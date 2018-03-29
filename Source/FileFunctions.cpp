@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <time.h>
+#include <windows.h>
 
 // Returns the file extension of FileName in lower case.
 
@@ -31,7 +32,7 @@ std::string GetDateAndTime()
 #ifdef _WIN64
     gmtime_s(&TimeStruct,&seconds);
 #else
-    gmtime_r(&seconds,&TimeStruct);
+    gmtime_s(&TimeStruct,&seconds);
 #endif
 
     int nYear=TimeStruct.tm_year+1900;
@@ -99,10 +100,6 @@ bool ReadFileLine(FILE        *pFile,
     return false;
     }
 
-#ifdef _WIN64
-
-#include <windows.h>
- 
 void ReadDirectory(std::string        const &DirName, 
                    std::vector<std::string> &aFileNames)
     {
@@ -119,4 +116,3 @@ void ReadDirectory(std::string        const &DirName,
         FindClose(hFind);
         }
     }
-#endif
