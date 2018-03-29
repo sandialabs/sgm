@@ -29,11 +29,7 @@ std::string GetDateAndTime()
     time_t seconds=time(NULL);
     struct tm TimeStruct;
 
-#ifdef _WIN64
     gmtime_s(&TimeStruct,&seconds);
-#else
-    gmtime_s(&TimeStruct,&seconds);
-#endif
 
     int nYear=TimeStruct.tm_year+1900;
     int nMonth=TimeStruct.tm_mon+1;
