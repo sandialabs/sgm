@@ -1,0 +1,70 @@
+#ifndef GRAPH_H
+#define GRAPH_H
+
+#include "SGMDataClasses.h"
+#include <set>
+#include <map>
+#include <vector>
+
+class edge;
+class face;
+
+class GraphEdge
+    {
+    public:
+
+        GraphEdge(size_t nStart=0,
+                  size_t nEnd=0,
+                  size_t nID=0):m_nStart(nStart),m_nEnd(nEnd),m_nID(nID) {}
+
+        bool operator<(GraphEdge const &) const;
+
+        size_t m_nStart;
+        size_t m_nEnd;
+        size_t m_nID;
+    };
+
+class Graph
+    {
+    public:
+
+        Graph(std::set<size_t> &sVertices,std::set<GraphEdge> &sEdges):m_sVertices(sVertices),m_sEdges(sEdges) {}
+
+        // If an edge is closed, then a non-simple graph is returned and extra vertices may  
+        // be added with potentialy invalid IDs if the closed edge(s) do not have vertices.
+
+        Graph(SGM::Result            &rResult,
+              std::set<edge *> const &sEdges);
+
+        Graph(SGM::Result            &rResult,
+              std::set<face *> const &sFaces,
+              bool                    bEdgeConnected);
+
+        // Get methods
+
+        std::set<size_t> const &GetVertices() const {return m_sVertices;}
+
+        std::set<GraphEdge> const &GetEdges() const {return m_sEdges;}
+
+        size_t GetDegree(size_t nVertex) const;
+
+        std::vector<size_t> const &GetStar(size_t nVertex) const;
+
+        // Find methods
+
+        size_t FindComponents(std::vector<Graph> &aComponents) const;
+
+        size_t FindBranches(std::vector<Graph> &aBranches) const;
+
+        bool IsCycle() const;
+
+        bool OrderVertices(std::vector<size_t> &aVertices) const;
+
+    private:
+
+                std::set<size_t>                      m_sVertices;
+                std::set<GraphEdge>                   m_sEdges;
+        mutable std::map<size_t,std::vector<size_t> > m_mNeighbors;
+    };
+
+#endif // GRAPH_H

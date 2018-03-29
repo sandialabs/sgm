@@ -1,0 +1,4 @@
+// Tests “Sphere.stp”;
+ReadFile(“Sphere.stp”,EntityList);
+SaveSTL(“Sphere.stl”,EntityList[0]);
+// CompareFiles(“Sphere.stl”,”Sphere.stl”);

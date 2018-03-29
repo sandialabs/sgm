@@ -1,0 +1,4 @@
+// Tests the ability to read in a block and write it out as STEP;
+ReadFile(“Correct Block.stp”,EntityList);
+SaveSTEP(“Block2.stp”,EntityList[0]);
+CompareFiles(“Block2.stp”,”Correct Block.stp”);
