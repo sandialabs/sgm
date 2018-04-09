@@ -1,4 +1,5 @@
 #include "SGMTree.h"
+#include <cfloat>
 
 #define SGM_MAX_NODES 10
 #define SGM_MIN_NODES  4
@@ -74,31 +75,23 @@ void SGM::BoxTree::AddNode(size_t nID)
         }
     }
 
-void SGM::BoxTree::RemoveBox(SGM::Interval3D const &Box,
-                             void            const *pData)
+void SGM::BoxTree::RemoveBox(SGM::Interval3D const &,//Box,
+                             void            const *)//pData)
     {
-    Box;
-    pData;
     }
 
-void SGM::BoxTree::AddPoint(SGM::Point3D const &Point,
-                            void         const *pData)
+void SGM::BoxTree::AddPoint(SGM::Point3D const &,//Point,
+                            void         const *)//pData)
     {
-    Point;
-    pData;
     }
 
-void *SGM::BoxTree::FindPoint(SGM::Point3D const &Center,
-                              double              dRadius)
+void *SGM::BoxTree::FindPoint(SGM::Point3D const &,//Center,
+                              double              )//dRadius)
     {
-    Center;
-    dRadius;
     return NULL;
     }
 
-void SGM::BoxTree::RemovePoint(SGM::Point3D const &Point,
-                               void         const *pData)
+void SGM::BoxTree::RemovePoint(SGM::Point3D const &,//Point,
+                               void         const *)//pData)
     {
-    Point;
-    pData;
     }

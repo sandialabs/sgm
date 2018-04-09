@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include <cmath>
 
 surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
@@ -76,9 +77,9 @@ curve *surface::UParamLine(SGM::Result &rResult,
     return NULL;
     }
 
-curve *surface::VParamLine(SGM::Result &rResult,double dV) const
+curve *surface::VParamLine(SGM::Result &,//rResult,
+                           double                  ) const //dV) const
     {
-    rResult;
     switch(m_SurfaceType)
         {
         case SGM::PlaneType:
@@ -87,7 +88,6 @@ curve *surface::VParamLine(SGM::Result &rResult,double dV) const
             }
         case SGM::CylinderType:
             {
-            dV;
             break;
             }
         case SGM::SphereType:

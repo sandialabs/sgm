@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Query.h"
+#include <cfloat>
 
 void FindClosestPointOnEdge(SGM::Result        &,//rResult,
                             SGM::Point3D const &Point,
@@ -114,19 +115,13 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
         }
     }
 
-void FindClosestPointOnVolume(SGM::Result        &rResult,
-                              SGM::Point3D const &Point,
-                              volume       const *pVolume,
-                              SGM::Point3D       &ClosestPoint,
-                              entity            *&pCloseEntity,
+void FindClosestPointOnVolume(SGM::Result        &,//rResult,
+                              SGM::Point3D const &,//Point,
+                              volume       const *,//pVolume,
+                              SGM::Point3D       &,//ClosestPoint,
+                              entity            *&,//pCloseEntity,
                               bool                bBoundary)
     {
-    rResult;
-    Point;
-    pVolume;
-    ClosestPoint;
-    pCloseEntity;
-
     if(bBoundary==false)
         {
         // Test for point in volume.
@@ -138,19 +133,13 @@ void FindClosestPointOnVolume(SGM::Result        &rResult,
         }
     }
 
-void FindClosestPointOnBody(SGM::Result        &rResult,
-                            SGM::Point3D const &Point,
-                            body         const *pBody,
-                            SGM::Point3D       &ClosestPoint,
-                            entity            *&pCloseEntity,
+void FindClosestPointOnBody(SGM::Result        &,//rResult,
+                            SGM::Point3D const &,//Point,
+                            body         const *,//pBody,
+                            SGM::Point3D       &,//ClosestPoint,
+                            entity            *&,//pCloseEntity,
                             bool                bBoundary)
     {
-    rResult;
-    Point;
-    pBody;
-    ClosestPoint;
-    pCloseEntity;
-    
     if(bBoundary==false)
         {
         // Test for point in volumes.
@@ -162,19 +151,13 @@ void FindClosestPointOnBody(SGM::Result        &rResult,
         }
     }
 
-void FindClosestPointOnThing(SGM::Result        &rResult,
-                             SGM::Point3D const &Point,
-                             thing        const *pThing,
-                             SGM::Point3D       &ClosestPoint,
-                             entity            *&pCloseEntity,
+void FindClosestPointOnThing(SGM::Result        &,//rResult,
+                             SGM::Point3D const &,//Point,
+                             thing        const *,//pThing,
+                             SGM::Point3D       &,//ClosestPoint,
+                             entity            *&,//pCloseEntity,
                              bool                bBoundary)
     {
-    rResult;
-    Point;
-    pThing;
-    ClosestPoint;
-    pCloseEntity;
-    
     if(bBoundary==false)
         {
         // Test for point in volumes.
@@ -191,24 +174,24 @@ void FindClosestPointOnEntity(SGM::Result        &rResult,
                               entity       const *pEntity,
                               SGM::Point3D       &ClosestPoint,
                               entity            *&pCloseEntity,
-                              bool                bBondary)
+                              bool                bBoundary)
     {
     SGM::EntityType nType=pEntity->GetType();
     switch(nType)
         {
         case SGM::ThingType:
             {
-            FindClosestPointOnThing(rResult,Point,(thing const *)pEntity,ClosestPoint,pCloseEntity,bBondary);
+            FindClosestPointOnThing(rResult,Point,(thing const *)pEntity,ClosestPoint,pCloseEntity,bBoundary);
             break;
             }
         case SGM::BodyType:
             {
-            FindClosestPointOnBody(rResult,Point,(body const *)pEntity,ClosestPoint,pCloseEntity,bBondary);
+            FindClosestPointOnBody(rResult,Point,(body const *)pEntity,ClosestPoint,pCloseEntity,bBoundary);
             break;
             }
         case SGM::VolumeType:
             {
-            FindClosestPointOnVolume(rResult,Point,(volume const *)pEntity,ClosestPoint,pCloseEntity,bBondary);
+            FindClosestPointOnVolume(rResult,Point,(volume const *)pEntity,ClosestPoint,pCloseEntity,bBoundary);
             break;
             }
         case SGM::FaceType:
@@ -232,12 +215,6 @@ void FindClosestPointOnEntity(SGM::Result        &rResult,
             throw;
             }
         }
-
-    rResult;
-    Point;
-    pEntity;
-    ClosestPoint;
-    pCloseEntity;
     }
 
 void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,

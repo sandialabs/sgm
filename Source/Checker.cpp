@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <cstdio>
 
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckLevel           Level,
@@ -89,12 +90,10 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool body::Check(SGM::Result              &rResult,
-                 SGM::CheckLevel           Level,
+bool body::Check(SGM::Result              &,//rResult,
+                 SGM::CheckLevel           ,//Level,
                  std::vector<std::string> &aCheckStrings) const
     {
-    Level;
-    rResult;
     bool bAnswer=true;
 
     // Check to see if all its volumes point to it.
@@ -107,7 +106,7 @@ bool body::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
+            std::snprintf(Buffer, sizeof(Buffer), "Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++VolumeIter;
@@ -116,24 +115,19 @@ bool body::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool complex::Check(SGM::Result              &rResult,
-                    SGM::CheckLevel           Level,
-                    std::vector<std::string> &aCheckStrings) const
+bool complex::Check(SGM::Result              &,//rResult,
+                    SGM::CheckLevel           ,//Level,
+                    std::vector<std::string> &) const//aCheckStrings) const
     {
-    rResult;
-    Level;
-    aCheckStrings;
     bool bAnswer=true;
 
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+bool volume::Check(SGM::Result              &,//rResult,
+                   SGM::CheckLevel           ,//Level,
                    std::vector<std::string> &aCheckStrings) const
     {
-    rResult;
-    Level;
     bool bAnswer=true;
 
     // Check to see if all its faces point to it.
@@ -146,7 +140,7 @@ bool volume::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
+            std::snprintf(Buffer,sizeof(Buffer),"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++FaceIter;
@@ -156,10 +150,9 @@ bool volume::Check(SGM::Result              &rResult,
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckLevel           Level,
+                 SGM::CheckLevel           ,//Level,
                  std::vector<std::string> &aCheckStrings) const
     {
-    Level;
     bool bAnswer=true;
 
     // Check to see if all its edges point to it.
@@ -173,7 +166,7 @@ bool face::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"Edge %ld of Face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
+            std::snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++EdgeIter;
@@ -208,7 +201,7 @@ bool face::Check(SGM::Result              &rResult,
                 {
                 bAnswer=false;
                 char Buffer[1000];
-                sprintf_s<1000>(Buffer,"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
+                std::snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
                 aCheckStrings.push_back(std::string(Buffer));
                 }
             }
@@ -217,12 +210,10 @@ bool face::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool edge::Check(SGM::Result               &rResult,
-                 SGM::CheckLevel           Level,
+bool edge::Check(SGM::Result               &,//rResult,
+                 SGM::CheckLevel           ,//Level,
                  std::vector<std::string> &aCheckStrings) const
     {
-    rResult;
-    Level;
     bool bAnswer=true;
 
     // Check to see if the start and end vertices point to this edge.
@@ -245,7 +236,7 @@ bool edge::Check(SGM::Result               &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"The start Vertex %d of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
+            std::snprintf(Buffer,sizeof(Buffer),"The start Vertex %ld of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -253,7 +244,7 @@ bool edge::Check(SGM::Result               &rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        sprintf_s<1000>(Buffer,"Edge %ld does not have a start vertex\n",GetID(),m_pStart->GetID(),GetID());
+        std::snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have a start vertex\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
     if(m_pEnd)
@@ -273,7 +264,7 @@ bool edge::Check(SGM::Result               &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"The end Vertex %d of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
+            std::snprintf(Buffer,sizeof(Buffer),"The end Vertex %ld of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -281,7 +272,7 @@ bool edge::Check(SGM::Result               &rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        sprintf_s<1000>(Buffer,"Edge %ld does not have an end vertex\n",GetID(),m_pStart->GetID(),GetID());
+        std::snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have an end vertex\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
 
@@ -299,7 +290,7 @@ bool edge::Check(SGM::Result               &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            sprintf_s<1000>(Buffer,"Edge %ld has the same orientation of both faces.\n",GetID());
+            std::snprintf(Buffer,sizeof(Buffer),"Edge %ld has the same orientation of both faces.\n",GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -307,45 +298,36 @@ bool edge::Check(SGM::Result               &rResult,
     return bAnswer;
     }
 
-bool vertex::Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+bool vertex::Check(SGM::Result              &,//rResult,
+                   SGM::CheckLevel           ,//Level,
                    std::vector<std::string> &aCheckStrings) const
     {
-    rResult;
-    Level;
-    aCheckStrings;
     bool bAnswer=true;
 
     if(m_sEdges.empty())
         {
         bAnswer=false;
         char Buffer[1000];
-        sprintf_s<1000>(Buffer,"Vertex %ld does not point to an edge\n",GetID());
+        std::snprintf(Buffer,sizeof(Buffer),"Vertex %ld does not point to an edge\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
 
     return bAnswer;
     }
 
-bool curve::Check(SGM::Result              &rResult,
-                  SGM::CheckLevel           Level,
-                  std::vector<std::string> &aCheckStrings) const
+bool curve::Check(SGM::Result              &,//rResult,
+                  SGM::CheckLevel           ,//Level,
+                  std::vector<std::string> &) const//aCheckStrings) const
     {
-    rResult;
-    Level;
-    aCheckStrings;
     bool bAnswer=true;
 
     return bAnswer;
     }
 
-bool surface::Check(SGM::Result              &rResult, 
-                    SGM::CheckLevel           Level,
-                    std::vector<std::string> &aCheckStrings) const
+bool surface::Check(SGM::Result              &,//rResult,
+                    SGM::CheckLevel           ,//Level,
+                    std::vector<std::string> &) const//aCheckStrings) const
     {
-    rResult;
-    Level;
-    aCheckStrings;
     bool bAnswer=true;
 
     return bAnswer;

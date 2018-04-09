@@ -1,11 +1,10 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 
-void FindBodies(SGM::Result      &rResult,
+void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
                 std::set<body *> &sBodies)
     {
-    rResult;
     if(pEntity==NULL)
         {
         return;
@@ -93,11 +92,10 @@ void FindBodies(SGM::Result      &rResult,
         }
     }
 
-void FindVolumes(SGM::Result        &rResult,
+void FindVolumes(SGM::Result        &,//rResult,
                  entity       const *pEntity,
                  std::set<volume *> &sVolumes)
     {
-    rResult;
     if(pEntity==NULL)
         {
         return;
@@ -189,11 +187,10 @@ void FindVolumes(SGM::Result        &rResult,
         }
     }
 
-void FindFaces(SGM::Result      &rResult,
+void FindFaces(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<face *> &sFaces)
     {
-    rResult;
     if(pEntity==NULL)
         {
         return;
@@ -273,11 +270,10 @@ void FindFaces(SGM::Result      &rResult,
         }
     }
 
-void FindEdges(SGM::Result      &rResult,
+void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<edge *> &sEdges)
     {
-    rResult;
     if(pEntity==NULL)
         {
         return;
@@ -395,11 +391,10 @@ void FindEdges(SGM::Result      &rResult,
         }
     }
 
-void FindVertices(SGM::Result        &rResult,
+void FindVertices(SGM::Result        &,//rResult,
                   entity       const *pEntity,
                   std::set<vertex *> &sVertices)
     {
-    rResult;
     if(pEntity==NULL)
         {
         return;
@@ -595,12 +590,11 @@ void FindVertices(SGM::Result        &rResult,
         }
     }
 
-edge *FindNextEdge(SGM::Result  &rResult,
+edge *FindNextEdge(SGM::Result  &,//rResult,
                    face   const *pFace,
                    edge   const *pEdge,
                    vertex const *pVertex)
     {
-    rResult;
     edge *pAnswer=NULL;
     if(pVertex==NULL)
         {
@@ -662,11 +656,10 @@ void OrderLoopEdges(SGM::Result                    &rResult,
         }
     }
 
-void FindComplexes(SGM::Result         &rResult,
+void FindComplexes(SGM::Result         &,//rResult,
                    entity        const *pEntity,
                    std::set<complex *> &sComplexes)
     {
-    rResult;
     SGM::EntityType nType=pEntity->GetType();
     switch(nType)
         {

@@ -341,7 +341,7 @@ bool RunFileLine(SGM::Result                                &rResult,
                  std::string                          const &sTestDirectory,
                  std::map<std::string,std::vector<size_t> > &mVariableMap,
                  std::string                          const &sFileLine,
-                 FILE                                       *pOutputFilep)
+                 FILE                                       *)//pOutputFilep)
     {
     TestCommand LineData;
     if(ParseLine(sFileLine,LineData))
@@ -358,7 +358,6 @@ bool RunFileLine(SGM::Result                                &rResult,
             }
         }
 
-    pOutputFilep;
     return true;
     }
 
@@ -402,17 +401,16 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
     {
     std::map<std::string,SGMFunction> mFunctionMap;
     CreateFunctionMap(mFunctionMap);
-    FILE *pOutputFile;
-    fopen_s(&pOutputFile,sOutputFileName.c_str(),"w");
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
     if(pOutputFile==NULL)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         rResult.SetMessage(sOutputFileName);
         return false;
         }
-    FILE *pTestFile;
+
     std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
-    fopen_s(&pTestFile,sFullPathName.c_str(),"rt");
+    FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
     if(pTestFile==NULL)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
@@ -420,6 +418,7 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
         return false;
         }
     bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
+    fclose(pTestFile);
     fclose(pOutputFile);
     return bAnswer;
     }
@@ -448,8 +447,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
     std::vector<std::string> aFileNames;
     ReadDirectory(sTestDirectory,aFileNames);
 
-    FILE *pOutputFile;
-    fopen_s(&pOutputFile,sOutputFileName.c_str(),"w");
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
     std::map<std::string,SGMFunction> mFunctionMap;
     CreateFunctionMap(mFunctionMap);
 
@@ -467,8 +465,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
                 std::string FullPath=sTestDirectory;
                 FullPath+="/";
                 FullPath+=aFileNames[Index1];
-                FILE *pTestFile;
-                fopen_s(&pTestFile,FullPath.c_str(),"rt");
+                FILE *pTestFile = fopen(FullPath.c_str(),"rt");
                 if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
                     {
                     ++nPassed;
@@ -501,9 +498,8 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
 
     // Open the files.
 
-    FILE *pFile1,*pFile2;
-    fopen_s(&pFile1,sFile1.c_str(),"rt");
-    fopen_s(&pFile2,sFile2.c_str(),"rt");
+    FILE *pFile1 = fopen(sFile1.c_str(),"rt");
+    FILE *pFile2 = fopen(sFile2.c_str(),"rt");
 
     // Compare the files.
 
@@ -572,14 +568,11 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
     return bAnswer;
     }
 
-bool SGM::RunCPPTest(SGM::Result       &rResult,
+bool SGM::RunCPPTest(SGM::Result       &,//rResult,
                      size_t             nTestNumber,
                      std::string const &sOutputFileName)
     {
-    rResult;
-
-    FILE *pOutputFile;
-    fopen_s(&pOutputFile,sOutputFileName.c_str(),"w");
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
 
     if(nTestNumber==1)
         {
@@ -626,7 +619,7 @@ bool SGM::RunCPPTest(SGM::Result       &rResult,
         // (x-1)(x-1)(x-2)(x-2) -> x^4-6*x^3+13*x^2-12*x+4 Two double roots
 
         aRoots.clear();
-        nRoots=nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots);
+        nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots);
         if( nRoots!=2 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2))
@@ -637,7 +630,7 @@ bool SGM::RunCPPTest(SGM::Result       &rResult,
         // (x-1)(x-2)(x^2+1) -> x^4-3*x^3+3*x^2-3*x+2 Two roots
 
         aRoots.clear();
-        nRoots=nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots);
+        nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots);
         if( nRoots!=2 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2))
@@ -648,7 +641,7 @@ bool SGM::RunCPPTest(SGM::Result       &rResult,
         // (x-1)(x-1)(x^2+1) -> x^4-2*x^3+2*x^2-2*x+1 One double root.
 
         aRoots.clear();
-        nRoots=nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots);
+        nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots);
         if( nRoots!=1 || 
             SGM_ZERO<fabs(aRoots[0]-1))
             {
@@ -658,7 +651,7 @@ bool SGM::RunCPPTest(SGM::Result       &rResult,
         // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 
         aRoots.clear();
-        nRoots=nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots);
+        nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots);
         if( nRoots!=1 || 
             SGM_ZERO<fabs(aRoots[0]-1))
             {
@@ -668,7 +661,7 @@ bool SGM::RunCPPTest(SGM::Result       &rResult,
         // (x^2+1)(x^2+1) -> x^4+2*x^2+1 No roots.
 
         aRoots.clear();
-        nRoots=nRoots=SGM::Quartic(1,0,2,0,1,aRoots);
+        nRoots=SGM::Quartic(1,0,2,0,1,aRoots);
         if( nRoots!=0 )
             {
             bAnswer=false;

@@ -164,11 +164,11 @@ namespace SGM
             // Note that if m_dMax<m_dMin then the interval is consider to be empty.
             // Infinite intervals may be defined by using -DBL_MAX and DBL_MAX.
 
-            SGM::Interval1D():m_dMin(1),m_dMax(0) {}
+            Interval1D():m_dMin(1),m_dMax(0) {}
 
-            SGM::Interval1D(double dStart,double dEnd):m_dMin(dStart),m_dMax(dEnd) {}
+            Interval1D(double dStart,double dEnd):m_dMin(dStart),m_dMax(dEnd) {}
 
-            explicit SGM::Interval1D(double dPoint):m_dMin(dPoint),m_dMax(dPoint) {}
+            explicit Interval1D(double dPoint):m_dMin(dPoint),m_dMax(dPoint) {}
 
             // Interigation methods.
 
@@ -205,11 +205,11 @@ namespace SGM
             // Note that if m_dMaxU<m_dMinU then the interval is consider to be empty.
             // Infinite intervals may be defined by using -DBL_MAX and DBL_MAX.
 
-            SGM::Interval2D() {}
+            Interval2D() {}
 
-            SGM::Interval2D(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
+            Interval2D(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
 
-            explicit SGM::Interval2D(SGM::Point2D const &Pos);
+            explicit Interval2D(SGM::Point2D const &Pos);
 
             // Interigation methods.
 
@@ -248,11 +248,11 @@ namespace SGM
            // Note that if m_dMaxX<m_dMinX then the interval is consider to be empty.
            // Infinite intervals may be defined by using -DBL_MAX and DBL_MAX.
 
-           SGM::Interval3D() {}
+           Interval3D() {}
 
-           SGM::Interval3D(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
+           Interval3D(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
 
-           explicit SGM::Interval3D(SGM::Point3D const &Pos);
+           explicit Interval3D(SGM::Point3D const &Pos);
 
            // Interigation methods.
 

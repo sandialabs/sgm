@@ -1,4 +1,6 @@
 #include "Intersectors.h"
+#include <cfloat>
+#include <cmath>
 
 double FindLocalMin(curve  const *pCurve1,    // Input
                     curve  const *pCurve2,    // Input
@@ -23,23 +25,15 @@ double FindLocalMin(curve  const *pCurve1,    // Input
     return sqrt(dDist2);
     }
 
-size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
-                                SGM::UnitVector3D            const &Axis,
-                                SGM::Interval1D              const &Domain,
-                                cylinder                     const *pCylinder,
-                                double                              dTolerance,
-                                std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes)
+size_t IntersectLineAndCylinder(SGM::Point3D                 const &,//Origin,
+                                SGM::UnitVector3D            const &,//Axis,
+                                SGM::Interval1D              const &,//Domain,
+                                cylinder                     const *,//pCylinder,
+                                double                              ,//dTolerance,
+                                std::vector<SGM::Point3D>          &,//aPoints,
+                                std::vector<SGM::IntersectionType> &)//aTypes)
     {
     // Empty, coincident, one tangent point, or two points.
-
-    Origin;
-    Axis;
-    Domain;
-    pCylinder;
-    dTolerance;
-    aPoints;
-    aTypes;
 
     return 0;
     }
@@ -101,44 +95,28 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
         }
     }
 
-size_t IntersectLineAndSphere(SGM::Point3D                  const &Origin,
-                               SGM::UnitVector3D            const &Axis,
-                               SGM::Interval1D              const &Domain,
-                               sphere                       const *pSphere,
-                               double                              dTolerance,
-                               std::vector<SGM::Point3D>          &aPoints,
-                               std::vector<SGM::IntersectionType> &aTypes)
+size_t IntersectLineAndSphere(SGM::Point3D                  const &,//Origin,
+                               SGM::UnitVector3D            const &,//Axis,
+                               SGM::Interval1D              const &,//Domain,
+                               sphere                       const *,//pSphere,
+                               double                              ,//dTolerance,
+                               std::vector<SGM::Point3D>          &,//aPoints,
+                               std::vector<SGM::IntersectionType> &)//aTypes)
     {
     // Empty, one tangent point or two points.
-
-    Origin;
-    Axis;
-    Domain;
-    pSphere;
-    dTolerance;
-    aPoints;
-    aTypes;
 
     return 0;
     }
 
-size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
-                             SGM::UnitVector3D            const &Axis,
-                             SGM::Interval1D              const &Domain,
-                             torus                        const *pTorus,
-                             double                              dTolerance,
-                             std::vector<SGM::Point3D>          &aPoints,
-                             std::vector<SGM::IntersectionType> &aTypes)
+size_t IntersectLineAndTorus(SGM::Point3D                 const &,//Origin,
+                             SGM::UnitVector3D            const &,//Axis,
+                             SGM::Interval1D              const &,//Domain,
+                             torus                        const *,//pTorus,
+                             double                              ,//dTolerance,
+                             std::vector<SGM::Point3D>          &,//aPoints,
+                             std::vector<SGM::IntersectionType> &)//aTypes)
     {
     // Empty, one tangent point, two points, two tangents points, two points and one tangent point, four points.
-
-    Origin;
-    Axis;
-    Domain;
-    pTorus;
-    dTolerance;
-    aPoints;
-    aTypes;
 
     return 0;
     }

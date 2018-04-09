@@ -30,11 +30,11 @@ void SaveSTL(SGM::Result                  &rResult,
     FILE *pFile=NULL;
     if(Options.m_bBinary)
         {
-        fopen_s(&pFile,FileName.c_str(),"wb");
+        pFile = fopen(FileName.c_str(),"wb");
         }
     else
         {
-        fopen_s(&pFile,FileName.c_str(),"wt");
+        pFile = fopen(FileName.c_str(),"wt");
         }
     if(pFile==NULL)
         {
@@ -130,9 +130,9 @@ void SaveSTL(SGM::Result                  &rResult,
                 SGM::UnitVector3D Norm(0,0,1);
                 fprintf(pFile,"   facet normal %lf %lf %lf \n",Norm.m_x,Norm.m_y,Norm.m_z);
                 fprintf(pFile,"      outer loop \n");
-                fprintf(pFile,"         vertex %lf %lf %lf \n",A.m_u,A.m_v,0);
-                fprintf(pFile,"         vertex %lf %lf %lf \n",B.m_u,B.m_v,0);
-                fprintf(pFile,"         vertex %lf %lf %lf \n",C.m_u,C.m_v,0);
+                fprintf(pFile,"         vertex %lf %lf %lf \n",A.m_u,A.m_v,0.0);
+                fprintf(pFile,"         vertex %lf %lf %lf \n",B.m_u,B.m_v,0.0);
+                fprintf(pFile,"         vertex %lf %lf %lf \n",C.m_u,C.m_v,0.0);
                 fprintf(pFile,"      endloop \n");
                 fprintf(pFile,"   endfacet \n");
                 }

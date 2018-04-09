@@ -17,7 +17,7 @@ size_t FindIndices(std::string   const &line,
         if(pString[nCount]=='#')
             {
             int nIndex;
-            sscanf_s(pString+nCount+1,"%d",&nIndex);
+            sscanf(pString+nCount+1,"%d",&nIndex);
             aIndices.push_back(nIndex);
             }
         if(pString[nCount]=='*')
@@ -69,7 +69,7 @@ void FindLastDouble(std::string   const &line,
         ++nCount;
         }
     double d;
-    sscanf_s(pString+nWhere,"%lf",&d);
+    sscanf(pString+nWhere,"%lf",&d);
     aData.push_back(d);
     }
 
@@ -88,7 +88,7 @@ void FindDoubles3(std::string   const &line,
         if(nPCount==2)
             {
             double x,y,z;
-            sscanf_s(pString+nCount+1,"%lf,%lf,%lf",&x,&y,&z);
+            sscanf(pString+nCount+1,"%lf,%lf,%lf",&x,&y,&z);
             aData.push_back(x);
             aData.push_back(y);
             aData.push_back(z);
@@ -110,166 +110,147 @@ class STEPLineData
         bool                m_bFlag;
     };
 
-void ProcessFace(SGM::Result       &rResult,
+void ProcessFace(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
     FindFlag(line,STEPData.m_bFlag);
-    rResult;
     }
 
-void ProcessAxis(SGM::Result       &rResult,
+void ProcessAxis(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessPoint(SGM::Result       &rResult,
+void ProcessPoint(SGM::Result       &,//rResult,
                   std::string const &line,
                   STEPLineData      &STEPData)
     {
     FindDoubles3(line,STEPData.m_aDoubles);
-    rResult;
     }
 
-void ProcessDirection(SGM::Result       &rResult,
+void ProcessDirection(SGM::Result       &,//rResult,
                       std::string const &line,
                       STEPLineData      &STEPData)
     {
     FindDoubles3(line,STEPData.m_aDoubles);
-    rResult;
     }
 
-void ProcessEdge(SGM::Result       &rResult,
+void ProcessEdge(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
     FindFlag(line,STEPData.m_bFlag);
-    rResult;
     }
 
-void ProcessLoop(SGM::Result       &rResult,
+void ProcessLoop(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessBound(SGM::Result       &rResult,
+void ProcessBound(SGM::Result       &,//rResult,
                   std::string const &line,
                   STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
     FindFlag(line,STEPData.m_bFlag);
-    rResult;
     }
 
-void ProcessLine(SGM::Result       &rResult,
+void ProcessLine(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessBody(SGM::Result       &rResult,
+void ProcessBody(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessVolume(SGM::Result       &rResult,
+void ProcessVolume(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessShell(SGM::Result       &rResult,
+void ProcessShell(SGM::Result       &,//rResult,
                   std::string const &line,
                   STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessCoedge(SGM::Result       &rResult,
+void ProcessCoedge(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
     FindFlag(line,STEPData.m_bFlag);
-    rResult;
     }
 
-void ProcessPlane(SGM::Result       &rResult,
+void ProcessPlane(SGM::Result       &,//rResult,
                   std::string const &line,
                   STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessCircle(SGM::Result       &rResult,
+void ProcessCircle(SGM::Result       &,//rResult,
                    std::string const &circle,
                    STEPLineData      &STEPData)
     {
     FindIndices(circle,STEPData.m_aIDs);
     FindLastDouble(circle,STEPData.m_aDoubles);
-    rResult;
     }
 
-void ProcessCylinder(SGM::Result       &rResult,
+void ProcessCylinder(SGM::Result       &,//rResult,
                      std::string const &cylinder,
                      STEPLineData      &STEPData)
     {
     FindIndices(cylinder,STEPData.m_aIDs);
     FindLastDouble(cylinder,STEPData.m_aDoubles);
-    rResult;
     }
 
 
-void ProcessSphere(SGM::Result       &rResult,
+void ProcessSphere(SGM::Result       &,//rResult,
                    std::string const &sphere,
                    STEPLineData      &STEPData)
     {
     FindIndices(sphere,STEPData.m_aIDs);
     FindLastDouble(sphere,STEPData.m_aDoubles);
-    rResult;
     }
 
 
-void ProcessVector(SGM::Result       &rResult,
+void ProcessVector(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
     FindLastDouble(line,STEPData.m_aDoubles);
-    rResult;
     }
 
-void ProcessVertex(SGM::Result       &rResult,
+void ProcessVertex(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
-void ProcessBodyTransform(SGM::Result       &rResult,
+void ProcessBodyTransform(SGM::Result       &,//rResult,
                           std::string const &line,
                           STEPLineData      &STEPData)
     {
     FindIndices(line,STEPData.m_aIDs);
-    rResult;
     }
 
 void ProcessLine(SGM::Result                        &rResult,
@@ -285,7 +266,7 @@ void ProcessLine(SGM::Result                        &rResult,
 
         char const *pData=line.c_str();
         int nLineNumber;
-        sscanf_s(pData+1,"%d",&nLineNumber);
+        sscanf(pData+1,"%d",&nLineNumber);
 
         // Find the STEP tag string.
 
@@ -456,7 +437,6 @@ void ProcessLine(SGM::Result                        &rResult,
             aLog.push_back(LogString);
             }
         
-        rResult;
         }
     }
 
@@ -507,8 +487,6 @@ void CreateEntities(SGM::Result                   &rResult,
                     std::map<size_t,entity *>     &mEntityMap,
                     std::vector<entity *>         &aEntities)
     {
-    rResult;
-
     std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
     std::map<size_t,STEPLineData>::iterator DataIter=mSTEPData.begin();
     while(DataIter!=mSTEPData.end())
@@ -559,7 +537,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
                 SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
-                SGM::UnitVector3D YAxis=ZAxis*XAxis;
+// unused               SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
                 }
@@ -663,10 +641,10 @@ void CreateEntities(SGM::Result                   &rResult,
         std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nBodyID);
         std::vector<size_t> const &aIDs=SLD->second.m_aIDs;
         size_t nLastVolume=aIDs.size()-2;
-        size_t nTrans=aIDs[nLastVolume];
+// unused        size_t nTrans=aIDs[nLastVolume];
 
         // Transform the body here.
-        nTrans;
+// unused       nTrans;
 
         for(Index2=0;Index2<nLastVolume;++Index2)
             {
@@ -795,8 +773,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     {
     // Open the file.
 
-    FILE *pFile=NULL;
-    fopen_s(&pFile,FileName.c_str(),"rt");
+    FILE *pFile = fopen(FileName.c_str(),"rt");
     if(pFile==NULL)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
@@ -841,8 +818,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
     {
     // Open the file.
 
-    FILE *pFile=NULL;
-    fopen_s(&pFile,FileName.c_str(),"rt");
+    FILE *pFile = fopen(FileName.c_str(),"rt");
     if(pFile==NULL)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
@@ -880,7 +856,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                 if(nVertexCount==6)
                     {
                     double x,y,z;
-                    fscanf_s(pFile,"%lf %lf %lf",&x,&y,&z);
+                    fscanf(pFile,"%lf %lf %lf",&x,&y,&z);
                     aPoints.push_back(SGM::Point3D(x,y,z));
                     aTriangles.push_back(nCount++);
                     }

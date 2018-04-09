@@ -1,9 +1,10 @@
 #include "EntityClasses.h"
 #include "Faceter.h"
+#include <algorithm>
 
 edge::edge(SGM::Result &rResult):
-    topology(rResult,SGM::EntityType::EdgeType),m_pVolume(NULL),
-    m_pStart(NULL),m_pEnd(NULL),m_pCurve(NULL)
+    topology(rResult,SGM::EntityType::EdgeType),
+    m_pStart(NULL),m_pEnd(NULL),m_pVolume(NULL),m_pCurve(NULL)
     {
     }
 
@@ -41,7 +42,7 @@ SGM::Interval1D const &edge::GetDomain() const
         m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
         if(m_Domain.Empty())
             {
-            std::swap((vertex *)m_pStart,(vertex *)m_pEnd);
+            std::swap(m_pStart,m_pEnd);
             std::swap(m_Domain.m_dMin,m_Domain.m_dMax);
             }
         }

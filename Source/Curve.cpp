@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include <cmath>
 
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 

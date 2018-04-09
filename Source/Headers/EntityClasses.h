@@ -40,7 +40,7 @@ class entity
 
         // Only to be called from the thing constructor.
 
-        entity::entity();
+        entity();
     };
 
 class thing : public entity
@@ -348,8 +348,8 @@ class edge : public topology
 
     private:
 
-        vertex           *m_pStart;
-        vertex           *m_pEnd;
+        mutable vertex           *m_pStart;
+        mutable vertex           *m_pEnd;
         std::set<face *>  m_sFaces;
         volume           *m_pVolume;
         curve            *m_pCurve;

@@ -1,6 +1,8 @@
 #ifndef SGM_ENTITY_CLASSES_H
 #define SGM_ENTITY_CLASSES_H
 
+#include <stddef.h>
+
 namespace SGM
     {
     // Abstract ID Classes

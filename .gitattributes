@@ -1,0 +1,25 @@
+# Set the default behavior for line endings to auto
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.c text
+*.cmake text
+*.cpp text
+*.cxx text
+*.h text
+*.h.in text
+*.hpp text
+*.hxx text
+*.i text
+*.py text
+*.txt text
+*.ctest text
+*.html text
+*.htm text
+*.xml text
+
+
+
+
+

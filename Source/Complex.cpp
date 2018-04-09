@@ -11,7 +11,7 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
     if(aPoints.empty() || aTriangles.empty())
         {
         rResult.SetResult(SGM::ResultTypeInsufficientData);
-        return SGM::Complex(NULL);
+        return SGM::Complex(0);
         }
     thing *pThing=rResult.GetThing();
     complex *pComplex=new complex(rResult,aPoints,aTriangles);

@@ -3,7 +3,20 @@
 #include <string>
 #include <algorithm>
 #include <time.h>
+
+#if defined(__linux__) && !defined(SGM_LINUX)
+# define SGM_LINUX
+#endif
+
+
+
+#if defined(_WIN64)
 #include <windows.h>
+#endif
+#if defined(SGM_LINUX)
+#include <sys/types.h>
+#include <dirent.h>
+#endif
 
 // Returns the file extension of FileName in lower case.
 
@@ -29,7 +42,12 @@ std::string GetDateAndTime()
     time_t seconds=time(NULL);
     struct tm TimeStruct;
 
+#if defined(_WIN64)
     gmtime_s(&TimeStruct,&seconds);
+#endif
+#if defined(SGM_LINUX)
+    gmtime_r(&seconds,&TimeStruct);
+#endif
 
     int nYear=TimeStruct.tm_year+1900;
     int nMonth=TimeStruct.tm_mon+1;
@@ -39,7 +57,7 @@ std::string GetDateAndTime()
     int nSecond=TimeStruct.tm_sec;
 
     char Buf[25];
-    sprintf_s(Buf,25,"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
+    std::snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
     return Buf;
     }
 
@@ -99,6 +117,7 @@ bool ReadFileLine(FILE        *pFile,
 void ReadDirectory(std::string        const &DirName, 
                    std::vector<std::string> &aFileNames)
     {
+#if defined(_WIN64)
     std::string pattern(DirName);
     pattern.append("\\*");
     _WIN32_FIND_DATAA data;
@@ -111,4 +130,16 @@ void ReadDirectory(std::string        const &DirName,
             } while (FindNextFileA(hFind, &data) != 0);
         FindClose(hFind);
         }
+#endif
+#if defined(SGM_LINUX)
+    if (DIR *directory = opendir(DirName.c_str()))
+        {
+            while(struct dirent *entity = readdir(directory))
+                {
+                    std::string filename(entity->d_name);
+                    aFileNames.push_back(filename);
+                }
+            closedir(directory);
+        }
+#endif
     }

@@ -187,11 +187,11 @@ void WriteFaces(SGM::Result                               &rResult,
                 char Buf[25];
                 if(Index2)
                     {
-                    sprintf_s(Buf,25,",#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    std::snprintf(Buf,sizeof(Buf),",#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 else
                     {
-                    sprintf_s(Buf,25,"#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    std::snprintf(Buf,sizeof(Buf),"#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 sEdges+=Buf;
                 }
@@ -209,11 +209,11 @@ void WriteFaces(SGM::Result                               &rResult,
             char Buf2[25];
             if(Index1)
                 {
-                sprintf_s(Buf2,25,",#%ld",nBound);
+                std::snprintf(Buf2,sizeof(Buf2),",#%ld",nBound);
                 }
             else
                 {
-                sprintf_s(Buf2,25,"#%ld",nBound);
+                std::snprintf(Buf2,sizeof(Buf2),"#%ld",nBound);
                 }
             sLoops+=Buf2;
             }
@@ -253,11 +253,11 @@ void WriteVolumes(SGM::Result              &rResult,
                 char Buf[25];
                 if(bFirst)
                     {
-                    sprintf_s(Buf,25,"#%ld",mFaceMap[pFace->GetID()]);
+                    std::snprintf(Buf,sizeof(Buf),"#%ld",mFaceMap[pFace->GetID()]);
                     }
                 else
                     {
-                    sprintf_s(Buf,25,",#%ld",mFaceMap[pFace->GetID()]);
+                    std::snprintf(Buf,sizeof(Buf),",#%ld",mFaceMap[pFace->GetID()]);
                     }
                 sFaceList+=Buf;
                 bFirst=false;
@@ -280,11 +280,11 @@ void WriteVolumes(SGM::Result              &rResult,
             char Buf2[25];
             if(bFirstVolume)
                 {
-                sprintf_s(Buf2,25,"#%ld",nVolume);
+                std::snprintf(Buf2,sizeof(Buf2),"#%ld",nVolume);
                 }
             else
                 {
-                sprintf_s(Buf2,25,",#%ld",nVolume);
+                std::snprintf(Buf2,sizeof(Buf2),",#%ld",nVolume);
                 }
             sVolumeList+=Buf2;
             bFirstVolume=false;
@@ -366,14 +366,11 @@ void WriteDataHeader(FILE   *pFile,
 void SaveSTEP(SGM::Result                  &rResult,
               std::string            const &FileName,
               entity                       *pEntity,
-              SGM::TranslatorOptions const &Options)
+              SGM::TranslatorOptions const &)//Options)
     {
-    Options;
-
     // Open the file.
 
-    FILE *pFile=NULL;
-    fopen_s(&pFile,FileName.c_str(),"wt");
+    FILE *pFile = fopen(FileName.c_str(),"wt");
     if(pFile==NULL)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);

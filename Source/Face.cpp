@@ -5,6 +5,7 @@
 #include "Graph.h"
 #include "Topology.h"
 #include "Query.h"
+#include <cfloat>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -13,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
-    m_pSurface(NULL),m_nSides(1),m_bFlipped(false)
+    m_pVolume(NULL),m_pSurface(NULL),m_bFlipped(false),m_nSides(1)
     {
     }
 
