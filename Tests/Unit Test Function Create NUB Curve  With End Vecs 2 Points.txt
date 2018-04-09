@@ -1,0 +1,3 @@
+// NUBCurve from a vector of points and end directions 2 Points;
+RunCPPTest(17);
+

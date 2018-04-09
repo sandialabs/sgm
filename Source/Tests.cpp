@@ -4,6 +4,7 @@
 #include "SGMMathematics.h"
 #include "SGMTranslators.h"
 #include "SGMDataClasses.h"
+#include "SGMGeometry.h"
 #include "SGMQuery.h"
 #include "SGMTree.h"
 #include "FileFunctions.h"
@@ -13,6 +14,10 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
+
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
 
 class TestCommand
     {
@@ -60,12 +65,43 @@ size_t ParseVariable(std::map<std::string,std::vector<size_t> > &mVariableMap,
         }
     }
 
+bool RunCPPTest(SGM::Result &rResult,std::map<std::string,std::vector<size_t> > &,std::string const &,TestCommand &TestData)
+    {
+    return SGM::RunCPPTest(rResult,(size_t)TestData.m_aDoubles[0]);
+    }
+
 bool RunCreateBlock(SGM::Result &rResult,std::map<std::string,std::vector<size_t> > &mVariableMap,std::string const &,TestCommand &TestData)
     {
     SGM::Point3D Pos0(TestData.m_aDoubles[0],TestData.m_aDoubles[1],TestData.m_aDoubles[2]);
     SGM::Point3D Pos1(TestData.m_aDoubles[3],TestData.m_aDoubles[4],TestData.m_aDoubles[5]);
     SGM::Body BodyID=SGM::CreateBlock(rResult,Pos0,Pos1);
-    mVariableMap[TestData.m_sOutput].push_back(BodyID.m_ID);
+    std::vector<size_t> aEnts;
+    aEnts.push_back(BodyID.m_ID);
+    mVariableMap[TestData.m_sOutput]=aEnts;
+    return true;
+    }
+
+bool RunCreateSphere(SGM::Result &rResult,std::map<std::string,std::vector<size_t> > &mVariableMap,std::string const &,TestCommand &TestData)
+    {
+    SGM::Point3D Center(TestData.m_aDoubles[0],TestData.m_aDoubles[1],TestData.m_aDoubles[2]);
+    double dRadius=TestData.m_aDoubles[3];
+    SGM::Body BodyID=SGM::CreateSphere(rResult,Center,dRadius);
+    std::vector<size_t> aEnts;
+    aEnts.push_back(BodyID.m_ID);
+    mVariableMap[TestData.m_sOutput]=aEnts;
+    return true;
+    }
+
+bool RunCreateTorus(SGM::Result &rResult,std::map<std::string,std::vector<size_t> > &mVariableMap,std::string const &,TestCommand &TestData)
+    {
+    SGM::Point3D Center(TestData.m_aDoubles[0],TestData.m_aDoubles[1],TestData.m_aDoubles[2]);
+    SGM::UnitVector3D Normal(TestData.m_aDoubles[3],TestData.m_aDoubles[4],TestData.m_aDoubles[5]);
+    double dMinorRadius=TestData.m_aDoubles[6];
+    double dMajorRadius=TestData.m_aDoubles[7];
+    SGM::Body BodyID=SGM::CreateTorus(rResult,Center,Normal,dMinorRadius,dMajorRadius);
+    std::vector<size_t> aEnts;
+    aEnts.push_back(BodyID.m_ID);
+    mVariableMap[TestData.m_sOutput]=aEnts;
     return true;
     }
 
@@ -180,14 +216,17 @@ typedef bool (*SGMFunction)(SGM::Result &,
 
 void CreateFunctionMap(std::map<std::string,SGMFunction> &mFunctionMap)
     {
-    mFunctionMap["CreateBlock"]=RunCreateBlock;
-    mFunctionMap["SaveSTEP"]=RunSaveSTEP;
-    mFunctionMap["SaveSTL"]=RunSaveSTL;
-    mFunctionMap["ReadFile"]=RunReadFile;
     mFunctionMap["CompareFiles"]=RunCompareFiles;
     mFunctionMap["CompareSizes"]=RunCompareSizes;
+    mFunctionMap["CreateBlock"]=RunCreateBlock;
+    mFunctionMap["CreateSphere"]=RunCreateSphere;
+    mFunctionMap["CreateTorus"]=RunCreateTorus;
     mFunctionMap["FindCloseFaces"]=RunFindCloseFaces;
     mFunctionMap["FindCloseEdges"]=RunFindCloseEdges;
+    mFunctionMap["ReadFile"]=RunReadFile;
+    mFunctionMap["RunCPPTest"]=RunCPPTest;
+    mFunctionMap["SaveSTEP"]=RunSaveSTEP;
+    mFunctionMap["SaveSTL"]=RunSaveSTL;
     }
 
 void FindOutput(std::string const &sFileLine,
@@ -383,6 +422,11 @@ bool RunTestFile(SGM::Result                       &rResult,
                 }
             }
         }
+    //if(rResult.GetResult()!=SGM::ResultTypeOK)
+    //    {
+    //    rResult.SetResult(SGM::ResultTypeOK);
+    //    bPassed=false;
+    //    }
     if(bPassed)
         {
         fprintf(pOutputFile,"Passed  \"%s\"\n",sFileName.c_str());
@@ -466,11 +510,18 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
                 FullPath+="/";
                 FullPath+=aFileNames[Index1];
                 FILE *pTestFile = fopen(FullPath.c_str(),"rt");
-                if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
+                try
                     {
-                    ++nPassed;
+                    if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
+                        {
+                        ++nPassed;
+                        }
+                    else
+                        {
+                        ++nFailed;
+                        }
                     }
-                else
+                catch(...)
                     {
                     ++nFailed;
                     }
@@ -568,12 +619,116 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
     return bAnswer;
     }
 
-bool SGM::RunCPPTest(SGM::Result       &,//rResult,
-                     size_t             nTestNumber,
-                     std::string const &sOutputFileName)
+bool TestSurface(surface      const *pSurface,
+                 SGM::Point2D const &uv1)
     {
-    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
+    bool bAnswer=true;
 
+    // Test to see if evalaute and inverse match.
+
+    SGM::Point3D Pos,CPos;
+    SGM::UnitVector3D Norm;
+    SGM::Vector3D dU,dV,dUU,dUV,dVV;
+    pSurface->Evaluate(uv1,&Pos,&dU,&dV,&Norm,&dUU,&dUV,&dVV);
+    SGM::Point2D uv2=pSurface->Inverse(Pos,&CPos);
+
+    if(SGM::NearEqual(uv1,uv2,SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(Pos,CPos,SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    // Test all the derivatives.
+
+    double dx=1E-3,dy=1E-3;
+    SGM::Vector3D dNU,dNV,dNUU,dNUV,dNVV;
+    SGM::Point3D aMatrix[5][5];
+    size_t Index1,Index2;
+    for(Index1=0;Index1<5;++Index1)
+        {
+        double dX=uv1.m_u+dx*(Index1-2.0);
+        for(Index2=0;Index2<5;++Index2)
+            {
+            double dY=uv1.m_v+dy*(Index2-2.0);
+            SGM::Point2D uv3(dX,dY);
+            SGM::Point3D GridPos;
+            pSurface->Evaluate(uv3,&GridPos);
+            aMatrix[Index1][Index2]=GridPos;
+            }
+        }
+    SGM::PartialDerivatives<SGM::Point3D,SGM::Vector3D>(aMatrix,dx,dy,dNU,dNV,dNUU,dNUV,dNVV);
+
+    if(SGM::NearEqual(dU,dNU,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(dV,dNV,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(dUU,dNUU,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(dUV,dNUV,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(dVV,dNVV,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+
+    return bAnswer;
+    }
+
+bool TestCurve(curve *pCurve,
+               double t1)
+    {
+    SGM::Point3D Pos;
+    SGM::Vector3D Vec1,Vec2;
+    pCurve->Evaluate(t1,&Pos,&Vec1,&Vec2);
+    SGM::Point3D ClosePos;
+    double t2=pCurve->Inverse(Pos,&ClosePos);
+
+    bool bAnswer=true;
+    if(SGM::NearEqual(Pos,ClosePos,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(t1,t2,SGM_MIN_TOL,false)==false)
+        {
+        bAnswer=false;
+        }
+
+    double h=1E-3;
+    SGM::Point3D Pos0,Pos1,Pos2,Pos3;
+    pCurve->Evaluate(t1-2*h,&Pos0);
+    pCurve->Evaluate(t1-h,&Pos1);
+    pCurve->Evaluate(t1+h,&Pos2);
+    pCurve->Evaluate(t1+2*h,&Pos3);
+
+    SGM::Vector3D VecN1=SGM::FirstDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos2,Pos3,h);
+    SGM::Vector3D VecN2=SGM::SecondDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos,Pos2,Pos3,h);
+
+    if(SGM::NearEqual(Vec1,VecN1,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(Vec2,VecN2,SGM_MIN_TOL)==false)
+        {
+        bAnswer=false;
+        }
+
+    return bAnswer;
+    }    
+
+bool SGM::RunCPPTest(SGM::Result &rResult,
+                     size_t       nTestNumber)
+    {
     if(nTestNumber==1)
         {
         // Test the quartic equation.
@@ -667,7 +822,6 @@ bool SGM::RunCPPTest(SGM::Result       &,//rResult,
             bAnswer=false;
             }
 
-        fclose(pOutputFile);
         return bAnswer;
         }
 
@@ -731,11 +885,589 @@ bool SGM::RunCPPTest(SGM::Result       &,//rResult,
             bAnswer=false;
             }
 
-        fclose(pOutputFile);
         return bAnswer;
         }
 
-    fclose(pOutputFile);
+    if(nTestNumber==3)
+        {
+        // Test plane inverse.
+
+        SGM::Point3D Origin(10,11,12);
+        SGM::UnitVector3D XAxis(1,2,3);
+        SGM::UnitVector3D YAxis=XAxis.Orthogonal();
+        SGM::UnitVector3D ZAxis=XAxis*YAxis;
+        double dScale=2.5;
+        plane *pPlane=new plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
+
+        bool bAnswer=TestSurface(pPlane,SGM::Point2D(0.5,0.2));
+        pPlane->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==4)
+        {
+        // Test sphere inverse.
+
+        SGM::Point3D Origin(10,11,12);
+        SGM::UnitVector3D XAxis(1,2,3);
+        SGM::UnitVector3D YAxis=XAxis.Orthogonal();
+        double dRadius=2.5;
+        sphere *pSphere=new sphere(rResult,Origin,dRadius,&XAxis,&YAxis);
+
+        bool bAnswer=TestSurface(pSphere,SGM::Point2D(0.5,0.2));
+        pSphere->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==5)
+        {
+        // Test cylinder inverse.
+
+        SGM::Point3D Bottom(10,11,12),Top(13,14,15);
+        double dRadius=2.5;
+        cylinder *pCylinder=new cylinder(rResult,Bottom,Top,dRadius);
+
+        bool bAnswer=TestSurface(pCylinder,SGM::Point2D(0.5,0.2));
+        pCylinder->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==6)
+        {
+        // Test torus inverse.
+
+        SGM::Point3D Origin(10,11,12);
+        SGM::UnitVector3D ZAxis(1,2,3);
+        torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
+
+        bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
+        pTorus->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==7)
+        {
+        // Test cone inverse.
+
+        SGM::Point3D Origin(10,11,12);
+        SGM::UnitVector3D ZAxis(1,2,3);
+        cone *pCone=new cone(rResult,Origin,ZAxis,2,0.4);
+
+        bool bAnswer=TestSurface(pCone,SGM::Point2D(0.5,0.2));
+        pCone->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==8)
+        {
+        std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
+        std::vector<SGM::Point3D> aControlPoints;
+        aControlPoints.push_back(SGM::Point3D(1,1,0));
+        aControlPoints.push_back(SGM::Point3D(1.166666666666666,1.166666666666666,0));
+        aControlPoints.push_back(SGM::Point3D(2,2.8333333333333333,0));
+        aControlPoints.push_back(SGM::Point3D(2.8333333333333333,1.166666666666666,0));
+        aControlPoints.push_back(SGM::Point3D(3,1,0));
+
+        NUBcurve *pNUB=new NUBcurve(rResult,aControlPoints,aKnots);
+
+        bool bAnswer=TestCurve(pNUB,0.45);
+        pNUB->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==9)
+        {
+        SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
+        SGM::UnitVector3D Axis(7,8,9);
+        double dScale=10;
+
+        line *pLine1=new line(rResult,Pos0,Pos1);
+        bool bAnswer=TestCurve(pLine1,0.5);
+        pLine1->Remove(rResult);
+
+        line *pLine2=new line(rResult,Pos0,Axis,dScale);
+        if(TestCurve(pLine2,0.5)==false)
+            {
+            bAnswer=false;
+            }
+
+        line *pLine3=new line(rResult,pLine2);
+        if(TestCurve(pLine3,0.5)==false)
+            {
+            bAnswer=false;
+            }
+        pLine2->Remove(rResult);
+        pLine3->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==10)
+        {
+        SGM::Point3D Center(1,2,3);
+        SGM::UnitVector3D Normal(4,5,6);
+        double dRadius=2.1;
+        SGM::Interval1D Domain(-1,1);
+        SGM::UnitVector3D XAxis=Normal.Orthogonal();
+   
+        circle *pCircle1=new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain);
+        bool bAnswer=TestCurve(pCircle1,0.5);
+        pCircle1->Remove(rResult);
+
+        circle *pCircle2=new circle(rResult,Center,Normal,dRadius,&XAxis);
+        if(TestCurve(pCircle2,0.5)==false)
+            {
+            bAnswer=false;
+            }
+        pCircle2->Remove(rResult);
+
+        circle *pCircle3=new circle(rResult,Center,Normal,dRadius);
+        if(TestCurve(pCircle3,0.5)==false)
+            {
+            bAnswer=false;
+            }
+
+        circle *pCircle4=new circle(rResult,pCircle3);
+        if(TestCurve(pCircle4,0.5)==false)
+            {
+            bAnswer=false;
+            }
+        pCircle3->Remove(rResult);
+        pCircle4->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==11)
+        {
+        bool bAnswer=true;
+
+        // if x=1,y=2,z=3,w=4, then
+        //
+        // 1x+2y+0z+0w= 5
+        // 2x+2y+2z+0w=12
+        // 0x+2y-1z+3w=13
+        // 0x+0y+2z-1w= 2
+
+        std::vector<std::vector<double> > aaMatrix;
+        aaMatrix.reserve(4);
+        std::vector<double> aRow;
+        aRow.reserve(4);
+        aRow.push_back(0);
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(5);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(2);
+        aRow.push_back(2);
+        aRow.push_back(2);
+        aRow.push_back(12);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(2);
+        aRow.push_back(-1);
+        aRow.push_back(3);
+        aRow.push_back(13);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(2);
+        aRow.push_back(-1);
+        aRow.push_back(0);
+        aRow.push_back(2);
+        aaMatrix.push_back(aRow);
+
+        if(SGM::TridiagonalSolve(aaMatrix)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[0][3],1,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[1][3],2,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[2][3],3,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[3][3],4,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==12)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(5);
+        aPoints.push_back(SGM::Point3D(0,0,0));
+        aPoints.push_back(SGM::Point3D(3,4,0));
+        aPoints.push_back(SGM::Point3D(-1,4,0));
+        aPoints.push_back(SGM::Point3D(-4,0,0));
+        aPoints.push_back(SGM::Point3D(-4,-3,0));
+
+        SGM::Curve NUBID=SGM::CreateNUBCurve(rResult,aPoints);
+        size_t Index1;
+        for(Index1=0;Index1<5;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==13)
+        {
+        bool bAnswer=true;
+
+        // if x=1,y=2,z=3,w=4,v=5,r=6 then
+        //
+        // 1x+2y+3z+0w+0v+0r=14
+        // 2x+1y+1z+1w+0v+0r=11
+        // 1x+2y+1z+1w+0v+0r=12
+        // 0x+1y+2z-1w+1v+0r=9
+        // 0x+0y-1z+1w+2v+1r=17
+        // 0x+0y+0z-1w-1v+2r=3
+
+        std::vector<std::vector<double> > aaMatrix;
+        aaMatrix.reserve(5);
+        std::vector<double> aRow;
+        aRow.reserve(6);
+        aRow.push_back(0);
+        aRow.push_back(0);
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(3);
+        aRow.push_back(14);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(0);
+        aRow.push_back(2);
+        aRow.push_back(1);
+        aRow.push_back(1);
+        aRow.push_back(1);
+        aRow.push_back(11);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(1);
+        aRow.push_back(1);
+        aRow.push_back(0);
+        aRow.push_back(12);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(-1);
+        aRow.push_back(1);
+        aRow.push_back(0);
+        aRow.push_back(9);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(-1);
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(1);
+        aRow.push_back(0);
+        aRow.push_back(17);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(-1);
+        aRow.push_back(-1);
+        aRow.push_back(2);
+        aRow.push_back(0);
+        aRow.push_back(0);
+        aRow.push_back(3);
+        aaMatrix.push_back(aRow);
+
+        if(SGM::BandedSolve(aaMatrix)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[0].back(),1,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[1].back(),2,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[2].back(),3,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[3].back(),4,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[4].back(),5,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==14)
+        {
+        bool bAnswer=true;
+
+        // if x=1,y=2,z=3,w=4, then
+        //
+        // 1x+2y+0z+1w= 9
+        // 2x+2y+2z+0w=12
+        // 0x+2y-1z+3w=13
+        // 1x+1y+2z-1w= 5
+
+        std::vector<std::vector<double> > aaMatrix;
+        aaMatrix.reserve(4);
+        std::vector<double> aRow;
+        aRow.reserve(4);
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(0);
+        aRow.push_back(1);
+        aRow.push_back(9);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(2);
+        aRow.push_back(2);
+        aRow.push_back(2);
+        aRow.push_back(0);
+        aRow.push_back(12);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(0);
+        aRow.push_back(2);
+        aRow.push_back(-1);
+        aRow.push_back(3);
+        aRow.push_back(13);
+        aaMatrix.push_back(aRow);
+        aRow.clear();
+        aRow.push_back(1);
+        aRow.push_back(1);
+        aRow.push_back(2);
+        aRow.push_back(-1);
+        aRow.push_back(5);
+        aaMatrix.push_back(aRow);
+
+        if(SGM::LinearSolve(aaMatrix)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[0].back(),1,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[1].back(),2,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[2].back(),3,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(aaMatrix[3].back(),4,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==15)
+        {
+        // Fitting a NUB curve two three points with end vectors.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(3);
+        aPoints.push_back(SGM::Point3D(1,1,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        aPoints.push_back(SGM::Point3D(3,1,0));
+
+        SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
+
+        SGM::Curve NUBID=SGM::CreateNUBCurveWithEndVectors(rResult,aPoints,StartVec,EndVec);
+        size_t Index1;
+        for(Index1=0;Index1<3;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+        SGM::Vector3D Vec0,Vec1;
+        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec1,EndVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+    
+    if(nTestNumber==16)
+        {
+        // Fitting a NUB curve to three points with end vectors.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(4);
+        aPoints.push_back(SGM::Point3D(1,1,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        aPoints.push_back(SGM::Point3D(3,1,0));
+        aPoints.push_back(SGM::Point3D(5,0,0));
+
+        SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
+
+        SGM::Curve NUBID=SGM::CreateNUBCurveWithEndVectors(rResult,aPoints,StartVec,EndVec);
+        size_t Index1;
+        for(Index1=0;Index1<4;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+        SGM::Vector3D Vec0,Vec1;
+        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec1,EndVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==17)
+        {
+        // Fitting a NUB curve to two points with end vectors.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(2);
+        aPoints.push_back(SGM::Point3D(1,1,0));
+        aPoints.push_back(SGM::Point3D(3,1,0));
+
+        SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
+
+        SGM::Curve NUBID=SGM::CreateNUBCurveWithEndVectors(rResult,aPoints,StartVec,EndVec);
+        size_t Index1;
+        for(Index1=0;Index1<2;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+        SGM::Vector3D Vec0,Vec1;
+        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec1,EndVec,SGM_MIN_TOL)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==18)
+        {
+        // Fitting a NUB curve to three points.
+        // Which requires it be degree two.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(3);
+        aPoints.push_back(SGM::Point3D(1,1,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        aPoints.push_back(SGM::Point3D(3,1,0));
+
+        SGM::Curve NUBID=SGM::CreateNUBCurve(rResult,aPoints);
+        size_t Index1;
+        for(Index1=0;Index1<3;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+        return bAnswer;
+        }
+
+    if(nTestNumber==19)
+        {
+        // Fitting a NUB curve to two points.
+        // Which requires it be degree one.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(2);
+        aPoints.push_back(SGM::Point3D(1,1,0));
+        aPoints.push_back(SGM::Point3D(3,1,0));
+
+        SGM::Curve NUBID=SGM::CreateNUBCurve(rResult,aPoints);
+        size_t Index1;
+        for(Index1=0;Index1<2;++Index1)
+            {
+            SGM::Point3D ClosePos;
+            SGM::CurveInverse(rResult,NUBID,aPoints[Index1],&ClosePos);
+            if(SGM::NearEqual(aPoints[Index1],ClosePos,SGM_MIN_TOL)==false)
+                {
+                bAnswer=false;
+                }
+            }
+
+        return bAnswer;
+        }
+
     return false;
     }
 

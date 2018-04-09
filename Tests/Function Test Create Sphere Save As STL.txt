@@ -1,0 +1,4 @@
+// Tests sphere creation;
+SphereID=CreateSphere(0.0,0.0,0.0,2.0);
+SaveSTL(“STL Parts/Sphere.stl”,SphereID);
+CompareFiles(“STL Parts/Sphere.stl”,”Test Answers/Sphere.stl”);

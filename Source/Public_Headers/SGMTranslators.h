@@ -41,25 +41,29 @@ namespace SGM
         };
 
     size_t ReadFile(SGM::Result                  &rResult,
-                    std::string            const &FileName,
+                    std::string            const &sFileName,
                     std::vector<Entity>          &aEntities,
                     std::vector<std::string>     &aLog,
                     SGM::TranslatorOptions const &Options);
 
     void SaveSTL(SGM::Result                  &rResult,
-                 std::string            const &FileName,
+                 std::string            const &sFileName,
                  SGM::Entity            const &EntityID,
                  SGM::TranslatorOptions const &Options);
 
     void SaveSGM(SGM::Result                  &rResult,
-                 std::string            const &FileName,
+                 std::string            const &sFileName,
                  SGM::Entity            const &EntityID,
                  SGM::TranslatorOptions const &Options);
     
     void SaveSTEP(SGM::Result                  &rResult,
-                  std::string            const &FileName,
+                  std::string            const &sFileName,
                   SGM::Entity            const &EntityID,
                   SGM::TranslatorOptions const &Options);
+
+    void ScanDirectory(SGM::Result       &rResult,
+                       std::string const &sDirName,
+                       std::string const &sOutputName);
 
     } // End of SGM namespace
 

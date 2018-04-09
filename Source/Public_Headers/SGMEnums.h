@@ -7,6 +7,8 @@ namespace SGM
         {
         ThingType=0,
 
+        AssemblyType,
+        ReferenceType,
         ComplexType,
         BodyType,
         VolumeType,
@@ -18,13 +20,30 @@ namespace SGM
 
         LineType,
         CircleType,
+        EllipseType,
+        ParabolType,
+        NUBCurveType,
+        NURBCurveType,
 
         SurfaceType,
 
         PlaneType,
         CylinderType,
+        ConeType,
         SphereType,
         TorusType,
+        RevolveType,
+        ExtrudeType,
+        NUBSurfaceType,
+        NURBSurfaceType
+        };
+
+    enum TorusKindType
+        {
+        AppleType,
+        LemonType,
+        PinchedType,
+        DonutType
         };
 
     enum IntersectionType
@@ -40,14 +59,6 @@ namespace SGM
         FaceOnRightType,
         SeamType,
         InteriorEdgeType
-        };
-
-    enum CheckLevel
-        {
-        CheckErrors=0,
-        CheckWarnings,
-        CheckInformative,
-        CheckDerivatives,
         };
 
     enum ResultType 

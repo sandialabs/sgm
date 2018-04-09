@@ -55,6 +55,32 @@ SGM::Interval3D SGM::FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints)
     return Answer;
     }
 
+void SGM::FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
+                        std::vector<double>             &aLengths,
+                        bool                             bNormalize)
+    {
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    aLengths.reserve(nPoints);
+    aLengths.push_back(0);
+    double dLast=0.0;
+    for(Index1=1;Index1<nPoints;++Index1)
+        {
+        dLast+=aPoints[Index1].Distance(aPoints[Index1-1]);
+        aLengths.push_back(dLast);
+        }
+    if(bNormalize)
+        {
+        double dScale=1.0/aLengths.back();
+        --nPoints;
+        for(Index1=1;Index1<nPoints;++Index1)
+            {
+            aLengths[Index1]*=dScale;
+            }
+        aLengths[Index1]=1.0;
+        }
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Polygon Functions
@@ -220,6 +246,30 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
     double dI=dG*dG+dH*dH;
     double dDet=SGM::Determinate(dA,dB,dC,dD,dE,dF,dG,dH,dI);
     return 1E-12<dDet;
+    }
+
+bool SGM::FindCircle(SGM::Point3D const &Pos0,
+                     SGM::Point3D const &Pos1,
+                     SGM::Point3D const &Pos2,
+                     SGM::Point3D       &Center,
+                     SGM::UnitVector3D  &Normal,
+                     double             &dRadius)
+    {
+    SGM::Vector3D Up=(Pos2-Pos1)*(Pos0-Pos1);
+    if(Up.Magnitude()<SGM_ZERO)
+        {
+        return false;
+        }
+    Normal=Up;
+    SGM::Point3D Mid01=SGM::MidPoint(Pos0,Pos1);
+    SGM::Point3D Mid21=SGM::MidPoint(Pos2,Pos1);
+    SGM::Vector3D Vec01=Normal*(Pos0-Pos1);
+    SGM::Vector3D Vec21=Normal*(Pos2-Pos1);
+    SGM::Segment3D Seg1(Mid01,Mid01+Vec01);
+    SGM::Segment3D Seg2(Mid21,Mid21+Vec21);
+    Seg1.Intersect(Seg2,Center,Center);
+    dRadius=Center.Distance(Pos0);
+    return true;
     }
 
 class EdgeData
@@ -845,6 +895,182 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
     DelaunayFlips(aPoints,aTriangles,aAdjacences);
     }
 
+bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)
+    {
+    // Remove the lower left triangle.
+
+    size_t nRows=aaMatrix.size();
+    size_t nColumns=aaMatrix[0].size();
+    size_t Index1,Index2,Index3;
+    for(Index1=0;Index1<nColumns-2;++Index1)
+        {
+        // Find the largest in the column and move it to the Index1 row. 
+
+        double dMax=0;
+        size_t nMaxRow=Index1;
+        for(Index2=Index1;Index2<nRows;++Index2)
+            {
+            double dX=fabs(aaMatrix[Index2][Index1]);
+            if(dMax<dX)
+                {
+                dMax=dX;
+                nMaxRow=Index2;
+                }
+            }
+        if(dMax<SGM_ZERO)
+            {
+            return false;
+            }
+        std::swap(aaMatrix[Index1],aaMatrix[nMaxRow]);
+
+        // Zero out the column below the diagonal.
+
+        double dn=aaMatrix[Index1][Index1];
+        for(Index2=Index1+1;Index2<nRows;++Index2)
+            {
+            double an=aaMatrix[Index2][Index1];
+            double dFactor=an/dn;
+            aaMatrix[Index2][Index1]=0.0;
+            for(Index3=Index1+1;Index3<nColumns;++Index3)
+                {
+                aaMatrix[Index2][Index3]-=dFactor*aaMatrix[Index1][Index3];
+                }
+            }
+        }
+
+    // Remove the upper right triangle.
+
+    for(Index1=nColumns-2;0<Index1;--Index1)
+        {
+        double dn=aaMatrix[Index1][Index1];
+        if(fabs(dn)<SGM_ZERO)
+            {
+            return false;
+            }
+        double en=aaMatrix[Index1][nColumns-1];
+        for(Index2=0;Index2<Index1;++Index2)
+            {
+            double an=aaMatrix[Index2][Index1];
+            aaMatrix[Index2][Index1]=0.0;
+            aaMatrix[Index2][nColumns-1]-=(an/dn)*en;
+            }
+        }
+
+    // Find the answers.
+    
+    for(Index1=0;Index1<nRows;++Index1)
+        {
+        double dn=aaMatrix[Index1][Index1];
+        if(fabs(dn)<SGM_ZERO)
+            {
+            return false;
+            }
+        aaMatrix[Index1][Index1]=1.0;
+        aaMatrix[Index1][nColumns-1]/=dn;
+        }
+
+    return true;
+    }
+
+bool SGM::TridiagonalSolve(std::vector<std::vector<double> > &aaMatrix)
+    {
+    // Remove the left band.
+
+    size_t nColumns=aaMatrix.size();
+    size_t Index1;
+    for(Index1=1;Index1<nColumns;++Index1)
+        {
+        double a0=aaMatrix[Index1-1][1];
+        if(fabs(a0)<SGM_ZERO)
+            {
+            return false;
+            }
+        double a1=aaMatrix[Index1][0];
+        double dFactor=a1/a0;
+        aaMatrix[Index1][0]=0.0;
+        aaMatrix[Index1][1]-=aaMatrix[Index1-1][2]*dFactor;
+        aaMatrix[Index1][3]-=aaMatrix[Index1-1][3]*dFactor;
+        }
+
+    // Remove the right band.
+
+    for(Index1=nColumns-1;0<Index1;--Index1)
+        {
+        double dn=aaMatrix[Index1][1];
+        if(fabs(dn)<SGM_ZERO)
+            {
+            return false;
+            }
+        double bn=aaMatrix[Index1][2];
+        double vn= Index1==nColumns-1 ? 1 : aaMatrix[Index1+1][3];
+        aaMatrix[Index1][1]=1.0;
+        aaMatrix[Index1][2]=0.0;
+        aaMatrix[Index1][3]-=bn*vn;
+        aaMatrix[Index1][3]/=dn;
+        }
+    return true;
+    }
+
+bool SGM::BandedSolve(std::vector<std::vector<double> > &aaMatrix)
+    {
+    size_t nBandWidth=(aaMatrix[0].size()-2)/2;
+    size_t nEndColumn=nBandWidth+nBandWidth+1;
+
+    // Remove the left bands.
+
+    size_t nColumns=aaMatrix.size();
+    size_t Index1,Index2,Index3;
+    for(Index1=1;Index1<nColumns;++Index1)
+        {
+        double dn=aaMatrix[Index1-1][nBandWidth];
+        if(fabs(dn)<SGM_ZERO)
+            {
+            return false;
+            }
+        for(Index2=0;Index2<nBandWidth;++Index2)
+            {
+            if(nColumns==Index1+Index2)
+                {
+                break;
+                }
+            double an=aaMatrix[Index1+Index2][nBandWidth-Index2-1];
+            double dFactor=an/dn;
+            aaMatrix[Index1+Index2][nBandWidth-Index2-1]=0.0;
+            for(Index3=1;Index3<nEndColumn-2;++Index3)
+                {
+                aaMatrix[Index1+Index2][nBandWidth+Index3-Index2-1]-=
+                    dFactor*aaMatrix[Index1-1][nBandWidth+Index3];
+                }
+            aaMatrix[Index1+Index2][nEndColumn]-=dFactor*aaMatrix[Index1-1][nEndColumn];
+            }
+        }
+
+    // Remove the right bands.
+
+    for(Index1=nColumns-1;0<Index1;--Index1)
+        {
+        double dn=aaMatrix[Index1][nBandWidth];
+        if(fabs(dn)<SGM_ZERO)
+            {
+            return false;
+            }
+        for(Index2=0;Index2<nBandWidth;++Index2)
+            {
+            if(Index1-Index2==0)
+                {
+                break;
+                }
+            double an=aaMatrix[Index1-Index2-1][nBandWidth+Index2+1];
+            double dFactor=an/dn;
+            aaMatrix[Index1-Index2-1][nBandWidth+Index2+1]=0.0;
+            aaMatrix[Index1-Index2-1][nEndColumn]-=dFactor*aaMatrix[Index1][nEndColumn];
+            }
+        aaMatrix[Index1][nBandWidth]=1.0;
+        aaMatrix[Index1][nEndColumn]/=dn;
+        }
+    return true;
+    }
+
 size_t SGM::Linear(double a,double b,
                    std::vector<double> aRoots)
     {
@@ -902,6 +1128,15 @@ double SGM::SAFEacos(double x)
         {
         return acos(x);
         }
+    }
+
+double SGM::SAFEatan2(double y,double x)
+    {
+    if(y==0 && x==0)
+        {
+        return 0.0;
+        }
+    return atan2(y,x);
     }
 
 size_t SGM::Cubic(double c3,double c2,double c1,double c0,
@@ -1080,3 +1315,40 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
         
     return aRoots.size();
     }
+
+bool SGM::PolynomialFit(std::vector<SGM::Point2D> aPoints,
+                        std::vector<double>       aCoefficients)
+    {
+    std::sort(aPoints.begin(),aPoints.end());
+    size_t nPoints=aPoints.size();
+    size_t Index1,Index2;
+    std::vector<std::vector<double> > aaMatrix;
+    aaMatrix.reserve(nPoints);
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double x=aPoints[Index1].m_u;
+        double y=aPoints[Index1].m_v;
+        std::vector<double> aRow;
+        aRow.reserve(nPoints+1);
+        aRow.push_back(1.0);
+        double dValue=x;
+        for(Index2=1;Index2<nPoints;++Index2)
+            {
+            aRow.push_back(dValue);
+            dValue*=x;
+            }
+        aRow.push_back(y);
+        aaMatrix.push_back(aRow);
+        }
+    if(SGM::LinearSolve(aaMatrix)==false)
+        {
+        return false;
+        }
+    aCoefficients.reserve(nPoints);
+    for(Index1=1;Index1<=nPoints;++Index1)
+        {
+        aCoefficients.push_back(aaMatrix[nPoints-Index1][nPoints]);
+        }
+    return true;
+    }
+

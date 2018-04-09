@@ -34,3 +34,4 @@ plane::plane(SGM::Result        &rResult,
     m_bClosedU=false;
     m_bClosedV=false;
     }
+

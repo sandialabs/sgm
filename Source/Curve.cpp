@@ -3,10 +3,17 @@
 #include "EntityClasses.h"
 #include "Topology.h"
 #include <cmath>
+#include <vector>
+#include <algorithm>
 
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
     {
+    }
+
+void curve::Remove(SGM::Result &rResult)
+    {
+    rResult.GetThing()->DeleteEntity(this);
     }
 
 void curve::AddEdge(edge *pEdge) 
@@ -44,9 +51,27 @@ curve *curve::MakeCopy(SGM::Result &rResult) const
         }
     }
 
+double NewtonsMethod(curve        const *pCurve,
+                     double              dStart,
+                     SGM::Point3D const &Pos)
+    {
+    SGM::Point3D Origin;
+    SGM::Vector3D Vec;
+    pCurve->Evaluate(dStart,&Origin,&Vec);
+    double dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
+    dStart+=dt;
+    while(SGM_ZERO<dt || dt<-SGM_ZERO)
+        {
+        pCurve->Evaluate(dStart,&Origin,&Vec);
+        dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
+        dStart+=dt;
+        }
+    return dStart;
+    }
+
 double curve::Inverse(SGM::Point3D const &Pos,
                       SGM::Point3D       *ClosePos,
-                      double             *pGuess) const
+                      double       const *pGuess) const
     {
     switch(m_CurveType)
         {
@@ -88,7 +113,7 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             if(pGuess)
                 {
-                
+                throw;
                 }
             
             if(ClosePos)
@@ -101,6 +126,39 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 ClosePos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin)*dRadius;
                 }
             return t;
+            }
+        case SGM::NUBCurveType:
+            {
+            double dParam=0;
+            if(pGuess)
+                {
+                dParam=*pGuess;
+                }
+            else
+                {
+                NUBcurve const *pNUB=(NUBcurve *)this;
+                std::vector<SGM::Point3D> const &aPoints=pNUB->NUBcurve::GetSeedPoints();
+                std::vector<double> const &aParams=pNUB->NUBcurve::GetSeedParams();
+                double dMin=DBL_MAX;
+                size_t Index1;
+                size_t nPoints=aPoints.size();
+                for(Index1=0;Index1<nPoints;++Index1)
+                    {
+                    SGM::Point3D const &TestPos=aPoints[Index1];
+                    double dDist=TestPos.DistanceSquared(Pos);
+                    if(dDist<dMin)
+                        {
+                        dMin=dDist;
+                        dParam=aParams[Index1];
+                        }
+                    }
+                }
+            double dAnswer=NewtonsMethod(this,dParam,Pos);
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            return dAnswer;
             }
         default:
             {
@@ -168,6 +226,70 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 D2->m_x=(-XAxis.m_x*dCos-YAxis.m_x*dSin)*dRadius;
                 D2->m_y=(-XAxis.m_y*dCos-YAxis.m_y*dSin)*dRadius;
                 D2->m_z=(-XAxis.m_z*dCos-YAxis.m_z*dSin)*dRadius;
+                }
+            break;
+            }
+        case SGM::NUBCurveType:
+            {
+            // From "The NURBS Book", page 82, Algorithm A3.1.
+
+            NUBcurve const *pNUB=(NUBcurve const *)this;
+            std::vector<double> const &aKnots=pNUB->m_aKnots;
+            std::vector<SGM::Point3D> const &aControlPoints=pNUB->m_aControlPoints;
+            int nDegree=pNUB->GetDegree();
+            int nSpanIndex=FindSpanIndex(m_Domain,nDegree,t,aKnots);
+            int nDerivatives=0;
+            if(D1) nDerivatives=1;
+            if(D2) nDerivatives=2;
+            double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+            double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            size_t Index1;
+            for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                {
+                aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                }
+            FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&aKnots[0],aaBasisFunctions);
+            if(Pos)
+                {
+                double *aBasis=aaBasisFunctions[0];
+                double x=0,y=0,z=0;
+                for(Index1=0;Index1<=nDegree;++Index1)
+                    {
+                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    }
+                Pos->m_x=x;
+                Pos->m_y=y;
+                Pos->m_z=z;
+                }
+            if(D1)
+                {
+                double *aBasis=aaBasisFunctions[1];
+                double x=0,y=0,z=0;
+                for(Index1=0;Index1<=nDegree;++Index1)
+                    {
+                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    }
+                D1->m_x=x;
+                D1->m_y=y;
+                D1->m_z=z;
+                }
+            if(D2)
+                {
+                double *aBasis=aaBasisFunctions[2];
+                double x=0,y=0,z=0;
+                for(Index1=0;Index1<=nDegree;++Index1)
+                    {
+                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    }
+                D2->m_x=x;
+                D2->m_y=y;
+                D2->m_z=z;
                 }
             break;
             }

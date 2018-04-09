@@ -3,6 +3,7 @@
 #include "EntityClasses.h"
 #include "Topology.h"
 #include <cmath>
+#include <algorithm>
 
 surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
@@ -13,6 +14,11 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighU=false;
     m_bSingularLowV=false;
     m_bSingularHighV=false;
+    }
+
+void surface::Remove(SGM::Result &rResult)
+    {
+    rResult.GetThing()->DeleteEntity(this);
     }
 
 void surface::AddFace(face *pFace) 
@@ -40,6 +46,10 @@ curve *surface::UParamLine(SGM::Result &rResult,
             {
             break;
             }
+        case SGM::ConeType:
+            {
+            break;
+            }
         case SGM::CylinderType:
             {
             cylinder const *pCylinder=(cylinder const *)this;
@@ -60,13 +70,28 @@ curve *surface::UParamLine(SGM::Result &rResult,
             SGM::UnitVector3D const &ZAxis=pSphere->m_ZAxis;
             double dRadius=pSphere->m_dRadius;
             SGM::UnitVector3D XAxis=Pos-Center;
-            SGM::Interval1D Domain=pSphere->GetDomain().m_VDomain;
             SGM::UnitVector3D Normal=XAxis*ZAxis;
-            return new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain);
+            SGM::Interval2D const &Domain=pSphere->GetDomain();
+            return new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain.m_VDomain);
             break;
             }
         case SGM::TorusType:
             {
+            torus const *pTorus=(torus const *)this;
+            SGM::Interval2D const &Domain=pTorus->GetDomain();
+            SGM::Point2D uv0(dU,Domain.m_VDomain.MidPoint(0.0));
+            SGM::Point2D uv1(dU,Domain.m_VDomain.MidPoint(0.3));
+            SGM::Point2D uv2(dU,Domain.m_VDomain.MidPoint(0.7));
+            SGM::Point3D Pos0,Pos1,Pos2;
+            Evaluate(uv0,&Pos0);
+            Evaluate(uv1,&Pos1);
+            Evaluate(uv2,&Pos2);
+            SGM::Point3D Center;
+            SGM::UnitVector3D Normal;
+            double dRadius;
+            SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
+            SGM::UnitVector3D XAxis=Pos0-Center;
+            return new circle(rResult,Center,Normal,dRadius,&XAxis);
             break;
             }
         default:
@@ -77,12 +102,16 @@ curve *surface::UParamLine(SGM::Result &rResult,
     return NULL;
     }
 
-curve *surface::VParamLine(SGM::Result &,//rResult,
-                           double                  ) const //dV) const
+curve *surface::VParamLine(SGM::Result &rResult,
+                           double       dV) const
     {
     switch(m_SurfaceType)
         {
         case SGM::PlaneType:
+            {
+            break;
+            }
+        case SGM::ConeType:
             {
             break;
             }
@@ -96,6 +125,21 @@ curve *surface::VParamLine(SGM::Result &,//rResult,
             }
         case SGM::TorusType:
             {
+            torus const *pTorus=(torus const *)this;
+            SGM::Interval2D const &Domain=pTorus->GetDomain();
+            SGM::Point2D uv0(Domain.m_UDomain.MidPoint(0.0),dV);
+            SGM::Point2D uv1(Domain.m_UDomain.MidPoint(0.3),dV);
+            SGM::Point2D uv2(Domain.m_UDomain.MidPoint(0.7),dV);
+            SGM::Point3D Pos0,Pos1,Pos2;
+            Evaluate(uv0,&Pos0);
+            Evaluate(uv1,&Pos1);
+            Evaluate(uv2,&Pos2);
+            SGM::Point3D Center;
+            SGM::UnitVector3D Normal;
+            double dRadius;
+            SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
+            SGM::UnitVector3D XAxis=Pos0-Center;
+            return new circle(rResult,Center,Normal,dRadius,&XAxis);
             break;
             }
         default:
@@ -246,7 +290,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 {
                 Pos->m_x=Center.m_x+((XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dCosV+ZAxis.m_x*dSinV)*dRadius;
                 Pos->m_y=Center.m_y+((XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dCosV+ZAxis.m_y*dSinV)*dRadius;
-                Pos->m_z=Center.m_x+((XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dCosV+ZAxis.m_z*dSinV)*dRadius;
+                Pos->m_z=Center.m_z+((XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dCosV+ZAxis.m_z*dSinV)*dRadius;
                 }
             if(Du)
                 {
@@ -355,6 +399,145 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             break;
             }
+        case SGM::ConeType:
+            {
+            cone const *pCone=(cone *)this;
+
+            SGM::Point3D      const &Center=pCone->m_Origin;
+            SGM::UnitVector3D const &XAxis =pCone->m_XAxis;
+            SGM::UnitVector3D const &YAxis =pCone->m_YAxis;
+            SGM::UnitVector3D const &ZAxis =pCone->m_ZAxis;
+            double            dSinHalfAngle=pCone->m_dSinHalfAngle;
+            double            dCosHalfAngle=pCone->m_dCosHalfAngle;
+            double                  dRadius=pCone->m_dRadius;
+
+            double dVScale=dRadius*(1.0-uv.m_v*dSinHalfAngle);
+            double dCosU=cos(uv.m_u);
+            double dSinU=sin(uv.m_u);
+            double dZScale=uv.m_v*dRadius*dCosHalfAngle;
+                
+            if(Pos)
+                {
+                Pos->m_x=Center.m_x+(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dVScale+ZAxis.m_x*dZScale;
+                Pos->m_y=Center.m_y+(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dVScale+ZAxis.m_y*dZScale;
+                Pos->m_z=Center.m_z+(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dVScale+ZAxis.m_z*dZScale;
+                }
+            if(Du)
+                {
+                Du->m_x=(YAxis.m_x*dCosU-XAxis.m_x*dSinU)*dVScale;
+                Du->m_y=(YAxis.m_y*dCosU-XAxis.m_y*dSinU)*dVScale;
+                Du->m_z=(YAxis.m_z*dCosU-XAxis.m_z*dSinU)*dVScale;
+                }
+            if(Dv)
+                {
+                double dDVScale=-dRadius*dSinHalfAngle;
+                double dDZScale=dRadius*dCosHalfAngle;
+                Dv->m_x=(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dDVScale+ZAxis.m_x*dDZScale;
+                Dv->m_y=(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dDVScale+ZAxis.m_y*dDZScale;
+                Dv->m_z=(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dDVScale+ZAxis.m_z*dDZScale;
+                }
+            if(Norm)
+                {
+                Norm->m_x=(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dCosHalfAngle+ZAxis.m_x*dSinHalfAngle;
+                Norm->m_y=(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dCosHalfAngle+ZAxis.m_y*dSinHalfAngle;
+                Norm->m_z=(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dCosHalfAngle+ZAxis.m_z*dSinHalfAngle;
+                }
+            if(Duu)
+                {
+                Duu->m_x=(-YAxis.m_x*dSinU-XAxis.m_x*dCosU)*dVScale;
+                Duu->m_y=(-YAxis.m_y*dSinU-XAxis.m_y*dCosU)*dVScale;
+                Duu->m_z=(-YAxis.m_z*dSinU-XAxis.m_z*dCosU)*dVScale;
+                }
+            if(Duv)
+                {
+                Duv->m_x=0;
+                Duv->m_y=0;
+                Duv->m_z=0;
+                }
+            if(Dvv)
+                {
+                Dvv->m_x=0;
+                Dvv->m_y=0;
+                Dvv->m_z=0;
+                }
+            break;
+            }
+        case SGM::NUBSurfaceType:
+            {
+            // From "The NURBs Book" Algorithm A3.6.
+
+            NUBsurface const *pNUB=(NUBsurface const *)this;
+            std::vector<std::vector<SGM::Point3D> > const &aControlPoints=pNUB->m_aaControlPoints;
+            
+            std::vector<double> const &aUKnots=pNUB->m_aUKnots;
+            int nUDegree=pNUB->GetUDegree();
+            int nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
+
+            std::vector<double> const &aVKnots=pNUB->m_aVKnots;
+            int nVDegree=pNUB->GetVDegree();
+            int nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
+
+            int nUDerivatives=0;
+            if(Du || Norm || Duv) nUDerivatives=1;
+            if(Duu) nUDerivatives=2;
+
+            int nVDerivatives=0;
+            if(Dv || Norm || Duv) nVDerivatives=1;
+            if(Dvv) nVDerivatives=2;
+
+            int d=std::max(nUDerivatives,nVDerivatives);
+
+            size_t Index1;
+
+            double aUMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+            double *aaUBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                {
+                aaUBasisFunctions[Index1]=aUMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                }
+            FindBasisFunctions(nUSpanIndex,uv.m_u,nUDegree,nUDerivatives,&aUKnots[0],aaUBasisFunctions);
+
+            double aVMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+            double *aaVBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                {
+                aaVBasisFunctions[Index1]=aVMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                }
+            FindBasisFunctions(nVSpanIndex,uv.m_v,nVDegree,nVDerivatives,&aVKnots[0],aaVBasisFunctions);
+
+            int k,s,r,l;
+            SGM::Point3D temp[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            SGM::Point3D SKL[3][3];
+            for(k=0;k<=nUDerivatives;++k)
+                {
+                for(s=0;s<=nVDegree;++s)
+                    {
+                    temp[s]=SGM::Point3D(0.0,0.0,0.0);
+                    for(r=0;r<=nUDegree;++r)
+                        {
+                        double dFactor=aaUBasisFunctions[k][r];
+                        SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+r][nVSpanIndex-nVDegree+s];
+                        temp[s].m_x+=dFactor*ControlPos.m_x;
+                        temp[s].m_y+=dFactor*ControlPos.m_y;
+                        temp[s].m_z+=dFactor*ControlPos.m_z;
+                        }
+                    size_t dd=std::min(d-k,nVDerivatives);
+                    for(l=0;l<=dd;++l)
+                        {
+                        SKL[k][l]=SGM::Point3D(0.0,0.0,0.0);
+                        for(s=0;s<=nVDegree;++s)
+                            {
+                            double dFactor=aaVBasisFunctions[l][r];
+                            SKL[k][l].m_x+=dFactor*temp[s].m_x;
+                            SKL[k][l].m_y+=dFactor*temp[s].m_y;
+                            SKL[k][l].m_z+=dFactor*temp[s].m_z;
+                            }
+                        }
+                    }
+                }
+
+            break;
+            }
         default:
             {
             throw;
@@ -407,7 +590,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             double dx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
             double dy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
-            uv.m_u=atan2(dy,dx);
+            uv.m_u=SGM::SAFEatan2(dy,dx);
             uv.m_v=(x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z)/dRadius;
 
             if(uv.m_u<m_Domain.m_UDomain.m_dMin)
@@ -429,6 +612,69 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 }
             break;
             }
+        case SGM::ConeType:
+            {
+            cone const *pCone=(cone *)this;
+
+            SGM::Point3D      const &Center =pCone->m_Origin;
+            SGM::UnitVector3D const &XAxis  =pCone->m_XAxis;
+            SGM::UnitVector3D const &YAxis  =pCone->m_YAxis;
+            SGM::UnitVector3D const &ZAxis  =pCone->m_ZAxis;
+            double             dSinHalfAngle=pCone->m_dSinHalfAngle;
+            double             dCosHalfAngle=pCone->m_dCosHalfAngle;
+            double             dRadius      =pCone->m_dRadius;
+
+            double x=Pos.m_x-Center.m_x;
+            double y=Pos.m_y-Center.m_y;
+            double z=Pos.m_z-Center.m_z;
+
+            double dx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
+            double dy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
+            uv.m_u=SGM::SAFEatan2(dy,dx);
+
+            double dCosU=cos(uv.m_u);
+            double dSinU=sin(uv.m_u);
+            
+            double Sx=XAxis.m_x*dCosU+YAxis.m_x*dSinU;
+            double Sy=XAxis.m_y*dCosU+YAxis.m_y*dSinU;
+            double Sz=XAxis.m_z*dCosU+YAxis.m_z*dSinU;
+
+            double Lx=ZAxis.m_x*dCosHalfAngle-Sx*dSinHalfAngle;
+            double Ly=ZAxis.m_y*dCosHalfAngle-Sy*dSinHalfAngle;
+            double Lz=ZAxis.m_z*dCosHalfAngle-Sz*dSinHalfAngle;
+
+            double dSx=Pos.m_x-Center.m_x-Sx*dRadius;
+            double dSy=Pos.m_y-Center.m_y-Sy*dRadius;
+            double dSz=Pos.m_z-Center.m_z-Sz*dRadius;
+            
+            uv.m_v=(Lx*dSx+Ly*dSy+Lz*dSz)/dRadius;
+
+            double dMaxV=1.0/dSinHalfAngle;
+            if(dMaxV<uv.m_v)
+                {
+                uv.m_v=dMaxV;
+                }
+
+            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+                {
+                uv.m_u+=SGM_TWO_PI;
+                }
+            if(pGuess)
+                {
+                throw;
+                }
+            
+            if(ClosePos)
+                {
+                double dVScale=dRadius*(1.0-uv.m_v*dSinHalfAngle);
+                double dZScale=uv.m_v*dRadius*dCosHalfAngle;
+                
+                ClosePos->m_x=Center.m_x+(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dVScale+ZAxis.m_x*dZScale;
+                ClosePos->m_y=Center.m_y+(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dVScale+ZAxis.m_y*dZScale;
+                ClosePos->m_z=Center.m_z+(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dVScale+ZAxis.m_z*dZScale;
+                }
+            break;
+            }
         case SGM::SphereType:
             {
             sphere const *pSphere=(sphere *)this;
@@ -437,7 +683,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             SGM::UnitVector3D const &XAxis  =pSphere->m_XAxis;
             SGM::UnitVector3D const &YAxis  =pSphere->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pSphere->m_ZAxis;
-            double                   dRadius=fabs(pSphere->m_dRadius);
+            double                   dRadius=pSphere->m_dRadius;
 
             double x=Pos.m_x-Center.m_x;
             double y=Pos.m_y-Center.m_y;
@@ -445,11 +691,11 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             double dUx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
             double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
-            uv.m_u=atan2(dUy,dUx);
+            uv.m_u=SGM::SAFEatan2(dUy,dUx);
             SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
             double dVx=x*Spoke.m_x+y*Spoke.m_y+z*Spoke.m_z;
             double dVy=x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z;
-            uv.m_v=atan2(dVy,dVx);
+            uv.m_v=SGM::SAFEatan2(dVy,dVx);
 
             if(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
@@ -469,6 +715,49 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             }
         case SGM::TorusType:
             {
+            torus const *pTorus=(torus *)this;
+
+            SGM::Point3D      const &Center =pTorus->m_Center;
+            SGM::UnitVector3D const &XAxis  =pTorus->m_XAxis;
+            SGM::UnitVector3D const &YAxis  =pTorus->m_YAxis;
+            SGM::UnitVector3D const &ZAxis  =pTorus->m_ZAxis;
+            double dMajorRadius=pTorus->m_dMajorRadius;
+
+            double x=Pos.m_x-Center.m_x;
+            double y=Pos.m_y-Center.m_y;
+            double z=Pos.m_z-Center.m_z;
+
+            double dUx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
+            double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
+            uv.m_u=SGM::SAFEatan2(dUy,dUx);
+
+            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+
+            double cx=Center.m_x+Spoke.m_x*dMajorRadius;
+            double cy=Center.m_y+Spoke.m_y*dMajorRadius;
+            double cz=Center.m_z+Spoke.m_z*dMajorRadius;
+
+            double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
+            double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
+            uv.m_v=SGM::SAFEatan2(dVy,dVx);
+
+            if(pTorus->GetKind()==SGM::TorusKindType::LemonType)
+                {
+                uv.m_v-=SGM_PI;
+                }
+            if(uv.m_v<m_Domain.m_VDomain.m_dMin)
+                {
+                uv.m_v+=SGM_TWO_PI;
+                }
+            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+                {
+                uv.m_u+=SGM_TWO_PI;
+                }
+            if(pGuess)
+                {
+                throw;
+                }
+
             break;
             }
         default:

@@ -34,7 +34,6 @@ circle::circle(SGM::Result             &rResult,
         }
     }
 
-
 circle::circle(SGM::Result  &rResult,
                circle const *pCircle):
     curve(rResult,SGM::CircleType),m_Center(pCircle->m_Center),

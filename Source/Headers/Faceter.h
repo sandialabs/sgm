@@ -27,7 +27,8 @@ class FacetOptions
 void FacetCurve(curve               const *pCurve,
                 SGM::Interval1D     const &Domain,
                 FacetOptions        const &Options,
-                std::vector<SGM::Point3D> &aPoints3D);
+                std::vector<SGM::Point3D> &aPoints3D,
+                std::vector<double>       *aParams=NULL);
 
 void FacetEdge(edge                const *pEdge,
                FacetOptions        const &Options,

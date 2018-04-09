@@ -1,0 +1,3 @@
+// Tests the methods of a Circle;
+RunCPPTest(10);
+

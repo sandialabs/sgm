@@ -19,8 +19,8 @@ size_t entity::GetID() const
 entity *thing::FindEntity(size_t ID) const
     {
     entity *pAnswer=NULL;
-    std::map<size_t,entity *>::const_iterator iter=m_mEntities.find(ID);
-    if(iter!=m_mEntities.end())
+    std::map<size_t,entity *>::const_iterator iter=m_mAllEntities.find(ID);
+    if(iter!=m_mAllEntities.end())
         {
         pAnswer=iter->second;
         }
@@ -29,8 +29,8 @@ entity *thing::FindEntity(size_t ID) const
 
 size_t thing::GetBodies(std::set<body *> &sBodies) const
     {
-    std::set<entity *>::const_iterator iter=m_sEntities.begin();
-    while(iter!=m_sEntities.end())
+    std::set<entity *>::const_iterator iter=m_sTopLevelEntities.begin();
+    while(iter!=m_sTopLevelEntities.end())
         {
         entity *pEntity=*iter;
         if(pEntity->GetType()==SGM::BodyType)
@@ -44,8 +44,8 @@ size_t thing::GetBodies(std::set<body *> &sBodies) const
 
 size_t thing::GetComplexes(std::set<complex *> &sComplexes) const
     {
-    std::set<entity *>::const_iterator iter=m_sEntities.begin();
-    while(iter!=m_sEntities.end())
+    std::set<entity *>::const_iterator iter=m_sTopLevelEntities.begin();
+    while(iter!=m_sTopLevelEntities.end())
         {
         entity *pEntity=*iter;
         if(pEntity->GetType()==SGM::ComplexType)

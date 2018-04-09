@@ -4,6 +4,10 @@
 #include "Topology.h"
 #include <string>
 
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
+
 void SaveSTL(SGM::Result                  &rResult,
              std::string            const &FileName,
              entity                       *pEntity,

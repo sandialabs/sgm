@@ -34,11 +34,13 @@ torus::torus(SGM::Result             &rResult,
             {
             m_Domain.m_VDomain.m_dMin=dT-SGM_PI;
             m_Domain.m_VDomain.m_dMax=SGM_PI-dT;
+            m_nKind=SGM::TorusKindType::AppleType;
             }
-        else // Limon Torus
+        else // Lemon Torus
             {
             m_Domain.m_VDomain.m_dMin=SGM_PI-dT;
             m_Domain.m_VDomain.m_dMax=SGM_PI+dT;
+            m_nKind=SGM::TorusKindType::LemonType;
             }
         }
     else if(fabs(m_dMajorRadius-m_dMinorRadius)<SGM_ZERO) // Pinched Torus
@@ -48,11 +50,13 @@ torus::torus(SGM::Result             &rResult,
         m_Domain.m_VDomain.m_dMax=SGM_PI;
         m_bSingularLowV=true;
         m_bSingularHighV=true;
+        m_nKind=SGM::TorusKindType::PinchedType;
         }
     else // Normal Torus
         {
         m_bClosedV=true;
         m_Domain.m_VDomain.m_dMin=0.0;
         m_Domain.m_VDomain.m_dMax=SGM_TWO_PI;
+        m_nKind=SGM::TorusKindType::DonutType;
         }
     }

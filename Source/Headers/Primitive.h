@@ -28,4 +28,14 @@ body *CreateTorus(SGM::Result             &rResult,
                   double                   dMinorRadius,
                   bool                     bApple);
 
+ NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
+                          std::vector<SGM::Point3D> const &aInterpolate,
+                          std::vector<double>       const *pParams=NULL);
+
+ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
+                                        std::vector<SGM::Point3D> const &aInterpolate,
+                                        SGM::Vector3D             const &StartVec,
+                                        SGM::Vector3D             const &EndVec,
+                                        std::vector<double>       const *pParams);
+
 #endif // PRIMITIVE_H

@@ -6,6 +6,7 @@
 #include "Graph.h"
 #include <vector>
 #include <algorithm>
+#include <list>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -13,10 +14,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+class FacetNode
+    {
+    public:
+
+    FacetNode(double              dParam,
+              SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
+
+    double       m_dParam;
+    SGM::Point3D m_Pos;
+    };
+
 void FacetCurve(curve               const *pCurve,
                 SGM::Interval1D     const &Domain,
                 FacetOptions        const &Options,
-                std::vector<SGM::Point3D> &aPoints3D)
+                std::vector<SGM::Point3D> &aPoints3D,
+                std::vector<double>       *aParams)
     {
     SGM::EntityType nType=pCurve->GetCurveType();
     switch(nType)
@@ -30,6 +43,12 @@ void FacetCurve(curve               const *pCurve,
             aPoints3D.reserve(2);
             aPoints3D.push_back(Start);
             aPoints3D.push_back(End);
+            if(aParams)
+                {
+                aParams->reserve(2);
+                aParams->push_back(Domain.m_dMin);
+                aParams->push_back(Domain.m_dMax);
+                }
             break;
             }
         case SGM::CircleType:
@@ -55,11 +74,19 @@ void FacetCurve(curve               const *pCurve,
                 nPoints=3;
                 }
             aPoints3D.reserve(nPoints);
+            if(aParams)
+                {
+                aParams->reserve(nPoints);
+                }
             size_t Index1;
             for(Index1=0;Index1<nPoints;++Index1)
                 {
                 double dFraction=(Index1/(nPoints-1.0));
                 double dt=Domain.MidPoint(dFraction);
+                if(aParams)
+                    {
+                    aParams->push_back(dt);
+                    }
                 SGM::Point3D Pos;
                 pCircle->Evaluate(dt,&Pos);
                 aPoints3D.push_back(Pos);
@@ -68,7 +95,73 @@ void FacetCurve(curve               const *pCurve,
             }
         default:
             {
-            throw;
+            std::list<FacetNode> lNodes;
+            SGM::Point3D Pos0,Pos1;
+            double d0=Domain.m_dMin;
+            double d1=Domain.m_dMax;
+            pCurve->Evaluate(d0,&Pos0);
+            pCurve->Evaluate(d1,&Pos1);
+            lNodes.push_back(FacetNode(d0,Pos0));
+            lNodes.push_back(FacetNode(d1,Pos1));
+            double dAngle=SGM_PI-Options.m_dFreeEdgeAngleTol;
+            double dCos=cos(dAngle);
+            bool bRefine=true;
+            while(bRefine)
+                {
+                bRefine=false;
+                std::list<FacetNode>::iterator LastIter=lNodes.begin();
+                std::list<FacetNode>::iterator iter=lNodes.begin();
+                ++iter;
+                while(iter!=lNodes.end())
+                    {
+                    double d0=LastIter->m_dParam;
+                    double d1=iter->m_dParam;
+
+                    // Check to see if the segment from d0 to d1 needs more facets.
+
+                    double da=d0*0.65433+d1*0.34567;
+                    double db=d0*0.5+d1*0.5;
+                    double dc=d0*0.34567+d1*0.65433;
+
+                    SGM::Point3D Pos0=LastIter->m_Pos;
+                    SGM::Point3D Pos1=iter->m_Pos;
+                    SGM::Point3D PosA,PosB,PosC;
+                    pCurve->Evaluate(da,&PosA);
+                    pCurve->Evaluate(db,&PosB);
+                    pCurve->Evaluate(dc,&PosC);
+
+                    double a1=SGM::UnitVector3D(Pos0-PosA)%SGM::UnitVector3D(Pos1-PosA);
+                    double a2=SGM::UnitVector3D(Pos0-PosB)%SGM::UnitVector3D(Pos1-PosB);
+                    double a3=SGM::UnitVector3D(Pos0-PosC)%SGM::UnitVector3D(Pos1-PosC);
+                    if(dCos<a1 || dCos<a2 || dCos<a3)
+                        {
+                        bRefine=true;
+                        lNodes.insert(iter,FacetNode(db,PosB));
+                        iter=LastIter;
+                        }
+                    else
+                        {
+                        ++LastIter;
+                        }
+                    ++iter;
+                    }
+                }
+            size_t nNodes=lNodes.size();
+            aPoints3D.reserve(nNodes);
+            if(aParams)
+                {
+                aParams->reserve(nNodes);
+                }
+            std::list<FacetNode>::iterator iter2=lNodes.begin();
+            while(iter2!=lNodes.end())
+                {
+                aPoints3D.push_back(iter2->m_Pos);
+                if(aParams)
+                    {
+                    aParams->push_back(iter2->m_dParam);
+                    }
+                ++iter2;
+                }
             }
         }
     }
@@ -389,12 +482,32 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                             std::vector<SGM::Point2D>         &aPoints2D,
                             std::vector<SGM::Point3D>         &aPoints3D,
                             std::vector<entity *>             &aEntities,
-                            std::vector<std::vector<size_t> > &aaPolygons)
+                            std::vector<std::vector<size_t> > &aaPolygons,
+                            std::vector<size_t>               &aTriangles)
     {
     surface const *pSurface=pFace->GetSurface();
     if(pSurface->ClosedInU())
         {
-        if(pSurface->SingularLowV() && pSurface->SingularHighV())
+        if(pSurface->ClosedInV())
+            {
+            // The torus case.
+
+            SGM::Interval2D const &Domain=pSurface->GetDomain();
+            double dMinU=Domain.m_UDomain.m_dMin;
+            double dMaxU=Domain.m_UDomain.m_dMax;
+            double dMinV=Domain.m_VDomain.m_dMin;
+            double dMaxV=Domain.m_VDomain.m_dMax;
+
+            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
+            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
+
+            dMaxU;
+            dMaxV;
+
+            pUSeam->Remove(rResult);
+            pVSeam->Remove(rResult);
+            }
+        else if(pSurface->SingularLowV() && pSurface->SingularHighV())
             {
             // The sphere case
 
@@ -404,14 +517,29 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             double dMinV=Domain.m_VDomain.m_dMin;
             double dMaxV=Domain.m_VDomain.m_dMax;
 
-            curve *pSeam=pSurface->UParamLine(rResult,dMinU);
+            // Find the seam points.
 
-            std::vector<SGM::Point3D> aSeamPoints3D;
+            curve *pSeam=pSurface->UParamLine(rResult,dMinU);
+            std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
             std::vector<double> aSeamVs;
-            FacetCurve(pSeam,Domain.m_VDomain,Options,aSeamPoints3D);
+            FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D);
+            pSeam->Remove(rResult);
             
+            // Trim off the two singularities.
+
+            size_t nTemp3D=aTemp3D.size();
+            aSeamPoints3D.reserve(nTemp3D-2);
             size_t Index1;
+            for(Index1=1;Index1<nTemp3D-1;++Index1)
+                {
+                aSeamPoints3D.push_back(aTemp3D[Index1]);
+                }
             size_t nSeamPoints3D=aSeamPoints3D.size();
+            SGM::Point3D LowPos=aSeamPoints3D.front();
+            SGM::Point3D HighPos=aSeamPoints3D.back();
+            dMinV=pSurface->Inverse(LowPos).m_v;
+            dMaxV=pSurface->Inverse(HighPos).m_v;
+
             aSeamVs.reserve(nSeamPoints3D);
             for(Index1=0;Index1<nSeamPoints3D;++Index1)
                 {
@@ -426,13 +554,17 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
 
             // South pole.
 
+            size_t nSouthPoleStart=aPoints3D.size();
             size_t nPolePoints=7;
             for(Index1=0;Index1<nPolePoints;++Index1)
                 {
                 double dFraction=Index1/(nPolePoints-1.0);
                 double dU=Domain.m_UDomain.MidPoint(dFraction);
-                aPoints3D.push_back(aSeamPoints3D.front());
-                aPoints2D.push_back(SGM::Point2D(dU,dMinV));
+                SGM::Point3D Pos;
+                SGM::Point2D uv(dU,dMinV);
+                pSurface->Evaluate(uv,&Pos);
+                aPoints3D.push_back(Pos);
+                aPoints2D.push_back(uv);
                 aPolygon.push_back(nCount);
                 ++nCount;
                 }
@@ -449,12 +581,16 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
 
             // North pole.
 
+            size_t nNorthPoleStart=aPoints3D.size();
             for(Index1=0;Index1<nPolePoints;++Index1)
                 {
                 double dFraction=(nPolePoints-1-Index1)/(nPolePoints-1.0);
                 double dU=Domain.m_UDomain.MidPoint(dFraction);
-                aPoints3D.push_back(aSeamPoints3D.back());
-                aPoints2D.push_back(SGM::Point2D(dU,dMaxV));
+                SGM::Point3D Pos;
+                SGM::Point2D uv(dU,dMaxV);
+                pSurface->Evaluate(uv,&Pos);
+                aPoints3D.push_back(Pos);
+                aPoints2D.push_back(uv);
                 aPolygon.push_back(nCount);
                 ++nCount;
                 }
@@ -470,8 +606,31 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                 }
 
             aaPolygons.push_back(aPolygon);
+            
+            // Add in the polar triangles.
 
-            delete pSeam;
+            SGM::Point3D NorthPole=aTemp3D.back();
+            SGM::Point3D SouthPole=aTemp3D.front();
+            SGM::Point2D NorthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMax);
+            SGM::Point2D SouthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMin);
+            size_t nNorth=aPoints3D.size();
+            aPoints3D.push_back(NorthPole);
+            aPoints2D.push_back(NorthUV);
+            size_t nSouth=aPoints3D.size();
+            aPoints3D.push_back(SouthPole);
+            aPoints2D.push_back(SouthUV);
+            for(Index1=nNorthPoleStart+1;Index1<nNorthPoleStart+nPolePoints;++Index1)
+                {
+                aTriangles.push_back(nNorth);
+                aTriangles.push_back(Index1-1);
+                aTriangles.push_back(Index1);
+                }
+            for(Index1=nSouthPoleStart+1;Index1<nSouthPoleStart+nPolePoints;++Index1)
+                {
+                aTriangles.push_back(nSouth);
+                aTriangles.push_back(Index1-1);
+                aTriangles.push_back(Index1);
+                }
             }
         }
     }
@@ -482,7 +641,8 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                       std::vector<SGM::Point2D>         &aPoints2D,
                       std::vector<SGM::Point3D>         &aPoints3D,
                       std::vector<entity *>             &aEntities,
-                      std::vector<std::vector<size_t> > &aaPolygons)
+                      std::vector<std::vector<size_t> > &aaPolygons,
+                      std::vector<size_t>               &aTriangles)
     {
     // First find and use all the vertices.
 
@@ -579,7 +739,7 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
             {
             // In this case we need a polygon that goes around the whole domain.
 
-            CreateWholeSurfaceLoop(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
+            CreateWholeSurfaceLoop(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons,aTriangles);
             }
         else
             {
@@ -1022,7 +1182,6 @@ void RefineTriangles(face                     const *pFace,
     }
 
 bool FlipIt(std::vector<SGM::Point3D>      const &aPoints3D,
-            std::vector<SGM::UnitVector3D> const &aNormals,
             size_t                                a,
             size_t                                b,
             size_t                                c,
@@ -1033,27 +1192,24 @@ bool FlipIt(std::vector<SGM::Point3D>      const &aPoints3D,
     SGM::Point3D const &C=aPoints3D[c];
     SGM::Point3D const &D=aPoints3D[d];
 
-    // Point normals.
-    SGM::UnitVector3D const &NormA=aNormals[a];
-    SGM::UnitVector3D const &NormB=aNormals[b];
-    SGM::UnitVector3D const &NormC=aNormals[c];
-    SGM::UnitVector3D const &NormD=aNormals[d];
+    // CD has to be shorter than AB and 
+    // The angle at C with A and B and the
+    // angle at D with A and B should be obtuse.
 
-    // Not flipped normals.
-    SGM::UnitVector3D NormABC=(B-A)*(C-A);
-    SGM::UnitVector3D NormADB=(D-A)*(B-A);
-
-    // Flipped normals.
-    SGM::UnitVector3D NormADC=(D-A)*(C-A);
-    SGM::UnitVector3D NormBCD=(C-B)*(D-B);
-
-    double dNotFlipped=(NormA%NormABC)+(NormB%NormABC)+(NormC%NormABC)+(NormA%NormADB)+(NormD%NormADB)+(NormB%NormADB);
-    double dFlipped=(NormA%NormADC)+(NormD%NormADC)+(NormC%NormADC)+(NormB%NormBCD)+(NormC%NormBCD)+(NormD%NormBCD);
-    return dNotFlipped<dFlipped;
+    double CD=C.DistanceSquared(D);
+    double AB=A.DistanceSquared(B);
+    if(AB<CD)
+        {
+        return false;
+        }
+    if(0<(A-C)%(B-C) || 0<(A-D)%(B-D))
+        {
+        return false;
+        }
+    return true;
     }
 
 bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
-            std::vector<SGM::UnitVector3D> const &aNormals,
             std::vector<size_t>                  &aTriangles,
             size_t                                T0,
             size_t                                nEdge,
@@ -1065,35 +1221,25 @@ bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
     size_t d=aTriangles[T1];
     size_t e=aTriangles[T1+1];
     size_t f=aTriangles[T1+2];
-    SGM::Point3D const &A=aPoints3D[a];
-    SGM::Point3D const &B=aPoints3D[b];
-    SGM::Point3D const &C=aPoints3D[c];
-    SGM::Point3D const &D=aPoints3D[d];
-    SGM::Point3D const &E=aPoints3D[e];
-    SGM::Point3D const &F=aPoints3D[f];
-    SGM::Point3D Pos1,Pos2;
     if(nEdge==0)
         {
         if(d!=a && d!=b)
             {
-            if( SGM::Segment3D(A,B).Intersect(SGM::Segment3D(C,D),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,a,b,c,d))
+            if(FlipIt(aPoints3D,a,b,c,d))
                 {
                 return true;
                 }
             }
         else if(e!=a && e!=b)
             {
-            if( SGM::Segment3D(A,B).Intersect(SGM::Segment3D(C,E),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,a,b,c,e))
+            if(FlipIt(aPoints3D,a,b,c,e))
                 {
                 return true;
                 }
             }
         else
             {
-            if( SGM::Segment3D(A,B).Intersect(SGM::Segment3D(C,F),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,a,b,c,f))
+            if(FlipIt(aPoints3D,a,b,c,f))
                 {
                 return true;
                 }
@@ -1103,24 +1249,21 @@ bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
         {
         if(d!=c && d!=b)
             {
-            if( SGM::Segment3D(C,B).Intersect(SGM::Segment3D(A,D),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,b,a,d))
+            if(FlipIt(aPoints3D,c,b,a,d))
                 {
                 return true;
                 }
             }
         else if(e!=c && e!=b)
             {
-            if( SGM::Segment3D(C,B).Intersect(SGM::Segment3D(A,E),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,b,a,e))
+            if(FlipIt(aPoints3D,c,b,a,e))
                 {
                 return true;
                 }
             }
         else
             {
-            if( SGM::Segment3D(C,B).Intersect(SGM::Segment3D(A,F),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,b,a,f))
+            if(FlipIt(aPoints3D,c,b,a,f))
                 {
                 return true;
                 }
@@ -1130,24 +1273,21 @@ bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
         {
         if(d!=a && d!=c)
             {
-            if( SGM::Segment3D(C,A).Intersect(SGM::Segment3D(B,D),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,a,b,d))
+            if(FlipIt(aPoints3D,c,a,b,d))
                 {
                 return true;
                 }
             }
         else if(e!=a && e!=c)
             {
-            if( SGM::Segment3D(C,A).Intersect(SGM::Segment3D(B,E),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,a,b,e))
+            if(FlipIt(aPoints3D,c,a,b,e))
                 {
                 return true;
                 }
             }
         else
             {
-            if( SGM::Segment3D(C,A).Intersect(SGM::Segment3D(B,F),Pos1,Pos2) && 
-                FlipIt(aPoints3D,aNormals,c,a,b,f))
+            if(FlipIt(aPoints3D,c,a,b,f))
                 {
                 return true;
                 }
@@ -1244,7 +1384,6 @@ void FlipTriangles(size_t               nTri,
     }
 
 void DelaunayFlips3D(std::vector<SGM::Point3D>      const &aPoints3D,
-                     std::vector<SGM::UnitVector3D> const &aNormals,
                      std::vector<size_t>                  &aTriangles,
                      std::vector<size_t>                  &aAdjacences)
     {
@@ -1255,15 +1394,18 @@ void DelaunayFlips3D(std::vector<SGM::Point3D>      const &aPoints3D,
         size_t T0=aAdjacences[Index1];
         size_t T1=aAdjacences[Index1+1];
         size_t T2=aAdjacences[Index1+2];
-        if(T0!=SIZE_MAX && Flip3D(aPoints3D,aNormals,aTriangles,Index1,0,T0))
+        if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
             {
             FlipTriangles(Index1,0,aTriangles,aAdjacences);
+            T1=aAdjacences[Index1+1];
+            T2=aAdjacences[Index1+2];
             }
-        else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aNormals,aTriangles,Index1,1,T1))
+        else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
             {
             FlipTriangles(Index1,1,aTriangles,aAdjacences);
+            T2=aAdjacences[Index1+2];
             }
-        else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aNormals,aTriangles,Index1,2,T2))
+        else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
             {
             FlipTriangles(Index1,2,aTriangles,aAdjacences);
             }
@@ -1344,8 +1486,9 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<entity *>          &aEntities)
     {
     std::vector<std::vector<size_t> > aaPolygons;
-    std::vector<size_t>               aAdjacences;
-    FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
+    std::vector<size_t> aAdjacences;
+    std::vector<size_t> aPoles;
+    FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons,aPoles);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacences);
     size_t nOldSize=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
@@ -1358,11 +1501,13 @@ void FacetFace(SGM::Result                    &rResult,
         aNormals.push_back(Norm);
         }
     RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacences);
-    /*
-    for(Index1=0;Index1<5;++Index1)
+    DelaunayFlips3D(aPoints3D,aTriangles,aAdjacences);
+    size_t nPoles=aPoles.size();
+    for(Index1=0;Index1<nPoles;++Index1)
         {
-        DelaunayFlips3D(aPoints3D,aNormals,aTriangles,aAdjacences);
+        aTriangles.push_back(aPoles[Index1]);
         }
+    /*
     for(Index1=0;Index1<5;++Index1)
         {
         StarSmoothing(pFace,aPoints2D,aPoints3D,aNormals,aTriangles,nOldSize);

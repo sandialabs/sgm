@@ -3,6 +3,8 @@
 
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
+#include "SGMChecker.h"
+#include "SGMMathematics.h"
 #include "SGMEnums.h"
 #include <vector>
 #include <set>
@@ -30,7 +32,7 @@ class entity
         SGM::EntityType GetType() const {return m_Type;}
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     protected:
@@ -53,11 +55,11 @@ class thing : public entity
 
         ~thing();
 
-        void AddTopLevelEntity(entity *pEntity) {m_sEntities.insert(pEntity);}
+        void AddTopLevelEntity(entity *pEntity) {m_sTopLevelEntities.insert(pEntity);}
 
-        void AddToMap(size_t nID,entity *pEntity) {m_mEntities[nID]=pEntity;}
+        void AddToMap(size_t nID,entity *pEntity) {m_mAllEntities[nID]=pEntity;}
 
-        void DeleteEntity(entity *pEntity) {m_sEntities.erase(pEntity); m_mEntities.erase(pEntity->GetID());}
+        void DeleteEntity(entity *pEntity) {m_sTopLevelEntities.erase(pEntity); m_mAllEntities.erase(pEntity->GetID());}
 
         // Get methods
 
@@ -76,15 +78,15 @@ class thing : public entity
         entity *FindEntity(size_t ID) const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        std::set<entity *> const &GetEntities() const {return m_sEntities;}
+        std::set<entity *> const &GetEntities() const {return m_sTopLevelEntities;}
         
     private:
 
-        std::set<entity *>        m_sEntities;
-        std::map<size_t,entity *> m_mEntities;
+        std::set<entity *>        m_sTopLevelEntities;
+        std::map<size_t,entity *> m_mAllEntities;
         mutable SGM::Interval3D   m_Box;
         size_t                    m_nNextID;
     };
@@ -117,13 +119,13 @@ class body : public topology
         
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     private:
 
-        std::set<volume *>       m_sVolumes;
-        mutable SGM::Interval3D  m_Box;
+        std::set<volume *>      m_sVolumes;
+        mutable SGM::Interval3D m_Box;
     };
 
 class complex : public entity
@@ -149,9 +151,9 @@ class complex : public entity
 
         // Get methods
 
-        thing *GetThing() const {return m_pThing;}
-
         SGM::Interval3D const &GetBox() const;
+
+        thing *GetThing() const {return m_pThing;}
 
         std::vector<SGM::Point3D> const &GetPoints() {return m_aPoints;}
 
@@ -164,16 +166,17 @@ class complex : public entity
         double Area() const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     private:
 
-        thing                     *m_pThing;
-        mutable SGM::Interval3D    m_Box;
         std::vector<SGM::Point3D>  m_aPoints;
         std::vector<size_t>        m_aSegments;
         std::vector<size_t>        m_aTriangles;
+        thing                     *m_pThing;
+
+        mutable SGM::Interval3D    m_Box;
     };
 
 class volume : public topology
@@ -192,14 +195,14 @@ class volume : public topology
         
         body *GetBody() const;
 
-        std::set<face *> const &GetFaces() {return m_sFaces;}
+        std::set<face *> const &GetFaces() const {return m_sFaces;}
 
-        std::set<edge *> const &GetEdges() {return m_sEdges;}
+        std::set<edge *> const &GetEdges() const {return m_sEdges;}
 
         SGM::Interval3D const &GetBox() const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
         size_t FindShells(SGM::Result                    &rResult,
@@ -270,7 +273,7 @@ class face : public topology
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
         bool PointInFace(SGM::Result        &rResult,
@@ -343,7 +346,7 @@ class edge : public topology
         SGM::Point3D FindMidPoint(double dFraction) const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     private:
@@ -351,7 +354,7 @@ class edge : public topology
         mutable vertex           *m_pStart;
         mutable vertex           *m_pEnd;
         std::set<face *>  m_sFaces;
-        volume           *m_pVolume;
+        volume           *m_pVolume; // Should be NULL if this belongs to a face.
         curve            *m_pCurve;
 
         mutable std::vector<SGM::Point3D> m_aPoints3D;
@@ -377,7 +380,7 @@ class vertex : public topology
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     private:
@@ -391,6 +394,8 @@ class surface : public entity
     public:
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
+
+        void Remove(SGM::Result &rResult);
 
         void AddFace(face *pFace);
 
@@ -420,7 +425,7 @@ class surface : public entity
                        double             &k2) const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
         bool ClosedInU() const {return m_bClosedU;}
@@ -442,6 +447,8 @@ class surface : public entity
         curve *VParamLine(SGM::Result &rResult,double dV) const;
 
     protected:
+
+        ~surface() {}; // Call remove instead.
 
         std::set<face *> m_sFaces;
         SGM::EntityType  m_SurfaceType;
@@ -506,6 +513,35 @@ class cylinder : public surface
         double            m_dRadius;
     };
 
+
+class cone : public surface
+    {
+    public:
+
+        cone(SGM::Result             &rResult,
+             SGM::Point3D      const &Center,
+             SGM::UnitVector3D const &ZAxis,
+             double                   dRadius,
+             double                   dHalfAngle,
+             SGM::UnitVector3D const *XAxis=NULL);
+
+        double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
+        
+        curve *UParamLine(double dU) const;
+
+        curve *VParamLine(double dV) const;
+
+    public:
+
+        SGM::Point3D      m_Origin;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_ZAxis;  // Point from center to apex.
+        double            m_dSinHalfAngle;
+        double            m_dCosHalfAngle;
+        double            m_dRadius;
+    };
+
 class sphere : public surface
     {
     public:
@@ -545,14 +581,93 @@ class torus : public surface
 
         curve *VParamLine(double dV) const;
 
+        SGM::TorusKindType GetKind() const {return m_nKind;}
+
     public:
 
-        SGM::Point3D      m_Center;
-        SGM::UnitVector3D m_XAxis;
-        SGM::UnitVector3D m_YAxis;
-        SGM::UnitVector3D m_ZAxis;
-        double            m_dMinorRadius;
-        double            m_dMajorRadius;
+        SGM::Point3D       m_Center;
+        SGM::UnitVector3D  m_XAxis;
+        SGM::UnitVector3D  m_YAxis;
+        SGM::UnitVector3D  m_ZAxis;
+        double             m_dMinorRadius;
+        double             m_dMajorRadius;
+        SGM::TorusKindType m_nKind;
+    };
+
+class NUBsurface: public surface
+    {
+    public:
+
+        NUBsurface(SGM::Result                     &rResult,
+                   std::vector<SGM::Point3D> const &aControlPoints,
+                   std::vector<double>       const &aKnots);
+
+        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+
+        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+
+        std::vector<std::vector<SGM::Point3D> > const &GetControlPoints() const {return m_aaControlPoints;}
+
+        std::vector<double> const &GetUKnots() const {return m_aUKnots;}
+
+        std::vector<double> const &GetVKnots() const {return m_aVKnots;}
+
+        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
+                               std::vector<double> &aUniqueKnots) const;
+
+        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
+                               std::vector<double> &aUniqueKnots) const;
+
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<SGM::Point2D> const &GetSeedParams() const;
+
+    public:
+
+        std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
+        std::vector<double>                     m_aUKnots;
+        std::vector<double>                     m_aVKnots;
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<SGM::Point2D> m_aSeedParams;
+    };
+
+class NURBsurface: public surface
+    {
+    public:
+
+        NURBsurface(SGM::Result                     &rResult,
+                    std::vector<SGM::Point4D> const &aControlPoints,
+                    std::vector<double>       const &aKnots);
+
+        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+
+        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+
+        std::vector<std::vector<SGM::Point4D> > const &GetControlPoints() const {return m_aaControlPoints;}
+
+        std::vector<double> const &GetUKnots() const {return m_aUKnots;}
+
+        std::vector<double> const &GetVKnots() const {return m_aVKnots;}
+
+        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
+                               std::vector<double> &aUniqueKnots) const;
+
+        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
+                               std::vector<double> &aUniqueKnots) const;
+
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<SGM::Point2D> const &GetSeedParams() const;
+
+    public:
+
+        std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
+        std::vector<double>                     m_aUKnots;
+        std::vector<double>                     m_aVKnots;
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<SGM::Point2D> m_aSeedParams;
     };
 
 class curve : public entity
@@ -560,6 +675,8 @@ class curve : public entity
     public:
 
         curve(SGM::Result &rResult,SGM::EntityType nType);
+
+        void Remove(SGM::Result &rResult);
 
         curve *MakeCopy(SGM::Result &rResult) const;
 
@@ -578,13 +695,15 @@ class curve : public entity
 
         double Inverse(SGM::Point3D const &Pos,
                        SGM::Point3D       *ClosePos=NULL,
-                       double             *pGuess=NULL) const;
+                       double       const *pGuess=NULL) const;
 
         bool Check(SGM::Result              &rResult,
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
     protected:
+
+        ~curve() {}; // Call remove instead.
 
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
@@ -647,4 +766,118 @@ class circle : public curve
         double            m_dRadius;
     };
 
+class ellipse : public curve
+    {
+    public:
+
+        ellipse(SGM::Result             &rResult,
+               SGM::Point3D      const &Center,
+               SGM::UnitVector3D const &Normal,
+               double                   dRadius1,
+               double                   dRadius2,
+               SGM::UnitVector3D const *pXAxis=NULL,
+               SGM::Interval1D   const *pDomain=NULL);
+
+        ellipse(SGM::Result   &rResult,
+                ellipse const *pEllipse);
+
+        SGM::Point3D       const &GetCenter() const {return m_Center;}
+        SGM::UnitVector3D  const &GetNormal() const {return m_Normal;}
+        SGM::UnitVector3D  const &GetXAxis()  const {return m_XAxis;}
+        SGM::UnitVector3D  const &GetYAxis()  const {return m_YAxis;}
+        double GetRadius1() const {return m_dRadius1;}
+        double GetRadius2() const {return m_dRadius2;}
+
+    public:
+
+        SGM::Point3D      m_Center;
+        SGM::UnitVector3D m_Normal;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        double            m_dRadius1;
+        double            m_dRadius2;
+    };
+
+class NUBcurve: public curve
+    {
+    public:
+
+        NUBcurve(SGM::Result                     &rResult,
+                 std::vector<SGM::Point3D> const &aControlPoints,
+                 std::vector<double>       const &aKnots);
+
+        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+
+        std::vector<SGM::Point3D> const &GetControlPoints() const {return m_aControlPoints;}
+
+        std::vector<double> const &GetKnots() const {return m_aKnots;}
+
+        size_t FindMultiplity(std::vector<int>    &aMultiplity,
+                              std::vector<double> &aUniqueKnots) const;
+
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<double> const &GetSeedParams() const;
+
+    public:
+
+        std::vector<SGM::Point3D> m_aControlPoints;
+        std::vector<double>       m_aKnots;   
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<double>       m_aSeedParams;
+    };
+
+class NURBcurve: public curve
+    {
+    public:
+
+        NURBcurve(SGM::Result                     &rResult,
+                  std::vector<SGM::Point4D> const &aControlPoints,
+                  std::vector<double>       const &aKnots);
+
+        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+
+        std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
+
+        std::vector<double> const &GetKnots() const {return m_aKnots;}
+
+        size_t FindMultiplity(std::vector<int>    &aMultiplity,
+                              std::vector<double> &aUniqueKnots) const;
+
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<double> const &GetSeedParams() const;
+
+    public:
+
+        std::vector<SGM::Point4D> m_aControlPoints;
+        std::vector<double>       m_aKnots;   
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<double>       m_aSeedParams;
+    };
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Internal functions need by more than one class.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#define SMG_MAX_NURB_DEGREE_PLUS_ONE 21
+#define SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED 441
+
+void FindBasisFunctions(int           i,     // One based span index.
+                        double        u,     // The value of the domain to be evaluated.
+                        int           p,     // The degree of the NURB.
+                        int           n,     // The number of derivatives requested.
+                        double const *U,     // The knot vector
+                        double      **ders); // Basis function values for each derivative.
+
+int FindSpanIndex(SGM::Interval1D     const &Domain,
+                  int                        nDegree,
+                  double                     t,
+                  std::vector<double> const &aKnots);
+
 #endif // ENTITY_CLASSES_H
+

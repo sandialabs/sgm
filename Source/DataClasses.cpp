@@ -24,11 +24,35 @@ double SGM::Point2D::DistanceSquared(SGM::Point2D const &Pos) const
     return dU*dU+dV*dV;
     }
 
+bool SGM::Point2D::operator<(SGM::Point2D const &Pos) const
+    {
+    if(m_u<Pos.m_u)
+        {
+        return true;
+        }
+    else if(Pos.m_u<m_u)
+        {
+        return false;
+        }
+    else
+        {
+        if(m_v<Pos.m_v)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Vector3D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+SGM::Vector3D::Vector3D(Point3D const &Pos):m_x(Pos.m_x),m_y(Pos.m_y),m_z(Pos.m_z)
+    {
+    }
 
 SGM::Vector3D SGM::Vector3D::Orthogonal() const
     {
@@ -54,9 +78,19 @@ SGM::Vector3D SGM::Vector3D::operator*(double dScale) const
     return SGM::Vector3D(m_x*dScale,m_y*dScale,m_z*dScale);
     }
 
+SGM::Vector3D SGM::Vector3D::operator/(double dScale) const
+    {
+    return SGM::Vector3D(m_x/dScale,m_y/dScale,m_z/dScale);
+    }
+
 double SGM::Vector3D::Magnitude() const
     {
     return sqrt(m_x*m_x+m_y*m_y+m_z*m_z);
+    }
+
+double SGM::Vector3D::MagnitudeSquared() const
+    {
+    return m_x*m_x+m_y*m_y+m_z*m_z;
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,6 +98,10 @@ double SGM::Vector3D::Magnitude() const
 //  Point3D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+SGM::Point3D::Point3D(Vector3D const &Vec):m_x(Vec.m_x),m_y(Vec.m_y),m_z(Vec.m_z)
+    {
+    }
 
 double SGM::Point3D::Distance(SGM::Point3D const &Pos) const
     {
@@ -683,6 +721,11 @@ SGM::UnitVector3D SGM::operator-(SGM::UnitVector3D const &UVec)
     return SGM::Vector3D(-UVec.m_x,-UVec.m_y,-UVec.m_z);
     }
 
+SGM::Vector3D SGM::operator*(double dValue,SGM::Vector3D const &Vec)
+    {
+    return SGM::Vector3D(Vec.m_x*dValue,Vec.m_y*dValue,Vec.m_z*dValue);
+    }
+
 SGM::Vector3D SGM::operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1)
     {
     return SGM::Vector3D(Vec0.m_y*Vec1.m_z-Vec0.m_z*Vec1.m_y,
@@ -755,6 +798,16 @@ bool SGM::NearEqual(double d1,double d2,double dTolerance,bool bPercent)
     }
 
 bool SGM::NearEqual(SGM::Point3D const &Pos1,SGM::Point3D const &Pos2,double dTolerance)
+    {
+    return Pos1.DistanceSquared(Pos2)<dTolerance*dTolerance;
+    }
+
+bool SGM::NearEqual(SGM::Vector3D const &Vec1,SGM::Vector3D const &Vec2,double dTolerance)
+    {
+    return (Vec1-Vec2).MagnitudeSquared()<dTolerance*dTolerance;
+    }
+
+bool SGM::NearEqual(SGM::Point2D const &Pos1,SGM::Point2D const &Pos2,double dTolerance)
     {
     return Pos1.DistanceSquared(Pos2)<dTolerance*dTolerance;
     }

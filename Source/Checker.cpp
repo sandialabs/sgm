@@ -6,13 +6,23 @@
 #include <string>
 #include <cstdio>
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#else
+#define snprintf snprintf
+#endif
+
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
+
 bool thing::Check(SGM::Result              &rResult,
-                  SGM::CheckLevel           Level,
+                  SGM::CheckOptions  const &Options,
                   std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
-    std::map<size_t,entity *>::const_iterator iter=m_mEntities.begin();
-    while(iter!=m_mEntities.end())
+    std::map<size_t,entity *>::const_iterator iter=m_mAllEntities.begin();
+    while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;
         switch(pEntity->GetType())
@@ -20,7 +30,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::BodyType:
                 {
                 body const *pBody=(body *)pEntity;
-                if(false==pBody->Check(rResult,Level,aCheckStrings))
+                if(false==pBody->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -29,7 +39,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::VolumeType:
                 {
                 volume const *pVolume=(volume *)pEntity;
-                if(false==pVolume->Check(rResult,Level,aCheckStrings))
+                if(false==pVolume->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -38,7 +48,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::FaceType:
                 {
                 face const *pFace=(face *)pEntity;
-                if(false==pFace->Check(rResult,Level,aCheckStrings))
+                if(false==pFace->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -47,7 +57,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::EdgeType:
                 {
                 edge const *pEdge=(edge *)pEntity;
-                if(false==pEdge->Check(rResult,Level,aCheckStrings))
+                if(false==pEdge->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -56,7 +66,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::VertexType:
                 {
                 vertex const *pVertex=(vertex *)pEntity;
-                if(false==pVertex->Check(rResult,Level,aCheckStrings))
+                if(false==pVertex->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -65,7 +75,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::CurveType:
                 {
                 curve const *pCurve=(curve *)pEntity;
-                if(false==pCurve->Check(rResult,Level,aCheckStrings))
+                if(false==pCurve->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -74,7 +84,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::SurfaceType:
                 {
                 surface const *pSurface=(surface *)pEntity;
-                if(false==pSurface->Check(rResult,Level,aCheckStrings))
+                if(false==pSurface->Check(rResult,Options,aCheckStrings))
                     {
                     bAnswer=false;
                     }
@@ -91,7 +101,7 @@ bool thing::Check(SGM::Result              &rResult,
     }
 
 bool body::Check(SGM::Result              &,//rResult,
-                 SGM::CheckLevel           ,//Level,
+                 SGM::CheckOptions  const &,//Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -106,7 +116,7 @@ bool body::Check(SGM::Result              &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer, sizeof(Buffer), "Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
+            snprintf(Buffer, sizeof(Buffer), "Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++VolumeIter;
@@ -116,7 +126,7 @@ bool body::Check(SGM::Result              &,//rResult,
     }
 
 bool complex::Check(SGM::Result              &,//rResult,
-                    SGM::CheckLevel           ,//Level,
+                    SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &) const//aCheckStrings) const
     {
     bool bAnswer=true;
@@ -125,7 +135,7 @@ bool complex::Check(SGM::Result              &,//rResult,
     }
 
 bool volume::Check(SGM::Result              &,//rResult,
-                   SGM::CheckLevel           ,//Level,
+                   SGM::CheckOptions  const &,//Options,
                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -140,7 +150,7 @@ bool volume::Check(SGM::Result              &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer,sizeof(Buffer),"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
+            snprintf(Buffer,sizeof(Buffer),"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++FaceIter;
@@ -150,7 +160,7 @@ bool volume::Check(SGM::Result              &,//rResult,
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckLevel           ,//Level,
+                 SGM::CheckOptions  const &,//Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -166,7 +176,7 @@ bool face::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
+            snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         ++EdgeIter;
@@ -201,7 +211,7 @@ bool face::Check(SGM::Result              &rResult,
                 {
                 bAnswer=false;
                 char Buffer[1000];
-                std::snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
+                snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
                 aCheckStrings.push_back(std::string(Buffer));
                 }
             }
@@ -210,8 +220,8 @@ bool face::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool edge::Check(SGM::Result               &,//rResult,
-                 SGM::CheckLevel           ,//Level,
+bool edge::Check(SGM::Result              &,//rResult,
+                 SGM::CheckOptions  const &,//Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -236,7 +246,7 @@ bool edge::Check(SGM::Result               &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer,sizeof(Buffer),"The start Vertex %ld of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
+            snprintf(Buffer,sizeof(Buffer),"The start Vertex %ld of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -244,7 +254,7 @@ bool edge::Check(SGM::Result               &,//rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        std::snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have a start vertex\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have a start vertex\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
     if(m_pEnd)
@@ -264,7 +274,7 @@ bool edge::Check(SGM::Result               &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer,sizeof(Buffer),"The end Vertex %ld of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
+            snprintf(Buffer,sizeof(Buffer),"The end Vertex %ld of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -272,7 +282,7 @@ bool edge::Check(SGM::Result               &,//rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        std::snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have an end vertex\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have an end vertex\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
 
@@ -290,7 +300,7 @@ bool edge::Check(SGM::Result               &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            std::snprintf(Buffer,sizeof(Buffer),"Edge %ld has the same orientation of both faces.\n",GetID());
+            snprintf(Buffer,sizeof(Buffer),"Edge %ld has the same orientation of both faces.\n",GetID());
             aCheckStrings.push_back(std::string(Buffer));
             }
         }
@@ -299,7 +309,7 @@ bool edge::Check(SGM::Result               &,//rResult,
     }
 
 bool vertex::Check(SGM::Result              &,//rResult,
-                   SGM::CheckLevel           ,//Level,
+                   SGM::CheckOptions  const &,//Options,
                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -308,7 +318,7 @@ bool vertex::Check(SGM::Result              &,//rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        std::snprintf(Buffer,sizeof(Buffer),"Vertex %ld does not point to an edge\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Vertex %ld does not point to an edge\n",GetID());
         aCheckStrings.push_back(std::string(Buffer));
         }
 
@@ -316,8 +326,8 @@ bool vertex::Check(SGM::Result              &,//rResult,
     }
 
 bool curve::Check(SGM::Result              &,//rResult,
-                  SGM::CheckLevel           ,//Level,
-                  std::vector<std::string> &) const//aCheckStrings) const
+                  SGM::CheckOptions  const &,//Options,
+                  std::vector<std::string> &) const //aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -325,7 +335,7 @@ bool curve::Check(SGM::Result              &,//rResult,
     }
 
 bool surface::Check(SGM::Result              &,//rResult,
-                    SGM::CheckLevel           ,//Level,
+                    SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &) const//aCheckStrings) const
     {
     bool bAnswer=true;
@@ -334,7 +344,7 @@ bool surface::Check(SGM::Result              &,//rResult,
     }
 
 bool entity::Check(SGM::Result              &rResult, 
-                   SGM::CheckLevel           Level,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -342,47 +352,47 @@ bool entity::Check(SGM::Result              &rResult,
         {
         case SGM::ThingType:
             {
-            bAnswer=((thing const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((thing const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::ComplexType:
             {
-            bAnswer=((complex const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((complex const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::BodyType:
             {
-            bAnswer=((body const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((body const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::VolumeType:
             {
-            bAnswer=((volume const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((volume const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             };
         case SGM::FaceType:
             {
-            bAnswer=((face const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((face const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             };
         case SGM::EdgeType:
             {
-            bAnswer=((edge const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((edge const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::VertexType:
             {
-            bAnswer=((vertex const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((vertex const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::CurveType:
             {
-            bAnswer=((curve const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((curve const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         case SGM::SurfaceType:
             {
-            bAnswer=((surface const *)this)->Check(rResult,Level,aCheckStrings);
+            bAnswer=((surface const *)this)->Check(rResult,Options,aCheckStrings);
             break;
             }
         default:

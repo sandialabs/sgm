@@ -9,6 +9,9 @@ class entity;
 
 namespace SGM
     {
+    class Vector3D;
+    class Point3D;
+
     // Note that for performance reasons the basic data classes DO NOT
     // initialize their data members with the default constructor.
 
@@ -30,6 +33,11 @@ namespace SGM
 
         double DistanceSquared(SGM::Point2D const &Pos) const;
 
+        // Orders by strict dictionary order, i.e. m_u first then m_v if the
+        // m_u's are equal.
+
+        bool operator<(Point2D const &Pos) const;
+
         double m_u;
         double m_v;
         };
@@ -41,6 +49,8 @@ namespace SGM
         Point3D() {}
 
         Point3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
+
+        explicit Point3D(Vector3D const &Vec);
 
         double Distance(SGM::Point3D const &Pos) const;
 
@@ -91,11 +101,17 @@ namespace SGM
 
         Vector3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
+        explicit Vector3D(Point3D const &Pos);
+
         double Magnitude() const;
+
+        double MagnitudeSquared() const;
 
         Vector3D Orthogonal() const;
 
         Vector3D operator*(double dScale) const;
+
+        Vector3D operator/(double dScale) const;
 
         double m_x;
         double m_y;
@@ -184,15 +200,15 @@ namespace SGM
 
             // Unites this interval with the given interval.
 
-            SGM::Interval1D const &operator+=(SGM::Interval1D const &);
+            Interval1D const &operator+=(Interval1D const &);
 
             // Intersects this interval with the given interval.
 
-            SGM::Interval1D const &operator&=(SGM::Interval1D const &);
+            Interval1D const &operator&=(Interval1D const &);
 
             // Returns true if the two intervals have a non-empty intersection.
 
-            bool operator&&(SGM::Interval1D const &) const;
+            bool operator&&(Interval1D const &) const;
 
             double m_dMin;
             double m_dMax;
@@ -334,7 +350,7 @@ namespace SGM
             
             // Returns the closest pairs of points on the two lines defined by
             // this and the given segment.  If the two points are not on the two
-            //  segments, then false is returned.
+            // segments, then false is returned.
 
             bool Intersect(SGM::Segment3D const &Seg,
                            SGM::Point3D         &Pos1,
@@ -485,6 +501,8 @@ namespace SGM
 
     SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
+    SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
+
     SGM::Vector3D operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
     SGM::Transform3D operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const &Trans1);
@@ -509,7 +527,11 @@ namespace SGM
 
     bool NearEqual(double d1,double d2,double dTolerance,bool bPercent);
 
-    bool NearEqual(SGM::Point3D const &Pos1,SGM::Point3D const &Pos2,double dTolerance);
+    bool NearEqual(SGM::Point2D const &Pos1,SGM::Point2D const &Pos2,double dTolerance);
+
+    bool NearEqual(SGM::Point3D const &Vec1,SGM::Point3D const &Vec2,double dTolerance);
+
+    bool NearEqual(SGM::Vector3D const &Pos1,SGM::Vector3D const &Pos2,double dTolerance);
 
     } // End of SGM namespace
 

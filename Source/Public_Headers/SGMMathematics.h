@@ -9,6 +9,7 @@
 #define SGM_HALF_PI 1.570796326794896619231321691639
 #define SGM_MAX     1E+12
 #define SGM_ZERO    1E-12
+#define SGM_MIN_TOL 1E-6
 
 namespace SGM
     {
@@ -32,9 +33,16 @@ namespace SGM
                                SGM::Point3D                    &Origin,
                                SGM::UnitVector3D               &Axis);
 
-    SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
-
     SGM::Point3D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
+    
+    SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
+    
+    // Returns the cumulative cord lengths between the given vector of points.
+    // If bNormalize=true, then the lengths are scales to go from zero to one.
+
+    void FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
+                       std::vector<double>             &aLengths,
+                       bool                             bNormalize=false);
 
     /////////////////////////////////////////////////////////////////////////
     //
@@ -81,14 +89,6 @@ namespace SGM
                     SGM::Point2D const &C,
                     SGM::Point2D const &D);
     
-    // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
-    // it is assumed that A, B, and C are in counter clockwise order.
-
-    bool InCircumcircle(SGM::Point2D const &A,
-                        SGM::Point2D const &B,
-                        SGM::Point2D const &C,
-                        SGM::Point2D const &D);
-
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
     // such that Tab0 is the index of the start of the triangle in aTriangles
@@ -104,7 +104,32 @@ namespace SGM
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  Algebra functions
+    //  Circle functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Returns false if the given three points are co-linear.  Otherwise the
+    // center, normal and radius of a circle that contains the three points
+    // is returned.
+    
+    bool FindCircle(SGM::Point3D const &Pos0,
+                    SGM::Point3D const &Pos1,
+                    SGM::Point3D const &Pos2,
+                    SGM::Point3D       &Center,
+                    SGM::UnitVector3D  &Normal,
+                    double             &dRadius);
+    
+    // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
+    // it is assumed that A, B, and C are in counter clockwise order.
+
+    bool InCircumcircle(SGM::Point2D const &A,
+                        SGM::Point2D const &B,
+                        SGM::Point2D const &C,
+                        SGM::Point2D const &D);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Linear Algebra Functions
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -126,24 +151,49 @@ namespace SGM
                        double dD,double dE,double dF,
                        double dG,double dH,double dI);
 
-    // Given several linear equations in the form
+    // Guassian elimination with partial pivoting is used.
+    // Given two or more linear equations in the form
     //
     // a0*x+b0*y+c0*z+...=s0
     // a1*x+b1*y+c1*z+...=s1
     // a2*x+b2*y+c2*z+...=s2
     // ...
-    // Where each term in aMatrix is a vector of the form
+    // Where each term in aaMatrix is a vector of the form
     // <an,bn,cn,...,sn, with the same number of unknowns as equations,
     // then  LinearSolve will return (x,y,z,...) as the back terms
-    // of each term in aMatrix.  If the given matrix is singular, then
-    // the function will return false.
+    // of each term in aaMatrix.  The function as order O(equations^3), 
+    // wheren is the number of rows.  If the given matrix is singular, 
+    // then the function will return false.
 
-    bool LinearSolve(std::vector<std::vector<double> > &aMatrix);
+    bool LinearSolve(std::vector<std::vector<double> > &aaMatrix);
 
-    // Snapps x to -1 or 1 if x is outside the interval [-1,1] so that
-    // acos will not return an error.
+    // Given tridiagonal matrix compressed as follows;
+    // 
+    // a0*x+b0*y+ 0  +  0 +...=s0      ( 0,a0,b0,s0)
+    // a1*x+b1*y+c1*z+  0 +...=s1  =>  (a1,b1,c1,s1)
+    //  0  +b2*y+c2*z+d2*w+...=s2      (b2,c2,d2,s2)
+    //  0  + 0  +c2*z+d2*w+...=s2      ...
+    // ...                             (wn,xn, 0,sn)
+    //
+    // The values of (a0,b0,c0,...) are returned in the last column.  
+    // If the given matrix is singular, then the function will return false.
+    // This function runs in linear time O(equations).
 
-    double SAFEacos(double x);
+    bool TridiagonalSolve(std::vector<std::vector<double> > &aaMatrix);
+
+    // Given a banded matrix compressed like TridiagonalSolve, but with 
+    // longer rows, the values (a0,b0,c0,...) are returned in the last column.
+    // If the given matrix is singular, then the function will return false.
+    // This function runs in linear time O(equations*bandwidth^2) assuming the 
+    // bandwidth is relatively small to the number of equations.
+
+    bool BandedSolve(std::vector<std::vector<double> > &aaMatrix);
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Polynomials Functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
     size_t Linear(double a,double b,
                   std::vector<double> aRoots);
@@ -157,6 +207,128 @@ namespace SGM
     size_t Quartic(double a,double b,double c,double d,double e,
                    std::vector<double> &aRoots);
 
+    // Given a vector of N points in the XY-plane PolynomialFit returns
+    // the coefficients of a degree N-1 polynomial that passes through the
+    // given points.  For examples if four points are given, then a degree
+    // three polynomial with coefficients (a,b,c,d) of the form 
+    // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
+    // same x coordinate, then false will be returned.
+
+    bool PolynomialFit(std::vector<SGM::Point2D> aPoints,
+                       std::vector<double>       aCoefficients);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Trigonometry functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    // Snapps x to -1 or 1 if x is outside the interval [-1,1] so that
+    // acos will not return an error.
+
+    double SAFEacos(double x);
+
+    // Returns zero if both y and x are zero so that atan2 will not return 
+    // an error.
+
+    double SAFEatan2(double y,double x);
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Calculus functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    // Returns a numeric first derivative of f(x), with error of order h^5,   
+    // given, f(x-2h), f(x-h), f(x+h), f(x+2h), and h.  The function is
+    // templated two work with {double, Point2D, Point3D, or Point4D} as
+    // the Pos type, and {double, Vector2D, Vector3D, or Vector4D} as the
+    // Vec type.
+
+    template<class Pos, class Vec>
+    Vec FirstDerivative(Pos const &fxm2h,
+                        Pos const &fxmh,
+                        Pos const &fxph,
+                        Pos const &fxp2h,
+                        double     h)
+        {
+        return (-Vec(fxp2h)+8*Vec(fxph)-8*Vec(fxmh)+Vec(fxm2h))/(12*h);
+        }
+
+    // Returns a numeric second derivative of f(x), with error of order h^4,   
+    // given, f(x-2h), f(x-h), f(x), f(x+h), f(x+2h), and h.  The function is
+    // templated two work with {double, Point2D, Point3D, or Point4D} as
+    // the Pos type, and {double, Vector2D, Vector3D, or Vector4D} as the
+    // Vec type.
+
+    template<class Pos, class Vec>
+    Vec SecondDerivative(Pos const &fxm2h,
+                         Pos const &fxmh,
+                         Pos const &fx,
+                         Pos const &fxph,
+                         Pos const &fxp2h,
+                         double     h)
+        {
+        return (-Vec(fxp2h)+16*Vec(fxph)-30*Vec(fx)+16*Vec(fxmh)-Vec(fxm2h))/(12*h*h);
+        }
+
+    // Returns the numerical partial derivatives of f(x,y) with respect to x, y,
+    // x twice, y twice, and the cross partial with respect to x and y.
+    // The error of the returned derivaives are of order dx^5, dy^5,
+    // dx^4, max(dx^5,dy^5), dy^4 respectivly.  aMatrix should contain
+    // the following values of f(x,y).
+    //
+    // aMatrix[0][0]=f(x-dx*2,y-dy*2);
+    // aMatrix[0][1]=f(x-dx*2,y-dy);
+    // aMatrix[0][2]=f(x-dx*2,y);
+    // aMatrix[0][3]=f(x-dx*2,y+dy);
+    // aMatrix[0][4]=f(x-dx*2,y+dy*2);
+    //
+    // aMatrix[1][0]=f(x-dx,y-dy*2);
+    // aMatrix[1][1]=f(x-dx,y-dy);
+    // aMatrix[1][2]=f(x-dx,y);
+    // aMatrix[1][3]=f(x-dx,y+dy);
+    // aMatrix[1][4]=f(x-dx,y+dy*2);
+    //
+    // aMatrix[2][0]=f(x,y-dy*2);
+    // aMatrix[2][1]=f(x,y-dy);
+    // aMatrix[2][2]=f(x,y);
+    // aMatrix[2][3]=f(x,y+dy);
+    // aMatrix[2][4]=f(x,y+dy*2);
+    //
+    // aMatrix[3][0]=f(x+dx,y-dy*2);
+    // aMatrix[3][1]=f(x+dx,y-dy);
+    // aMatrix[3][2]=f(x+dx,y);
+    // aMatrix[3][3]=f(x+dx,y+dy);
+    // aMatrix[3][4]=f(x+dx,y+dy*2);
+    //
+    // aMatrix[4][0]=f(x+dx*2,y-dy*2);
+    // aMatrix[4][1]=f(x+dx*2,y-dy);
+    // aMatrix[4][2]=f(x+dx*2,y);
+    // aMatrix[4][3]=f(x+dx*2,y+dy);
+    // aMatrix[4][4]=f(x+dx*2,y+dy*2);
+
+    template<class Pos, class Vec>
+    void PartialDerivatives(Pos const aMatrix[5][5],
+                            double    dx,
+                            double    dy,
+                            Vec      &dDFX,
+                            Vec      &dDFY,
+                            Vec      &dDFXX,
+                            Vec      &dDFXY,
+                            Vec      &dDFYY)
+        {
+        dDFX=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[3][2],aMatrix[4][2],dx);
+        dDFY=SGM::FirstDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][3],aMatrix[2][4],dy);
+        dDFXX=SGM::SecondDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[2][2],aMatrix[3][2],aMatrix[4][2],dx);
+        Vec dfx0=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][0],aMatrix[1][0],aMatrix[3][0],aMatrix[4][0],dx);
+        Vec dfx1=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][1],aMatrix[1][1],aMatrix[3][1],aMatrix[4][1],dx);
+        Vec dfx3=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][3],aMatrix[1][3],aMatrix[3][3],aMatrix[4][3],dx);
+        Vec dfx4=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][4],aMatrix[1][4],aMatrix[3][4],aMatrix[4][4],dx);
+        dDFXY=SGM::FirstDerivative<Pos,Vec>(Pos(dfx0),Pos(dfx1),Pos(dfx3),Pos(dfx4),dy);
+        dDFYY=SGM::SecondDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][2],aMatrix[2][3],aMatrix[2][4],dy);
+        }
+    
     } // End of SGM namespace
 
 #endif // SGM_MATHEMATICS_H

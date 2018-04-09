@@ -5,6 +5,16 @@
 #include "FileFunctions.h"
 #include <string>
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#else
+#define snprintf snprintf
+#endif
+
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
+
 void WriteVertices(FILE                     *pFile,
                    size_t                   &nLine,
                    std::set<vertex *> const &sVertices,
@@ -28,6 +38,11 @@ void WriteLine(FILE                    *pFile,
                line              const *pLine,
                std::map<size_t,size_t> &mCurveMap)
     {
+    // #24=CARTESIAN_POINT('',(1.00000000000000,2.00000000000000,3.00000000000000));
+    // #25=DIRECTION('',(0.577350269189626,0.577350269189626,0.577350269189626));
+    // #26=VECTOR('',#25,1.00000000000000);
+    // #27=LINE('',#24,#26);
+
     SGM::Point3D const &Pos=pLine->GetOrigin();
     SGM::UnitVector3D const &Axis=pLine->GetAxis();
     double dScale=pLine->GetScale();
@@ -40,6 +55,110 @@ void WriteLine(FILE                    *pFile,
     fprintf(pFile,"#%ld=VECTOR('',#%ld,%#.15G);\n",nLine++,nDirection,dScale);
     mCurveMap[pLine->GetID()]=nLine;
     fprintf(pFile,"#%ld=LINE('',#%ld,#%ld);\n",nLine++,nPos,nVector);
+    }
+
+void WriteCircle(FILE                    *pFile,
+                 size_t                  &nLine,
+                 circle            const *pCircle,
+                 std::map<size_t,size_t> &mCurveMap)
+    {
+    // #24=CARTESIAN_POINT('',(1.00000000000000,2.00000000000000,3.00000000000000));
+    // #25=DIRECTION('',(0.000000000000000,0.000000000000000,1.00000000000000));
+    // #26=DIRECTION('',(1.00000000000000,0.000000000000000,0.000000000000000));
+    // #27=AXIS2_PLACEMENT_3D('',#24,#25,#26);
+    // #28=CIRCLE('',#27,5.00000000000000);
+
+    SGM::Point3D const &Center=pCircle->GetCenter();
+    SGM::UnitVector3D const &XVec=pCircle->GetXAxis();
+    SGM::UnitVector3D const &ZVec=pCircle->GetNormal();
+    double dRadius=pCircle->GetRadius();
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Center.m_x,Center.m_y,Center.m_z);
+    size_t nDirection1=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,ZVec.m_x,ZVec.m_y,ZVec.m_z);
+    size_t nDirection2=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XVec.m_x,XVec.m_y,XVec.m_z);
+    size_t nAxis=nLine;
+    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nDirection1,nDirection2);
+    mCurveMap[pCircle->GetID()]=nLine;
+    fprintf(pFile,"#%ld=CIRCLE('',#%ld,%#.15G);\n",nLine++,nAxis,dRadius);
+    }
+
+void WriteNUBCurve(FILE                    *pFile,
+                   size_t                  &nLine,
+                   NUBcurve          const *pNUBCurve,
+                   std::map<size_t,size_t> &mCurveMap)
+    {
+    // #24=CARTESIAN_POINT('',(1.00000000000000,1.00000000000000,0.000000000000000));
+    // #25=CARTESIAN_POINT('',(1.16666666666667,1.16666666666667,0.000000000000000));
+    // #26=CARTESIAN_POINT('',(2.00000000000000,2.83333333333333,0.000000000000000));
+    // #27=CARTESIAN_POINT('',(2.83333333333333,1.16666666666667,0.000000000000000));
+    // #28=CARTESIAN_POINT('',(3.00000000000000,1.00000000000000,0.000000000000000));
+    // #29=B_SPLINE_CURVE_WITH_KNOTS('',3,(#24,#25,#26,#27,#28),.UNSPECIFIED.,.F.,.F.,(4,1,4),(0.000000000000000,0.500000000000000,1.00000000000000),.UNSPECIFIED.);
+    // Degree (Control Points) Curve Form, Closed, Self Intersect, (Mulitplicity) (Knots) Knot Type.
+    
+    int nDegree=pNUBCurve->GetDegree();
+    std::vector<SGM::Point3D> const &aControlPoints=pNUBCurve->GetControlPoints();
+    std::vector<double> aUniqueKnots;
+    std::vector<int> aMultiplity;
+    size_t nUniqueKnots=pNUBCurve->FindMultiplity(aMultiplity,aUniqueKnots);
+
+    // Write out the control points.
+
+    size_t Index1;
+    size_t nControlPoints=aControlPoints.size();
+    std::string sControlPoints="(";
+    for(Index1=0;Index1<nControlPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aControlPoints[Index1];
+        size_t nPos=nLine;
+        fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+        char Arg[10];
+        sprintf_s(Arg,10,"#%ld",nPos);
+        sControlPoints+=Arg;
+        if(Index1<nControlPoints-1)
+            {
+            sControlPoints+=",";
+            }
+        }
+    sControlPoints+=")";
+
+    // Set up the multiplity string.
+
+    std::string sMultiplity="(";
+    for(Index1=0;Index1<nUniqueKnots;++Index1)
+        {
+        char Arg[10];
+        sprintf_s(Arg,10,"%ld",aMultiplity[Index1]);
+        sMultiplity+=Arg;
+        if(Index1<nUniqueKnots-1)
+            {
+            sMultiplity+=",";
+            }
+        }
+    sMultiplity=")";
+
+    // Set up the unique knot string.
+
+    std::string sUniqueKnots="(";
+    for(Index1=0;Index1<nUniqueKnots;++Index1)
+        {
+        char Arg[10];
+        sprintf_s(Arg,10,"%#.15G",aUniqueKnots[Index1]);
+        sUniqueKnots+=Arg;
+        if(Index1<nUniqueKnots-1)
+            {
+            sUniqueKnots+=",";
+            }
+        }
+    sUniqueKnots=")";
+
+    // Write out the b-spline
+
+    mCurveMap[pNUBCurve->GetID()]=nLine;
+    fprintf(pFile,"#%ld=B_SPLINE_CURVE_WITH_KNOTS('',%ld,%s,.UNSPECIFIED.,.F.,.F.,%s,%s,.UNSPECIFIED.);\n",
+        nLine++,nDegree,sControlPoints.c_str(),sMultiplity.c_str(),sUniqueKnots.c_str());
     }
 
 void WriteCurves(FILE                          *pFile,
@@ -60,6 +179,12 @@ void WriteCurves(FILE                          *pFile,
                 }
             case SGM::EntityType::CircleType :
                 {
+                WriteCircle(pFile,nLine,(circle const *)pCurve,mCurveMap);
+                break;
+                }
+            case SGM::EntityType::NUBCurveType :
+                {
+                WriteNUBCurve(pFile,nLine,(NUBcurve const *)pCurve,mCurveMap);
                 break;
                 }
             default:
@@ -76,31 +201,50 @@ void WriteCoedges(FILE                                      *pFile,
                   std::set<edge *>                    const &sEdges,
                   std::map<size_t,size_t>                   &mVertexMap,
                   std::map<size_t,size_t>                   &mCurveMap,
-                  std::map<std::pair<size_t,size_t>,size_t> &mCoedgeMap)
+                  std::map<std::pair<size_t,size_t>,size_t> &mCoedgeMap,
+                  std::map<size_t,size_t>                   &mEdgeMap)
     {
     std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
     while(EdgeIter!=sEdges.end())
         {
         edge *pEdge=*EdgeIter;
         curve const *pCurve=pEdge->GetCurve();
-        vertex *pStart=pEdge->GetStart();
-        vertex *pEnd=pEdge->GetEnd();
-        size_t nEdgeCurve=nLine;
-        size_t nStart=mVertexMap[pStart->GetID()];
-        size_t nEnd=mVertexMap[pEnd->GetID()];
         size_t nCurve=mCurveMap[pCurve->GetID()];
-        fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
-        std::set<face *> const &sFaces=pEdge->GetFaces();
-        std::set<face *>::const_iterator FaceIter=sFaces.begin();
-        while(FaceIter!=sFaces.end())
+        size_t nEdgeCurve=nLine;
+        volume *pVolume=pEdge->GetVolume();
+
+        if(pVolume==NULL)
             {
-            face const *pFace=*FaceIter;
-            SGM::EdgeSideType bFlipped=pFace->GetEdgeType(pEdge);
-            size_t nOrientedEdge=nLine;
-            fprintf(pFile,"#%ld=ORIENTED_EDGE('',*,*,#%ld,.%c.));\n",nLine++,nEdgeCurve,bFlipped==SGM::FaceOnRightType ? 'F' : 'T');
-            mCoedgeMap[std::pair<size_t,size_t>(pEdge->GetID(),pFace->GetID())]=nOrientedEdge;
-            ++FaceIter;
+            // #55=EDGE_CURVE('',#44,#25,#54,.T.);
+            // #56=ORIENTED_EDGE('',*,*,#55,.T.);
+
+            vertex *pStart=pEdge->GetStart();
+            vertex *pEnd=pEdge->GetEnd();
+            size_t nStart=mVertexMap[pStart->GetID()];
+            size_t nEnd=mVertexMap[pEnd->GetID()];
+            fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
+            std::set<face *> const &sFaces=pEdge->GetFaces();
+            std::set<face *>::const_iterator FaceIter=sFaces.begin();
+            while(FaceIter!=sFaces.end())
+                {
+                face const *pFace=*FaceIter;
+                SGM::EdgeSideType bFlipped=pFace->GetEdgeType(pEdge);
+                mCoedgeMap[std::pair<size_t,size_t>(pEdge->GetID(),pFace->GetID())]=nLine;
+                fprintf(pFile,"#%ld=ORIENTED_EDGE('',*,*,#%ld,.%c.));\n",nLine++,nEdgeCurve,bFlipped==SGM::FaceOnRightType ? 'F' : 'T');
+                ++FaceIter;
+                }
             }
+        else
+            {
+            // #28=TRIMMED_CURVE('',#27,(PARAMETER_VALUE(0.000000000000000)),(PARAMETER_VALUE(5.19615242270663)),.T.,.UNSPECIFIED.);
+            // #29=GEOMETRIC_CURVE_SET(' ',(#28));
+
+            double dStart=pEdge->GetDomain().m_dMin;
+            double dEnd=pEdge->GetDomain().m_dMax;
+            mEdgeMap[pEdge->GetID()]=nLine;
+            fprintf(pFile,"#%ld=TRIMMED_CURVE('',#%ld,(PARAMETER_VALUE(%#.15G)),(PARAMETER_VALUE(%#.15G)),.T.,.UNSPECIFIED.);\n",nLine++,nCurve,dStart,dEnd);
+            }
+
         ++EdgeIter;
         }
     }
@@ -110,6 +254,12 @@ void WritePlane(FILE                    *pFile,
                 plane             const *pPlane,
                 std::map<size_t,size_t> &mSurfaceMap)
     {
+    // #114=CARTESIAN_POINT('',(0.000000000000000,10.0000000000000,0.000000000000000));
+    // #115=DIRECTION('',(-1.00000000000000,0.000000000000000,0.000000000000000));
+    // #116=DIRECTION('',(0.000000000000000,1.00000000000000,0.000000000000000));
+    // #117=AXIS2_PLACEMENT_3D('',#114,#115,#116);
+    // #118=PLANE('',#117);
+
     SGM::Point3D const &Pos=pPlane->m_Origin;
     SGM::UnitVector3D const &Norm=pPlane->m_ZAxis;
     SGM::UnitVector3D const &XAxis=pPlane->m_XAxis;
@@ -124,6 +274,141 @@ void WritePlane(FILE                    *pFile,
     fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pPlane->GetID()]=nLine;
     fprintf(pFile,"#%ld=PLANE('',#%ld);\n",nLine++,nAxis3D);
+    }
+
+void WriteSphere(FILE                    *pFile,
+                 size_t                  &nLine,
+                 sphere            const *pSphere,
+                 std::map<size_t,size_t> &mSurfaceMap)
+    {
+    // #38=CARTESIAN_POINT('',(1.00000000000000,2.00000000000000,3.00000000000000));
+    // #39=DIRECTION('',(0.000000000000000,0.000000000000000,1.00000000000000));
+    // #40=DIRECTION('',(1.00000000000000,0.000000000000000,0.000000000000000));
+    // #41=AXIS2_PLACEMENT_3D('',#38,#39,#40);
+    // #42=SPHERICAL_SURFACE('',#41,4.00000000000000);
+
+    SGM::Point3D const &Pos=pSphere->m_Center;
+    SGM::UnitVector3D const &Norm=pSphere->m_ZAxis;
+    SGM::UnitVector3D const &XAxis=pSphere->m_XAxis;
+    double dRadius=pSphere->m_dRadius;
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    size_t nNorm=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    size_t nXAxis=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    size_t nAxis3D=nLine;
+    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    mSurfaceMap[pSphere->GetID()]=nLine;
+    fprintf(pFile,"#%ld=SPHERICAL_SURFACE('',#%ld,%#.15G);\n",nLine++,nAxis3D,dRadius);
+    }
+
+void WriteCylinder(FILE                    *pFile,
+                   size_t                  &nLine,
+                   cylinder          const *pCylinder,
+                   std::map<size_t,size_t> &mSurfaceMap)
+    {
+    // #139=CARTESIAN_POINT('',(0.000000000000000,5.00000000000000,0.000000000000000));
+    // #140=DIRECTION('',(0.000000000000000,0.000000000000000,1.00000000000000));
+    // #141=DIRECTION('',(-1.00000000000000,0.000000000000000,0.000000000000000));
+    // #142=AXIS2_PLACEMENT_3D('',#139,#140,#141);
+    // #143=CYLINDRICAL_SURFACE('',#142,9.00000000000000);
+
+    SGM::Point3D const &Pos=pCylinder->m_Origin;
+    SGM::UnitVector3D const &Norm=pCylinder->m_ZAxis;
+    SGM::UnitVector3D const &XAxis=pCylinder->m_XAxis;
+    double dRadius=pCylinder->m_dRadius;
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    size_t nNorm=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    size_t nXAxis=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    size_t nAxis3D=nLine;
+    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    mSurfaceMap[pCylinder->GetID()]=nLine;
+    fprintf(pFile,"#%ld=CYLINDRICAL_SURFACE('',#%ld,%#.15G);\n",nLine++,nAxis3D,dRadius);
+    }
+
+void WriteTorus(FILE                    *pFile,
+                size_t                  &nLine,
+                torus             const *pTorus,
+                std::map<size_t,size_t> &mSurfaceMap)
+    {
+    // Donut or Pinched
+    // #44=CARTESIAN_POINT('',(0.000000000000000,0.000000000000000,0.000000000000000));
+    // #45=DIRECTION('',(0.000000000000000,0.000000000000000,1.00000000000000));
+    // #46=DIRECTION('',(-1.00000000000000,0.000000000000000,0.000000000000000));
+    // #47=AXIS2_PLACEMENT_3D('',#44,#45,#46);
+    // #48=TOROIDAL_SURFACE('',#47,5.00000000000000,1.00000000000000);
+
+    // Lemon
+    // #38=CARTESIAN_POINT('',(0.000000000000000,0.000000000000000,0.000000000000000));
+    // #39=DIRECTION('',(0.000000000000000,0.000000000000000,1.00000000000000));
+    // #40=DIRECTION('',(-1.00000000000000,0.000000000000000,0.000000000000000));
+    // #41=AXIS2_PLACEMENT_3D('',#38,#39,#40);
+    // #42=DEGENERATE_TOROIDAL_SURFACE('',#41,0.500000000000000,1.00000000000000,.F.);
+    // .F. for Lemon .T. for Apple.
+
+    SGM::Point3D const &Pos=pTorus->m_Center;
+    SGM::UnitVector3D const &Norm=pTorus->m_ZAxis;
+    SGM::UnitVector3D const &XAxis=pTorus->m_XAxis;
+    double dMinorRadius=pTorus->m_dMinorRadius;
+    double dMajorRadius=pTorus->m_dMajorRadius;
+    SGM::TorusKindType nKind=pTorus->GetKind();
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    size_t nNorm=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    size_t nXAxis=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    size_t nAxis3D=nLine;
+    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    mSurfaceMap[pTorus->GetID()]=nLine;
+    if(nKind==SGM::TorusKindType::DonutType || nKind==SGM::TorusKindType::PinchedType)
+        {
+        fprintf(pFile,"#%ld=TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        }
+    else if(nKind==SGM::TorusKindType::AppleType)
+        {
+        fprintf(pFile,"#%ld=DEGENERATE_TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G,.T.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        }
+    else // (nKind==SGM::TorusKindType::LemonType)
+        {
+        fprintf(pFile,"#%ld=DEGENERATE_TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G,.F.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        }
+    }
+
+void WriteCone(FILE                    *pFile,
+               size_t                  &nLine,
+               cone              const *pCone,
+               std::map<size_t,size_t> &mSurfaceMap)
+    {
+    // #44=CARTESIAN_POINT('',(0.000000000000000,0.000000000000000,0.000000000000000));
+    // #45=DIRECTION('',(-0.000000000000000,-0.000000000000000,-1.00000000000000));
+    // #46=DIRECTION('',(-1.00000000000000,0.000000000000000,0.000000000000000));
+    // #47=AXIS2_PLACEMENT_3D('',#44,#45,#46);
+    // #48=CONICAL_SURFACE('',#47,1.00000000000000,0.785398163397448);
+
+    SGM::Point3D const &Pos=pCone->m_Origin;
+    SGM::UnitVector3D const &Norm=pCone->m_ZAxis;
+    SGM::UnitVector3D const &XAxis=pCone->m_XAxis;
+    double dRadius=pCone->m_dRadius;
+    double dHalfAngle=pCone->FindHalfAngle();
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    size_t nNorm=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    size_t nXAxis=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    size_t nAxis3D=nLine;
+    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    mSurfaceMap[pCone->GetID()]=nLine;
+    fprintf(pFile,"#%ld=CONICAL_SURFACE('',#%ld,%#.15G,%#.15G);\n",nLine++,nAxis3D,dRadius,dHalfAngle);
     }
 
 void WriteSurfaces(FILE                            *pFile,
@@ -142,8 +427,24 @@ void WriteSurfaces(FILE                            *pFile,
                 WritePlane(pFile,nLine,(plane const *)pSurface,mSurfaceMap);
                 break;
                 }
+            case SGM::EntityType::SphereType :
+                {
+                WriteSphere(pFile,nLine,(sphere const *)pSurface,mSurfaceMap);
+                break;
+                }
             case SGM::EntityType::CylinderType :
                 {
+                WriteCylinder(pFile,nLine,(cylinder const *)pSurface,mSurfaceMap);
+                break;
+                }
+            case SGM::EntityType::TorusType :
+                {
+                WriteTorus(pFile,nLine,(torus const *)pSurface,mSurfaceMap);
+                break;
+                }
+            case SGM::EntityType::ConeType :
+                {
+                WriteCone(pFile,nLine,(cone const *)pSurface,mSurfaceMap);
                 break;
                 }
             default:
@@ -187,11 +488,11 @@ void WriteFaces(SGM::Result                               &rResult,
                 char Buf[25];
                 if(Index2)
                     {
-                    std::snprintf(Buf,sizeof(Buf),",#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    snprintf(Buf,sizeof(Buf),",#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 else
                     {
-                    std::snprintf(Buf,sizeof(Buf),"#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    snprintf(Buf,sizeof(Buf),"#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 sEdges+=Buf;
                 }
@@ -209,11 +510,11 @@ void WriteFaces(SGM::Result                               &rResult,
             char Buf2[25];
             if(Index1)
                 {
-                std::snprintf(Buf2,sizeof(Buf2),",#%ld",nBound);
+                snprintf(Buf2,sizeof(Buf2),",#%ld",nBound);
                 }
             else
                 {
-                std::snprintf(Buf2,sizeof(Buf2),"#%ld",nBound);
+                snprintf(Buf2,sizeof(Buf2),"#%ld",nBound);
                 }
             sLoops+=Buf2;
             }
@@ -229,17 +530,23 @@ void WriteVolumes(SGM::Result              &rResult,
                   size_t                   nGeoRepContext,
                   size_t                   nProductDefShape,
                   std::set<volume *> const &sVolumes,
-                  std::map<size_t,size_t>  &mFaceMap)
+                  std::map<size_t,size_t>  &mFaceMap,
+                  std::map<size_t,size_t>  &mEdgeMap)
     {
     std::string sVolumeList;
     std::set<volume *>::const_iterator VolumeIter=sVolumes.begin();
     bool bFirstVolume=true;
     int nSides=1;
+    bool bWireBody=false;
     while(VolumeIter!=sVolumes.end())
         {
         volume const *pVolume=*VolumeIter;
         std::vector<std::set<face *> > aShells;
         size_t nShells=pVolume->FindShells(rResult,aShells);
+        if(nShells>1)
+            {
+            throw;
+            }
         if(nShells==1)
             {
             std::string sFaceList;
@@ -253,11 +560,11 @@ void WriteVolumes(SGM::Result              &rResult,
                 char Buf[25];
                 if(bFirst)
                     {
-                    std::snprintf(Buf,sizeof(Buf),"#%ld",mFaceMap[pFace->GetID()]);
+                    snprintf(Buf,sizeof(Buf),"#%ld",mFaceMap[pFace->GetID()]);
                     }
                 else
                     {
-                    std::snprintf(Buf,sizeof(Buf),",#%ld",mFaceMap[pFace->GetID()]);
+                    snprintf(Buf,sizeof(Buf),",#%ld",mFaceMap[pFace->GetID()]);
                     }
                 sFaceList+=Buf;
                 bFirst=false;
@@ -280,18 +587,42 @@ void WriteVolumes(SGM::Result              &rResult,
             char Buf2[25];
             if(bFirstVolume)
                 {
-                std::snprintf(Buf2,sizeof(Buf2),"#%ld",nVolume);
+                snprintf(Buf2,sizeof(Buf2),"#%ld",nVolume);
                 }
             else
                 {
-                std::snprintf(Buf2,sizeof(Buf2),",#%ld",nVolume);
+                snprintf(Buf2,sizeof(Buf2),",#%ld",nVolume);
                 }
             sVolumeList+=Buf2;
             bFirstVolume=false;
             }
-        else
+        std::set<edge *> const &sEdges=pVolume->GetEdges();
+        if(sEdges.size())
             {
-            throw;
+            std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+            std::string sEdgeList;
+            bool bFirst=true;
+            while(EdgeIter!=sEdges.end())
+                {
+                edge *pEdge=*EdgeIter;
+                char Buf[25];
+                if(bFirst)
+                    {
+                    sprintf_s(Buf,25,"#%ld",mEdgeMap[pEdge->GetID()]);
+                    }
+                else
+                    {
+                    sprintf_s(Buf,25,",#%ld",mEdgeMap[pEdge->GetID()]);
+                    }
+                sEdgeList+=Buf;
+                bFirst=false;
+                ++EdgeIter;
+                }
+            char Buf2[25];
+            sprintf_s(Buf2,25,"#%ld",nLine);
+            sVolumeList+=Buf2;
+            fprintf(pFile,"#%ld=GEOMETRIC_CURVE_SET('',(%s));\n",nLine++,sEdgeList.c_str());
+            bWireBody=true;
             }
         ++VolumeIter;
         }
@@ -308,6 +639,10 @@ void WriteVolumes(SGM::Result              &rResult,
     if(nSides==2)
         {
         fprintf(pFile,"#%ld=MANIFOLD_SURFACE_SHAPE_REPRESENTATION('',(%s,#%ld),#%ld);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
+        }
+    else if(bWireBody)
+        {
+        fprintf(pFile,"#%ld=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('',(%s,#%ld),#%ld);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
         }
     else
         {
@@ -428,12 +763,13 @@ void SaveSTEP(SGM::Result                  &rResult,
     std::map<size_t,size_t> mCurveMap;
     WriteCurves(pFile,nLine,sCurves,mCurveMap);
     std::map<std::pair<size_t,size_t>,size_t> mCoedgeMap;
-    WriteCoedges(pFile,nLine,sEdges,mVertexMap,mCurveMap,mCoedgeMap);
+    std::map<size_t,size_t> mEdgeMap;
+    WriteCoedges(pFile,nLine,sEdges,mVertexMap,mCurveMap,mCoedgeMap,mEdgeMap);
     std::map<size_t,size_t> mSurfaceMap;
     WriteSurfaces(pFile,nLine,sSurfaces,mSurfaceMap);
     std::map<size_t,size_t> mFaceMap;
     WriteFaces(rResult,pFile,nLine,sFaces,mSurfaceMap,mCoedgeMap,mFaceMap);
-    WriteVolumes(rResult,pFile,nLine,nGeoRepContext,nProductDefShape,sVolumes,mFaceMap);
+    WriteVolumes(rResult,pFile,nLine,nGeoRepContext,nProductDefShape,sVolumes,mFaceMap,mEdgeMap);
 
     fprintf(pFile,"ENDSEC;\n");
     fprintf(pFile,"END-ISO-10303-21;\n");

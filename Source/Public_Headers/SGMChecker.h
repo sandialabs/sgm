@@ -7,6 +7,19 @@
 
 namespace SGM
     {
+    
+    class CheckOptions
+        {
+        public:
+
+            CheckOptions():
+                m_bDerivatives(false),
+                m_bEvaluateors(false) {}
+
+            bool m_bDerivatives;
+            bool m_bEvaluateors;
+        };
+
     ///////////////////////////////////////////////////////////////////////////
     //
     //  Functions to check test results.  The following functions cause a
@@ -15,8 +28,8 @@ namespace SGM
     ///////////////////////////////////////////////////////////////////////////
 
     bool CheckEntity(SGM::Result              &rResult,
-                     SGM::Entity              &EntityID,
-                     SGM::CheckLevel           Level,
+                     SGM::Entity        const &EntityID,
+                     SGM::CheckOptions  const &Options,
                      std::vector<std::string> &aCheckStrings);
     
     bool CompareFiles(SGM::Result       &rResult,
@@ -36,11 +49,8 @@ namespace SGM
                      std::string const &sTestFileName,
                      std::string const &sOutputFileName);
 
-    // If nTestNumber is zero, then all the CPP tests are run.
-
-    bool RunCPPTest(SGM::Result       &rResult,
-                    size_t             nTestNumber, 
-                    std::string const &sOutputFileName);
+    bool RunCPPTest(SGM::Result &rResult,
+                    size_t       nTestNumber);
 
     void RunTestDirectory(SGM::Result       &rResult,
                           std::string const &sTestDirectory,

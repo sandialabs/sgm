@@ -436,3 +436,247 @@ SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
 
     return SGM::Body(pBody->GetID());
     }
+
+void FindDegree3Knots(std::vector<double> const &aLengths,
+                      std::vector<double>       &aKnots,
+                      int                       &nDegree)
+    {
+    size_t nLengths=aLengths.size();
+    if(nLengths==2)
+        {
+        nDegree=1;
+        aKnots.reserve(4);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        }
+    else if(nLengths==3)
+        {
+        nDegree=2;
+        aKnots.reserve(6);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        }
+    else
+        {
+        nDegree=3;
+        size_t nKnots=nLengths+4;
+        aKnots.reserve(nKnots);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        aKnots.push_back(0.0);
+        size_t Index1;
+        for(Index1=4;Index1<nKnots-4;++Index1)
+            {
+            double dKnot=(aLengths[Index1-3]+aLengths[Index1-2]+aLengths[Index1-1])/3.0;
+            aKnots.push_back(dKnot);
+            }
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        aKnots.push_back(1.0);
+        }
+    }
+
+void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
+                                       std::vector<double>       &aKnots)
+    {
+    size_t nLengths=aLengths.size();
+    size_t nKnots=nLengths+6;
+    aKnots.reserve(nKnots);
+    aKnots.push_back(0.0);
+    aKnots.push_back(0.0);
+    aKnots.push_back(0.0);
+    aKnots.push_back(0.0);
+    size_t Index1;
+    for(Index1=0;Index1<nLengths-2;++Index1)
+        {
+        double dKnot=(aLengths[Index1]+aLengths[Index1+1]+aLengths[Index1+2])/3.0;
+        aKnots.push_back(dKnot);
+        }
+    aKnots.push_back(1.0);
+    aKnots.push_back(1.0);
+    aKnots.push_back(1.0);
+    aKnots.push_back(1.0);
+    }
+
+ NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
+                          std::vector<SGM::Point3D> const &aInterpolate,
+                          std::vector<double>       const *pParams)
+    {
+    // Find the knot vector.
+
+    std::vector<double> aLengths,aKnots;
+    if(pParams)
+        {
+        aLengths=*pParams;
+        }
+    else
+        {
+        SGM::FindLengths3D(aInterpolate,aLengths,true);
+        }
+    int nDegree;
+    FindDegree3Knots(aLengths,aKnots,nDegree);
+    SGM::Interval1D Domain(0,1);
+
+    // Set up the banded matrix.
+
+    size_t nInterpolate=aInterpolate.size();
+    std::vector<std::vector<double> > aaXMatrix;
+    aaXMatrix.reserve(nInterpolate);
+    size_t Index1;
+    std::vector<double> aRow;
+    aRow.reserve(6);
+    aRow.push_back(0.0);
+    aRow.push_back(0.0);
+    aRow.push_back(1.0);
+    aRow.push_back(0.0);
+    aRow.push_back(0.0);
+    aRow.push_back(aInterpolate[0].m_x);
+    aaXMatrix.push_back(aRow);
+    for(Index1=1;Index1<nInterpolate-1;++Index1)
+        {
+        aRow.clear();
+        double *aaBasis[1];
+        double dData[4];
+        aaBasis[0]=dData;
+        double t=aLengths[Index1];
+        int nSpanIndex=FindSpanIndex(Domain,nDegree,t,aKnots);
+        FindBasisFunctions(nSpanIndex,t,nDegree,0,&aKnots[0],aaBasis);
+        if(Index1==1)
+            {
+            aRow.push_back(0.0);
+            aRow.push_back(dData[0]);
+            aRow.push_back(dData[1]);
+            aRow.push_back(dData[2]);
+            aRow.push_back(dData[3]);
+            }
+        else
+            {
+            aRow.push_back(dData[0]);
+            aRow.push_back(dData[1]);
+            aRow.push_back(dData[2]);
+            aRow.push_back(dData[3]);
+            aRow.push_back(0.0);
+            }
+        aRow.push_back(aInterpolate[Index1].m_x);
+        aaXMatrix.push_back(aRow);
+        }
+    aRow.clear();
+    aRow.push_back(0.0);
+    aRow.push_back(0.0);
+    aRow.push_back(1.0);
+    aRow.push_back(0.0);
+    aRow.push_back(0.0);
+    aRow.push_back(aInterpolate[nInterpolate-1].m_x);
+    aaXMatrix.push_back(aRow);
+
+    // Solve for x, y, and z of the control ponts.
+
+    std::vector<std::vector<double> > aaYMatrix=aaXMatrix;
+    std::vector<std::vector<double> > aaZMatrix=aaXMatrix;
+    for(Index1=0;Index1<nInterpolate;++Index1)
+        {
+        aaYMatrix[Index1][5]=aInterpolate[Index1].m_y;
+        aaZMatrix[Index1][5]=aInterpolate[Index1].m_z;
+        }
+    SGM::BandedSolve(aaXMatrix);
+    SGM::BandedSolve(aaYMatrix);
+    SGM::BandedSolve(aaZMatrix);
+
+    // Create the curve.
+
+    std::vector<SGM::Point3D> aControlPoints;
+    aControlPoints.reserve(nInterpolate);
+    for(Index1=0;Index1<nInterpolate;++Index1)
+        {
+        SGM::Point3D Pos(aaXMatrix[Index1].back(),aaYMatrix[Index1].back(),aaZMatrix[Index1].back());
+        aControlPoints.push_back(Pos);
+        }
+    return new NUBcurve(rResult,aControlPoints,aKnots);
+    }
+
+NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
+                                       std::vector<SGM::Point3D> const &aInterpolate,
+                                       SGM::Vector3D             const &StartVec,
+                                       SGM::Vector3D             const &EndVec,
+                                       std::vector<double>       const *pParams)
+    {
+    // Find the knot vector.
+
+    std::vector<double> aLengths,aKnots;
+    if(pParams)
+        {
+        aLengths=*pParams;
+        }
+    else
+        {
+        SGM::FindLengths3D(aInterpolate,aLengths,true);
+        }
+    FindDegree3KnotsWithEndDirections(aLengths,aKnots);
+    SGM::Interval1D Domain(0.0,1.0);
+    
+    // From "The NURBs Book" Algorithm A9.2, page 373.
+
+    int n=(int)aInterpolate.size()-1;
+    std::vector<SGM::Point3D> aControlPoints;
+    aControlPoints.assign(n+3,SGM::Point3D(0,0,0));
+    aControlPoints[0]=aInterpolate[0];
+    aControlPoints[1]=aInterpolate[0]+(aKnots[4]/3.0)*StartVec;
+    aControlPoints[n+1]=aInterpolate[n]-((1-aKnots[n+2])/3.0)*EndVec;
+    aControlPoints[n+2]=aInterpolate[n];
+
+    double *aaBasis[1];
+    double dData[4];
+    aaBasis[0]=dData;
+
+    if(n==2)
+        {
+        FindBasisFunctions(4,aKnots[4],3,0,&aKnots[0],aaBasis);
+        aControlPoints[2].m_x=(aInterpolate[1].m_x-dData[2]*aControlPoints[1].m_x-dData[0]*aControlPoints[3].m_x)/dData[1];
+        aControlPoints[2].m_y=(aInterpolate[1].m_y-dData[2]*aControlPoints[1].m_y-dData[0]*aControlPoints[3].m_y)/dData[1];
+        aControlPoints[2].m_z=(aInterpolate[1].m_z-dData[2]*aControlPoints[1].m_z-dData[0]*aControlPoints[3].m_z)/dData[1];
+        }
+    else if(n>2)
+        {
+        FindBasisFunctions(4,aKnots[4],3,0,&aKnots[0],aaBasis);
+        double den=dData[1];
+        aControlPoints[2].m_x=(aInterpolate[1].m_x-dData[0]*aControlPoints[1].m_x)/den;
+        aControlPoints[2].m_y=(aInterpolate[1].m_y-dData[0]*aControlPoints[1].m_y)/den;
+        aControlPoints[2].m_z=(aInterpolate[1].m_z-dData[0]*aControlPoints[1].m_z)/den;
+
+        std::vector<double> dd;
+        dd.assign(n+1,0.0);
+        int Index1;
+        for(Index1=3;Index1<n;++Index1)
+            {
+            dd[Index1]=dData[2]/den;
+            FindBasisFunctions(Index1+2,aKnots[Index1+2],3,0,&aKnots[0],aaBasis);
+            den=dData[1]-dData[0]*dd[Index1];
+            aControlPoints[Index1].m_x=(aInterpolate[Index1-1].m_x-dData[0]*aControlPoints[Index1-1].m_x)/den;
+            aControlPoints[Index1].m_y=(aInterpolate[Index1-1].m_y-dData[0]*aControlPoints[Index1-1].m_y)/den;
+            aControlPoints[Index1].m_z=(aInterpolate[Index1-1].m_z-dData[0]*aControlPoints[Index1-1].m_z)/den;
+            }
+        dd[n]=dData[2]/den;
+        FindBasisFunctions(n+2,aKnots[n+2],3,0,&aKnots[0],aaBasis);
+        den=dData[1]-dData[0]*dd[n];
+        aControlPoints[n].m_x=(aInterpolate[n-1].m_x-dData[2]*aControlPoints[n+1].m_x-dData[0]*aControlPoints[n-1].m_x)/den;
+        aControlPoints[n].m_y=(aInterpolate[n-1].m_y-dData[2]*aControlPoints[n+1].m_y-dData[0]*aControlPoints[n-1].m_y)/den;
+        aControlPoints[n].m_z=(aInterpolate[n-1].m_z-dData[2]*aControlPoints[n+1].m_z-dData[0]*aControlPoints[n-1].m_z)/den;
+        for(Index1=n-1;Index1>=2;--Index1)
+            {
+            aControlPoints[Index1].m_x-=dd[Index1+1]*aControlPoints[Index1+1].m_x;
+            aControlPoints[Index1].m_y-=dd[Index1+1]*aControlPoints[Index1+1].m_y;
+            aControlPoints[Index1].m_z-=dd[Index1+1]*aControlPoints[Index1+1].m_z;
+            }
+        }
+
+    return new NUBcurve(rResult,aControlPoints,aKnots);
+    }
+

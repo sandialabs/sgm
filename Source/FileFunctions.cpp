@@ -4,13 +4,21 @@
 #include <algorithm>
 #include <time.h>
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#else
+#define snprintf snprintf
+#endif
+
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
+
 #if defined(__linux__) && !defined(SGM_LINUX)
 # define SGM_LINUX
 #endif
 
-
-
-#if defined(_WIN64)
+#if defined(_MSC_VER)
 #include <windows.h>
 #endif
 #if defined(SGM_LINUX)
@@ -57,7 +65,7 @@ std::string GetDateAndTime()
     int nSecond=TimeStruct.tm_sec;
 
     char Buf[25];
-    std::snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
+    snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
     return Buf;
     }
 
