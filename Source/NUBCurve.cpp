@@ -4,6 +4,7 @@
 #include "Faceter.h"
 #include <vector>
 #include <algorithm>
+#include <cfloat>
 
 NUBcurve::NUBcurve(SGM::Result                     &rResult,
                    std::vector<SGM::Point3D> const &aControlPoints,
