@@ -122,7 +122,7 @@ void FindParameters(std::string   const &line,
         if(nPCount==15)
             {
             double dParam;
-            sscanf_s(pString+nCount+1,"(%lf",&dParam);
+            sscanf(pString+nCount+1,"(%lf",&dParam);
             aData.push_back(dParam);
             }
         ++nCount;
@@ -223,7 +223,7 @@ void FindDoubleVector(std::string   const &line,
     for(Index1=0;Index1<nArgs;++Index1)
         {
         double dData;
-        sscanf_s(aArgs[Index1].c_str(),"%lf",&dData);
+        sscanf(aArgs[Index1].c_str(),"%lf",&dData);
         aData.push_back(dData);
         }
     }
@@ -237,7 +237,7 @@ void FindIntVector(std::string const &line,
     for(Index1=0;Index1<nArgs;++Index1)
         {
         int nData;
-        sscanf_s(aArgs[Index1].c_str(),"%d",&nData);
+        sscanf(aArgs[Index1].c_str(),"%d",&nData);
         aData.push_back(nData);
         }
     }
@@ -796,7 +796,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 for(Index1=0;Index1<nKnots;++Index1)
                     {
                     double dKnot=DataIter->second.m_aDoubles[Index1];
-                    int nMultiplicity=DataIter->second.m_aInts[Index1];
+                    unsigned int nMultiplicity=DataIter->second.m_aInts[Index1];
                     for(Index2=0;Index2<nMultiplicity;++Index2)
                         {
                         aKnots.push_back(dKnot);

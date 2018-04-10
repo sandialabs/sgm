@@ -4,6 +4,7 @@
 #include "Faceter.h"
 #include <vector>
 #include <algorithm>
+#include <cfloat>
 
 NUBcurve::NUBcurve(SGM::Result                     &rResult,
                    std::vector<SGM::Point3D> const &aControlPoints,
@@ -61,10 +62,10 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
 
 // From "The NURBS Book", page 72, Algorithm A2.3.
 
-void FindBasisFunctions(int           i,     // One based span index.
+void FindBasisFunctions(size_t        i,     // One based span index.
                         double        u,     // The value of the domain to be evaluated.
-                        int           p,     // The degree of the NURB.
-                        int           n,     // The number of derivatives requested.
+                        size_t        p,     // The degree of the NURB.
+                        size_t        n,     // The number of derivatives requested.
                         double const *U,     // The knot vector
                         double      **ders) // Basis function values for each derivative.
     {
@@ -74,7 +75,7 @@ void FindBasisFunctions(int           i,     // One based span index.
     double a[2][SMG_MAX_NURB_DEGREE_PLUS_ONE];
                    
     ndu[0][0]=1.0;
-    int j,r,k;
+    size_t j,r,k;
     for(j=1;j<=p;++j)
         {
         left[j]=u-U[i+1-j];
@@ -95,14 +96,14 @@ void FindBasisFunctions(int           i,     // One based span index.
         }
     for(r=0;r<=p;r++)
         {
-        int s1=0;
-        int s2=1;
+        size_t s1=0;
+        size_t s2=1;
         a[0][0]=1.0;
         for(k=1;k<=n;++k)
             {
             double d=0.0;
-            int rk=r-k;
-            int pk=p-k;
+            int rk=(int)(r-k);
+            int pk=(int)(p-k);
             if(r>=k)
                 {
                 a[s2][0]=a[s1][0]/ndu[pk+1][rk];
@@ -119,11 +120,11 @@ void FindBasisFunctions(int           i,     // One based span index.
                 }
             if(r-1<=pk)
                 {
-                j2=k-1;
+                j2=(int)(k-1);
                 }
             else
                 {
-                j2=p-r;
+                j2=(int)(p-r);
                 }
             for(j=j1;j<=j2;++j)
                 {
@@ -152,12 +153,12 @@ void FindBasisFunctions(int           i,     // One based span index.
         }
     }
 
-int FindSpanIndex(SGM::Interval1D     const &Domain,
-                  int                        nDegree,
-                  double                     t,
-                  std::vector<double> const &aKnots)
+size_t FindSpanIndex(SGM::Interval1D     const &Domain,
+                     size_t                        nDegree,
+                     double                     t,
+                     std::vector<double> const &aKnots)
     {
-    int nSpanIndex;
+    size_t nSpanIndex;
     if(Domain.m_dMax<=t)
         {
         nSpanIndex=(int)(aKnots.size()-nDegree-2);

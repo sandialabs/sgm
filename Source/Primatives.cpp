@@ -547,7 +547,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         double dData[4];
         aaBasis[0]=dData;
         double t=aLengths[Index1];
-        int nSpanIndex=FindSpanIndex(Domain,nDegree,t,aKnots);
+        size_t nSpanIndex=FindSpanIndex(Domain,nDegree,t,aKnots);
         FindBasisFunctions(nSpanIndex,t,nDegree,0,&aKnots[0],aaBasis);
         if(Index1==1)
             {

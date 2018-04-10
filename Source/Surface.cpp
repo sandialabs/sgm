@@ -470,12 +470,12 @@ void surface::Evaluate(SGM::Point2D const &uv,
             std::vector<std::vector<SGM::Point3D> > const &aControlPoints=pNUB->m_aaControlPoints;
             
             std::vector<double> const &aUKnots=pNUB->m_aUKnots;
-            int nUDegree=pNUB->GetUDegree();
-            int nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
+            size_t nUDegree=pNUB->GetUDegree();
+            size_t nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
 
             std::vector<double> const &aVKnots=pNUB->m_aVKnots;
-            int nVDegree=pNUB->GetVDegree();
-            int nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
+            size_t nVDegree=pNUB->GetVDegree();
+            size_t nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
 
             int nUDerivatives=0;
             if(Du || Norm || Duv) nUDerivatives=1;
@@ -521,12 +521,8 @@ void surface::Evaluate(SGM::Point2D const &uv,
                         temp[s].m_y+=dFactor*ControlPos.m_y;
                         temp[s].m_z+=dFactor*ControlPos.m_z;
                         }
-                    }
-                size_t dd=std::min(d-k,nVDerivatives);
-                for(l=0;l<=dd;++l)
-                    {
-                    SKL[k][l]=SGM::Point3D(0.0,0.0,0.0);
-                    for(s=0;s<=nVDegree;++s)
+                    int dd=std::min(d-k,nVDerivatives);
+                    for(l=0;l<=dd;++l)
                         {
                         double dFactor=aaVBasisFunctions[l][s];
                         SKL[k][l].m_x+=dFactor*temp[s].m_x;
