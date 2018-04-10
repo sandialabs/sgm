@@ -598,9 +598,10 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                     &rResult,
-                   std::vector<SGM::Point3D> const &aControlPoints,
-                   std::vector<double>       const &aKnots);
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
+                   std::vector<double>                     const &aUKnots,
+                   std::vector<double>                     const &aVKnots);
 
         int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
 

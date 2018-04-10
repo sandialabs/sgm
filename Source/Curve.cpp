@@ -136,9 +136,9 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             else
                 {
-                NUBcurve const *pNUB=(NUBcurve *)this;
-                std::vector<SGM::Point3D> const &aPoints=pNUB->NUBcurve::GetSeedPoints();
-                std::vector<double> const &aParams=pNUB->NUBcurve::GetSeedParams();
+                NUBcurve const *pNUB=(NUBcurve const *)this;
+                std::vector<SGM::Point3D> const &aPoints=pNUB->GetSeedPoints();
+                std::vector<double> const &aParams=pNUB->GetSeedParams();
                 double dMin=DBL_MAX;
                 size_t Index1;
                 size_t nPoints=aPoints.size();

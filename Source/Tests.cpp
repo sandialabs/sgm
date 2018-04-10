@@ -1468,6 +1468,42 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==20)
+        {
+        // Test cylinder inverse.
+
+        std::vector<double> aUKnots,aVKnots;
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(1.0);
+        aUKnots.push_back(1.0);
+        aUKnots.push_back(1.0);
+        aVKnots=aUKnots;
+        std::vector<std::vector<SGM::Point3D> > aaPoints;
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.assign(3,SGM::Point3D(0,0,0));
+        aaPoints.push_back(aPoints);
+        aaPoints.push_back(aPoints);
+        aaPoints.push_back(aPoints);
+        aaPoints[0][0]=SGM::Point3D(0,0,1);
+        aaPoints[0][1]=SGM::Point3D(0,1,0);
+        aaPoints[0][2]=SGM::Point3D(0,2,-1);
+        aaPoints[1][0]=SGM::Point3D(1,0,0);
+        aaPoints[1][1]=SGM::Point3D(1,1,0);
+        aaPoints[1][2]=SGM::Point3D(1,2,0);
+        aaPoints[2][0]=SGM::Point3D(2,0,-1);
+        aaPoints[2][1]=SGM::Point3D(2,1,0);
+        aaPoints[2][2]=SGM::Point3D(2,2,1);
+        NUBsurface *pNUB=new NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
+
+        bool bAnswer=TestSurface(pNUB,SGM::Point2D(0.3,0.2));
+        pNUB->Remove(rResult);
+
+        return bAnswer;
+        }
+
+
     return false;
     }
 
