@@ -521,7 +521,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                         temp[s].m_y+=dFactor*ControlPos.m_y;
                         temp[s].m_z+=dFactor*ControlPos.m_z;
                         }
-                    size_t dd=std::min(d-k,nVDerivatives);
+                    int dd=std::min(d-k,nVDerivatives);
                     for(l=0;l<=dd;++l)
                         {
                         SKL[k][l]=SGM::Point3D(0.0,0.0,0.0);

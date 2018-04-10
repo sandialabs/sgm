@@ -602,9 +602,9 @@ class NUBsurface: public surface
                    std::vector<SGM::Point3D> const &aControlPoints,
                    std::vector<double>       const &aKnots);
 
-        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+        unsigned int GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
-        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+        unsigned int GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
 
         std::vector<std::vector<SGM::Point3D> > const &GetControlPoints() const {return m_aaControlPoints;}
 
@@ -640,9 +640,9 @@ class NURBsurface: public surface
                     std::vector<SGM::Point4D> const &aControlPoints,
                     std::vector<double>       const &aKnots);
 
-        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+        unsigned int GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
-        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+        unsigned int GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
 
         std::vector<std::vector<SGM::Point4D> > const &GetControlPoints() const {return m_aaControlPoints;}
 
@@ -806,7 +806,7 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
-        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+        unsigned int GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point3D> const &GetControlPoints() const {return m_aControlPoints;}
 
@@ -836,7 +836,7 @@ class NURBcurve: public curve
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
 
-        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+        unsigned int GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
 

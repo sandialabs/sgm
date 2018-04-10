@@ -115,7 +115,7 @@ void WriteNUBCurve(FILE                    *pFile,
         size_t nPos=nLine;
         fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
         char Arg[10];
-        sprintf_s(Arg,10,"#%ld",nPos);
+        snprintf(Arg,sizeof(Arg),"#%ld",nPos);
         sControlPoints+=Arg;
         if(Index1<nControlPoints-1)
             {
@@ -130,7 +130,7 @@ void WriteNUBCurve(FILE                    *pFile,
     for(Index1=0;Index1<nUniqueKnots;++Index1)
         {
         char Arg[10];
-        sprintf_s(Arg,10,"%ld",aMultiplity[Index1]);
+        snprintf(Arg,sizeof(Arg),"%ld",(long)(aMultiplity[Index1]));
         sMultiplity+=Arg;
         if(Index1<nUniqueKnots-1)
             {
@@ -145,7 +145,7 @@ void WriteNUBCurve(FILE                    *pFile,
     for(Index1=0;Index1<nUniqueKnots;++Index1)
         {
         char Arg[10];
-        sprintf_s(Arg,10,"%#.15G",aUniqueKnots[Index1]);
+        snprintf(Arg,sizeof(Arg),"%#.15G",aUniqueKnots[Index1]);
         sUniqueKnots+=Arg;
         if(Index1<nUniqueKnots-1)
             {
@@ -158,7 +158,7 @@ void WriteNUBCurve(FILE                    *pFile,
 
     mCurveMap[pNUBCurve->GetID()]=nLine;
     fprintf(pFile,"#%ld=B_SPLINE_CURVE_WITH_KNOTS('',%ld,%s,.UNSPECIFIED.,.F.,.F.,%s,%s,.UNSPECIFIED.);\n",
-        nLine++,nDegree,sControlPoints.c_str(),sMultiplity.c_str(),sUniqueKnots.c_str());
+        nLine++,(long)nDegree,sControlPoints.c_str(),sMultiplity.c_str(),sUniqueKnots.c_str());
     }
 
 void WriteCurves(FILE                          *pFile,
@@ -608,18 +608,18 @@ void WriteVolumes(SGM::Result              &rResult,
                 char Buf[25];
                 if(bFirst)
                     {
-                    sprintf_s(Buf,25,"#%ld",mEdgeMap[pEdge->GetID()]);
+                    snprintf(Buf,sizeof(Buf),"#%ld",mEdgeMap[pEdge->GetID()]);
                     }
                 else
                     {
-                    sprintf_s(Buf,25,",#%ld",mEdgeMap[pEdge->GetID()]);
+                    snprintf(Buf,sizeof(Buf),",#%ld",mEdgeMap[pEdge->GetID()]);
                     }
                 sEdgeList+=Buf;
                 bFirst=false;
                 ++EdgeIter;
                 }
             char Buf2[25];
-            sprintf_s(Buf2,25,"#%ld",nLine);
+            snprintf(Buf2,sizeof(Buf2),"#%ld",nLine);
             sVolumeList+=Buf2;
             fprintf(pFile,"#%ld=GEOMETRIC_CURVE_SET('',(%s));\n",nLine++,sEdgeList.c_str());
             bWireBody=true;
