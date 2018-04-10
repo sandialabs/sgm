@@ -76,7 +76,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
                    
     ndu[0][0]=1.0;
     int j,r,k;
-    for(j=1;j<=p;++j)
+    for(j=1;j<=(int)p;++j)
         {
         left[j]=u-U[i+1-j];
         right[j]=U[i+j]-u;
@@ -90,16 +90,16 @@ void FindBasisFunctions(size_t        i,     // One based span index.
             }
         ndu[j][j]=saved;
         }
-    for(j=0;j<=p;++j)
+    for(j=0;j<=(int)p;++j)
         {
         ders[0][j]=ndu[j][p];
         }
-    for(r=0;r<=p;r++)
+    for(r=0;r<=(int)p;r++)
         {
         size_t s1=0;
         size_t s2=1;
         a[0][0]=1.0;
-        for(k=1;k<=n;++k)
+        for(k=1;k<=(int)n;++k)
             {
             double d=0.0;
             int rk=(int)(r-k);
@@ -143,9 +143,9 @@ void FindBasisFunctions(size_t        i,     // One based span index.
             }
         }
     r=(int)p;
-    for(k=1;k<=n;++k)
+    for(k=1;k<=(int)n;++k)
         {
-        for(j=0;j<=p;++j)
+        for(j=0;j<=(int)p;++j)
             {
             ders[k][j]*=r;
             }

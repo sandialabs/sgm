@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
@@ -510,10 +511,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Point3D SKL[3][3];
             for(k=0;k<=nUDerivatives;++k)
                 {
-                for(s=0;s<=nVDegree;++s)
+                for(s=0;s<=(int)nVDegree;++s)
                     {
                     temp[s]=SGM::Point3D(0.0,0.0,0.0);
-                    for(r=0;r<=nUDegree;++r)
+                    for(r=0;r<=(int)nUDegree;++r)
                         {
                         double dFactor=aaUBasisFunctions[k][r];
                         SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+r][nVSpanIndex-nVDegree+s];
@@ -572,13 +573,13 @@ void surface::Evaluate(SGM::Point2D const &uv,
         }
     }
 
-SGM::Point2D NewtonsMethod(surface      const *pSurface,
+SGM::Point2D NewtonsMethod(surface      const *,//pSurface,
                            SGM::Point2D       &StartUV,
-                           SGM::Point3D const &Pos)
+                           SGM::Point3D const &)//Pos)
     {
-    pSurface;
-    StartUV;
-    Pos;
+//    pSurface;
+//    StartUV;
+//    Pos;
     return StartUV;
     }
 
@@ -812,7 +813,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 std::vector<SGM::Point2D> const &aSeedParams=pNUBSurface->GetSeedParams();
                 size_t nSeedPoints=aSeedPoints.size();
                 size_t Index1;
-                double dMin=DBL_MAX;
+                double dMin=std::numeric_limits<double>::max();
                 for(Index1=0;Index1<nSeedPoints;++Index1)
                     {
                     double dDist=aSeedPoints[Index1].DistanceSquared(Pos);
