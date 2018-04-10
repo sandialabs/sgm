@@ -4,9 +4,8 @@
 #include "Topology.h"
 #include "Faceter.h"
 #include "Graph.h"
-#include <vector>
-#include <algorithm>
 #include <list>
+#include <cmath>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1161,7 +1160,7 @@ void RefineTriangles(face                     const *pFace,
             mEdgeData[std::pair<size_t,size_t>(Index1,2)]=dVal;
             }
         }
-    double dDotTol=cos(Options.m_dFaceAngleTol);
+    double dDotTol=std::cos(Options.m_dFaceAngleTol);
     dDotTol=0.93969262078590838405410927732473;
     bool bSplit=true;
     size_t nCount=0;

@@ -3,7 +3,7 @@
 #include "SGMTree.h"
 #include "Topology.h"
 #include "EntityClasses.h"
-#include <algorithm>
+#include <cmath>
 
 body *CreateTorus(SGM::Result             &rResult,
                   thing                   *pThing,
@@ -128,7 +128,7 @@ body *CreateBlock(SGM::Result        &rResult,
     pThing->AddTopLevelEntity(pBody);
     pBody->AddVolume(pVolume);
 
-    if(fabs(Z0-Z1)<1E-6)
+    if(std::abs(Z0-Z1)<1E-6)
         {
         SGM::Point3D Pos0(X0,Y0,Z0);
         SGM::Point3D Pos1(X1,Y0,Z0);

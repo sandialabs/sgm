@@ -2,8 +2,7 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Faceter.h"
-#include <vector>
-#include <algorithm>
+#include <limits>
 
 NUBcurve::NUBcurve(SGM::Result                     &rResult,
                    std::vector<SGM::Point3D> const &aControlPoints,
@@ -19,7 +18,7 @@ size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
     {
     size_t nKnots=m_aKnots.size();
     size_t Index1;
-    double dLastKnot=DBL_MAX;
+    double dLastKnot=std::numeric_limits<double>::max();
     for(Index1=0;Index1<nKnots;++Index1)
         {
         double dKnot=m_aKnots[Index1];

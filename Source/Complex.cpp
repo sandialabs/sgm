@@ -78,7 +78,7 @@ complex::complex(SGM::Result &rResult):
 
 complex::complex(SGM::Result                     &rResult,
                  std::vector<SGM::Point3D> const &aPoints):
-    entity(rResult,SGM::EntityType::ComplexType),m_pThing(rResult.GetThing()),m_aPoints(aPoints) 
+    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints),m_pThing(rResult.GetThing())
     {
     m_Box=SGM::FindBoundingBox3D(m_aPoints);
     }
@@ -86,7 +86,7 @@ complex::complex(SGM::Result                     &rResult,
 complex::complex(SGM::Result                     &rResult,
                  std::vector<size_t>       const &aSegments,
                  std::vector<SGM::Point3D> const &aPoints):
-    entity(rResult,SGM::EntityType::ComplexType),m_pThing(rResult.GetThing()),m_aPoints(aPoints),m_aSegments(aSegments)
+    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints),m_aSegments(aSegments),m_pThing(rResult.GetThing())
     {
     m_Box=SGM::FindBoundingBox3D(m_aPoints);
     }
@@ -94,7 +94,7 @@ complex::complex(SGM::Result                     &rResult,
 complex::complex(SGM::Result                     &rResult,
                  std::vector<SGM::Point3D> const &aPoints,
                  std::vector<size_t>       const &aTriangles):
-    entity(rResult,SGM::EntityType::ComplexType),m_pThing(rResult.GetThing()),m_aPoints(aPoints),m_aTriangles(aTriangles)
+    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints),m_aTriangles(aTriangles),m_pThing(rResult.GetThing())
     {
     m_Box=SGM::FindBoundingBox3D(m_aPoints);
     }

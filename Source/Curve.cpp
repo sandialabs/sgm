@@ -2,9 +2,8 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include <limits>
 #include <cmath>
-#include <vector>
-#include <algorithm>
 
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
@@ -105,7 +104,7 @@ double curve::Inverse(SGM::Point3D const &Pos,
 
             double dx=dSpokeX*XAxis.m_x+dSpokeY*XAxis.m_y+dSpokeZ*XAxis.m_z;
             double dy=dSpokeX*YAxis.m_x+dSpokeY*YAxis.m_y+dSpokeZ*YAxis.m_z;
-            double t=atan2(dy,dx);
+            double t=std::atan2(dy,dx);
 
             if(t<m_Domain.m_dMin)
                 {
@@ -139,7 +138,7 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 NUBcurve const *pNUB=(NUBcurve *)this;
                 std::vector<SGM::Point3D> const &aPoints=pNUB->NUBcurve::GetSeedPoints();
                 std::vector<double> const &aParams=pNUB->NUBcurve::GetSeedParams();
-                double dMin=DBL_MAX;
+                double dMin=std::numeric_limits<double>::max();
                 size_t Index1;
                 size_t nPoints=aPoints.size();
                 for(Index1=0;Index1<nPoints;++Index1)

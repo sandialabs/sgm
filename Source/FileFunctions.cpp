@@ -2,7 +2,8 @@
 #include "STEP.h"
 #include <string>
 #include <algorithm>
-#include <time.h>
+#include <iomanip>
+#include <sstream>
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -47,26 +48,11 @@ void FindFileExtension(std::string const &FileName,
 
 std::string GetDateAndTime() 
     {
-    time_t seconds=time(NULL);
-    struct tm TimeStruct;
-
-#if defined(_WIN64)
-    gmtime_s(&TimeStruct,&seconds);
-#endif
-#if defined(SGM_LINUX)
-    gmtime_r(&seconds,&TimeStruct);
-#endif
-
-    int nYear=TimeStruct.tm_year+1900;
-    int nMonth=TimeStruct.tm_mon+1;
-    int nDay=TimeStruct.tm_mday;
-    int nHour=TimeStruct.tm_hour;
-    int nMinute=TimeStruct.tm_min;
-    int nSecond=TimeStruct.tm_sec;
-
-    char Buf[25];
-    snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
-    return Buf;
+    std::stringstream ss;
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+    ss << std::put_time(&tm, "%F %T"); // for example, 2018-04-21 16:45:06
+    return ss.str();
     }
 
 std::string GetFileName(std::string const &FileName) 
