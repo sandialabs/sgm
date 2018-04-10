@@ -314,50 +314,6 @@ solid Face 297
       endloop 
    endfacet 
 end solid Face 297
-solid Face 301
-   facet normal -0.707107 0.707107 -0.000000 
-      outer loop 
-         vertex 2.886751 2.886751 2.886751 
-         vertex 5.773503 5.773503 5.773503 
-         vertex 6.484122 6.484122 3.989026 
-      endloop 
-   endfacet 
-   facet normal -0.707107 0.707107 -0.000000 
-      outer loop 
-         vertex 3.242061 3.242061 1.994513 
-         vertex 2.886751 2.886751 2.886751 
-         vertex 6.484122 6.484122 3.989026 
-      endloop 
-   endfacet 
-   facet normal -0.707107 0.707107 0.000000 
-      outer loop 
-         vertex 3.242061 3.242061 1.994513 
-         vertex 6.484122 6.484122 3.989026 
-         vertex 6.922776 6.922776 2.037237 
-      endloop 
-   endfacet 
-   facet normal -0.707107 0.707107 -0.000000 
-      outer loop 
-         vertex 3.461388 3.461388 1.018619 
-         vertex 3.242061 3.242061 1.994513 
-         vertex 6.922776 6.922776 2.037237 
-      endloop 
-   endfacet 
-   facet normal -0.707107 0.707107 0.000000 
-      outer loop 
-         vertex 6.922776 6.922776 2.037237 
-         vertex 7.071068 7.071068 0.000000 
-         vertex 3.535534 3.535534 0.000000 
-      endloop 
-   endfacet 
-   facet normal -0.707107 0.707107 0.000000 
-      outer loop 
-         vertex 3.461388 3.461388 1.018619 
-         vertex 6.922776 6.922776 2.037237 
-         vertex 3.535534 3.535534 0.000000 
-      endloop 
-   endfacet 
-end solid Face 301
 solid Face 303
    facet normal 0.097550 0.990438 0.097550 
       outer loop 
@@ -514,6 +470,50 @@ solid Face 303
       endloop 
    endfacet 
 end solid Face 303
+solid Face 301
+   facet normal -0.707107 0.707107 -0.000000 
+      outer loop 
+         vertex 2.886751 2.886751 2.886751 
+         vertex 5.773503 5.773503 5.773503 
+         vertex 6.484122 6.484122 3.989026 
+      endloop 
+   endfacet 
+   facet normal -0.707107 0.707107 -0.000000 
+      outer loop 
+         vertex 3.242061 3.242061 1.994513 
+         vertex 2.886751 2.886751 2.886751 
+         vertex 6.484122 6.484122 3.989026 
+      endloop 
+   endfacet 
+   facet normal -0.707107 0.707107 0.000000 
+      outer loop 
+         vertex 3.242061 3.242061 1.994513 
+         vertex 6.484122 6.484122 3.989026 
+         vertex 6.922776 6.922776 2.037237 
+      endloop 
+   endfacet 
+   facet normal -0.707107 0.707107 -0.000000 
+      outer loop 
+         vertex 3.461388 3.461388 1.018619 
+         vertex 3.242061 3.242061 1.994513 
+         vertex 6.922776 6.922776 2.037237 
+      endloop 
+   endfacet 
+   facet normal -0.707107 0.707107 0.000000 
+      outer loop 
+         vertex 6.922776 6.922776 2.037237 
+         vertex 7.071068 7.071068 0.000000 
+         vertex 3.535534 3.535534 0.000000 
+      endloop 
+   endfacet 
+   facet normal -0.707107 0.707107 0.000000 
+      outer loop 
+         vertex 3.461388 3.461388 1.018619 
+         vertex 6.922776 6.922776 2.037237 
+         vertex 3.535534 3.535534 0.000000 
+      endloop 
+   endfacet 
+end solid Face 301
 solid Face 318
    facet normal -0.000000 -0.707107 0.707107 
       outer loop 
@@ -816,6 +816,64 @@ solid Face 342
       endloop 
    endfacet 
 end solid Face 342
+solid Face 346
+   facet normal 0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 5.555702 0.000000 8.314696 
+         vertex 7.071068 0.000000 7.071068 
+         vertex 3.535534 0.000000 3.535534 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 5.555702 0.000000 8.314696 
+         vertex 3.535534 0.000000 3.535534 
+         vertex 2.777851 0.000000 4.157348 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 0.000000 0.000000 5.000000 
+         vertex 0.000000 0.000000 10.000000 
+         vertex 1.950903 0.000000 9.807853 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 -0.000000 
+      outer loop 
+         vertex 0.975452 0.000000 4.903926 
+         vertex 0.000000 0.000000 5.000000 
+         vertex 1.950903 0.000000 9.807853 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 0.975452 0.000000 4.903926 
+         vertex 1.950903 0.000000 9.807853 
+         vertex 3.826834 0.000000 9.238795 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 -0.000000 
+      outer loop 
+         vertex 1.913417 0.000000 4.619398 
+         vertex 0.975452 0.000000 4.903926 
+         vertex 3.826834 0.000000 9.238795 
+      endloop 
+   endfacet 
+   facet normal 0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 1.913417 0.000000 4.619398 
+         vertex 3.826834 0.000000 9.238795 
+         vertex 5.555702 0.000000 8.314696 
+      endloop 
+   endfacet 
+   facet normal -0.000000 1.000000 0.000000 
+      outer loop 
+         vertex 1.913417 0.000000 4.619398 
+         vertex 5.555702 0.000000 8.314696 
+         vertex 2.777851 0.000000 4.157348 
+      endloop 
+   endfacet 
+end solid Face 346
 solid Face 348
    facet normal 0.631090 0.101912 0.768986 
       outer loop 
@@ -972,64 +1030,6 @@ solid Face 348
       endloop 
    endfacet 
 end solid Face 348
-solid Face 346
-   facet normal 0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 5.555702 0.000000 8.314696 
-         vertex 7.071068 0.000000 7.071068 
-         vertex 3.535534 0.000000 3.535534 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 5.555702 0.000000 8.314696 
-         vertex 3.535534 0.000000 3.535534 
-         vertex 2.777851 0.000000 4.157348 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 0.000000 0.000000 5.000000 
-         vertex 0.000000 0.000000 10.000000 
-         vertex 1.950903 0.000000 9.807853 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 -0.000000 
-      outer loop 
-         vertex 0.975452 0.000000 4.903926 
-         vertex 0.000000 0.000000 5.000000 
-         vertex 1.950903 0.000000 9.807853 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 0.975452 0.000000 4.903926 
-         vertex 1.950903 0.000000 9.807853 
-         vertex 3.826834 0.000000 9.238795 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 -0.000000 
-      outer loop 
-         vertex 1.913417 0.000000 4.619398 
-         vertex 0.975452 0.000000 4.903926 
-         vertex 3.826834 0.000000 9.238795 
-      endloop 
-   endfacet 
-   facet normal 0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 1.913417 0.000000 4.619398 
-         vertex 3.826834 0.000000 9.238795 
-         vertex 5.555702 0.000000 8.314696 
-      endloop 
-   endfacet 
-   facet normal -0.000000 1.000000 0.000000 
-      outer loop 
-         vertex 1.913417 0.000000 4.619398 
-         vertex 5.555702 0.000000 8.314696 
-         vertex 2.777851 0.000000 4.157348 
-      endloop 
-   endfacet 
-end solid Face 346
 solid Face 363
    facet normal 0.707107 0.000000 -0.707107 
       outer loop 

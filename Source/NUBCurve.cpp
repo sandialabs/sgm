@@ -75,7 +75,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
     double a[2][SMG_MAX_NURB_DEGREE_PLUS_ONE];
                    
     ndu[0][0]=1.0;
-    size_t j,r,k;
+    int j,r,k;
     for(j=1;j<=p;++j)
         {
         left[j]=u-U[i+1-j];
@@ -137,19 +137,19 @@ void FindBasisFunctions(size_t        i,     // One based span index.
                 d+=a[s2][k]*ndu[r][pk];
                 }
             ders[k][r]=d;
-            j=s1;
+            j=(int)s1;
             s1=s2;
             s2=j;
             }
         }
-    r=p;
+    r=(int)p;
     for(k=1;k<=n;++k)
         {
         for(j=0;j<=p;++j)
             {
             ders[k][j]*=r;
             }
-        r*=(p-k);
+        r*=(int)(p-k);
         }
     }
 
