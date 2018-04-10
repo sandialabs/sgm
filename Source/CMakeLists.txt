@@ -17,9 +17,6 @@ target_include_directories(SGM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_D
                                       $<INSTALL_INTERFACE:SGM/Public>)
 
 
-# extra commands to run when linking KCM library
-
-
 # installation
-install(FILES ${KCM_PUBLIC_HEADERS} 
-        DESTINATION KCM/Public COMPONENT Development)
+install(FILES ${SGM_PUBLIC_HEADERS} 
+        DESTINATION include COMPONENT Development)
