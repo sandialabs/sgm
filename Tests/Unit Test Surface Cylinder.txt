@@ -1,3 +1,3 @@
-// Tests the methods of a Cylinder.
+// Tests the methods of a Cylinder.;
 RunCPPTest(5);
 

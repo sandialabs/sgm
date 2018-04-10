@@ -451,9 +451,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             if(Duv)
                 {
-                Duv->m_x=0;
-                Duv->m_y=0;
-                Duv->m_z=0;
+                double dVScaleD=-dRadius*dSinHalfAngle;
+                Duv->m_x=(YAxis.m_x*dCosU-XAxis.m_x*dSinU)*dVScaleD;
+                Duv->m_y=(YAxis.m_y*dCosU-XAxis.m_y*dSinU)*dVScaleD;
+                Duv->m_z=(YAxis.m_z*dCosU-XAxis.m_z*dSinU)*dVScaleD;
                 }
             if(Dvv)
                 {
