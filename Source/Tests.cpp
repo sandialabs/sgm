@@ -14,6 +14,7 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -740,7 +741,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         std::vector<double> aRoots;
         size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots);
         if( nRoots!=4 || 
-            SGM_ZERO<fabs(aRoots[0]-1) || 
+            SGM_ZERO<fabs(aRoots[0]-1) ||
             SGM_ZERO<fabs(aRoots[1]-2) ||
             SGM_ZERO<fabs(aRoots[2]-3) ||
             SGM_ZERO<fabs(aRoots[3]-4))

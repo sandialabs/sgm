@@ -1,0 +1,89 @@
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+.idea/
+# CMake
+cmake-build-debug/
+cmake-build-release/
+
+# Eclipse project files
+.settings/
+.classpath
+.project
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+# External tool builders
+.externalToolBuilders/
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# Visual Studio
+.vscode/*
+
+# Komodo IDE project files
+*.komodoproject
+
+# python and packages
+*.py[cod]
+__pycache__
+.cache
+*.egg
+*.eggs
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+pip-log.txt
+
+# testing / benchmarks / coverage reports
+benchmarks/env
+.coverage
+.tox
+cov_annotate
+cov_html
+*.pstat
+
+# examples and notebooks
+.ipynb_checkpoints
+
+# Translations
+*.mo
+
+# Other
+.DS_Store
+*_dropbox.sh
+*_blade.sh
+
+# binary executables, libraries
+*.so
+*.exe
+*.dll
+*.dylib
+
+# Windows
+Thumbs.db
+ehthumbs.db
+*.stackdump
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk

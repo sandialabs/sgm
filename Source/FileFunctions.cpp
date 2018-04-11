@@ -2,7 +2,8 @@
 #include "STEP.h"
 #include <string>
 #include <algorithm>
-#include <time.h>
+#include <iomanip>
+#include <sstream>
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -14,14 +15,11 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
-#if defined(__linux__) && !defined(SGM_LINUX)
-# define SGM_LINUX
-#endif
-
 #if defined(_MSC_VER)
 #include <windows.h>
 #endif
-#if defined(SGM_LINUX)
+
+#if defined(__GNUG__)
 #include <sys/types.h>
 #include <dirent.h>
 #endif
@@ -53,7 +51,7 @@ std::string GetDateAndTime()
 #if defined(_WIN64)
     gmtime_s(&TimeStruct,&seconds);
 #endif
-#if defined(SGM_LINUX)
+#if defined(__GNUG__)
     gmtime_r(&seconds,&TimeStruct);
 #endif
 
@@ -125,6 +123,7 @@ bool ReadFileLine(FILE        *pFile,
 void ReadDirectory(std::string        const &DirName, 
                    std::vector<std::string> &aFileNames)
     {
+        aFileNames.clear();
 #if defined(_WIN64)
     std::string pattern(DirName);
     pattern.append("\\*");
@@ -138,8 +137,7 @@ void ReadDirectory(std::string        const &DirName,
             } while (FindNextFileA(hFind, &data) != 0);
         FindClose(hFind);
         }
-#endif
-#if defined(SGM_LINUX)
+#elif defined(__GNUG__)  // true on GCC or Clang
     if (DIR *directory = opendir(DirName.c_str()))
         {
             while(struct dirent *entity = readdir(directory))
@@ -149,5 +147,7 @@ void ReadDirectory(std::string        const &DirName,
                 }
             closedir(directory);
         }
+#else
+#   error No available implementation for ReadDirectory()
 #endif
     }

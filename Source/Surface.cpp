@@ -24,7 +24,8 @@ void surface::Remove(SGM::Result &rResult)
 
 void surface::AddFace(face *pFace) 
     {
-    if(this)
+    void* other = (void*)this;
+    if(other)
         {
         m_sFaces.insert(pFace);
         }
@@ -32,7 +33,8 @@ void surface::AddFace(face *pFace)
 
 void surface::RemoveFace(face *pFace) 
     {
-    if(this)
+    void* other = (void*)this;
+    if(other)
         {
         m_sFaces.erase(pFace);
         }
