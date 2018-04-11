@@ -1,32 +1,32 @@
 solid Face 3
-   facet normal 0.000000 -0.000000 -1.000000 
+   facet normal 0.000000 0.000000 -1.000000 
       outer loop 
+         vertex 0.000000 10.000000 0.000000 
          vertex 10.000000 10.000000 0.000000 
          vertex 10.000000 0.000000 0.000000 
-         vertex 0.000000 0.000000 0.000000 
       endloop 
    endfacet 
-   facet normal -0.000000 0.000000 -1.000000 
+   facet normal 0.000000 0.000000 -1.000000 
       outer loop 
-         vertex 10.000000 10.000000 0.000000 
-         vertex 0.000000 0.000000 0.000000 
          vertex 0.000000 10.000000 0.000000 
+         vertex 10.000000 0.000000 0.000000 
+         vertex 0.000000 0.000000 0.000000 
       endloop 
    endfacet 
 end solid Face 3
 solid Face 4
-   facet normal 0.000000 -1.000000 0.000000 
+   facet normal -0.000000 -1.000000 0.000000 
       outer loop 
+         vertex 10.000000 0.000000 10.000000 
          vertex 0.000000 0.000000 10.000000 
          vertex 0.000000 0.000000 0.000000 
-         vertex 10.000000 0.000000 0.000000 
       endloop 
    endfacet 
-   facet normal 0.000000 -1.000000 0.000000 
+   facet normal 0.000000 -1.000000 -0.000000 
       outer loop 
-         vertex 0.000000 0.000000 10.000000 
-         vertex 10.000000 0.000000 0.000000 
          vertex 10.000000 0.000000 10.000000 
+         vertex 0.000000 0.000000 0.000000 
+         vertex 10.000000 0.000000 0.000000 
       endloop 
    endfacet 
 end solid Face 4

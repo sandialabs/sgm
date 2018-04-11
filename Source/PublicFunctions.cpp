@@ -4,6 +4,98 @@
 #include "SGMGeometry.h"
 #include "SGMChecker.h"
 #include "Primitive.h"
+#include "EntityClasses.h"
+#include "Topology.h"
+
+void FindBodies(SGM::Result         &rResult,
+                SGM::Entity   const &EntityID,
+                std::set<SGM::Body> &sBodies)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<body *> sbodies;
+    FindBodies(rResult,pEntity,sbodies);
+    std::set<body *>::iterator iter=sbodies.begin();
+    while(iter!=sbodies.end())
+        {
+        sBodies.insert(SGM::Body((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void FindComplexes(SGM::Result            &rResult,
+                   SGM::Entity      const &EntityID,
+                   std::set<SGM::Complex> &sComplexes)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<complex *> sComplex;
+    FindComplexes(rResult,pEntity,sComplex);
+    std::set<complex *>::iterator iter=sComplex.begin();
+    while(iter!=sComplex.end())
+        {
+        sComplexes.insert(SGM::Complex((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void FindVolumes(SGM::Result           &rResult,
+                 SGM::Entity     const &EntityID,
+                 std::set<SGM::Volume> &sVolumes)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<volume *> sVolume;
+    FindVolumes(rResult,pEntity,sVolume);
+    std::set<volume *>::iterator iter=sVolume.begin();
+    while(iter!=sVolume.end())
+        {
+        sVolumes.insert(SGM::Volume((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void FindFaces(SGM::Result         &rResult,
+               SGM::Entity   const &EntityID,
+               std::set<SGM::Face> &sFaces)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<face *> sFace;
+    FindFaces(rResult,pEntity,sFace);
+    std::set<face *>::iterator iter=sFace.begin();
+    while(iter!=sFace.end())
+        {
+        sFaces.insert(SGM::Face((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void FindEdges(SGM::Result         &rResult,
+               SGM::Entity   const &EntityID,
+               std::set<SGM::Edge> &sEdges)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<edge *> sEdge;
+    FindEdges(rResult,pEntity,sEdge);
+    std::set<edge *>::iterator iter=sEdge.begin();
+    while(iter!=sEdge.end())
+        {
+        sEdges.insert(SGM::Edge((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void FindVertices(SGM::Result           &rResult,
+                  SGM::Entity     const &EntityID,
+                  std::set<SGM::Vertex> &sVertices)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<vertex *> sVertex;
+    FindVertices(rResult,pEntity,sVertex);
+    std::set<vertex *>::iterator iter=sVertex.begin();
+    while(iter!=sVertex.end())
+        {
+        sVertices.insert(SGM::Vertex((*iter)->GetID()));
+        ++iter;
+        }
+    }
 
 SGM::Result SGM::CreateResult()
     {
