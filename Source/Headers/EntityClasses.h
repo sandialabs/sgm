@@ -833,15 +833,18 @@ class NURBcurve: public curve
     {
     public:
 
-        NURBcurve(SGM::Result                     &rResult,
-                  std::vector<SGM::Point4D> const &aControlPoints,
-                  std::vector<double>       const &aKnots);
+        NURBcurve(SGM::Result                                   &rResult,
+                  std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                  std::vector<double>                     const &aUKnots,
+                  std::vector<double>                     const &aVKnots);
 
-        size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
+        size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
+        size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
 
-        std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
+        std::vector<std::vector<SGM::Point4D> > const &GetControlPoints() const {return m_aaControlPoints;}
 
-        std::vector<double> const &GetKnots() const {return m_aKnots;}
+        std::vector<double> const &GetUKnots() const {return m_aUKnots;}
+        std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
         size_t FindMultiplity(std::vector<int>    &aMultiplity,
                               std::vector<double> &aUniqueKnots) const;
@@ -852,8 +855,9 @@ class NURBcurve: public curve
 
     public:
 
-        std::vector<SGM::Point4D> m_aControlPoints;
-        std::vector<double>       m_aKnots;   
+        std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
+        std::vector<double>                     m_aUKnots;   
+        std::vector<double>                     m_aVKnots;   
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;

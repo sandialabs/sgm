@@ -9,32 +9,32 @@
 
 namespace SGM
     {
-    SGM::Thing FindThing(SGM::Result       &rResult,
-                         SGM::Entity const &EntityID);
-
-    size_t FindBodies(SGM::Result         &rResult,
-                      SGM::Entity   const &EntityID,
-                      std::set<SGM::Body> &aBodies);
-
-    size_t FindComplexes(SGM::Result            &rResult,
-                         SGM::Entity      const &EntityID,
-                         std::set<SGM::Complex> &aComplexes);
-
-    size_t FindVolumes(SGM::Result           &rResult,
-                       SGM::Entity     const &EntityID,
-                       std::set<SGM::Volume> &aVolumes);
-
-    size_t FindFaces(SGM::Result         &rResult,
-                     SGM::Entity   const &EntityID,
-                     std::set<SGM::Face> &aFaces);
-
-    size_t FindEdges(SGM::Result         &rResult,
-                     SGM::Entity   const &EntityID,
-                     std::set<SGM::Edge> &aEdges);
+    // To create a thing just use the following code;
+    // SGM::Thing MyThing;
     
-    size_t FindVertices(SGM::Result           &rResult,
-                        SGM::Entity     const &EntityID,
-                        std::set<SGM::Vertex> &aVertices);
+    void FindBodies(SGM::Result         &rResult,
+                    SGM::Entity   const &EntityID,
+                    std::set<SGM::Body> &sBodies);
+
+    void FindComplexes(SGM::Result            &rResult,
+                       SGM::Entity      const &EntityID,
+                       std::set<SGM::Complex> &sComplexes);
+
+    void FindVolumes(SGM::Result           &rResult,
+                     SGM::Entity     const &EntityID,
+                     std::set<SGM::Volume> &sVolumes);
+
+    void FindFaces(SGM::Result         &rResult,
+                   SGM::Entity   const &EntityID,
+                   std::set<SGM::Face> &sFaces);
+
+    void FindEdges(SGM::Result         &rResult,
+                   SGM::Entity   const &EntityID,
+                   std::set<SGM::Edge> &sEdges);
+    
+    void FindVertices(SGM::Result           &rResult,
+                      SGM::Entity     const &EntityID,
+                      std::set<SGM::Vertex> &sVertices);
 
     } // End of SGM namespace
 

@@ -576,14 +576,28 @@ void surface::Evaluate(SGM::Point2D const &uv,
         }
     }
 
-SGM::Point2D NewtonsMethod(surface      const *,//pSurface,
-                           SGM::Point2D       &StartUV,
-                           SGM::Point3D const &)//Pos)
+SGM::Point2D NewtonsMethod(surface      const *pSurface,
+                           SGM::Point2D const &StartUV,
+                           SGM::Point3D const &Pos)
     {
-//    pSurface;
-//    StartUV;
-//    Pos;
-    return StartUV;
+    SGM::Point3D SurfPos;
+    SGM::Vector3D DU,DV;
+    SGM::UnitVector3D Norm;
+    pSurface->Evaluate(StartUV,&SurfPos,&DU,&DV,&Norm);
+    SGM::Point2D Answer=StartUV;
+    double DeltaU=std::numeric_limits<double>::max();
+    double DeltaV=std::numeric_limits<double>::max();
+    while(SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
+          SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO)
+        {
+        SGM::Point3D ProjectPos=Pos-Norm*((Pos-SurfPos)%Norm);
+        SGM::Vector3D S=ProjectPos-SurfPos;
+        DeltaU=(S%DU)/DU.MagnitudeSquared();
+        DeltaV=(S%DV)/DV.MagnitudeSquared();
+        Answer.m_u+=DeltaU;
+        Answer.m_v+=DeltaV;
+        }
+    return Answer;
     }
 
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
