@@ -772,12 +772,12 @@ class ellipse : public curve
     public:
 
         ellipse(SGM::Result             &rResult,
-               SGM::Point3D      const &Center,
-               SGM::UnitVector3D const &Normal,
-               double                   dRadius1,
-               double                   dRadius2,
-               SGM::UnitVector3D const *pXAxis=NULL,
-               SGM::Interval1D   const *pDomain=NULL);
+                SGM::Point3D      const &Center,
+                SGM::UnitVector3D const &Normal,
+                double                   dRadius1,
+                double                   dRadius2,
+                SGM::UnitVector3D const *pXAxis=NULL,
+                SGM::Interval1D   const *pDomain=NULL);
 
         ellipse(SGM::Result   &rResult,
                 ellipse const *pEllipse);
