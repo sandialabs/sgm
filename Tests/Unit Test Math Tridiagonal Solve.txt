@@ -1,3 +1,0 @@
-// Test Tridiagonal Solve
-RunCPPTest(11);
-

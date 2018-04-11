@@ -4,6 +4,9 @@
 #include "Topology.h"
 #include <limits>
 #include <cmath>
+#include <vector>
+#include <algorithm>
+#include <cfloat>
 
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
@@ -235,9 +238,9 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
             NUBcurve const *pNUB=(NUBcurve const *)this;
             std::vector<double> const &aKnots=pNUB->m_aKnots;
             std::vector<SGM::Point3D> const &aControlPoints=pNUB->m_aControlPoints;
-            int nDegree=pNUB->GetDegree();
-            int nSpanIndex=FindSpanIndex(m_Domain,nDegree,t,aKnots);
-            int nDerivatives=0;
+            size_t nDegree=pNUB->GetDegree();
+            size_t nSpanIndex=FindSpanIndex(m_Domain,nDegree,t,aKnots);
+            size_t nDerivatives=0;
             if(D1) nDerivatives=1;
             if(D2) nDerivatives=2;
             double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];

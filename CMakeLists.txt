@@ -14,8 +14,8 @@ sgm_project_setup()
 
 # hard coded version number
 
-set(SGM_VERSION_MAJOR 1)
-set(SGM_VERSION_MINOR 0)
+#set(SGM_VERSION_MAJOR 1)
+#set(SGM_VERSION_MINOR 0)
 
 
 # build settings for all projects
@@ -37,9 +37,9 @@ endif()
 #  add_definitions(-D_USE_MATH_DEFINES)
 #endif()
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SGMall_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SGMall_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SGMall_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
 # convenience function to set common properties on SGM libraries
@@ -48,9 +48,9 @@ function(add_sgm_library NAME)
   add_library(${NAME} ${ARGN})
 
   # set version information
-  set_target_properties(${NAME} PROPERTIES
-                                SOVERSION ${SGM_VERSION_MAJOR}.${SGM_VERSION_MINOR}
-                                VERSION ${SGM_VERSION_MAJOR}.${SGM_VERSION_MINOR}} )
+  #set_target_properties(${NAME} PROPERTIES
+  #                              SOVERSION ${SGM_VERSION_MAJOR}.${SGM_VERSION_MINOR}
+  #                              VERSION ${SGM_VERSION_MAJOR}.${SGM_VERSION_MINOR}} )
 
   # dll interface for windows requires definition of SGM_MAIN
   string(TOUPPER ${NAME} NAMEUPPER)
@@ -66,9 +66,9 @@ function(add_sgm_library NAME)
 
   # installation of library
   install(TARGETS ${NAME} EXPORT SGM
-        RUNTIME DESTINATION Executables COMPONENT Runtime
-        LIBRARY DESTINATION Executables COMPONENT Runtime
-        ARCHIVE DESTINATION Executables COMPONENT Development)
+        RUNTIME DESTINATION bin COMPONENT Runtime
+        LIBRARY DESTINATION bin COMPONENT Runtime
+        ARCHIVE DESTINATION bin COMPONENT Development)
 
 endfunction()
 

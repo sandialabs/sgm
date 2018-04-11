@@ -491,20 +491,20 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             {
             // The torus case.
 
-            SGM::Interval2D const &Domain=pSurface->GetDomain();
-            double dMinU=Domain.m_UDomain.m_dMin;
-            double dMaxU=Domain.m_UDomain.m_dMax;
-            double dMinV=Domain.m_VDomain.m_dMin;
-            double dMaxV=Domain.m_VDomain.m_dMax;
-
-            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
-            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
-
-            dMaxU;
-            dMaxV;
-
-            pUSeam->Remove(rResult);
-            pVSeam->Remove(rResult);
+//            SGM::Interval2D const &Domain=pSurface->GetDomain();
+//            double dMinU=Domain.m_UDomain.m_dMin;
+//            double dMaxU=Domain.m_UDomain.m_dMax;
+//            double dMinV=Domain.m_VDomain.m_dMin;
+//            double dMaxV=Domain.m_VDomain.m_dMax;
+//
+//            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
+//            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
+//
+//            dMaxU;
+//            dMaxV;
+//
+//            pUSeam->Remove(rResult);
+//            pVSeam->Remove(rResult);
             }
         else if(pSurface->SingularLowV() && pSurface->SingularHighV())
             {

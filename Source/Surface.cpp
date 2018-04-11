@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
@@ -23,7 +24,8 @@ void surface::Remove(SGM::Result &rResult)
 
 void surface::AddFace(face *pFace) 
     {
-    if(this)
+    void* other = (void*)this;
+    if(other)
         {
         m_sFaces.insert(pFace);
         }
@@ -31,7 +33,8 @@ void surface::AddFace(face *pFace)
 
 void surface::RemoveFace(face *pFace) 
     {
-    if(this)
+    void* other = (void*)this;
+    if(other)
         {
         m_sFaces.erase(pFace);
         }
@@ -450,9 +453,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             if(Duv)
                 {
-                Duv->m_x=0;
-                Duv->m_y=0;
-                Duv->m_z=0;
+                double dVScaleD=-dRadius*dSinHalfAngle;
+                Duv->m_x=(YAxis.m_x*dCosU-XAxis.m_x*dSinU)*dVScaleD;
+                Duv->m_y=(YAxis.m_y*dCosU-XAxis.m_y*dSinU)*dVScaleD;
+                Duv->m_z=(YAxis.m_z*dCosU-XAxis.m_z*dSinU)*dVScaleD;
                 }
             if(Dvv)
                 {
@@ -470,12 +474,12 @@ void surface::Evaluate(SGM::Point2D const &uv,
             std::vector<std::vector<SGM::Point3D> > const &aControlPoints=pNUB->m_aaControlPoints;
             
             std::vector<double> const &aUKnots=pNUB->m_aUKnots;
-            int nUDegree=pNUB->GetUDegree();
-            int nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
+            size_t nUDegree=pNUB->GetUDegree();
+            size_t nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
 
             std::vector<double> const &aVKnots=pNUB->m_aVKnots;
-            int nVDegree=pNUB->GetVDegree();
-            int nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
+            size_t nVDegree=pNUB->GetVDegree();
+            size_t nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
 
             int nUDerivatives=0;
             if(Du || Norm || Duv) nUDerivatives=1;
@@ -510,10 +514,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Point3D SKL[3][3];
             for(k=0;k<=nUDerivatives;++k)
                 {
-                for(s=0;s<=nVDegree;++s)
+                for(s=0;s<=(int)nVDegree;++s)
                     {
                     temp[s]=SGM::Point3D(0.0,0.0,0.0);
-                    for(r=0;r<=nUDegree;++r)
+                    for(r=0;r<=(int)nUDegree;++r)
                         {
                         double dFactor=aaUBasisFunctions[k][r];
                         SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+r][nVSpanIndex-nVDegree+s];
@@ -521,19 +525,46 @@ void surface::Evaluate(SGM::Point2D const &uv,
                         temp[s].m_y+=dFactor*ControlPos.m_y;
                         temp[s].m_z+=dFactor*ControlPos.m_z;
                         }
-                    size_t dd=std::min(d-k,nVDerivatives);
+                    int dd=std::min(d-k,nVDerivatives);
                     for(l=0;l<=dd;++l)
                         {
-                        SKL[k][l]=SGM::Point3D(0.0,0.0,0.0);
-                        for(s=0;s<=nVDegree;++s)
-                            {
-                            double dFactor=aaVBasisFunctions[l][r];
-                            SKL[k][l].m_x+=dFactor*temp[s].m_x;
-                            SKL[k][l].m_y+=dFactor*temp[s].m_y;
-                            SKL[k][l].m_z+=dFactor*temp[s].m_z;
-                            }
+                        double dFactor=aaVBasisFunctions[l][s];
+                        SKL[k][l].m_x+=dFactor*temp[s].m_x;
+                        SKL[k][l].m_y+=dFactor*temp[s].m_y;
+                        SKL[k][l].m_z+=dFactor*temp[s].m_z;
                         }
                     }
+                }
+
+            // Fill in the answers.
+
+            if(Pos)
+                {
+                *Pos=SKL[0][0];
+                }
+            if(Du)
+                {
+                *Du=SGM::Vector3D(SKL[1][0]);
+                }
+            if(Dv)
+                {
+                *Dv=SGM::Vector3D(SKL[0][1]);
+                }
+            if(Norm)
+                {
+                *Norm=SGM::Vector3D(SKL[1][0])*SGM::Vector3D(SKL[0][1]);
+                }
+            if(Duu)
+                {
+                *Duu=SGM::Vector3D(SKL[2][0]);
+                }
+            if(Duv)
+                {
+                *Duv=SGM::Vector3D(SKL[1][1]);
+                }
+            if(Dvv)
+                {
+                *Dvv=SGM::Vector3D(SKL[0][2]);
                 }
 
             break;
@@ -545,6 +576,16 @@ void surface::Evaluate(SGM::Point2D const &uv,
         }
     }
 
+SGM::Point2D NewtonsMethod(surface      const *,//pSurface,
+                           SGM::Point2D       &StartUV,
+                           SGM::Point3D const &)//Pos)
+    {
+//    pSurface;
+//    StartUV;
+//    Pos;
+    return StartUV;
+    }
+
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                               SGM::Point3D       *ClosePos,
                               SGM::Point2D const *pGuess) const
@@ -554,7 +595,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
         {
         case SGM::PlaneType:
             {
-            plane const *pPlane=(plane *)this;
+            plane const *pPlane=(plane const *)this;
 
             SGM::Point3D      const &Origin=pPlane->m_Origin;
             SGM::UnitVector3D const &XAxis =pPlane->m_XAxis;
@@ -576,7 +617,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             }
         case SGM::CylinderType:
             {
-            cylinder const *pCylinder=(cylinder *)this;
+            cylinder const *pCylinder=(cylinder const *)this;
 
             SGM::Point3D      const &Center =pCylinder->m_Origin;
             SGM::UnitVector3D const &XAxis  =pCylinder->m_XAxis;
@@ -614,7 +655,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             }
         case SGM::ConeType:
             {
-            cone const *pCone=(cone *)this;
+            cone const *pCone=(cone const *)this;
 
             SGM::Point3D      const &Center =pCone->m_Origin;
             SGM::UnitVector3D const &XAxis  =pCone->m_XAxis;
@@ -677,7 +718,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             }
         case SGM::SphereType:
             {
-            sphere const *pSphere=(sphere *)this;
+            sphere const *pSphere=(sphere const *)this;
 
             SGM::Point3D      const &Center =pSphere->m_Center;
             SGM::UnitVector3D const &XAxis  =pSphere->m_XAxis;
@@ -715,7 +756,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             }
         case SGM::TorusType:
             {
-            torus const *pTorus=(torus *)this;
+            torus const *pTorus=(torus const *)this;
 
             SGM::Point3D      const &Center =pTorus->m_Center;
             SGM::UnitVector3D const &XAxis  =pTorus->m_XAxis;
@@ -752,6 +793,45 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             if(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
                 uv.m_u+=SGM_TWO_PI;
+                }
+            if(pGuess)
+                {
+                throw;
+                }
+
+            break;
+            }
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface const *pNUBSurface=(NUBsurface const *)this;
+
+            SGM::Point2D StartUV(0.0,0.0);
+            if(pGuess)
+                {
+                StartUV=*pGuess;
+                }
+            else
+                {
+                std::vector<SGM::Point3D> const &aSeedPoints=pNUBSurface->GetSeedPoints();
+                std::vector<SGM::Point2D> const &aSeedParams=pNUBSurface->GetSeedParams();
+                size_t nSeedPoints=aSeedPoints.size();
+                size_t Index1;
+                double dMin=std::numeric_limits<double>::max();
+                for(Index1=0;Index1<nSeedPoints;++Index1)
+                    {
+                    double dDist=aSeedPoints[Index1].DistanceSquared(Pos);
+                    if(dDist<dMin)
+                        {
+                        dMin=dDist;
+                        StartUV=aSeedParams[Index1];
+                        }
+                    }
+                }
+
+            uv=NewtonsMethod(this,StartUV,Pos);
+            if(ClosePos)
+                {
+                Evaluate(uv,ClosePos);
                 }
             if(pGuess)
                 {

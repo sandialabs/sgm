@@ -598,13 +598,14 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                     &rResult,
-                   std::vector<SGM::Point3D> const &aControlPoints,
-                   std::vector<double>       const &aKnots);
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
+                   std::vector<double>                     const &aUKnots,
+                   std::vector<double>                     const &aVKnots);
 
-        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+        size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
-        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+        size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
 
         std::vector<std::vector<SGM::Point3D> > const &GetControlPoints() const {return m_aaControlPoints;}
 
@@ -640,9 +641,9 @@ class NURBsurface: public surface
                     std::vector<SGM::Point4D> const &aControlPoints,
                     std::vector<double>       const &aKnots);
 
-        int GetUDegree() const {return (int)(m_aUKnots.size()-m_aaControlPoints.size()-1);}
+        size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
-        int GetVDegree() const {return (int)(m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+        size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
 
         std::vector<std::vector<SGM::Point4D> > const &GetControlPoints() const {return m_aaControlPoints;}
 
@@ -806,7 +807,7 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
-        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+        size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point3D> const &GetControlPoints() const {return m_aControlPoints;}
 
@@ -836,7 +837,7 @@ class NURBcurve: public curve
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
 
-        int GetDegree() const {return (int)(m_aKnots.size()-m_aControlPoints.size()-1);}
+        size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
 
@@ -867,17 +868,17 @@ class NURBcurve: public curve
 #define SMG_MAX_NURB_DEGREE_PLUS_ONE 21
 #define SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED 441
 
-void FindBasisFunctions(int           i,     // One based span index.
+void FindBasisFunctions(size_t        i,     // One based span index.
                         double        u,     // The value of the domain to be evaluated.
-                        int           p,     // The degree of the NURB.
-                        int           n,     // The number of derivatives requested.
+                        size_t        p,     // The degree of the NURB.
+                        size_t        n,     // The number of derivatives requested.
                         double const *U,     // The knot vector
                         double      **ders); // Basis function values for each derivative.
 
-int FindSpanIndex(SGM::Interval1D     const &Domain,
-                  int                        nDegree,
-                  double                     t,
-                  std::vector<double> const &aKnots);
+size_t FindSpanIndex(SGM::Interval1D     const &Domain,
+                     size_t                     nDegree,
+                     double                     t,
+                     std::vector<double> const &aKnots);
 
 #endif // ENTITY_CLASSES_H
 

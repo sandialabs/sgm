@@ -1,3 +1,3 @@
-// Tests the methods of a Sphere.
+// Tests the methods of a NUBSurface.;
 RunCPPTest(4);
 
