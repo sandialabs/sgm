@@ -1,6 +1,6 @@
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMChecker.h"
 #include "Primitive.h"

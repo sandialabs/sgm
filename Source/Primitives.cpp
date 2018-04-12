@@ -1,4 +1,4 @@
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMMathematics.h"
 #include "SGMTree.h"
 #include "Topology.h"

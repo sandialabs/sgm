@@ -1,5 +1,5 @@
 #include "SGMChecker.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMComplex.h"
 #include "SGMMathematics.h"
 #include "SGMTranslators.h"
