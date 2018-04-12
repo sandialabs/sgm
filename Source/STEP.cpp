@@ -96,13 +96,13 @@ void WriteNUBCurve(FILE                    *pFile,
     // #27=CARTESIAN_POINT('',(2.83333333333333,1.16666666666667,0.000000000000000));
     // #28=CARTESIAN_POINT('',(3.00000000000000,1.00000000000000,0.000000000000000));
     // #29=B_SPLINE_CURVE_WITH_KNOTS('',3,(#24,#25,#26,#27,#28),.UNSPECIFIED.,.F.,.F.,(4,1,4),(0.000000000000000,0.500000000000000,1.00000000000000),.UNSPECIFIED.);
-    // Degree (Control Points) Curve Form, Closed, Self Intersect, (Mulitplicity) (Knots) Knot Type.
+    // Degree (Control Points) Curve Form, Closed, Self Intersect, (Multiplicity) (Knots) Knot Type.
     
     size_t nDegree=pNUBCurve->GetDegree();
     std::vector<SGM::Point3D> const &aControlPoints=pNUBCurve->GetControlPoints();
     std::vector<double> aUniqueKnots;
-    std::vector<int> aMultiplity;
-    size_t nUniqueKnots=pNUBCurve->FindMultiplity(aMultiplity,aUniqueKnots);
+    std::vector<int> aMultiplicity;
+    size_t nUniqueKnots= pNUBCurve->FindMultiplicity(aMultiplicity, aUniqueKnots);
 
     // Write out the control points.
 
@@ -126,18 +126,18 @@ void WriteNUBCurve(FILE                    *pFile,
 
     // Set up the multiplity string.
 
-    std::string sMultiplity="(";
+    std::string sMultiplicity="(";
     for(Index1=0;Index1<nUniqueKnots;++Index1)
         {
         char Arg[10];
-        snprintf(Arg,sizeof(Arg),"%ld",(long)(aMultiplity[Index1]));
-        sMultiplity+=Arg;
+        snprintf(Arg,sizeof(Arg),"%ld",(long)(aMultiplicity[Index1]));
+        sMultiplicity+=Arg;
         if(Index1<nUniqueKnots-1)
             {
-            sMultiplity+=",";
+            sMultiplicity+=",";
             }
         }
-    sMultiplity=")";
+    sMultiplicity=")";
 
     // Set up the unique knot string.
 
@@ -158,7 +158,7 @@ void WriteNUBCurve(FILE                    *pFile,
 
     mCurveMap[pNUBCurve->GetID()]=nLine;
     fprintf(pFile,"#%ld=B_SPLINE_CURVE_WITH_KNOTS('',%ld,%s,.UNSPECIFIED.,.F.,.F.,%s,%s,.UNSPECIFIED.);\n",
-        nLine++,(long)nDegree,sControlPoints.c_str(),sMultiplity.c_str(),sUniqueKnots.c_str());
+        nLine++,(long)nDegree,sControlPoints.c_str(),sMultiplicity.c_str(),sUniqueKnots.c_str());
     }
 
 void WriteCurves(FILE                          *pFile,
@@ -677,11 +677,11 @@ void WriteDataHeader(FILE   *pFile,
     fprintf(pFile,"#%ld=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#%ld);\n",nLine++,nNamedUnits1);
     size_t nConversionBaseUnit=nLine;
     fprintf(pFile,"#%ld= (CONVERSION_BASED_UNIT('INCH',#%ld)LENGTH_UNIT()NAMED_UNIT(#%ld));\n",nLine++,nLengthMeasure,nDimExp1);
-    size_t nUncertaintyMesure=nLine;
+    size_t nUncertaintyMeasure=nLine;
     fprintf(pFile,"#%ld=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.0E-006),#%ld,'','');\n",nLine++,nConversionBaseUnit);
     nGeoRepContext=nLine;
     fprintf(pFile,"#%ld= (GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#%ld))GLOBAL_UNIT_ASSIGNED_CONTEXT((#%ld,#%ld,#%ld))REPRESENTATION_CONTEXT('NONE','WORKSPACE'));\n",
-        nLine++,nUncertaintyMesure,nConversionBaseUnit,nNamedUnits2,nNamedUnits3);
+        nLine++,nUncertaintyMeasure,nConversionBaseUnit,nNamedUnits2,nNamedUnits3);
     fprintf(pFile,"#%ld=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(),#%ld);\n",nLine++,nGeoRepContext);
     size_t nProduct=nLine;
     fprintf(pFile,"#%ld=PRODUCT('', '', ' ',(#%ld));\n",nLine++,nProductContext);

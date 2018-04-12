@@ -31,7 +31,7 @@ class Graph
         Graph(std::set<size_t> &sVertices,std::set<GraphEdge> &sEdges):m_sVertices(sVertices),m_sEdges(sEdges) {}
 
         // If an edge is closed, then a non-simple graph is returned and extra vertices may  
-        // be added with potentialy invalid IDs if the closed edge(s) do not have vertices.
+        // be added with potentially invalid IDs if the closed edge(s) do not have vertices.
 
         Graph(SGM::Result            &rResult,
               std::set<edge *> const &sEdges);

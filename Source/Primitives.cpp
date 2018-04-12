@@ -407,9 +407,9 @@ SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
 
     // Create or find the vertices for each point.
 
-    std::vector<vertex *> aVetices;
+    std::vector<vertex *> aVertices;
     size_t nPoints=aPoints.size();
-    aVetices.reserve(nPoints);
+    aVertices.reserve(nPoints);
     SGM::BoxTree Tree;
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
@@ -421,7 +421,7 @@ SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
             pVertex=new vertex(rResult,Pos);
             Tree.AddPoint(Pos,pVertex);
             }
-        aVetices.push_back(pVertex);
+        aVertices.push_back(pVertex);
         }
 
     // Create the edges.
@@ -429,8 +429,8 @@ SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
     for(Index1=1;Index1<nPoints;++Index1)
         {
         edge *pEdge=new edge(rResult);
-        pEdge->SetStart(aVetices[Index1-1]);
-        pEdge->SetEnd(aVetices[Index1]);
+        pEdge->SetStart(aVertices[Index1-1]);
+        pEdge->SetEnd(aVertices[Index1]);
         pVolume->AddEdge(pEdge);
         }
 
@@ -577,7 +577,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     aRow.push_back(aInterpolate[nInterpolate-1].m_x);
     aaXMatrix.push_back(aRow);
 
-    // Solve for x, y, and z of the control ponts.
+    // Solve for x, y, and z of the control points.
 
     std::vector<std::vector<double> > aaYMatrix=aaXMatrix;
     std::vector<std::vector<double> > aaZMatrix=aaXMatrix;

@@ -102,7 +102,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         ++iter;
         }
 
-    // Find the parameter line to check sidedness from.
+    // Find the parameter line to check sided-ness from.
 
     if(pBoundary)
         {

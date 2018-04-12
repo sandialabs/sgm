@@ -74,7 +74,7 @@ namespace SGM
                             std::vector<SGM::Point2D>         const &aPoints,
                             std::vector<std::vector<size_t> > const &aaPolygons,
                             std::vector<size_t>                     &aTriangles,
-                            std::vector<size_t>                     &aAdjacences);
+                            std::vector<size_t>                     &aAdjacencies);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -93,7 +93,7 @@ namespace SGM
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
     // such that Tab0 is the index of the start of the triangle in aTriangles
     // that is adjacent to the first triangle along the edge ab.
-    // If more than one triangle is adjacent to the frist triangle along the same
+    // If more than one triangle is adjacent to the first triangle along the same
     // edge for example T0, T1, T2. Then T0 will point to T1, T1 will point to T2
     // and T2 will point to T0.  If an edge does not have a triangle that is
     // adjacent to it then the vector aAdjacency will have the value SIZE_MAX

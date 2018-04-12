@@ -613,11 +613,11 @@ class NUBsurface: public surface
 
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindUMultiplicity(std::vector<int> &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
-        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindVMultiplicity(std::vector<int> &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -651,11 +651,11 @@ class NURBsurface: public surface
 
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindUMultiplicity(std::vector<int>    &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
-        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindVMultiplicity(std::vector<int>    &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -813,8 +813,8 @@ class NUBcurve: public curve
 
         std::vector<double> const &GetKnots() const {return m_aKnots;}
 
-        size_t FindMultiplity(std::vector<int>    &aMultiplity,
-                              std::vector<double> &aUniqueKnots) const;
+        size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
+                                std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -846,8 +846,8 @@ class NURBcurve: public curve
         std::vector<double> const &GetUKnots() const {return m_aUKnots;}
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindMultiplity(std::vector<int>    &aMultiplity,
-                              std::vector<double> &aUniqueKnots) const;
+        size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
+                                std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 

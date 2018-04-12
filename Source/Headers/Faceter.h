@@ -52,16 +52,16 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
 
 bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacences,
+                   std::vector<size_t>             &aAdjacencies,
                    size_t                           nTri,
                    size_t                           nEdge);
 
 void FixBackPointers(size_t                     nTri,
                      std::vector<size_t> const &aTriangles,
-                     std::vector<size_t>       &aAdjacences);
+                     std::vector<size_t>       &aAdjacencies);
 
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacences);
+                   std::vector<size_t>             &aAdjacencies);
 
 #endif // FACETER_H

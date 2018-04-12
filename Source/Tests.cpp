@@ -625,7 +625,7 @@ bool TestSurface(surface      const *pSurface,
     {
     bool bAnswer=true;
 
-    // Test to see if evalaute and inverse match.
+    // Test to see if evaluate and inverse match.
 
     SGM::Point3D Pos,CPos;
     SGM::UnitVector3D Norm;

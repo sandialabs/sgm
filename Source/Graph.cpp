@@ -344,7 +344,7 @@ size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
     std::vector<Graph> aComponents;
     size_t nComps=graph.FindComponents(aComponents);
 
-    // Create the braches
+    // Create the branches
 
     aBranches.reserve(nComps);
     size_t Index1;

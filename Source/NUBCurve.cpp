@@ -16,8 +16,8 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
     m_Domain.m_dMax=aKnots.back();
     }
 
-size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
-                                std::vector<double> &aUniqueKnots) const
+size_t NUBcurve::FindMultiplicity(std::vector<int> &aMultiplicity,
+                                  std::vector<double> &aUniqueKnots) const
     {
     size_t nKnots=m_aKnots.size();
     size_t Index1;
@@ -28,15 +28,15 @@ size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
         if(SGM::NearEqual(dLastKnot,dKnot,SGM_ZERO,false)==false)
             {
             aUniqueKnots.push_back(dKnot);
-            aMultiplity.push_back(1);
+            aMultiplicity.push_back(1);
             }
         else
             {
-            size_t nSize=aMultiplity.size();
-            aMultiplity[nSize-1]=aMultiplity[nSize-1]+1;
+            size_t nSize=aMultiplicity.size();
+            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
             }
         }
-    return aMultiplity.size();
+    return aMultiplicity.size();
     }
 
 std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
