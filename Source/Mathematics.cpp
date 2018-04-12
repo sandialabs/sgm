@@ -1,7 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "Faceter.h"
-#include "math.h"
+#include <cmath>
 #include <vector>
 #include <set>
 #include <algorithm>
@@ -1169,7 +1169,7 @@ size_t SGM::Cubic(double c3,double c2,double c1,double c0,
         else
             {
             double E=a/3.0;
-            double A=pow(abs(R)+sqrt(R2-Q3),1.0/3.0);
+            double A=pow(std::abs(R)+sqrt(R2-Q3),1.0/3.0);
             if(fabs(A)<SGM_ZERO)
                 {
                 aRoots.push_back(-E);
