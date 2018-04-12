@@ -1,5 +1,5 @@
-#ifndef SGM_PRIMATIVES_H
-#define SGM_PRIMATIVES_H
+#ifndef SGM_PRIMITIVES_H
+#define SGM_PRIMITIVES_H
 
 #include "SGMEntityClasses.h"
 #include "SGMDataClasses.h"
@@ -42,7 +42,7 @@ SGM::Body CreateCone(SGM::Result        &rResult,
                      double              dTopRadius);
 
 // If bApple is set to true and dMajorRadius<dMinorRadius, then
-// an apple torue will be made, else a limon torus will be made.
+// an apple torus will be made, else a lemon torus will be made.
 // If dMajorRadius==dMinorRadius, then a pinched torus is made.
 
 SGM::Body CreateTorus(SGM::Result             &rResult,
@@ -79,7 +79,7 @@ SGM::Edge CreateEdge(SGM::Result  &rResult,
 SGM::Body CreateWireBody(SGM::Result               &rResult,
                          std::set<SGM::Edge> const &sEdges);
 
-// Closed PolyLines should have the first point duplcated at the end of the vector.
+// Closed PolyLines should have the first point duplicated at the end of the vector.
 // Line segments may intersect but only at their end points.
 
 SGM::Body CreatePolyLine(SGM::Result                     &rResult,
@@ -87,4 +87,4 @@ SGM::Body CreatePolyLine(SGM::Result                     &rResult,
 
     } // End of SGM namespace
 
-#endif // SGM_PRIMATIVES_H
+#endif // SGM_PRIMITIVES_H

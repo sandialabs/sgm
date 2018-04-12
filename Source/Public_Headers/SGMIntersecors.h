@@ -33,7 +33,7 @@ namespace SGM
                             std::vector<SGM::Entity>  &aEntity);
 
     size_t IntersectRectangleWithEdges(SGM::Result               &rResult,
-                                       SGM::Interval3D     const &rRectange,
+                                       SGM::Interval3D     const &rRectangle,
                                        SGM::Entity         const &EntityID,
                                        std::vector<SGM::Point3D> &aPoints,
                                        std::vector<SGM::Entity>  &aEntity);

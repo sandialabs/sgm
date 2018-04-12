@@ -36,9 +36,9 @@ namespace SGM
 
     // Find functions
 
-    size_t FindComponets(SGM::Result               &rResult,
-                         SGM::Complex        const &ComplexID,
-                         std::vector<SGM::Complex> &aComponents);
+    size_t FindComponents(SGM::Result               &rResult,
+                          SGM::Complex const        &ComplexID,
+                          std::vector<SGM::Complex> &aComponents);
 
     size_t FindBoundary(SGM::Result               &rResult,
                         SGM::Complex        const &ComplexID,
@@ -47,7 +47,7 @@ namespace SGM
     size_t FindGenus(SGM::Result        &rResult,
                      SGM::Complex const &ComplexID);
 
-    // Spliting functions
+    // Splitting functions
 
     size_t SplitWithPlane(SGM::Result               &rResult,
                           SGM::Complex        const &ComplexID,

@@ -69,7 +69,7 @@ namespace SGM
                                  double                     dTolerance,
                                  std::vector<void const *> &aData);
 
-            // Methods to find the first data intersectiong an object.
+            // Methods to find the first data intersecting an object.
 
             void *FindBox(SGM::Interval3D const &Box);
 

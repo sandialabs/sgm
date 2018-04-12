@@ -43,10 +43,10 @@ namespace SGM
                                   SGM::Entity  const &EntityID,
                                   SGM::Point3D       &ClosestPoint,
                                   SGM::Entity        &ClosestEntity,
-                                  bool                bBondary=true);
+                                  bool                bBoundary=true);
 
     // FindClosetPointBetweenEntities is the same as FindClosestPointOnEntity
-    // other than the two entites are used.
+    // other than the two entities are used.
 
     void FindClosetPointBetweenEntities(SGM::Result       &rResult,
                                         SGM::Entity const &Entity1,

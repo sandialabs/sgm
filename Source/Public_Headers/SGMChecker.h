@@ -14,10 +14,10 @@ namespace SGM
 
             CheckOptions():
                 m_bDerivatives(false),
-                m_bEvaluateors(false) {}
+                m_bEvaluators(false) {}
 
             bool m_bDerivatives;
-            bool m_bEvaluateors;
+            bool m_bEvaluators;
         };
 
     ///////////////////////////////////////////////////////////////////////////

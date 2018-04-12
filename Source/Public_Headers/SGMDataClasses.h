@@ -186,7 +186,7 @@ namespace SGM
 
             explicit Interval1D(double dPoint):m_dMin(dPoint),m_dMax(dPoint) {}
 
-            // Interigation methods.
+            // Interrogation methods.
 
             bool Empty() const {return m_dMax<m_dMin;}
 
@@ -227,13 +227,13 @@ namespace SGM
 
             explicit Interval2D(SGM::Point2D const &Pos);
 
-            // Interigation methods.
+            // Interrogation methods.
 
             double Area() const;
 
             // Note that if one is sorting rectangle by perimeter, then
             // half the perimeter can be found in less time resulting
-            // in the same order.  To get the perimeter muliply by two.
+            // in the same order.  To get the perimeter multiply by two.
 
             double HalfPerimeter() const; 
 
@@ -270,7 +270,7 @@ namespace SGM
 
            explicit Interval3D(SGM::Point3D const &Pos);
 
-           // Interigation methods.
+           // Interrogation methods.
 
            bool IsEmpty() const {return m_XDomain.m_dMax<m_XDomain.m_dMin;}
 
@@ -278,7 +278,7 @@ namespace SGM
 
            // Note that if one is sorting boxes by area, then
            // half the area can be found in less time resulting
-           // in the same order.  To get the area muliply by two.
+           // in the same order.  To get the area multiply by two.
 
            double HalfArea() const; 
 
@@ -362,7 +362,7 @@ namespace SGM
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  Tranformation classes
+    //  Transformation classes
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -394,7 +394,7 @@ namespace SGM
                            m_Matrix[3]=SGM::Vector4D(0,0,0,1);}
 
             // Returns a transform that scales by different amounts in each of
-            // the three coordinate axies.
+            // the three coordinate axes.
 
             Transform3D(double dXScale,
                         double dYScale,
@@ -405,7 +405,7 @@ namespace SGM
                            m_Matrix[3]=SGM::Vector4D(0,0,0,1);}
 
             // Returns a transform that rotates space about the origin by 
-            // moving the X, Y and Z axies to the given values.
+            // moving the X, Y and Z axes to the given values.
 
             Transform3D(SGM::UnitVector3D const &XAxis,
                         SGM::UnitVector3D const &YAxis,
