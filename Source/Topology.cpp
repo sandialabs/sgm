@@ -672,14 +672,14 @@ void FindComplexes(SGM::Result         &,//rResult,
                 entity *pEntity=*iter;
                 if(pEntity->GetType()==SGM::ComplexType)
                     {
-                    sComplexes.insert((complex *)pEntity);
+                    sComplexes.insert(static_cast<complex *>(pEntity));
                     }
                 }
             break;
             }
         case SGM::ComplexType:
             {
-            sComplexes.insert((complex *)pEntity);
+            sComplexes.insert(static_cast<complex *>(const_cast<entity *>(pEntity)));
             break;
             }
         default:

@@ -76,7 +76,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     // Find the closest edge or vertex.
 
     SGM::Point3D Pos,CPos,TPos;
-    entity *pEntity=(entity *)this;
+    entity *pEntity= (entity *)this;  //TODO: Why are casting away const'ness on "this" face*?
     double dDist=DBL_MAX;
     if(ClosePos)
         {
@@ -90,7 +90,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     while(iter!=m_sEdges.end())
         {
         edge *pEdge=*iter;
-        entity *pTempEnt=NULL;
+        entity *pTempEnt=nullptr;
         FindClosestPointOnEdge(rResult,Pos,pEdge,TPos,pTempEnt);
         double dTempDist=Pos.DistanceSquared(TPos);
         if(dTempDist<dDist)
@@ -102,18 +102,18 @@ bool face::PointInFace(SGM::Result        &rResult,
         ++iter;
         }
 
-    // Find the parmeter line to check sidedness from.
+    // Find the parameter line to check sidedness from.
 
     if(pBoundary)
         {
         *pBoundary=pEntity;
         }
     SGM::Point2D Buv=m_pSurface->Inverse(CPos);
-    if(pEntity->GetType()==SGM::EntityType::EdgeType)
+    if(pEntity->GetType()==SGM::EntityType::EdgeType)  //TODO: How can face pointer (pEntity=this) now be an EdgeType?
         {
         SGM::Vector3D VecU,VecV,Vec;
         m_pSurface->Evaluate(Buv,NULL,&VecU,&VecV);
-        edge *pEdge=(edge *)pEntity;
+        edge *pEdge=static_cast<edge *>(pEntity);
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
         if(pPos)
@@ -135,7 +135,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
-        SGM::Point3D const &VertexPos=((vertex *)pEntity)->GetPoint();
+        SGM::Point3D const &VertexPos=(static_cast<vertex *>(pEntity))->GetPoint();
         if(pPos)
             {
             *pPos=VertexPos;

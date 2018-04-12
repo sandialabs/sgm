@@ -35,7 +35,7 @@ size_t thing::GetBodies(std::set<body *> &sBodies) const
         entity *pEntity=*iter;
         if(pEntity->GetType()==SGM::BodyType)
             {
-            sBodies.insert((body *)pEntity);
+            sBodies.insert(static_cast<body *>(pEntity));
             }
         ++iter;
         }
@@ -50,7 +50,7 @@ size_t thing::GetComplexes(std::set<complex *> &sComplexes) const
         entity *pEntity=*iter;
         if(pEntity->GetType()==SGM::ComplexType)
             {
-            sComplexes.insert((complex *)pEntity);
+            sComplexes.insert(static_cast<complex *>(pEntity));
             }
         ++iter;
         }
