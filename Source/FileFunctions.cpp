@@ -45,7 +45,7 @@ void FindFileExtension(std::string const &FileName,
 
 std::string GetDateAndTime() 
     {
-    time_t seconds=time(NULL);
+    time_t seconds=time(nullptr);
     struct tm TimeStruct;
 
 #if defined(_WIN64)

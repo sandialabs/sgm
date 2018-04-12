@@ -71,7 +71,7 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
     surface const *pSurface=pFace->GetSurface();
     SGM::Point2D uv=pSurface->Inverse(Point,&ClosestPoint);
     double dDist=DBL_MAX;
-    entity *pBoundary=NULL;
+    entity *pBoundary=nullptr;
     SGM::Point3D BoundaryPos;
     if(pFace->PointInFace(rResult,uv,&ClosestPoint,&pBoundary,&BoundaryPos))
         {

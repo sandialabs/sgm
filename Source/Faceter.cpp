@@ -971,7 +971,7 @@ void SplitEdge(EdgeValue                           const &EV,
     SGM::Point2D Miduv=SGM::MidPoint(uv0,uv1);
     SGM::Point3D Pos;
     SGM::UnitVector3D Norm;
-    pSurface->Evaluate(Miduv,&Pos,NULL,NULL,&Norm);
+    pSurface->Evaluate(Miduv,&Pos,nullptr,nullptr,&Norm);
     size_t m=aPoints2D.size();
     aPoints2D.push_back(Miduv);
     aPoints3D.push_back(Pos);
@@ -1469,7 +1469,7 @@ void StarSmoothing(face                     const *pFace,
             aPoints2D[Index1]=Center;
             SGM::Point3D Pos;
             SGM::UnitVector3D Norm;
-            pSurface->Evaluate(Center,&Pos,NULL,NULL,&Norm);
+            pSurface->Evaluate(Center,&Pos,nullptr,nullptr,&Norm);
             aPoints3D[Index1]=Pos;
             aNormals[Index1]=Norm;
             }
@@ -1497,7 +1497,7 @@ void FacetFace(SGM::Result                    &rResult,
         {
         SGM::Point2D const &uv=aPoints2D[Index1];
         SGM::UnitVector3D Norm;
-        pSurface->Evaluate(uv,NULL,NULL,NULL,&Norm);
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         }
     RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacences);

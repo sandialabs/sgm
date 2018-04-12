@@ -213,7 +213,7 @@ void WriteCoedges(FILE                                      *pFile,
         size_t nEdgeCurve=nLine;
         volume *pVolume=pEdge->GetVolume();
 
-        if(pVolume==NULL)
+        if(pVolume==nullptr)
             {
             // #55=EDGE_CURVE('',#44,#25,#54,.T.);
             // #56=ORIENTED_EDGE('',*,*,#55,.T.);
@@ -706,7 +706,7 @@ void SaveSTEP(SGM::Result                  &rResult,
     // Open the file.
 
     FILE *pFile = fopen(FileName.c_str(),"wt");
-    if(pFile==NULL)
+    if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return;

@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
-    m_pVolume(NULL),m_pSurface(NULL),m_bFlipped(false),m_nSides(1)
+    m_pVolume(nullptr),m_pSurface(nullptr),m_bFlipped(false),m_nSides(1)
     {
     }
 
@@ -26,7 +26,7 @@ volume *face::GetVolume() const
         }
     else
         {
-        return NULL;
+        return nullptr;
         }
     }
 
@@ -112,7 +112,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     if(pEntity->GetType()==SGM::EntityType::EdgeType)  //TODO: How can face pointer (pEntity=this) now be an EdgeType?
         {
         SGM::Vector3D VecU,VecV,Vec;
-        m_pSurface->Evaluate(Buv,NULL,&VecU,&VecV);
+        m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
         edge *pEdge=static_cast<edge *>(pEntity);
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
@@ -120,7 +120,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             *pPos=CPos;
             }
-        pCurve->Evaluate(t,NULL,&Vec);
+        pCurve->Evaluate(t,nullptr,&Vec);
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;

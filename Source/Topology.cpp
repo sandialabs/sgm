@@ -5,7 +5,7 @@ void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
                 std::set<body *> &sBodies)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -96,7 +96,7 @@ void FindVolumes(SGM::Result        &,//rResult,
                  entity       const *pEntity,
                  std::set<volume *> &sVolumes)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -191,7 +191,7 @@ void FindFaces(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<face *> &sFaces)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -274,7 +274,7 @@ void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<edge *> &sEdges)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -395,7 +395,7 @@ void FindVertices(SGM::Result        &,//rResult,
                   entity       const *pEntity,
                   std::set<vertex *> &sVertices)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -595,8 +595,8 @@ edge *FindNextEdge(SGM::Result  &,//rResult,
                    edge   const *pEdge,
                    vertex const *pVertex)
     {
-    edge *pAnswer=NULL;
-    if(pVertex==NULL)
+    edge *pAnswer=nullptr;
+    if(pVertex==nullptr)
         {
         return (edge *)pEdge;
         }
@@ -669,10 +669,10 @@ void FindComplexes(SGM::Result         &,//rResult,
             std::set<entity *>::const_iterator iter=sEntities.begin();
             while(iter!=sEntities.end())
                 {
-                entity *pEntity=*iter;
-                if(pEntity->GetType()==SGM::ComplexType)
+                entity *pEntityIter=*iter;
+                if(pEntityIter->GetType()==SGM::ComplexType)
                     {
-                    sComplexes.insert(static_cast<complex *>(pEntity));
+                    sComplexes.insert(static_cast<complex *>(pEntityIter));
                     }
                 }
             break;

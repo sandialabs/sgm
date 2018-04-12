@@ -31,7 +31,7 @@ void SaveSTL(SGM::Result                  &rResult,
 
     // Open the file.
 
-    FILE *pFile=NULL;
+    FILE *pFile=nullptr;
     if(Options.m_bBinary)
         {
         pFile = fopen(FileName.c_str(),"wb");
@@ -40,7 +40,7 @@ void SaveSTL(SGM::Result                  &rResult,
         {
         pFile = fopen(FileName.c_str(),"wt");
         }
-    if(pFile==NULL)
+    if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return;

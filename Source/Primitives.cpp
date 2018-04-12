@@ -416,7 +416,7 @@ SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
         {
         SGM::Point3D const &Pos=aPoints[Index1];
         vertex *pVertex=(vertex *)Tree.FindPoint(Pos,1E-12);
-        if(pVertex==NULL)
+        if(pVertex==nullptr)
             {
             pVertex=new vertex(rResult,Pos);
             Tree.AddPoint(Pos,pVertex);

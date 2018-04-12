@@ -76,7 +76,7 @@ Graph::Graph(SGM::Result            &rResult,
             {
             edge *pEdge=*EdgeIter;
             size_t nEdge=pEdge->GetID();
-            if(pEdge->GetStart()==NULL)
+            if(pEdge->GetStart()==nullptr)
                 {
                 ++nMaxID;
                 m_sVertices.insert(nMaxID);

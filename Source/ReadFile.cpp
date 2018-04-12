@@ -1129,7 +1129,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     // Open the file.
 
     FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==NULL)
+    if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return 0;
@@ -1174,7 +1174,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
     // Open the file.
 
     FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==NULL)
+    if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return 0;

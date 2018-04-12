@@ -60,7 +60,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             SGM::Point2D uv(dU,0);
             SGM::Point3D Pos;
             SGM::Vector3D Vec;
-            Evaluate(uv,&Pos,NULL,&Vec);
+            Evaluate(uv,&Pos,nullptr,&Vec);
             return new line(rResult,Pos,Vec,dRadius);
             }
         case SGM::SphereType:
@@ -102,7 +102,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             throw;
             }
         }
-    return NULL;
+    return nullptr;
     }
 
 curve *surface::VParamLine(SGM::Result &rResult,
@@ -150,7 +150,7 @@ curve *surface::VParamLine(SGM::Result &rResult,
             throw;
             }
         }
-    return NULL;
+    return nullptr;
     }
 
 void surface::Evaluate(SGM::Point2D const &uv,

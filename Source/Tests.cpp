@@ -447,7 +447,7 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
     std::map<std::string,SGMFunction> mFunctionMap;
     CreateFunctionMap(mFunctionMap);
     FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    if(pOutputFile==NULL)
+    if(pOutputFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         rResult.SetMessage(sOutputFileName);
@@ -456,7 +456,7 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
 
     std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
     FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
-    if(pTestFile==NULL)
+    if(pTestFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         rResult.SetMessage(sFullPathName);
@@ -1321,8 +1321,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;
@@ -1362,8 +1362,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;
@@ -1401,8 +1401,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;
