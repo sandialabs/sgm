@@ -938,6 +938,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=new vertex(rResult,Pos);
                 break;
                 }
+            default:break;
             }
         ++DataIter;
         }

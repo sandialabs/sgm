@@ -597,7 +597,7 @@ void WriteVolumes(SGM::Result              &rResult,
             bFirstVolume=false;
             }
         std::set<edge *> const &sEdges=pVolume->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
             std::string sEdgeList;

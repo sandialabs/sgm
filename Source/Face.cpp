@@ -113,7 +113,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         SGM::Vector3D VecU,VecV,Vec;
         m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
-        edge *pEdge=static_cast<edge *>(pEntity);
+        edge *pEdge=(edge *)pEntity;
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
         if(pPos)
@@ -135,7 +135,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
-        SGM::Point3D const &VertexPos=(static_cast<vertex *>(pEntity))->GetPoint();
+        SGM::Point3D const &VertexPos=((vertex *)pEntity)->GetPoint();
         if(pPos)
             {
             *pPos=VertexPos;

@@ -67,7 +67,7 @@ bool GraphEdge::operator<(GraphEdge const &GEdge) const
 Graph::Graph(SGM::Result            &rResult,
              std::set<edge *> const &sEdges)
     {
-    if(sEdges.size())
+    if(!sEdges.empty())
         {
         std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
         thing *pThing=rResult.GetThing();
@@ -178,7 +178,7 @@ size_t Graph::FindComponents(std::vector<Graph> &aComponents) const
 
     // Find the component for each vertex.
 
-    while(sNotUsed.size())
+    while(!sNotUsed.empty())
         {
         std::set<size_t> sBoundary;
         size_t nVert=*(sNotUsed.begin());
@@ -186,7 +186,7 @@ size_t Graph::FindComponents(std::vector<Graph> &aComponents) const
         mComps[nVert]=nAnswer;
         sNotUsed.erase(nVert);
 
-        while(sBoundary.size())
+        while(!sBoundary.empty())
             {
             std::set<size_t> sNewBoundary;
             std::vector<std::set<size_t> > aCompVertices;

@@ -772,7 +772,7 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                 MD.m_Split2=aSplits[Index1];
                 aMerge.push_back(MD);
                 }
-            if(aMerge.size())
+            if(!aMerge.empty())
                 {
                 MergePolygons(pFace,aMerge,aPoints2D,aPoints3D,aEntities,aaPolygons);
                 }
@@ -1165,7 +1165,7 @@ void RefineTriangles(face                     const *pFace,
     dDotTol=0.93969262078590838405410927732473;
     bool bSplit=true;
     size_t nCount=0;
-    while(bSplit && sEdgeData.size())
+    while(bSplit && !sEdgeData.empty())
         {
         EdgeValue EV=*(sEdgeData.begin());
         if(EV.m_dDot<dDotTol)

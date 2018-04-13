@@ -30,9 +30,9 @@ void FindFileExtension(std::string const &FileName,
                        std::string       &Extension)
     {
     std::string sTemp;
-    if(FileName.find_last_of(".") != std::string::npos)
+    if(FileName.find_last_of('.') != std::string::npos)
         {
-        sTemp=FileName.substr(FileName.find_last_of(".")+1);
+        sTemp=FileName.substr(FileName.find_last_of('.')+1);
         }
     Extension.resize(sTemp.size());
     std::transform(sTemp.begin(),
@@ -64,7 +64,8 @@ std::string GetDateAndTime()
 
     char Buf[25];
     snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
-    return Buf;
+    std::string sDateAndTime(Buf);
+    return sDateAndTime;
     }
 
 std::string GetFileName(std::string const &FileName) 

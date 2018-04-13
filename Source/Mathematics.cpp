@@ -793,7 +793,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
                     nWhere=Index2;
                     }
                 }
-            PolyData PD;
+            PolyData PD{};
             PD.dExtreamU=dUValue;
             PD.nWhichPoint=nWhere;
             PD.nWhichPoly=Index1;
