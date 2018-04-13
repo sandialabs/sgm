@@ -460,6 +460,8 @@ namespace SGM
         {
         public:
 
+            Result() : m_nType(ResultTypeUnknownType), m_pThing(nullptr) {}
+
             Result(thing *pThing):m_pThing(pThing) {}
 
             void SetResult(SGM::ResultType nType);
