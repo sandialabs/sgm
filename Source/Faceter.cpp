@@ -114,8 +114,8 @@ void FacetCurve(curve               const *pCurve,
                 ++iter;
                 while(iter!=lNodes.end())
                     {
-                    double d0=LastIter->m_dParam;
-                    double d1=iter->m_dParam;
+                    d0=LastIter->m_dParam;
+                    d1=iter->m_dParam;
 
                     // Check to see if the segment from d0 to d1 needs more facets.
 
@@ -123,8 +123,8 @@ void FacetCurve(curve               const *pCurve,
                     double db=d0*0.5+d1*0.5;
                     double dc=d0*0.34567+d1*0.65433;
 
-                    SGM::Point3D Pos0=LastIter->m_Pos;
-                    SGM::Point3D Pos1=iter->m_Pos;
+                    Pos0=LastIter->m_Pos;
+                    Pos1=iter->m_Pos;
                     SGM::Point3D PosA,PosB,PosC;
                     pCurve->Evaluate(da,&PosA);
                     pCurve->Evaluate(db,&PosB);
