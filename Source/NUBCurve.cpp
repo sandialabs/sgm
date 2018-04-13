@@ -103,8 +103,8 @@ void FindBasisFunctions(size_t        i,     // One based span index.
         for(k=1;k<=(int)n;++k)
             {
             double d=0.0;
-            int rk=(int)(r-k);
-            int pk=(int)(p-k);
+            int rk=r-k;
+            int pk=p-k;
             if(r>=k)
                 {
                 a[s2][0]=a[s1][0]/ndu[pk+1][rk];
@@ -121,7 +121,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
                 }
             if(r-1<=pk)
                 {
-                j2=(int)(k-1);
+                j2=k-1;
                 }
             else
                 {
