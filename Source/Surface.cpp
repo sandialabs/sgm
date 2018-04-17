@@ -234,7 +234,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 {
                 Pos->m_x=Center.m_x+(XAxis.m_x*dCos+YAxis.m_x*dSin+ZAxis.m_x*uv.m_v)*dRadius;
                 Pos->m_y=Center.m_y+(XAxis.m_y*dCos+YAxis.m_y*dSin+ZAxis.m_y*uv.m_v)*dRadius;
-                Pos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_x*uv.m_v)*dRadius;
+                Pos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_z*uv.m_v)*dRadius;
                 }
             if(Du)
                 {
@@ -246,7 +246,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 {
                 Dv->m_x=ZAxis.m_x*dRadius;
                 Dv->m_y=ZAxis.m_y*dRadius;
-                Dv->m_z=ZAxis.m_x*dRadius;
+                Dv->m_z=ZAxis.m_z*dRadius;
                 }
             if(Norm)
                 {
@@ -663,7 +663,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 double dSin=sin(uv.m_u);
                 ClosePos->m_x=Center.m_x+(XAxis.m_x*dCos+YAxis.m_x*dSin+ZAxis.m_x*uv.m_v)*dRadius;
                 ClosePos->m_y=Center.m_y+(XAxis.m_y*dCos+YAxis.m_y*dSin+ZAxis.m_y*uv.m_v)*dRadius;
-                ClosePos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_x*uv.m_v)*dRadius;
+                ClosePos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_z*uv.m_v)*dRadius;
                 }
             break;
             }

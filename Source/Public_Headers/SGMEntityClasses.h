@@ -11,7 +11,9 @@ namespace SGM
         {
         public:
 
-            Entity(size_t nID):m_ID(nID) {}
+            Entity(size_t nID);
+
+            Entity();
 
             bool operator<(Entity const &Ent) const;
 
