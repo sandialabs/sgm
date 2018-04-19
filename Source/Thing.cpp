@@ -3,11 +3,7 @@
 
 size_t entity::GetID() const
     {
-    if(this)
-        {
-        return m_ID;
-        }
-    return 0;
+    return m_ID;
     }
 
 ///////////////////////////////////////////////////////////////////////////////

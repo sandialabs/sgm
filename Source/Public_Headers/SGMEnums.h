@@ -70,6 +70,7 @@ namespace SGM
         ResultTypeUnknownType,
         ResultTypeInsufficientData,
         ResultTypeUnknownCommand,
+        ResultTypeUnknownFileType
         };
 
     } // End of SGM namespace

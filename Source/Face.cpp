@@ -20,14 +20,7 @@ face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
 
 volume *face::GetVolume() const 
     {
-    if(this)
-        {
-        return m_pVolume;
-        }
-    else
-        {
-        return nullptr;
-        }
+    return m_pVolume;
     }
 
 std::vector<SGM::Point2D> const &face::GetPoints2D(SGM::Result &rResult) const

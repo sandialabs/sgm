@@ -10,14 +10,7 @@
 
 body *volume::GetBody() const 
     {
-    if(this)
-        {
-        return m_pBody;
-        }
-    else
-        {
-        return nullptr;
-        }
+    return m_pBody;
     }
 
 void volume::AddFace(face *pFace) 

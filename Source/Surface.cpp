@@ -607,10 +607,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Point3D SKL[3][3];
             for(Index1=0;Index1<=nUDerivatives;++Index1)
                 {
-                for(Index2=0;Index2<=(int)nVDegree;++Index2)
+                for(Index2=0;Index2<=nVDegree;++Index2)
                     {
                     temp[Index2]=SGM::Point3D(0.0,0.0,0.0);
-                    for(Index3=0;Index3<=(int)nUDegree;++Index3)
+                    for(Index3=0;Index3<=nUDegree;++Index3)
                         {
                         double dFactor=aaUBasisFunctions[Index1][Index3];
                         SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+Index3]
@@ -626,7 +626,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                     SKL[Index1][Index2].m_x=0.0;
                     SKL[Index1][Index2].m_y=0.0;
                     SKL[Index1][Index2].m_z=0.0;
-                    for(Index3=0;Index3<=(int)nVDegree;++Index3)
+                    for(Index3=0;Index3<=nVDegree;++Index3)
                         {
                         SKL[Index1][Index2].m_x+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_x;
                         SKL[Index1][Index2].m_y+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_y;

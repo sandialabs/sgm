@@ -1256,14 +1256,12 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
         {
         ReadSTLFile(rResult,FileName,pThing,aEnts,aLog,Options);
         }
+    else
+        {
+        rResult.SetResult(ResultType::ResultTypeUnknownFileType);
+        return 0;
+        }
 
-    // Temp code for testing.
-
-    SGM::Point3D Pos0(0.063500,0.241789,0.161558);
-    SGM::Point3D Pos1(0.063500,0.205625,0.205625);
-    std::vector<SGM::Face> aFaces0,aFaces1;
-    SGM::FindCloseFaces(rResult,Pos0,Entity(0),1.0E-4,aFaces0);
-    SGM::FindCloseFaces(rResult,Pos1,Entity(0),1.0E-4,aFaces1);
 
     size_t Index1;
     size_t nEnts=aEnts.size();

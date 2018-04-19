@@ -21,18 +21,12 @@ void curve::Remove(SGM::Result &rResult)
 
 void curve::AddEdge(edge *pEdge) 
     {
-    if(this)
-        {
-        m_sEdges.insert(pEdge);
-        }
+    m_sEdges.insert(pEdge);
     }
 
 void curve::RemoveEdge(edge *pEdge) 
     {
-    if(this)
-        {
-        m_sEdges.erase(pEdge);
-        }
+    m_sEdges.erase(pEdge);
     }
 
 curve *curve::MakeCopy(SGM::Result &rResult) const
