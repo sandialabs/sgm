@@ -14,10 +14,14 @@ namespace SGM
 
             CheckOptions():
                 m_bDerivatives(false),
-                m_bEvaluateors(false) {}
+                m_bEvaluaters(false) {}
+
+            CheckOptions(std::string);
+
+            std::string FindString() const;
 
             bool m_bDerivatives;
-            bool m_bEvaluateors;
+            bool m_bEvaluaters;
         };
 
     ///////////////////////////////////////////////////////////////////////////

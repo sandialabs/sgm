@@ -36,7 +36,8 @@ namespace SGM
     // on.  For example, if EntityID is a body, then ClosestEntity will be
     // either a body, face, edge, or vertex.  In the event that the point
     // is closest to an isolated point in the body then the body will be 
-    // returned as the ClosestEntity.  
+    // returned as the ClosestEntity.  If bBoundary is true then, only
+    // points on the boundary are returned and point in body is not called.
 
     void FindClosestPointOnEntity(SGM::Result        &rResult,
                                   SGM::Point3D const &Point,

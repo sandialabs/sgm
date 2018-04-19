@@ -33,7 +33,7 @@ namespace SGM
                                SGM::Point3D                    &Origin,
                                SGM::UnitVector3D               &Axis);
 
-    SGM::Point3D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
+    SGM::Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
     
     SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
     
@@ -141,16 +141,6 @@ namespace SGM
                      double a2,double b2,double c2,
                      double &x,double &y);
 
-    // Returns the determinate of the below matrix
-    //
-    //  | dA, dB, dC |
-    //  | dC, dD, dE |
-    //  | dG, dH, dI |
-
-    double Determinate(double dA,double dB,double dC,
-                       double dD,double dE,double dF,
-                       double dG,double dH,double dI);
-
     // Guassian elimination with partial pivoting is used.
     // Given two or more linear equations in the form
     //
@@ -167,7 +157,7 @@ namespace SGM
 
     bool LinearSolve(std::vector<std::vector<double> > &aaMatrix);
 
-    // Given tridiagonal matrix compressed as follows;
+    // Given a banded matrix compressed as follows;
     // 
     // a0*x+b0*y+ 0  +  0 +...=s0      ( 0,a0,b0,s0)
     // a1*x+b1*y+c1*z+  0 +...=s1  =>  (a1,b1,c1,s1)
@@ -175,25 +165,85 @@ namespace SGM
     //  0  + 0  +c2*z+d2*w+...=s2      ...
     // ...                             (wn,xn, 0,sn)
     //
-    // The values of (a0,b0,c0,...) are returned in the last column.  
-    // If the given matrix is singular, then the function will return false.
-    // This function runs in linear time O(equations).
-
-    bool TridiagonalSolve(std::vector<std::vector<double> > &aaMatrix);
-
-    // Given a banded matrix compressed like TridiagonalSolve, but with 
-    // longer rows, the values (a0,b0,c0,...) are returned in the last column.
+    // The values (a0,b0,c0,...) are returned in the last column.
     // If the given matrix is singular, then the function will return false.
     // This function runs in linear time O(equations*bandwidth^2) assuming the 
     // bandwidth is relatively small to the number of equations.
 
     bool BandedSolve(std::vector<std::vector<double> > &aaMatrix);
+
+    // Returns the determinate of a 2 by 2 matrix[row][column].
+
+    double Determinate2D(double const aaMatrix[2][2]);
+
+    // Returns the determinate of a 3 by 3 matrix[row][column].
+
+    double Determinate3D(double const aaMatrix[3][3]);
+
+    // Returns the trace of a two by two matrix[row][column].
+
+    double Trace2D(double const aaMatrix[2][2]);
+
+    // Returns the trace of a three by three matrix[row][column].
+
+    double Trace3D(double const aaMatrix[3][3]);
+
+    // Returns the product of two two by two matrices, A*B=C
+
+    void FindProduct2D(double const aaMatrix1[2][2], // A
+                       double const aMatrix2[2][2],  // B
+                       double       aAnswer[2][2]);  // C
+
+    // Returns the product of two three by three matrices, A*B=C
+
+    void FindProduct3D(double const aaMatrix1[3][3], // A
+                       double const aMatrix2[3][3],  // B
+                       double       aAnswer[3][3]);  // C
+
+    // Returns the characteristic polynomial of a two by two 
+    // matrix[row][column] in the form a*x^2+b*x+c.
+
+    void CharacteristicPolynomial2D(double const aaMatrix[2][2],
+                                    double a,double b,double c);
+
+    // Returns the characteristic polynomial of a three by three 
+    // matrix[row][column] in the form a*x^3+b*x^2+c*x+d.
+
+    void CharacteristicPolynomial3D(double const aaMatrix[3][3],
+                                    double a,double b,double c,double d);
+
+    // Returns true if the given matrix is a diagonal matrix.
+
+    bool IsDiagonal2D(double const aaMatrix[2][2]);
+
+    // Returns true if the given matrix is a diagonal matrix.
+
+    bool IsDiagonal3D(double const aaMatrix[3][3]);
+
+    // Returns the Eigen vectors and values of a two by two
+    // matrix[row][column].
+
+    size_t FindEigenVectors2D(double              const aaMatrix[2][2],
+                              std::vector<double>       &aValues,
+                              std::vector<UnitVector2D> &aVectors);
+
+    // Returns the Eigen vectors and values of a three by three
+    // matrix[row][column].
+
+    size_t FindEigenVectors3D(double              const aaMatrix[3][3],
+                              std::vector<double>       &aValues,
+                              std::vector<UnitVector3D> &aVectors);
     
     ///////////////////////////////////////////////////////////////////////////
     //
     //  Polynomials Functions
     //
     ///////////////////////////////////////////////////////////////////////////
+
+    // Return the real roots of a linear, quadratic, cubic, and quartic 
+    // equation.The returned roots are ordered from smallest to largest.  The  
+    // coefficients are ordered from largest degree to smallest.  The function
+    // returns the number of real roots.
 
     size_t Linear(double a,double b,
                   std::vector<double> aRoots);

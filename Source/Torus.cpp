@@ -10,7 +10,7 @@ torus::torus(SGM::Result             &rResult,
              double                   dMajorRadius,
              bool                     bApple,
              SGM::UnitVector3D const *XAxis):
-    surface(rResult,SGM::SphereType),m_Center(Center),m_ZAxis(ZAxis),
+    surface(rResult,SGM::TorusType),m_Center(Center),m_ZAxis(ZAxis),
     m_dMinorRadius(dMinorRadius),m_dMajorRadius(dMajorRadius)
     {
     if(XAxis)

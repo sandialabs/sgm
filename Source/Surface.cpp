@@ -97,6 +97,52 @@ curve *surface::UParamLine(SGM::Result &rResult,
             return new circle(rResult,Center,Normal,dRadius,&XAxis);
             break;
             }
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface const *pNUBSurface=(NUBsurface const *)this;
+            if(pNUBSurface->m_bSingularHighU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNUBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else if(pNUBSurface->m_bSingularLowU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNUBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else
+                {
+                std::vector<double> const &aUKnots=pNUBSurface->GetUKnots();
+                std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUBSurface->GetControlPoints();
+                size_t nUDegree=pNUBSurface->GetUDegree();
+                size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
+
+                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+                size_t Index1,Index2;
+                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                    {
+                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                    }
+                FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
+
+                std::vector<SGM::Point3D> aControlPoints;
+                size_t nControlPoints=aaControlPoints[0].size();
+                aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
+                for(Index1=0;Index1<nControlPoints;++Index1)
+                    {
+                    for(Index2=0;Index2<=nUDegree;++Index2)
+                        {
+                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                            SGM::Vector3D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
+                        }
+                    }
+                return new NUBcurve(rResult,aControlPoints,aUKnots);
+                }
+            break;
+            }
         default:
             {
             throw;
@@ -143,6 +189,52 @@ curve *surface::VParamLine(SGM::Result &rResult,
             SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
             SGM::UnitVector3D XAxis=Pos0-Center;
             return new circle(rResult,Center,Normal,dRadius,&XAxis);
+            break;
+            }
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface const *pNUBSurface=(NUBsurface const *)this;
+            if(pNUBSurface->m_bSingularHighV && SGM::NearEqual(m_Domain.m_VDomain.m_dMax,dV,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNUBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else if(pNUBSurface->m_bSingularLowV && SGM::NearEqual(m_Domain.m_VDomain.m_dMin,dV,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNUBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else
+                {
+                std::vector<double> const &aVKnots=pNUBSurface->GetVKnots();
+                std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUBSurface->GetControlPoints();
+                size_t nVDegree=pNUBSurface->GetVDegree();
+                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,dV,aVKnots);
+
+                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+                size_t Index1,Index2;
+                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                    {
+                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                    }
+                FindBasisFunctions(nSpanIndex,dV,nVDegree,0,&aVKnots[0],aaBasisFunctions);
+
+                std::vector<SGM::Point3D> aControlPoints;
+                size_t nControlPoints=aaControlPoints.size();
+                aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
+                for(Index1=0;Index1<nControlPoints;++Index1)
+                    {
+                    for(Index2=0;Index2<=nVDegree;++Index2)
+                        {
+                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                            SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nVDegree+Index2]);
+                        }
+                    }
+                return new NUBcurve(rResult,aControlPoints,aVKnots);
+                }
             break;
             }
         default:
@@ -234,7 +326,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 {
                 Pos->m_x=Center.m_x+(XAxis.m_x*dCos+YAxis.m_x*dSin+ZAxis.m_x*uv.m_v)*dRadius;
                 Pos->m_y=Center.m_y+(XAxis.m_y*dCos+YAxis.m_y*dSin+ZAxis.m_y*uv.m_v)*dRadius;
-                Pos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_x*uv.m_v)*dRadius;
+                Pos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_z*uv.m_v)*dRadius;
                 }
             if(Du)
                 {
@@ -378,6 +470,10 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 Norm->m_x=(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dCM+ZAxis.m_x*dSM;
                 Norm->m_y=(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dCM+ZAxis.m_y*dSM;
                 Norm->m_z=(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dCM+ZAxis.m_z*dSM;
+                double dScale=1.0/sqrt(Norm->m_x*Norm->m_x+Norm->m_y*Norm->m_y+Norm->m_z*Norm->m_z);
+                Norm->m_x*=dScale;
+                Norm->m_y*=dScale;
+                Norm->m_z*=dScale;
                 }
             if(Duu)
                 {
@@ -481,17 +577,15 @@ void surface::Evaluate(SGM::Point2D const &uv,
             size_t nVDegree=pNUB->GetVDegree();
             size_t nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
 
-            int nUDerivatives=0;
+            size_t nUDerivatives=0;
             if(Du || Norm || Duv) nUDerivatives=1;
             if(Duu) nUDerivatives=2;
 
-            int nVDerivatives=0;
+            size_t nVDerivatives=0;
             if(Dv || Norm || Duv) nVDerivatives=1;
             if(Dvv) nVDerivatives=2;
 
-            int d=std::max(nUDerivatives,nVDerivatives);
-
-            size_t Index1;
+            size_t Index1,Index2,Index3;
 
             double aUMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
             double *aaUBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
@@ -509,29 +603,34 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             FindBasisFunctions(nVSpanIndex,uv.m_v,nVDegree,nVDerivatives,&aVKnots[0],aaVBasisFunctions);
 
-            int k,s,r,l;
             SGM::Point3D temp[SMG_MAX_NURB_DEGREE_PLUS_ONE];
             SGM::Point3D SKL[3][3];
-            for(k=0;k<=nUDerivatives;++k)
+            for(Index1=0;Index1<=nUDerivatives;++Index1)
                 {
-                for(s=0;s<=(int)nVDegree;++s)
+                for(Index2=0;Index2<=(int)nVDegree;++Index2)
                     {
-                    temp[s]=SGM::Point3D(0.0,0.0,0.0);
-                    for(r=0;r<=(int)nUDegree;++r)
+                    temp[Index2]=SGM::Point3D(0.0,0.0,0.0);
+                    for(Index3=0;Index3<=(int)nUDegree;++Index3)
                         {
-                        double dFactor=aaUBasisFunctions[k][r];
-                        SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+r][nVSpanIndex-nVDegree+s];
-                        temp[s].m_x+=dFactor*ControlPos.m_x;
-                        temp[s].m_y+=dFactor*ControlPos.m_y;
-                        temp[s].m_z+=dFactor*ControlPos.m_z;
+                        double dFactor=aaUBasisFunctions[Index1][Index3];
+                        SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+Index3]
+                                                                     [nVSpanIndex-nVDegree+Index2];
+                        temp[Index2].m_x+=dFactor*ControlPos.m_x;
+                        temp[Index2].m_y+=dFactor*ControlPos.m_y;
+                        temp[Index2].m_z+=dFactor*ControlPos.m_z;
                         }
-                    int dd=std::min(d-k,nVDerivatives);
-                    for(l=0;l<=dd;++l)
+                    }
+
+                for(Index2=0;Index2<=nVDerivatives;++Index2)
+                    {
+                    SKL[Index1][Index2].m_x=0.0;
+                    SKL[Index1][Index2].m_y=0.0;
+                    SKL[Index1][Index2].m_z=0.0;
+                    for(Index3=0;Index3<=(int)nVDegree;++Index3)
                         {
-                        double dFactor=aaVBasisFunctions[l][s];
-                        SKL[k][l].m_x+=dFactor*temp[s].m_x;
-                        SKL[k][l].m_y+=dFactor*temp[s].m_y;
-                        SKL[k][l].m_z+=dFactor*temp[s].m_z;
+                        SKL[Index1][Index2].m_x+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_x;
+                        SKL[Index1][Index2].m_y+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_y;
+                        SKL[Index1][Index2].m_z+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_z;
                         }
                     }
                 }
@@ -583,13 +682,13 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     SGM::Point3D SurfPos;
     SGM::Vector3D DU,DV;
     SGM::UnitVector3D Norm;
-    pSurface->Evaluate(StartUV,&SurfPos,&DU,&DV,&Norm);
     SGM::Point2D Answer=StartUV;
     double DeltaU=std::numeric_limits<double>::max();
     double DeltaV=std::numeric_limits<double>::max();
     while(SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
           SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO)
         {
+        pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         SGM::Point3D ProjectPos=Pos-Norm*((Pos-SurfPos)%Norm);
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
@@ -598,6 +697,41 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         Answer.m_v+=DeltaV;
         }
     return Answer;
+    }
+
+void surface::Curvature(SGM::Point2D const &uv,
+                        SGM::UnitVector3D  &Vec1,
+                        SGM::UnitVector3D  &Vec2,
+                        double             &k1,
+                        double             &k2) const
+    {
+    // Find the Eigen vectors and values of the second fundamental form
+    // 
+    //  | L M |  L = Duu % Norm, M = Duv % Norm, N = Dvv % Norm.
+    //  | M N |
+
+    SGM::UnitVector3D Norm;
+    SGM::Vector3D Du,Dv,Duu,Duv,Dvv;
+    Evaluate(uv,NULL,&Du,&Dv,&Norm,&Duu,&Duv,&Dvv);
+    double L=Duu%Norm;
+    double M=Duv%Norm;
+    double N=Dvv%Norm;
+    double aaMatrix[2][2];
+    aaMatrix[0][0]=L;
+    aaMatrix[1][0]=M;
+    aaMatrix[0][1]=M;
+    aaMatrix[1][1]=N;
+    std::vector<double> aValues;
+    std::vector<SGM::UnitVector2D> aVectors;
+    size_t nValues=SGM::FindEigenVectors2D(aaMatrix,aValues,aVectors);
+    if(nValues==2)
+        {
+        SGM::UnitVector3D UDu=Du,UDv=Dv;
+        k1=aValues[0];
+        k2=aValues[1];
+        Vec1=aVectors[0].m_u*UDu+aVectors[0].m_v*UDv;
+        Vec2=aVectors[1].m_u*UDu+aVectors[1].m_v*UDv;
+        }
     }
 
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
@@ -663,7 +797,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 double dSin=sin(uv.m_u);
                 ClosePos->m_x=Center.m_x+(XAxis.m_x*dCos+YAxis.m_x*dSin+ZAxis.m_x*uv.m_v)*dRadius;
                 ClosePos->m_y=Center.m_y+(XAxis.m_y*dCos+YAxis.m_y*dSin+ZAxis.m_y*uv.m_v)*dRadius;
-                ClosePos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_x*uv.m_v)*dRadius;
+                ClosePos->m_z=Center.m_z+(XAxis.m_z*dCos+YAxis.m_z*dSin+ZAxis.m_z*uv.m_v)*dRadius;
                 }
             break;
             }

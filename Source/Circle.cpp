@@ -13,6 +13,7 @@ circle::circle(SGM::Result             &rResult,
                SGM::Interval1D   const *pDomain):
     curve(rResult,SGM::CircleType),m_Center(Center),m_Normal(Normal)
     {
+    m_bClosed=true;
     m_dRadius=dRadius;
     if(pXAxis)
         {
@@ -40,6 +41,7 @@ circle::circle(SGM::Result  &rResult,
     m_Normal(pCircle->m_Normal),m_XAxis(pCircle->m_XAxis),
     m_YAxis(pCircle->m_YAxis),m_dRadius(pCircle->m_dRadius)
     {
+    m_bClosed=true;
     m_Domain.m_dMin=0;
     m_Domain.m_dMax=SGM_TWO_PI;
     }

@@ -14,6 +14,10 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
     {
     m_Domain.m_dMin=aKnots.front();
     m_Domain.m_dMax=aKnots.back();
+    if(SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL))
+        {
+        m_bClosed=true;
+        }
     }
 
 size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
@@ -155,7 +159,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
     }
 
 size_t FindSpanIndex(SGM::Interval1D     const &Domain,
-                     size_t                        nDegree,
+                     size_t                     nDegree,
                      double                     t,
                      std::vector<double> const &aKnots)
     {

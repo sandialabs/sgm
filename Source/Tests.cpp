@@ -1047,63 +1047,16 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
     if(nTestNumber==11)
         {
-        bool bAnswer=true;
+        bool bAnswer=false;
 
-        // if x=1,y=2,z=3,w=4, then
-        //
-        // 1x+2y+0z+0w= 5
-        // 2x+2y+2z+0w=12
-        // 0x+2y-1z+3w=13
-        // 0x+0y+2z-1w= 2
-
-        std::vector<std::vector<double> > aaMatrix;
-        aaMatrix.reserve(4);
-        std::vector<double> aRow;
-        aRow.reserve(4);
-        aRow.push_back(0);
-        aRow.push_back(1);
-        aRow.push_back(2);
-        aRow.push_back(5);
-        aaMatrix.push_back(aRow);
-        aRow.clear();
-        aRow.push_back(2);
-        aRow.push_back(2);
-        aRow.push_back(2);
-        aRow.push_back(12);
-        aaMatrix.push_back(aRow);
-        aRow.clear();
-        aRow.push_back(2);
-        aRow.push_back(-1);
-        aRow.push_back(3);
-        aRow.push_back(13);
-        aaMatrix.push_back(aRow);
-        aRow.clear();
-        aRow.push_back(2);
-        aRow.push_back(-1);
-        aRow.push_back(0);
-        aRow.push_back(2);
-        aaMatrix.push_back(aRow);
-
-        if(SGM::TridiagonalSolve(aaMatrix)==false)
-            {
-            bAnswer=false;
-            }
-        if(SGM::NearEqual(aaMatrix[0][3],1,SGM_ZERO,false)==false)
-            {
-            bAnswer=false;
-            }
-        if(SGM::NearEqual(aaMatrix[1][3],2,SGM_ZERO,false)==false)
-            {
-            bAnswer=false;
-            }
-        if(SGM::NearEqual(aaMatrix[2][3],3,SGM_ZERO,false)==false)
-            {
-            bAnswer=false;
-            }
-        if(SGM::NearEqual(aaMatrix[3][3],4,SGM_ZERO,false)==false)
-            {
-            bAnswer=false;
-            }
+        SGM::Point3D Origin(0.0,0.0,0.0);
+        SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
+        torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
+        SGM::Point2D uv(0.0,0.0);
+        SGM::UnitVector3D Vec1,Vec2;
+        double k1,k2;
+        pTorus->Curvature(uv,Vec1,Vec2,k1,k2);
+        pTorus->Remove(rResult);
 
         return bAnswer;
         }
@@ -1471,7 +1424,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
     if(nTestNumber==20)
         {
-        // Test cylinder inverse.
+        // Test NUB surface.
 
         std::vector<double> aUKnots,aVKnots;
         aUKnots.push_back(0.0);
@@ -1487,18 +1440,41 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aaPoints.push_back(aPoints);
         aaPoints.push_back(aPoints);
         aaPoints.push_back(aPoints);
-        aaPoints[0][0]=SGM::Point3D(0,0,1);
-        aaPoints[0][1]=SGM::Point3D(0,1,0);
-        aaPoints[0][2]=SGM::Point3D(0,2,-1);
-        aaPoints[1][0]=SGM::Point3D(1,0,0);
-        aaPoints[1][1]=SGM::Point3D(1,1,0);
-        aaPoints[1][2]=SGM::Point3D(1,2,0);
-        aaPoints[2][0]=SGM::Point3D(2,0,-1);
-        aaPoints[2][1]=SGM::Point3D(2,1,0);
-        aaPoints[2][2]=SGM::Point3D(2,2,1);
+        aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
+        aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
+        aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
+        aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
+        aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+        aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
+        aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
+        aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
+        aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
         NUBsurface *pNUB=new NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
 
         bool bAnswer=TestSurface(pNUB,SGM::Point2D(0.3,0.2));
+        
+        SGM::UnitVector3D Vec1,Vec2;
+        double k1,k2;
+        SGM::Point2D uv(0.5,0.5);
+        pNUB->Curvature(uv,Vec1,Vec2,k1,k2);
+
+        if(SGM::NearEqual(Vec1,SGM::UnitVector3D(1.0,-1.0,0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec2,SGM::UnitVector3D(1.0,1.0,0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(k1,-4.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(k2,4.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
         pNUB->Remove(rResult);
 
         return bAnswer;

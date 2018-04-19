@@ -56,6 +56,8 @@ namespace SGM
 
         double DistanceSquared(SGM::Point3D const &Pos) const;
 
+        Point3D operator+=(Vector3D const &Vec);
+
         double m_x;
         double m_y;
         double m_z;
@@ -143,6 +145,8 @@ namespace SGM
         public:
 
         UnitVector2D() {}
+
+        UnitVector2D(double u,double v);
 
         UnitVector2D(SGM::Vector2D const &Vec);
         };
@@ -529,7 +533,7 @@ namespace SGM
 
     bool NearEqual(SGM::Point2D const &Pos1,SGM::Point2D const &Pos2,double dTolerance);
 
-    bool NearEqual(SGM::Point3D const &Vec1,SGM::Point3D const &Vec2,double dTolerance);
+    bool NearEqual(SGM::Point3D const &Pos1,SGM::Point3D const &Pos2,double dTolerance);
 
     bool NearEqual(SGM::Vector3D const &Pos1,SGM::Vector3D const &Pos2,double dTolerance);
 

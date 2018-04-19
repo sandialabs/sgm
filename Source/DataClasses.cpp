@@ -119,6 +119,14 @@ double SGM::Point3D::DistanceSquared(SGM::Point3D const &Pos) const
     return dX*dX+dY*dY+dZ*dZ;
     }
 
+SGM::Point3D SGM::Point3D::operator+=(SGM::Vector3D const &Vec) 
+    {
+    m_x+=Vec.m_x;
+    m_y+=Vec.m_y;
+    m_z+=Vec.m_z;
+    return *this;
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  UnitVector2D methods
@@ -140,6 +148,29 @@ SGM::UnitVector2D::UnitVector2D(SGM::Vector2D const &Vec)
         double dScale=1.0/dMag;
         m_u=Vec.m_u*dScale;
         m_v=Vec.m_v*dScale;
+        }
+    else
+        {
+        m_u=0.0;
+        m_v=1.0;
+        }
+    }
+
+SGM::UnitVector2D::UnitVector2D(double u,double v)
+    {
+    double dMagSquared=u*u+v*v;
+    if( 0.999999999999<dMagSquared &&
+        dMagSquared<1.000000000001)
+        {
+        m_u=u;
+        m_v=v;
+        }
+    else if(1E-24<dMagSquared)
+        {
+        double dMag=sqrt(dMagSquared);
+        double dScale=1.0/dMag;
+        m_u=u*dScale;
+        m_v=v*dScale;
         }
     else
         {

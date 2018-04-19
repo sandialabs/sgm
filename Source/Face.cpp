@@ -124,13 +124,18 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
+        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mFaceType.find(pEdge);
+        if(EdgeTypeIter->second==SGM::FaceOnRightType)
+            {
+            dZ=-dZ;
+            }
         if(-SGM_ZERO<=dZ)
             {
-            return true;
+            return m_bFlipped==true ? false : true;
             }
         else 
             {
-            return false;
+            return m_bFlipped==true ? true : false;
             }
         }
     else // The vertex case.
@@ -148,7 +153,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             // Have to find inside out side from one of the edges 
             // or the angle of the edges.
-            throw;
+            return false;
             }
         return false;
         }

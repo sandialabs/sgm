@@ -1,6 +1,8 @@
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
+#include "SGMQuery.h"
+#include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"
 #include "STEP.h"
@@ -836,7 +838,6 @@ void CreateEntities(SGM::Result                   &rResult,
                 SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
                 SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
-// unused               SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
                 }
@@ -958,10 +959,9 @@ void CreateEntities(SGM::Result                   &rResult,
         std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nBodyID);
         std::vector<size_t> const &aIDs=SLD->second.m_aIDs;
         size_t nLastVolume=aIDs.size()-2;
-// unused        size_t nTrans=aIDs[nLastVolume];
 
+        // size_t nTrans=aIDs[nLastVolume];
         // Transform the body here.
-// unused       nTrans;
 
         for(Index2=0;Index2<nLastVolume;++Index2)
             {
@@ -1051,10 +1051,15 @@ void CreateEntities(SGM::Result                   &rResult,
                     std::map<size_t,STEPLineData>::iterator SLD4=mSTEPData.find(nCoedgeID);
                     size_t nEdgeID=SLD4->second.m_aIDs[2];
                     bool bCoedgeFlag=SLD4->second.m_bFlag;
+                    std::map<size_t,STEPLineData>::iterator SLD5=mSTEPData.find(nEdgeID);
+                    bool bEdgeFlag=SLD5->second.m_bFlag;
                     SGM::EdgeSideType nEdgeSide=SGM::FaceOnLeftType; 
                     if(bBoundFlag!=bCoedgeFlag)
                         {
-                        nEdgeSide=SGM::FaceOnRightType;
+                        if(bEdgeFlag==true)
+                            {
+                            nEdgeSide=SGM::FaceOnRightType;
+                            }
                         }
                     edge *pEdge=(edge *)mEntityMap[nEdgeID];
                     pFace->AddEdge(pEdge,nEdgeSide);
@@ -1250,6 +1255,14 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
         {
         ReadSTLFile(rResult,FileName,pThing,aEnts,aLog,Options);
         }
+
+    // Temp code for testing.
+
+    SGM::Point3D Pos0(0.063500,0.241789,0.161558);
+    SGM::Point3D Pos1(0.063500,0.205625,0.205625);
+    std::vector<SGM::Face> aFaces0,aFaces1;
+    SGM::FindCloseFaces(rResult,Pos0,Entity(0),1.0E-4,aFaces0);
+    SGM::FindCloseFaces(rResult,Pos1,Entity(0),1.0E-4,aFaces1);
 
     size_t Index1;
     size_t nEnts=aEnts.size();

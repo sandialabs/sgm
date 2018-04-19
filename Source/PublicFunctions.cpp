@@ -3,9 +3,17 @@
 #include "SGMPrimatives.h"
 #include "SGMGeometry.h"
 #include "SGMChecker.h"
+#include "SGMComplex.h"
 #include "Primitive.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+
+SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
+                               std::vector<SGM::Point3D> const &aPoints)
+    {
+    complex *pComplex=new complex(rResult,aPoints);
+    return SGM::Complex(pComplex->GetID());
+    }
 
 void FindBodies(SGM::Result         &rResult,
                 SGM::Entity   const &EntityID,
@@ -101,6 +109,11 @@ SGM::Result SGM::CreateResult()
     {
     thing *pThing=new thing();
     return SGM::Result(pThing); 
+    }
+
+thing *SGM::CreateThing()
+    {
+    return new thing();
     }
 
 SGM::Body SGM::CreateBlock(SGM::Result        &rResult,

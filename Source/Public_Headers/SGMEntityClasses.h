@@ -11,7 +11,9 @@ namespace SGM
         {
         public:
 
-            Entity(size_t nID):m_ID(nID) {}
+            Entity(size_t nID);
+
+            Entity();
 
             bool operator<(Entity const &Ent) const;
 
@@ -46,6 +48,8 @@ namespace SGM
         public:
 
             Assembly(size_t nID):Entity(nID) {}
+
+            Assembly();
         };
 
     class Reference : public SGM::Entity
@@ -53,6 +57,8 @@ namespace SGM
         public:
 
             Reference(size_t nID):Entity(nID) {}
+
+            Reference();
         };
 
     class Complex : public SGM::Entity
@@ -60,6 +66,8 @@ namespace SGM
         public:
 
             Complex(size_t nID):Entity(nID) {}
+
+            Complex();
         };
 
     // Topology Classes
@@ -69,6 +77,8 @@ namespace SGM
         public:
 
             Body(size_t nID):Topology(nID) {}
+
+            Body();
         };
 
     class Volume : public SGM::Topology
@@ -76,6 +86,8 @@ namespace SGM
         public:
 
             Volume(size_t nID):Topology(nID) {}
+
+            Volume();
         };
 
     class Face : public SGM::Topology
@@ -83,6 +95,8 @@ namespace SGM
         public:
 
             Face(size_t nID):Topology(nID) {}
+
+            Face();
         };
 
     class Edge : public SGM::Topology
@@ -90,6 +104,8 @@ namespace SGM
         public:
 
             Edge(size_t nID):Topology(nID) {}
+
+            Edge();
         };
 
     class Vertex  : public SGM::Topology
@@ -97,6 +113,8 @@ namespace SGM
         public:
 
             Vertex(size_t nID):Topology(nID) {}
+
+            Vertex();
         };
 
     // Geometry Classes
@@ -106,6 +124,8 @@ namespace SGM
         public:
 
             Curve(size_t nID):Geometry(nID) {}
+
+            Curve();
         };
 
     class Surface  : public SGM::Geometry
@@ -113,6 +133,8 @@ namespace SGM
         public:
 
             Surface(size_t nID):Geometry(nID) {}
+
+            Surface();
         };
 
     } // End of SGM namespace

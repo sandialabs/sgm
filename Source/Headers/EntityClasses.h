@@ -419,8 +419,8 @@ class surface : public entity
                              SGM::Point2D const *pGuess=NULL) const;
 
         void Curvature(SGM::Point2D const &uv,
-                       SGM::UnitVector3D  *Vec1,
-                       SGM::UnitVector3D  *Vec2,
+                       SGM::UnitVector3D  &Vec1,
+                       SGM::UnitVector3D  &Vec2,
                        double             &k1,
                        double             &k2) const;
 
@@ -689,10 +689,14 @@ class curve : public entity
 
         SGM::EntityType GetCurveType() const {return m_CurveType;}
 
+        SGM::Interval1D const &GetDomain() const {return m_Domain;}
+
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
                       SGM::Vector3D *D1=NULL,
                       SGM::Vector3D *D2=NULL) const;
+
+        SGM::Vector3D Curvature(double t) const;
 
         double Inverse(SGM::Point3D const &Pos,
                        SGM::Point3D       *ClosePos=NULL,
@@ -702,6 +706,8 @@ class curve : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        bool GetClosed() const {return m_bClosed;}
+
     protected:
 
         ~curve() {}; // Call remove instead.
@@ -709,6 +715,7 @@ class curve : public entity
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
+        bool             m_bClosed;
     };
 
 class line : public curve
@@ -803,6 +810,9 @@ class NUBcurve: public curve
     {
     public:
 
+        // Note the all end points need to be clammped.  That is to say that
+        // first and last control points have to be on the ends of the curve.
+
         NUBcurve(SGM::Result                     &rResult,
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
@@ -861,6 +871,19 @@ class NURBcurve: public curve
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
+    };
+
+class PointCurve: public curve
+    {
+    public:
+
+        PointCurve(SGM::Result           &rResult,
+                   SGM::Point3D    const &Pos,
+                   SGM::Interval1D const *pDomain=NULL);
+
+    public:
+
+        SGM::Point3D m_Pos;
     };
 
 ///////////////////////////////////////////////////////////////////////////////

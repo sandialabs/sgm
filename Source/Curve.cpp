@@ -11,6 +11,7 @@
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
     {
+    m_bClosed=false;
     }
 
 void curve::Remove(SGM::Result &rResult)
@@ -167,6 +168,14 @@ double curve::Inverse(SGM::Point3D const &Pos,
             throw;
             }
         }
+    }
+
+SGM::Vector3D curve::Curvature(double t) const
+    {
+    SGM::Vector3D dt,ddt;
+    Evaluate(t,NULL,&dt,&ddt);
+    double dSpeed=dt%dt;
+    return ((dt*ddt)*dt)/(dSpeed*dSpeed);
     }
 
 void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const

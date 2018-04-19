@@ -1,6 +1,7 @@
 #ifndef SGM_TRANSLATORS_H
 #define SGM_TRANSLATORS_H
 
+#include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
 #include <vector>
 
@@ -18,6 +19,10 @@ namespace SGM
                 m_bScan(false),
                 m_b2D(false),
                 m_bSingleVolume(false) {}
+
+            TranslatorOptions(std::string const &sOptions);
+
+            std::string FindString() const;
 
             bool m_bBinary;        // Output a binary version of the file.
                                    // Default is false.

@@ -38,12 +38,27 @@ SGM::Interval1D const &edge::GetDomain() const
     {
     if(m_Domain.Empty())
         {
+        SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
         m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
         m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
         if(m_Domain.Empty())
             {
-            std::swap(m_pStart,m_pEnd);
-            std::swap(m_Domain.m_dMin,m_Domain.m_dMax);
+            if(m_pCurve->GetClosed())
+                {
+                if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                    {
+                    m_Domain.m_dMax=CurveDomain.m_dMax;
+                    }
+                else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
+                    {
+                    m_Domain.m_dMin=CurveDomain.m_dMin;
+                    }
+                }
+            if(m_Domain.Empty())
+                {
+                std::swap(m_pStart,m_pEnd);
+                std::swap(m_Domain.m_dMin,m_Domain.m_dMax);
+                }
             }
         }
     return m_Domain;

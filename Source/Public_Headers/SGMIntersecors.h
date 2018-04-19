@@ -20,8 +20,8 @@ namespace SGM
                            SGM::Edge           const *pEdge2=NULL);
 
     size_t IntersectCurveAndSurface(SGM::Result               &rResult,
-                                    SGM::Curve          const &CurveID1,
-                                    SGM::Curve          const &CurveID2,
+                                    SGM::Curve          const &CurveID,
+                                    SGM::Surface        const &SurfaceID,
                                     std::vector<SGM::Point3D> &aPoints,
                                     SGM::Edge           const *pEdge=NULL,
                                     SGM::Face           const *pFace=NULL);

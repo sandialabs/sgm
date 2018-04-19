@@ -24,6 +24,7 @@ namespace SGM
         ParabolType,
         NUBCurveType,
         NURBCurveType,
+        PointCurveType,
 
         SurfaceType,
 

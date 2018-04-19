@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include <cmath>
+#include <algorithm>
 
 body *CreateTorus(SGM::Result             &rResult,
                   thing                   *pThing,

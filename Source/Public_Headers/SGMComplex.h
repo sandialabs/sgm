@@ -55,10 +55,18 @@ namespace SGM
                           SGM::UnitVector3D   const &Normal,
                           std::vector<SGM::Complex> &aComponents);
 
+    // Split with slices will split the given two-dimensional complex
+    // with the given one-dimensional planar complexes.
+
     size_t SplitWithSlices(SGM::Result                     &rResult,
                            SGM::Complex              const &ComplexID,
                            std::vector<SGM::Complex> const &aSlices,
                            std::vector<SGM::Complex>       &aComponents);
+
+    // Split with complex will split the given two-dimensional complex
+    // with the given one dimensional sub-complex.  That is to say that
+    // the vertices and edges of SliceID must be vertices and edges of
+    // ComplexID.
 
     size_t SplitWithComplex(SGM::Result               &rResult,
                             SGM::Complex        const &ComplexID,

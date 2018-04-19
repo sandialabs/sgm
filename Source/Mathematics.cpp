@@ -13,6 +13,35 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+SGM::Point3D SGM::FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints)
+    {
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    double x=0.0,y=0.0,z=0.0;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        x+=Pos.m_x;
+        y+=Pos.m_y;
+        z+=Pos.m_z;
+        }
+    return SGM::Point3D(x/nPoints,y/nPoints,z/nPoints);
+    }
+
+SGM::Point2D SGM::FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints)
+    {
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    double u=0.0,v=0.0;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point2D const &Pos=aPoints[Index1];
+        u+=Pos.m_u;
+        v+=Pos.m_v;
+        }
+    return SGM::Point2D(u/nPoints,v/nPoints);
+    }
+
 SGM::Interval3D SGM::FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints)
     {
     SGM::Interval3D Answer;
@@ -205,13 +234,6 @@ bool SGM::PointInPolygon(SGM::Point2D              const &Pos,
     return nCrosses%2==1;
     }
 
-double SGM::Determinate(double dA,double dB,double dC,
-                        double dD,double dE,double dF,
-                        double dG,double dH,double dI)
-    {
-    return dA*(dE*dI-dF*dH)+dB*(dF*dG-dD*dI)+dC*(dD*dH-dE*dG);
-    }
-
 double sign(SGM::Point2D const &P1,
             SGM::Point2D const &P2,
             SGM::Point2D const &P3)
@@ -235,16 +257,17 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
                          SGM::Point2D const &C,
                          SGM::Point2D const &D)
     {
-    double dA=A.m_u-D.m_u;
-    double dB=A.m_v-D.m_v;
-    double dC=dA*dA+dB*dB;
-    double dD=B.m_u-D.m_u;
-    double dE=B.m_v-D.m_v;
-    double dF=dD*dD+dE*dE;
-    double dG=C.m_u-D.m_u;
-    double dH=C.m_v-D.m_v;
-    double dI=dG*dG+dH*dH;
-    double dDet=SGM::Determinate(dA,dB,dC,dD,dE,dF,dG,dH,dI);
+    double aMatrix[3][3];
+    aMatrix[0][0]=A.m_u-D.m_u;
+    aMatrix[0][1]=A.m_v-D.m_v;
+    aMatrix[0][2]=aMatrix[0][0]*aMatrix[0][0]+aMatrix[0][1]*aMatrix[0][1];
+    aMatrix[1][0]=B.m_u-D.m_u;
+    aMatrix[1][1]=B.m_v-D.m_v;
+    aMatrix[1][2]=aMatrix[1][0]*aMatrix[1][0]+aMatrix[1][1]*aMatrix[1][1];
+    aMatrix[2][0]=C.m_u-D.m_u;
+    aMatrix[2][1]=C.m_v-D.m_v;
+    aMatrix[2][2]=aMatrix[2][0]*aMatrix[2][0]+aMatrix[2][1]*aMatrix[2][1];
+    double dDet=SGM::Determinate3D(aMatrix);
     return 1E-12<dDet;
     }
 
@@ -972,43 +995,206 @@ bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)
     return true;
     }
 
-bool SGM::TridiagonalSolve(std::vector<std::vector<double> > &aaMatrix)
+double SGM::Determinate2D(double const aMatrix[2][2])
     {
-    // Remove the left band.
+    double dA=aMatrix[0][0];
+    double dB=aMatrix[0][1];
 
-    size_t nColumns=aaMatrix.size();
+    double dC=aMatrix[1][0];
+    double dD=aMatrix[1][1];
+    
+    return dA*dD-dC*dB;
+    }
+
+double SGM::Determinate3D(double const aMatrix[3][3])
+    {
+    double dA=aMatrix[0][0];
+    double dB=aMatrix[0][1];
+    double dC=aMatrix[0][2];
+
+    double dD=aMatrix[1][0];
+    double dE=aMatrix[1][1];
+    double dF=aMatrix[1][2];
+
+    double dG=aMatrix[2][0];
+    double dH=aMatrix[2][1];
+    double dI=aMatrix[2][2];
+    
+    return dA*(dE*dI-dF*dH)+dB*(dF*dG-dD*dI)+dC*(dD*dH-dE*dG);
+    }
+
+double SGM::Trace2D(double const aMatrix[2][2])
+    {
+    return aMatrix[0][0]+aMatrix[1][1];
+    }
+
+double SGM::Trace3D(double const aMatrix[3][3])
+    {
+    return aMatrix[0][0]+aMatrix[1][1]+aMatrix[2][2];
+    }
+
+void SGM::FindProduct2D(double const aMatrix1[2][2],
+                        double const aMatrix2[2][2],
+                        double       aAnswer[2][2])
+    {
+    aAnswer[0][0]=aMatrix1[0][0]*aMatrix2[0][0]+aMatrix1[0][1]*aMatrix2[1][0];
+    aAnswer[0][1]=aMatrix1[0][0]*aMatrix2[0][1]+aMatrix1[0][1]*aMatrix2[1][1];
+    aAnswer[1][0]=aMatrix1[1][0]*aMatrix2[0][0]+aMatrix1[1][1]*aMatrix2[1][0];
+    aAnswer[1][1]=aMatrix1[1][0]*aMatrix2[0][1]+aMatrix1[1][1]*aMatrix2[1][1];
+    }
+
+void SGM::FindProduct3D(double const aMatrix1[3][3],
+                        double const aMatrix2[3][3],
+                        double       aAnswer[3][3])
+    {
+    aAnswer[0][0]=aMatrix1[0][0]*aMatrix2[0][0]+aMatrix1[0][1]*aMatrix2[1][0]+aMatrix1[0][2]*aMatrix2[2][0];
+    aAnswer[0][1]=aMatrix1[0][0]*aMatrix2[0][1]+aMatrix1[0][1]*aMatrix2[1][1]+aMatrix1[0][2]*aMatrix2[2][1];
+    aAnswer[0][2]=aMatrix1[0][0]*aMatrix2[0][2]+aMatrix1[0][1]*aMatrix2[1][2]+aMatrix1[0][2]*aMatrix2[2][2];
+    aAnswer[1][0]=aMatrix1[1][0]*aMatrix2[0][0]+aMatrix1[1][1]*aMatrix2[1][0]+aMatrix1[1][2]*aMatrix2[2][0];
+    aAnswer[1][1]=aMatrix1[1][0]*aMatrix2[0][1]+aMatrix1[1][1]*aMatrix2[1][1]+aMatrix1[1][2]*aMatrix2[2][1];
+    aAnswer[1][2]=aMatrix1[1][0]*aMatrix2[0][2]+aMatrix1[1][1]*aMatrix2[1][2]+aMatrix1[1][2]*aMatrix2[2][2];
+    aAnswer[2][0]=aMatrix1[2][0]*aMatrix2[0][0]+aMatrix1[2][1]*aMatrix2[1][0]+aMatrix1[2][2]*aMatrix2[2][0];
+    aAnswer[2][1]=aMatrix1[2][0]*aMatrix2[0][1]+aMatrix1[2][1]*aMatrix2[1][1]+aMatrix1[2][2]*aMatrix2[2][1];
+    aAnswer[2][2]=aMatrix1[2][0]*aMatrix2[0][2]+aMatrix1[2][1]*aMatrix2[1][2]+aMatrix1[2][2]*aMatrix2[2][2];
+    }
+
+bool SGM::IsDiagonal2D(double const aaMatrix[2][2])
+    {
+    return fabs(aaMatrix[0][1])<SGM_ZERO && fabs(aaMatrix[1][0])<SGM_ZERO;
+    }
+
+size_t SGM::FindEigenVectors2D(double                  const  aaMatrix[2][2],
+                               std::vector<double>            &aValues,
+                               std::vector<SGM::UnitVector2D> &aVectors)
+    {
+    if(IsDiagonal2D(aaMatrix))
+        {
+        aValues.push_back(aaMatrix[0][0]);
+        aValues.push_back(aaMatrix[1][1]);
+        aVectors.push_back(SGM::UnitVector2D(1.0,0.0));
+        aVectors.push_back(SGM::UnitVector2D(0.0,1.0));
+        return 2;
+        }
+
+    // The characteristic polynomial of the matrix A is, where tr is the trace 
+    // and det is the determinate
+    // x^2 - tr(A)*x + det(A).
+
+    double a=1.0;
+    double b=-SGM::Trace2D(aaMatrix);
+    double c=SGM::Determinate2D(aaMatrix);
+    std::vector<double> aRoots;
+    size_t nRoots=SGM::Quadratic(a,b,c,aRoots);
+
+    // To find the Eigen vectors solve Mv=Lv where M is the matrix and
+    // L is an Eigen value.
+
+    size_t nAnswer=0;
     size_t Index1;
-    for(Index1=1;Index1<nColumns;++Index1)
+    for(Index1=0;Index1<nRoots;++Index1)
         {
-        double a0=aaMatrix[Index1-1][1];
-        if(fabs(a0)<SGM_ZERO)
+        std::vector<std::vector<double> > aaMat;
+        aaMat.reserve(2);
+        std::vector<double> aMat;
+        aMat.reserve(3);
+        aMat.push_back(aaMatrix[0][0]-aRoots[Index1]);
+        aMat.push_back(aaMatrix[0][1]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[1][0]);
+        aMat.push_back(aaMatrix[1][1]-aRoots[Index1]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        if(LinearSolve(aaMat)==true)
             {
-            return false;
+            aValues.push_back(aRoots[Index1]);
+            aVectors.push_back(SGM::UnitVector2D(aaMat[0].back(),aaMat[1].back()));
+            ++nAnswer;
             }
-        double a1=aaMatrix[Index1][0];
-        double dFactor=a1/a0;
-        aaMatrix[Index1][0]=0.0;
-        aaMatrix[Index1][1]-=aaMatrix[Index1-1][2]*dFactor;
-        aaMatrix[Index1][3]-=aaMatrix[Index1-1][3]*dFactor;
+        if(fabs(aaMat[1][0])<SGM_ZERO && fabs(aaMat[1][2])<SGM_ZERO)
+            {
+            // In this case we have aX+bY=0.0 and X^2+Y^2=1.0
+            // Let X=1 -> a+bY=0.0 -> Y=-a/b then normalize the vector.
+            aValues.push_back(aRoots[Index1]);
+            aVectors.push_back(SGM::UnitVector2D(1.0,-aaMat[0][0]/aaMat[0][1]));
+            ++nAnswer;
+            }
+        }
+    return nAnswer;
+    }
+
+bool SGM::IsDiagonal3D(double const aaMatrix[3][3])
+    {
+    return fabs(aaMatrix[0][1])<SGM_ZERO && fabs(aaMatrix[0][2])<SGM_ZERO &&
+           fabs(aaMatrix[1][0])<SGM_ZERO && fabs(aaMatrix[1][2])<SGM_ZERO &&
+           fabs(aaMatrix[2][0])<SGM_ZERO && fabs(aaMatrix[2][1])<SGM_ZERO;
+    }
+ 
+size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
+                               std::vector<double>            &aValues,
+                               std::vector<SGM::UnitVector3D> &aVectors)
+    {
+    if(IsDiagonal3D(aaMatrix))
+        {
+        aValues.push_back(aaMatrix[0][0]);
+        aValues.push_back(aaMatrix[1][1]);
+        aValues.push_back(aaMatrix[2][2]);
+        aVectors.push_back(SGM::UnitVector3D(1.0,0.0,0.0));
+        aVectors.push_back(SGM::UnitVector3D(0.0,1.0,0.0));
+        aVectors.push_back(SGM::UnitVector3D(0.0,0.0,1.0));
+        return 3;
         }
 
-    // Remove the right band.
+    // The characteristic polynomial of the matrix A is, where tr is the trace 
+    // and det is the determinate
+    // (-1)*x^3 + tr(A)*x^2 + (tr(A)^2 - tr(A^2))*x + det(A).
 
-    for(Index1=nColumns-1;0<Index1;--Index1)
+    double a=-1.0;
+    double b=SGM::Trace3D(aaMatrix);
+    double aaAA[3][3];
+    SGM::FindProduct3D(aaMatrix,aaMatrix,aaAA);
+    double c=b*b-SGM::Trace3D(aaAA);
+    double d=SGM::Determinate3D(aaMatrix);
+    std::vector<double> aRoots;
+    size_t nRoots=SGM::Cubic(a,b,c,d,aRoots);
+
+    // To find the Eigen vectors solve Mv=Lv where M is the matrix and
+    // L is an Eigen value.
+
+    size_t nAnswer=0;
+    size_t Index1;
+    for(Index1=0;Index1<nRoots;++Index1)
         {
-        double dn=aaMatrix[Index1][1];
-        if(fabs(dn)<SGM_ZERO)
+        std::vector<std::vector<double> > aaMat;
+        aaMat.reserve(3);
+        std::vector<double> aMat;
+        aMat.reserve(4);
+        aMat.push_back(aaMatrix[0][0]-aRoots[Index1]);
+        aMat.push_back(aaMatrix[0][1]);
+        aMat.push_back(aaMatrix[0][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[1][0]);
+        aMat.push_back(aaMatrix[1][1]-aRoots[Index1]);
+        aMat.push_back(aaMatrix[1][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[2][0]);
+        aMat.push_back(aaMatrix[2][1]);
+        aMat.push_back(aaMatrix[2][2]-aRoots[Index1]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        if(LinearSolve(aaMat)==true)
             {
-            return false;
+            aValues.push_back(aRoots[Index1]);
+            aVectors.push_back(SGM::UnitVector3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back()));
+            ++nAnswer;
             }
-        double bn=aaMatrix[Index1][2];
-        double vn= Index1==nColumns-1 ? 1 : aaMatrix[Index1+1][3];
-        aaMatrix[Index1][1]=1.0;
-        aaMatrix[Index1][2]=0.0;
-        aaMatrix[Index1][3]-=bn*vn;
-        aaMatrix[Index1][3]/=dn;
         }
-    return true;
+    return nAnswer;
     }
 
 bool SGM::BandedSolve(std::vector<std::vector<double> > &aaMatrix)
