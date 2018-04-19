@@ -1,7 +1,7 @@
 
 #include "SGMChecker.h"
 #include "SGMDataClasses.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 
 int main(int argc, char *argv[])
     {

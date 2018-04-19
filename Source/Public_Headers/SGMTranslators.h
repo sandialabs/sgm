@@ -32,7 +32,7 @@ namespace SGM
                                    // Default is false.
                                    // Used by STL write.
                                    
-            bool m_bScan;          // Only scans the files for infomation.
+            bool m_bScan;          // Only scans the files for information.
                                    // Default is false.
                                    // Used by STEP read.
                                    

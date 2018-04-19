@@ -20,8 +20,8 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
         }
     }
 
-size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
-                                std::vector<double> &aUniqueKnots) const
+size_t NUBcurve::FindMultiplicity(std::vector<int> &aMultiplicity,
+                                  std::vector<double> &aUniqueKnots) const
     {
     size_t nKnots=m_aKnots.size();
     size_t Index1;
@@ -32,15 +32,15 @@ size_t NUBcurve::FindMultiplity(std::vector<int>    &aMultiplity,
         if(SGM::NearEqual(dLastKnot,dKnot,SGM_ZERO,false)==false)
             {
             aUniqueKnots.push_back(dKnot);
-            aMultiplity.push_back(1);
+            aMultiplicity.push_back(1);
             }
         else
             {
-            size_t nSize=aMultiplity.size();
-            aMultiplity[nSize-1]=aMultiplity[nSize-1]+1;
+            size_t nSize=aMultiplicity.size();
+            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
             }
         }
-    return aMultiplity.size();
+    return aMultiplicity.size();
     }
 
 std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
@@ -107,7 +107,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
         for(k=1;k<=(int)n;++k)
             {
             double d=0.0;
-            int rk=(int)(r-k);
+            int rk=r-k;
             int pk=(int)(p-k);
             if(r>=k)
                 {
@@ -125,7 +125,7 @@ void FindBasisFunctions(size_t        i,     // One based span index.
                 }
             if(r-1<=pk)
                 {
-                j2=(int)(k-1);
+                j2=k-1;
                 }
             else
                 {

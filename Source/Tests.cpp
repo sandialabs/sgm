@@ -1,5 +1,5 @@
 #include "SGMChecker.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMComplex.h"
 #include "SGMMathematics.h"
 #include "SGMTranslators.h"
@@ -447,7 +447,7 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
     std::map<std::string,SGMFunction> mFunctionMap;
     CreateFunctionMap(mFunctionMap);
     FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    if(pOutputFile==NULL)
+    if(pOutputFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         rResult.SetMessage(sOutputFileName);
@@ -456,7 +456,7 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
 
     std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
     FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
-    if(pTestFile==NULL)
+    if(pTestFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         rResult.SetMessage(sFullPathName);
@@ -625,7 +625,7 @@ bool TestSurface(surface      const *pSurface,
     {
     bool bAnswer=true;
 
-    // Test to see if evalaute and inverse match.
+    // Test to see if evaluate and inverse match.
 
     SGM::Point3D Pos,CPos;
     SGM::UnitVector3D Norm;
@@ -944,7 +944,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D ZAxis(1,2,3);
         torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
 
-        bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
+        //bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
+        bool bAnswer=TestSurface(pTorus,SGM::Point2D(SGM_HALF_PI,SGM_HALF_PI));
         pTorus->Remove(rResult);
 
         return bAnswer;
@@ -1047,7 +1048,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
     if(nTestNumber==11)
         {
-        bool bAnswer=false;
+        bool bAnswer=true;
 
         SGM::Point3D Origin(0.0,0.0,0.0);
         SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
@@ -1057,6 +1058,23 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         double k1,k2;
         pTorus->Curvature(uv,Vec1,Vec2,k1,k2);
         pTorus->Remove(rResult);
+
+        if(SGM::NearEqual(Vec1,SGM::UnitVector3D(0.0,1.0,0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec2,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(k1,-7.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(k2,-2.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
 
         return bAnswer;
         }
@@ -1274,8 +1292,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;
@@ -1315,8 +1333,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;
@@ -1354,8 +1372,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
                 }
             }
         SGM::Vector3D Vec0,Vec1;
-        SGM::EvaluateCurve(rResult,NUBID,0.0,NULL,&Vec0);
-        SGM::EvaluateCurve(rResult,NUBID,1.0,NULL,&Vec1);
+        SGM::EvaluateCurve(rResult,NUBID,0.0,nullptr,&Vec0);
+        SGM::EvaluateCurve(rResult,NUBID,1.0,nullptr,&Vec1);
         if(SGM::NearEqual(Vec0,StartVec,SGM_MIN_TOL)==false)
             {
             bAnswer=false;

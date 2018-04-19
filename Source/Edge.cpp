@@ -4,7 +4,7 @@
 
 edge::edge(SGM::Result &rResult):
     topology(rResult,SGM::EntityType::EdgeType),
-    m_pStart(NULL),m_pEnd(NULL),m_pVolume(NULL),m_pCurve(NULL)
+    m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
     {
     }
 

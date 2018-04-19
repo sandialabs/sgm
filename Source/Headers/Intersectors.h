@@ -69,7 +69,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              std::vector<SGM::IntersectionType> &aTypes);
 
 // Returns the local minimum distance pair of points, from the given t1, and t2,
-// on the the given curves as Pos1, and Pos1.  Inaddition, the corresponding 
+// on the the given curves as Pos1, and Pos1.  In addition, the corresponding
 // parameters of the two points are returned as t1, and t2.  The functions 
 // returns the distance between to two points.
 

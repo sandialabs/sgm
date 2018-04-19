@@ -16,7 +16,7 @@ body *volume::GetBody() const
         }
     else
         {
-        return NULL;
+        return nullptr;
         }
     }
 

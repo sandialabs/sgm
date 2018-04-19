@@ -60,7 +60,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             SGM::Point2D uv(dU,0);
             SGM::Point3D Pos;
             SGM::Vector3D Vec;
-            Evaluate(uv,&Pos,NULL,&Vec);
+            Evaluate(uv,&Pos,nullptr,&Vec);
             return new line(rResult,Pos,Vec,dRadius);
             }
         case SGM::SphereType:
@@ -148,7 +148,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             throw;
             }
         }
-    return NULL;
+    return nullptr;
     }
 
 curve *surface::VParamLine(SGM::Result &rResult,
@@ -242,7 +242,7 @@ curve *surface::VParamLine(SGM::Result &rResult,
             throw;
             }
         }
-    return NULL;
+    return nullptr;
     }
 
 void surface::Evaluate(SGM::Point2D const &uv,
@@ -338,7 +338,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 {
                 Dv->m_x=ZAxis.m_x*dRadius;
                 Dv->m_y=ZAxis.m_y*dRadius;
-                Dv->m_z=ZAxis.m_x*dRadius;
+                Dv->m_z=ZAxis.m_z*dRadius;
                 }
             if(Norm)
                 {
@@ -457,7 +457,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             if(Dv)
                 {
-                double dVdMCV=-dSinV*dMajorRadius;
+                double dVdMCV=-dSinV*dMinorRadius;
                 double dVdSM=dCosV*dMinorRadius;
                 Dv->m_x=(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dVdMCV+ZAxis.m_x*dVdSM;
                 Dv->m_y=(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dVdMCV+ZAxis.m_y*dVdSM;
@@ -483,14 +483,14 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 }
             if(Duv)
                 {
-                double dVdMCV=-dSinV*dMajorRadius;
+                double dVdMCV=-dSinV*dMinorRadius;
                 Duv->m_x=(YAxis.m_x*dCosU-XAxis.m_x*dSinU)*dVdMCV;
                 Duv->m_y=(YAxis.m_y*dCosU-XAxis.m_y*dSinU)*dVdMCV;
                 Duv->m_z=(YAxis.m_z*dCosU-XAxis.m_z*dSinU)*dVdMCV;
                 }
             if(Dvv)
                 {
-                double ddVdMCV=-dCosV*dMajorRadius;
+                double ddVdMCV=-dCosV*dMinorRadius;
                 double ddVdSM=-dSinV*dMinorRadius;
                 Dvv->m_x=(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*ddVdMCV+ZAxis.m_x*ddVdSM;
                 Dvv->m_y=(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*ddVdMCV+ZAxis.m_y*ddVdSM;
@@ -922,9 +922,9 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
 
-            double cx=Center.m_x+Spoke.m_x*dMajorRadius;
-            double cy=Center.m_y+Spoke.m_y*dMajorRadius;
-            double cz=Center.m_z+Spoke.m_z*dMajorRadius;
+            double cx=Pos.m_x-Center.m_x-Spoke.m_x*dMajorRadius;
+            double cy=Pos.m_y-Center.m_y-Spoke.m_y*dMajorRadius;
+            double cz=Pos.m_z-Center.m_z-Spoke.m_z*dMajorRadius;
 
             double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
             double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
@@ -945,6 +945,11 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             if(pGuess)
                 {
                 throw;
+                }
+
+            if(ClosePos)
+                {
+                pTorus->Evaluate(uv,ClosePos);
                 }
 
             break;

@@ -114,8 +114,8 @@ void FacetCurve(curve               const *pCurve,
                 ++iter;
                 while(iter!=lNodes.end())
                     {
-                    double d0=LastIter->m_dParam;
-                    double d1=iter->m_dParam;
+                    d0=LastIter->m_dParam;
+                    d1=iter->m_dParam;
 
                     // Check to see if the segment from d0 to d1 needs more facets.
 
@@ -123,8 +123,8 @@ void FacetCurve(curve               const *pCurve,
                     double db=d0*0.5+d1*0.5;
                     double dc=d0*0.34567+d1*0.65433;
 
-                    SGM::Point3D Pos0=LastIter->m_Pos;
-                    SGM::Point3D Pos1=iter->m_Pos;
+                    Pos0=LastIter->m_Pos;
+                    Pos1=iter->m_Pos;
                     SGM::Point3D PosA,PosB,PosC;
                     pCurve->Evaluate(da,&PosA);
                     pCurve->Evaluate(db,&PosB);
@@ -772,7 +772,7 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                 MD.m_Split2=aSplits[Index1];
                 aMerge.push_back(MD);
                 }
-            if(aMerge.size())
+            if(!aMerge.empty())
                 {
                 MergePolygons(pFace,aMerge,aPoints2D,aPoints3D,aEntities,aaPolygons);
                 }
@@ -821,21 +821,21 @@ void FixBackPointer(size_t               nA,
                     size_t               nStart,
                     size_t               nT,
                     std::vector<size_t> &aTriangles,
-                    std::vector<size_t> &aAdjacences)
+                    std::vector<size_t> &aAdjacencies)
     {
     if(nA!=SIZE_MAX)
         {
         if(nStart==aTriangles[nA])
             {
-            aAdjacences[nA]=nT;
+            aAdjacencies[nA]=nT;
             }
         else if(nStart==aTriangles[nA+1])
             {
-            aAdjacences[nA+1]=nT;
+            aAdjacencies[nA+1]=nT;
             }
         else
             {
-            aAdjacences[nA+2]=nT;
+            aAdjacencies[nA+2]=nT;
             }
         }
     }
@@ -844,7 +844,7 @@ void FixEdgeData(size_t                                     nTri1,
                  size_t                                     nTri2,
                  std::vector<SGM::UnitVector3D>      const &aNormals,
                  std::vector<size_t>                 const &aTriangles,
-                 std::vector<size_t>                 const &aAdjacences,
+                 std::vector<size_t>                 const &aAdjacencies,
                  std::set<EdgeValue>                       &sEdgeData,
                  std::map<std::pair<size_t,size_t>,double> &mEdgeData)
     {
@@ -862,37 +862,37 @@ void FixEdgeData(size_t                                     nTri1,
     SGM::UnitVector3D const &NormE2=aNormals[aTriangles[nTri2+1]];
     SGM::UnitVector3D const &NormF2=aNormals[aTriangles[nTri2+2]];
 
-    if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacences[nTri1]!=SIZE_MAX)
+    if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=SIZE_MAX)
         {
         double dVal=NormA2%NormB2;
         sEdgeData.insert(EdgeValue(dVal,nTri1,0));
         mEdgeData[std::pair<size_t,size_t>(nTri1,0)]=dVal;
         }
-    if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacences[nTri1+1]!=SIZE_MAX)
+    if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=SIZE_MAX)
         {
         double dVal=NormB2%NormC2;
         sEdgeData.insert(EdgeValue(dVal,nTri1,1));
         mEdgeData[std::pair<size_t,size_t>(nTri1,1)]=dVal;
         }
-    if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacences[nTri1+2]!=SIZE_MAX)
+    if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=SIZE_MAX)
         {
         double dVal=NormC2%NormA2;
         sEdgeData.insert(EdgeValue(dVal,nTri1,2));
         mEdgeData[std::pair<size_t,size_t>(nTri1,2)]=dVal;
         }
-    if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacences[nTri2]!=SIZE_MAX)
+    if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=SIZE_MAX)
         {
         double dVal=NormD2%NormE2;
         sEdgeData.insert(EdgeValue(dVal,nTri2,0));
         mEdgeData[std::pair<size_t,size_t>(nTri2,0)]=dVal;
         }
-    if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacences[nTri2+1]!=SIZE_MAX)
+    if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=SIZE_MAX)
         {
         double dVal=NormE2%NormF2;
         sEdgeData.insert(EdgeValue(dVal,nTri2,1));
         mEdgeData[std::pair<size_t,size_t>(nTri2,1)]=dVal;
         }
-    if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacences[nTri2+2]!=SIZE_MAX)
+    if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=SIZE_MAX)
         {
         double dVal=NormF2%NormD2;
         sEdgeData.insert(EdgeValue(dVal,nTri2,2));
@@ -904,45 +904,45 @@ void IncrementalDelaunay(std::set<size_t>                          &sSearchTris,
                          std::vector<SGM::Point2D>           const &aPoints2D,
                          std::vector<SGM::UnitVector3D>      const &aNormals,
                          std::vector<size_t>                       &aTriangles,
-                         std::vector<size_t>                       &aAdjacences,
+                         std::vector<size_t>                       &aAdjacencies,
                          std::set<EdgeValue>                       &sEdgeData,
                          std::map<std::pair<size_t,size_t>,double> &mEdgeData)
     {
     while(sSearchTris.empty()==false)
         {
         size_t nT=*(sSearchTris.begin());
-        size_t nT0=aAdjacences[nT];
-        size_t nT1=aAdjacences[nT+1];
-        size_t nT2=aAdjacences[nT+2];
+        size_t nT0=aAdjacencies[nT];
+        size_t nT1=aAdjacencies[nT+1];
+        size_t nT2=aAdjacencies[nT+2];
         sSearchTris.erase(nT);
         if(nT0!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacences,nT,0))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,0))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT0);
-                nT1=aAdjacences[nT+1];
-                nT2=aAdjacences[nT+2];
-                FixEdgeData(nT,nT0,aNormals,aTriangles,aAdjacences,sEdgeData,mEdgeData);
+                nT1=aAdjacencies[nT+1];
+                nT2=aAdjacencies[nT+2];
+                FixEdgeData(nT,nT0,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         if(nT1!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacences,nT,1))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,1))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT1);
-                nT2=aAdjacences[nT+2];
-                FixEdgeData(nT,nT1,aNormals,aTriangles,aAdjacences,sEdgeData,mEdgeData);
+                nT2=aAdjacencies[nT+2];
+                FixEdgeData(nT,nT1,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         if(nT2!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacences,nT,2))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,2))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT2);
-                FixEdgeData(nT,nT2,aNormals,aTriangles,aAdjacences,sEdgeData,mEdgeData);
+                FixEdgeData(nT,nT2,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         }
@@ -954,7 +954,7 @@ void SplitEdge(EdgeValue                           const &EV,
                std::vector<SGM::Point3D>                 &aPoints3D,
                std::vector<SGM::UnitVector3D>            &aNormals,
                std::vector<size_t>                       &aTriangles,
-               std::vector<size_t>                       &aAdjacences,
+               std::vector<size_t>                       &aAdjacencies,
                std::set<EdgeValue>                       &sEdgeData,
                std::map<std::pair<size_t,size_t>,double> &mEdgeData)
     {
@@ -971,7 +971,7 @@ void SplitEdge(EdgeValue                           const &EV,
     SGM::Point2D Miduv=SGM::MidPoint(uv0,uv1);
     SGM::Point3D Pos;
     SGM::UnitVector3D Norm;
-    pSurface->Evaluate(Miduv,&Pos,NULL,NULL,&Norm);
+    pSurface->Evaluate(Miduv,&Pos,nullptr,nullptr,&Norm);
     size_t m=aPoints2D.size();
     aPoints2D.push_back(Miduv);
     aPoints3D.push_back(Pos);
@@ -979,7 +979,7 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Find the adjacent triangle information
     
-    size_t nT1=aAdjacences[nT0+nEdge];
+    size_t nT1=aAdjacencies[nT0+nEdge];
     size_t n0=aTriangles[nT1];
     size_t n1=aTriangles[nT1+1];
     size_t n2=aTriangles[nT1+2];
@@ -987,20 +987,20 @@ void SplitEdge(EdgeValue                           const &EV,
     if(n0!=a && n0!=b)
         {
         d=n0;
-        nA2=aAdjacences[nT1+2];
-        nA3=aAdjacences[nT1];
+        nA2=aAdjacencies[nT1+2];
+        nA3=aAdjacencies[nT1];
         }
     else if(n1!=a && n1!=b)
         {
         d=n1;
-        nA2=aAdjacences[nT1];
-        nA3=aAdjacences[nT1+1];
+        nA2=aAdjacencies[nT1];
+        nA3=aAdjacencies[nT1+1];
         }
     else
         {
         d=n2;
-        nA2=aAdjacences[nT1+1];
-        nA3=aAdjacences[nT1+2];
+        nA2=aAdjacencies[nT1+1];
+        nA3=aAdjacencies[nT1+2];
         }
 
     // Add the new triangles.
@@ -1025,29 +1025,29 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Fix adjacencies
 
-    size_t nA0=aAdjacences[nT0+(nEdge+1)%3];
-    size_t nA1=aAdjacences[nT0+(nEdge+2)%3];
+    size_t nA0=aAdjacencies[nT0+(nEdge+1)%3];
+    size_t nA1=aAdjacencies[nT0+(nEdge+2)%3];
 
-    aAdjacences[nT0]=nT2;
-    aAdjacences[nT0+1]=nT1;
-    aAdjacences[nT0+2]=nA1;
+    aAdjacencies[nT0]=nT2;
+    aAdjacencies[nT0+1]=nT1;
+    aAdjacencies[nT0+2]=nA1;
 
-    aAdjacences[nT1]=nT3;
-    aAdjacences[nT1+1]=nA0;
-    aAdjacences[nT1+2]=nT0;
+    aAdjacencies[nT1]=nT3;
+    aAdjacencies[nT1+1]=nA0;
+    aAdjacencies[nT1+2]=nT0;
 
-    aAdjacences.push_back(nT0);
-    aAdjacences.push_back(nA2);
-    aAdjacences.push_back(nT3);
+    aAdjacencies.push_back(nT0);
+    aAdjacencies.push_back(nA2);
+    aAdjacencies.push_back(nT3);
 
-    aAdjacences.push_back(nT1);
-    aAdjacences.push_back(nT2);
-    aAdjacences.push_back(nA3);
+    aAdjacencies.push_back(nT1);
+    aAdjacencies.push_back(nT2);
+    aAdjacencies.push_back(nA3);
 
-    FixBackPointer(nA0,c,nT1,aTriangles,aAdjacences);
-    FixBackPointer(nA1,a,nT0,aTriangles,aAdjacences);
-    FixBackPointer(nA2,d,nT2,aTriangles,aAdjacences);
-    FixBackPointer(nA3,b,nT3,aTriangles,aAdjacences);
+    FixBackPointer(nA0,c,nT1,aTriangles,aAdjacencies);
+    FixBackPointer(nA1,a,nT0,aTriangles,aAdjacencies);
+    FixBackPointer(nA2,d,nT2,aTriangles,aAdjacencies);
+    FixBackPointer(nA3,b,nT3,aTriangles,aAdjacencies);
 
     // Fix edge data.
 
@@ -1064,50 +1064,50 @@ void SplitEdge(EdgeValue                           const &EV,
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT1,1)],nT1,1));
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT1,2)],nT1,2));
 
-    if(aAdjacences[nT0+0]!=SIZE_MAX)
+    if(aAdjacencies[nT0+0]!=SIZE_MAX)
         {
         double dVal=NormA%NormM;
         sEdgeData.insert(EdgeValue(dVal,nT0,0));
         mEdgeData[std::pair<size_t,size_t>(nT0,0)]=dVal;
         }
-    if(aAdjacences[nT3+0]!=SIZE_MAX)
+    if(aAdjacencies[nT3+0]!=SIZE_MAX)
         {
         double dVal=NormB%NormM;
         sEdgeData.insert(EdgeValue(dVal,nT3,0));
         mEdgeData[std::pair<size_t,size_t>(nT3,0)]=dVal;
         }
-    if(aAdjacences[nT1+2]!=SIZE_MAX)
+    if(aAdjacencies[nT1+2]!=SIZE_MAX)
         {
         double dVal=NormC%NormM;
         sEdgeData.insert(EdgeValue(dVal,nT1,2));
         mEdgeData[std::pair<size_t,size_t>(nT1,2)]=dVal;
         }
-    if(aAdjacences[nT2+2]!=SIZE_MAX)
+    if(aAdjacencies[nT2+2]!=SIZE_MAX)
         {
         double dVal=NormD%NormM;
         sEdgeData.insert(EdgeValue(dVal,nT2,2));
         mEdgeData[std::pair<size_t,size_t>(nT2,2)]=dVal;
         }
 
-    if(c<a && aAdjacences[nT0+2]!=SIZE_MAX)
+    if(c<a && aAdjacencies[nT0+2]!=SIZE_MAX)
         {
         double dVal=NormC%NormA;
         sEdgeData.insert(EdgeValue(dVal,nT0,2));
         mEdgeData[std::pair<size_t,size_t>(nT0,2)]=dVal;
         }
-    if(b<c && aAdjacences[nT1+1]!=SIZE_MAX)
+    if(b<c && aAdjacencies[nT1+1]!=SIZE_MAX)
         {
         double dVal=NormB%NormC;
         sEdgeData.insert(EdgeValue(dVal,nT1,1));
         mEdgeData[std::pair<size_t,size_t>(nT1,1)]=dVal;
         }
-    if(a<d  && aAdjacences[nT2+1]!=SIZE_MAX)
+    if(a<d  && aAdjacencies[nT2+1]!=SIZE_MAX)
         {
         double dVal=NormA%NormD;
         sEdgeData.insert(EdgeValue(dVal,nT2,1));
         mEdgeData[std::pair<size_t,size_t>(nT2,1)]=dVal;
         }
-    if(d<b && aAdjacences[nT3+2]!=SIZE_MAX)
+    if(d<b && aAdjacencies[nT3+2]!=SIZE_MAX)
         {
         double dVal=NormD%NormB;
         sEdgeData.insert(EdgeValue(dVal,nT3,2));
@@ -1119,7 +1119,7 @@ void SplitEdge(EdgeValue                           const &EV,
     sSearchTris.insert(nT1);
     sSearchTris.insert(nT2);
     sSearchTris.insert(nT3);
-    IncrementalDelaunay(sSearchTris,aPoints2D,aNormals,aTriangles,aAdjacences,sEdgeData,mEdgeData);
+    IncrementalDelaunay(sSearchTris,aPoints2D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
     }            
 
 void RefineTriangles(face                     const *pFace,
@@ -1128,7 +1128,7 @@ void RefineTriangles(face                     const *pFace,
                      std::vector<SGM::Point3D>      &aPoints3D,
                      std::vector<SGM::UnitVector3D> &aNormals,
                      std::vector<size_t>            &aTriangles,
-                     std::vector<size_t>            &aAdjacences)
+                     std::vector<size_t>            &aAdjacencies)
     {
     std::set<EdgeValue> sEdgeData;
     std::map<std::pair<size_t,size_t>,double> mEdgeData;
@@ -1142,19 +1142,19 @@ void RefineTriangles(face                     const *pFace,
         SGM::UnitVector3D const &NormA=aNormals[a];
         SGM::UnitVector3D const &NormB=aNormals[b];
         SGM::UnitVector3D const &NormC=aNormals[c];
-        if(a<b && aAdjacences[Index1]!=SIZE_MAX)
+        if(a<b && aAdjacencies[Index1]!=SIZE_MAX)
             {
             double dVal=NormA%NormB;
             sEdgeData.insert(EdgeValue(NormA%NormB,Index1,0));
             mEdgeData[std::pair<size_t,size_t>(Index1,0)]=dVal;
             }
-        if(b<c && aAdjacences[Index1+1]!=SIZE_MAX)
+        if(b<c && aAdjacencies[Index1+1]!=SIZE_MAX)
             {
             double dVal=NormB%NormC;
             sEdgeData.insert(EdgeValue(dVal,Index1,1));
             mEdgeData[std::pair<size_t,size_t>(Index1,1)]=dVal;
             }
-        if(c<a && aAdjacences[Index1+2]!=SIZE_MAX)
+        if(c<a && aAdjacencies[Index1+2]!=SIZE_MAX)
             {
             double dVal=NormC%NormA;
             sEdgeData.insert(EdgeValue(dVal,Index1,2));
@@ -1165,12 +1165,12 @@ void RefineTriangles(face                     const *pFace,
     dDotTol=0.93969262078590838405410927732473;
     bool bSplit=true;
     size_t nCount=0;
-    while(bSplit && sEdgeData.size())
+    while(bSplit && !sEdgeData.empty())
         {
         EdgeValue EV=*(sEdgeData.begin());
         if(EV.m_dDot<dDotTol)
             {
-            SplitEdge(EV,pFace,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacences,sEdgeData,mEdgeData);
+            SplitEdge(EV,pFace,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
             bSplit=true;
             }
         else
@@ -1299,12 +1299,12 @@ bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
 void FlipTriangles(size_t               nTri,
                    size_t               nEdge,
                    std::vector<size_t> &aTriangles,
-                   std::vector<size_t> &aAdjacences)
+                   std::vector<size_t> &aAdjacencies)
     {
     size_t a=aTriangles[nTri];
     size_t b=aTriangles[nTri+1];
     size_t c=aTriangles[nTri+2];
-    size_t nT=aAdjacences[nTri+nEdge];
+    size_t nT=aAdjacencies[nTri+nEdge];
     size_t d=aTriangles[nT];
     size_t e=aTriangles[nT+1];
     size_t f=aTriangles[nT+2];
@@ -1312,25 +1312,25 @@ void FlipTriangles(size_t               nTri,
     if(d!=a && d!=b && d!=c)
         {
         g=d;
-        nTA=aAdjacences[nT+2];
-        nTB=aAdjacences[nT];
+        nTA=aAdjacencies[nT+2];
+        nTB=aAdjacencies[nT];
         }
     else if(e!=a && e!=b && e!=c)
         {
         g=e;
-        nTA=aAdjacences[nT];
-        nTB=aAdjacences[nT+1];
+        nTA=aAdjacencies[nT];
+        nTB=aAdjacencies[nT+1];
         }
     else
         {
         g=f;
-        nTA=aAdjacences[nT+1];
-        nTB=aAdjacences[nT+2];
+        nTA=aAdjacencies[nT+1];
+        nTB=aAdjacencies[nT+2];
         }
     
-    size_t nT0=aAdjacences[nTri];
-    size_t nT1=aAdjacences[nTri+1];
-    size_t nT2=aAdjacences[nTri+2];
+    size_t nT0=aAdjacencies[nTri];
+    size_t nT1=aAdjacencies[nTri+1];
+    size_t nT2=aAdjacencies[nTri+2];
     if(nEdge==0)
         {
         aTriangles[nTri]=g;
@@ -1340,12 +1340,12 @@ void FlipTriangles(size_t               nTri,
         aTriangles[nT+1]=b;
         aTriangles[nT+2]=c;
 
-        aAdjacences[nTri]=nT;
-        aAdjacences[nTri+1]=nT2;
-        aAdjacences[nTri+2]=nTA;
-        aAdjacences[nT]=nTB;
-        aAdjacences[nT+1]=nT1;
-        aAdjacences[nT+2]=nTri;
+        aAdjacencies[nTri]=nT;
+        aAdjacencies[nTri+1]=nT2;
+        aAdjacencies[nTri+2]=nTA;
+        aAdjacencies[nT]=nTB;
+        aAdjacencies[nT+1]=nT1;
+        aAdjacencies[nT+2]=nTri;
         }
     else if(nEdge==1)
         {
@@ -1356,12 +1356,12 @@ void FlipTriangles(size_t               nTri,
         aTriangles[nT+1]=c;
         aTriangles[nT+2]=a;
 
-        aAdjacences[nTri]=nT;
-        aAdjacences[nTri+1]=nT0;
-        aAdjacences[nTri+2]=nTA;
-        aAdjacences[nT]=nTB;
-        aAdjacences[nT+1]=nT2;
-        aAdjacences[nT+2]=nTri;
+        aAdjacencies[nTri]=nT;
+        aAdjacencies[nTri+1]=nT0;
+        aAdjacencies[nTri+2]=nTA;
+        aAdjacencies[nT]=nTB;
+        aAdjacencies[nT+1]=nT2;
+        aAdjacencies[nT+2]=nTri;
         }
     else
         {
@@ -1372,42 +1372,42 @@ void FlipTriangles(size_t               nTri,
         aTriangles[nT+1]=b;
         aTriangles[nT+2]=c;
 
-        aAdjacences[nTri]=nTB;
-        aAdjacences[nTri+1]=nT0;
-        aAdjacences[nTri+2]=nT;
-        aAdjacences[nT]=nTri;
-        aAdjacences[nT+1]=nT1;
-        aAdjacences[nT+2]=nTA;
+        aAdjacencies[nTri]=nTB;
+        aAdjacencies[nTri+1]=nT0;
+        aAdjacencies[nTri+2]=nT;
+        aAdjacencies[nT]=nTri;
+        aAdjacencies[nT+1]=nT1;
+        aAdjacencies[nT+2]=nTA;
         }
-    FixBackPointers(nT,aTriangles,aAdjacences);
-    FixBackPointers(nTri,aTriangles,aAdjacences);
+    FixBackPointers(nT,aTriangles,aAdjacencies);
+    FixBackPointers(nTri,aTriangles,aAdjacencies);
     }
 
 void DelaunayFlips3D(std::vector<SGM::Point3D>      const &aPoints3D,
                      std::vector<size_t>                  &aTriangles,
-                     std::vector<size_t>                  &aAdjacences)
+                     std::vector<size_t>                  &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        size_t T0=aAdjacences[Index1];
-        size_t T1=aAdjacences[Index1+1];
-        size_t T2=aAdjacences[Index1+2];
+        size_t T0=aAdjacencies[Index1];
+        size_t T1=aAdjacencies[Index1+1];
+        size_t T2=aAdjacencies[Index1+2];
         if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
             {
-            FlipTriangles(Index1,0,aTriangles,aAdjacences);
-            T1=aAdjacences[Index1+1];
-            T2=aAdjacences[Index1+2];
+            FlipTriangles(Index1,0,aTriangles,aAdjacencies);
+            T1=aAdjacencies[Index1+1];
+            T2=aAdjacencies[Index1+2];
             }
         else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
             {
-            FlipTriangles(Index1,1,aTriangles,aAdjacences);
-            T2=aAdjacences[Index1+2];
+            FlipTriangles(Index1,1,aTriangles,aAdjacencies);
+            T2=aAdjacencies[Index1+2];
             }
         else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
             {
-            FlipTriangles(Index1,2,aTriangles,aAdjacences);
+            FlipTriangles(Index1,2,aTriangles,aAdjacencies);
             }
         }
     }
@@ -1469,7 +1469,7 @@ void StarSmoothing(face                     const *pFace,
             aPoints2D[Index1]=Center;
             SGM::Point3D Pos;
             SGM::UnitVector3D Norm;
-            pSurface->Evaluate(Center,&Pos,NULL,NULL,&Norm);
+            pSurface->Evaluate(Center,&Pos,nullptr,nullptr,&Norm);
             aPoints3D[Index1]=Pos;
             aNormals[Index1]=Norm;
             }
@@ -1486,10 +1486,10 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<entity *>          &aEntities)
     {
     std::vector<std::vector<size_t> > aaPolygons;
-    std::vector<size_t> aAdjacences;
+    std::vector<size_t> aAdjacencies;
     std::vector<size_t> aPoles;
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons,aPoles);
-    SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacences);
+    SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     size_t nOldSize=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
     size_t Index1;
@@ -1497,11 +1497,11 @@ void FacetFace(SGM::Result                    &rResult,
         {
         SGM::Point2D const &uv=aPoints2D[Index1];
         SGM::UnitVector3D Norm;
-        pSurface->Evaluate(uv,NULL,NULL,NULL,&Norm);
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         }
-    RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacences);
-    DelaunayFlips3D(aPoints3D,aTriangles,aAdjacences);
+    RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies);
+    DelaunayFlips3D(aPoints3D,aTriangles,aAdjacencies);
     size_t nPoles=aPoles.size();
     for(Index1=0;Index1<nPoles;++Index1)
         {

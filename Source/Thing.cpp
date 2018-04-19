@@ -18,7 +18,7 @@ size_t entity::GetID() const
 
 entity *thing::FindEntity(size_t ID) const
     {
-    entity *pAnswer=NULL;
+    entity *pAnswer=nullptr;
     std::map<size_t,entity *>::const_iterator iter=m_mAllEntities.find(ID);
     if(iter!=m_mAllEntities.end())
         {

@@ -65,16 +65,16 @@ namespace SGM
     bool PointInPolygon(SGM::Point2D              const &Pos,
                         std::vector<SGM::Point2D> const &aPolygon);
 
-    // Returns a vetor of triangles, indexed into aPoints for the given 
+    // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
-    // couter clockwise.  The following polygons are assumed to be inside the
+    // counter clockwise.  The following polygons are assumed to be inside the
     // first one, disjoint, clockwise.
 
     void TriangulatePolygon(SGM::Result                             &rResult,
                             std::vector<SGM::Point2D>         const &aPoints,
                             std::vector<std::vector<size_t> > const &aaPolygons,
                             std::vector<size_t>                     &aTriangles,
-                            std::vector<size_t>                     &aAdjacences);
+                            std::vector<size_t>                     &aAdjacencies);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -92,8 +92,8 @@ namespace SGM
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
     // such that Tab0 is the index of the start of the triangle in aTriangles
-    // that is adjacent to the frist triangle along the edge ab.
-    // If more than one triangle is adjacent to the frist triangle along the same
+    // that is adjacent to the first triangle along the edge ab.
+    // If more than one triangle is adjacent to the first triangle along the same
     // edge for example T0, T1, T2. Then T0 will point to T1, T1 will point to T2
     // and T2 will point to T0.  If an edge does not have a triangle that is
     // adjacent to it then the vector aAdjacency will have the value SIZE_MAX
@@ -141,7 +141,7 @@ namespace SGM
                      double a2,double b2,double c2,
                      double &x,double &y);
 
-    // Guassian elimination with partial pivoting is used.
+    // Gaussian elimination with partial pivoting is used.
     // Given two or more linear equations in the form
     //
     // a0*x+b0*y+c0*z+...=s0
@@ -152,7 +152,7 @@ namespace SGM
     // <an,bn,cn,...,sn, with the same number of unknowns as equations,
     // then  LinearSolve will return (x,y,z,...) as the back terms
     // of each term in aaMatrix.  The function as order O(equations^3), 
-    // wheren is the number of rows.  If the given matrix is singular, 
+    // where n is the number of rows.  If the given matrix is singular,
     // then the function will return false.
 
     bool LinearSolve(std::vector<std::vector<double> > &aaMatrix);
@@ -273,7 +273,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
     
-    // Snapps x to -1 or 1 if x is outside the interval [-1,1] so that
+    // Snaps x to -1 or 1 if x is outside the interval [-1,1] so that
     // acos will not return an error.
 
     double SAFEacos(double x);
@@ -324,8 +324,8 @@ namespace SGM
 
     // Returns the numerical partial derivatives of f(x,y) with respect to x, y,
     // x twice, y twice, and the cross partial with respect to x and y.
-    // The error of the returned derivaives are of order dx^5, dy^5,
-    // dx^4, max(dx^5,dy^5), dy^4 respectivly.  aMatrix should contain
+    // The error of the returned derivatives are of order dx^5, dy^5,
+    // dx^4, max(dx^5,dy^5), dy^4 respectively. aMatrix should contain
     // the following values of f(x,y).
     //
     // aMatrix[0][0]=f(x-dx*2,y-dy*2);

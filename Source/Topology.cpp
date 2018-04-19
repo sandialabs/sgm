@@ -5,7 +5,7 @@ void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
                 std::set<body *> &sBodies)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -35,7 +35,7 @@ void FindBodies(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::EdgeType)
         {
         std::set<face *> const &sFaces=((edge *)(pEntity))->GetFaces();
-        if(sFaces.size())
+        if(!sFaces.empty())
             {
             face *pFace=*(sFaces.begin());
             sBodies.insert(pFace->GetVolume()->GetBody());
@@ -48,11 +48,11 @@ void FindBodies(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::VertexType)
         {
         std::set<edge *> const &sEdges=((vertex *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sFaces=pEdge->GetFaces();
-            if(sFaces.size())
+            if(!sFaces.empty())
                 {
                 face *pFace=*(sFaces.begin());
                 sBodies.insert(pFace->GetVolume()->GetBody());
@@ -66,7 +66,7 @@ void FindBodies(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::SurfaceType)
         {
         std::set<face *> const &sFaces=((surface *)(pEntity))->GetFaces();
-        if(sFaces.size())
+        if(!sFaces.empty())
             {
             face *pFace=*(sFaces.begin());
             sBodies.insert(pFace->GetVolume()->GetBody());
@@ -75,11 +75,11 @@ void FindBodies(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::CurveType)
         {
         std::set<edge *> const &sEdges=((curve *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sFaces=pEdge->GetFaces();
-            if(sFaces.size())
+            if(!sFaces.empty())
                 {
                 face *pFace=*(sFaces.begin());
                 sBodies.insert(pFace->GetVolume()->GetBody());
@@ -96,7 +96,7 @@ void FindVolumes(SGM::Result        &,//rResult,
                  entity       const *pEntity,
                  std::set<volume *> &sVolumes)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -130,7 +130,7 @@ void FindVolumes(SGM::Result        &,//rResult,
     else if(Type==SGM::EntityType::EdgeType)
         {
         std::set<face *> const &sFaces=((edge *)(pEntity))->GetFaces();
-        if(sFaces.size())
+        if(!sFaces.empty())
             {
             face *pFace=*(sFaces.begin());
             sVolumes.insert(pFace->GetVolume());
@@ -143,11 +143,11 @@ void FindVolumes(SGM::Result        &,//rResult,
     else if(Type==SGM::EntityType::VertexType)
         {
         std::set<edge *> const &sEdges=((vertex *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sFaces=pEdge->GetFaces();
-            if(sFaces.size())
+            if(!sFaces.empty())
                 {
                 face *pFace=*(sFaces.begin());
                 sVolumes.insert(pFace->GetVolume());
@@ -161,7 +161,7 @@ void FindVolumes(SGM::Result        &,//rResult,
     else if(Type==SGM::EntityType::SurfaceType)
         {
         std::set<face *> const &sFaces=((surface *)(pEntity))->GetFaces();
-        if(sFaces.size())
+        if(!sFaces.empty())
             {
             face *pFace=*(sFaces.begin());
             sVolumes.insert(pFace->GetVolume());
@@ -170,11 +170,11 @@ void FindVolumes(SGM::Result        &,//rResult,
     else if(Type==SGM::EntityType::CurveType)
         {
         std::set<edge *> const &sEdges=((curve *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sFaces=pEdge->GetFaces();
-            if(sFaces.size())
+            if(!sFaces.empty())
                 {
                 face *pFace=*(sFaces.begin());
                 sVolumes.insert(pFace->GetVolume());
@@ -191,7 +191,7 @@ void FindFaces(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<face *> &sFaces)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -246,7 +246,7 @@ void FindFaces(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::VertexType)
         {
         std::set<edge *> const &sEdges=((vertex *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sVertexFaces=pEdge->GetFaces();
@@ -261,7 +261,7 @@ void FindFaces(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::CurveType)
         {
         std::set<edge *> const &sEdges=((curve *)(pEntity))->GetEdges();
-        if(sEdges.size())
+        if(!sEdges.empty())
             {
             edge *pEdge=*(sEdges.begin());
             std::set<face *> const &sEdgeFaces=pEdge->GetFaces();
@@ -274,7 +274,7 @@ void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<edge *> &sEdges)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -395,7 +395,7 @@ void FindVertices(SGM::Result        &,//rResult,
                   entity       const *pEntity,
                   std::set<vertex *> &sVertices)
     {
-    if(pEntity==NULL)
+    if(pEntity==nullptr)
         {
         return;
         }
@@ -595,8 +595,8 @@ edge *FindNextEdge(SGM::Result  &,//rResult,
                    edge   const *pEdge,
                    vertex const *pVertex)
     {
-    edge *pAnswer=NULL;
-    if(pVertex==NULL)
+    edge *pAnswer=nullptr;
+    if(pVertex==nullptr)
         {
         return (edge *)pEdge;
         }
@@ -669,17 +669,17 @@ void FindComplexes(SGM::Result         &,//rResult,
             std::set<entity *>::const_iterator iter=sEntities.begin();
             while(iter!=sEntities.end())
                 {
-                entity *pEntity=*iter;
-                if(pEntity->GetType()==SGM::ComplexType)
+                entity *pEntityIter=*iter;
+                if(pEntityIter->GetType()==SGM::ComplexType)
                     {
-                    sComplexes.insert((complex *)pEntity);
+                    sComplexes.insert((complex *)pEntityIter);
                     }
                 }
             break;
             }
         case SGM::ComplexType:
             {
-            sComplexes.insert((complex *)pEntity);
+            sComplexes.insert((complex *)const_cast<entity *>(pEntity));
             break;
             }
         default:

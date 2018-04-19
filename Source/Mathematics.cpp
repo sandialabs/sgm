@@ -1,7 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "Faceter.h"
-#include "math.h"
+#include <cmath>
 #include <vector>
 #include <set>
 #include <algorithm>
@@ -587,11 +587,11 @@ double FindAngle(std::vector<SGM::Point2D> const &aPoints,
 
 void FixBackPointers(size_t                     nTri,
                      std::vector<size_t> const &aTriangles,
-                     std::vector<size_t>       &aAdjacences)
+                     std::vector<size_t>       &aAdjacencies)
     {
-    size_t nT0=aAdjacences[nTri];
-    size_t nT1=aAdjacences[nTri+1];
-    size_t nT2=aAdjacences[nTri+2];
+    size_t nT0=aAdjacencies[nTri];
+    size_t nT1=aAdjacencies[nTri+1];
+    size_t nT2=aAdjacencies[nTri+2];
     size_t a=aTriangles[nTri];
     size_t b=aTriangles[nTri+1];
     size_t c=aTriangles[nTri+2];
@@ -602,15 +602,15 @@ void FixBackPointers(size_t                     nTri,
         size_t b0=aTriangles[nT0+1];
         if(a0!=a && a0!=b)
             {
-            aAdjacences[nT0+1]=nTri;
+            aAdjacencies[nT0+1]=nTri;
             }
         else if(b0!=a && b0!=b)
             {
-            aAdjacences[nT0+2]=nTri;
+            aAdjacencies[nT0+2]=nTri;
             }
         else
             {
-            aAdjacences[nT0]=nTri;
+            aAdjacencies[nT0]=nTri;
             }
         }
 
@@ -620,15 +620,15 @@ void FixBackPointers(size_t                     nTri,
         size_t b1=aTriangles[nT1+1];
         if(a1!=c && a1!=b)
             {
-            aAdjacences[nT1+1]=nTri;
+            aAdjacencies[nT1+1]=nTri;
             }
         else if(b1!=c && b1!=b)
             {
-            aAdjacences[nT1+2]=nTri;
+            aAdjacencies[nT1+2]=nTri;
             }
         else
             {
-            aAdjacences[nT1]=nTri;
+            aAdjacencies[nT1]=nTri;
             }
         }
 
@@ -638,29 +638,29 @@ void FixBackPointers(size_t                     nTri,
         size_t b2=aTriangles[nT2+1];
         if(a2!=a && a2!=c)
             {
-            aAdjacences[nT2+1]=nTri;
+            aAdjacencies[nT2+1]=nTri;
             }
         else if(b2!=a && b2!=c)
             {
-            aAdjacences[nT2+2]=nTri;
+            aAdjacencies[nT2+2]=nTri;
             }
         else
             {
-            aAdjacences[nT2]=nTri;
+            aAdjacencies[nT2]=nTri;
             }
         }
     }
 
 bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacences,
+                   std::vector<size_t>             &aAdjacencies,
                    size_t                           nTri,
                    size_t                           nEdge)
     {
     size_t a=aTriangles[nTri];
     size_t b=aTriangles[nTri+1];
     size_t c=aTriangles[nTri+2];
-    size_t nT=aAdjacences[nTri+nEdge];
+    size_t nT=aAdjacencies[nTri+nEdge];
     if(nT==SIZE_MAX)
         {
         return false;
@@ -672,20 +672,20 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
     if(d!=a && d!=b && d!=c)
         {
         g=d;
-        nTA=aAdjacences[nT+2];
-        nTB=aAdjacences[nT];
+        nTA=aAdjacencies[nT+2];
+        nTB=aAdjacencies[nT];
         }
     else if(e!=a && e!=b && e!=c)
         {
         g=e;
-        nTA=aAdjacences[nT];
-        nTB=aAdjacences[nT+1];
+        nTA=aAdjacencies[nT];
+        nTB=aAdjacencies[nT+1];
         }
     else
         {
         g=f;
-        nTA=aAdjacences[nT+1];
-        nTB=aAdjacences[nT+2];
+        nTA=aAdjacencies[nT+1];
+        nTB=aAdjacencies[nT+2];
         }
     SGM::Point2D const &A=aPoints[a];
     SGM::Point2D const &B=aPoints[b];
@@ -693,9 +693,9 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &G=aPoints[g];
     if(SGM::InCircumcircle(A,B,C,G))
         {
-        size_t nT0=aAdjacences[nTri];
-        size_t nT1=aAdjacences[nTri+1];
-        size_t nT2=aAdjacences[nTri+2];
+        size_t nT0=aAdjacencies[nTri];
+        size_t nT1=aAdjacencies[nTri+1];
+        size_t nT2=aAdjacencies[nTri+2];
         if(nEdge==0)
             {
             aTriangles[nTri]=g;
@@ -705,12 +705,12 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
             aTriangles[nT+1]=b;
             aTriangles[nT+2]=c;
 
-            aAdjacences[nTri]=nT;
-            aAdjacences[nTri+1]=nT2;
-            aAdjacences[nTri+2]=nTA;
-            aAdjacences[nT]=nTB;
-            aAdjacences[nT+1]=nT1;
-            aAdjacences[nT+2]=nTri;
+            aAdjacencies[nTri]=nT;
+            aAdjacencies[nTri+1]=nT2;
+            aAdjacencies[nTri+2]=nTA;
+            aAdjacencies[nT]=nTB;
+            aAdjacencies[nT+1]=nT1;
+            aAdjacencies[nT+2]=nTri;
             }
         else if(nEdge==1)
             {
@@ -721,12 +721,12 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
             aTriangles[nT+1]=c;
             aTriangles[nT+2]=a;
 
-            aAdjacences[nTri]=nT;
-            aAdjacences[nTri+1]=nT0;
-            aAdjacences[nTri+2]=nTA;
-            aAdjacences[nT]=nTB;
-            aAdjacences[nT+1]=nT2;
-            aAdjacences[nT+2]=nTri;
+            aAdjacencies[nTri]=nT;
+            aAdjacencies[nTri+1]=nT0;
+            aAdjacencies[nTri+2]=nTA;
+            aAdjacencies[nT]=nTB;
+            aAdjacencies[nT+1]=nT2;
+            aAdjacencies[nT+2]=nTri;
             }
         else
             {
@@ -737,15 +737,15 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
             aTriangles[nT+1]=b;
             aTriangles[nT+2]=c;
 
-            aAdjacences[nTri]=nTB;
-            aAdjacences[nTri+1]=nT0;
-            aAdjacences[nTri+2]=nT;
-            aAdjacences[nT]=nTri;
-            aAdjacences[nT+1]=nT1;
-            aAdjacences[nT+2]=nTA;
+            aAdjacencies[nTri]=nTB;
+            aAdjacencies[nTri+1]=nT0;
+            aAdjacencies[nTri+2]=nT;
+            aAdjacencies[nT]=nTri;
+            aAdjacencies[nT+1]=nT1;
+            aAdjacencies[nT+2]=nTA;
             }
-        FixBackPointers(nT,aTriangles,aAdjacences);
-        FixBackPointers(nTri,aTriangles,aAdjacences);
+        FixBackPointers(nT,aTriangles,aAdjacencies);
+        FixBackPointers(nTri,aTriangles,aAdjacencies);
         return true;
         }
     return false;
@@ -753,7 +753,7 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
 
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacences)
+                   std::vector<size_t>             &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
@@ -763,15 +763,15 @@ void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
         bFlipped=false;
         for(Index1=0;Index1<nTriangles;Index1+=3)
             {
-            if(FlipTriangles(aPoints,aTriangles,aAdjacences,Index1,0))
+            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,0))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacences,Index1,1))
+            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,1))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacences,Index1,2))
+            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,2))
                 {
                 bFlipped=true;
                 }
@@ -783,7 +783,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
                              std::vector<SGM::Point2D>         const &aPoints,
                              std::vector<std::vector<size_t> > const &aaPolygons,
                              std::vector<size_t>                     &aTriangles,
-                             std::vector<size_t>                     &aAdjacences)
+                             std::vector<size_t>                     &aAdjacencies)
     {
     if(aaPolygons.empty() || aPoints.empty())
         {
@@ -816,7 +816,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
                     nWhere=Index2;
                     }
                 }
-            PolyData PD;
+            PolyData PD{};
             PD.dExtreamU=dUValue;
             PD.nWhichPoint=nWhere;
             PD.nWhichPoly=Index1;
@@ -914,8 +914,8 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
     
     // Flip to improve triangles.
 
-    SGM::FindAdjacences2D(aTriangles,aAdjacences);
-    DelaunayFlips(aPoints,aTriangles,aAdjacences);
+    SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+    DelaunayFlips(aPoints,aTriangles,aAdjacencies);
     }
 
 bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)
@@ -1355,7 +1355,7 @@ size_t SGM::Cubic(double c3,double c2,double c1,double c0,
         else
             {
             double E=a/3.0;
-            double A=pow(abs(R)+sqrt(R2-Q3),1.0/3.0);
+            double A=pow(std::abs(R)+sqrt(R2-Q3),1.0/3.0);
             if(fabs(A)<SGM_ZERO)
                 {
                 aRoots.push_back(-E);

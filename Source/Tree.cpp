@@ -88,7 +88,7 @@ void SGM::BoxTree::AddPoint(SGM::Point3D const &,//Point,
 void *SGM::BoxTree::FindPoint(SGM::Point3D const &,//Center,
                               double              )//dRadius)
     {
-    return NULL;
+    return nullptr;
     }
 
 void SGM::BoxTree::RemovePoint(SGM::Point3D const &,//Point,

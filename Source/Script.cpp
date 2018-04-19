@@ -2,7 +2,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMChecker.h"
 #include "SGMComplex.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMDisplay.h"
 #include "SGMGeometry.h"
 #include <vector>

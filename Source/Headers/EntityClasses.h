@@ -278,9 +278,9 @@ class face : public topology
 
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,
-                         SGM::Point3D       *ClosePos=NULL,    // The closest point.
-                         entity            **pBoundary=NULL,   // The closest sub element.
-                         SGM::Point3D       *pPos=NULL) const; // Found point on boundary.
+                         SGM::Point3D       *ClosePos=nullptr,    // The closest point.
+                         entity            **pBoundary=nullptr,   // The closest sub element.
+                         SGM::Point3D       *pPos=nullptr) const; // Found point on boundary.
                         
     private:
     
@@ -354,7 +354,7 @@ class edge : public topology
         mutable vertex           *m_pStart;
         mutable vertex           *m_pEnd;
         std::set<face *>  m_sFaces;
-        volume           *m_pVolume; // Should be NULL if this belongs to a face.
+        volume           *m_pVolume; // Should be nullptr if this belongs to a face.
         curve            *m_pCurve;
 
         mutable std::vector<SGM::Point3D> m_aPoints3D;
@@ -407,16 +407,16 @@ class surface : public entity
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
-                      SGM::Vector3D      *Du=NULL,
-                      SGM::Vector3D      *Dv=NULL,
-                      SGM::UnitVector3D  *Norm=NULL,
-                      SGM::Vector3D      *Duu=NULL,
-                      SGM::Vector3D      *Duv=NULL,
-                      SGM::Vector3D      *Dvv=NULL) const;
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const;
 
         SGM::Point2D Inverse(SGM::Point3D const &Pos,
-                             SGM::Point3D       *ClosePos=NULL,
-                             SGM::Point2D const *pGuess=NULL) const;
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const;
 
         void Curvature(SGM::Point2D const &uv,
                        SGM::UnitVector3D  &Vec1,
@@ -498,7 +498,7 @@ class cylinder : public surface
                  SGM::Point3D      const &Bottom,
                  SGM::Point3D      const &Top,
                  double                   dRadius,
-                 SGM::UnitVector3D const *XAxis=NULL);
+                 SGM::UnitVector3D const *XAxis=nullptr);
         
         curve *UParamLine(double dU) const;
 
@@ -523,7 +523,7 @@ class cone : public surface
              SGM::UnitVector3D const &ZAxis,
              double                   dRadius,
              double                   dHalfAngle,
-             SGM::UnitVector3D const *XAxis=NULL);
+             SGM::UnitVector3D const *XAxis=nullptr);
 
         double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
         
@@ -549,8 +549,8 @@ class sphere : public surface
         sphere(SGM::Result             &rResult,
                SGM::Point3D      const &Center,
                double                   dRadius,
-               SGM::UnitVector3D const *XAxis=NULL,
-               SGM::UnitVector3D const *YAxis=NULL);
+               SGM::UnitVector3D const *XAxis=nullptr,
+               SGM::UnitVector3D const *YAxis=nullptr);
         
         curve *UParamLine(double dU) const;
 
@@ -575,7 +575,7 @@ class torus : public surface
               double                   dMinorRadius,
               double                   dMajorRadius,
               bool                     bApple,
-              SGM::UnitVector3D const *XAxis=NULL);
+              SGM::UnitVector3D const *XAxis=nullptr);
         
         curve *UParamLine(double dU) const;
 
@@ -613,11 +613,11 @@ class NUBsurface: public surface
 
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindUMultiplicity(std::vector<int> &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
-        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindVMultiplicity(std::vector<int> &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -651,11 +651,11 @@ class NURBsurface: public surface
 
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindUMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindUMultiplicity(std::vector<int>    &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
-        size_t FindVMultiplity(std::vector<int>    &aMultiplity,
-                               std::vector<double> &aUniqueKnots) const;
+        size_t FindVMultiplicity(std::vector<int>    &aMultiplicity,
+                                 std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -691,22 +691,22 @@ class curve : public entity
 
         SGM::Interval1D const &GetDomain() const {return m_Domain;}
 
+        bool GetClosed() const {return m_bClosed;}
+
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
-                      SGM::Vector3D *D1=NULL,
-                      SGM::Vector3D *D2=NULL) const;
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const;
 
         SGM::Vector3D Curvature(double t) const;
 
         double Inverse(SGM::Point3D const &Pos,
-                       SGM::Point3D       *ClosePos=NULL,
-                       double       const *pGuess=NULL) const;
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
-
-        bool GetClosed() const {return m_bClosed;}
 
     protected:
 
@@ -753,8 +753,8 @@ class circle : public curve
                SGM::Point3D      const &Center,
                SGM::UnitVector3D const &Normal,
                double                   dRadius,
-               SGM::UnitVector3D const *pXAxis=NULL,
-               SGM::Interval1D   const *pDomain=NULL);
+               SGM::UnitVector3D const *pXAxis=nullptr,
+               SGM::Interval1D   const *pDomain=nullptr);
 
         circle(SGM::Result  &rResult,
                circle const *pCircle);
@@ -783,8 +783,8 @@ class ellipse : public curve
                 SGM::UnitVector3D const &Normal,
                 double                   dRadius1,
                 double                   dRadius2,
-                SGM::UnitVector3D const *pXAxis=NULL,
-                SGM::Interval1D   const *pDomain=NULL);
+                SGM::UnitVector3D const *pXAxis=nullptr,
+                SGM::Interval1D   const *pDomain=nullptr);
 
         ellipse(SGM::Result   &rResult,
                 ellipse const *pEllipse);
@@ -823,8 +823,8 @@ class NUBcurve: public curve
 
         std::vector<double> const &GetKnots() const {return m_aKnots;}
 
-        size_t FindMultiplity(std::vector<int>    &aMultiplity,
-                              std::vector<double> &aUniqueKnots) const;
+        size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
+                                std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -856,8 +856,8 @@ class NURBcurve: public curve
         std::vector<double> const &GetUKnots() const {return m_aUKnots;}
         std::vector<double> const &GetVKnots() const {return m_aVKnots;}
 
-        size_t FindMultiplity(std::vector<int>    &aMultiplity,
-                              std::vector<double> &aUniqueKnots) const;
+        size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
+                                std::vector<double> &aUniqueKnots) const;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 

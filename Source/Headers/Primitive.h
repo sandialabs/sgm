@@ -30,7 +30,7 @@ body *CreateTorus(SGM::Result             &rResult,
 
  NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
                           std::vector<SGM::Point3D> const &aInterpolate,
-                          std::vector<double>       const *pParams=NULL);
+                          std::vector<double>       const *pParams=nullptr);
 
  NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
                                         std::vector<SGM::Point3D> const &aInterpolate,

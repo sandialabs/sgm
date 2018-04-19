@@ -1,9 +1,10 @@
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
-#include "SGMPrimatives.h"
+#include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMChecker.h"
 #include "SGMComplex.h"
+#include "SGMTopology.h"
 #include "Primitive.h"
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -15,9 +16,9 @@ SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
     return SGM::Complex(pComplex->GetID());
     }
 
-void FindBodies(SGM::Result         &rResult,
-                SGM::Entity   const &EntityID,
-                std::set<SGM::Body> &sBodies)
+void SGM::FindBodies(SGM::Result         &rResult,
+                     SGM::Entity   const &EntityID,
+                     std::set<SGM::Body> &sBodies)
     {
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<body *> sbodies;
@@ -30,7 +31,7 @@ void FindBodies(SGM::Result         &rResult,
         }
     }
 
-void FindComplexes(SGM::Result            &rResult,
+void SGM::FindComplexes(SGM::Result            &rResult,
                    SGM::Entity      const &EntityID,
                    std::set<SGM::Complex> &sComplexes)
     {
@@ -45,7 +46,7 @@ void FindComplexes(SGM::Result            &rResult,
         }
     }
 
-void FindVolumes(SGM::Result           &rResult,
+void SGM::FindVolumes(SGM::Result           &rResult,
                  SGM::Entity     const &EntityID,
                  std::set<SGM::Volume> &sVolumes)
     {
@@ -60,7 +61,7 @@ void FindVolumes(SGM::Result           &rResult,
         }
     }
 
-void FindFaces(SGM::Result         &rResult,
+void SGM::FindFaces(SGM::Result         &rResult,
                SGM::Entity   const &EntityID,
                std::set<SGM::Face> &sFaces)
     {
@@ -75,7 +76,7 @@ void FindFaces(SGM::Result         &rResult,
         }
     }
 
-void FindEdges(SGM::Result         &rResult,
+void SGM::FindEdges(SGM::Result         &rResult,
                SGM::Entity   const &EntityID,
                std::set<SGM::Edge> &sEdges)
     {
@@ -90,7 +91,7 @@ void FindEdges(SGM::Result         &rResult,
         }
     }
 
-void FindVertices(SGM::Result           &rResult,
+void SGM::FindVertices(SGM::Result           &rResult,
                   SGM::Entity     const &EntityID,
                   std::set<SGM::Vertex> &sVertices)
     {

@@ -16,15 +16,15 @@ namespace SGM
                            SGM::Curve          const &CurveID1,
                            SGM::Curve          const &CurveID2,
                            std::vector<SGM::Point3D> &aPoints,
-                           SGM::Edge           const *pEdge1=NULL,
-                           SGM::Edge           const *pEdge2=NULL);
+                           SGM::Edge           const *pEdge1=nullptr,
+                           SGM::Edge           const *pEdge2=nullptr);
 
     size_t IntersectCurveAndSurface(SGM::Result               &rResult,
                                     SGM::Curve          const &CurveID,
                                     SGM::Surface        const &SurfaceID,
                                     std::vector<SGM::Point3D> &aPoints,
-                                    SGM::Edge           const *pEdge=NULL,
-                                    SGM::Face           const *pFace=NULL);
+                                    SGM::Edge           const *pEdge=nullptr,
+                                    SGM::Face           const *pFace=nullptr);
 
     size_t IntersectSegment(SGM::Result               &rResult,
                             SGM::Segment3D      const &Segment,
@@ -33,7 +33,7 @@ namespace SGM
                             std::vector<SGM::Entity>  &aEntity);
 
     size_t IntersectRectangleWithEdges(SGM::Result               &rResult,
-                                       SGM::Interval3D     const &rRectange,
+                                       SGM::Interval3D     const &rRectangle,
                                        SGM::Entity         const &EntityID,
                                        std::vector<SGM::Point3D> &aPoints,
                                        std::vector<SGM::Entity>  &aEntity);

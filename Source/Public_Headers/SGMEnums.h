@@ -1,5 +1,5 @@
-#ifndef SGM_EMUMS_H
-#define SGM_EMUMS_H
+#ifndef SGM_ENUMS_H
+#define SGM_ENUMS_H
 
 namespace SGM
     {
@@ -21,7 +21,7 @@ namespace SGM
         LineType,
         CircleType,
         EllipseType,
-        ParabolType,
+        ParabolaType,
         NUBCurveType,
         NURBCurveType,
         PointCurveType,
@@ -74,4 +74,4 @@ namespace SGM
 
     } // End of SGM namespace
 
-#endif // SGM_EMUMS_H
+#endif // SGM_ENUMS_H

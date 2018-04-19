@@ -9,11 +9,10 @@ circle::circle(SGM::Result             &rResult,
                SGM::Point3D      const &Center,
                SGM::UnitVector3D const &Normal,
                double                   dRadius,
-               SGM::UnitVector3D const *pXAxis,
-               SGM::Interval1D   const *pDomain):
+               SGM::UnitVector3D const *pXAxis,    //TODO: not consistent practice accepting pointers here
+               SGM::Interval1D   const *pDomain):  // instead overload the constructor
     curve(rResult,SGM::CircleType),m_Center(Center),m_Normal(Normal)
     {
-    m_bClosed=true;
     m_dRadius=dRadius;
     if(pXAxis)
         {
@@ -33,6 +32,11 @@ circle::circle(SGM::Result             &rResult,
         m_Domain.m_dMin=0;
         m_Domain.m_dMax=SGM_TWO_PI;
         }
+
+    if(SGM::NearEqual(m_Domain.Length(), SGM_TWO_PI, SGM_MIN_TOL, false))
+        {
+        m_bClosed = true;
+        }
     }
 
 circle::circle(SGM::Result  &rResult,
@@ -44,4 +48,5 @@ circle::circle(SGM::Result  &rResult,
     m_bClosed=true;
     m_Domain.m_dMin=0;
     m_Domain.m_dMax=SGM_TWO_PI;
+    m_bClosed = true;
     }

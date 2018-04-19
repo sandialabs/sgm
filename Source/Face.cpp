@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
-    m_pVolume(NULL),m_pSurface(NULL),m_bFlipped(false),m_nSides(1)
+    m_pVolume(nullptr),m_pSurface(nullptr),m_bFlipped(false),m_nSides(1)
     {
     }
 
@@ -26,7 +26,7 @@ volume *face::GetVolume() const
         }
     else
         {
-        return NULL;
+        return nullptr;
         }
     }
 
@@ -76,7 +76,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     // Find the closest edge or vertex.
 
     SGM::Point3D Pos,CPos,TPos;
-    entity *pEntity=(entity *)this;
+    entity *pEntity= (entity *)this;
     double dDist=DBL_MAX;
     if(ClosePos)
         {
@@ -90,7 +90,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     while(iter!=m_sEdges.end())
         {
         edge *pEdge=*iter;
-        entity *pTempEnt=NULL;
+        entity *pTempEnt=nullptr;
         FindClosestPointOnEdge(rResult,Pos,pEdge,TPos,pTempEnt);
         double dTempDist=Pos.DistanceSquared(TPos);
         if(dTempDist<dDist)
@@ -102,7 +102,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         ++iter;
         }
 
-    // Find the parmeter line to check sidedness from.
+    // Find the parameter line to check sided-ness from.
 
     if(pBoundary)
         {
@@ -112,7 +112,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
         SGM::Vector3D VecU,VecV,Vec;
-        m_pSurface->Evaluate(Buv,NULL,&VecU,&VecV);
+        m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
         edge *pEdge=(edge *)pEntity;
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
@@ -120,7 +120,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             *pPos=CPos;
             }
-        pCurve->Evaluate(t,NULL,&Vec);
+        pCurve->Evaluate(t,nullptr,&Vec);
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
@@ -129,13 +129,17 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             dZ=-dZ;
             }
-        if(-SGM_ZERO<=dZ)
+        if(SGM_ZERO<=dZ)
             {
             return m_bFlipped==true ? false : true;
             }
-        else 
+        else if(-SGM_ZERO>=dZ)
             {
             return m_bFlipped==true ? true : false;
+            }
+        else
+            {
+            return true;
             }
         }
     else // The vertex case.

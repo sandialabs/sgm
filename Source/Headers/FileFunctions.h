@@ -19,7 +19,7 @@ std::string GetDateAndTime();
 
 std::string GetFileName(std::string const &FileName);
 
-// Returns the file extention of a file string.
+// Returns the file extension of a file string.
 
 void FindFileExtension(std::string const &FileName,
                        std::string       &Extension);
