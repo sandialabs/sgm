@@ -32,6 +32,9 @@ circle::circle(SGM::Result             &rResult,
         m_Domain.m_dMin=0;
         m_Domain.m_dMax=SGM_TWO_PI;
         }
+
+    if(SGM::NearEqual(m_Domain.Length(), SGM_TWO_PI, SGM_MIN_TOL, false))
+        m_Closed = true;
     }
 
 circle::circle(SGM::Result  &rResult,
@@ -42,4 +45,5 @@ circle::circle(SGM::Result  &rResult,
     {
     m_Domain.m_dMin=0;
     m_Domain.m_dMax=SGM_TWO_PI;
+    m_Closed = true;
     }

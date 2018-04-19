@@ -76,7 +76,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     // Find the closest edge or vertex.
 
     SGM::Point3D Pos,CPos,TPos;
-    entity *pEntity= (entity *)this;  //TODO: Why are casting away const'ness on "this" face*?
+    entity *pEntity= (entity *)this;
     double dDist=DBL_MAX;
     if(ClosePos)
         {
@@ -109,7 +109,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         *pBoundary=pEntity;
         }
     SGM::Point2D Buv=m_pSurface->Inverse(CPos);
-    if(pEntity->GetType()==SGM::EntityType::EdgeType)  //TODO: How can face pointer (pEntity=this) now be an EdgeType?
+    if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
         SGM::Vector3D VecU,VecV,Vec;
         m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
@@ -124,13 +124,22 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
-        if(-SGM_ZERO<=dZ)
+        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mFaceType.find(pEdge);
+        if(EdgeTypeIter->second==SGM::FaceOnRightType)
+            {
+            dZ=-dZ;
+            }
+        if(1e-4<=dZ)
+            {
+            return m_bFlipped==true ? false : true;
+            }
+        else if(-1e-4>=dZ)
+            {
+            return m_bFlipped==true ? true : false;
+            }
+        else
             {
             return true;
-            }
-        else 
-            {
-            return false;
             }
         }
     else // The vertex case.
@@ -148,7 +157,8 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             // Have to find inside out side from one of the edges 
             // or the angle of the edges.
-            throw;
+            //throw;
+            return false;
             }
         return false;
         }

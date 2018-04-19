@@ -11,6 +11,7 @@
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
     {
+    m_Closed = false;
     }
 
 void curve::Remove(SGM::Result &rResult)

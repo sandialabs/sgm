@@ -689,6 +689,10 @@ class curve : public entity
 
         SGM::EntityType GetCurveType() const {return m_CurveType;}
 
+        SGM::Interval1D const &GetDomain() const {return m_Domain;}
+
+        bool GetClosed() const {return m_Closed;}
+
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
                       SGM::Vector3D *D1=nullptr,
@@ -709,6 +713,7 @@ class curve : public entity
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
+        bool             m_Closed;
     };
 
 class line : public curve
