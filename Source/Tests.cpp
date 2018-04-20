@@ -573,13 +573,13 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
             {
             complex *pComplex=(complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
             aAreas1.push_back(pComplex->Area());
-            delete pComplex;
+            pThing->DeleteEntity(pComplex);
             }
         for(Index1=0;Index1<nEntities1;++Index1)
             {
             complex *pComplex=(complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
             aAreas2.push_back(pComplex->Area());
-            delete pComplex;
+            pThing->DeleteEntity(pComplex);
             }
         if(nEntities1==nEntities2)
             {

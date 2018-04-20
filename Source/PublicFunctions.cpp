@@ -109,7 +109,7 @@ void SGM::FindVertices(SGM::Result           &rResult,
 SGM::Result SGM::CreateResult()
     {
     thing *pThing=new thing();
-    return SGM::Result(pThing); 
+    return std::move(SGM::Result(pThing));
     }
 
 thing *SGM::CreateThing()

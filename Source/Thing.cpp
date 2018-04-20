@@ -12,13 +12,26 @@ size_t entity::GetID() const
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
+void thing::AddToMap(size_t nID,entity *pEntity)
+    {
+    m_mAllEntities.emplace(std::make_pair(nID, std::unique_ptr<entity>(pEntity)));
+    }
+
+void thing::DeleteEntity(entity *pEntity)
+    {
+    m_sTopLevelEntities.erase(pEntity);
+    m_mAllEntities.erase(pEntity->GetID());
+    }
+
 entity *thing::FindEntity(size_t ID) const
     {
+    if (ID == 0) return const_cast<thing*>(this);
     entity *pAnswer=nullptr;
-    std::map<size_t,entity *>::const_iterator iter=m_mAllEntities.find(ID);
+    auto iter=m_mAllEntities.find(ID);
     if(iter!=m_mAllEntities.end())
         {
-        pAnswer=iter->second;
+        pAnswer=iter->second.get();
         }
     return pAnswer;
     }

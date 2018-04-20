@@ -9,6 +9,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <memory>
 
 class thing;
 class complex;
@@ -51,15 +52,15 @@ class thing : public entity
 
         // Construction methods
         
-        thing():entity(),m_nNextID(1) {AddToMap(0,this);}
+        thing():entity(),m_nNextID(1) {}
 
-        ~thing();
+        ~thing() = default;
 
         void AddTopLevelEntity(entity *pEntity) {m_sTopLevelEntities.insert(pEntity);}
 
-        void AddToMap(size_t nID,entity *pEntity) {m_mAllEntities[nID]=pEntity;}
+        void AddToMap(size_t nID,entity *pEntity);
 
-        void DeleteEntity(entity *pEntity) {m_sTopLevelEntities.erase(pEntity); m_mAllEntities.erase(pEntity->GetID());}
+        void DeleteEntity(entity *pEntity);
 
         // Get methods
 
@@ -86,7 +87,7 @@ class thing : public entity
     private:
 
         std::set<entity *>        m_sTopLevelEntities;
-        std::map<size_t,entity *> m_mAllEntities;
+        std::map<size_t,std::unique_ptr<entity> > m_mAllEntities;
         mutable SGM::Interval3D   m_Box;
         size_t                    m_nNextID;
     };
