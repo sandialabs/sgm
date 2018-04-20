@@ -6,7 +6,7 @@ IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 ENDIF()
 
 
-project(SGMall VERSION 1.0 LANGUAGES NONE)
+project(SGM VERSION 1.0 LANGUAGES NONE)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/SGMFunctions.cmake)
 sgm_project_setup()
