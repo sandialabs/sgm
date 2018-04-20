@@ -19,7 +19,7 @@ sgm_project_setup()
 
 
 # build settings for all projects
-set(BUILD_SHARED_LIBS 1)
+set(BUILD_SHARED_LIBS ON)
 
 #if(CMAKE_SYSTEM_NAME MATCHES Darwin)
 #  add_definitions(-DSGM_OSX)
