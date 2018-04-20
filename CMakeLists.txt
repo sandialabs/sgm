@@ -6,17 +6,10 @@ IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 ENDIF()
 
 
-project(SGMall NONE)
+project(SGMall VERSION 1.0 LANGUAGES CXX)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/SGMFunctions.cmake)
 sgm_project_setup()
-
-
-# hard coded version number
-
-#set(SGM_VERSION_MAJOR 1)
-#set(SGM_VERSION_MINOR 0)
-
 
 # build settings for all projects
 set(BUILD_SHARED_LIBS ON)
