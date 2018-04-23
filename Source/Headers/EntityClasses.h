@@ -10,8 +10,6 @@
 #include <set>
 #include <map>
 
-#include <iostream>
-
 class thing;
 class complex;
 class body;
