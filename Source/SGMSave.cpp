@@ -5,6 +5,7 @@
 #include "FileFunctions.h"
 #include "Topology.h"
 #include "Surface.h"
+#include "Curve.h"
 
 // Lets us use fprintf
 #ifdef _MSC_VER

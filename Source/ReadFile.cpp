@@ -7,6 +7,8 @@
 #include "FileFunctions.h"
 #include "Surface.h"
 #include "STEP.h"
+#include "Curve.h"
+
 #include <string>
 #include <algorithm>
 

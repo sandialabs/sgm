@@ -4,6 +4,7 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Curve.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //

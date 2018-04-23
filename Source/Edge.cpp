@@ -1,5 +1,6 @@
 #include "EntityClasses.h"
 #include "Faceter.h"
+#include "Curve.h"
 #include <algorithm>
 
 edge::edge(SGM::Result &rResult):

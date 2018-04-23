@@ -1,5 +1,6 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
+#include "Curve.h"
 #include "Surface.h"
 
 void FindBodies(SGM::Result      &,//rResult,

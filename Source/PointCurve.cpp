@@ -2,6 +2,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMEnums.h"
 #include "EntityClasses.h"
+#include "Curve.h"
 
 PointCurve::PointCurve(SGM::Result           &rResult,
                        SGM::Point3D    const &Pos,

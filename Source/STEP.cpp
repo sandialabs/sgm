@@ -3,6 +3,7 @@
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Surface.h"
+#include "Curve.h"
 #include "FileFunctions.h"
 #include <string>
 

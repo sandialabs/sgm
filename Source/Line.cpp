@@ -3,6 +3,7 @@
 #include "SGMMathematics.h"
 #include "Topology.h"
 #include "EntityClasses.h"
+#include "Curve.h"
 
 line::line(SGM::Result        &rResult,
            SGM::Point3D const &Pos0,

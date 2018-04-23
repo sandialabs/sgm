@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Curve.h"
 #include "Topology.h"
 #include <cmath>
 #include <algorithm>

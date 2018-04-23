@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include "Curve.h"
 #include <limits>
 #include <cmath>
 #include <vector>

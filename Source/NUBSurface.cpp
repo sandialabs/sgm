@@ -1,6 +1,7 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Curve.h"
 #include "Faceter.h"
 
 NUBsurface::NUBsurface(SGM::Result                                   &rResult,

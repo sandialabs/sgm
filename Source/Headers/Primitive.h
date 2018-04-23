@@ -1,6 +1,8 @@
 #ifndef PRIMITIVE_H
 #define PRIMITIVE_H
 
+#include "Curve.h"
+
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 
