@@ -1704,7 +1704,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
-        pTorus->Remove(rResult);
+        rResult.Delete(pTorus);
 
         return bAnswer;
         }
