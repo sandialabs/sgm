@@ -3,6 +3,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 
 plane::plane(SGM::Result             &rResult,
              SGM::Point3D      const &Origin,

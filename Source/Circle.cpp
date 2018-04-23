@@ -3,6 +3,7 @@
 #include "SGMEnums.h"
 #include "SGMEntityClasses.h"
 #include "EntityClasses.h"
+#include "Curve.h"
 #include "Topology.h"
 
 circle::circle(SGM::Result             &rResult,

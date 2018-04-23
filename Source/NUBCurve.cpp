@@ -1,6 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
+#include "Curve.h"
 #include "Faceter.h"
 #include <limits>
 #include <vector>

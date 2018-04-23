@@ -1,4 +1,6 @@
 #include "EntityClasses.h"
+#include "Surface.h"
+#include "Curve.h"
 #include <algorithm>
 #include <cstdlib>
 

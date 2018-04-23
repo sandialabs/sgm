@@ -1,6 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 #include <cmath>
 
 torus::torus(SGM::Result             &rResult,

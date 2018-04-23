@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "SGMEntityClasses.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 
 cylinder::cylinder(SGM::Result             &rResult,
                    SGM::Point3D      const &Bottom,

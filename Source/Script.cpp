@@ -5,6 +5,7 @@
 #include "SGMPrimitives.h"
 #include "SGMDisplay.h"
 #include "SGMGeometry.h"
+
 #include <vector>
 #include <map>
 #include <sstream>
@@ -1139,7 +1140,7 @@ bool ReadGetFaceNormals(SGM::Result                    &,//rResult,
     return bAnswer;
     }
 
-bool ReadGetPointOfVertex(SGM::Result                    &,//rResult,
+bool ReadGetPointOfVertex(SGM::Result                    &rResult,
                           std::string                    &sLineString,
                           std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1153,11 +1154,11 @@ bool ReadGetPointOfVertex(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Point3D Pos=SGM::GetPointOfVertex(rResult,aArguments[1].m_Vertex);
+    SGM::Point3D Pos=SGM::GetPointOfVertex(rResult,aArguments[1].m_Vertex);
 
-    //Argument Arg;
-    //Arg.m_Point3D=Pos;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Point3D=Pos;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
