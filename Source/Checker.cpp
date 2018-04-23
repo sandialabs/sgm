@@ -24,7 +24,7 @@ bool thing::Check(SGM::Result              &rResult,
     auto iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
         {
-        entity *pEntity=iter->second.get();
+        entity *pEntity=iter->second;
         switch(pEntity->GetType())
             {
             case SGM::BodyType:

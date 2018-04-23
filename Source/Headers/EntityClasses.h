@@ -9,7 +9,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <memory>
 
 class thing;
 class complex;
@@ -54,7 +53,7 @@ class thing : public entity
         
         thing():entity(),m_nNextID(1) {}
 
-        ~thing() = default;
+        ~thing();
 
         void AddTopLevelEntity(entity *pEntity) {m_sTopLevelEntities.insert(pEntity);}
 
@@ -87,7 +86,7 @@ class thing : public entity
     private:
 
         std::set<entity *>        m_sTopLevelEntities;
-        std::map<size_t,std::unique_ptr<entity> > m_mAllEntities;
+        std::map<size_t,entity* > m_mAllEntities;
         mutable SGM::Interval3D   m_Box;
         size_t                    m_nNextID;
     };
@@ -396,8 +395,6 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
-        void Remove(SGM::Result &rResult);
-
         void AddFace(face *pFace);
 
         void RemoveFace(face *pFace);
@@ -448,8 +445,6 @@ class surface : public entity
         curve *VParamLine(SGM::Result &rResult,double dV) const;
 
     protected:
-
-        ~surface() {}; // Call remove instead.
 
         std::set<face *> m_sFaces;
         SGM::EntityType  m_SurfaceType;
@@ -678,8 +673,6 @@ class curve : public entity
 
         curve(SGM::Result &rResult,SGM::EntityType nType);
 
-        void Remove(SGM::Result &rResult);
-
         curve *MakeCopy(SGM::Result &rResult) const;
 
         void AddEdge(edge *pEdge);
@@ -710,8 +703,6 @@ class curve : public entity
                    std::vector<std::string> &aCheckStrings) const;
 
     protected:
-
-        ~curve() {}; // Call remove instead.
 
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
