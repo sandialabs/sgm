@@ -3,6 +3,7 @@
 #include "SGMTree.h"
 #include "Topology.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 #include <cmath>
 #include <algorithm>
 

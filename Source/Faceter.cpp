@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include "Faceter.h"
 #include "Graph.h"
+#include "Surface.h"
 #include <list>
 #include <cmath>
 #include <algorithm>

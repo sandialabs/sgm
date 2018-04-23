@@ -1,6 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 
 sphere::sphere(SGM::Result             &rResult,
                SGM::Point3D      const &Center,

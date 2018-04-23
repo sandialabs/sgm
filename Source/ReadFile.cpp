@@ -5,6 +5,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"
+#include "Surface.h"
 #include "STEP.h"
 #include <string>
 #include <algorithm>

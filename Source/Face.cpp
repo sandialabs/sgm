@@ -4,6 +4,7 @@
 #include "Faceter.h"
 #include "Graph.h"
 #include "Topology.h"
+#include "Surface.h"
 #include "Query.h"
 #include <cfloat>
 

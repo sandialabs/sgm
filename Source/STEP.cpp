@@ -2,6 +2,7 @@
 #include "SGMTranslators.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include "Surface.h"
 #include "FileFunctions.h"
 #include <string>
 

@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Query.h"
+#include "Surface.h"
 #include <cfloat>
 
 void FindClosestPointOnEdge(SGM::Result        &,//rResult,

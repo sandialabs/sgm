@@ -3,6 +3,7 @@
 
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -56,7 +57,7 @@ size_t IntersectLineAndLine(SGM::Point3D                 const &Origin,
                             std::vector<SGM::Point3D>          &aPoints,
                             std::vector<SGM::IntersectionType> &aTypes);
 
-size_t IntersectLineAndCircle(SGM::Point3D                  const &Origin,
+size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
                               SGM::UnitVector3D            const &Axis,
                               SGM::Interval1D              const &Domain,
                               circle                       const *pCircle,

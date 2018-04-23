@@ -1,6 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 #include "Topology.h"
 #include <cmath>
 #include <algorithm>

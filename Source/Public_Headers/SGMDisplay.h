@@ -9,9 +9,6 @@
 
 namespace SGM
     {
-    SGM::Interval3D const &GetBoundingBox(SGM::Result       &rResult,
-                                          SGM::Entity const &EntityID);
-
     std::vector<SGM::Point3D> const &GetEdgePoints(SGM::Result     &rResult,
                                                    SGM::Edge const &EdgeID);
 

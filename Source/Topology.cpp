@@ -1,5 +1,6 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
+#include "Surface.h"
 
 void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
@@ -674,6 +675,7 @@ void FindComplexes(SGM::Result         &,//rResult,
                     {
                     sComplexes.insert((complex *)pEntityIter);
                     }
+                ++iter;
                 }
             break;
             }

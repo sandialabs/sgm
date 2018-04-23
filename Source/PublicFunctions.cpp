@@ -6,6 +6,12 @@
 #include "SGMComplex.h"
 #include "SGMTopology.h"
 #include "SGMIntersecors.h"
+#include "SGMDisplay.h"
+#include "SGMEntityFunctions.h"
+#include "SGMMathematics.h"
+#include "SGMQuery.h"
+#include "SGMTranslators.h"
+
 #include "Primitive.h"
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -56,6 +62,13 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
          }
      return ::IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
      }
+
+SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
+                                          SGM::Vertex const &VertexID)
+    {
+    vertex const *pVertex=(vertex const *)rResult.GetThing()->FindEntity(VertexID.m_ID);
+    return pVertex->GetPoint();
+    }
 
 SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aPoints)
