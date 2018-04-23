@@ -103,11 +103,6 @@ complex::complex(SGM::Result                     &rResult,
     m_Box=SGM::FindBoundingBox3D(m_aPoints);
     }
 
-complex::~complex()
-    {
-    GetThing()->DeleteEntity(this);
-    }
-
 SGM::Interval3D const &complex::GetBox() const
     {
     if(m_Box.IsEmpty())

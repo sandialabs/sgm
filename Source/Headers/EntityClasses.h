@@ -10,6 +10,8 @@
 #include <set>
 #include <map>
 
+#include <iostream>
+
 class thing;
 class complex;
 class body;
@@ -109,8 +111,6 @@ class body : public topology
 
         void AddVolume(volume *pVolume);
 
-        ~body();
-
         // Get methods
 
         SGM::Interval3D const &GetBox() const;
@@ -147,8 +147,6 @@ class complex : public entity
                 std::vector<SGM::Point3D> const &aPoints,
                 std::vector<size_t>       const &aTriangles);
 
-        ~complex();
-
         // Get methods
 
         SGM::Interval3D const &GetBox() const;
@@ -184,8 +182,6 @@ class volume : public topology
     public:
 
         volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType) {}
-
-        ~volume();
 
         void AddFace(face *pFace);
 
