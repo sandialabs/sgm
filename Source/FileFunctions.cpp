@@ -109,7 +109,7 @@ bool ReadFileLine(FILE        *pFile,
     char data;
     while(fread(&data,1,1,pFile))
         {
-        if(data!='\n')
+        if(data>31) // ignore control characters
             {
             sFileLine+=data;
             }
