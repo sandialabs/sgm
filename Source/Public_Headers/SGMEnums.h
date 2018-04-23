@@ -22,6 +22,7 @@ namespace SGM
         CircleType,
         EllipseType,
         ParabolaType,
+        HyperboleType,
         NUBCurveType,
         NURBCurveType,
         PointCurveType,
@@ -64,13 +65,13 @@ namespace SGM
 
     enum ResultType 
         {
-        ResultTypeOK=0,
-        ResultInterrupt,
-        ResultTypeFileOpen,
-        ResultTypeUnknownType,
-        ResultTypeInsufficientData,
-        ResultTypeUnknownCommand,
-        ResultTypeUnknownFileType
+        ResultTypeOK=0,             // Every thing is OK.
+        ResultInterrupt,            // User requests the modeler to return.
+        ResultTypeFileOpen,         // A file could not be found or openned.
+        ResultTypeUnknownType,      // An unknown data type was found in a file.
+        ResultTypeInsufficientData, // Not enough data was given to the function.
+        ResultTypeUnknownCommand,   // An unknown script command was used.
+        ResultTypeUnknownFileType   // An unknown file type was sent to ReadFile.
         };
 
     } // End of SGM namespace

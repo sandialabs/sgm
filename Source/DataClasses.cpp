@@ -643,7 +643,7 @@ void SGM::Transform3D::Inverse(SGM::Transform3D &Trans) const
     Trans.m_Matrix[3].m_w = ( m_Matrix[2].m_x * s3 - m_Matrix[2].m_y * s1 + m_Matrix[2].m_z * s0) * invdet;
     }
 
-SGM::Transform3D operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const &Trans1)
+SGM::Transform3D SGM::operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const &Trans1)
     {
     SGM::Vector4D const *Matrix0=Trans0.GetData();
     SGM::Vector4D const &XAxis0=Matrix0[0];
@@ -682,47 +682,39 @@ SGM::Transform3D operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const
     return SGM::Transform3D(X,Y,Z,W);
     }
 
-SGM::Point3D operator*(SGM::Transform3D const &Trans,SGM::Point3D const &Pos)
+SGM::Point3D SGM::operator*(SGM::Transform3D const &Trans,SGM::Point3D const &Pos)
     {
     SGM::Vector4D const *Matrix=Trans.GetData();
     SGM::Vector4D const &XAxis=Matrix[0];
     SGM::Vector4D const &YAxis=Matrix[1];
     SGM::Vector4D const &ZAxis=Matrix[2];
-    SGM::Vector4D const &WAxis=Matrix[3];
-    double x=Pos.m_x*XAxis.m_x+Pos.m_y*YAxis.m_x+Pos.m_z*ZAxis.m_x+WAxis.m_x;
-    double y=Pos.m_x*XAxis.m_y+Pos.m_y*YAxis.m_y+Pos.m_z*ZAxis.m_y+WAxis.m_y;
-    double z=Pos.m_x*XAxis.m_z+Pos.m_y*YAxis.m_z+Pos.m_z*ZAxis.m_z+WAxis.m_z;
-    double w=Pos.m_x*XAxis.m_w+Pos.m_y*YAxis.m_w+Pos.m_z*ZAxis.m_w+WAxis.m_w;
-    if(w!=1.0)
-        {
-        x/=w;
-        y/=w;
-        z/=w;
-        }
+    double x=Pos.m_x*XAxis.m_x+Pos.m_y*XAxis.m_y+Pos.m_z*XAxis.m_z+XAxis.m_w;
+    double y=Pos.m_x*YAxis.m_x+Pos.m_y*YAxis.m_y+Pos.m_z*YAxis.m_z+YAxis.m_w;
+    double z=Pos.m_x*ZAxis.m_x+Pos.m_y*ZAxis.m_y+Pos.m_z*ZAxis.m_z+ZAxis.m_w;
     return SGM::Point3D(x,y,z);
     }
 
-SGM::Vector3D operator*(SGM::Transform3D const &Trans,SGM::Vector3D const &Vec)
+SGM::Vector3D SGM::operator*(SGM::Transform3D const &Trans,SGM::Vector3D const &Vec)
     {
     SGM::Vector4D const *Matrix=Trans.GetData();
     SGM::Vector4D const &XAxis=Matrix[0];
     SGM::Vector4D const &YAxis=Matrix[1];
     SGM::Vector4D const &ZAxis=Matrix[2];
-    double x=Vec.m_x*XAxis.m_x+Vec.m_y*YAxis.m_x+Vec.m_z*ZAxis.m_x;
-    double y=Vec.m_x*XAxis.m_y+Vec.m_y*YAxis.m_y+Vec.m_z*ZAxis.m_y;
-    double z=Vec.m_x*XAxis.m_z+Vec.m_y*YAxis.m_z+Vec.m_z*ZAxis.m_z;
+    double x=Vec.m_x*XAxis.m_x+Vec.m_y*XAxis.m_y+Vec.m_z*XAxis.m_z;
+    double y=Vec.m_x*YAxis.m_x+Vec.m_y*YAxis.m_y+Vec.m_z*YAxis.m_z;
+    double z=Vec.m_x*ZAxis.m_x+Vec.m_y*ZAxis.m_y+Vec.m_z*ZAxis.m_z;
     return SGM::Vector3D(x,y,z);   
     }
 
-SGM::UnitVector3D operator*(SGM::Transform3D const &Trans,SGM::UnitVector3D const &UVec)
+SGM::UnitVector3D SGM::operator*(SGM::Transform3D const &Trans,SGM::UnitVector3D const &UVec)
     {
     SGM::Vector4D const *Matrix=Trans.GetData();
     SGM::Vector4D const &XAxis=Matrix[0];
     SGM::Vector4D const &YAxis=Matrix[1];
     SGM::Vector4D const &ZAxis=Matrix[2];
-    double x=UVec.m_x*XAxis.m_x+UVec.m_y*YAxis.m_x+UVec.m_z*ZAxis.m_x;
-    double y=UVec.m_x*XAxis.m_y+UVec.m_y*YAxis.m_y+UVec.m_z*ZAxis.m_y;
-    double z=UVec.m_x*XAxis.m_z+UVec.m_y*YAxis.m_z+UVec.m_z*ZAxis.m_z;
+    double x=UVec.m_x*XAxis.m_x+UVec.m_y*XAxis.m_y+UVec.m_z*XAxis.m_z;
+    double y=UVec.m_x*YAxis.m_x+UVec.m_y*YAxis.m_y+UVec.m_z*YAxis.m_z;
+    double z=UVec.m_x*ZAxis.m_x+UVec.m_y*ZAxis.m_y+UVec.m_z*ZAxis.m_z;
     return SGM::UnitVector3D(x,y,z); 
     }
 

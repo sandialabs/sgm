@@ -31,6 +31,14 @@ void FindComplexes(SGM::Result         &rResult,
                    entity        const *pEntity,
                    std::set<complex *> &sComplexes);
 
+void FindSurfaces(SGM::Result         &rResult,
+                  entity        const *pEntity,
+                  std::set<surface *> &sSurfaces);
+
+void FindCurves(SGM::Result       &rResult,
+                entity      const *pEntity,
+                std::set<curve *> &sCurves);
+
 // Ordering Functions
 
 void OrderLoopEdges(SGM::Result                    &rResult,

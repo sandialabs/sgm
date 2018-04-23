@@ -60,3 +60,42 @@ torus::torus(SGM::Result             &rResult,
         m_nKind=SGM::TorusKindType::DonutType;
         }
     }
+
+void FindSeedPoints(torus               const *pTorus,
+                    std::vector<SGM::Point3D> &aSeedPoints,
+                    std::vector<SGM::Point2D> &aSeedParams)
+    {
+    SGM::Interval2D const &Domain=pTorus->GetDomain();
+    size_t Index1,Index2;
+    for(Index1=0;Index1<4;++Index1)
+        {
+        double u=Domain.m_UDomain.MidPoint(0.0125+Index1/4.0);
+        for(Index2=0;Index2<4;++Index2)
+            {
+            double v=Domain.m_VDomain.MidPoint(Index2/4.0);
+            SGM::Point2D uv(u,v);
+            aSeedParams.push_back(uv);
+            SGM::Point3D Pos;
+            pTorus->Evaluate(uv,&Pos);
+            aSeedPoints.push_back(Pos);
+            }
+        }
+    }
+
+std::vector<SGM::Point3D> const &torus::GetSeedPoints() const
+    {
+    if(m_aSeedPoints.empty())
+        {
+        FindSeedPoints(this,m_aSeedPoints,m_aSeedParams);
+        }
+    return m_aSeedPoints;
+    }
+
+std::vector<SGM::Point2D> const &torus::GetSeedParams() const
+    {
+    if(m_aSeedPoints.empty())
+        {
+        FindSeedPoints(this,m_aSeedPoints,m_aSeedParams);
+        }
+    return m_aSeedParams;
+    }

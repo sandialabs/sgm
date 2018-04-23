@@ -1262,7 +1262,6 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
         return 0;
         }
 
-
     size_t Index1;
     size_t nEnts=aEnts.size();
     aEntities.reserve(nEnts);

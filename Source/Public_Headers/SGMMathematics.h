@@ -204,13 +204,13 @@ namespace SGM
     // matrix[row][column] in the form a*x^2+b*x+c.
 
     void CharacteristicPolynomial2D(double const aaMatrix[2][2],
-                                    double a,double b,double c);
+                                    double &a,double &b,double &c);
 
     // Returns the characteristic polynomial of a three by three 
     // matrix[row][column] in the form a*x^3+b*x^2+c*x+d.
 
     void CharacteristicPolynomial3D(double const aaMatrix[3][3],
-                                    double a,double b,double c,double d);
+                                    double &a,double &b,double &c,double &d);
 
     // Returns true if the given matrix is a diagonal matrix.
 

@@ -731,7 +731,7 @@ bool ReadCreatePoints(SGM::Result                    &rResult,
     return bAnswer;
     }
 
-bool ReadCreateSegments(SGM::Result                    &,//rResult,
+bool ReadCreateSegments(SGM::Result                    &rResult,
                         std::string                    &sLineString,
                         std::map<std::string,Argument> &mArgumentMap)
     {
@@ -746,11 +746,11 @@ bool ReadCreateSegments(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Complex ComplexID=SGM::CreateSegments(rResult,aArguments[1].m_aPoint3D,aArguments[2].m_aSize);
+    SGM::Complex ComplexID=SGM::CreateSegments(rResult,aArguments[1].m_aPoint3D,aArguments[2].m_aSize);
 
-    //Argument Arg;
-    //Arg.m_Complex=ComplexID;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Complex=ComplexID;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
@@ -779,7 +779,7 @@ bool ReadCreateTriangles(SGM::Result                    &rResult,
     return bAnswer;
     }
 
-bool ReadCreateSlice(SGM::Result                    &,//rResult,
+bool ReadCreateSlice(SGM::Result                    &rResult,
                      std::string                    &sLineString,
                      std::map<std::string,Argument> &mArgumentMap)
     {
@@ -796,17 +796,17 @@ bool ReadCreateSlice(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Complex ComplexID=SGM::CreateSlice(rResult,aArguments[1].m_Complex,aArguments[2].m_Point3D,
-    //    aArguments[3].m_UnitVector3D,aArguments[4].m_bool);
+    SGM::Complex ComplexID=SGM::CreateSlice(rResult,aArguments[1].m_Complex,aArguments[2].m_Point3D,
+                                            aArguments[3].m_UnitVector3D,aArguments[4].m_bool);
 
-    //Argument Arg;
-    //Arg.m_Complex=ComplexID;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Complex=ComplexID;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadCreatePolygon(SGM::Result                    &,//rResult,
+bool ReadCreatePolygon(SGM::Result                    &rResult,
                        std::string                    &sLineString,
                        std::map<std::string,Argument> &mArgumentMap)
     {
@@ -821,16 +821,16 @@ bool ReadCreatePolygon(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Complex ComplexID=SGM::CreatePolygon(rResult,aArguments[1].m_aPoint3D,aArguments[2].m_bool);
+    SGM::Complex ComplexID=SGM::CreatePolygon(rResult,aArguments[1].m_aPoint3D,aArguments[2].m_bool);
 
-    //Argument Arg;
-    //Arg.m_Complex=ComplexID;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Complex=ComplexID;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadCreateRectangle(SGM::Result                    &,//rResult,
+bool ReadCreateRectangle(SGM::Result                    &rResult,
                          std::string                    &sLineString,
                          std::map<std::string,Argument> &mArgumentMap)
     {
@@ -846,17 +846,17 @@ bool ReadCreateRectangle(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Complex ComplexID=SGM::CreateRectangle(rResult,aArguments[1].m_Point2D,
-    //    aArguments[2].m_Point2D,aArguments[3].m_bool);
+    SGM::Complex ComplexID=SGM::CreateRectangle(rResult,aArguments[1].m_Point2D,
+                                                aArguments[2].m_Point2D,aArguments[3].m_bool);
 
-    //Argument Arg;
-    //Arg.m_Complex=ComplexID;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Complex=ComplexID;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadFindComponents(SGM::Result                    &,//rResult,
+bool ReadFindComponents(SGM::Result                    &rResult,
                         std::string                    &sLineString,
                         std::map<std::string,Argument> &mArgumentMap)
     {
@@ -871,20 +871,20 @@ bool ReadFindComponents(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Complex> aOutput;
-    //size_t nSize=SGM::FindComponets(rResult,aArguments[1].m_Complex,aOutput);
+    std::vector<SGM::Complex> aOutput;
+    size_t nSize=SGM::FindComponents(rResult,aArguments[1].m_Complex,aOutput);
 
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
-    //Argument Arg2;
-    //Arg2.m_aComplex=aOutput;
-    //mArgumentMap[aArguments[2].m_String]=Arg2;
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg2;
+    Arg2.m_aComplex=aOutput;
+    mArgumentMap[aArguments[2].m_String]=Arg2;
 
     return bAnswer;
     }
 
-bool ReadFindBoundary(SGM::Result                    &,//rResult,
+bool ReadFindBoundary(SGM::Result                    &rResult,
                       std::string                    &sLineString,
                       std::map<std::string,Argument> &mArgumentMap)
     {
@@ -899,20 +899,20 @@ bool ReadFindBoundary(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Complex> aOutput;
-    //size_t nSize=SGM::FindBoundary(rResult,aArguments[1].m_Complex,aOutput);
+    std::vector<SGM::Complex> aOutput;
+    size_t nSize=SGM::FindBoundary(rResult,aArguments[1].m_Complex,aOutput);
 
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
-    //Argument Arg2;
-    //Arg2.m_aComplex=aOutput;
-    //mArgumentMap[aArguments[2].m_String]=Arg2;
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg2;
+    Arg2.m_aComplex=aOutput;
+    mArgumentMap[aArguments[2].m_String]=Arg2;
 
     return bAnswer;
     }
 
-bool ReadFindGenus(SGM::Result                    &,//rResult,
+bool ReadFindGenus(SGM::Result                    &rResult,
                    std::string                    &sLineString,
                    std::map<std::string,Argument> &mArgumentMap)
     {
@@ -926,16 +926,16 @@ bool ReadFindGenus(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //size_t nSize=SGM::FindGenus(rResult,aArguments[1].m_Complex);
+    size_t nSize=SGM::FindGenus(rResult,aArguments[1].m_Complex);
 
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadSplitWithPlane(SGM::Result                    &,//rResult,
+bool ReadSplitWithPlane(SGM::Result                    &rResult,
                         std::string                    &sLineString,
                         std::map<std::string,Argument> &mArgumentMap)
     {
@@ -952,21 +952,21 @@ bool ReadSplitWithPlane(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Complex> aOutput;
-    //size_t nSize=SGM::SplitWithPlane(rResult,aArguments[1].m_Complex,aArguments[2].m_Point3D,
-    //    aArguments[3].m_UnitVector3D,aOutput);
+    std::vector<SGM::Complex> aOutput;
+    size_t nSize=SGM::SplitWithPlane(rResult,aArguments[1].m_Complex,aArguments[2].m_Point3D,
+        aArguments[3].m_UnitVector3D,aOutput);
 
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
-    //Argument Arg2;
-    //Arg2.m_aComplex=aOutput;
-    //mArgumentMap[aArguments[4].m_String]=Arg2;
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg2;
+    Arg2.m_aComplex=aOutput;
+    mArgumentMap[aArguments[4].m_String]=Arg2;
 
     return bAnswer;
     }
 
-bool ReadSplitWithSlices(SGM::Result                    &,//rResult,
+bool ReadSplitWithSlices(SGM::Result                    &rResult,
                          std::string                    &sLineString,
                          std::map<std::string,Argument> &mArgumentMap)
     {
@@ -982,20 +982,20 @@ bool ReadSplitWithSlices(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Complex> aOutput;
-    //size_t nSize=SGM::SplitWithSlices(rResult,aArguments[1].m_Complex,aArguments[2].m_aComplex,aOutput);
-
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
-    //Argument Arg2;
-    //Arg2.m_aComplex=aOutput;
-   // mArgumentMap[aArguments[3].m_String]=Arg2;
+    std::vector<SGM::Complex> aOutput;
+    size_t nSize=SGM::SplitWithSlices(rResult,aArguments[1].m_Complex,aArguments[2].m_aComplex,aOutput);
+    
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg2;
+    Arg2.m_aComplex=aOutput;
+    mArgumentMap[aArguments[3].m_String]=Arg2;
 
     return bAnswer;
     }
 
-bool ReadSplitWithComplex(SGM::Result                    &,//rResult,
+bool ReadSplitWithComplex(SGM::Result                    &rResult,
                           std::string                    &sLineString,
                           std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1011,15 +1011,15 @@ bool ReadSplitWithComplex(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Complex> aOutput;
-    //size_t nSize=SGM::SplitWithComplex(rResult,aArguments[1].m_Complex,aArguments[2].m_Complex,aOutput);
+    std::vector<SGM::Complex> aOutput;
+    size_t nSize=SGM::SplitWithComplex(rResult,aArguments[1].m_Complex,aArguments[2].m_Complex,aOutput);
 
-    //Argument Arg;
-    //Arg.m_Size=nSize;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
-    //Argument Arg2;
-    //Arg2.m_aComplex=aOutput;
-    //mArgumentMap[aArguments[3].m_String]=Arg2;
+    Argument Arg;
+    Arg.m_Size=nSize;
+    mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg2;
+    Arg2.m_aComplex=aOutput;
+    mArgumentMap[aArguments[3].m_String]=Arg2;
 
     return bAnswer;
     }

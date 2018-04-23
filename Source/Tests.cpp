@@ -7,8 +7,11 @@
 #include "SGMGeometry.h"
 #include "SGMQuery.h"
 #include "SGMTree.h"
+
 #include "FileFunctions.h"
 #include "EntityClasses.h"
+#include "Intersectors.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -1498,6 +1501,269 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==21)
+        {
+        // Test Least Squared Plane Fitting.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(2.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(2.0,1.0,0.0));
+        aPoints.push_back(SGM::Point3D(0.0,1.0,0.0));
+        aPoints.push_back(SGM::Point3D(1.0,0.5,0.4));
+
+        SGM::Point3D Origin;
+        SGM::UnitVector3D XVec,YVec,ZVec;
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+        if(SGM::NearEqual(Origin,SGM::Point3D(1.0,0.5,0.08),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,0.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(1.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(0.0,1.0,0.0));
+        aPoints.push_back(SGM::Point3D(3.0,2.0,0.0));
+        aPoints.push_back(SGM::Point3D(2.0,3.0,0.0));
+
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+        if(SGM::NearEqual(Origin,SGM::Point3D(1.5,1.5,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(YVec,SGM::UnitVector3D(1.0,-1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,-1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(1.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(0.0,1.0,0.0));
+        aPoints.push_back(SGM::Point3D(1.0,1.0,0.0));
+        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(1.0,0.0,1.0));
+        aPoints.push_back(SGM::Point3D(0.0,1.0,1.0));
+        aPoints.push_back(SGM::Point3D(1.0,1.0,1.0));
+        aPoints.push_back(SGM::Point3D(0.0,0.0,1.0));
+
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+        if(SGM::NearEqual(Origin,SGM::Point3D(0.5,0.5,0.5),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,0.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(8.0,8.0,0.0));
+        aPoints.push_back(SGM::Point3D(4.0,4.0,0.0));
+
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+        if(SGM::NearEqual(Origin,SGM::Point3D(4.0,4.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(YVec,SGM::UnitVector3D(-1.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(8.0,8.0,0.0));
+        aPoints.push_back(SGM::Point3D(4.0,4.0,0.1));
+
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+        if(SGM::NearEqual(Origin,SGM::Point3D(4.0,4.0,0.0333333333333333),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(ZVec,SGM::UnitVector3D(1.0,-1.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==22)
+        {
+        // Test Line Torus Intersections.
+
+        bool bAnswer=true;
+
+        SGM::Point3D Origin(-20,0,0);
+        SGM::UnitVector3D Axis(1.0,0.0,0.0);
+        SGM::Interval1D Domain(-20.0,20.0);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+
+        SGM::Point3D Center(0.0,0.0,0.0);
+        SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
+        torus *pTorus=new torus(rResult,Center,ZAxis,1.0,3.0,false);
+
+        size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=4 ||
+            SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[2],SGM::Point3D( 2.0,0.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[3],SGM::Point3D( 4.0,0.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        Origin.m_y=2.0;
+        nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=3 ||
+            SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[2],SGM::Point3D(3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        Origin.m_y=3.0;
+        nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=2 ||
+            SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        Origin.m_y=4.0;
+        nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=1 ||
+            SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        Origin.m_y=5.0;
+        nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if(nHits!=0)
+            {
+            bAnswer=false;
+            }
+
+        pTorus->Remove(rResult);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==23)
+        {
+        // Test Transforms
+
+        bool bAnswer=true;
+
+        SGM::UnitVector3D XAxis(2.0,3.0,4.0);
+        SGM::UnitVector3D YAxis=XAxis.Orthogonal();
+        SGM::UnitVector3D ZAxis=XAxis*YAxis;
+        SGM::Vector3D Offset(5.0,6.0,7.0);
+        SGM::Transform3D Trans1(XAxis,YAxis,ZAxis,Offset);
+        SGM::Transform3D Trans2;
+        Trans1.Inverse(Trans2);
+        SGM::Transform3D Trans3=Trans1*Trans2;
+
+        SGM::Point3D Pos(0.0,0.0,0.0);
+        SGM::Vector3D Vec(1.0,0.0,0.0);
+        SGM::UnitVector3D UVec(1.0,0.0,0.0);
+        SGM::Point3D Pos1=Trans1*Pos;
+        SGM::Point3D Pos2=Trans2*Pos1;
+        SGM::Point3D Pos3=Trans3*Pos;
+        SGM::Vector3D Vec1=Trans1*Vec;
+        SGM::Vector3D Vec2=Trans2*Vec1;
+        SGM::Vector3D Vec3=Trans3*Vec;
+        SGM::UnitVector3D UVec1=Trans1*UVec;
+        SGM::UnitVector3D UVec2=Trans2*UVec1;
+        SGM::UnitVector3D UVec3=Trans3*UVec;
+
+        if(SGM::NearEqual(Pos,Pos2,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec,Vec2,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(UVec,UVec2,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Pos,Pos3,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(Vec,Vec3,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+        if(SGM::NearEqual(UVec,UVec3,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
 
     return false;
     }

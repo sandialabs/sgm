@@ -686,3 +686,31 @@ void FindComplexes(SGM::Result         &,//rResult,
             break;
         }
     }
+
+void FindSurfaces(SGM::Result         &rResult,
+                  entity        const *pEntity,
+                  std::set<surface *> &sSurfaces)
+    {
+    std::set<face *> sFaces;
+    FindFaces(rResult,pEntity,sFaces);
+    std::set<face *>::iterator iter=sFaces.begin();
+    while(iter!=sFaces.end())
+        {
+        sSurfaces.insert((surface *)((*iter)->GetSurface()));
+        ++iter;
+        }
+    }
+
+void FindCurves(SGM::Result       &rResult,
+                entity      const *pEntity,
+                std::set<curve *> &sCurves)
+    {
+    std::set<edge *> sEdges;
+    FindEdges(rResult,pEntity,sEdges);
+    std::set<edge *>::iterator iter=sEdges.begin();
+    while(iter!=sEdges.end())
+        {
+        sCurves.insert((curve *)((*iter)->GetCurve()));
+        ++iter;
+        }
+    }

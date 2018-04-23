@@ -11,6 +11,7 @@
 #define snprintf snprintf
 #endif
 
+// Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif

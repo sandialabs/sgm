@@ -155,11 +155,11 @@ class complex : public entity
 
         thing *GetThing() const {return m_pThing;}
 
-        std::vector<SGM::Point3D> const &GetPoints() {return m_aPoints;}
+        std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
-        std::vector<size_t>       const &GetSegments() {return m_aSegments;}
+        std::vector<size_t>       const &GetSegments() const {return m_aSegments;}
 
-        std::vector<size_t>       const &GetTriangles() {return m_aTriangles;}
+        std::vector<size_t>       const &GetTriangles() const {return m_aTriangles;}
 
         // Other methods
 
@@ -349,10 +349,12 @@ class edge : public topology
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        double GetTolerance() const {return m_dTolerance;}
+
     private:
 
-        mutable vertex           *m_pStart;
-        mutable vertex           *m_pEnd;
+        mutable vertex   *m_pStart;
+        mutable vertex   *m_pEnd;
         std::set<face *>  m_sFaces;
         volume           *m_pVolume; // Should be nullptr if this belongs to a face.
         curve            *m_pCurve;
@@ -360,6 +362,7 @@ class edge : public topology
         mutable std::vector<SGM::Point3D> m_aPoints3D;
         mutable SGM::Interval1D           m_Domain;
         mutable SGM::Interval3D           m_Box;
+        mutable double                    m_dTolerance;
     };
 
 class vertex : public topology
@@ -583,6 +586,10 @@ class torus : public surface
 
         SGM::TorusKindType GetKind() const {return m_nKind;}
 
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<SGM::Point2D> const &GetSeedParams() const;
+
     public:
 
         SGM::Point3D       m_Center;
@@ -592,6 +599,9 @@ class torus : public surface
         double             m_dMinorRadius;
         double             m_dMajorRadius;
         SGM::TorusKindType m_nKind;
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<SGM::Point2D> m_aSeedParams;
     };
 
 class NUBsurface: public surface
