@@ -4,6 +4,22 @@
 #include "EntityClasses.h"
 #include <algorithm>
 
+SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
+                              SGM::Complex      const &,//ComplexID,
+                              SGM::Point3D      const &,//Point,
+                              SGM::UnitVector3D const &,//Normal,
+                              bool                     )//bLocal)
+    {
+    return SGM::Complex(0);
+    }
+
+SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
+                                std::vector<SGM::Point3D> const &,//aPoints,
+                                bool                             )//bFilled)
+    {
+    return SGM::Complex(0);
+    }
+
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
                                   std::vector<size_t>       const &aTriangles)
@@ -17,6 +33,51 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
     complex *pComplex=new complex(rResult,aPoints,aTriangles);
     pThing->AddTopLevelEntity(pComplex);
     return SGM::Complex(pComplex->GetID());
+    }
+
+size_t SGM::FindComponents(SGM::Result               &,//rResult,
+                           SGM::Complex const        &,//ComplexID,
+                           std::vector<SGM::Complex> &)//aComponents)
+    {
+    return 0;
+    }
+
+size_t SGM::FindBoundary(SGM::Result               &,//rResult,
+                         SGM::Complex        const &,//ComplexID,
+                         std::vector<SGM::Complex> &)//aBoundary)
+    {
+    return 0;
+    }
+
+size_t SGM::FindGenus(SGM::Result        &,//rResult,
+                      SGM::Complex const &)//ComplexID)
+    {
+    return 0;
+    }
+
+size_t SGM::SplitWithPlane(SGM::Result               &,//rResult,
+                           SGM::Complex        const &,//ComplexID,
+                           SGM::Point3D        const &,//Point,
+                           SGM::UnitVector3D   const &,//Normal,
+                           std::vector<SGM::Complex> &)//aComponents)
+    {
+    return 0;
+    }
+
+size_t SGM::SplitWithSlices(SGM::Result                     &,//rResult,
+                            SGM::Complex              const &,//ComplexID,
+                            std::vector<SGM::Complex> const &,//aSlices,
+                            std::vector<SGM::Complex>       &)//aComponents)
+    {
+    return 0;
+    }
+
+size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
+                             SGM::Complex        const &,//ComplexID,
+                             SGM::Complex        const &,//SliceID,
+                             std::vector<SGM::Complex> &)//aComponents)
+    {
+    return 0;
     }
 
 SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,

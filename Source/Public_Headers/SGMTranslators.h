@@ -18,7 +18,8 @@ namespace SGM
                 m_bUnhookFaces(false),
                 m_bScan(false),
                 m_b2D(false),
-                m_bSingleVolume(false) {}
+                m_bSingleVolume(false),
+                m_bVerbose(false) {}
 
             TranslatorOptions(std::string const &sOptions);
 
@@ -43,6 +44,10 @@ namespace SGM
             bool m_bSingleVolume;  // Output only single volume bodies.
                                    // Default is false.
                                    // Used in STEP read.
+
+            bool m_bVerbose;       // Output all data.
+                                   // Default is false.
+                                   // Used in SGM write.
         };
 
     size_t ReadFile(SGM::Result                  &rResult,

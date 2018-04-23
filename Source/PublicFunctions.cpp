@@ -5,14 +5,70 @@
 #include "SGMChecker.h"
 #include "SGMComplex.h"
 #include "SGMTopology.h"
+#include "SGMIntersecors.h"
 #include "Primitive.h"
 #include "EntityClasses.h"
 #include "Topology.h"
+#include "Intersectors.h"
+
+size_t SGM::IntersectCurves(SGM::Result                        &rResult,
+                            SGM::Curve                   const &CurveID1,
+                            SGM::Curve                   const &CurveID2,
+                            std::vector<SGM::Point3D>          &aPoints,
+                            std::vector<SGM::IntersectionType> &aTypes,
+                            SGM::Edge                    const *pEdge1,
+                            SGM::Edge                    const *pEdge2)
+    {
+    curve const *pCurve1=(curve const *)rResult.GetThing()->FindEntity(CurveID1.m_ID);
+    curve const *pCurve2=(curve const *)rResult.GetThing()->FindEntity(CurveID2.m_ID);
+    edge const *pedge1=NULL;
+    edge const *pedge2=NULL;
+    if(pEdge1)
+        {
+        pedge1=(edge const *)rResult.GetThing()->FindEntity(pEdge1->m_ID);
+        }
+    if(pEdge2)
+        {
+        pedge2=(edge const *)rResult.GetThing()->FindEntity(pEdge2->m_ID);
+        }
+    return ::IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
+    }
+
+ size_t SGM::IntersectCurveAndSurface(SGM::Result                        &rResult,
+                                      SGM::Curve                   const &CurveID,
+                                      SGM::Surface                 const &SurfaceID,
+                                      std::vector<SGM::Point3D>          &aPoints,
+                                      std::vector<SGM::IntersectionType> &aTypes,
+                                      SGM::Edge                    const *pEdge,
+                                      SGM::Face                    const *pFace)
+     {
+     curve const *pCurve=(curve const *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+     surface const *pSurface=(surface const *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
+     edge const *pedge=NULL;
+     face const *pface=NULL;
+     if(pEdge)
+         {
+         pedge=(edge const *)rResult.GetThing()->FindEntity(pEdge->m_ID);
+         }
+     if(pFace)
+         {
+         pface=(face const *)rResult.GetThing()->FindEntity(pFace->m_ID);
+         }
+     return ::IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
+     }
 
 SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aPoints)
     {
     complex *pComplex=new complex(rResult,aPoints);
+    return SGM::Complex(pComplex->GetID());
+    }
+
+SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
+                                 std::vector<SGM::Point3D> const &aPoints,
+                                 std::vector<size_t>       const &aSegments)
+    {
+    complex *pComplex=new complex(rResult,aSegments,aPoints);
     return SGM::Complex(pComplex->GetID());
     }
 

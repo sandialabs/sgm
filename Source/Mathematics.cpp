@@ -42,6 +42,75 @@ SGM::Point2D SGM::FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints)
     return SGM::Point2D(u/nPoints,v/nPoints);
     }
 
+bool SGM::FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
+                                SGM::Point3D                    &Origin,
+                                SGM::UnitVector3D               &Axis)
+    {
+    SGM::UnitVector3D YVec,ZVec;
+    return SGM::FindLeastSquarePlane(aPoints,Origin,Axis,YVec,ZVec);
+    }
+
+bool SGM::FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
+                               SGM::Point3D                    &Origin,
+                               SGM::UnitVector3D               &XVec,
+                               SGM::UnitVector3D               &YVec,
+                               SGM::UnitVector3D               &ZVec)
+    {
+    double SumXX=0.0,SumXY=0.0,SumXZ=0.0,SumYY=0.0,SumYZ=0.0,SumZZ=0.0;
+    Origin=SGM::FindCenterOfMass3D(aPoints);
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        double x=Pos.m_x-Origin.m_x;
+        double y=Pos.m_y-Origin.m_y;
+        double z=Pos.m_z-Origin.m_z;
+        SumXX+=x*x;
+        SumXY+=x*y;
+        SumXZ+=x*z;
+        SumYY+=y*y;
+        SumYZ+=y*z;
+        SumZZ+=z*z;
+        }
+    double aaMatrix[3][3];
+    aaMatrix[0][0]=SumXX;
+    aaMatrix[0][1]=SumXY;
+    aaMatrix[0][2]=SumXZ;
+    aaMatrix[1][0]=SumXY;
+    aaMatrix[1][1]=SumYY;
+    aaMatrix[1][2]=SumYZ;
+    aaMatrix[2][0]=SumXZ;
+    aaMatrix[2][1]=SumYZ;
+    aaMatrix[2][2]=SumZZ;
+
+    std::vector<double> aValues;
+    std::vector<SGM::UnitVector3D> aVectors;
+    size_t nFound=SGM::FindEigenVectors3D(aaMatrix,aValues,aVectors);
+    if(nFound==3)
+        {
+        XVec=aVectors[0];
+        YVec=aVectors[1];
+        ZVec=aVectors[2];
+        return true;
+        }
+    else if(nFound==2)
+        {
+        XVec=aVectors[1];
+        YVec=aVectors[0];
+        ZVec=XVec*YVec;
+        return true;
+        }
+    else if(nFound==1)
+        {
+        XVec=aVectors[0];
+        YVec=XVec.Orthogonal();
+        ZVec=XVec*YVec;
+        return true;
+        }
+    return false;
+    }
+
 SGM::Interval3D SGM::FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints)
     {
     SGM::Interval3D Answer;
@@ -1028,9 +1097,27 @@ double SGM::Trace2D(double const aMatrix[2][2])
     return aMatrix[0][0]+aMatrix[1][1];
     }
 
+void SGM::CharacteristicPolynomial2D(double const aaMatrix[2][2],
+                                     double &a,double &b,double &c)
+    {
+    a=1.0;
+    b=-SGM::Trace2D(aaMatrix);
+    c=SGM::Determinate2D(aaMatrix);
+    }
+
 double SGM::Trace3D(double const aMatrix[3][3])
     {
     return aMatrix[0][0]+aMatrix[1][1]+aMatrix[2][2];
+    }
+
+void SGM::CharacteristicPolynomial3D(double const aaMatrix[3][3],
+                                     double &a,double &b,double &c,double &d)
+    {
+    a=1.0;
+    b=-SGM::Trace3D(aaMatrix);
+    c=aaMatrix[0][0]*aaMatrix[1][1]+aaMatrix[0][0]*aaMatrix[2][2]+aaMatrix[1][1]*aaMatrix[2][2]-
+      aaMatrix[1][2]*aaMatrix[2][1]-aaMatrix[0][1]*aaMatrix[1][0]-aaMatrix[0][2]*aaMatrix[2][0];
+    d=-SGM::Determinate3D(aaMatrix);
     }
 
 void SGM::FindProduct2D(double const aMatrix1[2][2],
@@ -1076,13 +1163,9 @@ size_t SGM::FindEigenVectors2D(double                  const  aaMatrix[2][2],
         return 2;
         }
 
-    // The characteristic polynomial of the matrix A is, where tr is the trace 
-    // and det is the determinate
-    // x^2 - tr(A)*x + det(A).
+    double a,b,c;
+    SGM::CharacteristicPolynomial2D(aaMatrix,a,b,c);
 
-    double a=1.0;
-    double b=-SGM::Trace2D(aaMatrix);
-    double c=SGM::Determinate2D(aaMatrix);
     std::vector<double> aRoots;
     size_t nRoots=SGM::Quadratic(a,b,c,aRoots);
 
@@ -1135,6 +1218,21 @@ size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
                                std::vector<double>            &aValues,
                                std::vector<SGM::UnitVector3D> &aVectors)
     {
+    double dMaxValue=0.0;
+    size_t Index1,Index2;
+    for(Index1=0;Index1<3;++Index1)
+        {
+        for(Index2=0;Index2<3;++Index2)
+            {
+            double dValue=fabs(aaMatrix[Index1][Index2]);
+            if(dMaxValue<dValue)
+                {
+                dMaxValue=dValue;
+                }
+            }
+        }
+    double dTol=SGM_ZERO*std::max(1.0,dMaxValue);
+
     if(IsDiagonal3D(aaMatrix))
         {
         aValues.push_back(aaMatrix[0][0]);
@@ -1146,16 +1244,9 @@ size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
         return 3;
         }
 
-    // The characteristic polynomial of the matrix A is, where tr is the trace 
-    // and det is the determinate
-    // (-1)*x^3 + tr(A)*x^2 + (tr(A)^2 - tr(A^2))*x + det(A).
+    double a,b,c,d;
+    CharacteristicPolynomial3D(aaMatrix,a,b,c,d);
 
-    double a=-1.0;
-    double b=SGM::Trace3D(aaMatrix);
-    double aaAA[3][3];
-    SGM::FindProduct3D(aaMatrix,aaMatrix,aaAA);
-    double c=b*b-SGM::Trace3D(aaAA);
-    double d=SGM::Determinate3D(aaMatrix);
     std::vector<double> aRoots;
     size_t nRoots=SGM::Cubic(a,b,c,d,aRoots);
 
@@ -1163,35 +1254,43 @@ size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
     // L is an Eigen value.
 
     size_t nAnswer=0;
-    size_t Index1;
     for(Index1=0;Index1<nRoots;++Index1)
         {
-        std::vector<std::vector<double> > aaMat;
-        aaMat.reserve(3);
-        std::vector<double> aMat;
-        aMat.reserve(4);
-        aMat.push_back(aaMatrix[0][0]-aRoots[Index1]);
-        aMat.push_back(aaMatrix[0][1]);
-        aMat.push_back(aaMatrix[0][2]);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        aMat.clear();
-        aMat.push_back(aaMatrix[1][0]);
-        aMat.push_back(aaMatrix[1][1]-aRoots[Index1]);
-        aMat.push_back(aaMatrix[1][2]);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        aMat.clear();
-        aMat.push_back(aaMatrix[2][0]);
-        aMat.push_back(aaMatrix[2][1]);
-        aMat.push_back(aaMatrix[2][2]-aRoots[Index1]);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        if(LinearSolve(aaMat)==true)
+        if(dTol<fabs(aRoots[Index1]))
             {
-            aValues.push_back(aRoots[Index1]);
-            aVectors.push_back(SGM::UnitVector3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back()));
-            ++nAnswer;
+            std::vector<std::vector<double> > aaMat;
+            aaMat.reserve(3);
+            std::vector<double> aMat;
+            aMat.reserve(4);
+            aMat.push_back(aaMatrix[0][0]-aRoots[Index1]);
+            aMat.push_back(aaMatrix[0][1]);
+            aMat.push_back(aaMatrix[0][2]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            aMat.clear();
+            aMat.push_back(aaMatrix[1][0]);
+            aMat.push_back(aaMatrix[1][1]-aRoots[Index1]);
+            aMat.push_back(aaMatrix[1][2]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            aMat.clear();
+            aMat.push_back(aaMatrix[2][0]);
+            aMat.push_back(aaMatrix[2][1]);
+            aMat.push_back(aaMatrix[2][2]-aRoots[Index1]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            if(LinearSolve(aaMat)==true)
+                {
+                aValues.push_back(aRoots[Index1]);
+                aVectors.push_back(SGM::UnitVector3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back()));
+                ++nAnswer;
+                }
+            else if(dTol<fabs(aaMat[0][0]) && dTol<fabs(aaMat[0][1]))
+                {
+                aValues.push_back(aRoots[Index1]);
+                aVectors.push_back(SGM::UnitVector3D(1.0,-aaMat[0][0]/aaMat[0][1],0.0));
+                ++nAnswer;
+                }
             }
         }
     return nAnswer;
@@ -1379,12 +1478,163 @@ size_t SGM::Cubic(double c3,double c2,double c1,double c0,
     return aRoots.size();
     }
 
+void NewtonMethod(double a,
+                  double b,
+                  double c,
+                  double d,
+                  double e,
+                  double &x)
+    {
+    double delta=1.0;
+    double fx=1.0;
+    double a4=a*4.0;
+    double b3=b*3.0;
+    double c2=c*2.0;
+    size_t nCount=0;
+    while(SGM_ZERO<fabs(delta) && SGM_ZERO<fabs(fx) && nCount<100)
+        {
+        fx=x*(x*(x*(a*x+b)+c)+d)+e;
+        double dfx=x*(x*(a4*x+b3)+c2)+d;
+        if(SGM_ZERO<fabs(dfx))
+            {
+            delta=fx/dfx;
+            }
+        else
+            {
+            delta=0.0;
+            }
+        x-=delta;
+        ++nCount;
+        }
+    }
+
+size_t SGM::Quartic(double a,double b,double c,double d,double e,
+                    std::vector<double> &aRoots)
+    {
+    // Make sure that a is positive.
+
+    if(fabs(a)<SGM_ZERO)
+        {
+        return SGM::Cubic(b,c,d,e,aRoots);
+        }
+    if(a<0)
+        {
+        a=-a;
+        b=-b;
+        c=-c;
+        d=-d;
+        e=-e;
+        }
+    
+    // Find the roots of the derivative.
+
+    std::vector<double> aDRoots,aDRootValues;
+    size_t nDRoots=SGM::Cubic(4.0*a,3.0*b,2.0*c,d,aDRoots);
+    size_t Index1;
+    for(Index1=0;Index1<nDRoots;++Index1)
+        {
+        double t=aDRoots[Index1];
+        double t2=t*t;
+        double t3=t2*t;
+        double t4=t2*t2;
+        aDRootValues.push_back(a*t4+b*t3+c*t2+d*t+e);
+        }
+
+    // Find all double roots and from where to look for other roots.
+
+    std::vector<double> aLookFrom;
+    if(nDRoots==1)
+        {
+        if(aDRootValues[0]<-SGM_ZERO)
+            {
+            aLookFrom.push_back(aDRoots[0]-1.0);
+            aLookFrom.push_back(aDRoots[0]+1.0);
+            }
+        else if(aDRootValues[0]<SGM_ZERO)
+            {
+            aRoots.push_back(aDRoots[0]);
+            }
+        }
+    else
+        {
+        if(aDRootValues[0]<-SGM_ZERO)
+            {
+            aLookFrom.push_back(aDRoots[0]-1.0);
+            }
+        else if(aDRootValues[0]<SGM_ZERO)
+            {
+            aRoots.push_back(aDRoots[0]);
+            }
+
+        if(nDRoots==2)
+            {
+            if(aDRootValues[0]*aDRootValues[1]<0)
+                {
+                aLookFrom.push_back((aDRoots[0]+aDRoots[1])*0.5);
+                }
+            }
+        else
+            {
+            if(fabs(aDRootValues[1])<SGM_ZERO)
+                {
+                aRoots.push_back(aDRoots[1]);
+                }
+            else 
+                {
+                if(aDRootValues[0]*aDRootValues[1]<0)
+                    {
+                    aLookFrom.push_back((aDRoots[0]+aDRoots[1])*0.5);
+                    }
+                if(aDRootValues[2]*aDRootValues[1]<0)
+                    {
+                    aLookFrom.push_back((aDRoots[2]+aDRoots[1])*0.5);
+                    }
+                }
+            }
+
+        if(aDRootValues[nDRoots-1]<-SGM_ZERO)
+            {
+            aLookFrom.push_back(aDRoots[nDRoots-1]+1.0);
+            }
+        else if(aDRootValues[nDRoots-1]<SGM_ZERO)
+            {
+            aRoots.push_back(aDRoots[nDRoots-1]);
+            }
+        }
+
+    // Look for non-double roots.
+
+    size_t nLookFrom=aLookFrom.size();
+    for(Index1=0;Index1<nLookFrom;++Index1)
+        {
+        NewtonMethod(a,b,c,d,e,aLookFrom[Index1]);
+        aRoots.push_back(aLookFrom[Index1]);
+        }
+
+    std::sort(aRoots.begin(),aRoots.end());
+    return aRoots.size();
+    }
+
+/* Old Quartic code.
+
 size_t SGM::Quartic(double a,double b,double c,double d,double e,
                     std::vector<double> &aRoots)
     {
     if(fabs(a)<SGM_ZERO)
         {
         return SGM::Cubic(b,c,d,e,aRoots);
+        }
+
+    std::vector<double> aDRoots,aDRootValues;
+    size_t nDRoots=SGM::Cubic(4.0*a,3.0*b,2.0*c,d,aDRoots);
+    size_t Index1,Index2;
+    for(Index1=0;Index1<nDRoots;++Index1)
+        {
+        double t=aDRoots[Index1];
+        double t2=t*t;
+        double t3=t2*t;
+        double t4=t2*t2;
+        aDRootValues.push_back(a*t4+b*t3+c*t2+d*t+e);
         }
 
     double a2=a*a;
@@ -1463,44 +1713,93 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
             {
             S=0.5*sqrt(((Q+D0/Q)/a-2.0*p)/3.0);
             }
-        if(fabs(S)<SGM_ZERO)
-            {
-            throw;
-            }
 
-        double S2=S*S;
-        double QS=q/S;
-        double E=p*2+S2*4;
-        double R12=QS-E;
-        double R34=-QS-E;
-        double b4a=-b/(4*a);
+        if(SGM_ZERO<fabs(S))
+            {
+            double S2=S*S;
+            double QS=q/S;
+            double E=p*2+S2*4;
+            double R12=QS-E;
+            double R34=-QS-E;
+            double b4a=-b/(4*a);
 
-        if(fabs(R12)<SGM_ZERO)
-            {
-            aRoots.push_back(b4a-S);
-            }
-        else if(0<R12)
-            {
-            double F=0.5*sqrt(R12);
-            aRoots.push_back(b4a-S-F);
-            aRoots.push_back(b4a-S+F);
-            }
+            if(fabs(R12)<SGM_ZERO)
+                {
+                aRoots.push_back(b4a-S);
+                }
+            else if(0<R12)
+                {
+                double F=0.5*sqrt(R12);
+                aRoots.push_back(b4a-S-F);
+                aRoots.push_back(b4a-S+F);
+                }
 
-        if(fabs(R34)<SGM_ZERO)
-            {
-            aRoots.push_back(b4a+S);
+            if(fabs(R34)<SGM_ZERO)
+                {
+                aRoots.push_back(b4a+S);
+                }
+            else if(0<R34)
+                {
+                double F=0.5*sqrt(R34);
+                aRoots.push_back(b4a+S-F);
+                aRoots.push_back(b4a+S+F);
+                }
             }
-        else if(0<R34)
+        else
             {
-            double F=0.5*sqrt(R34);
-            aRoots.push_back(b4a+S-F);
-            aRoots.push_back(b4a+S+F);
+            // Use the roots of the derivative to find where to look for roots.
+            if((a>0 && aDRootValues.front()<0) || (a<0 && aDRootValues.front()>0))
+                {
+                double x=aDRoots.front()-1.0;
+                NewtonMethod(a,b,c,d,e,x);
+                aRoots.push_back(x);
+                }
+            if((a>0 && aDRootValues.back()<0) || (a<0 && aDRootValues.back()>0))
+                {
+                double x=aDRoots.back()+1.0;
+                NewtonMethod(a,b,c,d,e,x);
+                aRoots.push_back(x);
+                }
             }
         }
+
+    // Polish roots.
+
+    size_t nAnswer=aRoots.size();
+    for(Index1=0;Index1<nAnswer;++Index1)
+        {
+        NewtonMethod(a,b,c,d,e,aRoots[Index1]);
+        }
+
+    // Check for double roots.
+
+    for(Index1=0;Index1<nDRoots;++Index1)
+        {
+        if(fabs(aDRootValues[Index1])<SGM_MIN_TOL)
+            {
+            bool bFound=false;
+            for(Index2=0;Index2<nAnswer;++Index2)
+                {
+                if(fabs(aRoots[Index2]-aDRoots[Index1])<1E-4)
+                    {
+                    aRoots[Index2]=aDRoots[Index1];
+                    bFound=true;
+                    }
+                }
+            if(bFound==false)
+                {
+                aRoots.push_back(aDRoots[Index1]);
+                nAnswer=aRoots.size();
+                }
+            }
+        }
+
     std::sort(aRoots.begin(),aRoots.end());
+    aRoots.erase(unique(aRoots.begin(),aRoots.end() ),aRoots.end());
         
     return aRoots.size();
     }
+*/
 
 bool SGM::PolynomialFit(std::vector<SGM::Point2D> aPoints,
                         std::vector<double>       aCoefficients)

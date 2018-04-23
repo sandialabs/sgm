@@ -6,6 +6,7 @@ edge::edge(SGM::Result &rResult):
     topology(rResult,SGM::EntityType::EdgeType),
     m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
     {
+    m_dTolerance=SGM_MIN_TOL;
     }
 
 void edge::SetStart(vertex *pStart) 

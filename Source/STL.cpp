@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include <string>
 
+// Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
@@ -149,9 +150,9 @@ void SaveSTL(SGM::Result                  &rResult,
     }
 
 void SGM::SaveSTL(SGM::Result                  &rResult,
-                  std::string            const &FileName,
+                  std::string            const &sFileName,
                   SGM::Entity            const &EntityID,
                   SGM::TranslatorOptions const &Options)
     {
-    SaveSTL(rResult,FileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
+    ::SaveSTL(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }

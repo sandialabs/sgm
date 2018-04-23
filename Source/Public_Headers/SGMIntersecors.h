@@ -3,6 +3,8 @@
 
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
+#include "SGMEnums.h"
+#include <vector>
 
 namespace SGM
     {
@@ -12,19 +14,21 @@ namespace SGM
                    SGM::Entity         const &EntityID,
                    std::vector<SGM::Point3D> &aPoints);
 
-    size_t IntersectCurves(SGM::Result               &rResult,
-                           SGM::Curve          const &CurveID1,
-                           SGM::Curve          const &CurveID2,
-                           std::vector<SGM::Point3D> &aPoints,
-                           SGM::Edge           const *pEdge1=nullptr,
-                           SGM::Edge           const *pEdge2=nullptr);
+    size_t IntersectCurves(SGM::Result                        &rResult,
+                           SGM::Curve                   const &CurveID1,
+                           SGM::Curve                   const &CurveID2,
+                           std::vector<SGM::Point3D>          &aPoints,
+                           std::vector<SGM::IntersectionType> &aTypes,
+                           SGM::Edge                    const *pEdge1=nullptr,
+                           SGM::Edge                    const *pEdge2=nullptr);
 
-    size_t IntersectCurveAndSurface(SGM::Result               &rResult,
-                                    SGM::Curve          const &CurveID,
-                                    SGM::Surface        const &SurfaceID,
-                                    std::vector<SGM::Point3D> &aPoints,
-                                    SGM::Edge           const *pEdge=nullptr,
-                                    SGM::Face           const *pFace=nullptr);
+    size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
+                                    SGM::Curve                   const &CurveID,
+                                    SGM::Surface                 const &SurfaceID,
+                                    std::vector<SGM::Point3D>          &aPoints,
+                                    std::vector<SGM::IntersectionType> &aTypes,
+                                    SGM::Edge                    const *pEdge=nullptr,
+                                    SGM::Face                    const *pFace=nullptr);
 
     size_t IntersectSegment(SGM::Result               &rResult,
                             SGM::Segment3D      const &Segment,
