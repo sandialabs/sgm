@@ -15,55 +15,9 @@ size_t entity::GetID() const
 ///////////////////////////////////////////////////////////////////////////////
 
 thing::~thing() {
-  for (auto& pair : m_mAllEntities) {
-    auto e = pair.second;
-    /* hand-code a virtual destructor to avoid having a vtable for (entity) */
-    switch(e->GetType()) {
-      case SGM::BodyType:
-        delete static_cast<body*>(e);
-      case SGM::ComplexType:
-        delete static_cast<complex*>(e);
-      case SGM::VolumeType:
-        delete static_cast<volume*>(e);
-      case SGM::FaceType:
-        delete static_cast<face*>(e);
-      case SGM::EdgeType:
-        delete static_cast<edge*>(e);
-      case SGM::VertexType:
-        delete static_cast<vertex*>(e);
-      case SGM::SurfaceType:
-        delete static_cast<surface*>(e);
-      case SGM::PlaneType:
-        delete static_cast<plane*>(e);
-      case SGM::CylinderType:
-        delete static_cast<cylinder*>(e);
-      case SGM::ConeType:
-        delete static_cast<cone*>(e);
-      case SGM::SphereType:
-        delete static_cast<sphere*>(e);
-      case SGM::TorusType:
-        delete static_cast<torus*>(e);
-      case SGM::NUBSurfaceType:
-        delete static_cast<NUBsurface*>(e);
-      case SGM::NURBSurfaceType:
-        delete static_cast<NUBsurface*>(e);
-      case SGM::CurveType:
-        delete static_cast<curve*>(e);
-      case SGM::LineType:
-        delete static_cast<line*>(e);
-      case SGM::CircleType:
-        delete static_cast<circle*>(e);
-      case SGM::EllipseType:
-        delete static_cast<ellipse*>(e);
-      case SGM::NUBCurveType:
-        delete static_cast<NUBcurve*>(e);
-      case SGM::NURBCurveType:
-        delete static_cast<NURBcurve*>(e);
-      case SGM::PointCurveType:
-        delete static_cast<PointCurve*>(e);
-      default:
-        std::abort();
-    }
+  while (!m_mAllEntities.empty()) {
+    auto pEntity = m_mAllEntities.begin()->second;
+    DeleteEntity(pEntity);
   }
 }
 
@@ -78,6 +32,52 @@ void thing::DeleteEntity(entity *pEntity)
     {
     m_sTopLevelEntities.erase(pEntity);
     m_mAllEntities.erase(pEntity->GetID());
+    switch(pEntity->GetType()) {
+      case SGM::BodyType:
+        delete static_cast<body*>(pEntity);
+      case SGM::ComplexType:
+        delete static_cast<complex*>(pEntity);
+      case SGM::VolumeType:
+        delete static_cast<volume*>(pEntity);
+      case SGM::FaceType:
+        delete static_cast<face*>(pEntity);
+      case SGM::EdgeType:
+        delete static_cast<edge*>(pEntity);
+      case SGM::VertexType:
+        delete static_cast<vertex*>(pEntity);
+      case SGM::SurfaceType:
+        delete static_cast<surface*>(pEntity);
+      case SGM::PlaneType:
+        delete static_cast<plane*>(pEntity);
+      case SGM::CylinderType:
+        delete static_cast<cylinder*>(pEntity);
+      case SGM::ConeType:
+        delete static_cast<cone*>(pEntity);
+      case SGM::SphereType:
+        delete static_cast<sphere*>(pEntity);
+      case SGM::TorusType:
+        delete static_cast<torus*>(pEntity);
+      case SGM::NUBSurfaceType:
+        delete static_cast<NUBsurface*>(pEntity);
+      case SGM::NURBSurfaceType:
+        delete static_cast<NUBsurface*>(pEntity);
+      case SGM::CurveType:
+        delete static_cast<curve*>(pEntity);
+      case SGM::LineType:
+        delete static_cast<line*>(pEntity);
+      case SGM::CircleType:
+        delete static_cast<circle*>(pEntity);
+      case SGM::EllipseType:
+        delete static_cast<ellipse*>(pEntity);
+      case SGM::NUBCurveType:
+        delete static_cast<NUBcurve*>(pEntity);
+      case SGM::NURBCurveType:
+        delete static_cast<NURBcurve*>(pEntity);
+      case SGM::PointCurveType:
+        delete static_cast<PointCurve*>(pEntity);
+      default:
+        std::abort();
+    }
     }
 
 entity *thing::FindEntity(size_t ID) const
