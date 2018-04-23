@@ -482,7 +482,7 @@ namespace SGM
             thing *GetThing() const {return m_pThing;}
 
             entity *FindEntity(size_t nID) const;
-            
+
             void Delete(entity* e);
 
             ~Result();
