@@ -1,8 +1,6 @@
 #include "EntityClasses.h"
 #include <algorithm>
 #include <cstdlib>
-#include <cassert>
-#include <iostream>
 
 size_t entity::GetID() const
     {
@@ -15,24 +13,22 @@ size_t entity::GetID() const
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-thing::~thing() {
-  while (!m_mAllEntities.empty()) {
-    auto pEntity = m_mAllEntities.begin()->second;
-    DeleteEntity(pEntity);
-  }
-}
+thing::~thing()
+    {
+    while (!m_mAllEntities.empty()) {
+      auto pEntity = m_mAllEntities.begin()->second;
+      DeleteEntity(pEntity);
+    }
+    }
 
 void thing::AddToMap(size_t nID,entity *pEntity)
     {
-    auto it = m_mAllEntities.find(nID);
-    assert(it == m_mAllEntities.end());
-    m_mAllEntities.insert(it, std::make_pair(nID, pEntity));
+    m_mAllEntities[nID] = pEntity;
     }
 
 void thing::DeleteEntity(entity *pEntity)
     {
     m_sTopLevelEntities.erase(pEntity);
-    assert(m_mAllEntities.find(pEntity->GetID())->second == pEntity);
     m_mAllEntities.erase(pEntity->GetID());
     switch(pEntity->GetType()) {
       case SGM::BodyType:
