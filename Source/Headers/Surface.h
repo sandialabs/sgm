@@ -17,8 +17,6 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
-        void Remove(SGM::Result &rResult);
-
         void AddFace(face *pFace);
 
         void RemoveFace(face *pFace);
@@ -69,8 +67,6 @@ class surface : public entity
         curve *VParamLine(SGM::Result &rResult,double dV) const;
 
     protected:
-
-        ~surface() {}; // Call remove instead.
 
         std::set<face *> m_sFaces;
         SGM::EntityType  m_SurfaceType;

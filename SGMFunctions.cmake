@@ -4,8 +4,8 @@ macro(sgm_project_setup)
 
   set(CMAKE_LINK_DEPENDS_NO_SHARED ON)
   set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED 1)
-  set(CMAKE_CXX_EXTENSIONS 0)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
   if(POLICY CMP0061)
     cmake_policy(SET CMP0061 NEW)
@@ -21,10 +21,8 @@ macro(sgm_project_setup)
 
   # set the default compiler names to a more common name found in recognized compiler installations
   # some compiler installations do not include "cc" which is CMake's default
-  set(CMAKE_C_COMPILER_NAMES gcc)
   set(CMAKE_CXX_COMPILER_NAMES g++)
 
-  enable_language(C)
   enable_language(CXX)
 
   # if we found sierra compiler, set rpath to allow running without LD_LIBRARY_PATH

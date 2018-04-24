@@ -23,7 +23,7 @@ bool thing::Check(SGM::Result              &rResult,
                   std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
-    std::map<size_t,entity *>::const_iterator iter=m_mAllEntities.begin();
+    auto iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;

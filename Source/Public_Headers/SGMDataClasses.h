@@ -3,6 +3,7 @@
 
 #include "SGMEnums.h"
 #include <string>
+#include <memory>
 
 class thing;
 class entity;
@@ -482,11 +483,19 @@ namespace SGM
 
             entity *FindEntity(size_t nID) const;
 
+            void Delete(entity* e);
+
+            ~Result();
+
+            Result(Result&&);
+            Result(Result&) = delete;
+            Result& operator=(Result&) = delete;
+
         private:
 
             SGM::ResultType  m_nType;
             std::string      m_sMessage;
-            thing           *m_pThing;
+            thing* m_pThing;
         };
 
     ///////////////////////////////////////////////////////////////////////////

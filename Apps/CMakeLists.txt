@@ -1,8 +1,5 @@
-project(SGMApps)
-
 # glob for sources (manual re-run of cmake required if list of sources changes)
 file(GLOB SGMApps_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
-
 
 # create the SGM library with sources and headers
 add_executable(RunTests ${SGMApps_SOURCES})

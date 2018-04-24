@@ -50,8 +50,6 @@ class curve : public entity
 
     protected:
 
-        ~curve() {}; // Call remove instead.
-
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
