@@ -102,7 +102,7 @@ void OutputSurface(SGM::Result                  &,//rResult,
         case SGM::EntityType::PlaneType:
             {
             plane const *pPlane=(plane *)pSurface;
-            fprintf(pFile,"  Plane;\n",pSurface->GetID());
+            fprintf(pFile,"  Plane %ld;\n",pSurface->GetID());
             SGM::Point3D const &Origin=pPlane->m_Origin;
             fprintf(pFile,"    Origin %#.15G,%#.15G,%#.15G;\n",Origin.m_x,Origin.m_y,Origin.m_z);
             SGM::UnitVector3D const &XAxis=pPlane->m_XAxis;
@@ -170,7 +170,7 @@ void OutputFace(SGM::Result                  &rResult,
     size_t nEdges=sEdges.size();
     if(nEdges)
         {
-        fprintf(pFile,"      Edges",nEdges);
+        fprintf(pFile,"      Edges %ld",nEdges);
         std::set<edge *>::iterator EdgeIter=sEdges.begin();
         while(EdgeIter!=sEdges.end())
             {
@@ -179,26 +179,26 @@ void OutputFace(SGM::Result                  &rResult,
             }
         fprintf(pFile,";\n");
 
-        fprintf(pFile,"      Flipped",nEdges);
+        fprintf(pFile,"      Flipped\n");
         EdgeIter=sEdges.begin();
         while(EdgeIter!=sEdges.end())
             {
             SGM::EdgeSideType nType=pFace->GetEdgeType(*EdgeIter);
             if(nType==SGM::EdgeSideType::FaceOnLeftType)
                 {
-                fprintf(pFile," Left ",(*EdgeIter)->GetID());
+                fprintf(pFile," Left ");
                 }
             else if(nType==SGM::EdgeSideType::FaceOnRightType)
                 {
-                fprintf(pFile," Right",(*EdgeIter)->GetID());
+                fprintf(pFile," Right");
                 }
             else if(nType==SGM::EdgeSideType::InteriorEdgeType)
                 {
-                fprintf(pFile," Interior",(*EdgeIter)->GetID());
+                fprintf(pFile," Interior");
                 }
             else if(nType==SGM::EdgeSideType::SeamType)
                 {
-                fprintf(pFile," Seam",(*EdgeIter)->GetID());
+                fprintf(pFile," Seam");
                 }
             ++EdgeIter;
             }
