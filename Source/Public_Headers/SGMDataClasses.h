@@ -273,6 +273,8 @@ namespace SGM
 
            Interval3D(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
 
+           Interval3D(SGM::Point3D const &Pos0, double tol);
+
            explicit Interval3D(SGM::Point3D const &Pos);
 
            // Interrogation methods.
@@ -296,6 +298,22 @@ namespace SGM
            // Intersects this interval with the given interval.
 
            SGM::Interval3D const &operator&=(SGM::Interval3D const &);
+
+           bool IntersectBox(Interval3D const &);
+
+           bool IntersectHalfSpace(Point3D const &, UnitVector3D const &);
+
+            // we can use IntersectLineAndPlane in Intersectors.h on each 6 faces
+        // then check if the intersection lies within the face
+           bool IntersectLine(Point3D const &, UnitVector3D const &, double tol = 0.);
+
+           bool IntersectPlane(Point3D const &, UnitVector3D const &);
+
+           bool IntersectPoint(Point3D const &, double);
+
+           bool IntersectRay(Point3D const &, UnitVector3D const &, double tol = 0.);
+
+           bool IntersectSegment(Point3D const &, Point3D const &, double tol = 0.);
 
            // Returns true if the two intervals have a non-empty intersection.
 
