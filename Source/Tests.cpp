@@ -355,7 +355,7 @@ bool ParseLine(std::string const &sFileLine,
     for(Index1=0;Index1<nArguments;++Index1)
         {
         char c=aArguments[Index1].c_str()[0];
-        if(c==-109 || c==-108)  // String
+        if(c=='\"')  // String
             {
             size_t nLength=aArguments[Index1].length()-1;
             std::string sString;
