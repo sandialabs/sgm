@@ -498,11 +498,6 @@ entity *SGM::Result::FindEntity(size_t nID) const
     return m_pThing->FindEntity(nID);
     }
 
-void SGM::Result::Delete(entity* e)
-    {
-      m_pThing->DeleteEntity(e);
-    }
-
 void SGM::Result::SetMessage(std::string const &sMessage)
     {
     m_sMessage+=sMessage;
@@ -513,15 +508,6 @@ void SGM::Result::Clear()
     m_sMessage.clear();
     m_nType=SGM::ResultType::ResultTypeOK;
     }
-
-SGM::Result::Result(Result&& other) {
-    m_nType = other.m_nType;
-    m_sMessage = std::move(other.m_sMessage);
-    m_pThing = other.m_pThing;
-    other.m_pThing = nullptr;
-    }
-
-SGM::Result::~Result() { delete m_pThing; }
 
 ///////////////////////////////////////////////////////////////////////////////
 //

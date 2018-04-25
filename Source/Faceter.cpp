@@ -546,7 +546,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                 {
                 aSeamVs.push_back(pSeam->Inverse(aSeamPoints3D[Index1]));
                 }
-            rResult.Delete(pSeam);
+            rResult.GetThing()->DeleteEntity(pSeam);
             std::vector<size_t> aPolygon;
             aPolygon.reserve(nSeamPoints3D*2-2);
             aPoints2D.reserve(nSeamPoints3D*2-2);

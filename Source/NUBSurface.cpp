@@ -23,8 +23,8 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     std::vector<SGM::Point3D> aUPoints,aVPoints;
     FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,&aUParams);
     FacetCurve(pVCurve,pVCurve->GetDomain(),Options,aVPoints,&aVParams);
-    rResult.Delete(pUCurve);
-    rResult.Delete(pVCurve);
+    rResult.GetThing()->DeleteEntity(pUCurve);
+    rResult.GetThing()->DeleteEntity(pVCurve);
     size_t Index1,Index2;
     size_t nUParams=aUParams.size();
     size_t nVParams=aVParams.size();

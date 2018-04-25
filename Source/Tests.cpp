@@ -904,7 +904,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         plane *pPlane=new plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
 
         bool bAnswer=TestSurface(pPlane,SGM::Point2D(0.5,0.2));
-        rResult.Delete(pPlane);
+        rResult.GetThing()->DeleteEntity(pPlane);
 
         return bAnswer;
         }
@@ -920,7 +920,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         sphere *pSphere=new sphere(rResult,Origin,dRadius,&XAxis,&YAxis);
 
         bool bAnswer=TestSurface(pSphere,SGM::Point2D(0.5,0.2));
-        rResult.Delete(pSphere);
+        rResult.GetThing()->DeleteEntity(pSphere);
 
         return bAnswer;
         }
@@ -934,7 +934,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         cylinder *pCylinder=new cylinder(rResult,Bottom,Top,dRadius);
 
         bool bAnswer=TestSurface(pCylinder,SGM::Point2D(0.5,0.2));
-        rResult.Delete(pCylinder);
+        rResult.GetThing()->DeleteEntity(pCylinder);
 
         return bAnswer;
         }
@@ -949,7 +949,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         //bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
         bool bAnswer=TestSurface(pTorus,SGM::Point2D(SGM_HALF_PI,SGM_HALF_PI));
-        rResult.Delete(pTorus);
+        rResult.GetThing()->DeleteEntity(pTorus);
 
         return bAnswer;
         }
@@ -963,7 +963,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         cone *pCone=new cone(rResult,Origin,ZAxis,2,0.4);
 
         bool bAnswer=TestSurface(pCone,SGM::Point2D(0.5,0.2));
-        rResult.Delete(pCone);
+        rResult.GetThing()->DeleteEntity(pCone);
 
         return bAnswer;
         }
@@ -981,7 +981,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         NUBcurve *pNUB=new NUBcurve(rResult,aControlPoints,aKnots);
 
         bool bAnswer=TestCurve(pNUB,0.45);
-        rResult.Delete(pNUB);
+        rResult.GetThing()->DeleteEntity(pNUB);
 
         return bAnswer;
         }
@@ -994,7 +994,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         line *pLine1=new line(rResult,Pos0,Pos1);
         bool bAnswer=TestCurve(pLine1,0.5);
-        rResult.Delete(pLine1);
+        rResult.GetThing()->DeleteEntity(pLine1);
 
         line *pLine2=new line(rResult,Pos0,Axis,dScale);
         if(TestCurve(pLine2,0.5)==false)
@@ -1007,8 +1007,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             {
             bAnswer=false;
             }
-        rResult.Delete(pLine2);
-        rResult.Delete(pLine3);
+        rResult.GetThing()->DeleteEntity(pLine2);
+        rResult.GetThing()->DeleteEntity(pLine3);
 
         return bAnswer;
         }
@@ -1023,14 +1023,14 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
    
         circle *pCircle1=new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain);
         bool bAnswer=TestCurve(pCircle1,0.5);
-        rResult.Delete(pCircle1);
+        rResult.GetThing()->DeleteEntity(pCircle1);
 
         circle *pCircle2=new circle(rResult,Center,Normal,dRadius,&XAxis);
         if(TestCurve(pCircle2,0.5)==false)
             {
             bAnswer=false;
             }
-        rResult.Delete(pCircle2);
+        rResult.GetThing()->DeleteEntity(pCircle2);
 
         circle *pCircle3=new circle(rResult,Center,Normal,dRadius);
         if(TestCurve(pCircle3,0.5)==false)
@@ -1043,8 +1043,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             {
             bAnswer=false;
             }
-        rResult.Delete(pCircle3);
-        rResult.Delete(pCircle4);
+        rResult.GetThing()->DeleteEntity(pCircle3);
+        rResult.GetThing()->DeleteEntity(pCircle4);
 
         return bAnswer;
         }
@@ -1060,7 +1060,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D Vec1,Vec2;
         double k1,k2;
         pTorus->Curvature(uv,Vec1,Vec2,k1,k2);
-        rResult.Delete(pTorus);
+        rResult.GetThing()->DeleteEntity(pTorus);
 
         if(SGM::NearEqual(Vec1,SGM::UnitVector3D(0.0,1.0,0),SGM_ZERO)==false)
             {
@@ -1496,7 +1496,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
-        rResult.Delete(pNUB);
+        rResult.GetThing()->DeleteEntity(pNUB);
 
         return bAnswer;
         }
@@ -1704,7 +1704,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
-        rResult.Delete(pTorus);
+        rResult.GetThing()->DeleteEntity(pTorus);
 
         return bAnswer;
         }
