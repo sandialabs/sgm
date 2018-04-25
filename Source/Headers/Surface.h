@@ -68,6 +68,8 @@ class surface : public entity
 
         curve *VParamLine(SGM::Result &rResult,double dV) const;
 
+        void Transform(SGM::Transform3D const &Trans);
+
     protected:
 
         ~surface() {}; // Call remove instead.

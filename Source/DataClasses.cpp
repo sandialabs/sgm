@@ -95,6 +95,27 @@ double SGM::Vector3D::MagnitudeSquared() const
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//  Vector4D methods
+//
+///////////////////////////////////////////////////////////////////////////////
+
+SGM::Vector4D::Vector4D(Point4D const &Pos):m_x(Pos.m_x),m_y(Pos.m_y),
+    m_z(Pos.m_z),m_w(Pos.m_w)
+    {
+    }
+
+SGM::Vector4D SGM::Vector4D::operator*(double dScale) const
+    {
+    return SGM::Vector4D(m_x*dScale,m_y*dScale,m_z*dScale,m_w*dScale);
+    }
+
+SGM::Vector4D SGM::Vector4D::operator/(double dScale) const
+    {
+    return SGM::Vector4D(m_x/dScale,m_y/dScale,m_z/dScale,m_w/dScale);
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //  Point3D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -124,6 +145,21 @@ SGM::Point3D SGM::Point3D::operator+=(SGM::Vector3D const &Vec)
     m_x+=Vec.m_x;
     m_y+=Vec.m_y;
     m_z+=Vec.m_z;
+    return *this;
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Point3D methods
+//
+///////////////////////////////////////////////////////////////////////////////
+
+SGM::Point4D SGM::Point4D::operator+=(SGM::Vector4D const &Vec) 
+    {
+    m_x+=Vec.m_x;
+    m_y+=Vec.m_y;
+    m_z+=Vec.m_z;
+    m_w+=Vec.m_w;
     return *this;
     }
 
@@ -602,6 +638,23 @@ bool SGM::Segment3D::Intersect(SGM::Segment3D const &Seg,
 //
 ///////////////////////////////////////////////////////////////////////////
 
+double SGM::Transform3D::Scale(SGM::UnitVector3D const &Direction) const
+    {
+    return ((*this)*Vector3D(Direction)).Magnitude();
+    }
+
+double SGM::Transform3D::Scale() const
+    {
+    double dX=Scale(SGM::UnitVector3D(1.0,0.0,0.0));
+    double dY=Scale(SGM::UnitVector3D(0.0,1.0,0.0));
+    double dZ=Scale(SGM::UnitVector3D(0.0,0.0,1.0));
+    if(SGM::NearEqual(dX,dY,SGM_ZERO,false) && SGM::NearEqual(dZ,dY,SGM_ZERO,false))
+        {
+        return dX;
+        }
+    return 0.0;
+    }
+
 void SGM::Transform3D::Inverse(SGM::Transform3D &Trans) const
     {
     double s0 = m_Matrix[0].m_x * m_Matrix[1].m_y - m_Matrix[1].m_x * m_Matrix[0].m_y;
@@ -749,6 +802,11 @@ SGM::Vector3D SGM::operator*(double dValue,SGM::Vector3D const &Vec)
     return SGM::Vector3D(Vec.m_x*dValue,Vec.m_y*dValue,Vec.m_z*dValue);
     }
 
+SGM::Vector4D SGM::operator*(double dValue,SGM::Vector4D const &Vec)
+    {
+    return SGM::Vector4D(Vec.m_x*dValue,Vec.m_y*dValue,Vec.m_z*dValue,Vec.m_w*dValue);
+    }
+
 SGM::Vector3D SGM::operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1)
     {
     return SGM::Vector3D(Vec0.m_y*Vec1.m_z-Vec0.m_z*Vec1.m_y,
@@ -766,9 +824,19 @@ SGM::Point3D SGM::operator+(SGM::Point3D const &Pos,SGM::Vector3D const &Vec)
     return SGM::Point3D(Pos.m_x+Vec.m_x,Pos.m_y+Vec.m_y,Pos.m_z+Vec.m_z);
     }
 
+SGM::Point4D SGM::operator+(SGM::Point4D const &Pos,SGM::Vector4D const &Vec)
+    {
+    return SGM::Point4D(Pos.m_x+Vec.m_x,Pos.m_y+Vec.m_y,Pos.m_z+Vec.m_z,Pos.m_w+Vec.m_w);
+    }
+
 SGM::Point3D SGM::operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec)
     {
     return SGM::Point3D(Pos.m_x-Vec.m_x,Pos.m_y-Vec.m_y,Pos.m_z-Vec.m_z);
+    }
+
+SGM::Point4D SGM::operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec)
+    {
+    return SGM::Point4D(Pos.m_x-Vec.m_x,Pos.m_y-Vec.m_y,Pos.m_z-Vec.m_z,Pos.m_w-Vec.m_w);
     }
 
 SGM::Vector3D SGM::operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1)

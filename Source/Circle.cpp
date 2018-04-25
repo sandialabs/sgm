@@ -10,8 +10,8 @@ circle::circle(SGM::Result             &rResult,
                SGM::Point3D      const &Center,
                SGM::UnitVector3D const &Normal,
                double                   dRadius,
-               SGM::UnitVector3D const *pXAxis,    //TODO: not consistent practice accepting pointers here
-               SGM::Interval1D   const *pDomain):  // instead overload the constructor
+               SGM::UnitVector3D const *pXAxis,    
+               SGM::Interval1D   const *pDomain):  
     curve(rResult,SGM::CircleType),m_Center(Center),m_Normal(Normal)
     {
     m_dRadius=dRadius;

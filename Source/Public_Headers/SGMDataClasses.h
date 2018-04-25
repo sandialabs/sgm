@@ -10,6 +10,7 @@ class entity;
 namespace SGM
     {
     class Vector3D;
+    class Vector4D;
     class Point3D;
 
     // Note that for performance reasons the basic data classes DO NOT
@@ -71,6 +72,8 @@ namespace SGM
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
+        Point4D operator+=(Vector4D const &Vec);
+
         double m_x;
         double m_y;
         double m_z;
@@ -127,6 +130,12 @@ namespace SGM
         Vector4D() {}
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
+
+        explicit Vector4D(Point4D const &Pos);
+
+        Vector4D operator*(double dScale) const;
+
+        Vector4D operator/(double dScale) const;
 
         double m_x;
         double m_y;
@@ -445,6 +454,14 @@ namespace SGM
 
             void Inverse(Transform3D &Trans) const;
 
+            // Returns the scale in a given direction.
+
+            double Scale(SGM::UnitVector3D const &Direction) const;
+
+            // Returns either zero or a uniform scale value.
+
+            double Scale() const;
+
             // Get methods.
 
             SGM::Vector4D const *GetData() const {return m_Matrix;}
@@ -505,9 +522,15 @@ namespace SGM
 
     SGM::Point3D operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
 
+    SGM::Point4D operator+(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+
+    SGM::Point4D operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+
     SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
     SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
+
+    SGM::Vector4D operator*(double dValue,SGM::Vector4D const &Vec);
 
     SGM::Vector3D operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 

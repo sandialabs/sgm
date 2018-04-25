@@ -113,6 +113,14 @@ size_t IntersectLineAndSphere(SGM::Point3D                  const &Origin,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes);
 
+size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
+                            SGM::UnitVector3D            const &Axis,
+                            SGM::Interval1D              const &Domain,
+                            cone                         const *pCone,
+                            double                              dTolerance,
+                            std::vector<SGM::Point3D>          &aPoints,
+                            std::vector<SGM::IntersectionType> &aTypes);
+
 size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              SGM::UnitVector3D            const &Axis,
                              SGM::Interval1D              const &Domain,
@@ -120,6 +128,14 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              double                              dTolerance,
                              std::vector<SGM::Point3D>          &aPoints,
                              std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
+                                  SGM::UnitVector3D            const &Axis,
+                                  SGM::Interval1D              const &Domain,
+                                  NUBsurface                   const *pNUBSurface,
+                                  double                              dTolerance,
+                                  std::vector<SGM::Point3D>          &aPoints,
+                                  std::vector<SGM::IntersectionType> &aTypes);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

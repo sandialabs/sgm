@@ -307,6 +307,78 @@ size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
+                            SGM::UnitVector3D            const &Axis,
+                            SGM::Interval1D              const &,//Domain,
+                            cone                         const *pCone,
+                            double                              dTolerance,
+                            std::vector<SGM::Point3D>          &aPoints,
+                            std::vector<SGM::IntersectionType> &aTypes)
+    {
+    //  Empty, one point tangent or not, two points.
+
+    // A point is on a cone with apex at the origin and axis the positive 
+    // z-axis if and only if x^2+y^2=(cos(half angle)/sin(half angle))^2*z^2.
+
+    double dCosHalfAngle=pCone->m_dCosHalfAngle;
+    double dSinHalfAngle=pCone->m_dSinHalfAngle;
+    double dCoTan=dCosHalfAngle/dSinHalfAngle;
+    double s=dCoTan*dCoTan;
+
+    // x^2+y^2=s*z^2
+    //
+    // x=a+t*b
+    // y=c+t*d
+    // z=e+t*f
+    //
+    // (a+t*b)^2+(c+t*d)^2-s*(e+t*f)^2=0
+
+    double a=Origin.m_x;
+    double c=Origin.m_y;
+    double e=Origin.m_z;
+    double b=Axis.m_x;
+    double d=Axis.m_y;
+    double f=Axis.m_z;
+
+    double A = d*d-f*f*s;
+    double B = 2*a*b+2*c*d-2*e*f*s;
+    double C = a*a+c*c-e*e*s;
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<double> aRoots;
+    size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
+    if(nRoots==0 && SGM_ZERO<fabs(A))
+        {
+        double x=-B/(2.0*A);
+        aHits.push_back(Origin+x*Axis);
+        }
+    else if(nRoots==1)
+        {
+        aHits.push_back(Origin+aRoots[0]*Axis);
+        }
+    else
+        {
+        aHits.push_back(Origin+aRoots[0]*Axis);
+        aHits.push_back(Origin+aRoots[1]*Axis);
+        }
+
+    // Check all the hits.
+
+    size_t nHits=aHits.size();
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aHits[Index1];
+        SGM::Point3D CPos;
+        pCone->Inverse(Pos,&CPos);
+        if(SGM::NearEqual(Pos,CPos,dTolerance))
+            {
+            aPoints.push_back(CPos);
+            }
+        }
+    return aPoints.size();
+    }
+
 size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              SGM::UnitVector3D            const &Axis,
                              double                              dMajorRadius,
@@ -386,6 +458,17 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     return nHits;
     }
 
+size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &,//Origin,
+                                  SGM::UnitVector3D            const &,//Axis,
+                                  SGM::Interval1D              const &,//Domain,
+                                  NUBsurface                   const *,//pNUBSurface,
+                                  double                              ,//dTolerance,
+                                  std::vector<SGM::Point3D>          &,//aPoints,
+                                  std::vector<SGM::IntersectionType> &)//aTypes)
+    {
+    return 0;
+    }
+
 size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
                                SGM::UnitVector3D            const &Axis,
                                SGM::Interval1D              const &Domain,
@@ -411,6 +494,10 @@ size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
         case SGM::EntityType::TorusType:
             {
             return IntersectLineAndTorus(Origin,Axis,Domain,(torus const *)pSurface,dTolerance,aPoints,aTypes);
+            }
+        case SGM::EntityType::NUBSurfaceType:
+            {
+            return IntersectLineAndNUBSurface(Origin,Axis,Domain,(NUBsurface const *)pSurface,dTolerance,aPoints,aTypes);
             }
         default:
             {
