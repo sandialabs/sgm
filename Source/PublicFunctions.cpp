@@ -17,6 +17,14 @@
 #include "Topology.h"
 #include "Intersectors.h"
 
+void SGM::DeleteEntity(SGM::Result &rResult,
+                       SGM::Entity &EntityID)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    rResult.GetThing()->DeleteEntity(pEntity);
+    }
+
+
 size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                             SGM::Curve                   const &CurveID1,
                             SGM::Curve                   const &CurveID2,
@@ -175,15 +183,14 @@ void SGM::FindVertices(SGM::Result           &rResult,
         }
     }
 
-SGM::Result SGM::CreateResult()
-    {
-    thing *pThing=new thing();
-    return std::move(SGM::Result(pThing));
-    }
-
 thing *SGM::CreateThing()
     {
     return new thing();
+    }
+
+void SGM::DeleteThing(thing *pThing)
+    {
+    delete pThing;
     }
 
 SGM::Body SGM::CreateBlock(SGM::Result        &rResult,
