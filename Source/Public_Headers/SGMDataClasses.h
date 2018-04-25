@@ -3,6 +3,7 @@
 
 #include "SGMEnums.h"
 #include <string>
+#include <memory>
 
 class thing;
 class entity;

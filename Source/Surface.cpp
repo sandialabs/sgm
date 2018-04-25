@@ -19,11 +19,6 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighV=false;
     }
 
-void surface::Remove(SGM::Result &rResult)
-    {
-    rResult.GetThing()->DeleteEntity(this);
-    }
-
 void surface::AddFace(face *pFace) 
     {
     void* other = (void*)this;

@@ -4,8 +4,7 @@
 *.ipr
 .idea/
 # CMake
-cmake-build-debug/
-cmake-build-release/
+cmake-build-*/
 
 # Eclipse project files
 .settings/

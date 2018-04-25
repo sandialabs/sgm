@@ -1,4 +1,4 @@
-// Tests “Block Cylinder On One Side.stp”;
-ReadFile(“STEP Parts/Block Cylinder On One Side.stp”,EntityList);
-SaveSTL(“STL Parts/Block Cylinder On One Side.stl”,EntityList[0]);
-CompareFiles(“STL Parts/Block Cylinder On One Side.stl”,”Test Answers/Block Cylinder On One Side.stl”);
+// Tests "Block Cylinder On One Side.stp";
+ReadFile("STEP Parts/Block Cylinder On One Side.stp",EntityList);
+SaveSTL("STL Parts/Block Cylinder On One Side.stl",EntityList[0]);
+CompareFiles("STL Parts/Block Cylinder On One Side.stl","Test Answers/Block Cylinder On One Side.stl");

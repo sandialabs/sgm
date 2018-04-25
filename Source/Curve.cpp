@@ -15,11 +15,6 @@ curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     m_bClosed=false;
     }
 
-void curve::Remove(SGM::Result &rResult)
-    {
-    rResult.GetThing()->DeleteEntity(this);
-    }
-
 void curve::AddEdge(edge *pEdge) 
     {
     m_sEdges.insert(pEdge);

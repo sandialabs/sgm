@@ -525,7 +525,6 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
             std::vector<double> aSeamVs;
             FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D);
-            pSeam->Remove(rResult);
             
             // Trim off the two singularities.
 
@@ -547,6 +546,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                 {
                 aSeamVs.push_back(pSeam->Inverse(aSeamPoints3D[Index1]));
                 }
+            rResult.GetThing()->DeleteEntity(pSeam);
             std::vector<size_t> aPolygon;
             aPolygon.reserve(nSeamPoints3D*2-2);
             aPoints2D.reserve(nSeamPoints3D*2-2);

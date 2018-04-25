@@ -6,28 +6,13 @@ IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 ENDIF()
 
 
-project(SGMall NONE)
+project(SGM VERSION 1.0 LANGUAGES NONE)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/SGMFunctions.cmake)
 sgm_project_setup()
 
-
-# hard coded version number
-
-#set(SGM_VERSION_MAJOR 1)
-#set(SGM_VERSION_MINOR 0)
-
-
 # build settings for all projects
-set(BUILD_SHARED_LIBS 1)
-
-# platform specific build settings for all projects
-if(CMAKE_SYSTEM_NAME MATCHES Linux)
-#  add_definitions(-DSGM_LINUX)
-  if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 4.9)
-   set(CMAKE_C11_STANDARD_COMPILE_OPTION "-std=c11") 
-  endif()
-endif()
+set(BUILD_SHARED_LIBS ON)
 
 #if(CMAKE_SYSTEM_NAME MATCHES Darwin)
 #  add_definitions(-DSGM_OSX)
