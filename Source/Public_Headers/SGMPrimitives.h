@@ -6,6 +6,8 @@
 #include <set>
 #include <vector>
 
+#include "sgm_export.h"
+
 class thing;
 
 namespace SGM
@@ -16,9 +18,9 @@ namespace SGM
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-thing *CreateThing();
+thing SGM_EXPORT *CreateThing();
 
-void   DeleteThing(thing *pThing);  // if you create a thing, you are responsible for deleting it
+void   SGM_EXPORT DeleteThing(thing *pThing);  // if you create a thing, you are responsible for deleting it
 
 ///////////////////////////////////////////////////////////////////////////////
 //
