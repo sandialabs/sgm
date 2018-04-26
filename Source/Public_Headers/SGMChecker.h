@@ -16,7 +16,7 @@ namespace SGM
                 m_bDerivatives(false),
                 m_bEvaluaters(false) {}
 
-            CheckOptions(std::string);
+            explicit CheckOptions(std::string);
 
             std::string FindString() const;
 

@@ -73,20 +73,16 @@ bool SGM::FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
         SumYZ+=y*z;
         SumZZ+=z*z;
         }
-    double aaMatrix[3][3];
-    aaMatrix[0][0]=SumXX;
-    aaMatrix[0][1]=SumXY;
-    aaMatrix[0][2]=SumXZ;
-    aaMatrix[1][0]=SumXY;
-    aaMatrix[1][1]=SumYY;
-    aaMatrix[1][2]=SumYZ;
-    aaMatrix[2][0]=SumXZ;
-    aaMatrix[2][1]=SumYZ;
-    aaMatrix[2][2]=SumZZ;
+    const double aaMatrix[3][3] =
+        {
+        SumXX, SumXY, SumXZ,
+        SumXY, SumYY, SumYZ,
+        SumXZ, SumYZ, SumZZ
+        };
 
     std::vector<double> aValues;
     std::vector<SGM::UnitVector3D> aVectors;
-    size_t nFound=SGM::FindEigenVectors3D(aaMatrix,aValues,aVectors);
+    size_t nFound=SGM::FindEigenVectors3D(&aaMatrix[0],aValues,aVectors);
     if(nFound==3)
         {
         XVec=aVectors[0];
@@ -326,16 +322,22 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
                          SGM::Point2D const &C,
                          SGM::Point2D const &D)
     {
-    double aMatrix[3][3];
-    aMatrix[0][0]=A.m_u-D.m_u;
-    aMatrix[0][1]=A.m_v-D.m_v;
-    aMatrix[0][2]=aMatrix[0][0]*aMatrix[0][0]+aMatrix[0][1]*aMatrix[0][1];
-    aMatrix[1][0]=B.m_u-D.m_u;
-    aMatrix[1][1]=B.m_v-D.m_v;
-    aMatrix[1][2]=aMatrix[1][0]*aMatrix[1][0]+aMatrix[1][1]*aMatrix[1][1];
-    aMatrix[2][0]=C.m_u-D.m_u;
-    aMatrix[2][1]=C.m_v-D.m_v;
-    aMatrix[2][2]=aMatrix[2][0]*aMatrix[2][0]+aMatrix[2][1]*aMatrix[2][1];
+    const double a00 = A.m_u-D.m_u;
+    const double a01 = A.m_v-D.m_v;
+    const double a02 = a00*a00+a01*a01;
+    const double a10 = B.m_u-D.m_u;
+    const double a11 = B.m_v-D.m_v;
+    const double a12 = a10*a10+a11*a11;
+    const double a20 = C.m_u-D.m_u;
+    const double a21 = C.m_v-D.m_v;
+    const double a22 = a20*a20+a21*a21;
+
+    const double aMatrix[3][3] =
+        {
+        a00, a01, a02,
+        a10, a11, a12,
+        a20, a21, a22
+        };
     double dDet=SGM::Determinate3D(aMatrix);
     return 1E-12<dDet;
     }
@@ -412,9 +414,9 @@ size_t SGM::FindAdjacences2D(std::vector<size_t> const &aTriangles,
         size_t a=aTriangles[Index1];
         size_t b=aTriangles[Index1+1];
         size_t c=aTriangles[Index1+2];
-        aEdges.push_back(EdgeData(a,b,Index1,0));
-        aEdges.push_back(EdgeData(b,c,Index1,1));
-        aEdges.push_back(EdgeData(c,a,Index1,2));
+        aEdges.emplace_back(a,b,Index1,0);
+        aEdges.emplace_back(b,c,Index1,1);
+        aEdges.emplace_back(c,a,Index1,2);
         }
     std::sort(aEdges.begin(),aEdges.end());
     size_t nEdges=aEdges.size();
@@ -503,7 +505,7 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
         {
         SGM::Point2D const &Pos2=aPoints[aOutsidePolygon[Index1]];
         double dLengthSquared(Pos1.DistanceSquared(Pos2));
-        aSpans.push_back(std::pair<double,size_t>(dLengthSquared,Index1));
+        aSpans.emplace_back(dLengthSquared,Index1);
         }
     std::sort(aSpans.begin(),aSpans.end());
     for(Index1=0;Index1<nOutside;++Index1)
@@ -1158,8 +1160,8 @@ size_t SGM::FindEigenVectors2D(double                  const  aaMatrix[2][2],
         {
         aValues.push_back(aaMatrix[0][0]);
         aValues.push_back(aaMatrix[1][1]);
-        aVectors.push_back(SGM::UnitVector2D(1.0,0.0));
-        aVectors.push_back(SGM::UnitVector2D(0.0,1.0));
+        aVectors.emplace_back(1.0,0.0);
+        aVectors.emplace_back(0.0,1.0);
         return 2;
         }
 
@@ -1192,7 +1194,7 @@ size_t SGM::FindEigenVectors2D(double                  const  aaMatrix[2][2],
         if(LinearSolve(aaMat)==true)
             {
             aValues.push_back(aRoots[Index1]);
-            aVectors.push_back(SGM::UnitVector2D(aaMat[0].back(),aaMat[1].back()));
+            aVectors.emplace_back(aaMat[0].back(),aaMat[1].back());
             ++nAnswer;
             }
         if(fabs(aaMat[1][0])<SGM_ZERO && fabs(aaMat[1][2])<SGM_ZERO)
@@ -1200,7 +1202,8 @@ size_t SGM::FindEigenVectors2D(double                  const  aaMatrix[2][2],
             // In this case we have aX+bY=0.0 and X^2+Y^2=1.0
             // Let X=1 -> a+bY=0.0 -> Y=-a/b then normalize the vector.
             aValues.push_back(aRoots[Index1]);
-            aVectors.push_back(SGM::UnitVector2D(1.0,-aaMat[0][0]/aaMat[0][1]));
+            double ratio = -aaMat[0][0]/aaMat[0][1];
+            aVectors.emplace_back(1.0,ratio);
             ++nAnswer;
             }
         }
@@ -1238,9 +1241,9 @@ size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
         aValues.push_back(aaMatrix[0][0]);
         aValues.push_back(aaMatrix[1][1]);
         aValues.push_back(aaMatrix[2][2]);
-        aVectors.push_back(SGM::UnitVector3D(1.0,0.0,0.0));
-        aVectors.push_back(SGM::UnitVector3D(0.0,1.0,0.0));
-        aVectors.push_back(SGM::UnitVector3D(0.0,0.0,1.0));
+        aVectors.emplace_back(1.0,0.0,0.0);
+        aVectors.emplace_back(0.0,1.0,0.0);
+        aVectors.emplace_back(0.0,0.0,1.0);
         return 3;
         }
 
@@ -1282,13 +1285,14 @@ size_t SGM::FindEigenVectors3D(double                   const aaMatrix[3][3],
             if(LinearSolve(aaMat)==true)
                 {
                 aValues.push_back(aRoots[Index1]);
-                aVectors.push_back(SGM::UnitVector3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back()));
+                aVectors.emplace_back(aaMat[0].back(),aaMat[1].back(),aaMat[2].back());
                 ++nAnswer;
                 }
             else if(dTol<fabs(aaMat[0][0]) && dTol<fabs(aaMat[0][1]))
                 {
                 aValues.push_back(aRoots[Index1]);
-                aVectors.push_back(SGM::UnitVector3D(1.0,-aaMat[0][0]/aaMat[0][1],0.0));
+                double ratio=-aaMat[0][0]/aaMat[0][1];
+                aVectors.emplace_back(1.0,ratio,0.0);
                 ++nAnswer;
                 }
             }

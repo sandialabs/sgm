@@ -163,7 +163,7 @@ double curve::Inverse(SGM::Point3D const &Pos,
 SGM::Vector3D curve::Curvature(double t) const
     {
     SGM::Vector3D dt,ddt;
-    Evaluate(t,NULL,&dt,&ddt);
+    Evaluate(t,nullptr,&dt,&ddt);
     double dSpeed=dt%dt;
     return ((dt*ddt)*dt)/(dSpeed*dSpeed);
     }

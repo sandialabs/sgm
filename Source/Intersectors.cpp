@@ -264,7 +264,7 @@ size_t IntersectLineAndCircle(SGM::Point3D                  const &Origin,
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
-    else if(aPoints2.size()==0)
+    else if(aPoints2.empty())
         {
         SGM::Point3D Pos;
         pCircle->Inverse(aPoints2[0],&Pos);

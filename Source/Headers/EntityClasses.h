@@ -105,7 +105,7 @@ class body : public topology
 
         // Construction methods
 
-        body(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+        explicit body(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
 
         void AddVolume(volume *pVolume);
 
@@ -132,7 +132,7 @@ class complex : public entity
 
         // Construction methods
 
-        complex(SGM::Result &rResult);
+        explicit complex(SGM::Result &rResult);
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints);
@@ -179,7 +179,7 @@ class volume : public topology
     {
     public:
 
-        volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType) {}
+        explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
 
         void AddFace(face *pFace);
 
@@ -216,7 +216,7 @@ class face : public topology
 
         // Construction methods
 
-        face(SGM::Result &rResult);
+        explicit face(SGM::Result &rResult);
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
 
@@ -297,7 +297,7 @@ class edge : public topology
     {
     public:
 
-        edge(SGM::Result &rResult);
+        explicit edge(SGM::Result &rResult);
 
         // Set Methods
 

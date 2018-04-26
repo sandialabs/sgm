@@ -21,7 +21,7 @@ namespace SGM
         {
         public:
 
-            BoxTree(size_t nReserve=0);
+            explicit BoxTree(size_t nReserve=0);
 
             void AddBox(SGM::Interval3D const &Box,
                         void            const *pData);

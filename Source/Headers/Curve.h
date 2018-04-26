@@ -217,7 +217,7 @@ class PointCurve: public curve
 
         PointCurve(SGM::Result           &rResult,
                    SGM::Point3D    const &Pos,
-                   SGM::Interval1D const *pDomain=NULL);
+                   SGM::Interval1D const *pDomain=nullptr);
 
     public:
 

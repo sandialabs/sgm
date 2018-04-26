@@ -709,18 +709,18 @@ void surface::Curvature(SGM::Point2D const &uv,
 
     SGM::UnitVector3D Norm;
     SGM::Vector3D Du,Dv,Duu,Duv,Dvv;
-    Evaluate(uv,NULL,&Du,&Dv,&Norm,&Duu,&Duv,&Dvv);
+    Evaluate(uv,nullptr,&Du,&Dv,&Norm,&Duu,&Duv,&Dvv);
     double L=Duu%Norm;
     double M=Duv%Norm;
     double N=Dvv%Norm;
-    double aaMatrix[2][2];
-    aaMatrix[0][0]=L;
-    aaMatrix[1][0]=M;
-    aaMatrix[0][1]=M;
-    aaMatrix[1][1]=N;
+    const double aaMatrix[2][2] =
+        {
+        L, M,
+        M, N
+        };
     std::vector<double> aValues;
     std::vector<SGM::UnitVector2D> aVectors;
-    size_t nValues=SGM::FindEigenVectors2D(aaMatrix,aValues,aVectors);
+    size_t nValues=SGM::FindEigenVectors2D(&aaMatrix[0],aValues,aVectors);
     if(nValues==2)
         {
         SGM::UnitVector3D UDu=Du,UDv=Dv;

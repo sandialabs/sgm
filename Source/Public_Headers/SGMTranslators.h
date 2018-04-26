@@ -21,7 +21,7 @@ namespace SGM
                 m_bSingleVolume(false),
                 m_bVerbose(false) {}
 
-            TranslatorOptions(std::string const &sOptions);
+            explicit TranslatorOptions(std::string const &sOptions);
 
             std::string FindString() const;
 

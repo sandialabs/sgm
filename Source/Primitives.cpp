@@ -378,7 +378,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         ++VertexIter;
         }
     std::set<edge *>::iterator EdgeIter=sEdges.begin();
-    while(EdgeIter!=EdgeIter)
+    while(EdgeIter!=EdgeIter)  //TODO: always false. fix? (kdcopps)
         {
         edge *pEdge=*EdgeIter;
         curve const *pCurve=pEdge->GetCurve();

@@ -121,7 +121,7 @@ void FindArguments(std::string               const &sLineString,
         }
     else
         {
-        aArgs.push_back("");
+        aArgs.emplace_back("");
         }
 
     // Find the input arguments.
@@ -293,13 +293,13 @@ void FindArguments(std::string               const &sLineString,
                 }
             case aSizeType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     ArgData.m_aSize.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -311,13 +311,13 @@ void FindArguments(std::string               const &sLineString,
                 }
             case aDoubleType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 double Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     ArgData.m_aDouble.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -330,13 +330,13 @@ void FindArguments(std::string               const &sLineString,
             case aPoint2DType:
                 {
                 std::vector<double> aData;
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 double Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     aData.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -347,20 +347,20 @@ void FindArguments(std::string               const &sLineString,
                 size_t nData=aData.size();
                 for(Index2=0;Index2<nData;Index2+=2)
                     {
-                    ArgData.m_aPoint2D.push_back(SGM::Point2D(aData[Index2],aData[Index2+1]));
+                    ArgData.m_aPoint2D.emplace_back(aData[Index2],aData[Index2+1]);
                     }
                 break;
                 }
             case aPoint3DType:
                 {
                 std::vector<double> aData;
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 double Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     aData.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -371,20 +371,20 @@ void FindArguments(std::string               const &sLineString,
                 size_t nData=aData.size();
                 for(Index2=0;Index2<nData;Index2+=3)
                     {
-                    ArgData.m_aPoint3D.push_back(SGM::Point3D(aData[Index2],aData[Index2+1],aData[Index2+2]));
+                    ArgData.m_aPoint3D.emplace_back(aData[Index2],aData[Index2+1],aData[Index2+2]);
                     }
                 break;
                 }
             case aUnitVector2DType:
                 {
                 std::vector<double> aData;
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 double Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     aData.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -395,20 +395,20 @@ void FindArguments(std::string               const &sLineString,
                 size_t nData=aData.size();
                 for(Index2=0;Index2<nData;Index2+=2)
                     {
-                    ArgData.m_aUnitVector2D.push_back(SGM::UnitVector2D(aData[Index2],aData[Index2+1]));
+                    ArgData.m_aUnitVector2D.emplace_back(aData[Index2],aData[Index2+1]);
                     }
                 break;
                 }
             case aUnitVector3DType:
                 {
                 std::vector<double> aData;
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 double Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     aData.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
@@ -419,134 +419,134 @@ void FindArguments(std::string               const &sLineString,
                 size_t nData=aData.size();
                 for(Index2=0;Index2<nData;Index2+=3)
                     {
-                    ArgData.m_aUnitVector3D.push_back(SGM::UnitVector3D(aData[Index2],aData[Index2+1],aData[Index2+2]));
+                    ArgData.m_aUnitVector3D.emplace_back(aData[Index2],aData[Index2+1],aData[Index2+2]);
                     }
                 break;
                 }
             case aComplexType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aComplex.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aComplex.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aComplex.push_back(Data);
+                ArgData.m_aComplex.emplace_back(Data);
                 break;
                 }
             case aVolumeType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aVolume.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aVolume.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aVolume.push_back(Data);
+                ArgData.m_aVolume.emplace_back(Data);
                 break;
                 }
             case aBodyType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aBody.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aBody.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aBody.push_back(Data);
+                ArgData.m_aBody.emplace_back(Data);
                 break;
                 }
             case aEdgeType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aEdge.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aEdge.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aEdge.push_back(Data);
+                ArgData.m_aEdge.emplace_back(Data);
                 break;
                 }
             case aVertexType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aVertex.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aVertex.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aVertex.push_back(Data);
+                ArgData.m_aVertex.emplace_back(Data);
                 break;
                 }
             case aFaceType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aFace.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aFace.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aFace.push_back(Data);
+                ArgData.m_aFace.emplace_back(Data);
                 break;
                 }
             case aEntityType:
                 {
-                size_t nSpace=aArgs[Index1].find(" ");
+                size_t nSpace=aArgs[Index1].find(' ');
                 size_t Data;
                 while(nSpace!=std::numeric_limits<size_t>::max())
                     {
                     std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                    ArgData.m_aEntity.push_back(Data);
-                    nSpace=aArgs[Index1].find(" ",nSpace+1);
+                    ArgData.m_aEntity.emplace_back(Data);
+                    nSpace=aArgs[Index1].find(' ',nSpace+1);
                     if(nSpace!=std::numeric_limits<size_t>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
                     }
                 std::stringstream(aArgs[Index1].substr(1,aArgs[Index1].size())) >> Data;
-                ArgData.m_aEntity.push_back(Data);
+                ArgData.m_aEntity.emplace_back(Data);
                 break;
                 }
             case aStringType:
@@ -1297,7 +1297,7 @@ bool ReadCreateNUBCurve(SGM::Result                    &rResult,
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
     SGM::Curve CurveID=SGM::CreateNUBCurve(rResult,aArguments[1].m_aPoint3D,
-        aArguments.size()==3 ? &(aArguments[2].m_aDouble) : NULL);
+        aArguments.size()==3 ? &(aArguments[2].m_aDouble) : nullptr);
 
     Argument Arg;
     Arg.m_Curve=CurveID;
@@ -1324,7 +1324,7 @@ bool ReadCreateNUBCurveWithEndVectors(SGM::Result                    &rResult,
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
     SGM::Curve CurveID=SGM::CreateNUBCurveWithEndVectors(rResult,aArguments[1].m_aPoint3D,aArguments[2].m_Vector3D,
-        aArguments[3].m_Vector3D,aArguments.size()==5 ? &(aArguments[4].m_aDouble) : NULL);
+        aArguments[3].m_Vector3D,aArguments.size()==5 ? &(aArguments[4].m_aDouble) : nullptr);
 
     Argument Arg;
     Arg.m_Curve=CurveID;

@@ -402,7 +402,7 @@ namespace SGM
 
             // Returns a transform that scales space by dS.
 
-            explicit Transform3D(double dS) 
+            explicit Transform3D(double dS)
                           {m_Matrix[0]=SGM::Vector4D(dS,0,0,0);
                            m_Matrix[1]=SGM::Vector4D(0,dS,0,0);
                            m_Matrix[2]=SGM::Vector4D(0,0,dS,0);
@@ -410,7 +410,7 @@ namespace SGM
 
             // Returns a transform that translates space by the given vector.
 
-            explicit Transform3D(SGM::Vector3D const &Translate) 
+            explicit Transform3D(SGM::Vector3D const &Translate)
                           {m_Matrix[0]=SGM::Vector4D(1,0,0,Translate.m_x);
                            m_Matrix[1]=SGM::Vector4D(0,1,0,Translate.m_y);
                            m_Matrix[2]=SGM::Vector4D(0,0,1,Translate.m_z);

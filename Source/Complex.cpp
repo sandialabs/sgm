@@ -94,10 +94,10 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
 
     std::vector<SGM::Point3D> aPoints;
     aPoints.reserve(4);
-    aPoints.push_back(SGM::Point3D(dMinX,dMinY,0));
-    aPoints.push_back(SGM::Point3D(dMaxX,dMinY,0));
-    aPoints.push_back(SGM::Point3D(dMaxX,dMaxY,0));
-    aPoints.push_back(SGM::Point3D(dMinX,dMaxY,0));
+    aPoints.emplace_back(dMinX,dMinY,0);
+    aPoints.emplace_back(dMaxX,dMinY,0);
+    aPoints.emplace_back(dMaxX,dMaxY,0);
+    aPoints.emplace_back(dMinX,dMaxY,0);
 
     complex *pComplex;
     if(bFilled)

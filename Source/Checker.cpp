@@ -119,7 +119,7 @@ bool body::Check(SGM::Result              &,//rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer, sizeof(Buffer), "Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         ++VolumeIter;
         }
@@ -153,7 +153,7 @@ bool volume::Check(SGM::Result              &,//rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         ++FaceIter;
         }
@@ -179,7 +179,7 @@ bool face::Check(SGM::Result              &rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         ++EdgeIter;
         }
@@ -214,7 +214,7 @@ bool face::Check(SGM::Result              &rResult,
                 bAnswer=false;
                 char Buffer[1000];
                 snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
-                aCheckStrings.push_back(std::string(Buffer));
+                aCheckStrings.emplace_back(Buffer);
                 }
             }
         }
@@ -249,7 +249,7 @@ bool edge::Check(SGM::Result              &,//rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"The start Vertex %ld of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         }
     else
@@ -257,7 +257,7 @@ bool edge::Check(SGM::Result              &,//rResult,
         bAnswer=false;
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have a start vertex\n",GetID());
-        aCheckStrings.push_back(std::string(Buffer));
+        aCheckStrings.emplace_back(Buffer);
         }
     if(m_pEnd)
         {
@@ -277,7 +277,7 @@ bool edge::Check(SGM::Result              &,//rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"The end Vertex %ld of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         }
     else
@@ -285,7 +285,7 @@ bool edge::Check(SGM::Result              &,//rResult,
         bAnswer=false;
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have an end vertex\n",GetID());
-        aCheckStrings.push_back(std::string(Buffer));
+        aCheckStrings.emplace_back(Buffer);
         }
 
     // Check to see if it is consistently oriented with respect to its faces.
@@ -303,7 +303,7 @@ bool edge::Check(SGM::Result              &,//rResult,
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"Edge %ld has the same orientation of both faces.\n",GetID());
-            aCheckStrings.push_back(std::string(Buffer));
+            aCheckStrings.emplace_back(Buffer);
             }
         }
 
@@ -321,7 +321,7 @@ bool vertex::Check(SGM::Result              &,//rResult,
         bAnswer=false;
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"Vertex %ld does not point to an edge\n",GetID());
-        aCheckStrings.push_back(std::string(Buffer));
+        aCheckStrings.emplace_back(Buffer);
         }
 
     return bAnswer;
@@ -399,7 +399,7 @@ bool entity::Check(SGM::Result              &rResult,
             }
         default:
             {
-            aCheckStrings.push_back(std::string("Given unknown entity type\n"));
+            aCheckStrings.emplace_back("Given unknown entity type\n");
             bAnswer=false;
             break;
             }
