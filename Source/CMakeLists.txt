@@ -11,7 +11,10 @@ add_sgm_library(SGM ${SGM_SOURCES} ${SGM_HEADERS} ${SGM_PUBLIC_HEADERS})
 target_include_directories(SGM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Public_Headers>
                                       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Headers>
                                       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                                      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> 
                                       $<INSTALL_INTERFACE:include>)
+
+generate_export_header(SGM)
 
 # installation
 install(FILES ${SGM_PUBLIC_HEADERS} 

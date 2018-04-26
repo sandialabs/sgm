@@ -77,10 +77,10 @@ macro(sgm_project_setup)
 #    endif()
   endif()
   
-#  if(NOT MSVC AND NOT CMAKE_CXX_FLAGS MATCHES fvisibility)
-#    set(CMAKE_CXX_FLAGS "-fvisibility=hidden ${CMAKE_CXX_FLAGS}")
-#    set(CMAKE_C_FLAGS "-fvisibility=hidden ${CMAKE_C_FLAGS}")
-#  endif()
+  if(NOT MSVC AND NOT CMAKE_CXX_FLAGS MATCHES fvisibility)
+    set(CMAKE_CXX_FLAGS "-fvisibility=hidden ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-fvisibility=hidden ${CMAKE_C_FLAGS}")
+  endif()
 
   # default to a debug build if nothing was specified, the first time
   # but still allow someone to go in the cache file and set the build type
@@ -104,5 +104,7 @@ macro(sgm_project_setup)
       set(CMAKE_CXX_FLAGS "-Wvla ${CMAKE_CXX_FLAGS}")
     endif()
   endif()
+
+  include(GenerateExportHeader)
 
 endmacro()

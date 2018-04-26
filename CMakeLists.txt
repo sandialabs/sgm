@@ -14,13 +14,6 @@ sgm_project_setup()
 # build settings for all projects
 set(BUILD_SHARED_LIBS ON)
 
-#if(CMAKE_SYSTEM_NAME MATCHES Darwin)
-#  add_definitions(-DSGM_OSX)
-#endif()
-
-#if(CMAKE_SYSTEM_NAME MATCHES Windows)
-#  add_definitions(-D_USE_MATH_DEFINES)
-#endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
