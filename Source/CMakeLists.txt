@@ -17,5 +17,5 @@ target_include_directories(SGM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_D
 generate_export_header(SGM)
 
 # installation
-install(FILES ${SGM_PUBLIC_HEADERS} 
+install(FILES ${SGM_PUBLIC_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/sgm_export.h
         DESTINATION include COMPONENT Development)
