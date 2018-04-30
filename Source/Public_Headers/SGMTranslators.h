@@ -5,11 +5,13 @@
 #include "SGMEntityClasses.h"
 #include <vector>
 
+#include "sgm_export.h"
+
 namespace SGM
     {
     // All file names must be given as full paths with '/'s.
 
-    class TranslatorOptions
+    class SGM_EXPORT TranslatorOptions
         {
         public:
 
@@ -50,30 +52,30 @@ namespace SGM
                                    // Used in SGM write.
         };
 
-    size_t ReadFile(SGM::Result                  &rResult,
-                    std::string            const &sFileName,
-                    std::vector<Entity>          &aEntities,
-                    std::vector<std::string>     &aLog,
-                    SGM::TranslatorOptions const &Options);
+    SGM_EXPORT size_t ReadFile(SGM::Result                  &rResult,
+                               std::string            const &sFileName,
+                               std::vector<Entity>          &aEntities,
+                               std::vector<std::string>     &aLog,
+                               SGM::TranslatorOptions const &Options);
 
-    void SaveSTL(SGM::Result                  &rResult,
-                 std::string            const &sFileName,
-                 SGM::Entity            const &EntityID,
-                 SGM::TranslatorOptions const &Options);
+    SGM_EXPORT void SaveSTL(SGM::Result                  &rResult,
+                            std::string            const &sFileName,
+                            SGM::Entity            const &EntityID,
+                            SGM::TranslatorOptions const &Options);
 
-    void SaveSGM(SGM::Result                  &rResult,
-                 std::string            const &sFileName,
-                 SGM::Entity            const &EntityID,
-                 SGM::TranslatorOptions const &Options);
+    SGM_EXPORT void SaveSGM(SGM::Result                  &rResult,
+                            std::string            const &sFileName,
+                            SGM::Entity            const &EntityID,
+                            SGM::TranslatorOptions const &Options);
     
-    void SaveSTEP(SGM::Result                  &rResult,
-                  std::string            const &sFileName,
-                  SGM::Entity            const &EntityID,
-                  SGM::TranslatorOptions const &Options);
+    SGM_EXPORT void SaveSTEP(SGM::Result                  &rResult,
+                             std::string            const &sFileName,
+                             SGM::Entity            const &EntityID,
+                             SGM::TranslatorOptions const &Options);
 
-    void ScanDirectory(SGM::Result       &rResult,
-                       std::string const &sDirName,
-                       std::string const &sOutputName);
+    SGM_EXPORT void ScanDirectory(SGM::Result       &rResult,
+                                  std::string const &sDirName,
+                                  std::string const &sOutputName);
 
     } // End of SGM namespace
 
