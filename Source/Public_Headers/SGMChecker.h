@@ -5,10 +5,12 @@
 #include "SGMEntityClasses.h"
 #include <vector>
 
+#include "sgm_export.h"
+
 namespace SGM
     {
     
-    class CheckOptions
+    class SGM_EXPORT CheckOptions
         {
         public:
 
@@ -16,7 +18,7 @@ namespace SGM
                 m_bDerivatives(false),
                 m_bEvaluaters(false) {}
 
-            CheckOptions(std::string);
+            explicit CheckOptions(std::string);
 
             std::string FindString() const;
 
@@ -31,16 +33,16 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    bool CheckEntity(SGM::Result              &rResult,
-                     SGM::Entity        const &EntityID,
-                     SGM::CheckOptions  const &Options,
-                     std::vector<std::string> &aCheckStrings);
+    SGM_EXPORT bool CheckEntity(SGM::Result              &rResult,
+                                SGM::Entity        const &EntityID,
+                                SGM::CheckOptions  const &Options,
+                                std::vector<std::string> &aCheckStrings);
     
-    bool CompareFiles(SGM::Result       &rResult,
-                      std::string const &sFile1,
-                      std::string const &sFile2);
+    SGM_EXPORT bool CompareFiles(SGM::Result       &rResult,
+                                 std::string const &sFile1,
+                                 std::string const &sFile2);
 
-    bool CompareSizes(size_t nSize1,size_t nSize2);
+    SGM_EXPORT bool CompareSizes(size_t nSize1,size_t nSize2);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -48,17 +50,17 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    bool RunTestFile(SGM::Result       &rResult,
-                     std::string const &sTestDirectory,
-                     std::string const &sTestFileName,
-                     std::string const &sOutputFileName);
+    SGM_EXPORT bool RunTestFile(SGM::Result       &rResult,
+                                std::string const &sTestDirectory,
+                                std::string const &sTestFileName,
+                                std::string const &sOutputFileName);
 
-    bool RunCPPTest(SGM::Result &rResult,
-                    size_t       nTestNumber);
+    SGM_EXPORT bool RunCPPTest(SGM::Result &rResult,
+                               size_t       nTestNumber);
 
-    void RunTestDirectory(SGM::Result       &rResult,
-                          std::string const &sTestDirectory,
-                          std::string const &sOutputFileName);
+    SGM_EXPORT void RunTestDirectory(SGM::Result       &rResult,
+                                     std::string const &sTestDirectory,
+                                     std::string const &sOutputFileName);
 
     } // End of SGM namespace
 

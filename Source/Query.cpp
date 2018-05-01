@@ -253,7 +253,7 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
         FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aEdges.push_back(SGM::Edge(pEdge->GetID()));
+            aEdges.emplace_back(pEdge->GetID());
             }
         ++iter;
         }
@@ -280,7 +280,7 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
         FindClosestPointOnFace(rResult,Point,pFace,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aFaces.push_back(SGM::Face(pFace->GetID()));
+            aFaces.emplace_back(pFace->GetID());
             }
         ++iter;
         }

@@ -451,7 +451,7 @@ void curve::Transform(SGM::Transform3D const &Trans)
 SGM::Vector3D curve::Curvature(double t) const
     {
     SGM::Vector3D dt,ddt;
-    Evaluate(t,NULL,&dt,&ddt);
+    Evaluate(t,nullptr,&dt,&ddt);
     double dSpeed=dt%dt;
     return ((dt*ddt)*dt)/(dSpeed*dSpeed);
     }

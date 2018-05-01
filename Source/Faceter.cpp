@@ -103,8 +103,8 @@ void FacetCurve(curve               const *pCurve,
             double d1=Domain.m_dMax;
             pCurve->Evaluate(d0,&Pos0);
             pCurve->Evaluate(d1,&Pos1);
-            lNodes.push_back(FacetNode(d0,Pos0));
-            lNodes.push_back(FacetNode(d1,Pos1));
+            lNodes.emplace_back(d0,Pos0);
+            lNodes.emplace_back(d1,Pos1);
             double dAngle=SGM_PI-Options.m_dFreeEdgeAngleTol;
             double dCos=cos(dAngle);
             bool bRefine=true;
@@ -222,9 +222,9 @@ class SplitData
 
         bool operator<(SplitData const &Other) const {return m_dParam<Other.m_dParam;}
 
-        double m_dParam;
-        size_t m_nPolygon;
-        size_t m_nSpan;
+        double m_dParam{};
+        size_t m_nPolygon{};
+        size_t m_nSpan{};
     };
 
 class MergeData
@@ -403,7 +403,7 @@ void MergePolygons(face                              const *pFace,
             nPos0=aPoints2D.size();
             aSplitVertices.push_back(nPos0);
             aPoly[nSpan]=nPos0;
-            aPoints2D.push_back(SGM::Point2D(u0,v0));
+            aPoints2D.emplace_back(u0,v0);
             aPoints3D.push_back(Pos0);
             aEntities.push_back(pEnt0);
             }
@@ -421,7 +421,7 @@ void MergePolygons(face                              const *pFace,
             nPos1=aPoints2D.size();
             aSplitVertices.push_back(nPos1);
             aPoly[(nSpan+1)%nPolyPoints]=nPos1;
-            aPoints2D.push_back(SGM::Point2D(u1,v1));
+            aPoints2D.emplace_back(u1,v1);
             aPoints3D.push_back(Pos1);
             aEntities.push_back(pEnt1);
             }
@@ -576,7 +576,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             for(Index1=1;Index1<nSeamPoints3D-1;++Index1)
                 {
                 aPoints3D.push_back(aSeamPoints3D[Index1]);
-                aPoints2D.push_back(SGM::Point2D(dMaxU,aSeamVs[Index1]));
+                aPoints2D.emplace_back(dMaxU,aSeamVs[Index1]);
                 aPolygon.push_back(nCount);
                 ++nCount;
                 }
@@ -602,7 +602,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             for(Index1=nSeamPoints3D-2;0<Index1;--Index1)
                 {
                 aPoints3D.push_back(aSeamPoints3D[Index1]);
-                aPoints2D.push_back(SGM::Point2D(dMinU,aSeamVs[Index1]));
+                aPoints2D.emplace_back(dMinU,aSeamVs[Index1]);
                 aPolygon.push_back(nCount);
                 ++nCount;
                 }
@@ -757,7 +757,7 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                 size_t nSplitValues=FindUCrosses(UDomain,aPoints2D,aPolygon,aSplitValues,aSplitIndex);
                 for(Index2=0;Index2<nSplitValues;++Index2)
                     {
-                    aSplits.push_back(SplitData(aSplitValues[Index2],Index1,aSplitIndex[Index2]));
+                    aSplits.emplace_back(aSplitValues[Index2],Index1,aSplitIndex[Index2]);
                     }
                 }
             std::sort(aSplits.begin(),aSplits.end());

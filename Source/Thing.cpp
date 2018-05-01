@@ -34,81 +34,81 @@ void thing::DeleteEntity(entity *pEntity)
     m_mAllEntities.erase(pEntity->GetID());
     switch(pEntity->GetType()) {
       case SGM::BodyType:
-        delete static_cast<body*>(pEntity);
-        break;
-      case SGM::ComplexType:
-        delete static_cast<complex*>(pEntity);
-        break;
-      case SGM::VolumeType:
-        delete static_cast<volume*>(pEntity);
-        break;
-      case SGM::FaceType:
-        delete static_cast<face*>(pEntity);
-        break;
-      case SGM::EdgeType:
-        delete static_cast<edge*>(pEntity);
-        break;
-      case SGM::VertexType:
-        delete static_cast<vertex*>(pEntity);
-        break;
-      case SGM::SurfaceType: {
-        surface* pSurface = static_cast<surface*>(pEntity);
-        switch (pSurface->GetSurfaceType()) {
-          case SGM::PlaneType:
-            delete static_cast<plane*>(pEntity);
+            delete reinterpret_cast<body*>(pEntity);
             break;
-          case SGM::CylinderType:
-            delete static_cast<cylinder*>(pEntity);
+          case SGM::ComplexType:
+            delete reinterpret_cast<complex*>(pEntity);
             break;
-          case SGM::ConeType:
-            delete static_cast<cone*>(pEntity);
+          case SGM::VolumeType:
+            delete reinterpret_cast<volume*>(pEntity);
             break;
-          case SGM::SphereType:
-            delete static_cast<sphere*>(pEntity);
+          case SGM::FaceType:
+            delete reinterpret_cast<face*>(pEntity);
             break;
-          case SGM::TorusType:
-            delete static_cast<torus*>(pEntity);
+          case SGM::EdgeType:
+            delete reinterpret_cast<edge*>(pEntity);
             break;
-          case SGM::NUBSurfaceType:
-            delete static_cast<NUBsurface*>(pEntity);
+          case SGM::VertexType:
+            delete reinterpret_cast<vertex*>(pEntity);
             break;
-          case SGM::NURBSurfaceType:
-            delete static_cast<NUBsurface*>(pEntity);
+          case SGM::SurfaceType: {
+            surface* pSurface = reinterpret_cast<surface*>(pEntity);
+            switch (pSurface->GetSurfaceType()) {
+              case SGM::PlaneType:
+                delete reinterpret_cast<plane*>(pEntity);
+                break;
+              case SGM::CylinderType:
+                delete reinterpret_cast<cylinder*>(pEntity);
+                break;
+              case SGM::ConeType:
+                delete reinterpret_cast<cone*>(pEntity);
+                break;
+              case SGM::SphereType:
+                delete reinterpret_cast<sphere*>(pEntity);
+                break;
+              case SGM::TorusType:
+                delete reinterpret_cast<torus*>(pEntity);
+                break;
+              case SGM::NUBSurfaceType:
+                delete reinterpret_cast<NUBsurface*>(pEntity);
+                break;
+              case SGM::NURBSurfaceType:
+                delete reinterpret_cast<NUBsurface*>(pEntity);
+                break;
+              default:
+                std::abort();
+            }
             break;
+          }
+          case SGM::CurveType: {
+            curve* pCurve = reinterpret_cast<curve*>(pEntity);
+            switch(pCurve->GetCurveType()) {
+              case SGM::LineType:
+                delete reinterpret_cast<line*>(pEntity);
+                break;
+              case SGM::CircleType:
+                delete reinterpret_cast<circle*>(pEntity);
+                break;
+              case SGM::EllipseType:
+                delete reinterpret_cast<ellipse*>(pEntity);
+                break;
+              case SGM::NUBCurveType:
+                delete reinterpret_cast<NUBcurve*>(pEntity);
+                break;
+              case SGM::NURBCurveType:
+                delete reinterpret_cast<NURBcurve*>(pEntity);
+                break;
+              case SGM::PointCurveType:
+                delete reinterpret_cast<PointCurve*>(pEntity);
+                break;
+              default:
+                std::abort();
+            }
+            break;
+          }
           default:
             std::abort();
         }
-        break;
-      }
-      case SGM::CurveType: {
-        curve* pCurve = static_cast<curve*>(pEntity);
-        switch(pCurve->GetCurveType()) {
-          case SGM::LineType:
-            delete static_cast<line*>(pEntity);
-            break;
-          case SGM::CircleType:
-            delete static_cast<circle*>(pEntity);
-            break;
-          case SGM::EllipseType:
-            delete static_cast<ellipse*>(pEntity);
-            break;
-          case SGM::NUBCurveType:
-            delete static_cast<NUBcurve*>(pEntity);
-            break;
-          case SGM::NURBCurveType:
-            delete static_cast<NURBcurve*>(pEntity);
-            break;
-          case SGM::PointCurveType:
-            delete static_cast<PointCurve*>(pEntity);
-            break;
-          default:
-            std::abort();
-        }
-        break;
-      }
-      default:
-        std::abort();
-    }
     }
 
 entity *thing::FindEntity(size_t ID) const

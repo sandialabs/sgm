@@ -1221,7 +1221,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                     {
                     double x,y,z;
                     fscanf(pFile,"%lf %lf %lf",&x,&y,&z);
-                    aPoints.push_back(SGM::Point3D(x,y,z));
+                    aPoints.emplace_back(x,y,z);
                     aTriangles.push_back(nCount++);
                     }
                 }
@@ -1270,7 +1270,7 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
     aEntities.reserve(nEnts);
     for(Index1=0;Index1<nEnts;++Index1)
         {
-        aEntities.push_back(Entity(aEnts[Index1]->GetID()));
+        aEntities.emplace_back(aEnts[Index1]->GetID());
         }
     return nEnts;
     }

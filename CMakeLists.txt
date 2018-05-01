@@ -14,13 +14,6 @@ sgm_project_setup()
 # build settings for all projects
 set(BUILD_SHARED_LIBS ON)
 
-#if(CMAKE_SYSTEM_NAME MATCHES Darwin)
-#  add_definitions(-DSGM_OSX)
-#endif()
-
-#if(CMAKE_SYSTEM_NAME MATCHES Windows)
-#  add_definitions(-D_USE_MATH_DEFINES)
-#endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -60,6 +53,11 @@ endfunction()
 # the projects we are building
 add_subdirectory(Source)
 add_subdirectory(Apps)
+
+option(BUILD_MODEL_VIEWER "Build the Qt/VTK based model viewer application." OFF)
+if(BUILD_MODEL_VIEWER)
+  add_subdirectory(ModelViewer)
+endif()
 
 
 

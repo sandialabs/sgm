@@ -362,7 +362,7 @@ size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
             sNewVertices.insert(GE.m_nEnd);
             ++VertIter;
             }
-        aBranches.push_back(Graph(sNewVertices,sNewEdges));
+        aBranches.emplace_back(sNewVertices,sNewEdges);
         }
 
     return nComps;

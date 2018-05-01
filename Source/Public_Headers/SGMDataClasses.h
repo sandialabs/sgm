@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 
+#include "sgm_export.h"
+
 class thing;
 class entity;
 
@@ -25,7 +27,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class Point2D
+    class SGM_EXPORT Point2D
         {
         public:
 
@@ -48,7 +50,7 @@ namespace SGM
         double m_v;
         };
 
-    class Point3D
+    class SGM_EXPORT Point3D
         {
         public:
 
@@ -71,7 +73,7 @@ namespace SGM
         double m_z;
         };
 
-    class Point4D
+    class SGM_EXPORT Point4D
         {
         public:
 
@@ -93,7 +95,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class Vector2D
+    class SGM_EXPORT Vector2D
         {
         public:
 
@@ -105,7 +107,7 @@ namespace SGM
         double m_v;
         };
 
-    class Vector3D
+    class SGM_EXPORT Vector3D
         {
         public:
 
@@ -132,7 +134,7 @@ namespace SGM
         double m_z;
         };
 
-    class Vector4D
+    class SGM_EXPORT Vector4D
         {
         public:
 
@@ -158,7 +160,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class UnitVector2D : public SGM::Vector2D
+    class SGM_EXPORT UnitVector2D : public SGM::Vector2D
         {
         public:
 
@@ -171,7 +173,7 @@ namespace SGM
         UnitVector2D operator*(double dScale) const;
         };
 
-    class UnitVector3D : public SGM::Vector3D
+    class SGM_EXPORT UnitVector3D : public SGM::Vector3D
         {
         public:
 
@@ -188,7 +190,7 @@ namespace SGM
         void Negate();
         };
 
-    class UnitVector4D : public SGM::Vector4D
+    class SGM_EXPORT UnitVector4D : public SGM::Vector4D
         {
         public:
 
@@ -203,7 +205,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class Interval1D
+    class SGM_EXPORT Interval1D
         {
         public:
 
@@ -244,7 +246,7 @@ namespace SGM
             double m_dMax;
         };
 
-    class Interval2D
+    class SGM_EXPORT Interval2D
         {
         public:
             
@@ -287,7 +289,7 @@ namespace SGM
             SGM::Interval1D m_VDomain;
         };
 
-    class Interval3D
+    class SGM_EXPORT Interval3D
         {
         public:
 
@@ -297,6 +299,8 @@ namespace SGM
            Interval3D() {}
 
            Interval3D(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
+
+           Interval3D(SGM::Point3D const &Pos0, double tol);
 
            explicit Interval3D(SGM::Point3D const &Pos);
 
@@ -322,6 +326,22 @@ namespace SGM
 
            SGM::Interval3D const &operator&=(SGM::Interval3D const &);
 
+           bool IntersectBox(Interval3D const &);
+
+           bool IntersectHalfSpace(Point3D const &, UnitVector3D const &);
+
+            // we can use IntersectLineAndPlane in Intersectors.h on each 6 faces
+        // then check if the intersection lies within the face
+           bool IntersectLine(Point3D const &, UnitVector3D const &, double tol = 0.);
+
+           bool IntersectPlane(Point3D const &, UnitVector3D const &);
+
+           bool IntersectPoint(Point3D const &, double);
+
+           bool IntersectRay(Point3D const &, UnitVector3D const &, double tol = 0.);
+
+           bool IntersectSegment(Point3D const &, Point3D const &, double tol = 0.);
+
            // Returns true if the two intervals have a non-empty intersection.
 
            bool operator&&(SGM::Interval3D const &) const;
@@ -343,7 +363,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class Segment2D
+    class SGM_EXPORT Segment2D
         {
         public:
 
@@ -369,7 +389,7 @@ namespace SGM
             Point2D m_End;
         };
 
-    class Segment3D
+    class SGM_EXPORT Segment3D
         {
         public:
 
@@ -396,7 +416,7 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    class Transform3D
+    class SGM_EXPORT Transform3D
         {
         public:
 
@@ -409,7 +429,7 @@ namespace SGM
 
             // Returns a transform that scales space by dS.
 
-            explicit Transform3D(double dS) 
+            explicit Transform3D(double dS)
                           {m_Matrix[0]=SGM::Vector4D(dS,0,0,0);
                            m_Matrix[1]=SGM::Vector4D(0,dS,0,0);
                            m_Matrix[2]=SGM::Vector4D(0,0,dS,0);
@@ -417,7 +437,7 @@ namespace SGM
 
             // Returns a transform that translates space by the given vector.
 
-            explicit Transform3D(SGM::Vector3D const &Translate) 
+            explicit Transform3D(SGM::Vector3D const &Translate)
                           {m_Matrix[0]=SGM::Vector4D(1,0,0,Translate.m_x);
                            m_Matrix[1]=SGM::Vector4D(0,1,0,Translate.m_y);
                            m_Matrix[2]=SGM::Vector4D(0,0,1,Translate.m_z);
@@ -498,23 +518,23 @@ namespace SGM
         {
         public:
 
-            Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr) {}
+            SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr) {}
 
-            explicit Result(thing *pThing) : m_nType(ResultType::ResultTypeOK), m_pThing(pThing) {}
+            SGM_EXPORT explicit Result(thing *pThing) : m_nType(ResultType::ResultTypeOK), m_pThing(pThing) {}
 
-            void SetResult(SGM::ResultType nType);
+            SGM_EXPORT void SetResult(SGM::ResultType nType);
 
-            void SetMessage(std::string const &sMessage);
+            SGM_EXPORT void SetMessage(std::string const &sMessage);
 
-            void Clear();
+            SGM_EXPORT void Clear();
 
-            SGM::ResultType GetResult() const {return m_nType;}
+            SGM_EXPORT SGM::ResultType GetResult() const {return m_nType;}
 
-            std::string const &GetMessage() const {return m_sMessage;}
+            SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
 
-            thing *GetThing() const {return m_pThing;}
+            SGM_EXPORT thing *GetThing() const {return m_pThing;}
 
-            entity *FindEntity(size_t nID) const;
+            SGM_EXPORT entity *FindEntity(size_t nID) const;
 
         private:
 
@@ -529,59 +549,61 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    SGM::Vector2D operator-(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
+    SGM_EXPORT SGM::Vector2D operator-(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
 
-    SGM::Point2D operator+(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
+    SGM_EXPORT SGM::Point2D operator+(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
 
-    SGM::Point2D operator-(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
+    SGM_EXPORT SGM::Point2D operator-(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
 
-    SGM::Vector3D operator-(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
+    SGM_EXPORT SGM::Vector3D operator-(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
 
-    SGM::Vector3D operator+(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+    SGM_EXPORT SGM::Vector3D operator+(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
-    SGM::Point3D operator+(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
+    SGM_EXPORT SGM::Point3D operator+(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
 
-    SGM::Point3D operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
+    SGM_EXPORT SGM::Point3D operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
 
-    SGM::Point4D operator+(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+    SGM_EXPORT SGM::Point4D operator+(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
 
-    SGM::Point4D operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+    SGM_EXPORT SGM::Point4D operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
 
-    SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+    SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
-    SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
+    SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
-    SGM::Vector4D operator*(double dValue,SGM::Vector4D const &Vec);
+    SGM_EXPORT SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
 
-    SGM::Vector3D operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+    SGM_EXPORT SGM::Vector4D operator*(double dValue,SGM::Vector4D const &Vec);
 
-    SGM::Transform3D operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const &Trans1);
+    SGM_EXPORT SGM::Vector3D operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
-    SGM::Point3D operator*(SGM::Transform3D const &Trans,SGM::Point3D const &Pos);
+    SGM_EXPORT SGM::Transform3D operator*(SGM::Transform3D const &Trans0,SGM::Transform3D const &Trans1);
 
-    SGM::Vector3D operator*(SGM::Transform3D const &Trans,SGM::Vector3D const &Vec);
+    SGM_EXPORT SGM::Point3D operator*(SGM::Transform3D const &Trans,SGM::Point3D const &Pos);
 
-    SGM::UnitVector3D operator*(SGM::Transform3D const &Trans,SGM::UnitVector3D const &UVec);
+    SGM_EXPORT SGM::Vector3D operator*(SGM::Transform3D const &Trans,SGM::Vector3D const &Vec);
+
+    SGM_EXPORT SGM::UnitVector3D operator*(SGM::Transform3D const &Trans,SGM::UnitVector3D const &UVec);
     
-    double operator%(SGM::Vector2D const &Vec0,SGM::Vector2D const &Vec1);
+    SGM_EXPORT double operator%(SGM::Vector2D const &Vec0,SGM::Vector2D const &Vec1);
 
-    double operator%(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+    SGM_EXPORT double operator%(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
-    SGM::Vector3D operator-(SGM::Vector3D const &Vec);
+    SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec);
 
-    SGM::UnitVector3D operator-(SGM::UnitVector3D const &UVec);
+    SGM_EXPORT SGM::UnitVector3D operator-(SGM::UnitVector3D const &UVec);
 
-    SGM::Point3D MidPoint(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1,double dFraction=0.5);
+    SGM_EXPORT SGM::Point3D MidPoint(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1,double dFraction=0.5);
     
-    SGM::Point2D MidPoint(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1,double dFraction=0.5);
+    SGM_EXPORT SGM::Point2D MidPoint(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1,double dFraction=0.5);
 
-    bool NearEqual(double d1,double d2,double dTolerance,bool bPercent);
+    SGM_EXPORT bool NearEqual(double d1,double d2,double dTolerance,bool bPercent);
 
-    bool NearEqual(SGM::Point2D const &Pos1,SGM::Point2D const &Pos2,double dTolerance);
+    SGM_EXPORT bool NearEqual(SGM::Point2D const &Pos1,SGM::Point2D const &Pos2,double dTolerance);
 
-    bool NearEqual(SGM::Point3D const &Pos1,SGM::Point3D const &Pos2,double dTolerance);
+    SGM_EXPORT bool NearEqual(SGM::Point3D const &Pos1,SGM::Point3D const &Pos2,double dTolerance);
 
-    bool NearEqual(SGM::Vector3D const &Pos1,SGM::Vector3D const &Pos2,double dTolerance);
+    SGM_EXPORT bool NearEqual(SGM::Vector3D const &Pos1,SGM::Vector3D const &Pos2,double dTolerance);
 
     } // End of SGM namespace
 

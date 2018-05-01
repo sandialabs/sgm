@@ -1,7 +1,7 @@
 #include "EntityClasses.h"
 #include "Faceter.h"
 #include "Curve.h"
-#include <algorithm>
+#include <utility>
 
 edge::edge(SGM::Result &rResult):
     topology(rResult,SGM::EntityType::EdgeType),

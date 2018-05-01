@@ -13,7 +13,7 @@ class GraphEdge
     {
     public:
 
-        GraphEdge(size_t nStart=0,
+    explicit GraphEdge(size_t nStart=0,
                   size_t nEnd=0,
                   size_t nID=0):m_nStart(nStart),m_nEnd(nEnd),m_nID(nID) {}
 

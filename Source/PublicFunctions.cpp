@@ -70,8 +70,8 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
     {
     curve const *pCurve1=(curve const *)rResult.GetThing()->FindEntity(CurveID1.m_ID);
     curve const *pCurve2=(curve const *)rResult.GetThing()->FindEntity(CurveID2.m_ID);
-    edge const *pedge1=NULL;
-    edge const *pedge2=NULL;
+    edge const *pedge1=nullptr;
+    edge const *pedge2=nullptr;
     if(pEdge1)
         {
         pedge1=(edge const *)rResult.GetThing()->FindEntity(pEdge1->m_ID);
@@ -93,8 +93,8 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
      {
      curve const *pCurve=(curve const *)rResult.GetThing()->FindEntity(CurveID.m_ID);
      surface const *pSurface=(surface const *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
-     edge const *pedge=NULL;
-     face const *pface=NULL;
+     edge const *pedge=nullptr;
+     face const *pface=nullptr;
      if(pEdge)
          {
          pedge=(edge const *)rResult.GetThing()->FindEntity(pEdge->m_ID);

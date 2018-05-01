@@ -3,11 +3,13 @@
 
 #include <stddef.h>
 
+#include "sgm_export.h"
+
 namespace SGM
     {
     // Abstract ID Classes
 
-    class Entity
+    class SGM_EXPORT Entity
         {
         public:
 
@@ -20,14 +22,14 @@ namespace SGM
             size_t m_ID;
         };
 
-    class Topology : public SGM::Entity
+    class SGM_EXPORT Topology : public SGM::Entity
         {
         public:
 
             Topology(size_t nID):Entity(nID) {}
         };
 
-    class Geometry : public SGM::Entity
+    class SGM_EXPORT Geometry : public SGM::Entity
         {
         public:
 
@@ -36,14 +38,14 @@ namespace SGM
 
     // Entity Classes
 
-    class Thing : public SGM::Entity
+    class SGM_EXPORT Thing : public SGM::Entity
         {
         public:
 
             Thing():Entity(0) {}
         };
 
-    class Assembly : public SGM::Entity
+    class SGM_EXPORT Assembly : public SGM::Entity
         {
         public:
 
@@ -52,7 +54,7 @@ namespace SGM
             Assembly();
         };
 
-    class Reference : public SGM::Entity
+    class SGM_EXPORT Reference : public SGM::Entity
         {
         public:
 
@@ -61,7 +63,7 @@ namespace SGM
             Reference();
         };
 
-    class Complex : public SGM::Entity
+    class SGM_EXPORT Complex : public SGM::Entity
         {
         public:
 
@@ -72,7 +74,7 @@ namespace SGM
 
     // Topology Classes
 
-    class Body : public SGM::Topology
+    class SGM_EXPORT Body : public SGM::Topology
         {
         public:
 
@@ -81,7 +83,7 @@ namespace SGM
             Body();
         };
 
-    class Volume : public SGM::Topology
+    class SGM_EXPORT Volume : public SGM::Topology
         {
         public:
 
@@ -90,7 +92,7 @@ namespace SGM
             Volume();
         };
 
-    class Face : public SGM::Topology
+    class SGM_EXPORT Face : public SGM::Topology
         {
         public:
 
@@ -99,7 +101,7 @@ namespace SGM
             Face();
         };
 
-    class Edge : public SGM::Topology
+    class SGM_EXPORT Edge : public SGM::Topology
         {
         public:
 
@@ -108,7 +110,7 @@ namespace SGM
             Edge();
         };
 
-    class Vertex  : public SGM::Topology
+    class SGM_EXPORT Vertex  : public SGM::Topology
         {
         public:
 
@@ -119,7 +121,7 @@ namespace SGM
 
     // Geometry Classes
 
-    class Curve  : public SGM::Geometry
+    class SGM_EXPORT Curve  : public SGM::Geometry
         {
         public:
 
@@ -128,7 +130,7 @@ namespace SGM
             Curve();
         };
 
-    class Surface  : public SGM::Geometry
+    class SGM_EXPORT Surface  : public SGM::Geometry
         {
         public:
 

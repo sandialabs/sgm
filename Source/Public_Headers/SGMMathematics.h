@@ -4,6 +4,8 @@
 #include "SGMDataClasses.h"
 #include <vector>
 
+#include "sgm_export.h"
+
 #define SGM_PI      3.1415926535897932384626433832795
 #define SGM_TWO_PI  6.283185307179586476925286766559
 #define SGM_HALF_PI 1.570796326794896619231321691639
@@ -19,16 +21,17 @@ namespace SGM
     //
     /////////////////////////////////////////////////////////////////////////
 
-    SGM::Interval2D FindBoundingBox2D(std::vector<SGM::Point2D> const &aPoints);
+    SGM_EXPORT SGM::Interval2D FindBoundingBox2D(std::vector<SGM::Point2D> const &aPoints);
 
-    SGM::Interval3D FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints);
+    SGM_EXPORT SGM::Interval3D FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints);
 
-    bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
-                              SGM::Point3D                    &Origin,
-                              SGM::UnitVector3D               &XVec,
-                              SGM::UnitVector3D               &YVec,
-                              SGM::UnitVector3D               &ZVec);
+    SGM_EXPORT bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
+                                         SGM::Point3D                    &Origin,
+                                         SGM::UnitVector3D               &XVec,
+                                         SGM::UnitVector3D               &YVec,
+                                         SGM::UnitVector3D               &ZVec);
 
+<<<<<<< HEAD
     // ProjectPointsToPlane will project the given vector of 3D points 
     // to the given plane resulting in a vector of 2D points.  The function
     // returns the maximum distance that the given points are from the plane.
@@ -43,17 +46,22 @@ namespace SGM
     bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
                                SGM::Point3D                    &Origin,
                                SGM::UnitVector3D               &Axis);
+=======
+    SGM_EXPORT bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
+                                          SGM::Point3D                    &Origin,
+                                          SGM::UnitVector3D               &Axis);
+>>>>>>> a05f5f57757aeee1f3ccb13adfebf69650c9a909
 
-    SGM::Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
+    SGM_EXPORT SGM::Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
     
-    SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
+    SGM_EXPORT SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
     
     // Returns the cumulative cord lengths between the given vector of points.
     // If bNormalize=true, then the lengths are scales to go from zero to one.
 
-    void FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
-                       std::vector<double>             &aLengths,
-                       bool                             bNormalize=false);
+    SGM_EXPORT void FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
+                                  std::vector<double>             &aLengths,
+                                  bool                             bNormalize=false);
 
     /////////////////////////////////////////////////////////////////////////
     //
@@ -68,24 +76,24 @@ namespace SGM
 
     //  Cycles that loop counter clockwise return positive area.
 
-    double PolygonArea(std::vector<SGM::Point2D> const &aPolygon);
+    SGM_EXPORT double PolygonArea(std::vector<SGM::Point2D> const &aPolygon);
 
-    size_t FindConcavePoints(std::vector<SGM::Point2D> const &aPolygon,
-                             std::vector<size_t>             &aConcavePoints);
+    SGM_EXPORT size_t FindConcavePoints(std::vector<SGM::Point2D> const &aPolygon,
+                                        std::vector<size_t>             &aConcavePoints);
 
-    bool PointInPolygon(SGM::Point2D              const &Pos,
-                        std::vector<SGM::Point2D> const &aPolygon);
+    SGM_EXPORT bool PointInPolygon(SGM::Point2D              const &Pos,
+                                   std::vector<SGM::Point2D> const &aPolygon);
 
     // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
     // counter clockwise.  The following polygons are assumed to be inside the
     // first one, disjoint, clockwise.
 
-    void TriangulatePolygon(SGM::Result                             &rResult,
-                            std::vector<SGM::Point2D>         const &aPoints,
-                            std::vector<std::vector<size_t> > const &aaPolygons,
-                            std::vector<size_t>                     &aTriangles,
-                            std::vector<size_t>                     &aAdjacencies);
+    SGM_EXPORT void TriangulatePolygon(SGM::Result                             &rResult,
+                                       std::vector<SGM::Point2D>         const &aPoints,
+                                       std::vector<std::vector<size_t> > const &aaPolygons,
+                                       std::vector<size_t>                     &aTriangles,
+                                       std::vector<size_t>                     &aAdjacencies);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -95,10 +103,10 @@ namespace SGM
 
     // Returns true if D is inside the triangle (A,B,C)
 
-    bool InTriangle(SGM::Point2D const &A,
-                    SGM::Point2D const &B,
-                    SGM::Point2D const &C,
-                    SGM::Point2D const &D);
+    SGM_EXPORT bool InTriangle(SGM::Point2D const &A,
+                               SGM::Point2D const &B,
+                               SGM::Point2D const &C,
+                               SGM::Point2D const &D);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
@@ -110,8 +118,8 @@ namespace SGM
     // adjacent to it then the vector aAdjacency will have the value SIZE_MAX
     // for that edges.
 
-    size_t FindAdjacences2D(std::vector<size_t> const &aTriangles,
-                            std::vector<size_t>       &aAdjacency);
+    SGM_EXPORT size_t FindAdjacences2D(std::vector<size_t> const &aTriangles,
+                                       std::vector<size_t>       &aAdjacency);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -123,20 +131,20 @@ namespace SGM
     // center, normal and radius of a circle that contains the three points
     // is returned.
     
-    bool FindCircle(SGM::Point3D const &Pos0,
-                    SGM::Point3D const &Pos1,
-                    SGM::Point3D const &Pos2,
-                    SGM::Point3D       &Center,
-                    SGM::UnitVector3D  &Normal,
-                    double             &dRadius);
+    SGM_EXPORT bool FindCircle(SGM::Point3D const &Pos0,
+                               SGM::Point3D const &Pos1,
+                               SGM::Point3D const &Pos2,
+                               SGM::Point3D       &Center,
+                               SGM::UnitVector3D  &Normal,
+                               double             &dRadius);
     
     // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
     // it is assumed that A, B, and C are in counter clockwise order.
 
-    bool InCircumcircle(SGM::Point2D const &A,
-                        SGM::Point2D const &B,
-                        SGM::Point2D const &C,
-                        SGM::Point2D const &D);
+    SGM_EXPORT bool InCircumcircle(SGM::Point2D const &A,
+                                   SGM::Point2D const &B,
+                                   SGM::Point2D const &C,
+                                   SGM::Point2D const &D);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -148,9 +156,9 @@ namespace SGM
     // a1*x+b1*y=c1 and a2*x+b2*y=c2.
     // Returns false if a unique answer does not exist.
 
-    bool CramersRule(double a1,double b1,double c1,
-                     double a2,double b2,double c2,
-                     double &x,double &y);
+    SGM_EXPORT bool CramersRule(double a1,double b1,double c1,
+                                double a2,double b2,double c2,
+                                double &x,double &y);
 
     // Gaussian elimination with partial pivoting is used.
     // Given two or more linear equations in the form
@@ -166,7 +174,7 @@ namespace SGM
     // where n is the number of rows.  If the given matrix is singular,
     // then the function will return false.
 
-    bool LinearSolve(std::vector<std::vector<double> > &aaMatrix);
+    SGM_EXPORT bool LinearSolve(std::vector<std::vector<double> > &aaMatrix);
 
     // Given a banded matrix compressed as follows;
     // 
@@ -181,69 +189,69 @@ namespace SGM
     // This function runs in linear time O(equations*bandwidth^2) assuming the 
     // bandwidth is relatively small to the number of equations.
 
-    bool BandedSolve(std::vector<std::vector<double> > &aaMatrix);
+    SGM_EXPORT bool BandedSolve(std::vector<std::vector<double> > &aaMatrix);
 
     // Returns the determinate of a 2 by 2 matrix[row][column].
 
-    double Determinate2D(double const aaMatrix[2][2]);
+    SGM_EXPORT double Determinate2D(double const aaMatrix[2][2]);
 
     // Returns the determinate of a 3 by 3 matrix[row][column].
 
-    double Determinate3D(double const aaMatrix[3][3]);
+    SGM_EXPORT double Determinate3D(double const aaMatrix[3][3]);
 
     // Returns the trace of a two by two matrix[row][column].
 
-    double Trace2D(double const aaMatrix[2][2]);
+    SGM_EXPORT double Trace2D(double const aaMatrix[2][2]);
 
     // Returns the trace of a three by three matrix[row][column].
 
-    double Trace3D(double const aaMatrix[3][3]);
+    SGM_EXPORT double Trace3D(double const aaMatrix[3][3]);
 
     // Returns the product of two two by two matrices, A*B=C
 
-    void FindProduct2D(double const aaMatrix1[2][2], // A
-                       double const aMatrix2[2][2],  // B
-                       double       aAnswer[2][2]);  // C
+    SGM_EXPORT void FindProduct2D(double const aaMatrix1[2][2], // A
+                                  double const aMatrix2[2][2],  // B
+                                  double       aAnswer[2][2]);  // C
 
     // Returns the product of two three by three matrices, A*B=C
 
-    void FindProduct3D(double const aaMatrix1[3][3], // A
-                       double const aMatrix2[3][3],  // B
-                       double       aAnswer[3][3]);  // C
+    SGM_EXPORT void FindProduct3D(double const aaMatrix1[3][3], // A
+                                  double const aMatrix2[3][3],  // B
+                                  double       aAnswer[3][3]);  // C
 
     // Returns the characteristic polynomial of a two by two 
     // matrix[row][column] in the form a*x^2+b*x+c.
 
-    void CharacteristicPolynomial2D(double const aaMatrix[2][2],
-                                    double &a,double &b,double &c);
+    SGM_EXPORT void CharacteristicPolynomial2D(double const aaMatrix[2][2],
+                                               double &a,double &b,double &c);
 
     // Returns the characteristic polynomial of a three by three 
     // matrix[row][column] in the form a*x^3+b*x^2+c*x+d.
 
-    void CharacteristicPolynomial3D(double const aaMatrix[3][3],
-                                    double &a,double &b,double &c,double &d);
+    SGM_EXPORT void CharacteristicPolynomial3D(double const aaMatrix[3][3],
+                                               double &a,double &b,double &c,double &d);
 
     // Returns true if the given matrix is a diagonal matrix.
 
-    bool IsDiagonal2D(double const aaMatrix[2][2]);
+    SGM_EXPORT bool IsDiagonal2D(double const aaMatrix[2][2]);
 
     // Returns true if the given matrix is a diagonal matrix.
 
-    bool IsDiagonal3D(double const aaMatrix[3][3]);
+    SGM_EXPORT bool IsDiagonal3D(double const aaMatrix[3][3]);
 
     // Returns the Eigen vectors and values of a two by two
     // matrix[row][column].
 
-    size_t FindEigenVectors2D(double              const aaMatrix[2][2],
-                              std::vector<double>       &aValues,
-                              std::vector<UnitVector2D> &aVectors);
+    SGM_EXPORT size_t FindEigenVectors2D(double              const aaMatrix[2][2],
+                                         std::vector<double>       &aValues,
+                                         std::vector<UnitVector2D> &aVectors);
 
     // Returns the Eigen vectors and values of a three by three
     // matrix[row][column].
 
-    size_t FindEigenVectors3D(double              const aaMatrix[3][3],
-                              std::vector<double>       &aValues,
-                              std::vector<UnitVector3D> &aVectors);
+    SGM_EXPORT size_t FindEigenVectors3D(double              const aaMatrix[3][3],
+                                         std::vector<double>       &aValues,
+                                         std::vector<UnitVector3D> &aVectors);
     
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -256,15 +264,16 @@ namespace SGM
     // coefficients are ordered from largest degree to smallest.  The function
     // returns the number of real roots.
 
-    size_t Linear(double a,double b,
-                  std::vector<double> aRoots);
+    SGM_EXPORT size_t Linear(double a,double b,
+                             std::vector<double> aRoots);
 
-    size_t Quadratic(double a,double b,double c,
-                     std::vector<double> &aRoots);
+    SGM_EXPORT size_t Quadratic(double a,double b,double c,
+                                std::vector<double> &aRoots);
 
-    size_t Cubic(double a,double b,double c,double d,
-                 std::vector<double> &aRoots);
+    SGM_EXPORT size_t Cubic(double a,double b,double c,double d,
+                            std::vector<double> &aRoots);
 
+<<<<<<< HEAD
     // Quartic returns the roots of f(x)=a*x^4+b*x^3+c*x^2+d*x+c.
     // dTolerance is used to find double roots and keep from
     // returning two roots if abs(f(x)) is less than dTolerance
@@ -273,6 +282,10 @@ namespace SGM
     size_t Quartic(double a,double b,double c,double d,double e,
                    std::vector<double> &aRoots,
                    double dTolerance);
+=======
+    SGM_EXPORT size_t Quartic(double a,double b,double c,double d,double e,
+                              std::vector<double> &aRoots);
+>>>>>>> a05f5f57757aeee1f3ccb13adfebf69650c9a909
 
     // Given a vector of N points in the XY-plane PolynomialFit returns
     // the coefficients of a degree N-1 polynomial that passes through the
@@ -281,8 +294,8 @@ namespace SGM
     // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
     // same x coordinate, then false will be returned.
 
-    bool PolynomialFit(std::vector<SGM::Point2D> aPoints,
-                       std::vector<double>       aCoefficients);
+    SGM_EXPORT bool PolynomialFit(std::vector<SGM::Point2D> aPoints,
+                                  std::vector<double>       aCoefficients);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -293,12 +306,12 @@ namespace SGM
     // Snaps x to -1 or 1 if x is outside the interval [-1,1] so that
     // acos will not return an error.
 
-    double SAFEacos(double x);
+    SGM_EXPORT double SAFEacos(double x);
 
     // Returns zero if both y and x are zero so that atan2 will not return 
     // an error.
 
-    double SAFEatan2(double y,double x);
+    SGM_EXPORT double SAFEatan2(double y,double x);
     
     ///////////////////////////////////////////////////////////////////////////
     //
