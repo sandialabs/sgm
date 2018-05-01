@@ -161,7 +161,7 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
     edge->points->InsertPoint(point_counter++, point.m_x, point.m_y, point.m_z);
 
   // Setup the lines
-  edge->lines->InsertNextCell(points.size());
+  edge->lines->InsertNextCell((int)points.size());
   for(size_t i = 0; i < points.size(); i++)
     edge->lines->InsertCellPoint(i);
 
