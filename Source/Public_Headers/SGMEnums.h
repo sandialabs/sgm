@@ -22,7 +22,7 @@ namespace SGM
         CircleType,
         EllipseType,
         ParabolaType,
-        HyperboleType,
+        HyperbolaType,
         NUBCurveType,
         NURBCurveType,
         PointCurveType,

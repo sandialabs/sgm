@@ -24,6 +24,13 @@ double SGM::Point2D::DistanceSquared(SGM::Point2D const &Pos) const
     return dU*dU+dV*dV;
     }
 
+SGM::Point2D SGM::Point2D::operator+=(SGM::Vector2D const &Vec)
+    {
+    m_u+=Vec.m_u;
+    m_v+=Vec.m_v;
+    return *this;
+    }
+
 bool SGM::Point2D::operator<(SGM::Point2D const &Pos) const
     {
     if(m_u<Pos.m_u)
@@ -81,6 +88,12 @@ SGM::Vector3D SGM::Vector3D::operator*(double dScale) const
 SGM::Vector3D SGM::Vector3D::operator/(double dScale) const
     {
     return SGM::Vector3D(m_x/dScale,m_y/dScale,m_z/dScale);
+    }
+
+SGM::Vector3D SGM::Vector3D::operator*=(SGM::Transform3D const &Trans)
+    {
+    *this=Trans*(*this);
+    return *this;
     }
 
 double SGM::Vector3D::Magnitude() const
@@ -148,9 +161,15 @@ SGM::Point3D SGM::Point3D::operator+=(SGM::Vector3D const &Vec)
     return *this;
     }
 
+SGM::Point3D SGM::Point3D::operator*=(SGM::Transform3D const &Trans)
+    {
+    *this=Trans*(*this);
+    return *this;
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Point3D methods
+//  Point4D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -215,6 +234,11 @@ SGM::UnitVector2D::UnitVector2D(double u,double v)
         }
     }
 
+SGM::UnitVector2D SGM::UnitVector2D::operator*(double dScale) const
+    {
+    return SGM::UnitVector2D(m_u*dScale,m_v*dScale);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  UnitVector3D methods
@@ -271,6 +295,24 @@ SGM::UnitVector3D::UnitVector3D(double x,double y,double z)
         m_y=0.0;
         m_z=1.0;
         }
+    }
+
+SGM::UnitVector3D SGM::UnitVector3D::operator*=(SGM::Transform3D const &Trans)
+    {
+    *this=Trans*(*this);
+    return *this;
+    }
+
+void SGM::UnitVector3D::Negate()
+    {
+    m_x=-m_x;
+    m_y=-m_y;
+    m_z=-m_z;
+    }
+
+SGM::UnitVector3D SGM::UnitVector3D::operator*(double dScale) const
+    {
+    return SGM::UnitVector3D(m_x*dScale,m_y*dScale,m_z*dScale);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -362,13 +404,13 @@ bool SGM::Interval1D::InInterval(double Pos) const
     return m_dMin<=Pos && Pos<=m_dMax;
     }
 
-bool SGM::Interval1D::OnBoundary(double Pos) const
+bool SGM::Interval1D::OnBoundary(double Pos,double dTol) const
     {
     if(m_dMax<m_dMin)
         {
         return false;
         }
-    return fabs(Pos-m_dMax)<1E-6 || fabs(Pos-m_dMin)<1E-6;
+    return fabs(Pos-m_dMax)<dTol || fabs(Pos-m_dMin)<dTol;
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -780,6 +822,16 @@ SGM::UnitVector3D SGM::operator*(SGM::Transform3D const &Trans,SGM::UnitVector3D
 SGM::Vector2D SGM::operator-(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1)
     {
     return SGM::Vector2D(Pos0.m_u-Pos1.m_u,Pos0.m_v-Pos1.m_v);
+    }
+
+SGM::Point2D SGM::operator+(SGM::Point2D const &Pos,SGM::Vector2D const &Vec)
+    {
+    return SGM::Point2D(Pos.m_u+Vec.m_u,Pos.m_v+Vec.m_v);
+    }
+
+SGM::Point2D SGM::operator-(SGM::Point2D const &Pos,SGM::Vector2D const &Vec)
+    {
+    return SGM::Point2D(Pos.m_u-Vec.m_u,Pos.m_v-Vec.m_v);
     }
 
 SGM::Vector3D SGM::operator-(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1)

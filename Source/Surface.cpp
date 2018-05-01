@@ -665,8 +665,14 @@ void surface::Evaluate(SGM::Point2D const &uv,
             double                   dMinorRadius=pTorus->m_dMinorRadius;
             double                   dMajorRadius=pTorus->m_dMajorRadius;
 
-            double dCosU=cos(uv.m_u);
-            double dSinU=sin(uv.m_u);
+            double du=uv.m_u;
+            if(pTorus->m_nKind==SGM::TorusKindType::LemonType)
+                {
+                du+=SGM_PI;
+                }
+
+            double dCosU=cos(du);
+            double dSinU=sin(du);
             double dCosV=cos(uv.m_v);
             double dSinV=sin(uv.m_v);
 
@@ -1137,13 +1143,36 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             uv.m_u=SGM::SAFEatan2(dy,dx);
             uv.m_v=(x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z)/dRadius;
 
-            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            while(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
                 uv.m_u+=SGM_TWO_PI;
                 }
+            while(m_Domain.m_UDomain.m_dMax<uv.m_u)
+                {
+                uv.m_u-=SGM_TWO_PI;
+                }
+
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -1205,7 +1234,25 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 }
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -1247,7 +1294,30 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 }
             if(pGuess)
                 {
-                throw;
+                // Check for points on the north-south pole axis, at the 
+                // center, and on the seam.
+
+                if(SGM::NearEqual(Pos,Center,SGM_MIN_TOL))
+                    {
+                    uv=*pGuess;
+                    }
+                else if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -1267,6 +1337,8 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             SGM::UnitVector3D const &ZAxis  =pTorus->m_ZAxis;
             double dMajorRadius=pTorus->m_dMajorRadius;
 
+            // Find the u value.
+
             double x=Pos.m_x-Center.m_x;
             double y=Pos.m_y-Center.m_y;
             double z=Pos.m_z-Center.m_z;
@@ -1275,31 +1347,100 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
             uv.m_u=SGM::SAFEatan2(dUy,dUx);
 
-            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+            // Find the v value.
 
+            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+            if(pTorus->GetKind()==SGM::TorusKindType::LemonType)
+                {
+                Spoke.Negate();
+                }
             double cx=Pos.m_x-Center.m_x-Spoke.m_x*dMajorRadius;
             double cy=Pos.m_y-Center.m_y-Spoke.m_y*dMajorRadius;
             double cz=Pos.m_z-Center.m_z-Spoke.m_z*dMajorRadius;
-
             double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
             double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
             uv.m_v=SGM::SAFEatan2(dVy,dVx);
-
-            if(pTorus->GetKind()==SGM::TorusKindType::LemonType)
-                {
-                uv.m_v-=SGM_PI;
-                }
-            if(uv.m_v<m_Domain.m_VDomain.m_dMin)
+            
+            // Adjust to the domain.
+            
+            while(uv.m_v<m_Domain.m_VDomain.m_dMin)
                 {
                 uv.m_v+=SGM_TWO_PI;
                 }
-            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            while(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
                 uv.m_u+=SGM_TWO_PI;
                 }
+            while(uv.m_v>m_Domain.m_VDomain.m_dMax)
+                {
+                uv.m_v-=SGM_TWO_PI;
+                }
+            while(uv.m_u>m_Domain.m_UDomain.m_dMax)
+                {
+                uv.m_u-=SGM_TWO_PI;
+                }
+            
+            // fix apples and lemons
+
+            if( pTorus->GetKind()==SGM::TorusKindType::AppleType ||
+                pTorus->GetKind()==SGM::TorusKindType::LemonType)
+                {
+                if(m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                    {
+                    SGM::Point3D NorthPole,SouthPole;
+                    SGM::Point2D uv1(uv.m_u,m_Domain.m_VDomain.m_dMax);
+                    pTorus->Evaluate(uv1,&NorthPole);
+                    SGM::Point2D uv2(uv.m_u,m_Domain.m_VDomain.m_dMin);
+                    pTorus->Evaluate(uv2,&SouthPole);
+                    double dNorth=NorthPole.DistanceSquared(Pos);
+                    double dSouth=SouthPole.DistanceSquared(Pos);
+                    if(dNorth<dSouth)
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                }
+
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+               if( pTorus->m_nKind!=SGM::TorusKindType::LemonType &&
+                   pTorus->m_nKind!=SGM::TorusKindType::AppleType &&
+                   m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
 
             if(ClosePos)

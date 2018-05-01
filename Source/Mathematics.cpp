@@ -111,6 +111,32 @@ bool SGM::FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
     return false;
     }
 
+double SGM::ProjectPointsToPlane(std::vector<SGM::Point3D> const &aPoints3D,
+                                 SGM::Point3D              const &Origin,
+                                 SGM::UnitVector3D         const &XVec,
+                                 SGM::UnitVector3D         const &YVec,
+                                 SGM::UnitVector3D         const &ZVec,
+                                 std::vector<SGM::Point2D>       &aPoints2D)
+    {
+    double dAnswer=0;
+    size_t nPoints=aPoints3D.size();
+    aPoints2D.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Vector3D Vec=aPoints3D[Index1]-Origin;
+        double dx=Vec%XVec;
+        double dy=Vec%YVec;
+        aPoints2D.push_back(SGM::Point2D(dx,dy));
+        double dz=fabs(Vec%ZVec);
+        if(dAnswer<dz)
+            {
+            dAnswer=dz;
+            }
+        }
+    return dAnswer;
+    }
+
 SGM::Interval3D SGM::FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints)
     {
     SGM::Interval3D Answer;
@@ -1509,7 +1535,8 @@ void NewtonMethod(double a,
     }
 
 size_t SGM::Quartic(double a,double b,double c,double d,double e,
-                    std::vector<double> &aRoots)
+                    std::vector<double> &aRoots,
+                    double dTolerance)
     {
     // Make sure that a is positive.
 
@@ -1545,23 +1572,23 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
     std::vector<double> aLookFrom;
     if(nDRoots==1)
         {
-        if(aDRootValues[0]<-SGM_ZERO)
+        if(aDRootValues[0]<-dTolerance)
             {
             aLookFrom.push_back(aDRoots[0]-1.0);
             aLookFrom.push_back(aDRoots[0]+1.0);
             }
-        else if(aDRootValues[0]<SGM_ZERO)
+        else if(aDRootValues[0]<dTolerance)
             {
             aRoots.push_back(aDRoots[0]);
             }
         }
     else
         {
-        if(aDRootValues[0]<-SGM_ZERO)
+        if(aDRootValues[0]<-dTolerance)
             {
             aLookFrom.push_back(aDRoots[0]-1.0);
             }
-        else if(aDRootValues[0]<SGM_ZERO)
+        else if(aDRootValues[0]<dTolerance)
             {
             aRoots.push_back(aDRoots[0]);
             }
@@ -1575,7 +1602,7 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
             }
         else
             {
-            if(fabs(aDRootValues[1])<SGM_ZERO)
+            if(fabs(aDRootValues[1])<dTolerance)
                 {
                 aRoots.push_back(aDRoots[1]);
                 }
@@ -1592,11 +1619,11 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
                 }
             }
 
-        if(aDRootValues[nDRoots-1]<-SGM_ZERO)
+        if(aDRootValues[nDRoots-1]<-dTolerance)
             {
             aLookFrom.push_back(aDRoots[nDRoots-1]+1.0);
             }
-        else if(aDRootValues[nDRoots-1]<SGM_ZERO)
+        else if(aDRootValues[nDRoots-1]<dTolerance)
             {
             aRoots.push_back(aDRoots[nDRoots-1]);
             }

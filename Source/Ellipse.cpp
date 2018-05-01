@@ -12,7 +12,8 @@ ellipse::ellipse(SGM::Result             &rResult,
                  SGM::UnitVector3D const &YAxis,
                  double                   dA,
                  double                   dB):  
-    curve(rResult,SGM::EllipseType),m_Center(Center),m_XAxis(XAxis),m_YAxis(YAxis),m_dA(dA),m_dB(dB)
+    curve(rResult,SGM::EllipseType),m_Center(Center),m_XAxis(XAxis),m_YAxis(YAxis),
+    m_Normal(XAxis*YAxis),m_dA(dA),m_dB(dB)
     {
     m_Domain.m_dMin=0;
     m_Domain.m_dMax=SGM_TWO_PI;

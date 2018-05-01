@@ -151,6 +151,8 @@ class cone : public surface
 
         curve *VParamLine(double dV) const;
 
+        SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
+
     public:
 
         SGM::Point3D      m_Origin;

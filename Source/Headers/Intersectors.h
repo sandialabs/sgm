@@ -12,14 +12,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
-                                curve                        const *pCurve,
-                                surface                      const *pSurface,
-                                std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes,
-                                edge                         const *pEdge,
-                                face                         const *pFace);
-
 size_t IntersectCurves(SGM::Result                        &rResult,
                        curve                        const *pCurve1,
                        curve                        const *pCurve2,
@@ -28,12 +20,39 @@ size_t IntersectCurves(SGM::Result                        &rResult,
                        edge                         const *pEdge1,
                        edge                         const *pEdge2);
 
+size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
+                                curve                        const *pCurve,
+                                surface                      const *pSurface,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                edge                         const *pEdge,
+                                face                         const *pFace);
+
+size_t IntersectSurfaces(SGM::Result                &rResult,
+                         surface              const *pSurface1,
+                         surface              const *pSurface2,
+                         std::vector<curve *>       &aCurves,
+                         face                 const *pFace1,
+                         face                 const *pFace2);
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Specific Surface Surface Intersectors.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t IntersectPlaneCone(SGM::Result                &rResult,
+                          plane                const *pPlane,
+                          cone                 const *pCone,
+                          std::vector<curve *>       &aCurves,
+                          face                 const *pFace1,
+                          face                 const *pFace2);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Specific General Intersectors.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
 
 size_t IntersectLineAndCurve(SGM::Result                        &rResult,
                              SGM::Point3D                 const &Origin,
@@ -43,6 +62,20 @@ size_t IntersectLineAndCurve(SGM::Result                        &rResult,
                              double                              dTolerance,
                              std::vector<SGM::Point3D>          &aPoints,
                              std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
+                               circle                       const *pCircle,
+                               curve                        const *pCurve,
+                               double                              dTolerance,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectEllipseAndCurve(SGM::Result                        &rResult,
+                                ellipse                      const *pEllipse,
+                                curve                        const *pCurve,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -65,6 +98,30 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
                               double                              dTolerance,
                               std::vector<SGM::Point3D>          &aPoints,
                               std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
+                               SGM::UnitVector3D            const &Axis,
+                               SGM::Interval1D              const &Domain,
+                               ellipse                      const *pEllipse,
+                               double                              dTolerance,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
+                                 SGM::UnitVector3D            const &Axis,
+                                 SGM::Interval1D              const &Domain,
+                                 hyperbola                    const *pHyperbola,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
+                                SGM::UnitVector3D            const &Axis,
+                                SGM::Interval1D              const &Domain,
+                                parabola                     const *pParabola,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

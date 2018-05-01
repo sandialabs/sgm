@@ -17,6 +17,41 @@
 #include "Topology.h"
 #include "Intersectors.h"
 
+std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
+                                                 SGM::Face const &FaceID)
+    {
+    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    return pFace->GetTriangles(rResult);    
+    }
+
+std::vector<SGM::Point3D> const &SGM::GetFacePoints(SGM::Result     &rResult,
+                                                    SGM::Face const &FaceID)
+    {
+    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    return pFace->GetPoints3D(rResult);
+    }
+
+std::vector<SGM::Point3D> const &SGM::GetEdgePoints(SGM::Result     &rResult,
+                                                    SGM::Edge const &EdgeID)
+    {
+    edge *pEdge=(edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);    
+    return pEdge->GetFacets();
+    }
+
+std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResult,
+                                                          SGM::Face const &FaceID)
+    {
+    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    return pFace->GetNormals(rResult);
+    }
+
+SGM::Interval3D const &SGM::GetBoundingBox(SGM::Result       &rResult,
+                                           SGM::Entity const &EntityID)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    return pEntity->GetBox();
+    }
+
 void SGM::DeleteEntity(SGM::Result &rResult,
                        SGM::Entity &EntityID)
     {

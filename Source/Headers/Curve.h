@@ -208,6 +208,7 @@ class ellipse: public curve
         SGM::Point3D      m_Center;
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
         double            m_dA;
         double            m_dB;
     };
@@ -230,6 +231,7 @@ class hyperbola: public curve
         SGM::Point3D      m_Center;
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
         double            m_dA;
         double            m_dB;
     };
@@ -238,7 +240,7 @@ class parabola: public curve
     {
     public:
 
-        // y=ax^2
+        // f(t)=at^2
 
         parabola(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
@@ -251,6 +253,7 @@ class parabola: public curve
         SGM::Point3D      m_Center;
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
         double            m_dA;
     };
 

@@ -10,9 +10,11 @@ class entity;
 
 namespace SGM
     {
+    class Vector2D;
     class Vector3D;
     class Vector4D;
     class Point3D;
+    class Transform3D;
 
     // Note that for performance reasons the basic data classes DO NOT
     // initialize their data members with the default constructor.
@@ -40,6 +42,8 @@ namespace SGM
 
         bool operator<(Point2D const &Pos) const;
 
+        Point2D operator+=(Vector2D const &Vec);
+
         double m_u;
         double m_v;
         };
@@ -59,6 +63,8 @@ namespace SGM
         double DistanceSquared(SGM::Point3D const &Pos) const;
 
         Point3D operator+=(Vector3D const &Vec);
+
+        Point3D operator*=(Transform3D const &Trans);
 
         double m_x;
         double m_y;
@@ -119,6 +125,8 @@ namespace SGM
 
         Vector3D operator/(double dScale) const;
 
+        Vector3D operator*=(Transform3D const &Trans);
+
         double m_x;
         double m_y;
         double m_z;
@@ -159,6 +167,8 @@ namespace SGM
         UnitVector2D(double u,double v);
 
         UnitVector2D(SGM::Vector2D const &Vec);
+
+        UnitVector2D operator*(double dScale) const;
         };
 
     class UnitVector3D : public SGM::Vector3D
@@ -170,6 +180,12 @@ namespace SGM
         UnitVector3D(double x,double y,double z);
 
         UnitVector3D(SGM::Vector3D const &Vec);
+
+        UnitVector3D operator*=(Transform3D const &Trans);
+
+        UnitVector3D operator*(double dScale) const;
+
+        void Negate();
         };
 
     class UnitVector4D : public SGM::Vector4D
@@ -210,7 +226,7 @@ namespace SGM
 
             bool InInterval(double Pos) const;
 
-            bool OnBoundary(double Pos) const;
+            bool OnBoundary(double Pos,double dTol) const;
 
             // Unites this interval with the given interval.
 
@@ -514,6 +530,10 @@ namespace SGM
     ///////////////////////////////////////////////////////////////////////////
 
     SGM::Vector2D operator-(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
+
+    SGM::Point2D operator+(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
+
+    SGM::Point2D operator-(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
 
     SGM::Vector3D operator-(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
 

@@ -1,5 +1,6 @@
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
+#include "SGMEntityFunctions.h"
 #include "SGMChecker.h"
 #include "SGMComplex.h"
 #include "SGMPrimitives.h"
@@ -1025,7 +1026,7 @@ bool ReadSplitWithComplex(SGM::Result                    &rResult,
     return bAnswer;
     }
 
-bool ReadGetBoundingBox(SGM::Result                    &,//rResult,
+bool ReadGetBoundingBox(SGM::Result                    &rResult,
                         std::string                    &sLineString,
                         std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1039,16 +1040,16 @@ bool ReadGetBoundingBox(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //SGM::Interval3D Box=SGM::GetBoundingBox(rResult,aArguments[1].m_Entity);
+    SGM::Interval3D Box=SGM::GetBoundingBox(rResult,aArguments[1].m_Entity);
 
-    //Argument Arg;
-    //Arg.m_Interval3D=Box;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_Interval3D=Box;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadGetEdgePoints(SGM::Result                    &,//rResult,
+bool ReadGetEdgePoints(SGM::Result                    &rResult,
                        std::string                    &sLineString,
                        std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1062,16 +1063,16 @@ bool ReadGetEdgePoints(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Point3D> const &aEdgePoints=SGM::GetEdgePoints(rResult,aArguments[1].m_Edge);
+    std::vector<SGM::Point3D> const &aEdgePoints=SGM::GetEdgePoints(rResult,aArguments[1].m_Edge);
 
-    //Argument Arg;
-    //Arg.m_aPoint3D=aEdgePoints;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_aPoint3D=aEdgePoints;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadGetFacePoints(SGM::Result                    &,//rResult,
+bool ReadGetFacePoints(SGM::Result                    &rResult,
                        std::string                    &sLineString,
                        std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1085,16 +1086,16 @@ bool ReadGetFacePoints(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::Point3D> const &aFacePoints=SGM::GetFacePoints(rResult,aArguments[1].m_Face);
+    std::vector<SGM::Point3D> const &aFacePoints=SGM::GetFacePoints(rResult,aArguments[1].m_Face);
 
-    //Argument Arg;
-    //Arg.m_aPoint3D=aFacePoints;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_aPoint3D=aFacePoints;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadGetFaceTriangles(SGM::Result                    &,//rResult,
+bool ReadGetFaceTriangles(SGM::Result                    &rResult,
                           std::string                    &sLineString,
                           std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1108,16 +1109,16 @@ bool ReadGetFaceTriangles(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<size_t> const &aFaceTriangles=SGM::GetFaceTriangles(rResult,aArguments[1].m_Face);
+    std::vector<size_t> const &aFaceTriangles=SGM::GetFaceTriangles(rResult,aArguments[1].m_Face);
 
-    //Argument Arg;
-    //Arg.m_aSize=aFaceTriangles;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_aSize=aFaceTriangles;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }
 
-bool ReadGetFaceNormals(SGM::Result                    &,//rResult,
+bool ReadGetFaceNormals(SGM::Result                    &rResult,
                         std::string                    &sLineString,
                         std::map<std::string,Argument> &mArgumentMap)
     {
@@ -1131,11 +1132,11 @@ bool ReadGetFaceNormals(SGM::Result                    &,//rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    //std::vector<SGM::UnitVector3D> const &aFaceNormals=SGM::GetFaceNormals(rResult,aArguments[1].m_Face);
+    std::vector<SGM::UnitVector3D> const &aFaceNormals=SGM::GetFaceNormals(rResult,aArguments[1].m_Face);
 
-    //Argument Arg;
-    //Arg.m_aUnitVector3D=aFaceNormals;
-    //mArgumentMap[aArguments[0].m_String]=Arg;
+    Argument Arg;
+    Arg.m_aUnitVector3D=aFaceNormals;
+    mArgumentMap[aArguments[0].m_String]=Arg;
 
     return bAnswer;
     }

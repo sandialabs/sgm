@@ -100,13 +100,26 @@ double curve::Inverse(SGM::Point3D const &Pos,
             double dy=dSpokeX*YAxis.m_x+dSpokeY*YAxis.m_y+dSpokeZ*YAxis.m_z;
             double t=std::atan2(dy,dx);
 
-            if(t<m_Domain.m_dMin)
+            while(t<m_Domain.m_dMin)
                 {
                 t+=SGM_TWO_PI;
                 }
+            while(m_Domain.m_dMax<t)
+                {
+                t-=SGM_TWO_PI;
+                }
             if(pGuess)
                 {
-                throw;
+                if( SGM::NearEqual(t,m_Domain.m_dMin,SGM_MIN_TOL,false)==true &&
+                    SGM::NearEqual(*pGuess,m_Domain.m_dMax,SGM_MIN_TOL,false)==true)
+                    {
+                    t=*pGuess;
+                    }
+                else if(SGM::NearEqual(t,m_Domain.m_dMax,SGM_MIN_TOL,false)==true &&
+                        SGM::NearEqual(*pGuess,m_Domain.m_dMin,SGM_MIN_TOL,false)==true)
+                    {
+                    t=*pGuess;
+                    }
                 }
             
             if(ClosePos)
@@ -143,6 +156,87 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             return pPointCurve->GetDomain().m_dMin;
             }
+        case SGM::EllipseType:
+            {
+            ellipse const *pEllipse=(ellipse const *)this;
+            SGM::Point3D const &Center=pEllipse->m_Center;
+            SGM::UnitVector3D const &XVec=pEllipse->m_XAxis;
+            SGM::UnitVector3D const &YVec=pEllipse->m_YAxis;
+            SGM::Vector3D Vec=Pos-Center;
+            double dx=XVec%Vec;
+            double dy=YVec%Vec;
+            double dParam=SGM::SAFEatan2(dy,dx);
+            double dAnswer=NewtonsMethod(this,dParam,Pos);
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            if(pGuess)
+                {
+                if( SGM::NearEqual(dAnswer,m_Domain.m_dMin,SGM_MIN_TOL,false)==true &&
+                    SGM::NearEqual(*pGuess,m_Domain.m_dMax,SGM_MIN_TOL,false)==true)
+                    {
+                    dAnswer=*pGuess;
+                    }
+                else if(SGM::NearEqual(dAnswer,m_Domain.m_dMax,SGM_MIN_TOL,false)==true &&
+                        SGM::NearEqual(*pGuess,m_Domain.m_dMin,SGM_MIN_TOL,false)==true)
+                    {
+                    dAnswer=*pGuess;
+                    }
+                }
+            return dAnswer;
+            }
+        case SGM::HyperbolaType:
+            {
+            hyperbola const *pHyperbola=(hyperbola const *)this;
+            SGM::Point3D const &Center=pHyperbola->m_Center;
+            SGM::UnitVector3D const &XVec=pHyperbola->m_XAxis;
+            SGM::Vector3D Vec=Pos-Center;
+            double dParam=XVec%Vec;
+            double dAnswer=NewtonsMethod(this,dParam,Pos);
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            return dAnswer;
+            }
+        case SGM::ParabolaType:
+            {
+            parabola const *pParabola=(parabola const *)this;
+            SGM::Point3D const &Center=pParabola->m_Center;
+            SGM::UnitVector3D const &XVec=pParabola->m_XAxis;
+            SGM::UnitVector3D const &YVec=pParabola->m_YAxis;
+            double dA=pParabola->m_dA;
+            SGM::Vector3D Vec=Pos-Center;
+            double Px=XVec%Vec;
+            double Py=YVec%Vec;
+            double a=4*dA*dA;
+            double b=0.0;
+            double c=2.0-4.0*dA*Py;
+            double d=-2.0*Px;
+            std::vector<double> aRoots;
+            size_t nRoots=SGM::Cubic(a,b,c,d,aRoots);
+            double dAnswer=0.0;
+            double dMin=std::numeric_limits<double>::max();
+            size_t Index1;
+            for(Index1=0;Index1<nRoots;++Index1)
+                {
+                double t=aRoots[Index1];
+                SGM::Point3D CPos;
+                Evaluate(t,&CPos);
+                double dDist=CPos.DistanceSquared(Pos);
+                if(dDist<dMin)
+                    {
+                    dMin=dDist;
+                    dAnswer=t;
+                    if(ClosePos)
+                        {
+                        *ClosePos=CPos;
+                        }
+                    }
+                }
+            return dAnswer;
+            }
         case SGM::NUBCurveType:
             {
             double dParam=0;
@@ -152,9 +246,42 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             else
                 {
-                NUBcurve const *pNUB=(NUBcurve *)this;
+                NUBcurve const *pNUB=(NUBcurve const *)this;
                 std::vector<SGM::Point3D> const &aPoints=pNUB->NUBcurve::GetSeedPoints();
                 std::vector<double> const &aParams=pNUB->NUBcurve::GetSeedParams();
+                double dMin=std::numeric_limits<double>::max();
+                size_t Index1;
+                size_t nPoints=aPoints.size();
+                for(Index1=0;Index1<nPoints;++Index1)
+                    {
+                    SGM::Point3D const &TestPos=aPoints[Index1];
+                    double dDist=TestPos.DistanceSquared(Pos);
+                    if(dDist<dMin)
+                        {
+                        dMin=dDist;
+                        dParam=aParams[Index1];
+                        }
+                    }
+                }
+            double dAnswer=NewtonsMethod(this,dParam,Pos);
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            return dAnswer;
+            }
+        case SGM::NURBCurveType:
+            {
+            double dParam=0;
+            if(pGuess)
+                {
+                dParam=*pGuess;
+                }
+            else
+                {
+                NURBcurve const *pNURB=(NURBcurve const *)this;
+                std::vector<SGM::Point3D> const &aPoints=pNURB->NURBcurve::GetSeedPoints();
+                std::vector<double> const &aParams=pNURB->NURBcurve::GetSeedParams();
                 double dMin=std::numeric_limits<double>::max();
                 size_t Index1;
                 size_t nPoints=aPoints.size();
@@ -238,7 +365,7 @@ void curve::Transform(SGM::Transform3D const &Trans)
 
             break;
             }
-        case SGM::HyperboleType:
+        case SGM::HyperbolaType:
             {
             // f(t)=a*sqrt(1+t^2/b^2)
 
@@ -423,7 +550,7 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 }
             break;
             }
-        case SGM::HyperboleType:
+        case SGM::HyperbolaType:
             {
             // f(t)=a*sqrt(1+t^2/b^2)
 
