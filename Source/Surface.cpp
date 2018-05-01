@@ -37,6 +37,147 @@ void surface::RemoveFace(face *pFace)
         }
     }
 
+void surface::Transform(SGM::Transform3D const &Trans)
+    {
+    switch(m_SurfaceType)
+        {
+        case SGM::PlaneType:
+            {
+            plane *pPlane=(plane *)this;
+            SGM::Point3D &Origin=pPlane->m_Origin;
+            SGM::UnitVector3D &XAxis=pPlane->m_XAxis;
+            SGM::UnitVector3D &YAxis=pPlane->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pPlane->m_ZAxis;
+            double dPlaneScale=pPlane->m_dScale;
+
+            Origin=Trans*Origin;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+            if(double dScale=Trans.Scale())
+                {
+                dPlaneScale*=dScale;
+                }
+
+            break;
+            }
+        case SGM::CylinderType:
+            {
+            cylinder *pCylinder=(cylinder *)this;
+            SGM::Point3D &Origin=pCylinder->m_Origin;
+            SGM::UnitVector3D &XAxis=pCylinder->m_XAxis;
+            SGM::UnitVector3D &YAxis=pCylinder->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pCylinder->m_ZAxis;
+            double &dRadius=pCylinder->m_dRadius;
+
+            Origin=Trans*Origin;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+            if(double dScale=Trans.Scale())
+                {
+                dRadius*=dScale;
+                }
+
+            break;
+            }
+        case SGM::ConeType:
+            {
+            cone *pCone=(cone *)this;
+            SGM::Point3D &Origin=pCone->m_Origin;
+            SGM::UnitVector3D &XAxis=pCone->m_XAxis;
+            SGM::UnitVector3D &YAxis=pCone->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pCone->m_ZAxis;
+            double &dRadius=pCone->m_dRadius;
+
+            Origin=Trans*Origin;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+            if(double dScale=Trans.Scale())
+                {
+                dRadius*=dScale;
+                }
+            break;
+            }
+        case SGM::SphereType:
+            {
+            sphere *pSphere=(sphere *)this;
+            SGM::Point3D &Center=pSphere->m_Center;
+            SGM::UnitVector3D &XAxis=pSphere->m_XAxis;
+            SGM::UnitVector3D &YAxis=pSphere->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pSphere->m_ZAxis;
+            double &dRadius=pSphere->m_dRadius;
+
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+            if(double dScale=Trans.Scale())
+                {
+                dRadius*=dScale;
+                }
+            break;
+            }
+        case SGM::TorusType:
+            {
+            torus *pTorus=(torus *)this;
+            SGM::Point3D &Center=pTorus->m_Center;
+            SGM::UnitVector3D &XAxis=pTorus->m_XAxis;
+            SGM::UnitVector3D &YAxis=pTorus->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pTorus->m_ZAxis;
+            double &dMinorRadius=pTorus->m_dMinorRadius;
+            double &dMajorRadius=pTorus->m_dMajorRadius;
+
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+            if(double dScale=Trans.Scale())
+                {
+                dMinorRadius*=dScale;
+                dMajorRadius*=dScale;
+                }
+            break;
+            }
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface *pNUBSurface=(NUBsurface *)this;
+            std::vector<std::vector<SGM::Point3D> > aaPoints=pNUBSurface->m_aaControlPoints;
+            size_t nSize1=aaPoints.size();
+            size_t nSize2=aaPoints[0].size();
+            size_t Index1,Index2;
+            for(Index1=0;Index1<nSize1;++Index1)
+                {
+                for(Index2=0;Index2<nSize2;++Index2)
+                    {
+                    aaPoints[Index1][Index2]=Trans*aaPoints[Index1][Index2];
+                    }
+                }
+            break;
+            }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface *pNURBSurface=(NURBsurface *)this;
+            std::vector<std::vector<SGM::Point4D> > aaPoints=pNURBSurface->m_aaControlPoints;
+            size_t nSize1=aaPoints.size();
+            size_t nSize2=aaPoints[0].size();
+            size_t Index1,Index2;
+            for(Index1=0;Index1<nSize1;++Index1)
+                {
+                for(Index2=0;Index2<nSize2;++Index2)
+                    {
+                    SGM::Point4D Pos=aaPoints[Index1][Index2];
+                    SGM::Point3D Pos3D(Pos.m_x,Pos.m_y,Pos.m_z);
+                    Pos3D=Trans*Pos3D;
+                    aaPoints[Index1][Index2]=SGM::Point4D(Pos3D.m_x,Pos3D.m_y,Pos3D.m_z,Pos.m_w);
+                    }
+                }
+            break;
+            }
+        }
+    }
+
 curve *surface::UParamLine(SGM::Result &rResult,
                            double       dU) const
     {
@@ -138,6 +279,51 @@ curve *surface::UParamLine(SGM::Result &rResult,
                     }
                 return new NUBcurve(rResult,aControlPoints,aUKnots);
                 }
+            }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURBSurface=(NURBsurface const *)this;
+            if(pNURBSurface->m_bSingularHighU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNURBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else if(pNURBSurface->m_bSingularLowU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNURBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else
+                {
+                std::vector<double> const &aUKnots=pNURBSurface->GetUKnots();
+                std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURBSurface->GetControlPoints();
+                size_t nUDegree=pNURBSurface->GetUDegree();
+                size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
+
+                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+                size_t Index1,Index2;
+                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                    {
+                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                    }
+                FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
+
+                std::vector<SGM::Point4D> aControlPoints;
+                size_t nControlPoints=aaControlPoints[0].size();
+                aControlPoints.assign(nControlPoints,SGM::Point4D(0.0,0.0,0.0,0.0));
+                for(Index1=0;Index1<nControlPoints;++Index1)
+                    {
+                    for(Index2=0;Index2<=nUDegree;++Index2)
+                        {
+                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                            SGM::Vector4D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
+                        }
+                    }
+                return new NURBcurve(rResult,aControlPoints,aUKnots);
+                }
             break;
             }
         default:
@@ -231,6 +417,52 @@ curve *surface::VParamLine(SGM::Result &rResult,
                         }
                     }
                 return new NUBcurve(rResult,aControlPoints,aVKnots);
+                }
+            break;
+            }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURBSurface=(NURBsurface const *)this;
+            if(pNURBSurface->m_bSingularHighV && SGM::NearEqual(m_Domain.m_VDomain.m_dMax,dV,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNURBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else if(pNURBSurface->m_bSingularLowV && SGM::NearEqual(m_Domain.m_VDomain.m_dMin,dV,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D Pos;
+                pNURBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+                }
+            else
+                {
+                std::vector<double> const &aVKnots=pNURBSurface->GetVKnots();
+                std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURBSurface->GetControlPoints();
+                size_t nVDegree=pNURBSurface->GetVDegree();
+                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,dV,aVKnots);
+
+                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+                size_t Index1,Index2;
+                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                    {
+                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                    }
+                FindBasisFunctions(nSpanIndex,dV,nVDegree,0,&aVKnots[0],aaBasisFunctions);
+
+                std::vector<SGM::Point4D> aControlPoints;
+                size_t nControlPoints=aaControlPoints.size();
+                aControlPoints.assign(nControlPoints,SGM::Point4D(0.0,0.0,0.0,0.0));
+                for(Index1=0;Index1<nControlPoints;++Index1)
+                    {
+                    for(Index2=0;Index2<=nVDegree;++Index2)
+                        {
+                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                            SGM::Vector4D(aaControlPoints[Index1][nSpanIndex-nVDegree+Index2]);
+                        }
+                    }
+                return new NURBcurve(rResult,aControlPoints,aVKnots);
                 }
             break;
             }
@@ -433,8 +665,14 @@ void surface::Evaluate(SGM::Point2D const &uv,
             double                   dMinorRadius=pTorus->m_dMinorRadius;
             double                   dMajorRadius=pTorus->m_dMajorRadius;
 
-            double dCosU=cos(uv.m_u);
-            double dSinU=sin(uv.m_u);
+            double du=uv.m_u;
+            if(pTorus->m_nKind==SGM::TorusKindType::LemonType)
+                {
+                du+=SGM_PI;
+                }
+
+            double dCosU=cos(du);
+            double dSinU=sin(du);
             double dCosV=cos(uv.m_v);
             double dSinV=sin(uv.m_v);
 
@@ -564,7 +802,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
             // From "The NURBs Book" Algorithm A3.6.
 
             NUBsurface const *pNUB=(NUBsurface const *)this;
-            std::vector<std::vector<SGM::Point3D> > const &aControlPoints=pNUB->m_aaControlPoints;
+            std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUB->m_aaControlPoints;
             
             std::vector<double> const &aUKnots=pNUB->m_aUKnots;
             size_t nUDegree=pNUB->GetUDegree();
@@ -610,8 +848,8 @@ void surface::Evaluate(SGM::Point2D const &uv,
                     for(Index3=0;Index3<=nUDegree;++Index3)
                         {
                         double dFactor=aaUBasisFunctions[Index1][Index3];
-                        SGM::Point3D const &ControlPos=aControlPoints[nUSpanIndex-nUDegree+Index3]
-                                                                     [nVSpanIndex-nVDegree+Index2];
+                        SGM::Point3D const &ControlPos=aaControlPoints[nUSpanIndex-nUDegree+Index3]
+                                                                      [nVSpanIndex-nVDegree+Index2];
                         temp[Index2].m_x+=dFactor*ControlPos.m_x;
                         temp[Index2].m_y+=dFactor*ControlPos.m_y;
                         temp[Index2].m_z+=dFactor*ControlPos.m_z;
@@ -665,6 +903,132 @@ void surface::Evaluate(SGM::Point2D const &uv,
 
             break;
             }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURB=(NURBsurface const *)this;
+            std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURB->m_aaControlPoints;
+            
+            std::vector<double> const &aUKnots=pNURB->m_aUKnots;
+            size_t nUDegree=pNURB->GetUDegree();
+            size_t nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,aUKnots);
+
+            std::vector<double> const &aVKnots=pNURB->m_aVKnots;
+            size_t nVDegree=pNURB->GetVDegree();
+            size_t nVSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,uv.m_v,aVKnots);
+
+            size_t nUDerivatives=0;
+            if(Du || Norm || Duv) nUDerivatives=1;
+            if(Duu) nUDerivatives=2;
+
+            size_t nVDerivatives=0;
+            if(Dv || Norm || Duv) nVDerivatives=1;
+            if(Dvv) nVDerivatives=2;
+
+            size_t Index1,Index2,Index3;
+
+            double aUMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+            double *aaUBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                {
+                aaUBasisFunctions[Index1]=aUMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                }
+            FindBasisFunctions(nUSpanIndex,uv.m_u,nUDegree,nUDerivatives,&aUKnots[0],aaUBasisFunctions);
+
+            double aVMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+            double *aaVBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+                {
+                aaVBasisFunctions[Index1]=aVMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+                }
+            FindBasisFunctions(nVSpanIndex,uv.m_v,nVDegree,nVDerivatives,&aVKnots[0],aaVBasisFunctions);
+
+            SGM::Point4D temp[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+            SGM::Point4D SKL[3][3];
+            for(Index1=0;Index1<=nUDerivatives;++Index1)
+                {
+                for(Index2=0;Index2<=nVDegree;++Index2)
+                    {
+                    temp[Index2]=SGM::Point4D(0.0,0.0,0.0,0.0);
+                    for(Index3=0;Index3<=nUDegree;++Index3)
+                        {
+                        double dFactor=aaUBasisFunctions[Index1][Index3];
+                        SGM::Point4D const &ControlPos=aaControlPoints[nUSpanIndex-nUDegree+Index3]
+                                                                      [nVSpanIndex-nVDegree+Index2];
+                        temp[Index2].m_x+=dFactor*ControlPos.m_x;
+                        temp[Index2].m_y+=dFactor*ControlPos.m_y;
+                        temp[Index2].m_z+=dFactor*ControlPos.m_z;
+                        temp[Index2].m_w+=dFactor*ControlPos.m_w;
+                        }
+                    }
+
+                for(Index2=0;Index2<=nVDerivatives;++Index2)
+                    {
+                    SKL[Index1][Index2].m_x=0.0;
+                    SKL[Index1][Index2].m_y=0.0;
+                    SKL[Index1][Index2].m_z=0.0;
+                    SKL[Index1][Index2].m_w=0.0;
+                    for(Index3=0;Index3<=nVDegree;++Index3)
+                        {
+                        SKL[Index1][Index2].m_x+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_x;
+                        SKL[Index1][Index2].m_y+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_y;
+                        SKL[Index1][Index2].m_z+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_z;
+                        SKL[Index1][Index2].m_w+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_w;
+                        }
+                    }
+                }
+
+            // Fill in the answers.
+
+            if(Pos)
+                {
+                SGM::Point4D &Pos4D=SKL[0][0];
+                double dRW=1.0/Pos4D.m_w;
+                *Pos=SGM::Point3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+            if(Du)
+                {
+                SGM::Point4D &Pos4D=SKL[1][0];
+                double dRW=1.0/Pos4D.m_w;
+                *Du=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+            if(Dv)
+                {
+                SGM::Point4D &Pos4D=SKL[0][1];
+                double dRW=1.0/Pos4D.m_w;
+                *Dv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+            if(Norm)
+                {
+                SGM::Point4D &Pos4DU=SKL[1][0];
+                double dRWU=1.0/Pos4DU.m_w;
+
+                SGM::Point4D &Pos4DV=SKL[0][1];
+                double dRWV=1.0/Pos4DV.m_w;
+
+                *Norm=SGM::Vector3D(Pos4DU.m_x*dRWU,Pos4DU.m_y*dRWU,Pos4DU.m_z*dRWU)*
+                      SGM::Vector3D(Pos4DV.m_x*dRWV,Pos4DV.m_y*dRWV,Pos4DV.m_z*dRWV);
+                }
+            if(Duu)
+                {
+                SGM::Point4D &Pos4D=SKL[2][0];
+                double dRW=1.0/Pos4D.m_w;
+                *Duu=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+            if(Duv)
+                {
+                SGM::Point4D &Pos4D=SKL[1][1];
+                double dRW=1.0/Pos4D.m_w;
+                *Duv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+            if(Dvv)
+                {
+                SGM::Point4D &Pos4D=SKL[0][2];
+                double dRW=1.0/Pos4D.m_w;
+                *Dvv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                }
+
+            break;
+            }
         default:
             {
             throw;
@@ -682,7 +1046,9 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     SGM::Point2D Answer=StartUV;
     double DeltaU=std::numeric_limits<double>::max();
     double DeltaV=std::numeric_limits<double>::max();
-    while(SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
+    size_t nCount=0;
+    while(nCount<100 &&
+          SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
           SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO)
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
@@ -692,6 +1058,7 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         DeltaV=(S%DV)/DV.MagnitudeSquared();
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
+        ++nCount;
         }
     return Answer;
     }
@@ -779,13 +1146,36 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             uv.m_u=SGM::SAFEatan2(dy,dx);
             uv.m_v=(x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z)/dRadius;
 
-            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            while(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
                 uv.m_u+=SGM_TWO_PI;
                 }
+            while(m_Domain.m_UDomain.m_dMax<uv.m_u)
+                {
+                uv.m_u-=SGM_TWO_PI;
+                }
+
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -847,7 +1237,25 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 }
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -889,7 +1297,30 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 }
             if(pGuess)
                 {
-                throw;
+                // Check for points on the north-south pole axis, at the 
+                // center, and on the seam.
+
+                if(SGM::NearEqual(Pos,Center,SGM_MIN_TOL))
+                    {
+                    uv=*pGuess;
+                    }
+                else if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
             
             if(ClosePos)
@@ -909,6 +1340,8 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             SGM::UnitVector3D const &ZAxis  =pTorus->m_ZAxis;
             double dMajorRadius=pTorus->m_dMajorRadius;
 
+            // Find the u value.
+
             double x=Pos.m_x-Center.m_x;
             double y=Pos.m_y-Center.m_y;
             double z=Pos.m_z-Center.m_z;
@@ -917,31 +1350,100 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
             uv.m_u=SGM::SAFEatan2(dUy,dUx);
 
-            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+            // Find the v value.
 
+            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+            if(pTorus->GetKind()==SGM::TorusKindType::LemonType)
+                {
+                Spoke.Negate();
+                }
             double cx=Pos.m_x-Center.m_x-Spoke.m_x*dMajorRadius;
             double cy=Pos.m_y-Center.m_y-Spoke.m_y*dMajorRadius;
             double cz=Pos.m_z-Center.m_z-Spoke.m_z*dMajorRadius;
-
             double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
             double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
             uv.m_v=SGM::SAFEatan2(dVy,dVx);
-
-            if(pTorus->GetKind()==SGM::TorusKindType::LemonType)
-                {
-                uv.m_v-=SGM_PI;
-                }
-            if(uv.m_v<m_Domain.m_VDomain.m_dMin)
+            
+            // Adjust to the domain.
+            
+            while(uv.m_v<m_Domain.m_VDomain.m_dMin)
                 {
                 uv.m_v+=SGM_TWO_PI;
                 }
-            if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            while(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {
                 uv.m_u+=SGM_TWO_PI;
                 }
+            while(uv.m_v>m_Domain.m_VDomain.m_dMax)
+                {
+                uv.m_v-=SGM_TWO_PI;
+                }
+            while(uv.m_u>m_Domain.m_UDomain.m_dMax)
+                {
+                uv.m_u-=SGM_TWO_PI;
+                }
+            
+            // fix apples and lemons
+
+            if( pTorus->GetKind()==SGM::TorusKindType::AppleType ||
+                pTorus->GetKind()==SGM::TorusKindType::LemonType)
+                {
+                if(m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                    {
+                    SGM::Point3D NorthPole,SouthPole;
+                    SGM::Point2D uv1(uv.m_u,m_Domain.m_VDomain.m_dMax);
+                    pTorus->Evaluate(uv1,&NorthPole);
+                    SGM::Point2D uv2(uv.m_u,m_Domain.m_VDomain.m_dMin);
+                    pTorus->Evaluate(uv2,&SouthPole);
+                    double dNorth=NorthPole.DistanceSquared(Pos);
+                    double dSouth=SouthPole.DistanceSquared(Pos);
+                    if(dNorth<dSouth)
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                }
+
             if(pGuess)
                 {
-                throw;
+                // Check for points on the axis, and on the seam.
+
+               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_u=m_Domain.m_UDomain.m_dMin;
+                        }
+                    }
+               if( pTorus->m_nKind!=SGM::TorusKindType::LemonType &&
+                   pTorus->m_nKind!=SGM::TorusKindType::AppleType &&
+                   m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                    {
+                    if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false) &&
+                        SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMax;
+                        }
+                    else if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false) &&
+                             SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        uv.m_v=m_Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-Center)%ZAxis),1.0,SGM_MIN_TOL,false))
+                    {
+                    uv.m_u=pGuess->m_u;
+                    }
                 }
 
             if(ClosePos)

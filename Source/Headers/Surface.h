@@ -66,6 +66,8 @@ class surface : public entity
 
         curve *VParamLine(SGM::Result &rResult,double dV) const;
 
+        void Transform(SGM::Transform3D const &Trans);
+
     protected:
 
         std::set<face *> m_sFaces;
@@ -148,6 +150,8 @@ class cone : public surface
         curve *UParamLine(double dU) const;
 
         curve *VParamLine(double dV) const;
+
+        SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
 
     public:
 

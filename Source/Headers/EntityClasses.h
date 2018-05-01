@@ -35,10 +35,13 @@ class entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        SGM::Interval3D const &GetBox() const {return m_Box;}
+
     protected:
 
-        size_t          m_ID;
-        SGM::EntityType m_Type;
+        size_t                  m_ID;
+        SGM::EntityType         m_Type;
+        mutable SGM::Interval3D m_Box;
 
         // Only to be called from the thing constructor.
 
@@ -240,7 +243,7 @@ class face : public topology
 
         std::vector<size_t> const &GetTriangles(SGM::Result &rResult) const;
 
-        std::vector<SGM::UnitVector3D> const &GetNormals() const; 
+        std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
         std::vector<entity *> const &GetEntities() const;
 

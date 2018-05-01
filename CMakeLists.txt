@@ -54,6 +54,11 @@ endfunction()
 add_subdirectory(Source)
 add_subdirectory(Apps)
 
+option(BUILD_MODEL_VIEWER "Build the Qt/VTK based model viewer application." OFF)
+if(BUILD_MODEL_VIEWER)
+  add_subdirectory(ModelViewer)
+endif()
+
 
 
 # installation for all projects

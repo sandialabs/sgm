@@ -389,7 +389,7 @@ void MergePolygons(face                              const *pFace,
         SGM::Point3D const &Pos1=aPoints3D[nPos1];
         entity *pEnt0=aEntities[nPos0];
         entity *pEnt1=aEntities[nPos1];
-        if(UDomain.OnBoundary(u0))
+        if(UDomain.OnBoundary(u0,SGM_MIN_TOL))
             {
             if(dMidDomain<u0)
                 {
@@ -407,7 +407,7 @@ void MergePolygons(face                              const *pFace,
             aPoints3D.push_back(Pos0);
             aEntities.push_back(pEnt0);
             }
-        else if(UDomain.OnBoundary(u1))
+        else if(UDomain.OnBoundary(u1,SGM_MIN_TOL))
             {
             if(dMidDomain<u1)
                 {

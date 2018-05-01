@@ -48,6 +48,8 @@ class curve : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        void Transform(SGM::Transform3D const &Trans);
+
     protected:
 
         std::set<edge *> m_sEdges;
@@ -112,38 +114,6 @@ class circle : public curve
         double            m_dRadius;
     };
 
-class ellipse : public curve
-    {
-    public:
-
-        ellipse(SGM::Result             &rResult,
-                SGM::Point3D      const &Center,
-                SGM::UnitVector3D const &Normal,
-                double                   dRadius1,
-                double                   dRadius2,
-                SGM::UnitVector3D const *pXAxis=nullptr,
-                SGM::Interval1D   const *pDomain=nullptr);
-
-        ellipse(SGM::Result   &rResult,
-                ellipse const *pEllipse);
-
-        SGM::Point3D       const &GetCenter() const {return m_Center;}
-        SGM::UnitVector3D  const &GetNormal() const {return m_Normal;}
-        SGM::UnitVector3D  const &GetXAxis()  const {return m_XAxis;}
-        SGM::UnitVector3D  const &GetYAxis()  const {return m_YAxis;}
-        double GetRadius1() const {return m_dRadius1;}
-        double GetRadius2() const {return m_dRadius2;}
-
-    public:
-
-        SGM::Point3D      m_Center;
-        SGM::UnitVector3D m_Normal;
-        SGM::UnitVector3D m_XAxis;
-        SGM::UnitVector3D m_YAxis;
-        double            m_dRadius1;
-        double            m_dRadius2;
-    };
-
 class NUBcurve: public curve
     {
     public:
@@ -181,18 +151,15 @@ class NURBcurve: public curve
     {
     public:
 
-        NURBcurve(SGM::Result                                   &rResult,
-                  std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
-                  std::vector<double>                     const &aUKnots,
-                  std::vector<double>                     const &aVKnots);
+        NURBcurve(SGM::Result                     &rResult,
+                  std::vector<SGM::Point4D> const &aControlPoints,
+                  std::vector<double>       const &aKnots);
 
-        size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
-        size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
+        size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
-        std::vector<std::vector<SGM::Point4D> > const &GetControlPoints() const {return m_aaControlPoints;}
+        std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
 
-        std::vector<double> const &GetUKnots() const {return m_aUKnots;}
-        std::vector<double> const &GetVKnots() const {return m_aVKnots;}
+        std::vector<double> const &GetKnots() const {return m_aKnots;}
 
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
@@ -203,9 +170,8 @@ class NURBcurve: public curve
 
     public:
 
-        std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
-        std::vector<double>                     m_aUKnots;   
-        std::vector<double>                     m_aVKnots;   
+        std::vector<SGM::Point4D> m_aControlPoints;
+        std::vector<double>       m_aKnots;   
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -222,6 +188,73 @@ class PointCurve: public curve
     public:
 
         SGM::Point3D m_Pos;
+    };
+
+class ellipse: public curve
+    {
+    public:
+
+        // f(t)=(a*cos(t),b*sin(t))
+
+        ellipse(SGM::Result             &rResult,
+                SGM::Point3D      const &Center,
+                SGM::UnitVector3D const &XAxis,
+                SGM::UnitVector3D const &YAxis,
+                double                   dA,
+                double                   dB);
+
+    public:
+
+        SGM::Point3D      m_Center;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
+        double            m_dA;
+        double            m_dB;
+    };
+
+class hyperbola: public curve
+    {
+    public:
+
+        // f(t)=a*sqrt(1+t^2/b^2)
+        
+        hyperbola(SGM::Result             &rResult,
+                  SGM::Point3D      const &Center,
+                  SGM::UnitVector3D const &XAxis,
+                  SGM::UnitVector3D const &YAxis,
+                  double                   dA,
+                  double                   dB);
+
+    public:
+
+        SGM::Point3D      m_Center;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
+        double            m_dA;
+        double            m_dB;
+    };
+
+class parabola: public curve
+    {
+    public:
+
+        // f(t)=at^2
+
+        parabola(SGM::Result             &rResult,
+                 SGM::Point3D      const &Center,
+                 SGM::UnitVector3D const &XAxis,
+                 SGM::UnitVector3D const &YAxis,
+                 double                   dA);
+
+    public:
+
+        SGM::Point3D      m_Center;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
+        double            m_dA;
     };
 
 ///////////////////////////////////////////////////////////////////////////////

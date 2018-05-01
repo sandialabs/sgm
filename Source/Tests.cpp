@@ -11,6 +11,7 @@
 #include "FileFunctions.h"
 #include "EntityClasses.h"
 #include "Intersectors.h"
+#include "FacetToBRep.h"
 
 #include <string>
 #include <vector>
@@ -742,7 +743,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // 2*(x-1)(x-2)(x-3)(x-4) -> 2*x^4-20*x^3+70*x^2-100*x+48 Four roots
 
         std::vector<double> aRoots;
-        size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots);
+        size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots,SGM_MIN_TOL);
         if( nRoots!=4 || 
             SGM_ZERO<fabs(aRoots[0]-1) ||
             SGM_ZERO<fabs(aRoots[1]-2) ||
@@ -755,7 +756,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-2)(x-3)(x-3) -> x^4-9*x^3+29*x^2-39*x+18 Three roots, one double
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-9,29,-39,18,aRoots);
+        nRoots=SGM::Quartic(1,-9,29,-39,18,aRoots,SGM_MIN_TOL);
         if( nRoots!=3 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2) ||
@@ -767,7 +768,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-2)(x-2)(x-2) -> x^4-7*x^3+18*x^2-20*x+8 Two roots, one triple
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-7,18,-20,8,aRoots);
+        nRoots=SGM::Quartic(1,-7,18,-20,8,aRoots,SGM_MIN_TOL);
         if( nRoots!=2 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2))
@@ -778,7 +779,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-1)(x-2)(x-2) -> x^4-6*x^3+13*x^2-12*x+4 Two double roots
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots);
+        nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots,SGM_MIN_TOL);
         if( nRoots!=2 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2))
@@ -789,7 +790,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-2)(x^2+1) -> x^4-3*x^3+3*x^2-3*x+2 Two roots
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots);
+        nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots,SGM_MIN_TOL);
         if( nRoots!=2 || 
             SGM_ZERO<fabs(aRoots[0]-1) || 
             SGM_ZERO<fabs(aRoots[1]-2))
@@ -800,7 +801,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-1)(x^2+1) -> x^4-2*x^3+2*x^2-2*x+1 One double root.
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots);
+        nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_MIN_TOL);
         if( nRoots!=1 || 
             SGM_ZERO<fabs(aRoots[0]-1))
             {
@@ -810,7 +811,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots);
+        nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots,SGM_MIN_TOL);
         if( nRoots!=1 || 
             SGM_ZERO<fabs(aRoots[0]-1))
             {
@@ -820,7 +821,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // (x^2+1)(x^2+1) -> x^4+2*x^2+1 No roots.
 
         aRoots.clear();
-        nRoots=SGM::Quartic(1,0,2,0,1,aRoots);
+        nRoots=SGM::Quartic(1,0,2,0,1,aRoots,SGM_MIN_TOL);
         if( nRoots!=0 )
             {
             bAnswer=false;
@@ -943,12 +944,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         {
         // Test torus inverse.
 
-        SGM::Point3D Origin(10,11,12);
-        SGM::UnitVector3D ZAxis(1,2,3);
+        SGM::Point3D Origin(0,0,0);
+        SGM::UnitVector3D ZAxis(0,0,1);
         torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
 
-        //bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
-        bool bAnswer=TestSurface(pTorus,SGM::Point2D(SGM_HALF_PI,SGM_HALF_PI));
+        bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pTorus);
 
         return bAnswer;
@@ -1762,6 +1762,190 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
+        return bAnswer;
+        }
+
+     if(nTestNumber==24)
+        {
+        // Test Line Torus Intersections.
+
+        bool bAnswer=true;
+
+        SGM::UnitVector3D XVec(1.0,2.0,3.0);
+        SGM::UnitVector3D YVec=XVec.Orthogonal();
+        SGM::UnitVector3D ZVec=XVec*YVec;
+        SGM::Vector3D TVec(4.0,5.0,6.0);
+        SGM::Transform3D Trans(XVec,YVec,ZVec,TVec);
+
+        SGM::Point3D Origin1(-20,0,0);
+        SGM::UnitVector3D Axis(1.0,0.0,0.0);
+        SGM::Interval1D Domain(-20.0,20.0);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+
+        SGM::Point3D Center(0.0,0.0,0.0);
+        SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
+        torus *pTorus=new torus(rResult,Center,ZAxis,1.0,3.0,false);
+
+        pTorus->Transform(Trans);
+        Origin1*=Trans;
+        Axis*=Trans;
+
+        size_t nHits=IntersectLineAndTorus(Origin1,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        SGM::Point3D Answer0(-4.0,0.0,0.0);
+        SGM::Point3D Answer1(-2.0,0.0,0.0);
+        SGM::Point3D Answer2( 2.0,0.0,0.0);
+        SGM::Point3D Answer3( 4.0,0.0,0.0);
+        if( nHits!=4 ||
+            SGM::NearEqual(aPoints[0],Trans*Answer0,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],Trans*Answer1,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[2],Trans*Answer2,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[3],Trans*Answer3,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        SGM::Point3D Origin2(-20,2.0,0);
+        Origin2*=Trans;
+        SGM::Point3D Answer4(-3.4641016151377545870548926830117,2.0,0.0);
+        SGM::Point3D Answer5(0.0,2.0,0.0);
+        SGM::Point3D Answer6(3.4641016151377545870548926830117,2.0,0.0);
+        nHits=IntersectLineAndTorus(Origin2,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=3 ||
+            SGM::NearEqual(aPoints[0],Trans*Answer4,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],Trans*Answer5,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[2],Trans*Answer6,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        SGM::Point3D Origin3(-20,3.0,0);
+        Origin3*=Trans;
+        SGM::Point3D Answer7(-2.6457513110645905905016157536393,3.0,0.0);
+        SGM::Point3D Answer8(2.6457513110645905905016157536393,3.0,0.0);
+        nHits=IntersectLineAndTorus(Origin3,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=2 ||
+            SGM::NearEqual(aPoints[0],Trans*Answer7,SGM_ZERO)==false ||
+            SGM::NearEqual(aPoints[1],Trans*Answer8,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        SGM::Point3D Origin4(-20,4.0,0);
+        Origin4*=Trans;
+        SGM::Point3D Answer9(0.0,4.0,0.0);
+        nHits=IntersectLineAndTorus(Origin4,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if( nHits!=1 ||
+            SGM::NearEqual(aPoints[0],Trans*Answer9,SGM_ZERO)==false)
+            {
+            bAnswer=false;
+            }
+
+        aPoints.clear();
+        SGM::Point3D Origin5(-20,5.0,0);
+        Origin5*=Trans;
+        nHits=IntersectLineAndTorus(Origin5,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
+        if(nHits!=0)
+            {
+            bAnswer=false;
+            }
+
+        rResult.GetThing()->DeleteEntity(pTorus);
+
+        return bAnswer;
+        }
+
+     if(nTestNumber==25)
+        {
+        // Test finding conic sections from five points
+
+        bool bAnswer=true;
+
+        double dTolerance=SGM_MIN_TOL;
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(5);
+
+        // y=ax^2 parabola
+        // a=2 
+        
+        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(1.0,2.0,0.0));
+        aPoints.push_back(SGM::Point3D(-1.0,2.0,0.0));
+        aPoints.push_back(SGM::Point3D(2.0,8.0,0.0));
+        aPoints.push_back(SGM::Point3D(-3.0,18.0,0.0));
+
+        curve *pConic0=FindConic(rResult,aPoints,dTolerance);
+        if(pConic0)
+            {
+            bAnswer=false;
+            rResult.GetThing()->DeleteEntity(pConic0);
+            }
+
+        // x^2/a^2-y^2/b^2=1 hyperbola
+        // a=2 b=3
+        
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(2.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(-2.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(6.0,8.4852813742385702928101323452582,0.0));
+        aPoints.push_back(SGM::Point3D(6.0,-8.4852813742385702928101323452582,0.0));
+        aPoints.push_back(SGM::Point3D(-6.0,8.4852813742385702928101323452582,0.0));
+
+        curve *pConic1=FindConic(rResult,aPoints,dTolerance);
+        rResult.GetThing()->DeleteEntity(pConic1);
+
+        // x^2/a^2+y^2/b^2=1 ellipse
+        // a=2 b=3
+
+        aPoints.clear();
+        aPoints.push_back(SGM::Point3D(0.0,3.0,0.0));
+        aPoints.push_back(SGM::Point3D(2.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(-2.0,0.0,0.0));
+        aPoints.push_back(SGM::Point3D(0.0,-3.0,0.0));
+        aPoints.push_back(SGM::Point3D(1.0,2.5980762113533159402911695122588,0.0));
+        
+        curve *pConic2=FindConic(rResult,aPoints,dTolerance);
+        rResult.GetThing()->DeleteEntity(pConic2);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==26)
+        {
+        // Test inverse on lemon and apple tori.
+
+        bool bAnswer=true;
+
+        SGM::Point3D Center;
+        SGM::UnitVector3D Axis(0.0,0.0,1.0),XAxis(1.0,0.0,0.0);
+        torus *pApple=new torus(rResult,Center,Axis,2.0,0.5,true,&XAxis);
+        torus *pLemon=new torus(rResult,Center,Axis,2.0,0.5,false,&XAxis);
+
+        SGM::Point3D Pos0(0.5,0.0,0.0);
+        SGM::Point3D Pos1(1.5,0.0,2.0);
+        SGM::Point3D CPos;
+
+        pApple->Inverse(Pos0,&CPos);
+        pLemon->Inverse(Pos1,&CPos);
+        
+        rResult.GetThing()->DeleteEntity(pApple);
+        rResult.GetThing()->DeleteEntity(pLemon);
+
+        pApple=new torus(rResult,Center,Axis,2.0,1.5,true,&XAxis);
+        pLemon=new torus(rResult,Center,Axis,2.0,1.5,false,&XAxis);
+
+        SGM::Point3D Pos2(1.5,0.0,0.0);
+        SGM::Point3D Pos3(2.5,0.0,2.0);
+        
+        pApple->Inverse(Pos2,&CPos);
+        pLemon->Inverse(Pos3,&CPos);
+
+        rResult.GetThing()->DeleteEntity(pApple);
+        rResult.GetThing()->DeleteEntity(pLemon);
+        
         return bAnswer;
         }
 

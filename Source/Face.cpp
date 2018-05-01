@@ -55,6 +55,16 @@ std::vector<size_t> const &face::GetTriangles(SGM::Result &rResult) const
     return m_aTriangles;
     }
 
+std::vector<SGM::UnitVector3D> const &face::GetNormals(SGM::Result &rResult) const
+    {
+    if(m_aPoints2D.empty())
+        {
+        FacetOptions Options;
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        }
+    return m_aNormals;
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        SGM::Point3D       *ClosePos,    // The closest point.

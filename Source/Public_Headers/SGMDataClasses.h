@@ -12,8 +12,11 @@ class entity;
 
 namespace SGM
     {
+    class Vector2D;
     class Vector3D;
+    class Vector4D;
     class Point3D;
+    class Transform3D;
 
     // Note that for performance reasons the basic data classes DO NOT
     // initialize their data members with the default constructor.
@@ -41,6 +44,8 @@ namespace SGM
 
         bool operator<(Point2D const &Pos) const;
 
+        Point2D operator+=(Vector2D const &Vec);
+
         double m_u;
         double m_v;
         };
@@ -61,6 +66,8 @@ namespace SGM
 
         Point3D operator+=(Vector3D const &Vec);
 
+        Point3D operator*=(Transform3D const &Trans);
+
         double m_x;
         double m_y;
         double m_z;
@@ -73,6 +80,8 @@ namespace SGM
         Point4D() {}
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
+
+        Point4D operator+=(Vector4D const &Vec);
 
         double m_x;
         double m_y;
@@ -118,6 +127,8 @@ namespace SGM
 
         Vector3D operator/(double dScale) const;
 
+        Vector3D operator*=(Transform3D const &Trans);
+
         double m_x;
         double m_y;
         double m_z;
@@ -130,6 +141,12 @@ namespace SGM
         Vector4D() {}
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
+
+        explicit Vector4D(Point4D const &Pos);
+
+        Vector4D operator*(double dScale) const;
+
+        Vector4D operator/(double dScale) const;
 
         double m_x;
         double m_y;
@@ -152,6 +169,8 @@ namespace SGM
         UnitVector2D(double u,double v);
 
         UnitVector2D(SGM::Vector2D const &Vec);
+
+        UnitVector2D operator*(double dScale) const;
         };
 
     class SGM_EXPORT UnitVector3D : public SGM::Vector3D
@@ -163,6 +182,10 @@ namespace SGM
         UnitVector3D(double x,double y,double z);
 
         UnitVector3D(SGM::Vector3D const &Vec);
+
+        UnitVector3D operator*=(Transform3D const &Trans);
+
+        void Negate();
         };
 
     class SGM_EXPORT UnitVector4D : public SGM::Vector4D
@@ -203,7 +226,7 @@ namespace SGM
 
             bool InInterval(double Pos) const;
 
-            bool OnBoundary(double Pos) const;
+            bool OnBoundary(double Pos,double dTol) const;
 
             // Unites this interval with the given interval.
 
@@ -466,6 +489,14 @@ namespace SGM
 
             void Inverse(Transform3D &Trans) const;
 
+            // Returns the scale in a given direction.
+
+            double Scale(SGM::UnitVector3D const &Direction) const;
+
+            // Returns either zero or a uniform scale value.
+
+            double Scale() const;
+
             // Get methods.
 
             SGM::Vector4D const *GetData() const {return m_Matrix;}
@@ -518,6 +549,10 @@ namespace SGM
 
     SGM_EXPORT SGM::Vector2D operator-(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
 
+    SGM_EXPORT SGM::Point2D operator+(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
+
+    SGM_EXPORT SGM::Point2D operator-(SGM::Point2D const &Pos,SGM::Vector2D const &Vec);
+
     SGM_EXPORT SGM::Vector3D operator-(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1);
 
     SGM_EXPORT SGM::Vector3D operator+(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
@@ -526,9 +561,17 @@ namespace SGM
 
     SGM_EXPORT SGM::Point3D operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec);
 
+    SGM_EXPORT SGM::Point4D operator+(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+
+    SGM_EXPORT SGM::Point4D operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
+
+    SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+
     SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
     SGM_EXPORT SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
+
+    SGM_EXPORT SGM::Vector4D operator*(double dValue,SGM::Vector4D const &Vec);
 
     SGM_EXPORT SGM::Vector3D operator*(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
