@@ -228,9 +228,17 @@ void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
     {
     thing *pThing=rResult.GetThing();
     entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    entity *pCloseEntity;
-    ::FindClosestPointOnEntity(rResult,Point,pEntity,ClosestPoint,pCloseEntity,bBoundary);
-    ClosestEntity=Entity(pCloseEntity->GetID());
+    if (nullptr == pEntity)
+        {
+        rResult.SetResult(ResultType::ResultTypeUnknownEntityID);
+        rResult.SetMessage("Given EntityID does not exist.");
+        }
+    else
+        {
+        entity *pCloseEntity;
+        ::FindClosestPointOnEntity(rResult, Point, pEntity, ClosestPoint, pCloseEntity, bBoundary);
+        ClosestEntity = Entity(pCloseEntity->GetID());
+        }
     }
 
 size_t SGM::FindCloseEdges(SGM::Result            &rResult,
@@ -253,7 +261,7 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
         FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aEdges.emplace_back(pEdge->GetID());
+            aEdges.push_back(SGM::Edge(pEdge->GetID()));
             }
         ++iter;
         }
@@ -280,7 +288,7 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
         FindClosestPointOnFace(rResult,Point,pFace,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aFaces.emplace_back(pFace->GetID());
+            aFaces.push_back(SGM::Face(pFace->GetID()));
             }
         ++iter;
         }

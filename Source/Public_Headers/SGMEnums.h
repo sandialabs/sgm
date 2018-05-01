@@ -71,7 +71,8 @@ namespace SGM
         ResultTypeUnknownType,      // An unknown data type was found in a file.
         ResultTypeInsufficientData, // Not enough data was given to the function.
         ResultTypeUnknownCommand,   // An unknown script command was used.
-        ResultTypeUnknownFileType   // An unknown file type was sent to ReadFile.
+        ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
+        ResultTypeUnknownEntityID   // No matching entity for given ID
         };
 
     } // End of SGM namespace

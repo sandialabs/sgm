@@ -2,6 +2,7 @@
 #include "EntityClasses.h"
 #include "Curve.h"
 #include <vector>
+#include <cmath>
 
 // A quadratic curve, or conic, in the plane is defined by
 // the following equation
