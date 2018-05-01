@@ -82,6 +82,12 @@
        <attribute name="headerCascadingSectionResizes">
         <bool>true</bool>
        </attribute>
+       <attribute name="headerDefaultSectionSize">
+        <number>150</number>
+       </attribute>
+       <attribute name="headerStretchLastSection">
+        <bool>true</bool>
+       </attribute>
        <column>
         <property name="text">
          <string notr="true">Type</string>

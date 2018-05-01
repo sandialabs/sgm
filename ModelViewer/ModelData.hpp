@@ -5,6 +5,7 @@
 
 #include "SGMEntityClasses.h"
 
+class SGMGraphicsWidget;
 class SGMTreeWidget;
 struct pModelData;
 
@@ -15,6 +16,7 @@ public:
   ~ModelData();
 
   void set_tree_widget(SGMTreeWidget *tree);
+  void set_graphics_widget(SGMGraphicsWidget *graphics);
 
   void open_file(const QString &filename);
 
@@ -26,6 +28,7 @@ private:
   void on_entity_removed(const SGM::Entity &ent);
 
   void rebuild_tree();
+  void rebuild_graphics();
 };
 
 #endif // MODELDATA_HPP
