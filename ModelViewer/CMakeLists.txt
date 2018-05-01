@@ -20,6 +20,8 @@ qt5_wrap_ui(UI_SRC ${MODEL_VIEWER_UIS})
 
 set(MODEL_VIEWER_SRC
     ${UI_SRC}
+    FileMenu.cpp
+    FileMenu.hpp
     main.cpp
     MainWindow.cpp
     MainWindow.hpp
