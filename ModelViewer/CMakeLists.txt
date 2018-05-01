@@ -3,12 +3,10 @@ project(ModelViewer)
 cmake_minimum_required(VERSION 3.3)
 
 set(CMAKE_AUTOMOC ON)
-find_package(Qt5Widgets)
-find_package(Qt5OpenGL)
+find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 find_package(VTK)
-find_package(CubitUtil)
-#find_package(OpenNURBS)
-find_package(Cubit)
+
+include(${VTK_USE_FILE})
 
 get_target_property(_loc Qt5::qmake LOCATION)
 get_filename_component(_qmake_dir ${_loc} DIRECTORY)
@@ -45,9 +43,10 @@ add_executable(sgm_viewer ${MODEL_VIEWER_SRC})
 
 target_link_libraries(sgm_viewer PRIVATE
   SGM
-  Qt5::Widgets
-  showviz_geom showviz_base
-  vtkInteractionStyle vtkRenderingOpenGL2)
+  Qt5::Widgets Qt5::OpenGL
+  ${VTK_LIBRARIES}
+  vtkInteractionStyle
+  vtkRenderingOpenGL2)
 
 foreach(vtk_inc ${VTK_INCLUDE_DIRS})
   target_include_directories(sgm_viewer PRIVATE $<BUILD_INTERFACE:${vtk_inc}>)

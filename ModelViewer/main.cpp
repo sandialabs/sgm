@@ -8,7 +8,6 @@
 #include "MainWindow.hpp"
 #include "QVTKOpenGLWidget.h"
 #include "vtkGenericOpenGLRenderWindow.h"
-#include "GView.hpp"
 
 int main(int argc, char** argv)
 {

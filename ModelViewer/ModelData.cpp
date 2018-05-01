@@ -1,9 +1,12 @@
 #include "ModelData.hpp"
 
 #include "SGMDataClasses.h"
+#include "SGMDisplay.h"
 #include "SGMPrimitives.h"
 #include "SGMTopology.h"
 #include "SGMTranslators.h"
+
+#include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
 
 
@@ -11,10 +14,14 @@ struct pModelData
 {
   thing* mThing;
   SGM::Result mResult;
+  SGMGraphicsWidget* mGraphics;
+  SGMTreeWidget* mTree;
 
   pModelData() :
     mThing(SGM::CreateThing()),
-    mResult(mThing)
+    mResult(mThing),
+    mGraphics(nullptr),
+    mTree(nullptr)
   {}
 
   ~pModelData()
@@ -26,8 +33,7 @@ struct pModelData
 
 
 ModelData::ModelData() :
-  dPtr(new pModelData),
-  mTree(nullptr)
+  dPtr(new pModelData)
 {}
 
 ModelData::~ModelData()
@@ -37,7 +43,12 @@ ModelData::~ModelData()
 
 void ModelData::set_tree_widget(SGMTreeWidget *tree)
 {
-  mTree = tree;
+  dPtr->mTree = tree;
+}
+
+void ModelData::set_graphics_widget(SGMGraphicsWidget *graphics)
+{
+  dPtr->mGraphics = graphics;
 }
 
 void ModelData::open_file(const QString &filename)
@@ -51,19 +62,23 @@ void ModelData::open_file(const QString &filename)
                                        ents, log, options);
 
   rebuild_tree();
+  rebuild_graphics();
 }
 
 
 void ModelData::rebuild_tree()
 {
-  mTree->clear();
+  if(!dPtr->mTree)
+    return;
+
+  dPtr->mTree->clear();
   std::set<SGM::Body> bodies;
 
   SGM::FindBodies(dPtr->mResult, SGM::Thing(), bodies);
 
   for(const SGM::Body &body : bodies)
   {
-    QTreeWidgetItem *body_item = new QTreeWidgetItem(mTree);
+    QTreeWidgetItem *body_item = new QTreeWidgetItem(dPtr->mTree);
     body_item->setText(0, "Body");
     body_item->setText(1, QString::number(body.m_ID));
 
@@ -103,5 +118,38 @@ void ModelData::rebuild_tree()
       }
     }
   }
+}
 
+void ModelData::rebuild_graphics()
+{
+  if(!dPtr->mGraphics)
+    return;
+
+  dPtr->mGraphics->clear();
+
+  std::set<SGM::Face> face_list;
+  SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
+  for(const SGM::Face &face : face_list)
+  {
+    const std::vector<SGM::Point3D> &face_points =
+        SGM::GetFacePoints(dPtr->mResult, face);
+    const std::vector<size_t> &face_tris =
+        SGM::GetFaceTriangles(dPtr->mResult, face);
+//    const std::vector<SGM::UnitVector3D> &face_normals =
+//        SGM::GetFaceNormals(dPtr->mResult, face);
+
+    dPtr->mGraphics->add_face(face_points, face_tris);
+  }
+
+  std::set<SGM::Edge> edge_list;
+  SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
+  for(const SGM::Edge &edge : edge_list)
+  {
+    const std::vector<SGM::Point3D> &edge_points =
+        SGM::GetEdgePoints(dPtr->mResult, edge);
+
+    dPtr->mGraphics->add_edge(edge_points);
+  }
+
+  dPtr->mGraphics->reset_view();
 }

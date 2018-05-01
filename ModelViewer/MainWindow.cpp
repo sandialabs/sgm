@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->mGraphics->setFocusPolicy(Qt::ClickFocus);
 
   mModel->set_tree_widget(ui->twTree);
+  mModel->set_graphics_widget(ui->mGraphics);
 
   read_settings();
 }
