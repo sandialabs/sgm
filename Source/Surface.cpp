@@ -1046,7 +1046,9 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     SGM::Point2D Answer=StartUV;
     double DeltaU=std::numeric_limits<double>::max();
     double DeltaV=std::numeric_limits<double>::max();
-    while(SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
+    size_t nCount=0;
+    while(nCount<100 &&
+          SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
           SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO)
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
@@ -1056,6 +1058,7 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         DeltaV=(S%DV)/DV.MagnitudeSquared();
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
+        ++nCount;
         }
     return Answer;
     }

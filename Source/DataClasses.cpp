@@ -310,11 +310,6 @@ void SGM::UnitVector3D::Negate()
     m_z=-m_z;
     }
 
-SGM::UnitVector3D SGM::UnitVector3D::operator*(double dScale) const
-    {
-    return SGM::UnitVector3D(m_x*dScale,m_y*dScale,m_z*dScale);
-    }
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  UnitVector4D methods

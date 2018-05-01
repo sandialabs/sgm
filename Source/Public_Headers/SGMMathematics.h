@@ -31,26 +31,20 @@ namespace SGM
                                          SGM::UnitVector3D               &YVec,
                                          SGM::UnitVector3D               &ZVec);
 
-<<<<<<< HEAD
+    SGM_EXPORT bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
+                                          SGM::Point3D                    &Origin,
+                                          SGM::UnitVector3D               &Axis);
+
     // ProjectPointsToPlane will project the given vector of 3D points 
     // to the given plane resulting in a vector of 2D points.  The function
     // returns the maximum distance that the given points are from the plane.
 
-    double ProjectPointsToPlane(std::vector<SGM::Point3D> const &aPoints3D,
-                                SGM::Point3D              const &Origin,
-                                SGM::UnitVector3D         const &XVec,
-                                SGM::UnitVector3D         const &YVec,
-                                SGM::UnitVector3D         const &ZVec,
-                                std::vector<SGM::Point2D>       &aPoints2D);
-
-    bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
-                               SGM::Point3D                    &Origin,
-                               SGM::UnitVector3D               &Axis);
-=======
-    SGM_EXPORT bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
-                                          SGM::Point3D                    &Origin,
-                                          SGM::UnitVector3D               &Axis);
->>>>>>> a05f5f57757aeee1f3ccb13adfebf69650c9a909
+    SGM_EXPORT double ProjectPointsToPlane(std::vector<SGM::Point3D> const &aPoints3D,
+                                           SGM::Point3D              const &Origin,
+                                           SGM::UnitVector3D         const &XVec,
+                                           SGM::UnitVector3D         const &YVec,
+                                           SGM::UnitVector3D         const &ZVec,
+                                           std::vector<SGM::Point2D>       &aPoints2D);
 
     SGM_EXPORT SGM::Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
     
@@ -273,19 +267,14 @@ namespace SGM
     SGM_EXPORT size_t Cubic(double a,double b,double c,double d,
                             std::vector<double> &aRoots);
 
-<<<<<<< HEAD
     // Quartic returns the roots of f(x)=a*x^4+b*x^3+c*x^2+d*x+c.
     // dTolerance is used to find double roots and keep from
     // returning two roots if abs(f(x)) is less than dTolerance
     // at a root of the derivative.
 
-    size_t Quartic(double a,double b,double c,double d,double e,
-                   std::vector<double> &aRoots,
-                   double dTolerance);
-=======
     SGM_EXPORT size_t Quartic(double a,double b,double c,double d,double e,
-                              std::vector<double> &aRoots);
->>>>>>> a05f5f57757aeee1f3ccb13adfebf69650c9a909
+                              std::vector<double> &aRoots,
+                              double dTolerance);
 
     // Given a vector of N points in the XY-plane PolynomialFit returns
     // the coefficients of a degree N-1 polynomial that passes through the

@@ -944,12 +944,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         {
         // Test torus inverse.
 
-        SGM::Point3D Origin(10,11,12);
-        SGM::UnitVector3D ZAxis(1,2,3);
+        SGM::Point3D Origin(0,0,0);
+        SGM::UnitVector3D ZAxis(0,0,1);
         torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
 
-        //bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
-        bool bAnswer=TestSurface(pTorus,SGM::Point2D(SGM_HALF_PI,SGM_HALF_PI));
+        bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pTorus);
 
         return bAnswer;

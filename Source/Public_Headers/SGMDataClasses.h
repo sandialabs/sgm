@@ -185,8 +185,6 @@ namespace SGM
 
         UnitVector3D operator*=(Transform3D const &Trans);
 
-        UnitVector3D operator*(double dScale) const;
-
         void Negate();
         };
 
