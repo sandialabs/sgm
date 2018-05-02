@@ -175,6 +175,8 @@ void surface::Transform(SGM::Transform3D const &Trans)
                 }
             break;
             }
+        default:
+            break;
         }
     }
 
@@ -1048,8 +1050,8 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     double DeltaV=std::numeric_limits<double>::max();
     size_t nCount=0;
     while(nCount<100 &&
-          SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
-          SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO)
+       (SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
+        SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO))
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         SGM::Point3D ProjectPos=Pos-Norm*((Pos-SurfPos)%Norm);
