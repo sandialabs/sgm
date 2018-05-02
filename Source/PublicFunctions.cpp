@@ -198,6 +198,7 @@ void SGM::FindSurfaces(SGM::Result         &rResult,
                        SGM::Entity   const &EntityID,
                        std::set<SGM::Surface> &sSurfaces)
     {
+      using namespace Impl;
       entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
       std::set<surface *> sSurface;
       FindSurfaces(rResult,pEntity,sSurface);
@@ -228,16 +229,17 @@ void SGM::FindEdges(SGM::Result         &rResult,
 void SGM::FindCurves(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<Curve> &sCurves)
-{
-  entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-  std::set<curve *> sCurve;
-  FindCurves(rResult,pEntity,sCurve);
-  std::set<curve *>::iterator iter=sCurve.begin();
-  while(iter!=sCurve.end())
-  {
-    sCurves.insert(SGM::Curve((*iter)->GetID()));
-    ++iter;
-  }
+    {
+      using namespace Impl;
+      entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+      std::set<curve *> sCurve;
+      FindCurves(rResult,pEntity,sCurve);
+      std::set<curve *>::iterator iter=sCurve.begin();
+      while(iter!=sCurve.end())
+      {
+        sCurves.insert(SGM::Curve((*iter)->GetID()));
+        ++iter;
+      }
 }
 
 void SGM::FindVertices(SGM::Result           &rResult,

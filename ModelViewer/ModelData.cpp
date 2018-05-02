@@ -12,7 +12,7 @@
 
 struct pModelData
 {
-  thing* mThing;
+  SGM::Impl::thing* mThing;
   SGM::Result mResult;
   SGMGraphicsWidget* mGraphics;
   SGMTreeWidget* mTree;
