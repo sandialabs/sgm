@@ -6,19 +6,21 @@
 #include <set>
 #include <vector>
 
-class thing;
-
 namespace SGM
     {
+    namespace Impl
+        {
+        class thing;
+        }
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  By creating a SGM::Result one starts the SGM modeler.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-SGM_EXPORT thing *CreateThing();
+SGM_EXPORT Impl::thing *CreateThing();
 
-SGM_EXPORT void   DeleteThing(thing *pThing);  // if you create a thing, you are responsible for deleting it
+SGM_EXPORT void   DeleteThing(Impl::thing *pThing);  // if you create a thing, you are responsible for deleting it
 
 ///////////////////////////////////////////////////////////////////////////////
 //

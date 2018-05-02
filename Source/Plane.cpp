@@ -5,6 +5,8 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 
+namespace SGM { namespace Impl {
+
 plane::plane(SGM::Result             &rResult,
              SGM::Point3D      const &Origin,
              SGM::UnitVector3D const &XAxis,
@@ -37,3 +39,4 @@ plane::plane(SGM::Result        &rResult,
     m_bClosedV=false;
     }
 
+}}

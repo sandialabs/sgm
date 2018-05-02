@@ -16,6 +16,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGM { namespace Impl {
+
 size_t FindIndices(std::string   const &line,
                    std::vector<size_t> &aIndices)
     {
@@ -1238,12 +1240,15 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
     return aEntities.size();
     }
 
+}}
+
 size_t SGM::ReadFile(SGM::Result                  &rResult,
                      std::string            const &FileName,
                      std::vector<SGM::Entity>     &aEntities,
                      std::vector<std::string>     &aLog,
                      SGM::TranslatorOptions const &Options)
     {
+    using namespace Impl;
     // Find the file type.
 
     thing *pThing=rResult.GetThing();
@@ -1280,7 +1285,7 @@ void SGM::ScanDirectory(SGM::Result       &rResult,
                         std::string const &sOutputName)
     {
     std::vector<std::string> aFileNames;
-    ReadDirectory(sDirName,aFileNames);
+    Impl::ReadDirectory(sDirName,aFileNames);
     size_t nFileNames=aFileNames.size();
     SGM::TranslatorOptions Options;
     Options.m_bScan=true;
@@ -1290,7 +1295,7 @@ void SGM::ScanDirectory(SGM::Result       &rResult,
     for(Index1=0;Index1<nFileNames;++Index1)
         {
         std::string sExt;
-        FindFileExtension(aFileNames[Index1],sExt);
+        Impl::FindFileExtension(aFileNames[Index1],sExt);
         if(sExt=="STEP" || sExt=="step" || sExt=="stp" || sExt=="STP")
             {
             std::string sFullName=sDirName+"/"+aFileNames[Index1];

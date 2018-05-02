@@ -12,6 +12,8 @@
 #include <sstream>
 #include <limits>
 
+namespace SGM { namespace Impl {
+
 class Argument
     {
     public:
@@ -2894,3 +2896,5 @@ void Parse(std::string            ,//LineString,
 
 
     }
+
+}}

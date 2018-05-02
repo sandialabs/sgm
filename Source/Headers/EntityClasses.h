@@ -1,5 +1,5 @@
-#ifndef ENTITY_CLASSES_H
-#define ENTITY_CLASSES_H
+#ifndef SGM_INTERNAL_ENTITY_CLASSES_H
+#define SGM_INTERNAL_ENTITY_CLASSES_H
 
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
@@ -9,6 +9,8 @@
 #include <vector>
 #include <set>
 #include <map>
+
+namespace SGM { namespace Impl {
 
 class thing;
 class complex;
@@ -389,5 +391,6 @@ class vertex : public topology
         std::set<edge *> m_sEdges;
     };
 
-#endif // ENTITY_CLASSES_H
+}}
 
+#endif // ENTITY_CLASSES_H

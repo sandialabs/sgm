@@ -4,6 +4,8 @@
 #include <vector>
 #include <cmath>
 
+namespace SGM { namespace Impl {
+
 // A quadratic curve, or conic, in the plane is defined by
 // the following equation
 //
@@ -283,3 +285,5 @@ curve *FindConic(SGM::Result                     &rResult,
         }
     return nullptr;
     }
+
+}}

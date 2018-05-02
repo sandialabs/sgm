@@ -20,42 +20,42 @@
 std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
                                                  SGM::Face const &FaceID)
     {
-    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    Impl::face *pFace=(Impl::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetTriangles(rResult);    
     }
 
 std::vector<SGM::Point3D> const &SGM::GetFacePoints(SGM::Result     &rResult,
                                                     SGM::Face const &FaceID)
     {
-    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    Impl::face *pFace=(Impl::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetPoints3D(rResult);
     }
 
 std::vector<SGM::Point3D> const &SGM::GetEdgePoints(SGM::Result     &rResult,
                                                     SGM::Edge const &EdgeID)
     {
-    edge *pEdge=(edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);    
+    Impl::edge *pEdge=(Impl::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);    
     return pEdge->GetFacets();
     }
 
 std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResult,
                                                           SGM::Face const &FaceID)
     {
-    face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    Impl::face *pFace=(Impl::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetNormals(rResult);
     }
 
 SGM::Interval3D const &SGM::GetBoundingBox(SGM::Result       &rResult,
                                            SGM::Entity const &EntityID)
     {
-    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    Impl::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     return pEntity->GetBox();
     }
 
 void SGM::DeleteEntity(SGM::Result &rResult,
                        SGM::Entity &EntityID)
     {
-    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    Impl::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     rResult.GetThing()->DeleteEntity(pEntity);
     }
 
@@ -68,6 +68,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                             SGM::Edge                    const *pEdge1,
                             SGM::Edge                    const *pEdge2)
     {
+    using namespace Impl;
     curve const *pCurve1=(curve const *)rResult.GetThing()->FindEntity(CurveID1.m_ID);
     curve const *pCurve2=(curve const *)rResult.GetThing()->FindEntity(CurveID2.m_ID);
     edge const *pedge1=nullptr;
@@ -80,7 +81,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
         {
         pedge2=(edge const *)rResult.GetThing()->FindEntity(pEdge2->m_ID);
         }
-    return ::IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
+    return ::SGM::Impl::IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
     }
 
  size_t SGM::IntersectCurveAndSurface(SGM::Result                        &rResult,
@@ -91,6 +92,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                                       SGM::Edge                    const *pEdge,
                                       SGM::Face                    const *pFace)
      {
+     using namespace Impl;
      curve const *pCurve=(curve const *)rResult.GetThing()->FindEntity(CurveID.m_ID);
      surface const *pSurface=(surface const *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
      edge const *pedge=nullptr;
@@ -103,20 +105,20 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
          {
          pface=(face const *)rResult.GetThing()->FindEntity(pFace->m_ID);
          }
-     return ::IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
+     return Impl::IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
      }
 
 SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
                                           SGM::Vertex const &VertexID)
     {
-    vertex const *pVertex=(vertex const *)rResult.GetThing()->FindEntity(VertexID.m_ID);
+    Impl::vertex const *pVertex=(Impl::vertex const *)rResult.GetThing()->FindEntity(VertexID.m_ID);
     return pVertex->GetPoint();
     }
 
 SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aPoints)
     {
-    complex *pComplex=new complex(rResult,aPoints);
+    Impl::complex *pComplex=new Impl::complex(rResult,aPoints);
     return SGM::Complex(pComplex->GetID());
     }
 
@@ -124,7 +126,7 @@ SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
                                  std::vector<SGM::Point3D> const &aPoints,
                                  std::vector<size_t>       const &aSegments)
     {
-    complex *pComplex=new complex(rResult,aSegments,aPoints);
+    Impl::complex *pComplex=new Impl::complex(rResult,aSegments,aPoints);
     return SGM::Complex(pComplex->GetID());
     }
 
@@ -132,6 +134,7 @@ void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<body *> sbodies;
     FindBodies(rResult,pEntity,sbodies);
@@ -147,6 +150,7 @@ void SGM::FindComplexes(SGM::Result            &rResult,
                    SGM::Entity      const &EntityID,
                    std::set<SGM::Complex> &sComplexes)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<complex *> sComplex;
     FindComplexes(rResult,pEntity,sComplex);
@@ -162,6 +166,7 @@ void SGM::FindVolumes(SGM::Result           &rResult,
                  SGM::Entity     const &EntityID,
                  std::set<SGM::Volume> &sVolumes)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<volume *> sVolume;
     FindVolumes(rResult,pEntity,sVolume);
@@ -177,6 +182,7 @@ void SGM::FindFaces(SGM::Result         &rResult,
                SGM::Entity   const &EntityID,
                std::set<SGM::Face> &sFaces)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<face *> sFace;
     FindFaces(rResult,pEntity,sFace);
@@ -207,6 +213,7 @@ void SGM::FindEdges(SGM::Result         &rResult,
                SGM::Entity   const &EntityID,
                std::set<SGM::Edge> &sEdges)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<edge *> sEdge;
     FindEdges(rResult,pEntity,sEdge);
@@ -237,6 +244,7 @@ void SGM::FindVertices(SGM::Result           &rResult,
                   SGM::Entity     const &EntityID,
                   std::set<SGM::Vertex> &sVertices)
     {
+    using namespace Impl;
     entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
     std::set<vertex *> sVertex;
     FindVertices(rResult,pEntity,sVertex);
@@ -248,12 +256,12 @@ void SGM::FindVertices(SGM::Result           &rResult,
         }
     }
 
-thing *SGM::CreateThing()
+SGM::Impl::thing *SGM::CreateThing()
     {
-    return new thing();
+    return new Impl::thing();
     }
 
-void SGM::DeleteThing(thing *pThing)
+void SGM::DeleteThing(Impl::thing *pThing)
     {
     delete pThing;
     }
@@ -262,8 +270,8 @@ SGM::Body SGM::CreateBlock(SGM::Result        &rResult,
                            SGM::Point3D const &Point1,
                            SGM::Point3D const &Point2)
     {
-    thing *pThing=rResult.GetThing();
-    body *pBody=CreateBlock(rResult,pThing,Point1,Point2);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::body *pBody=CreateBlock(rResult,pThing,Point1,Point2);
     return SGM::Body(pBody->GetID());
     }
 
@@ -271,8 +279,8 @@ SGM::Body SGM::CreateSphere(SGM::Result        &rResult,
                             SGM::Point3D const &Center,
                             double              dRadius)
     {
-    thing *pThing=rResult.GetThing();
-    body *pBody=CreateSphere(rResult,pThing,Center,dRadius);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::body *pBody=CreateSphere(rResult,pThing,Center,dRadius);
     return SGM::Body(pBody->GetID());
     }
 
@@ -281,8 +289,8 @@ SGM::Body SGM::CreateCylinder(SGM::Result        &rResult,
                               SGM::Point3D const &TopCenter,
                               double              dRadius)
     {
-    thing *pThing=rResult.GetThing();
-    body *pBody=CreateCylinder(rResult,pThing,BottomCenter,TopCenter,dRadius);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::body *pBody=CreateCylinder(rResult,pThing,BottomCenter,TopCenter,dRadius);
     return SGM::Body(pBody->GetID());
     }
 
@@ -293,8 +301,8 @@ SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
                            double                   dMinorRadius,
                            bool                     bApple)
     {
-    thing *pThing=rResult.GetThing();
-    body *pBody=CreateTorus(rResult,pThing,Center,Axis,dMajorRadius,dMinorRadius,bApple);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::body *pBody=CreateTorus(rResult,pThing,Center,Axis,dMajorRadius,dMinorRadius,bApple);
     return SGM::Body(pBody->GetID());
     }
 
@@ -303,8 +311,8 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
                       SGM::CheckOptions  const &Options,
                       std::vector<std::string> &aCheckStrings)
     {
-    thing *pThing=rResult.GetThing();
-    entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
     return pEntity->Check(rResult,Options,aCheckStrings);
     }
 
@@ -315,6 +323,7 @@ void SGM::EvaluateCurve(SGM::Result      &rResult,
                         SGM::Vector3D    *pVec1,
                         SGM::Vector3D    *pVec2)
     {
+    using namespace Impl;
     thing *pThing=rResult.GetThing();
     curve *pCurve=(curve *)(pThing->FindEntity(CurveID.m_ID));
     pCurve->Evaluate(dt,pPos,pVec1,pVec2);
@@ -326,6 +335,7 @@ double SGM::CurveInverse(SGM::Result        &rResult,
                          SGM::Point3D       *pClosePos,
                          double       const *pGuess)
     {
+    using namespace Impl;
     thing *pThing=rResult.GetThing();
     curve *pCurve=(curve *)(pThing->FindEntity(CurveID.m_ID));
     return pCurve->Inverse(Pos,pClosePos,pGuess);
@@ -342,6 +352,7 @@ void SGM::EvaluateSurface(SGM::Result             &rResult,
                           SGM::Vector3D           *pDuv,
                           SGM::Vector3D           *pDvv)
     {
+    using namespace Impl;
     thing *pThing=rResult.GetThing();
     surface *pSurface=(surface *)(pThing->FindEntity(SurfaceID.m_ID));
     pSurface->Evaluate(uv,pPos,pDu,pDv,pNorm,pDuu,pDuv,pDvv);
@@ -353,6 +364,7 @@ SGM::Point2D SGM::SurfaceInverse(SGM::Result        &rResult,
                                  SGM::Point3D       *pClosePos,
                                  SGM::Point2D const *pGuess)
     {
+    using namespace Impl;
     thing *pThing=rResult.GetThing();
     surface *pSurface=(surface *)(pThing->FindEntity(SurfaceID.m_ID));
     return pSurface->Inverse(Pos,pClosePos,pGuess);
@@ -362,7 +374,7 @@ SGM::Curve SGM::CreateNUBCurve(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aInterpolate,
                                std::vector<double>       const *pParams)
     {
-    curve *pCurve=::CreateNUBCurve(rResult,aInterpolate,pParams);
+    Impl::curve *pCurve=Impl::CreateNUBCurve(rResult,aInterpolate,pParams);
     return SGM::Curve(pCurve->GetID());
     }
 
@@ -372,6 +384,6 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
                                              SGM::Vector3D             const &EndVec,
                                              std::vector<double>       const *pParams)
     {
-    curve *pCurve=::CreateNUBCurveWithEndVectors(rResult,aInterpolate,StartVec,EndVec,pParams);
+    Impl::curve *pCurve=Impl::CreateNUBCurveWithEndVectors(rResult,aInterpolate,StartVec,EndVec,pParams);
     return SGM::Curve(pCurve->GetID());
     }

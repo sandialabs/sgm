@@ -6,6 +6,8 @@
 #include <map>
 #include <vector>
 
+namespace SGM { namespace Impl {
+
 void FindNeighbors(std::set<GraphEdge>             const &sEdges,
                    std::map<size_t,std::vector<size_t> > &mNeighbors)
     {
@@ -368,3 +370,4 @@ size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
     return nComps;
     }
 
+}}

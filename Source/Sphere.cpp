@@ -3,6 +3,8 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 
+namespace SGM { namespace Impl {
+
 sphere::sphere(SGM::Result             &rResult,
                SGM::Point3D      const &Center,
                double                   dRadius,
@@ -31,3 +33,5 @@ sphere::sphere(SGM::Result             &rResult,
         m_ZAxis=SGM::UnitVector3D(0.0,0.0,1.0);
         }
     }
+
+}}

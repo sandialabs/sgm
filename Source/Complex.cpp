@@ -4,22 +4,6 @@
 #include "EntityClasses.h"
 #include <algorithm>
 
-SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
-                              SGM::Complex      const &,//ComplexID,
-                              SGM::Point3D      const &,//Point,
-                              SGM::UnitVector3D const &,//Normal,
-                              bool                     )//bLocal)
-    {
-    return SGM::Complex(0);
-    }
-
-SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
-                                std::vector<SGM::Point3D> const &,//aPoints,
-                                bool                             )//bFilled)
-    {
-    return SGM::Complex(0);
-    }
-
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
                                   std::vector<size_t>       const &aTriangles)
@@ -29,8 +13,8 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
         rResult.SetResult(SGM::ResultTypeInsufficientData);
         return SGM::Complex(0);
         }
-    thing *pThing=rResult.GetThing();
-    complex *pComplex=new complex(rResult,aPoints,aTriangles);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::complex *pComplex=new Impl::complex(rResult,aPoints,aTriangles);
     pThing->AddTopLevelEntity(pComplex);
     return SGM::Complex(pComplex->GetID());
     }
@@ -85,7 +69,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
                                   SGM::Point2D const &Pos1,
                                   bool                bFilled)
     {
-    thing *pThing=rResult.GetThing();
+    Impl::thing *pThing=rResult.GetThing();
 
     double dMinX=std::min(Pos0.m_u,Pos1.m_u);
     double dMaxX=std::max(Pos0.m_u,Pos1.m_u);
@@ -99,7 +83,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
     aPoints.emplace_back(dMaxX,dMaxY,0);
     aPoints.emplace_back(dMinX,dMaxY,0);
 
-    complex *pComplex;
+    Impl::complex *pComplex;
     if(bFilled)
         {
         std::vector<size_t> aTriangles;
@@ -110,7 +94,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
         aTriangles.push_back(3);
         aTriangles.push_back(1);
         aTriangles.push_back(2);
-        pComplex=new complex(rResult,aPoints,aTriangles);
+        pComplex=new Impl::complex(rResult,aPoints,aTriangles);
         }
     else
         {
@@ -124,12 +108,30 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
         aSegments.push_back(3);
         aSegments.push_back(3);
         aSegments.push_back(0);
-        pComplex=new complex(rResult,aSegments,aPoints);
+        pComplex=new Impl::complex(rResult,aSegments,aPoints);
         }
 
     pThing->AddTopLevelEntity(pComplex);
     return Complex(pComplex->GetID());
     }
+
+SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
+                    SGM::Complex      const &,//ComplexID,
+                    SGM::Point3D      const &,//Point,
+                    SGM::UnitVector3D const &,//Normal,
+                    bool                     )//bLocal)
+    {
+    return Complex(0);
+    }
+
+SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
+                      std::vector<Point3D> const &,//aPoints,
+                      bool                             )//bFilled)
+    {
+    return Complex(0);
+    }
+
+namespace SGM { namespace Impl {
 
 complex::complex(SGM::Result &rResult):
     entity(rResult,SGM::EntityType::ComplexType)
@@ -187,3 +189,5 @@ double complex::Area() const
         }
     return dArea*0.5;
     }
+
+}}

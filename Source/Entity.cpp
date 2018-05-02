@@ -1,5 +1,7 @@
 #include "EntityClasses.h"
 
+namespace SGM { namespace Impl {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  entity methods
@@ -16,3 +18,5 @@ entity::entity():
     m_ID(0),m_Type(SGM::ThingType) 
     {
     }
+
+}}

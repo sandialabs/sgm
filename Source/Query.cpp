@@ -8,6 +8,8 @@
 #include "Surface.h"
 #include <cfloat>
 
+namespace SGM { namespace Impl {
+
 void FindClosestPointOnEdge(SGM::Result        &,//rResult,
                             SGM::Point3D const &Point,
                             edge         const *pEdge,
@@ -219,6 +221,8 @@ void FindClosestPointOnEntity(SGM::Result        &rResult,
         }
     }
 
+}}
+
 void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
                                    SGM::Point3D const &Point,
                                    SGM::Entity  const &EntityID,
@@ -226,8 +230,8 @@ void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
                                    SGM::Entity        &ClosestEntity,
                                    bool                bBoundary)
     {
-    thing *pThing=rResult.GetThing();
-    entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
     if (nullptr == pEntity)
         {
         rResult.SetResult(ResultType::ResultTypeUnknownEntityID);
@@ -235,8 +239,8 @@ void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
         }
     else
         {
-        entity *pCloseEntity;
-        ::FindClosestPointOnEntity(rResult, Point, pEntity, ClosestPoint, pCloseEntity, bBoundary);
+        Impl::entity *pCloseEntity;
+        Impl::FindClosestPointOnEntity(rResult, Point, pEntity, ClosestPoint, pCloseEntity, bBoundary);
         ClosestEntity = Entity(pCloseEntity->GetID());
         }
     }
@@ -247,18 +251,18 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
                            double                  dMaxDistance,
                            std::vector<SGM::Edge> &aEdges)
     {
-    thing *pThing=rResult.GetThing();
-    entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    std::set<edge *> sEdges;
-    FindEdges(rResult,pEntity,sEdges);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    std::set<Impl::edge *> sEdges;
+    Impl::FindEdges(rResult,pEntity,sEdges);
     double dTol=dMaxDistance*dMaxDistance;
-    std::set<edge *>::iterator iter=sEdges.begin();
+    std::set<Impl::edge *>::iterator iter=sEdges.begin();
     while(iter!=sEdges.end())
         {
         SGM::Point3D ClosestPoint;
-        entity *pCloseEntity;
-        edge *pEdge=*iter;
-        FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
+        Impl::entity *pCloseEntity;
+        Impl::edge *pEdge=*iter;
+        Impl::FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
             aEdges.push_back(SGM::Edge(pEdge->GetID()));
@@ -274,18 +278,18 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
                            double                  dMaxDistance,
                            std::vector<SGM::Face> &aFaces)
     {
-    thing *pThing=rResult.GetThing();
-    entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    std::set<face *> sFaces;
-    FindFaces(rResult,pEntity,sFaces);
+    Impl::thing *pThing=rResult.GetThing();
+    Impl::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    std::set<Impl::face *> sFaces;
+    Impl::FindFaces(rResult,pEntity,sFaces);
     double dTol=dMaxDistance*dMaxDistance;
-    std::set<face *>::iterator iter=sFaces.begin();
+    std::set<Impl::face *>::iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
         SGM::Point3D ClosestPoint;
-        entity *pCloseEntity;
-        face *pFace=*iter;
-        FindClosestPointOnFace(rResult,Point,pFace,ClosestPoint,pCloseEntity);
+        Impl::entity *pCloseEntity;
+        Impl::face *pFace=*iter;
+        Impl::FindClosestPointOnFace(rResult,Point,pFace,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
             aFaces.push_back(SGM::Face(pFace->GetID()));

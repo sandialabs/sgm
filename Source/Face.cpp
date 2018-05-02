@@ -9,6 +9,8 @@
 #include "Query.h"
 #include <cfloat>
 
+namespace SGM { namespace Impl {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  face methods
@@ -228,3 +230,4 @@ bool face::GetFlipped() const
     return m_bFlipped;
     }
 
+}}

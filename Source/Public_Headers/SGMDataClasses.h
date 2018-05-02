@@ -7,11 +7,13 @@
 
 #include "sgm_export.h"
 
-class thing;
-class entity;
-
 namespace SGM
     {
+    namespace Impl
+        {
+        class thing;
+        class entity;
+        }
     class Vector2D;
     class Vector3D;
     class Vector4D;
@@ -518,7 +520,7 @@ namespace SGM
 
             SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr) {}
 
-            SGM_EXPORT explicit Result(thing *pThing) : m_nType(ResultType::ResultTypeOK), m_pThing(pThing) {}
+            SGM_EXPORT explicit Result(Impl::thing *pThing) : m_nType(ResultType::ResultTypeOK), m_pThing(pThing) {}
 
             SGM_EXPORT void SetResult(SGM::ResultType nType);
 
@@ -530,15 +532,15 @@ namespace SGM
 
             SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
 
-            SGM_EXPORT thing *GetThing() const {return m_pThing;}
+            SGM_EXPORT Impl::thing *GetThing() const {return m_pThing;}
 
-            SGM_EXPORT entity *FindEntity(size_t nID) const;
+            SGM_EXPORT Impl::entity *FindEntity(size_t nID) const;
 
         private:
 
             SGM::ResultType  m_nType;
             std::string      m_sMessage;
-            thing           *m_pThing;
+            Impl::thing           *m_pThing;
         };
 
     ///////////////////////////////////////////////////////////////////////////

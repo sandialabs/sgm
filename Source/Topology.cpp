@@ -3,6 +3,8 @@
 #include "Curve.h"
 #include "Surface.h"
 
+namespace SGM { namespace Impl {
+
 void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
                 std::set<body *> &sBodies)
@@ -717,3 +719,5 @@ void FindCurves(SGM::Result       &rResult,
         ++iter;
         }
     }
+
+}}

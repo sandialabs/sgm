@@ -2,6 +2,8 @@
 #include "Topology.h"
 #include "Graph.h"
 
+namespace SGM { namespace Impl {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  volume methods
@@ -50,3 +52,5 @@ size_t volume::FindShells(SGM::Result                    &rResult,
         }
     return nShells;
     }
+
+}}

@@ -4,6 +4,8 @@
 #include "Surface.h"
 #include <cmath>
 
+namespace SGM { namespace Impl {
+
 torus::torus(SGM::Result             &rResult,
              SGM::Point3D      const &Center,
              SGM::UnitVector3D const &ZAxis,
@@ -100,3 +102,5 @@ std::vector<SGM::Point2D> const &torus::GetSeedParams() const
         }
     return m_aSeedParams;
     }
+
+}}
