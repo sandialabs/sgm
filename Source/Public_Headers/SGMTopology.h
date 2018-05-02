@@ -30,10 +30,18 @@ namespace SGM
                               SGM::Entity   const &EntityID,
                               std::set<SGM::Face> &sFaces);
 
+    SGM_EXPORT void FindSurfaces(SGM::Result         &rResult,
+                                 SGM::Entity   const &EntityID,
+                                 std::set<SGM::Surface> &sSurfaces);
+
     SGM_EXPORT void FindEdges(SGM::Result         &rResult,
                               SGM::Entity   const &EntityID,
                               std::set<SGM::Edge> &sEdges);
     
+    SGM_EXPORT void FindCurves(SGM::Result         &rResult,
+                              SGM::Entity   const &EntityID,
+                              std::set<SGM::Curve> &sCurves);
+
     SGM_EXPORT void FindVertices(SGM::Result           &rResult,
                                  SGM::Entity     const &EntityID,
                                  std::set<SGM::Vertex> &sVertices);

@@ -103,6 +103,16 @@ void ModelData::rebuild_tree()
         face_item->setText(0, "Face");
         face_item->setText(1, QString::number(face.m_ID));
 
+        // Show the surfaces associated with the face
+        std::set<SGM::Surface> surface_list;
+        SGM::FindSurfaces(dPtr->mResult, face, surface_list);
+        for(const SGM::Surface &surf : surface_list)
+        {
+          QTreeWidgetItem* surface_item = new QTreeWidgetItem(face_item);
+          surface_item->setText(0, "Surface");
+          surface_item->setText(1, QString::number(surf.m_ID));
+        }
+
         std::set<SGM::Edge> edge_list;
         SGM::FindEdges(dPtr->mResult, face, edge_list);
         for(const SGM::Edge &edge : edge_list)
@@ -110,6 +120,16 @@ void ModelData::rebuild_tree()
           QTreeWidgetItem* edge_item = new QTreeWidgetItem(face_item);
           edge_item->setText(0, "Edge");
           edge_item->setText(1, QString::number(edge.m_ID));
+
+          // Show the curves associated with the edge
+          std::set<SGM::Curve> curve_list;
+          SGM::FindCurves(dPtr->mResult, edge, curve_list);
+          for(const SGM::Curve &curv : curve_list)
+          {
+            QTreeWidgetItem* curve_item = new QTreeWidgetItem(edge_item);
+            curve_item->setText(0, "Curve");
+            curve_item->setText(1, QString::number(curv.m_ID));
+          }
 
           std::set<SGM::Vertex> vertex_list;
           SGM::FindVertices(dPtr->mResult, edge, vertex_list);
