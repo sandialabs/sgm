@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 
+namespace SGM { namespace Impl {
+
 size_t entity::GetID() const
     {
     return m_ID;
@@ -153,3 +155,4 @@ size_t thing::GetComplexes(std::set<complex *> &sComplexes) const
     return sComplexes.size();
     }
 
+}}

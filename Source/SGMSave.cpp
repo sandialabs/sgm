@@ -12,6 +12,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGM { namespace Impl {
+
 void OutputCurve(SGM::Result                  &,//rResult,
                  curve                  const *pCurve,
                  FILE                         *pFile,
@@ -392,10 +394,13 @@ void SaveSGM(SGM::Result                  &rResult,
         }
     }
 
+}}
+
 void SGM::SaveSGM(SGM::Result                  &rResult,
                   std::string            const &sFileName,
                   SGM::Entity            const &EntityID,
                   SGM::TranslatorOptions const &Options)
     {
-    ::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
+    ::SGM::Impl::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }
+

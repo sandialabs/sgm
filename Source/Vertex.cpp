@@ -1,6 +1,8 @@
 #include "EntityClasses.h"
 #include "Topology.h"
 
+namespace SGM { namespace Impl {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  vertex methods
@@ -17,3 +19,5 @@ void vertex::RemoveEdge(edge *pEdge)
     {
     m_sEdges.erase(pEdge);
     }
+
+}}

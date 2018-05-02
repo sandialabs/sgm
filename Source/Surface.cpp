@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <limits>
 
+namespace SGM { namespace Impl {
+
 surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
     {
@@ -1501,3 +1503,5 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
         }
     return uv;
     }
+
+}}

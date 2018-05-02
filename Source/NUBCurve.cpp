@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cfloat>
 
+namespace SGM { namespace Impl {
+
 NUBcurve::NUBcurve(SGM::Result                     &rResult,
                    std::vector<SGM::Point3D> const &aControlPoints,
                    std::vector<double>       const &aKnots):
@@ -179,3 +181,5 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
         }
     return nSpanIndex;
     }
+
+}}

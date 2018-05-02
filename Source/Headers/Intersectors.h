@@ -6,6 +6,8 @@
 #include "Surface.h"
 #include "Curve.h"
 
+namespace SGM { namespace Impl {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  General Intersectors.
@@ -264,5 +266,7 @@ double FindLocalMin(curve  const *pCurve1,    // Input
                     double       &t2,         // Input and output
                     SGM::Point3D &Pos1,       // Output
                     SGM::Point3D &Pos2);      // Output
+
+}}
 
 #endif // INTERSECTOR_H

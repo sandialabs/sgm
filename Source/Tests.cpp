@@ -24,6 +24,10 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGM { namespace Test {
+
+using namespace Impl;
+
 class TestCommand
     {
     public:
@@ -443,187 +447,6 @@ bool RunTestFile(SGM::Result                       &rResult,
     return bPassed;
     }
 
-bool SGM::RunTestFile(SGM::Result       &rResult,
-                      std::string const &sTestDirectory,
-                      std::string const &sTestFileName,
-                      std::string const &sOutputFileName)
-    {
-    std::map<std::string,SGMFunction> mFunctionMap;
-    CreateFunctionMap(mFunctionMap);
-    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    if(pOutputFile==nullptr)
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage(sOutputFileName);
-        return false;
-        }
-
-    std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
-    FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
-    if(pTestFile==nullptr)
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage(sFullPathName);
-        return false;
-        }
-    bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
-    fclose(pTestFile);
-    fclose(pOutputFile);
-    return bAnswer;
-    }
-
-void SGM::RunTestDirectory(SGM::Result       &rResult,
-                           std::string const &sTestDirectory,
-                           std::string const &sOutputFileName)
-    {
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  Temp code to test STEP read.
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    //std::vector<Entity> aEntities;
-    //std::vector<std::string> aLog;
-    //SGM::TranslatorOptions Options;
-    //SGM::ReadFile(rResult,sTestDirectory+"/Sphere.stp",aEntities,aLog,Options);
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  End of Temp code to test STEP read.
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    std::vector<std::string> aFileNames;
-    ReadDirectory(sTestDirectory,aFileNames);
-
-    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    std::map<std::string,SGMFunction> mFunctionMap;
-    CreateFunctionMap(mFunctionMap);
-
-    size_t nFiles=aFileNames.size();
-    size_t nPassed=0,nFailed=0;
-    size_t Index1;
-    for(Index1=0;Index1<nFiles;++Index1)
-        {
-        if(aFileNames[Index1].c_str()[0]!='.')
-            {
-            std::string sExtension;
-            FindFileExtension(aFileNames[Index1],sExtension);
-            if(sExtension=="txt")
-                {
-                std::string FullPath=sTestDirectory;
-                FullPath+="/";
-                FullPath+=aFileNames[Index1];
-                FILE *pTestFile = fopen(FullPath.c_str(),"rt");
-                try
-                    {
-                    if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
-                        {
-                        ++nPassed;
-                        }
-                    else
-                        {
-                        ++nFailed;
-                        }
-                    }
-                catch(...)
-                    {
-                    ++nFailed;
-                    }
-                fclose(pTestFile);
-                }
-            }
-        }
-    fprintf(pOutputFile,"\n%ld Passed %ld Failed\n",nPassed,nFailed);
-    fclose(pOutputFile);
-    }
-
-bool SGM::CompareFiles(SGM::Result       &rResult,
-                       std::string const &sFile1,
-                       std::string const &sFile2)
-    {
-    // Find the file types.
-
-    std::string Ext1,Ext2;
-    FindFileExtension(sFile1,Ext1);
-    FindFileExtension(sFile2,Ext2);
-    if(Ext1!=Ext2)
-        {
-        return false;
-        }
-
-    // Open the files.
-
-    FILE *pFile1 = fopen(sFile1.c_str(),"rt");
-    FILE *pFile2 = fopen(sFile2.c_str(),"rt");
-
-    // Compare the files.
-
-    bool bAnswer=false;
-    if(Ext1=="stl")
-        {
-        bAnswer=true;
-        SGM::TranslatorOptions Options;
-        std::vector<std::string> aLog;
-        std::vector<SGM::Entity> aEntities1,aEntities2;
-        size_t nEntities1=ReadFile(rResult,sFile1,aEntities1,aLog,Options);
-        size_t nEntities2=ReadFile(rResult,sFile2,aEntities2,aLog,Options);
-        thing *pThing=rResult.GetThing();
-        std::vector<double> aAreas1,aAreas2;
-        aAreas1.reserve(nEntities1);
-        aAreas2.reserve(nEntities2);
-        size_t Index1;
-        for(Index1=0;Index1<nEntities1;++Index1)
-            {
-            complex *pComplex=(complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
-            aAreas1.push_back(pComplex->Area());
-            pThing->DeleteEntity(pComplex);
-            }
-        for(Index1=0;Index1<nEntities1;++Index1)
-            {
-            complex *pComplex=(complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
-            aAreas2.push_back(pComplex->Area());
-            pThing->DeleteEntity(pComplex);
-            }
-        if(nEntities1==nEntities2)
-            {
-            std::sort(aAreas1.begin(),aAreas1.end());
-            std::sort(aAreas2.begin(),aAreas2.end());
-            bAnswer=true;
-            for(Index1=0;Index1<nEntities1;++Index1)
-                {
-                double dArea1=aAreas1[Index1];
-                double dArea2=aAreas1[Index1];
-                if(SGM::NearEqual(dArea1,dArea2,0.01,true)==false)
-                    {
-                    bAnswer=false;
-                    break;
-                    }
-                }
-            }
-        }
-    else if(Ext1=="spt")
-        {
-        ReadToString(pFile1,"Data;");
-        ReadToString(pFile2,"Data;");
-        bAnswer=true;
-        while(bAnswer)
-            {
-            char data1,data2;
-            fread(&data1,1,1,pFile1);
-            fread(&data2,1,1,pFile2);
-            if(data1!=data2)
-                {
-                bAnswer=false;
-                }
-            }
-        }
-
-    fclose(pFile1);
-    fclose(pFile2);
-    return bAnswer;
-    }
-
 bool TestSurface(surface      const *pSurface,
                  SGM::Point2D const &uv1)
     {
@@ -731,9 +554,13 @@ bool TestCurve(curve *pCurve,
     return bAnswer;
     }    
 
+}}
+
 bool SGM::RunCPPTest(SGM::Result &rResult,
                      size_t       nTestNumber)
     {
+    using namespace Impl;
+    using namespace Test;
     if(nTestNumber==1)
         {
         // Test the quartic equation.
@@ -1956,3 +1783,189 @@ bool SGM::CompareSizes(size_t nSize1,size_t nSize2)
     {
     return nSize1==nSize2;
     }
+
+bool SGM::RunTestFile(SGM::Result       &rResult,
+                      std::string const &sTestDirectory,
+                      std::string const &sTestFileName,
+                      std::string const &sOutputFileName)
+    {
+    using namespace Test;
+    std::map<std::string,SGMFunction> mFunctionMap;
+    CreateFunctionMap(mFunctionMap);
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
+    if(pOutputFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage(sOutputFileName);
+        return false;
+        }
+
+    std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
+    FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
+    if(pTestFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage(sFullPathName);
+        return false;
+        }
+    bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
+    fclose(pTestFile);
+    fclose(pOutputFile);
+    return bAnswer;
+    }
+
+void SGM::RunTestDirectory(SGM::Result       &rResult,
+                           std::string const &sTestDirectory,
+                           std::string const &sOutputFileName)
+    {
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Temp code to test STEP read.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    //std::vector<Entity> aEntities;
+    //std::vector<std::string> aLog;
+    //SGM::TranslatorOptions Options;
+    //SGM::ReadFile(rResult,sTestDirectory+"/Sphere.stp",aEntities,aLog,Options);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  End of Temp code to test STEP read.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    using namespace Test;
+
+    std::vector<std::string> aFileNames;
+    ReadDirectory(sTestDirectory,aFileNames);
+
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
+    std::map<std::string,SGMFunction> mFunctionMap;
+    CreateFunctionMap(mFunctionMap);
+
+    size_t nFiles=aFileNames.size();
+    size_t nPassed=0,nFailed=0;
+    size_t Index1;
+    for(Index1=0;Index1<nFiles;++Index1)
+        {
+        if(aFileNames[Index1].c_str()[0]!='.')
+            {
+            std::string sExtension;
+            FindFileExtension(aFileNames[Index1],sExtension);
+            if(sExtension=="txt")
+                {
+                std::string FullPath=sTestDirectory;
+                FullPath+="/";
+                FullPath+=aFileNames[Index1];
+                FILE *pTestFile = fopen(FullPath.c_str(),"rt");
+                try
+                    {
+                    if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
+                        {
+                        ++nPassed;
+                        }
+                    else
+                        {
+                        ++nFailed;
+                        }
+                    }
+                catch(...)
+                    {
+                    ++nFailed;
+                    }
+                fclose(pTestFile);
+                }
+            }
+        }
+    fprintf(pOutputFile,"\n%ld Passed %ld Failed\n",nPassed,nFailed);
+    fclose(pOutputFile);
+    }
+
+bool SGM::CompareFiles(SGM::Result       &rResult,
+                       std::string const &sFile1,
+                       std::string const &sFile2)
+    {
+    using namespace Impl;
+    // Find the file types.
+
+    std::string Ext1,Ext2;
+    FindFileExtension(sFile1,Ext1);
+    FindFileExtension(sFile2,Ext2);
+    if(Ext1!=Ext2)
+        {
+        return false;
+        }
+
+    // Open the files.
+
+    FILE *pFile1 = fopen(sFile1.c_str(),"rt");
+    FILE *pFile2 = fopen(sFile2.c_str(),"rt");
+
+    // Compare the files.
+
+    bool bAnswer=false;
+    if(Ext1=="stl")
+        {
+        bAnswer=true;
+        SGM::TranslatorOptions Options;
+        std::vector<std::string> aLog;
+        std::vector<SGM::Entity> aEntities1,aEntities2;
+        size_t nEntities1=ReadFile(rResult,sFile1,aEntities1,aLog,Options);
+        size_t nEntities2=ReadFile(rResult,sFile2,aEntities2,aLog,Options);
+        thing *pThing=rResult.GetThing();
+        std::vector<double> aAreas1,aAreas2;
+        aAreas1.reserve(nEntities1);
+        aAreas2.reserve(nEntities2);
+        size_t Index1;
+        for(Index1=0;Index1<nEntities1;++Index1)
+            {
+            complex *pComplex=(complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
+            aAreas1.push_back(pComplex->Area());
+            pThing->DeleteEntity(pComplex);
+            }
+        for(Index1=0;Index1<nEntities1;++Index1)
+            {
+            complex *pComplex=(complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
+            aAreas2.push_back(pComplex->Area());
+            pThing->DeleteEntity(pComplex);
+            }
+        if(nEntities1==nEntities2)
+            {
+            std::sort(aAreas1.begin(),aAreas1.end());
+            std::sort(aAreas2.begin(),aAreas2.end());
+            bAnswer=true;
+            for(Index1=0;Index1<nEntities1;++Index1)
+                {
+                double dArea1=aAreas1[Index1];
+                double dArea2=aAreas1[Index1];
+                if(SGM::NearEqual(dArea1,dArea2,0.01,true)==false)
+                    {
+                    bAnswer=false;
+                    break;
+                    }
+                }
+            }
+        }
+    else if(Ext1=="spt")
+        {
+        ReadToString(pFile1,"Data;");
+        ReadToString(pFile2,"Data;");
+        bAnswer=true;
+        while(bAnswer)
+            {
+            char data1,data2;
+            fread(&data1,1,1,pFile1);
+            fread(&data2,1,1,pFile2);
+            if(data1!=data2)
+                {
+                bAnswer=false;
+                }
+            }
+        }
+
+    fclose(pFile1);
+    fclose(pFile2);
+    return bAnswer;
+    }
+

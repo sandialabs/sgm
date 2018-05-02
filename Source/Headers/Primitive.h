@@ -6,6 +6,8 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 
+namespace SGM { namespace Impl {
+
 body *CreateBlock(SGM::Result        &rResult,
                   thing              *pThing,
                   SGM::Point3D const &Point1,
@@ -39,5 +41,7 @@ body *CreateTorus(SGM::Result             &rResult,
                                         SGM::Vector3D             const &StartVec,
                                         SGM::Vector3D             const &EndVec,
                                         std::vector<double>       const *pParams);
+
+}}
 
 #endif // PRIMITIVE_H

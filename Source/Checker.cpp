@@ -18,6 +18,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGM { namespace Impl {
+
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
                   std::vector<std::string> &aCheckStrings) const
@@ -406,3 +408,5 @@ bool entity::Check(SGM::Result              &rResult,
         }
     return bAnswer;
     }
+
+}}

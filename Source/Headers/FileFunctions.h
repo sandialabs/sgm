@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace SGM { namespace Impl {
+
 // Returns a vector of all the files in a given directory.
 
 void ReadDirectory(std::string        const &DirName, 
@@ -33,5 +35,7 @@ bool ReadFileLine(FILE        *pFile,
 
 bool ReadToString(FILE              *pFile,
                   std::string const &sData);
+
+}}
 
 #endif // FILE_FUNCTIONS_H

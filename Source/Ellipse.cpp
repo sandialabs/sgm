@@ -6,6 +6,8 @@
 #include "Curve.h"
 #include "Topology.h"
 
+namespace SGM { namespace Impl {
+
 ellipse::ellipse(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
                  SGM::UnitVector3D const &XAxis,
@@ -20,3 +22,4 @@ ellipse::ellipse(SGM::Result             &rResult,
     m_bClosed=true;
     }
 
+}}

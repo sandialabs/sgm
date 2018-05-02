@@ -4,6 +4,8 @@
 #include "EntityClasses.h"
 #include "Curve.h"
 
+namespace SGM { namespace Impl {
+
 PointCurve::PointCurve(SGM::Result           &rResult,
                        SGM::Point3D    const &Pos,
                        SGM::Interval1D const *pDomain):
@@ -19,3 +21,5 @@ PointCurve::PointCurve(SGM::Result           &rResult,
         m_Domain.m_dMax=0.0;
         }
     }
+
+}}
