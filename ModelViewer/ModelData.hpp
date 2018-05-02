@@ -18,7 +18,7 @@ public:
   void set_tree_widget(SGMTreeWidget *tree);
   void set_graphics_widget(SGMGraphicsWidget *graphics);
 
-  void open_file(const QString &filename);
+  bool open_file(const QString &filename);
 
 private:
   pModelData* dPtr;

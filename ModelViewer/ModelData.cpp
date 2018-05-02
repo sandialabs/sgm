@@ -51,7 +51,7 @@ void ModelData::set_graphics_widget(SGMGraphicsWidget *graphics)
   dPtr->mGraphics = graphics;
 }
 
-void ModelData::open_file(const QString &filename)
+bool ModelData::open_file(const QString &filename)
 {
   std::vector<SGM::Entity> ents;
   std::vector<std::string> log;
@@ -61,8 +61,13 @@ void ModelData::open_file(const QString &filename)
                                        filename.toUtf8().data(),
                                        ents, log, options);
 
+  if(dPtr->mResult.GetResult() != SGM::ResultTypeOK)
+    return false;
+
   rebuild_tree();
   rebuild_graphics();
+
+  return true;
 }
 
 
