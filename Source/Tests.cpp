@@ -1816,6 +1816,32 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==27)
+        {
+        // Test Revolve Surface
+
+        bool bAnswer=true;
+
+        // revolve a line
+        SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
+        line *pLine1=new line(rResult,Pos0,Pos1);
+        SGM::Interval3D box = pLine1->GetBox();
+
+        SGM::Point3D Origin(5,6,7);
+        SGM::UnitVector3D Axis(0,0,1);
+
+        revolve *pRevolve = new revolve(rResult, pLine1, Origin, Axis);
+
+        bAnswer = SGM::NearEqual(pRevolve->m_Origin, SGM::Point3D(0,0,4), SGM_ZERO);
+
+        //SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
+        //SGM::UnitVector3D Axis(7,8,9);
+        //double dScale=10;
+
+        //line *pLine1=new line(rResult,Pos0,Pos1);
+
+        return bAnswer;
+        }
     return false;
     }
 

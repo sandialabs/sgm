@@ -307,4 +307,25 @@ class NURBsurface: public surface
     };
 }
 
+class revolve : public surface
+    {
+    public:
+
+        revolve(SGM::Result             &rResult,
+                SGM::Impl::curve        *pCurve,
+                SGM::Point3D      const &pAxisOrigin,
+                SGM::UnitVector3D const &uAxisVector);
+        ~revolve();
+//        
+//        curve *UParamLine(double dU) const;
+//
+//        curve *VParamLine(double dV) const;
+//
+    public:
+
+        SGM::Impl::curve  *m_pCurve;
+        SGM::Point3D       m_Origin;
+        SGM::UnitVector3D  m_Axis;
+    };
+
 #endif // SURFACE_H
