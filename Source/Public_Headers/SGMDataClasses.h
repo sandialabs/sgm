@@ -8,7 +8,6 @@
 #include "sgm_export.h"
 
 class thing;
-class entity;
 
 namespace SGM
     {
@@ -531,8 +530,6 @@ namespace SGM
             SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
 
             SGM_EXPORT thing *GetThing() const {return m_pThing;}
-
-            SGM_EXPORT entity *FindEntity(size_t nID) const;
 
         private:
 

@@ -566,11 +566,6 @@ void SGM::Result::SetResult(SGM::ResultType nType)
     m_nType=nType;
     }
 
-entity *SGM::Result::FindEntity(size_t nID) const
-    {
-    return m_pThing->FindEntity(nID);
-    }
-
 void SGM::Result::SetMessage(std::string const &sMessage)
     {
     m_sMessage+=sMessage;

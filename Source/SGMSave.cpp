@@ -397,5 +397,6 @@ void SGM::SaveSGM(SGM::Result                  &rResult,
                   SGM::Entity            const &EntityID,
                   SGM::TranslatorOptions const &Options)
     {
-    ::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
+    SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }
+

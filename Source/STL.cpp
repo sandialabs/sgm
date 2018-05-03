@@ -156,5 +156,5 @@ void SGM::SaveSTL(SGM::Result                  &rResult,
                   SGM::Entity            const &EntityID,
                   SGM::TranslatorOptions const &Options)
     {
-    ::SaveSTL(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
+    SaveSTL(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }

@@ -368,3 +368,4 @@ size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
     return nComps;
     }
 
+

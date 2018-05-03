@@ -17,3 +17,4 @@ void vertex::RemoveEdge(edge *pEdge)
     {
     m_sEdges.erase(pEdge);
     }
+

@@ -8,20 +8,30 @@
 
 #include "qinputdialog.h"
 #include "qmessagebox.h"
-
+#include "FileMenu.hpp"
 #include "ModelData.hpp"
 
 #include "SGMChecker.h"
 #include "SGMPrimitives.h"
 #include "SGMDataClasses.h"
+#include "SGMEntityClasses.h"
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  mModel(new ModelData)
+  mModel(new ModelData),
+  mFileMenu(new FileMenu)
 {
   ui->setupUi(this);
   ui->mGraphics->setFocusPolicy(Qt::ClickFocus);
+
+  ui->menubar->addMenu(mFileMenu);
+  connect(mFileMenu, SIGNAL(open()),
+          this, SLOT(file_open()));
+  connect(mFileMenu, SIGNAL(exit()),
+          this, SLOT(file_exit()));
+  connect(mFileMenu, SIGNAL(recent_file(QString)),
+          this, SLOT(file_open_recent(QString)));
 
   mModel->set_tree_widget(ui->twTree);
   mModel->set_graphics_widget(ui->mGraphics);
@@ -31,7 +41,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+  delete mFileMenu;
   delete ui;
+
   delete mModel;
 }
 
@@ -41,7 +53,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void MainWindow::on_actionOpen_triggered()
+void MainWindow::file_open()
 {
   QString type_filter = tr("Step files (%1)").arg("*.stp *.step");
   type_filter += ";;" + tr("STL Files (%1)").arg("*.stl");
@@ -52,7 +64,7 @@ void MainWindow::on_actionOpen_triggered()
         this, tr("Open File(s)"), "", type_filter);
 
   for(const QString &f : files)
-    mModel->open_file(f);
+    file_open_recent(f);
 }
 
 void MainWindow::on_actionRunAllTests_triggered()
@@ -122,9 +134,16 @@ void MainWindow::on_actionRunScript_triggered()
       }
 }
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::file_exit()
 {
   this->close();
+}
+
+void MainWindow::file_open_recent(const QString &filename)
+{
+  bool opened = mModel->open_file(filename);
+  if(opened)
+    mFileMenu->add_recent_file(filename);
 }
 
 void MainWindow::read_settings()

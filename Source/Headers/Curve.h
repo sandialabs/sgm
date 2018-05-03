@@ -1,5 +1,5 @@
-#ifndef CURVE_H
-#define CURVE_H
+#ifndef SGM_INTERNAL_CURVE_H
+#define SGM_INTERNAL_CURVE_H
 
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
@@ -278,4 +278,4 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
                      double                     t,
                      std::vector<double> const &aKnots);
 
-#endif // CURVE_H
+#endif // SGM_INTERNAL_CURVE_H

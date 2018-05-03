@@ -152,4 +152,3 @@ size_t thing::GetComplexes(std::set<complex *> &sComplexes) const
         }
     return sComplexes.size();
     }
-

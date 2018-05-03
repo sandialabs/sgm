@@ -1,5 +1,5 @@
-#ifndef ENTITY_CLASSES_H
-#define ENTITY_CLASSES_H
+#ifndef SGM_INTERNAL_ENTITY_CLASSES_H
+#define SGM_INTERNAL_ENTITY_CLASSES_H
 
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
@@ -389,5 +389,5 @@ class vertex : public topology
         std::set<edge *> m_sEdges;
     };
 
-#endif // ENTITY_CLASSES_H
 
+#endif // ENTITY_CLASSES_H

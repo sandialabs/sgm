@@ -825,7 +825,7 @@ size_t IntersectLineAndSurface(line                         const *pLine,
     std::vector<SGM::Point3D> aTempPoints;
     std::vector<SGM::IntersectionType> aTempTypes;
     //size_t nSize=
-        ::IntersectLineAndSurface(pLine->m_Origin,pLine->m_Axis,pLine->GetDomain(),
+        IntersectLineAndSurface(pLine->m_Origin,pLine->m_Axis,pLine->GetDomain(),
                                            pSurface,dTolerance,aTempPoints,aTempTypes);
     if(pEdge)
         {
@@ -1153,3 +1153,4 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
          }
      return aCurves.size();
      }
+

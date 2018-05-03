@@ -31,3 +31,4 @@ sphere::sphere(SGM::Result             &rResult,
         m_ZAxis=SGM::UnitVector3D(0.0,0.0,1.0);
         }
     }
+

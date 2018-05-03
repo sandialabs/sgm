@@ -5,6 +5,8 @@
 
 #include "ModelData.hpp"
 
+class FileMenu;
+
 namespace Ui {
   class MainWindow;
 }
@@ -21,9 +23,9 @@ protected:
   void closeEvent(QCloseEvent *event);
 
 private slots:
-  void on_actionOpen_triggered();
-
-  void on_actionExit_triggered();
+  void file_open();
+  void file_exit();
+  void file_open_recent(const QString &filename);
 
   void on_actionRunAllTests_triggered();
 
@@ -37,6 +39,7 @@ private slots:
 
 private:
   Ui::MainWindow *ui;
+  FileMenu* mFileMenu;
   ModelData *mModel;
 
   void read_settings();

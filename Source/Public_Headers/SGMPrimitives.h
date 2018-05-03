@@ -18,7 +18,7 @@ namespace SGM
 
 SGM_EXPORT thing *CreateThing();
 
-SGM_EXPORT void   DeleteThing(thing *pThing);  // if you create a thing, you are responsible for deleting it
+SGM_EXPORT void DeleteThing(thing *pThing);  // if you create a thing, you are responsible for deleting it
 
 ///////////////////////////////////////////////////////////////////////////////
 //

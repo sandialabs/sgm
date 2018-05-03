@@ -4,22 +4,6 @@
 #include "EntityClasses.h"
 #include <algorithm>
 
-SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
-                              SGM::Complex      const &,//ComplexID,
-                              SGM::Point3D      const &,//Point,
-                              SGM::UnitVector3D const &,//Normal,
-                              bool                     )//bLocal)
-    {
-    return SGM::Complex(0);
-    }
-
-SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
-                                std::vector<SGM::Point3D> const &,//aPoints,
-                                bool                             )//bFilled)
-    {
-    return SGM::Complex(0);
-    }
-
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
                                   std::vector<size_t>       const &aTriangles)
@@ -129,6 +113,22 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
 
     pThing->AddTopLevelEntity(pComplex);
     return Complex(pComplex->GetID());
+    }
+
+SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
+                    SGM::Complex      const &,//ComplexID,
+                    SGM::Point3D      const &,//Point,
+                    SGM::UnitVector3D const &,//Normal,
+                    bool                     )//bLocal)
+    {
+    return Complex(0);
+    }
+
+SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
+                      std::vector<Point3D> const &,//aPoints,
+                      bool                             )//bFilled)
+    {
+    return Complex(0);
     }
 
 complex::complex(SGM::Result &rResult):

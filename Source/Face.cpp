@@ -227,4 +227,3 @@ bool face::GetFlipped() const
     {
     return m_bFlipped;
     }
-

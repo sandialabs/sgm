@@ -236,7 +236,7 @@ void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
     else
         {
         entity *pCloseEntity;
-        ::FindClosestPointOnEntity(rResult, Point, pEntity, ClosestPoint, pCloseEntity, bBoundary);
+        FindClosestPointOnEntity(rResult, Point, pEntity, ClosestPoint, pCloseEntity, bBoundary);
         ClosestEntity = Entity(pCloseEntity->GetID());
         }
     }

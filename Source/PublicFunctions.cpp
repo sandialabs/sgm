@@ -80,7 +80,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
         {
         pedge2=(edge const *)rResult.GetThing()->FindEntity(pEdge2->m_ID);
         }
-    return ::IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
+    return IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
     }
 
  size_t SGM::IntersectCurveAndSurface(SGM::Result                        &rResult,
@@ -103,7 +103,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
          {
          pface=(face const *)rResult.GetThing()->FindEntity(pFace->m_ID);
          }
-     return ::IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
+     return IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface);
      }
 
 SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
@@ -188,6 +188,21 @@ void SGM::FindFaces(SGM::Result         &rResult,
         }
     }
 
+void SGM::FindSurfaces(SGM::Result         &rResult,
+                       SGM::Entity   const &EntityID,
+                       std::set<SGM::Surface> &sSurfaces)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<surface *> sSurface;
+    FindSurfaces(rResult,pEntity,sSurface);
+    std::set<surface *>::iterator iter=sSurface.begin();
+    while(iter!=sSurface.end())
+        {
+        sSurfaces.insert(SGM::Surface((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
 void SGM::FindEdges(SGM::Result         &rResult,
                SGM::Entity   const &EntityID,
                std::set<SGM::Edge> &sEdges)
@@ -199,6 +214,21 @@ void SGM::FindEdges(SGM::Result         &rResult,
     while(iter!=sEdge.end())
         {
         sEdges.insert(SGM::Edge((*iter)->GetID()));
+        ++iter;
+        }
+    }
+
+void SGM::FindCurves(SGM::Result         &rResult,
+                     SGM::Entity   const &EntityID,
+                     std::set<Curve> &sCurves)
+    {
+    entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<curve *> sCurve;
+    FindCurves(rResult,pEntity,sCurve);
+    std::set<curve *>::iterator iter=sCurve.begin();
+    while(iter!=sCurve.end())
+        {
+        sCurves.insert(SGM::Curve((*iter)->GetID()));
         ++iter;
         }
     }

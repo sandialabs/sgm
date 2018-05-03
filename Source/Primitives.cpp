@@ -349,97 +349,6 @@ body *CreateBlock(SGM::Result        &rResult,
     return pBody;
     }
 
-SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
-                               SGM::Body   &PlanarWireID)
-    {
-    // Create the new body
-
-    thing  *pThing=rResult.GetThing();
-    entity *pEntity=pThing->FindEntity(PlanarWireID.m_ID);
-    body   *pBody=new body(rResult); 
-    volume *pVolume=new volume(rResult);
-    face   *pFace=new face(rResult);
-    pVolume->AddFace(pFace);
-    pBody->AddVolume(pVolume);
-    pThing->AddTopLevelEntity(pBody);
-
-    // Copy the bounding edges
-
-    std::set<edge *> sEdges;
-    std::set<vertex *> sVertices;
-    std::map<vertex const *,vertex *> mVertices;
-    FindEdges(rResult,pEntity,sEdges);
-    FindVertices(rResult,pEntity,sVertices);
-    std::set<vertex *>::iterator VertexIter=sVertices.begin();
-    while(VertexIter!=sVertices.end())
-        {
-        vertex *pVertex=*VertexIter;
-        mVertices[pVertex]=new vertex(rResult,pVertex);
-        ++VertexIter;
-        }
-    std::set<edge *>::iterator EdgeIter=sEdges.begin();
-    while(EdgeIter!=EdgeIter)  //TODO: always false. fix? (kdcopps)
-        {
-        edge *pEdge=*EdgeIter;
-        curve const *pCurve=pEdge->GetCurve();
-        vertex const *pStart=pEdge->GetStart();
-        vertex const *pEnd=pEdge->GetEnd();
-        vertex *pNewStart=mVertices[pStart];
-        vertex *pNewEnd=mVertices[pEnd];
-        curve *pNewCurve=pCurve->MakeCopy(rResult);
-        SGM::Interval1D const &Domain=pEdge->GetDomain();
-        edge *pNewEdge=new edge(rResult);
-        pNewEdge->SetStart(pNewStart);
-        pNewEdge->SetEnd(pNewEnd);
-        pNewEdge->SetCurve(pNewCurve);
-        pNewEdge->SetDomain(Domain);
-        pFace->AddEdge(pNewEdge,SGM::FaceOnLeftType);
-        }
-
-    // Create the plane.
-
-    return SGM::Body(pBody->GetID());
-    }
-
-SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
-                              std::vector<SGM::Point3D> const &aPoints)
-    {
-    body   *pBody=new body(rResult); 
-    volume *pVolume=new volume(rResult);
-    pBody->AddVolume(pVolume);
-
-    // Create or find the vertices for each point.
-
-    std::vector<vertex *> aVertices;
-    size_t nPoints=aPoints.size();
-    aVertices.reserve(nPoints);
-    SGM::BoxTree Tree;
-    size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        SGM::Point3D const &Pos=aPoints[Index1];
-        vertex *pVertex=(vertex *)Tree.FindPoint(Pos,1E-12);
-        if(pVertex==nullptr)
-            {
-            pVertex=new vertex(rResult,Pos);
-            Tree.AddPoint(Pos,pVertex);
-            }
-        aVertices.push_back(pVertex);
-        }
-
-    // Create the edges.
-
-    for(Index1=1;Index1<nPoints;++Index1)
-        {
-        edge *pEdge=new edge(rResult);
-        pEdge->SetStart(aVertices[Index1-1]);
-        pEdge->SetEnd(aVertices[Index1]);
-        pVolume->AddEdge(pEdge);
-        }
-
-    return SGM::Body(pBody->GetID());
-    }
-
 void FindDegree3Knots(std::vector<double> const &aLengths,
                       std::vector<double>       &aKnots,
                       int                       &nDegree)
@@ -681,5 +590,96 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
         }
 
     return new NUBcurve(rResult,aControlPoints,aKnots);
+    }
+
+SGM::Body SGM::CreatePolyLine(SGM::Result                     &rResult,
+                              std::vector<SGM::Point3D> const &aPoints)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+
+    // Create or find the vertices for each point.
+
+    std::vector<vertex *> aVertices;
+    size_t nPoints=aPoints.size();
+    aVertices.reserve(nPoints);
+    SGM::BoxTree Tree;
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        vertex *pVertex=(vertex *)Tree.FindPoint(Pos,1E-12);
+        if(pVertex==nullptr)
+            {
+            pVertex=new vertex(rResult,Pos);
+            Tree.AddPoint(Pos,pVertex);
+            }
+        aVertices.push_back(pVertex);
+        }
+
+    // Create the edges.
+
+    for(Index1=1;Index1<nPoints;++Index1)
+        {
+        edge *pEdge=new edge(rResult);
+        pEdge->SetStart(aVertices[Index1-1]);
+        pEdge->SetEnd(aVertices[Index1]);
+        pVolume->AddEdge(pEdge);
+        }
+
+    return SGM::Body(pBody->GetID());
+    }
+
+SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
+                               SGM::Body   &PlanarWireID)
+    {
+    // Create the new body
+
+    thing  *pThing=rResult.GetThing();
+    entity *pEntity=pThing->FindEntity(PlanarWireID.m_ID);
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    face   *pFace=new face(rResult);
+    pVolume->AddFace(pFace);
+    pBody->AddVolume(pVolume);
+    pThing->AddTopLevelEntity(pBody);
+
+    // Copy the bounding edges
+
+    std::set<edge *> sEdges;
+    std::set<vertex *> sVertices;
+    std::map<vertex const *,vertex *> mVertices;
+    FindEdges(rResult,pEntity,sEdges);
+    FindVertices(rResult,pEntity,sVertices);
+    std::set<vertex *>::iterator VertexIter=sVertices.begin();
+    while(VertexIter!=sVertices.end())
+        {
+        vertex *pVertex=*VertexIter;
+        mVertices[pVertex]=new vertex(rResult,pVertex);
+        ++VertexIter;
+        }
+    std::set<edge *>::iterator EdgeIter=sEdges.begin();
+    while(EdgeIter!=EdgeIter)  //TODO: always false. fix? (kdcopps)
+        {
+        edge *pEdge=*EdgeIter;
+        curve const *pCurve=pEdge->GetCurve();
+        vertex const *pStart=pEdge->GetStart();
+        vertex const *pEnd=pEdge->GetEnd();
+        vertex *pNewStart=mVertices[pStart];
+        vertex *pNewEnd=mVertices[pEnd];
+        curve *pNewCurve=pCurve->MakeCopy(rResult);
+        SGM::Interval1D const &Domain=pEdge->GetDomain();
+        edge *pNewEdge=new edge(rResult);
+        pNewEdge->SetStart(pNewStart);
+        pNewEdge->SetEnd(pNewEnd);
+        pNewEdge->SetCurve(pNewCurve);
+        pNewEdge->SetDomain(Domain);
+        pFace->AddEdge(pNewEdge,SGM::FaceOnLeftType);
+        }
+
+    // Create the plane.
+
+    return SGM::Body(pBody->GetID());
     }
 

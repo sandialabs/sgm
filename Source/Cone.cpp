@@ -35,4 +35,3 @@ cone::cone(SGM::Result             &rResult,
         }
     m_YAxis=m_ZAxis*m_XAxis;
     }
-   

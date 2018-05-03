@@ -7,6 +7,274 @@
 #include <algorithm>
 #include <cfloat>
 
+namespace {
+double sign(SGM::Point2D const &P1,
+            SGM::Point2D const &P2,
+            SGM::Point2D const &P3)
+    {
+    return (P1.m_u-P3.m_u)*(P2.m_v-P3.m_v)-(P2.m_u-P3.m_u)*(P1.m_v-P3.m_v);
+    }
+
+void NewtonMethod(double a,
+                  double b,
+                  double c,
+                  double d,
+                  double e,
+                  double &x)
+    {
+    double delta=1.0;
+    double fx=1.0;
+    double a4=a*4.0;
+    double b3=b*3.0;
+    double c2=c*2.0;
+    size_t nCount=0;
+    while(SGM_ZERO<fabs(delta) && SGM_ZERO<fabs(fx) && nCount<100)
+        {
+        fx=x*(x*(x*(a*x+b)+c)+d)+e;
+        double dfx=x*(x*(a4*x+b3)+c2)+d;
+        if(SGM_ZERO<fabs(dfx))
+            {
+            delta=fx/dfx;
+            }
+        else
+            {
+            delta=0.0;
+            }
+        x-=delta;
+        ++nCount;
+        }
+    }
+
+// Returns true if the given segment intersects the given polygon
+// at a segment other than a segment contains the point with 
+// index nNotHere.
+
+bool SegmentIntersectPolygon(std::vector<SGM::Point2D> const &aPoints,
+                             SGM::Segment2D            const &Segment,
+                             std::vector<size_t>       const &aPolygon,
+                             size_t                           nNotHere)
+    {
+    size_t nPolygon=aPolygon.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPolygon;++Index1)
+        {
+        if(Index1!=nNotHere && (Index1+1)%nPolygon!=nNotHere)
+            {
+            SGM::Segment2D TestSeg(aPoints[aPolygon[Index1]],
+                                aPoints[aPolygon[(Index1+1)%nPolygon]]);
+            SGM::Point2D Pos;
+            if(Segment.Intersect(TestSeg,Pos))
+                {
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
+void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
+                   std::vector<size_t>       const &aInsidePolygon,
+                   size_t                           nExtreamPoint,
+                   std::vector<size_t>             &aOutsidePolygon)
+    {
+    size_t Index1,Index2;
+    size_t nInside=aInsidePolygon.size();
+    size_t nOutside=aOutsidePolygon.size();
+    std::vector<std::pair<double,SGM::Segment2D> > aSegments;
+    SGM::Point2D const &Pos1=aPoints[aInsidePolygon[nExtreamPoint]];
+    std::vector<std::pair<double,size_t> > aSpans;
+    aSpans.reserve(nOutside);
+    for(Index1=0;Index1<nOutside;++Index1)
+        {
+        SGM::Point2D const &Pos2=aPoints[aOutsidePolygon[Index1]];
+        double dLengthSquared(Pos1.DistanceSquared(Pos2));
+        aSpans.emplace_back(dLengthSquared,Index1);
+        }
+    std::sort(aSpans.begin(),aSpans.end());
+    for(Index1=0;Index1<nOutside;++Index1)
+        {
+        size_t nSpanHit=aSpans[Index1].second;
+        SGM::Segment2D TestSeg(Pos1,aPoints[aOutsidePolygon[nSpanHit]]);
+        if( SegmentIntersectPolygon(aPoints,TestSeg,aInsidePolygon,nExtreamPoint)==false &&
+            SegmentIntersectPolygon(aPoints,TestSeg,aOutsidePolygon,nSpanHit)==false)
+            {
+            // Connect nExtreamPoint on the inner polygon to 
+            // nSpanHit on the outer polygon.
+
+            std::vector<size_t> aNewPoly;
+            aNewPoly.reserve(nInside+nOutside+2);
+            for(Index2=0;Index2<=nSpanHit;++Index2)
+                {
+                aNewPoly.push_back(aOutsidePolygon[Index2]);
+                }
+            for(Index2=0;Index2<=nInside;++Index2)
+                {
+                aNewPoly.push_back(aInsidePolygon[(nExtreamPoint+Index2)%nInside]);
+                }
+            for(Index2=nSpanHit;Index2<nOutside;++Index2)
+                {
+                aNewPoly.push_back(aOutsidePolygon[Index2]);
+                }
+            aOutsidePolygon=aNewPoly;
+            break;
+            }
+        }
+    }
+
+size_t GetPrevious(size_t                   nEar,
+                   std::vector<bool> const &aCutOff)
+    {
+    size_t nAnswer=nEar;
+    size_t nPolygon=aCutOff.size();
+    size_t Index1;
+    for(Index1=1;Index1<nPolygon;++Index1)
+        {
+        nAnswer=(nEar+nPolygon-Index1)%nPolygon;
+        if(aCutOff[nAnswer]==false)
+            {
+            break;
+            }
+        }
+    return nAnswer;
+    }
+
+size_t GetNext(size_t                   nEar,
+               std::vector<bool> const &aCutOff)
+    {
+    size_t nAnswer=nEar;
+    size_t nPolygon=aCutOff.size();
+    size_t Index1;
+    for(Index1=1;Index1<nPolygon;++Index1)
+        {
+        nAnswer=(nEar+Index1)%nPolygon;
+        if(aCutOff[nAnswer]==false)
+            {
+            break;
+            }
+        }
+    return nAnswer;
+    }
+
+bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
+             std::vector<size_t>             &aPolygon,
+             std::vector<bool>         const &aCutOff,
+             size_t                           nEar)
+    {
+    size_t nPolygon=aPolygon.size();
+    size_t nEarA=aPolygon[GetPrevious(nEar,aCutOff)];
+    size_t nEarB=aPolygon[nEar];
+    size_t nEarC=aPolygon[GetNext(nEar,aCutOff)];
+    SGM::Point2D const &A=aPoints[nEarA];
+    SGM::Point2D const &B=aPoints[nEarB];
+    SGM::Point2D const &C=aPoints[nEarC];
+    size_t Index1;
+    for(Index1=0;Index1<nPolygon;++Index1)
+        {
+        size_t nPos=aPolygon[Index1];
+        if(nPos!=nEarA && nPos!=nEarB && nPos!=nEarC)
+            {
+            SGM::Point2D const &Pos=aPoints[nPos];
+            if(InTriangle(A,B,C,Pos))
+                {
+                return false;
+                }
+            }
+        }
+    return true;
+    }
+
+class PolyData
+    {
+    public:
+
+        double dExtreamU;
+        size_t nWhichPoly;
+        size_t nWhichPoint;
+
+        bool operator<(PolyData const &PD) const
+            {
+            return PD.dExtreamU<dExtreamU;
+            }
+    };
+
+double FindAngle(std::vector<SGM::Point2D> const &aPoints,
+                 std::vector<size_t>       const &aPolygon,
+                 std::vector<bool>         const &aCutOff,
+                 size_t                           nB)
+    {
+    size_t nA=0,nC=0;
+    size_t nPolygon=aPolygon.size();
+    size_t Index1;
+    for(Index1=1;Index1<nPolygon;++Index1)
+        {
+        size_t nWhere=(nB+Index1)%nPolygon;
+        if(aCutOff[nWhere]==false)
+            {
+            nC=nWhere;
+            break;
+            }
+        }
+    for(Index1=1;Index1<nPolygon;++Index1)
+        {
+        size_t nWhere=(nB+nPolygon-Index1)%nPolygon;
+        if(aCutOff[nWhere]==false)
+            {
+            nA=nWhere;
+            break;
+            }
+        }
+    SGM::Point2D const &PosA=aPoints[aPolygon[nA]];
+    SGM::Point2D const &PosB=aPoints[aPolygon[nB]];
+    SGM::Point2D const &PosC=aPoints[aPolygon[nC]];
+    SGM::UnitVector2D VecAB=PosA-PosB;
+    SGM::UnitVector2D VecCB=PosC-PosB;
+    double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
+    if(dUp<0)
+        {
+        return 10;
+        }
+    else
+        {
+        return 1.0-VecAB%VecCB;
+        }
+    }
+
+class EdgeData
+    {
+    public:
+
+        EdgeData(size_t nPosA,size_t nPosB,size_t nTriangle,int nEdge):
+            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge) 
+            {
+            if(nPosB<nPosA)
+                {
+                std::swap(m_nPosA,m_nPosB);
+                }
+            }
+
+        bool operator<(EdgeData const &ED) const
+            {
+            if(m_nPosA<ED.m_nPosA)
+                {
+                return true;
+                }
+            else if(m_nPosA==ED.m_nPosA)
+                {
+                if(m_nPosB<ED.m_nPosB)
+                    {
+                    return true;
+                    }
+                }
+            return false;
+            }
+
+        size_t m_nPosA;
+        size_t m_nPosB;
+        size_t m_nTriangle;
+        int    m_nEdge;
+    };
+} // end anonymous namespace
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Point vector functions
@@ -325,13 +593,6 @@ bool SGM::PointInPolygon(SGM::Point2D              const &Pos,
     return nCrosses%2==1;
     }
 
-double sign(SGM::Point2D const &P1,
-            SGM::Point2D const &P2,
-            SGM::Point2D const &P3)
-    {
-    return (P1.m_u-P3.m_u)*(P2.m_v-P3.m_v)-(P2.m_u-P3.m_u)*(P1.m_v-P3.m_v);
-    }
-
 bool SGM::InTriangle(SGM::Point2D const &A,
                      SGM::Point2D const &B,
                      SGM::Point2D const &C,
@@ -392,41 +653,6 @@ bool SGM::FindCircle(SGM::Point3D const &Pos0,
     return true;
     }
 
-class EdgeData
-    {
-    public:
-
-        EdgeData(size_t nPosA,size_t nPosB,size_t nTriangle,int nEdge):
-            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge) 
-            {
-            if(nPosB<nPosA)
-                {
-                std::swap(m_nPosA,m_nPosB);
-                }
-            }
-
-        bool operator<(EdgeData const &ED) const
-            {
-            if(m_nPosA<ED.m_nPosA)
-                {
-                return true;
-                }
-            else if(m_nPosA==ED.m_nPosA)
-                {
-                if(m_nPosB<ED.m_nPosB)
-                    {
-                    return true;
-                    }
-                }
-            return false;
-            }
-
-        size_t m_nPosA;
-        size_t m_nPosB;
-        size_t m_nTriangle;
-        int    m_nEdge;
-    };
-
 size_t SGM::FindAdjacences2D(std::vector<size_t> const &aTriangles,
                              std::vector<size_t>       &aAdjacency)
     {
@@ -486,394 +712,6 @@ bool SGM::CramersRule(double a1,double b1,double c1,
     x=Dx/D;
     y=Dy/D;
     return true;
-    }
-
-// Returns true if the given segment intersects the given polygon
-// at a segment other than a segment contains the point with 
-// index nNotHere.
-
-bool SegmentIntersectPolygon(std::vector<SGM::Point2D> const &aPoints,
-                             SGM::Segment2D            const &Segment,
-                             std::vector<size_t>       const &aPolygon,
-                             size_t                           nNotHere)
-    {
-    size_t nPolygon=aPolygon.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPolygon;++Index1)
-        {
-        if(Index1!=nNotHere && (Index1+1)%nPolygon!=nNotHere)
-            {
-            SGM::Segment2D TestSeg(aPoints[aPolygon[Index1]],
-                                aPoints[aPolygon[(Index1+1)%nPolygon]]);
-            SGM::Point2D Pos;
-            if(Segment.Intersect(TestSeg,Pos))
-                {
-                return true;
-                }
-            }
-        }
-    return false;
-    }
-
-void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>       const &aInsidePolygon,
-                   size_t                           nExtreamPoint,
-                   std::vector<size_t>             &aOutsidePolygon)
-    {
-    size_t Index1,Index2;
-    size_t nInside=aInsidePolygon.size();
-    size_t nOutside=aOutsidePolygon.size();
-    std::vector<std::pair<double,SGM::Segment2D> > aSegments;
-    SGM::Point2D const &Pos1=aPoints[aInsidePolygon[nExtreamPoint]];
-    std::vector<std::pair<double,size_t> > aSpans;
-    aSpans.reserve(nOutside);
-    for(Index1=0;Index1<nOutside;++Index1)
-        {
-        SGM::Point2D const &Pos2=aPoints[aOutsidePolygon[Index1]];
-        double dLengthSquared(Pos1.DistanceSquared(Pos2));
-        aSpans.emplace_back(dLengthSquared,Index1);
-        }
-    std::sort(aSpans.begin(),aSpans.end());
-    for(Index1=0;Index1<nOutside;++Index1)
-        {
-        size_t nSpanHit=aSpans[Index1].second;
-        SGM::Segment2D TestSeg(Pos1,aPoints[aOutsidePolygon[nSpanHit]]);
-        if( SegmentIntersectPolygon(aPoints,TestSeg,aInsidePolygon,nExtreamPoint)==false &&
-            SegmentIntersectPolygon(aPoints,TestSeg,aOutsidePolygon,nSpanHit)==false)
-            {
-            // Connect nExtreamPoint on the inner polygon to 
-            // nSpanHit on the outer polygon.
-
-            std::vector<size_t> aNewPoly;
-            aNewPoly.reserve(nInside+nOutside+2);
-            for(Index2=0;Index2<=nSpanHit;++Index2)
-                {
-                aNewPoly.push_back(aOutsidePolygon[Index2]);
-                }
-            for(Index2=0;Index2<=nInside;++Index2)
-                {
-                aNewPoly.push_back(aInsidePolygon[(nExtreamPoint+Index2)%nInside]);
-                }
-            for(Index2=nSpanHit;Index2<nOutside;++Index2)
-                {
-                aNewPoly.push_back(aOutsidePolygon[Index2]);
-                }
-            aOutsidePolygon=aNewPoly;
-            break;
-            }
-        }
-    }
-
-size_t GetPrevious(size_t                   nEar,
-                   std::vector<bool> const &aCutOff)
-    {
-    size_t nAnswer=nEar;
-    size_t nPolygon=aCutOff.size();
-    size_t Index1;
-    for(Index1=1;Index1<nPolygon;++Index1)
-        {
-        nAnswer=(nEar+nPolygon-Index1)%nPolygon;
-        if(aCutOff[nAnswer]==false)
-            {
-            break;
-            }
-        }
-    return nAnswer;
-    }
-
-size_t GetNext(size_t                   nEar,
-               std::vector<bool> const &aCutOff)
-    {
-    size_t nAnswer=nEar;
-    size_t nPolygon=aCutOff.size();
-    size_t Index1;
-    for(Index1=1;Index1<nPolygon;++Index1)
-        {
-        nAnswer=(nEar+Index1)%nPolygon;
-        if(aCutOff[nAnswer]==false)
-            {
-            break;
-            }
-        }
-    return nAnswer;
-    }
-
-bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
-             std::vector<size_t>             &aPolygon,
-             std::vector<bool>         const &aCutOff,
-             size_t                           nEar)
-    {
-    size_t nPolygon=aPolygon.size();
-    size_t nEarA=aPolygon[GetPrevious(nEar,aCutOff)];
-    size_t nEarB=aPolygon[nEar];
-    size_t nEarC=aPolygon[GetNext(nEar,aCutOff)];
-    SGM::Point2D const &A=aPoints[nEarA];
-    SGM::Point2D const &B=aPoints[nEarB];
-    SGM::Point2D const &C=aPoints[nEarC];
-    size_t Index1;
-    for(Index1=0;Index1<nPolygon;++Index1)
-        {
-        size_t nPos=aPolygon[Index1];
-        if(nPos!=nEarA && nPos!=nEarB && nPos!=nEarC)
-            {
-            SGM::Point2D const &Pos=aPoints[nPos];
-            if(InTriangle(A,B,C,Pos))
-                {
-                return false;
-                }
-            }
-        }
-    return true;
-    }
-
-class PolyData
-    {
-    public:
-
-        double dExtreamU;
-        size_t nWhichPoly;
-        size_t nWhichPoint;
-
-        bool operator<(PolyData const &PD) const
-            {
-            return PD.dExtreamU<dExtreamU;
-            }
-    };
-
-double FindAngle(std::vector<SGM::Point2D> const &aPoints,
-                 std::vector<size_t>       const &aPolygon,
-                 std::vector<bool>         const &aCutOff,
-                 size_t                           nB)
-    {
-    size_t nA=0,nC=0;
-    size_t nPolygon=aPolygon.size();
-    size_t Index1;
-    for(Index1=1;Index1<nPolygon;++Index1)
-        {
-        size_t nWhere=(nB+Index1)%nPolygon;
-        if(aCutOff[nWhere]==false)
-            {
-            nC=nWhere;
-            break;
-            }
-        }
-    for(Index1=1;Index1<nPolygon;++Index1)
-        {
-        size_t nWhere=(nB+nPolygon-Index1)%nPolygon;
-        if(aCutOff[nWhere]==false)
-            {
-            nA=nWhere;
-            break;
-            }
-        }
-    SGM::Point2D const &PosA=aPoints[aPolygon[nA]];
-    SGM::Point2D const &PosB=aPoints[aPolygon[nB]];
-    SGM::Point2D const &PosC=aPoints[aPolygon[nC]];
-    SGM::UnitVector2D VecAB=PosA-PosB;
-    SGM::UnitVector2D VecCB=PosC-PosB;
-    double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
-    if(dUp<0)
-        {
-        return 10;
-        }
-    else
-        {
-        return 1.0-VecAB%VecCB;
-        }
-    }
-
-void FixBackPointers(size_t                     nTri,
-                     std::vector<size_t> const &aTriangles,
-                     std::vector<size_t>       &aAdjacencies)
-    {
-    size_t nT0=aAdjacencies[nTri];
-    size_t nT1=aAdjacencies[nTri+1];
-    size_t nT2=aAdjacencies[nTri+2];
-    size_t a=aTriangles[nTri];
-    size_t b=aTriangles[nTri+1];
-    size_t c=aTriangles[nTri+2];
-    
-    if(nT0!=SIZE_MAX)
-        {
-        size_t a0=aTriangles[nT0];
-        size_t b0=aTriangles[nT0+1];
-        if(a0!=a && a0!=b)
-            {
-            aAdjacencies[nT0+1]=nTri;
-            }
-        else if(b0!=a && b0!=b)
-            {
-            aAdjacencies[nT0+2]=nTri;
-            }
-        else
-            {
-            aAdjacencies[nT0]=nTri;
-            }
-        }
-
-    if(nT1!=SIZE_MAX)
-        {
-        size_t a1=aTriangles[nT1];
-        size_t b1=aTriangles[nT1+1];
-        if(a1!=c && a1!=b)
-            {
-            aAdjacencies[nT1+1]=nTri;
-            }
-        else if(b1!=c && b1!=b)
-            {
-            aAdjacencies[nT1+2]=nTri;
-            }
-        else
-            {
-            aAdjacencies[nT1]=nTri;
-            }
-        }
-
-    if(nT2!=SIZE_MAX)
-        {
-        size_t a2=aTriangles[nT2];
-        size_t b2=aTriangles[nT2+1];
-        if(a2!=a && a2!=c)
-            {
-            aAdjacencies[nT2+1]=nTri;
-            }
-        else if(b2!=a && b2!=c)
-            {
-            aAdjacencies[nT2+2]=nTri;
-            }
-        else
-            {
-            aAdjacencies[nT2]=nTri;
-            }
-        }
-    }
-
-bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies,
-                   size_t                           nTri,
-                   size_t                           nEdge)
-    {
-    size_t a=aTriangles[nTri];
-    size_t b=aTriangles[nTri+1];
-    size_t c=aTriangles[nTri+2];
-    size_t nT=aAdjacencies[nTri+nEdge];
-    if(nT==SIZE_MAX)
-        {
-        return false;
-        }
-    size_t d=aTriangles[nT];
-    size_t e=aTriangles[nT+1];
-    size_t f=aTriangles[nT+2];
-    size_t g,nTA,nTB;
-    if(d!=a && d!=b && d!=c)
-        {
-        g=d;
-        nTA=aAdjacencies[nT+2];
-        nTB=aAdjacencies[nT];
-        }
-    else if(e!=a && e!=b && e!=c)
-        {
-        g=e;
-        nTA=aAdjacencies[nT];
-        nTB=aAdjacencies[nT+1];
-        }
-    else
-        {
-        g=f;
-        nTA=aAdjacencies[nT+1];
-        nTB=aAdjacencies[nT+2];
-        }
-    SGM::Point2D const &A=aPoints[a];
-    SGM::Point2D const &B=aPoints[b];
-    SGM::Point2D const &C=aPoints[c];
-    SGM::Point2D const &G=aPoints[g];
-    if(SGM::InCircumcircle(A,B,C,G))
-        {
-        size_t nT0=aAdjacencies[nTri];
-        size_t nT1=aAdjacencies[nTri+1];
-        size_t nT2=aAdjacencies[nTri+2];
-        if(nEdge==0)
-            {
-            aTriangles[nTri]=g;
-            aTriangles[nTri+1]=c;
-            aTriangles[nTri+2]=a;
-            aTriangles[nT]=g;
-            aTriangles[nT+1]=b;
-            aTriangles[nT+2]=c;
-
-            aAdjacencies[nTri]=nT;
-            aAdjacencies[nTri+1]=nT2;
-            aAdjacencies[nTri+2]=nTA;
-            aAdjacencies[nT]=nTB;
-            aAdjacencies[nT+1]=nT1;
-            aAdjacencies[nT+2]=nTri;
-            }
-        else if(nEdge==1)
-            {
-            aTriangles[nTri]=g;
-            aTriangles[nTri+1]=a;
-            aTriangles[nTri+2]=b;
-            aTriangles[nT]=g;
-            aTriangles[nT+1]=c;
-            aTriangles[nT+2]=a;
-
-            aAdjacencies[nTri]=nT;
-            aAdjacencies[nTri+1]=nT0;
-            aAdjacencies[nTri+2]=nTA;
-            aAdjacencies[nT]=nTB;
-            aAdjacencies[nT+1]=nT2;
-            aAdjacencies[nT+2]=nTri;
-            }
-        else
-            {
-            aTriangles[nTri]=g;
-            aTriangles[nTri+1]=a;
-            aTriangles[nTri+2]=b;
-            aTriangles[nT]=g;
-            aTriangles[nT+1]=b;
-            aTriangles[nT+2]=c;
-
-            aAdjacencies[nTri]=nTB;
-            aAdjacencies[nTri+1]=nT0;
-            aAdjacencies[nTri+2]=nT;
-            aAdjacencies[nT]=nTri;
-            aAdjacencies[nT+1]=nT1;
-            aAdjacencies[nT+2]=nTA;
-            }
-        FixBackPointers(nT,aTriangles,aAdjacencies);
-        FixBackPointers(nTri,aTriangles,aAdjacencies);
-        return true;
-        }
-    return false;
-    }
-
-void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies)
-    {
-    size_t nTriangles=aTriangles.size();
-    bool bFlipped=true;
-    size_t Index1;
-    while(bFlipped)
-        {
-        bFlipped=false;
-        for(Index1=0;Index1<nTriangles;Index1+=3)
-            {
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,0))
-                {
-                bFlipped=true;
-                }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,1))
-                {
-                bFlipped=true;
-                }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,2))
-                {
-                bFlipped=true;
-                }
-            }
-        }
     }
 
 void SGM::TriangulatePolygon(SGM::Result                             &rResult,
@@ -1508,36 +1346,6 @@ size_t SGM::Cubic(double c3,double c2,double c1,double c0,
     return aRoots.size();
     }
 
-void NewtonMethod(double a,
-                  double b,
-                  double c,
-                  double d,
-                  double e,
-                  double &x)
-    {
-    double delta=1.0;
-    double fx=1.0;
-    double a4=a*4.0;
-    double b3=b*3.0;
-    double c2=c*2.0;
-    size_t nCount=0;
-    while(SGM_ZERO<fabs(delta) && SGM_ZERO<fabs(fx) && nCount<100)
-        {
-        fx=x*(x*(x*(a*x+b)+c)+d)+e;
-        double dfx=x*(x*(a4*x+b3)+c2)+d;
-        if(SGM_ZERO<fabs(dfx))
-            {
-            delta=fx/dfx;
-            }
-        else
-            {
-            delta=0.0;
-            }
-        x-=delta;
-        ++nCount;
-        }
-    }
-
 size_t SGM::Quartic(double a,double b,double c,double d,double e,
                     std::vector<double> &aRoots,
                     double dTolerance)
@@ -1867,4 +1675,3 @@ bool SGM::PolynomialFit(std::vector<SGM::Point2D> aPoints,
         }
     return true;
     }
-
