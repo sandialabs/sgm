@@ -9,7 +9,7 @@ line::line(SGM::Result        &rResult,
            SGM::Point3D const &Pos0,
            SGM::Point3D const &Pos1):
     curve(rResult,SGM::LineType),m_Origin(Pos0),
-    m_Axis(Pos1-Pos0),m_dScale(Pos0.Distance(Pos1))
+    m_Axis(Pos1-Pos0),m_dScale(1.0)
     {
     m_Domain.m_dMin=-SGM_MAX;
     m_Domain.m_dMax=SGM_MAX;

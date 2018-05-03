@@ -25,6 +25,16 @@ private slots:
 
   void on_actionExit_triggered();
 
+  void on_actionRunAllTests_triggered();
+
+  void on_actionRunTestNumber_triggered();
+
+  void on_actionRunScript_triggered();
+
+  void on_actionCreateBlock_triggered();
+
+  void on_actionCreateSphere_triggered();
+
 private:
   Ui::MainWindow *ui;
   ModelData *mModel;

@@ -57,6 +57,26 @@
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
+
+   <widget class="QMenu" name="menuTest">
+     <property name="title">
+       <string>Test</string>
+     </property>
+     <addaction name="actionRunAllTests"/>
+     <addaction name="actionRunTestNumber"/>
+     <addaction name="actionRunScript"/>
+   </widget>
+   <addaction name="menuTest"/>
+
+   <widget class="QMenu" name="menuPrimitives">
+     <property name="title">
+       <string>Primitives</string>
+     </property>
+     <addaction name="actionCreateBlock"/>
+     <addaction name="actionCreateSphere"/>
+   </widget>
+   <addaction name="menuPrimitives"/>
+
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dwTreeDock">
@@ -123,13 +143,56 @@
     <string>Ctrl+O</string>
    </property>
   </action>
+
+  <action name="actionRunAllTests">
+    <property name="text">
+      <string>Run All Tests</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+A</string>
+    </property>
+  </action>
+  <action name="actionRunTestNumber">
+    <property name="text">
+      <string>Run Test Number</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+N</string>
+    </property>
+  </action>
+  <action name="actionRunScript">
+    <property name="text">
+      <string>Run Script</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+R</string>
+    </property>
+    
+  </action>
+  <action name="actionCreateBlock">
+    <property name="text">
+      <string>Create Block</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+B</string>
+    </property>
+  </action>
+  <action name="actionCreateSphere">
+    <property name="text">
+      <string>Create Sphere</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+B</string>
+    </property>
+  </action>
+
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
  </widget>
- <customwidgets>
+  <customwidgets>
   <customwidget>
    <class>SGMGraphicsWidget</class>
    <extends>QOpenGLWidget</extends>

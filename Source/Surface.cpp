@@ -1063,6 +1063,39 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     return Answer;
     }
 
+bool surface::IsSingularity(SGM::Point2D const &uv) const
+    {
+    if(m_bSingularHighU)
+        {
+        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_ZERO,false))
+            {
+            return true;
+            }
+        }
+    if(m_bSingularHighV)
+        {
+        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMax,SGM_ZERO,false))
+            {
+            return true;
+            }
+        }
+    if(m_bSingularLowU)
+        {
+        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_ZERO,false))
+            {
+            return true;
+            }
+        }
+    if(m_bSingularLowV)
+        {
+        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,SGM_ZERO,false))
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 void surface::Curvature(SGM::Point2D const &uv,
                         SGM::UnitVector3D  &Vec1,
                         SGM::UnitVector3D  &Vec2,
@@ -1286,10 +1319,27 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             double dUx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
             double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
             uv.m_u=SGM::SAFEatan2(dUy,dUx);
-            SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
-            double dVx=x*Spoke.m_x+y*Spoke.m_y+z*Spoke.m_z;
-            double dVy=x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z;
-            uv.m_v=SGM::SAFEatan2(dVy,dVx);
+            SGM::Vector3D VSpoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+            if(VSpoke.Magnitude()<SGM_ZERO)
+                {
+                if((Pos-Center)%ZAxis<0)
+                    {
+                    // South Pole
+                    uv.m_v=-SGM_HALF_PI;
+                    }
+                else
+                    {
+                    // North Pole
+                    uv.m_v=SGM_HALF_PI;
+                    }
+                }
+            else
+                {
+                SGM::UnitVector3D Spoke=VSpoke;
+                double dVx=x*Spoke.m_x+y*Spoke.m_y+z*Spoke.m_z;
+                double dVy=x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z;
+                uv.m_v=SGM::SAFEatan2(dVy,dVx);
+                }
 
             if(uv.m_u<m_Domain.m_UDomain.m_dMin)
                 {

@@ -334,6 +334,8 @@ class edge : public topology
 
         std::vector<SGM::Point3D> const &GetFacets() const;
 
+        double GetTolerance() const {return m_dTolerance;}
+
         // Find Methods
 
         SGM::Point3D const &FindStartPoint() const;
@@ -345,8 +347,6 @@ class edge : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
-
-        double GetTolerance() const {return m_dTolerance;}
 
     private:
 

@@ -128,8 +128,8 @@ void SGMGraphicsWidget::clear()
 }
 
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D> &points,
-                                 const std::vector<size_t> &triangles)
-//                                 const std::vector<SGM::UnitVector3D> &normals)
+                                 const std::vector<size_t> &triangles,
+                                 const std::vector<SGM::UnitVector3D> &)//normals)
 {
   pGraphicsFace *face = new pGraphicsFace;
   dPtr->mFaces.push_back(face);

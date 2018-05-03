@@ -60,6 +60,8 @@ class surface : public entity
 
         bool SingularHighV() const {return m_bSingularHighV;}
 
+        bool IsSingularity(SGM::Point2D const &uv) const;
+
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
         curve *UParamLine(SGM::Result &rResult,double dU) const;

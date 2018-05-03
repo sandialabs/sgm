@@ -4,6 +4,7 @@
 #include <QString>
 
 #include "SGMEntityClasses.h"
+#include "SGMDataClasses.h"
 
 class SGMGraphicsWidget;
 class SGMTreeWidget;
@@ -19,6 +20,12 @@ public:
   void set_graphics_widget(SGMGraphicsWidget *graphics);
 
   void open_file(const QString &filename);
+
+  void create_block(SGM::Point3D const &Pos0,
+                    SGM::Point3D const &Pos1);
+
+  void create_sphere(SGM::Point3D const &Pos0,
+                     double              dRadius);
 
 private:
   pModelData* dPtr;

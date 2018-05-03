@@ -65,6 +65,23 @@ void ModelData::open_file(const QString &filename)
   rebuild_graphics();
 }
 
+void ModelData::create_block(SGM::Point3D const &Pos0,
+                             SGM::Point3D const &Pos1)
+{
+  SGM::CreateBlock(dPtr->mResult,Pos0,Pos1);
+
+  rebuild_tree();
+  rebuild_graphics();
+}
+
+void ModelData::create_sphere(SGM::Point3D const &Pos0,
+                              double              dRadius)
+{
+  SGM::CreateSphere(dPtr->mResult,Pos0,dRadius);
+
+  rebuild_tree();
+  rebuild_graphics();
+}
 
 void ModelData::rebuild_tree()
 {
@@ -135,10 +152,10 @@ void ModelData::rebuild_graphics()
         SGM::GetFacePoints(dPtr->mResult, face);
     const std::vector<size_t> &face_tris =
         SGM::GetFaceTriangles(dPtr->mResult, face);
-//    const std::vector<SGM::UnitVector3D> &face_normals =
-//        SGM::GetFaceNormals(dPtr->mResult, face);
+    const std::vector<SGM::UnitVector3D> &face_normals =
+        SGM::GetFaceNormals(dPtr->mResult, face);
 
-    dPtr->mGraphics->add_face(face_points, face_tris);
+    dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
   }
 
   std::set<SGM::Edge> edge_list;

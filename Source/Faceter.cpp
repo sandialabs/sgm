@@ -649,10 +649,13 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
     // First find and use all the vertices.
 
     surface const *pSurface=pFace->GetSurface();
+    std::set<edge *> const &sFaceEdges=pFace->GetEdges();
     std::set<vertex *> sVertices;
     FindVertices(rResult,pFace,sVertices);
     std::set<vertex *>::iterator VertexIter=sVertices.begin();
     std::map<vertex *,size_t> mVertexMap;
+    std::map<std::pair<vertex *,edge *>,size_t> mSingularity;
+    size_t Index1,Index2,Index3;
     size_t nCount=0;
     while(VertexIter!=sVertices.end())
         {
@@ -660,10 +663,84 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
         SGM::Point3D const &Pos=pVertex->GetPoint();
         aPoints3D.push_back(Pos);
         SGM::Point2D uv=pSurface->Inverse(Pos);
-        aPoints2D.push_back(uv);
-        mVertexMap[pVertex]=nCount;
-        aEntities.push_back(pVertex);
-        ++nCount;
+        if(pSurface->IsSingularity(uv))
+            {
+            // Find all outgoing and incoming edges, of the vertex, on the face.
+
+            std::vector<edge *> aOutgoing,aIncoming;
+            std::vector<SGM::Point2D> aOutUV,aInUV;
+            std::set<edge *> const &sVertexEdges=pVertex->GetEdges();
+            std::set<edge *>::const_iterator EdgeIter=sVertexEdges.begin();
+            while(EdgeIter!=sVertexEdges.end())
+                {
+                edge *pEdge=*EdgeIter;
+                if(sFaceEdges.find(pEdge)!=sFaceEdges.end())
+                    {
+                    SGM::EdgeSideType nType=pFace->GetEdgeType(pEdge);
+                    if(nType==SGM::EdgeSideType::FaceOnLeftType)
+                        {
+                        if(pEdge->GetStart()==pVertex)
+                            {
+                            aOutgoing.push_back(pEdge);
+                            }
+                        if(pEdge->GetEnd()==pVertex)
+                            {
+                            aIncoming.push_back(pEdge);
+                            }
+                        }
+                    else if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        if(pEdge->GetStart()==pVertex)
+                            {
+                            aIncoming.push_back(pEdge);
+                            }
+                        if(pEdge->GetEnd()==pVertex)
+                            {
+                            aOutgoing.push_back(pEdge);
+                            }
+                        }
+                    else
+                        {
+                        aIncoming.push_back(pEdge);
+                        aOutgoing.push_back(pEdge);
+                        }
+                    }
+                }
+
+            // Find the vertex's uv value of each edge.
+
+            size_t nOutgoing=aOutgoing.size();
+            size_t nIncoming=aIncoming.size();
+            for(Index1=0;Index1<nOutgoing;++Index1)
+                {
+                edge *pEdge=aOutgoing[Index1];
+                SGM::EdgeSideType nType=pFace->GetEdgeType(pEdge);
+                if(nType==SGM::EdgeSideType::SeamType)
+                    {
+                    //$$
+                    }
+                SGM::Point3D Pos=pEdge->FindMidPoint(0.01);
+                aOutUV.push_back(pSurface->Inverse(Pos));
+                }
+            for(Index1=0;Index1<nIncoming;++Index1)
+                {
+                edge *pEdge=aIncoming[Index1];
+                SGM::EdgeSideType nType=pFace->GetEdgeType(pEdge);
+                if(nType==SGM::EdgeSideType::SeamType)
+                    {
+                    
+                    }
+                SGM::Point3D Pos=pEdge->FindMidPoint(0.99);
+                aInUV.push_back(pSurface->Inverse(Pos));
+                }
+            }
+        else
+            {
+            aPoints2D.push_back(uv);
+            mVertexMap[pVertex]=nCount;
+            aEntities.push_back(pVertex);
+            ++nCount;
+            }
         ++VertexIter;
         }
 
@@ -673,7 +750,6 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideType;
     size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideType);
     bool bFlip=pFace->GetFlipped();
-    size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nLoops;++Index1)
         {
         std::vector<edge *> const &aLoop=aaLoops[Index1];
@@ -705,7 +781,12 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                 }
             if(pStart)
                 {
-                aPolygon.push_back(mVertexMap[pStart]);
+                size_t nVertex=mVertexMap[pStart];
+                if(pSurface->IsSingularity(aPoints2D[nVertex]))
+                    {
+                    nVertex=mSingularity[std::pair<vertex *,edge *>(pStart,pEdge)];
+                    }
+                aPolygon.push_back(nVertex);
                 }
             size_t nVertices=0;
             if(pStart)

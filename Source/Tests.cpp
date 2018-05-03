@@ -427,18 +427,16 @@ bool RunTestFile(SGM::Result                       &rResult,
                 }
             }
         }
-    //if(rResult.GetResult()!=SGM::ResultTypeOK)
-    //    {
-    //    rResult.SetResult(SGM::ResultTypeOK);
-    //    bPassed=false;
-    //    }
-    if(bPassed)
+    if(pOutputFile)
         {
-        fprintf(pOutputFile,"Passed  \"%s\"\n",sFileName.c_str());
-        }
-    else
-        {
-        fprintf(pOutputFile,"Failed  \"%s\"\n",sFileName.c_str());
+        if(bPassed)
+            {
+            fprintf(pOutputFile,"Passed  \"%s\"\n",sFileName.c_str());
+            }
+        else
+            {
+            fprintf(pOutputFile,"Failed  \"%s\"\n",sFileName.c_str());
+            }
         }
     return bPassed;
     }
@@ -451,14 +449,16 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
     std::map<std::string,SGMFunction> mFunctionMap;
     CreateFunctionMap(mFunctionMap);
     FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    if(pOutputFile==nullptr)
+    
+    std::string sFullPathName;
+    if(sTestDirectory.empty())
         {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage(sOutputFileName);
-        return false;
+        sFullPathName=sTestFileName;
         }
-
-    std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
+    else
+        {
+        sFullPathName=sTestDirectory+"/"+sTestFileName;
+        }
     FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
     if(pTestFile==nullptr)
         {
@@ -468,7 +468,10 @@ bool SGM::RunTestFile(SGM::Result       &rResult,
         }
     bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
     fclose(pTestFile);
-    fclose(pOutputFile);
+    if(pOutputFile)
+        {
+        fclose(pOutputFile);
+        }
     return bAnswer;
     }
 

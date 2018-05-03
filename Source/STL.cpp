@@ -91,6 +91,7 @@ void SaveSTL(SGM::Result                  &rResult,
         if(Options.m_b2D==false)
             {
             face *pFace=*FaceIter;
+            //pFace=(face *)rResult.GetThing()->FindEntity(57);
             fprintf(pFile,"solid Face %ld\n",pFace->GetID());
             std::vector<SGM::Point3D> const &aPoints=pFace->GetPoints3D(rResult);
             std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
@@ -119,6 +120,7 @@ void SaveSTL(SGM::Result                  &rResult,
         else
             {
             face *pFace=*FaceIter;
+            //pFace=(face *)rResult.GetThing()->FindEntity(57);
             fprintf(pFile,"solid Face %ld\n",pFace->GetID());
             std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
             std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
