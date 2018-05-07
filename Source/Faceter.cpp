@@ -9,7 +9,8 @@
 #include <list>
 #include <cmath>
 #include <algorithm>
-
+namespace SGMInternal
+{
 void FixBackPointers(size_t                     nTri,
                      std::vector<size_t> const &aTriangles,
                      std::vector<size_t>       &aAdjacencies)
@@ -1791,3 +1792,4 @@ void FacetFace(SGM::Result                    &rResult,
         }
     */
     }
+}

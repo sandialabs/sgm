@@ -1,8 +1,12 @@
 #ifndef STEP_H
 #define STEP_H
 
-namespace SGM
-    {
+#include "SGMDataClasses.h"
+#include "SGMTranslators.h"
+
+namespace SGMInternal
+{
+class entity;
 
     enum STEPTags
         {
@@ -132,7 +136,35 @@ namespace SGM
         VIEW_VOLUME
         };
 
-    } // End SGM namespace
+void SaveSTEP(SGM::Result                  &rResult,
+              std::string            const &FileName,
+              entity                       *pEntity,
+              SGM::TranslatorOptions const &Options);
+
+void SaveSTL(SGM::Result                  &rResult,
+             std::string            const &FileName,
+             entity                       *pEntity,
+             SGM::TranslatorOptions const &Options);
+
+void SaveSGM(SGM::Result                  &rResult,
+             std::string            const &sFileName,
+             entity                 const *pEntity,
+             SGM::TranslatorOptions const &Options);
+
+size_t ReadStepFile(SGM::Result                  &rResult,
+                    std::string            const &FileName,
+                    thing                        *pThing,
+                    std::vector<entity *>        &aEntities,
+                    std::vector<std::string>     &aLog,
+                    SGM::TranslatorOptions const &Options);
+
+size_t ReadSTLFile(SGM::Result                  &rResult,
+                   std::string            const &FileName,
+                   thing                        *pThing,
+                   std::vector<entity *>        &aEntities,
+                   std::vector<std::string>     &aLog,
+                   SGM::TranslatorOptions const &Options);
+}
 
 #endif // STEP_H
 

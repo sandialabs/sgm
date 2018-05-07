@@ -6,7 +6,8 @@
 #include <cfloat>
 #include <cmath>
 #include <vector>
-
+namespace SGMInternal
+{
 void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::UnitVector3D const &Normal1,
                                 SGM::Point3D      const &Origin2,
@@ -1153,4 +1154,4 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
          }
      return aCurves.size();
      }
-
+}

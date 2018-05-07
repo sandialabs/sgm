@@ -850,7 +850,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
     // Flip to improve triangles.
 
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-    DelaunayFlips(aPoints,aTriangles,aAdjacencies);
+    SGMInternal::DelaunayFlips(aPoints,aTriangles,aAdjacencies);
     }
 
 bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)

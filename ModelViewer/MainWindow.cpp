@@ -9,6 +9,7 @@
 #include "qinputdialog.h"
 #include "qmessagebox.h"
 #include "FileMenu.hpp"
+#include "ViewMenu.hpp"
 #include "TestMenu.hpp"
 #include "PrimitiveMenu.hpp"
 #include "ModelData.hpp"
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow),
   mModel(new ModelData),
   mFileMenu(new FileMenu),
+  mViewMenu(new ViewMenu),
   mTestMenu(new TestMenu),
   mPrimitiveMenu(new PrimitiveMenu)
 {
@@ -40,6 +42,16 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(file_stl()));
   connect(mFileMenu, SIGNAL(exit()),
           this, SLOT(file_exit()));
+
+  ui->menubar->addMenu(mViewMenu);
+  connect(mViewMenu, SIGNAL(zoom()),
+          this, SLOT(view_zoom()));
+  connect(mViewMenu, SIGNAL(wire()),
+          this, SLOT(view_wire()));
+  connect(mViewMenu, SIGNAL(uvspace()),
+          this, SLOT(view_uvspace()));
+  connect(mViewMenu, SIGNAL(perspective()),
+          this, SLOT(view_perspective()));
 
   ui->menubar->addMenu(mTestMenu);
   connect(mTestMenu, SIGNAL(all()),
@@ -86,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
   delete mFileMenu;
+  delete mViewMenu;
   delete mTestMenu;
   delete mPrimitiveMenu;
   delete ui;
@@ -159,13 +172,33 @@ void MainWindow::read_settings()
     restoreState(settings.value("MainWindow/state").toByteArray());
 }
 
+void MainWindow::view_zoom()
+    {
+    
+    }
+
+void MainWindow::view_wire()
+    {
+    
+    }
+
+void MainWindow::view_uvspace()
+    {
+    
+    }
+
+void MainWindow::view_perspective()
+    {
+    
+    }
+
 void MainWindow::test_all()
 {
   QString DirectoryName=QFileDialog::getExistingDirectory(this, tr("Test Directory"), "");
 
   QString OutputName=QFileDialog::getSaveFileName(this, tr("Output File", ""));
 
-  thing *pThing=SGM::CreateThing();
+  SGMInternal::thing *pThing=SGM::CreateThing();
   SGM::Result rResult(pThing);
   SGM::RunTestDirectory(rResult,DirectoryName.toUtf8().data(),OutputName.toUtf8().data());
 }
@@ -173,7 +206,7 @@ void MainWindow::test_all()
 void MainWindow::test_number()
 {
   int nTest=QInputDialog::getInt(this, tr("Test Number"), tr("C++ Test"));
-  thing *pThing=SGM::CreateThing();
+  SGMInternal::thing *pThing=SGM::CreateThing();
   SGM::Result rResult(pThing);
   if(SGM::RunCPPTest(rResult,nTest))
       {
@@ -193,7 +226,7 @@ void MainWindow::test_script()
 {
   QString FileName=QFileDialog::getOpenFileName(this, tr("Test Script"), "");
 
-  thing *pThing=SGM::CreateThing();
+  SGMInternal::thing *pThing=SGM::CreateThing();
   SGM::Result rResult(pThing);
   if(SGM::RunTestFile(rResult,"",FileName.toUtf8().data(),""))
       {

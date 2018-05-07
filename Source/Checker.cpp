@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdio>
 
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #else
@@ -18,6 +19,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGMInternal
+{
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
                   std::vector<std::string> &aCheckStrings) const
@@ -438,3 +441,4 @@ bool entity::Check(SGM::Result              &rResult,
         }
     return bAnswer;
     }
+}

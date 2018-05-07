@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cfloat>
 
+namespace SGMInternal
+{
 curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType) 
     {
@@ -778,3 +780,4 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
             }
         }
     }
+}

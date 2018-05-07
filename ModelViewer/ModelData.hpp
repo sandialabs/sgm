@@ -28,6 +28,14 @@ public:
 
   void stl(QString const &SaveName);
 
+  void zoom();
+
+  void wire_mode();
+
+  void uvspace_mode();
+
+  void perspective_mode();
+
   void check(std::vector<std::string> &aLog);
 
   void create_block(SGM::Point3D const &Pos0,
@@ -77,6 +85,10 @@ public:
 private:
   pModelData* dPtr;
   SGMTreeWidget *mTree;
+
+  bool mwire_mode;
+  bool muvspace_mode;
+  bool mperspective_mode;
 
   void on_entity_added(const SGM::Entity &ent);
   void on_entity_removed(const SGM::Entity &ent);

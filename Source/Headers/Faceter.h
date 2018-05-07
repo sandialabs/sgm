@@ -4,6 +4,9 @@
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
 
+namespace SGMInternal
+{
+
 class FacetOptions
     {
     public:
@@ -63,5 +66,7 @@ void FixBackPointers(size_t                     nTri,
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
                    std::vector<size_t>             &aAdjacencies);
+
+}
 
 #endif // FACETER_H

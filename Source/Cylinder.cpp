@@ -4,6 +4,8 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 
+namespace SGMInternal
+{
 cylinder::cylinder(SGM::Result             &rResult,
                    SGM::Point3D      const &Bottom,
                    SGM::Point3D      const &Top,
@@ -30,3 +32,4 @@ cylinder::cylinder(SGM::Result             &rResult,
         }
     m_YAxis=m_ZAxis*m_XAxis;
     }
+}

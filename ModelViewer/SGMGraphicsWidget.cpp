@@ -149,7 +149,9 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
   size_t point_counter = 0;
   for(const SGM::Point3D &point : points)
       {
-      //normalsArray->SetTuple(point_counter,(double *)&norms[point_counter]);
+      //SGM::UnitVector3D Norm=norms[point_counter];
+      //Norm.Negate();
+      //normalsArray->SetTuple(point_counter,(double *)&Norm);
       face->points->InsertPoint(point_counter++, point.m_x, point.m_y, point.m_z);
       }
 
@@ -161,8 +163,6 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
     tri_vertex_ids->SetId(i, triangles[i]);
 
   //face->polyData->GetCellData()->SetNormals(normalsArray);
-  //face->actor->GetProperty()->BackfaceCullingOff();
-
   face->cells->InsertNextCell(face->triangleStrip);
 
   dPtr->renderer->AddActor(face->actor);

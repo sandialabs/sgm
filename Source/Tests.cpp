@@ -12,6 +12,7 @@
 #include "EntityClasses.h"
 #include "Intersectors.h"
 #include "FacetToBRep.h"
+#include "Primitive.h"
 
 #include <string>
 #include <vector>
@@ -418,7 +419,7 @@ bool RunTestFile(SGM::Result                       &rResult,
     while(bFound)
         {
         std::string sFileLine;
-        bFound=ReadFileLine(pTestFile,sFileLine);
+        bFound=SGMInternal::ReadFileLine(pTestFile,sFileLine);
         if(bFound)
             {
             if(RunFileLine(rResult,mFunctionMap,sTestDirectory,mVariableMap,sFileLine,pOutputFile)==false)
@@ -441,8 +442,8 @@ bool RunTestFile(SGM::Result                       &rResult,
     return bPassed;
     }
 
-bool TestSurface(surface      const *pSurface,
-                 SGM::Point2D const &uv1)
+bool TestSurface(SGMInternal::surface const *pSurface,
+                 SGM::Point2D         const &uv1)
     {
     bool bAnswer=true;
 
@@ -507,7 +508,7 @@ bool TestSurface(surface      const *pSurface,
     return bAnswer;
     }
 
-bool TestCurve(curve *pCurve,
+bool TestCurve(SGMInternal::curve *pCurve,
                double t1)
     {
     SGM::Point3D Pos;
@@ -719,7 +720,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D YAxis=XAxis.Orthogonal();
         SGM::UnitVector3D ZAxis=XAxis*YAxis;
         double dScale=2.5;
-        plane *pPlane=new plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
+        SGMInternal::plane *pPlane=new SGMInternal::plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
 
         bool bAnswer=TestSurface(pPlane,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pPlane);
@@ -735,7 +736,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D XAxis(1,2,3);
         SGM::UnitVector3D YAxis=XAxis.Orthogonal();
         double dRadius=2.5;
-        sphere *pSphere=new sphere(rResult,Origin,dRadius,&XAxis,&YAxis);
+        SGMInternal::sphere *pSphere=new SGMInternal::sphere(rResult,Origin,dRadius,&XAxis,&YAxis);
 
         bool bAnswer=TestSurface(pSphere,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pSphere);
@@ -749,7 +750,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Bottom(10,11,12),Top(13,14,15);
         double dRadius=2.5;
-        cylinder *pCylinder=new cylinder(rResult,Bottom,Top,dRadius);
+        SGMInternal::cylinder *pCylinder=new SGMInternal::cylinder(rResult,Bottom,Top,dRadius);
 
         bool bAnswer=TestSurface(pCylinder,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pCylinder);
@@ -763,7 +764,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin(0,0,0);
         SGM::UnitVector3D ZAxis(0,0,1);
-        torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,Origin,ZAxis,2,5,true);
 
         bool bAnswer=TestSurface(pTorus,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pTorus);
@@ -777,7 +778,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin(10,11,12);
         SGM::UnitVector3D ZAxis(1,2,3);
-        cone *pCone=new cone(rResult,Origin,ZAxis,2,0.4);
+        SGMInternal::cone *pCone=new SGMInternal::cone(rResult,Origin,ZAxis,2,0.4);
 
         bool bAnswer=TestSurface(pCone,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pCone);
@@ -795,7 +796,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aControlPoints.emplace_back(2.8333333333333333,1.166666666666666,0);
         aControlPoints.emplace_back(3,1,0);
 
-        NUBcurve *pNUB=new NUBcurve(rResult,aControlPoints,aKnots);
+        SGMInternal::NUBcurve *pNUB=new SGMInternal::NUBcurve(rResult,aControlPoints,aKnots);
 
         bool bAnswer=TestCurve(pNUB,0.45);
         rResult.GetThing()->DeleteEntity(pNUB);
@@ -809,17 +810,17 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D Axis(7,8,9);
         double dScale=10;
 
-        line *pLine1=new line(rResult,Pos0,Pos1);
+        SGMInternal::line *pLine1=new SGMInternal::line(rResult,Pos0,Pos1);
         bool bAnswer=TestCurve(pLine1,0.5);
         rResult.GetThing()->DeleteEntity(pLine1);
 
-        line *pLine2=new line(rResult,Pos0,Axis,dScale);
+        SGMInternal::line *pLine2=new SGMInternal::line(rResult,Pos0,Axis,dScale);
         if(TestCurve(pLine2,0.5)==false)
             {
             bAnswer=false;
             }
 
-        line *pLine3=new line(rResult,pLine2);
+        SGMInternal::line *pLine3=new SGMInternal::line(rResult,pLine2);
         if(TestCurve(pLine3,0.5)==false)
             {
             bAnswer=false;
@@ -838,24 +839,24 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::Interval1D Domain(-1,1);
         SGM::UnitVector3D XAxis=Normal.Orthogonal();
    
-        circle *pCircle1=new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain);
+        SGMInternal::circle *pCircle1=new SGMInternal::circle(rResult,Center,Normal,dRadius,&XAxis,&Domain);
         bool bAnswer=TestCurve(pCircle1,0.5);
         rResult.GetThing()->DeleteEntity(pCircle1);
 
-        circle *pCircle2=new circle(rResult,Center,Normal,dRadius,&XAxis);
+        SGMInternal::circle *pCircle2=new SGMInternal::circle(rResult,Center,Normal,dRadius,&XAxis);
         if(TestCurve(pCircle2,0.5)==false)
             {
             bAnswer=false;
             }
         rResult.GetThing()->DeleteEntity(pCircle2);
 
-        circle *pCircle3=new circle(rResult,Center,Normal,dRadius);
+        SGMInternal::circle *pCircle3=new SGMInternal::circle(rResult,Center,Normal,dRadius);
         if(TestCurve(pCircle3,0.5)==false)
             {
             bAnswer=false;
             }
 
-        circle *pCircle4=new circle(rResult,pCircle3);
+        SGMInternal::circle *pCircle4=new SGMInternal::circle(rResult,pCircle3);
         if(TestCurve(pCircle4,0.5)==false)
             {
             bAnswer=false;
@@ -872,7 +873,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin(0.0,0.0,0.0);
         SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
-        torus *pTorus=new torus(rResult,Origin,ZAxis,2,5,true);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,Origin,ZAxis,2,5,true);
         SGM::Point2D uv(0.0,0.0);
         SGM::UnitVector3D Vec1,Vec2;
         double k1,k2;
@@ -1293,7 +1294,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
         aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
         aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
-        NUBsurface *pNUB=new NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
+        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
 
         bool bAnswer=TestSurface(pNUB,SGM::Point2D(0.3,0.2));
         
@@ -1477,7 +1478,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Center(0.0,0.0,0.0);
         SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
-        torus *pTorus=new torus(rResult,Center,ZAxis,1.0,3.0,false);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,Center,ZAxis,1.0,3.0,false);
 
         size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
         if( nHits!=4 ||
@@ -1608,7 +1609,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Center(0.0,0.0,0.0);
         SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
-        torus *pTorus=new torus(rResult,Center,ZAxis,1.0,3.0,false);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,Center,ZAxis,1.0,3.0,false);
 
         pTorus->Transform(Trans);
         Origin1*=Trans;
@@ -1700,7 +1701,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aPoints.push_back(SGM::Point3D(2.0,8.0,0.0));
         aPoints.push_back(SGM::Point3D(-3.0,18.0,0.0));
 
-        curve *pConic0=FindConic(rResult,aPoints,dTolerance);
+        SGMInternal::curve *pConic0=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         if(pConic0)
             {
             bAnswer=false;
@@ -1717,7 +1718,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aPoints.push_back(SGM::Point3D(6.0,-8.4852813742385702928101323452582,0.0));
         aPoints.push_back(SGM::Point3D(-6.0,8.4852813742385702928101323452582,0.0));
 
-        curve *pConic1=FindConic(rResult,aPoints,dTolerance);
+        SGMInternal::curve *pConic1=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         rResult.GetThing()->DeleteEntity(pConic1);
 
         // x^2/a^2+y^2/b^2=1 ellipse
@@ -1730,7 +1731,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aPoints.push_back(SGM::Point3D(0.0,-3.0,0.0));
         aPoints.push_back(SGM::Point3D(1.0,2.5980762113533159402911695122588,0.0));
         
-        curve *pConic2=FindConic(rResult,aPoints,dTolerance);
+        SGMInternal::curve *pConic2=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         rResult.GetThing()->DeleteEntity(pConic2);
 
         return bAnswer;
@@ -1744,8 +1745,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Center;
         SGM::UnitVector3D Axis(0.0,0.0,1.0),XAxis(1.0,0.0,0.0);
-        torus *pApple=new torus(rResult,Center,Axis,2.0,0.5,true,&XAxis);
-        torus *pLemon=new torus(rResult,Center,Axis,2.0,0.5,false,&XAxis);
+        SGMInternal::torus *pApple=new SGMInternal::torus(rResult,Center,Axis,2.0,0.5,true,&XAxis);
+        SGMInternal::torus *pLemon=new SGMInternal::torus(rResult,Center,Axis,2.0,0.5,false,&XAxis);
 
         SGM::Point3D Pos0(0.5,0.0,0.0);
         SGM::Point3D Pos1(1.5,0.0,2.0);
@@ -1757,8 +1758,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         rResult.GetThing()->DeleteEntity(pApple);
         rResult.GetThing()->DeleteEntity(pLemon);
 
-        pApple=new torus(rResult,Center,Axis,2.0,1.5,true,&XAxis);
-        pLemon=new torus(rResult,Center,Axis,2.0,1.5,false,&XAxis);
+        pApple=new SGMInternal::torus(rResult,Center,Axis,2.0,1.5,true,&XAxis);
+        pLemon=new SGMInternal::torus(rResult,Center,Axis,2.0,1.5,false,&XAxis);
 
         SGM::Point3D Pos2(1.5,0.0,0.0);
         SGM::Point3D Pos3(2.5,0.0,2.0);
@@ -1831,7 +1832,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
     ///////////////////////////////////////////////////////////////////////////
     
     std::vector<std::string> aFileNames;
-    ReadDirectory(sTestDirectory,aFileNames);
+    SGMInternal::ReadDirectory(sTestDirectory,aFileNames);
 
     FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
     std::map<std::string,SGMFunction> mFunctionMap;
@@ -1845,7 +1846,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
         if(aFileNames[Index1].c_str()[0]!='.')
             {
             std::string sExtension;
-            FindFileExtension(aFileNames[Index1],sExtension);
+            SGMInternal::FindFileExtension(aFileNames[Index1],sExtension);
             if(sExtension=="txt")
                 {
                 std::string FullPath=sTestDirectory;
@@ -1882,8 +1883,8 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
     // Find the file types.
 
     std::string Ext1,Ext2;
-    FindFileExtension(sFile1,Ext1);
-    FindFileExtension(sFile2,Ext2);
+    SGMInternal::FindFileExtension(sFile1,Ext1);
+    SGMInternal::FindFileExtension(sFile2,Ext2);
     if(Ext1!=Ext2)
         {
         return false;
@@ -1905,20 +1906,20 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
         std::vector<SGM::Entity> aEntities1,aEntities2;
         size_t nEntities1=ReadFile(rResult,sFile1,aEntities1,aLog,Options);
         size_t nEntities2=ReadFile(rResult,sFile2,aEntities2,aLog,Options);
-        thing *pThing=rResult.GetThing();
+        SGMInternal::thing *pThing=rResult.GetThing();
         std::vector<double> aAreas1,aAreas2;
         aAreas1.reserve(nEntities1);
         aAreas2.reserve(nEntities2);
         size_t Index1;
         for(Index1=0;Index1<nEntities1;++Index1)
             {
-            complex *pComplex=(complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
+            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
             aAreas1.push_back(pComplex->Area());
             pThing->DeleteEntity(pComplex);
             }
         for(Index1=0;Index1<nEntities1;++Index1)
             {
-            complex *pComplex=(complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
+            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
             aAreas2.push_back(pComplex->Area());
             pThing->DeleteEntity(pComplex);
             }
@@ -1941,8 +1942,8 @@ bool SGM::CompareFiles(SGM::Result       &rResult,
         }
     else if(Ext1=="spt")
         {
-        ReadToString(pFile1,"Data;");
-        ReadToString(pFile2,"Data;");
+        SGMInternal::ReadToString(pFile1,"Data;");
+        SGMInternal::ReadToString(pFile2,"Data;");
         bAnswer=true;
         while(bAnswer)
             {

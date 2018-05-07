@@ -7,7 +7,10 @@
 
 #include "sgm_export.h"
 
+namespace SGMInternal
+{
 class thing;
+}
 
 namespace SGM
     {
@@ -515,7 +518,7 @@ namespace SGM
 
             SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr) {}
 
-            SGM_EXPORT explicit Result(thing *pThing) : m_nType(ResultType::ResultTypeOK), m_pThing(pThing) {}
+            SGM_EXPORT explicit Result(SGMInternal::thing *pThing);
 
             SGM_EXPORT void SetResult(SGM::ResultType nType);
 
@@ -527,13 +530,13 @@ namespace SGM
 
             SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
 
-            SGM_EXPORT thing *GetThing() const {return m_pThing;}
+            SGM_EXPORT SGMInternal::thing *GetThing() const {return m_pThing;}
 
         private:
 
-            SGM::ResultType  m_nType;
-            std::string      m_sMessage;
-            thing           *m_pThing;
+            SGM::ResultType     m_nType;
+            std::string         m_sMessage;
+            SGMInternal::thing *m_pThing;
         };
 
     ///////////////////////////////////////////////////////////////////////////

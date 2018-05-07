@@ -6,6 +6,8 @@
 #include "Curve.h"
 #include "Topology.h"
 
+namespace SGMInternal
+{
 hyperbola::hyperbola(SGM::Result             &rResult,
                      SGM::Point3D      const &Center,
                      SGM::UnitVector3D const &XAxis,
@@ -18,3 +20,4 @@ hyperbola::hyperbola(SGM::Result             &rResult,
     m_Domain.m_dMin=-SGM_MAX;
     m_Domain.m_dMax=SGM_MAX;
     }
+}

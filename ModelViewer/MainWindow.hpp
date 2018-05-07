@@ -7,6 +7,7 @@
 
 class FileMenu;
 class TestMenu;
+class ViewMenu;
 class PrimitiveMenu;
 
 namespace Ui {
@@ -30,6 +31,11 @@ private slots:
   void file_step();
   void file_stl();
   void file_exit();
+
+  void view_zoom();
+  void view_wire();
+  void view_uvspace();
+  void view_perspective();
 
   void test_all();
   void test_number();
@@ -56,6 +62,7 @@ private slots:
 private:
   Ui::MainWindow *ui;
   FileMenu       *mFileMenu;
+  ViewMenu       *mViewMenu;
   TestMenu       *mTestMenu;
   PrimitiveMenu  *mPrimitiveMenu;
   ModelData      *mModel;

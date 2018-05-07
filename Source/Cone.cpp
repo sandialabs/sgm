@@ -3,7 +3,8 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 #include <cmath>
-
+namespace SGMInternal
+{
 cone::cone(SGM::Result             &rResult,
            SGM::Point3D      const &Center,
            SGM::UnitVector3D const &ZAxis,
@@ -35,3 +36,4 @@ cone::cone(SGM::Result             &rResult,
         }
     m_YAxis=m_ZAxis*m_XAxis;
     }
+}

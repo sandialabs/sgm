@@ -6,6 +6,9 @@
 #include "Curve.h"
 #include "Topology.h"
 
+namespace SGMInternal
+{
+
 circle::circle(SGM::Result             &rResult,
                SGM::Point3D      const &Center,
                SGM::UnitVector3D const &Normal,
@@ -51,3 +54,4 @@ circle::circle(SGM::Result  &rResult,
     m_Domain.m_dMax=SGM_TWO_PI;
     m_bClosed = true;
     }
+}

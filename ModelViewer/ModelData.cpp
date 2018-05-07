@@ -14,7 +14,7 @@
 
 struct pModelData
 {
-  thing* mThing;
+  SGMInternal::thing* mThing;
   SGM::Result mResult;
   SGMGraphicsWidget* mGraphics;
   SGMTreeWidget* mTree;
@@ -34,7 +34,11 @@ struct pModelData
 
 ModelData::ModelData() :
   dPtr(new pModelData)
-{}
+{
+  mwire_mode=false;
+  muvspace_mode=false;
+  mperspective_mode=false;
+}
 
 ModelData::~ModelData()
 {
@@ -80,6 +84,29 @@ void ModelData::stl(QString const &SaveName)
 {
   SGM::TranslatorOptions Options;
   SGM::SaveSTL(dPtr->mResult,SaveName.toUtf8().data(),SGM::Thing(),Options);
+}
+
+void ModelData::zoom()
+{
+  rebuild_graphics();
+}
+
+void ModelData::wire_mode()
+{
+  mwire_mode = !mwire_mode;
+  rebuild_graphics();
+}
+
+void ModelData::uvspace_mode()
+{
+  muvspace_mode = !muvspace_mode;
+  rebuild_graphics();
+}
+
+void ModelData::perspective_mode()
+{
+  muvspace_mode = !muvspace_mode;
+  rebuild_graphics();
 }
 
 void ModelData::check(std::vector<std::string> &aLog)

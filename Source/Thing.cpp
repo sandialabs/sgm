@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 
+namespace SGMInternal
+{
 size_t entity::GetID() const
     {
     return m_ID;
@@ -329,3 +331,4 @@ size_t thing::GetComplexes(std::set<complex *> &sComplexes,bool bTopLevel) const
         }
     return sComplexes.size();
     }
+}

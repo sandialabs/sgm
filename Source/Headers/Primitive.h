@@ -5,7 +5,8 @@
 
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
-
+namespace SGMInternal
+{
 body *CreateBlock(SGM::Result        &rResult,
                   SGM::Point3D const &Point1,
                   SGM::Point3D const &Point2);
@@ -45,5 +46,5 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
                                        SGM::Vector3D             const &StartVec,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams);
-
+    }
 #endif // PRIMITIVE_H

@@ -5,7 +5,8 @@
 #include <set>
 #include <map>
 #include <vector>
-
+namespace SGMInternal
+{
 class edge;
 class face;
 
@@ -66,5 +67,5 @@ class Graph
                 std::set<GraphEdge>                   m_sEdges;
         mutable std::map<size_t,std::vector<size_t> > m_mNeighbors;
     };
-
+}
 #endif // GRAPH_H

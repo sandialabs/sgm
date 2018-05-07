@@ -12,6 +12,8 @@
 #include <sstream>
 #include <limits>
 
+namespace SGMInternal
+{
 class Argument
     {
     public:
@@ -2893,3 +2895,4 @@ void Parse(std::string            ,//LineString,
 
 
     }
+}

@@ -560,6 +560,10 @@ bool SGM::Interval3D::operator&&(SGM::Interval3D const &domain) const
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+SGM::Result::Result(SGMInternal::thing *pThing): 
+    m_nType(ResultType::ResultTypeOK), m_pThing(pThing) 
+    {
+    }
     
 void SGM::Result::SetResult(SGM::ResultType nType)
     {

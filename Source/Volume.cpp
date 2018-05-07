@@ -7,7 +7,8 @@
 //  volume methods
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+namespace SGMInternal
+{
 body *volume::GetBody() const 
     {
     return m_pBody;
@@ -50,3 +51,4 @@ size_t volume::FindShells(SGM::Result                    &rResult,
         }
     return nShells;
     }
+}

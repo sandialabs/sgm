@@ -11,6 +11,9 @@
 #include <set>
 #include <map>
 
+namespace SGMInternal
+{
+
 class curve : public entity
     {
     public:
@@ -279,5 +282,6 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
                      size_t                     nDegree,
                      double                     t,
                      std::vector<double> const &aKnots);
+}
 
 #endif // SGM_INTERNAL_CURVE_H

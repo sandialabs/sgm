@@ -4,7 +4,8 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Curve.h"
-
+namespace SGMInternal
+{
 line::line(SGM::Result        &rResult,
            SGM::Point3D const &Pos0,
            SGM::Point3D const &Pos1):
@@ -34,3 +35,4 @@ line::line(SGM::Result             &rResult,
     m_Domain.m_dMin=-SGM_MAX;
     m_Domain.m_dMax=SGM_MAX;
     }
+}

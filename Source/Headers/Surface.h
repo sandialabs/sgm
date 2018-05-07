@@ -11,6 +11,8 @@
 #include <set>
 #include <map>
 
+namespace SGMInternal
+{
 class surface : public entity
     {
     public:
@@ -303,5 +305,6 @@ class NURBsurface: public surface
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<SGM::Point2D> m_aSeedParams;
     };
+}
 
 #endif // SURFACE_H

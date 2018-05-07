@@ -10,6 +10,9 @@
 #include <set>
 #include <map>
 
+namespace SGMInternal
+{
+
 class thing;
 class complex;
 class body;
@@ -408,6 +411,6 @@ class vertex : public topology
         SGM::Point3D     m_Pos;
         std::set<edge *> m_sEdges;
     };
-
+}
 
 #endif // ENTITY_CLASSES_H

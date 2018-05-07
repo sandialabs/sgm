@@ -7,7 +7,8 @@
 #include <vector>
 #include <algorithm>
 #include <cfloat>
-
+namespace SGMInternal
+{
 NURBcurve::NURBcurve(SGM::Result                     &rResult,
                      std::vector<SGM::Point4D> const &aControlPoints,
                      std::vector<double>       const &aKnots):
@@ -69,3 +70,4 @@ std::vector<double> const &NURBcurve::GetSeedParams() const
         }
     return m_aSeedParams;
     }
+}

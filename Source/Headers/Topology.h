@@ -5,6 +5,8 @@
 #include "EntityClasses.h"
 #include <set>
 
+namespace SGMInternal
+{
 // Find Functions
 
 void FindBodies(SGM::Result      &rResult,
@@ -54,5 +56,5 @@ void OrderLoopEdges(SGM::Result                    &rResult,
                     std::set<edge *>         const &sEdges,
                     std::vector<edge *>            &aEdges,
                     std::vector<SGM::EdgeSideType> &aFlips);
-
+}
 #endif // TOPOLOGY_H

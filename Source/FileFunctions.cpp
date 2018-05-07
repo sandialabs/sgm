@@ -24,6 +24,8 @@ __pragma(warning(disable: 4996 ))
 #include <dirent.h>
 #endif
 
+namespace SGMInternal
+{
 // Returns the file extension of FileName in lower case.
 
 void FindFileExtension(std::string const &FileName,
@@ -152,3 +154,4 @@ void ReadDirectory(std::string        const &DirName,
 #   error No available implementation for ReadDirectory()
 #endif
     }
+}

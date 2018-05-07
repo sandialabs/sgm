@@ -9,6 +9,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGMInternal
+{
 void SaveSTL(SGM::Result                  &rResult,
              std::string            const &FileName,
              entity                       *pEntity,
@@ -150,11 +152,4 @@ void SaveSTL(SGM::Result                  &rResult,
 
     fclose(pFile);
     }
-
-void SGM::SaveSTL(SGM::Result                  &rResult,
-                  std::string            const &sFileName,
-                  SGM::Entity            const &EntityID,
-                  SGM::TranslatorOptions const &Options)
-    {
-    SaveSTL(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
-    }
+}

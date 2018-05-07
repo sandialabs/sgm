@@ -18,6 +18,8 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
+namespace SGMInternal
+{
 void WriteVertices(FILE                     *pFile,
                    size_t                   &nLine,
                    std::set<vertex *> const &sVertices,
@@ -780,11 +782,4 @@ void SaveSTEP(SGM::Result                  &rResult,
     fclose(pFile);
     }
 
-void SGM::SaveSTEP(SGM::Result                  &rResult,
-                   std::string            const &FileName,
-                   SGM::Entity            const &EntityID,
-                   SGM::TranslatorOptions const &Options)
-    {
-    thing *pThing=rResult.GetThing();
-    SaveSTEP(rResult,FileName,pThing->FindEntity(EntityID.m_ID),Options); 
-    }
+}

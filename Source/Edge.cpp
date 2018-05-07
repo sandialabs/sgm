@@ -2,7 +2,8 @@
 #include "Faceter.h"
 #include "Curve.h"
 #include <utility>
-
+namespace SGMInternal
+{
 edge::edge(SGM::Result &rResult):
     topology(rResult,SGM::EntityType::EdgeType),
     m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
@@ -103,3 +104,4 @@ SGM::Point3D edge::FindMidPoint(double dFraction) const
     m_pCurve->Evaluate(t,&Pos);
     return Pos;
     }
+}

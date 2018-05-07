@@ -14,7 +14,8 @@
 //  face methods
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+namespace SGMInternal
+{
 face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
     m_pVolume(nullptr),m_pSurface(nullptr),m_bFlipped(false),m_nSides(1)
     {
@@ -227,3 +228,4 @@ bool face::GetFlipped() const
     {
     return m_bFlipped;
     }
+}

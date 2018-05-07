@@ -5,6 +5,7 @@
 #define SGM_MIN_NODES  4
 #define SGM_REINSERT   3
 
+#if 0
 SGM::BoxTree::BoxTree(size_t nReserve):m_nRoot(SIZE_MAX)
     {
     m_aData.reserve(nReserve);
@@ -95,3 +96,4 @@ void SGM::BoxTree::RemovePoint(SGM::Point3D const &,//Point,
                                void         const *)//pData)
     {
     }
+#endif

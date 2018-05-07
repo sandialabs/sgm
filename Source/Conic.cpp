@@ -10,7 +10,8 @@
 // AX^2+2Bxy+Cy^2+2Dx+2Ey+F=0
 //
 // (A,B,C,D,E,F) are called the conic parameters.
-
+namespace SGMInternal
+{
 bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
                          double                           dTolerance,
                          std::vector<double>             &aConicParams,
@@ -283,3 +284,4 @@ curve *FindConic(SGM::Result                     &rResult,
         }
     return nullptr;
     }
+}

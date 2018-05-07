@@ -3,7 +3,8 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Faceter.h"
-
+namespace SGMInternal
+{
 NUBsurface::NUBsurface(SGM::Result                                   &rResult,
                        std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
                        std::vector<double>                     const &aUKnots,
@@ -52,3 +53,4 @@ std::vector<SGM::Point2D> const &NUBsurface::GetSeedParams() const
     {
     return m_aSeedParams;
     }
+}
