@@ -1832,7 +1832,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         revolve *pRevolve = new revolve(rResult, pLine1, Origin, Axis);
 
-        bAnswer = SGM::NearEqual(pRevolve->m_Origin, SGM::Point3D(0,0,4), SGM_ZERO);
+        bAnswer = TestSurface(pRevolve, SGM::Point2D(0.5,0.2));
 
         //SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
         //SGM::UnitVector3D Axis(7,8,9);

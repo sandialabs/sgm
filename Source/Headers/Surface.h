@@ -312,7 +312,7 @@ class revolve : public surface
     public:
 
         revolve(SGM::Result             &rResult,
-                SGM::Impl::curve        *pCurve,
+                curve                   *pCurve,
                 SGM::Point3D      const &pAxisOrigin,
                 SGM::UnitVector3D const &uAxisVector);
         ~revolve();
@@ -323,9 +323,11 @@ class revolve : public surface
 //
     public:
 
-        SGM::Impl::curve  *m_pCurve;
+        curve             *m_pCurve;
         SGM::Point3D       m_Origin;
-        SGM::UnitVector3D  m_Axis;
+        SGM::UnitVector3D  m_XAxis;
+        SGM::UnitVector3D  m_YAxis;
+        SGM::UnitVector3D  m_ZAxis;
     };
 
 #endif // SURFACE_H

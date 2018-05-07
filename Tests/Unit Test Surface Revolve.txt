@@ -1,0 +1,5 @@
+// Tests the methods of a Cylinder.;
+// RunCPPTest(5);
+// Tests the methods of a RevolveSurface;
+RunCPPTest(27);
+

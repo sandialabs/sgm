@@ -5,28 +5,28 @@
 #include "Surface.h"
 #include "Curve.h"
 
-namespace SGM { namespace Impl {
-
 revolve::revolve(SGM::Result             &rResult,
-                 SGM::Impl::curve        *pCurve,
+                 curve                   *pCurve,
                  SGM::Point3D      const &pAxisOrigin,
                  SGM::UnitVector3D const &uAxisVector)
-                 : surface(rResult, SGM::RevolveType),
-                   m_Origin(pAxisOrigin),
-                   m_Axis(uAxisVector)
-
+                 : surface(rResult, SGM::RevolveType)
     {
-    this->m_bClosedU = true;
-    this->m_bClosedV = pCurve->GetClosed();
-    m_Domain.m_UDomain.m_dMin = 0.0;
-    m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
-    m_Domain.m_VDomain = pCurve->GetDomain();
+    //this->m_bClosedU = true;
+    //this->m_bClosedV = pCurve->GetClosed();
+    //m_Domain.m_UDomain.m_dMin = 0.0;
+    //m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
+    //m_Domain.m_VDomain = pCurve->GetDomain();
 
+    //SGM::Point3D start;
+    //pCurve->Evaluate(pCurve->GetDomain().m_dMin, &start);
+    //m_Origin = pAxisOrigin + ((start - pAxisOrigin) % uAxisVector) * uAxisVector;
 
+    //m_ZAxis = uAxisVector;
+    //m_XAxis = start - m_Origin;
+    //m_YAxis = m_ZAxis * m_YAxis;
     }
 
 revolve::~revolve()
     {
     // remove curve ownership
     }
-}}
