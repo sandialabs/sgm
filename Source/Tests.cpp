@@ -1823,14 +1823,25 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         // revolve a line
-        SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
-        line *pLine1=new line(rResult,Pos0,Pos1);
-        SGM::Interval3D box = pLine1->GetBox();
+        //SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
+        //line *pLine1=new line(rResult,Pos0,Pos1);
+        //SGM::Interval3D box = pLine1->GetBox();
 
-        SGM::Point3D Origin(5,6,7);
-        SGM::UnitVector3D Axis(0,0,1);
+        // create a NUB to revolve
+        std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
+        std::vector<SGM::Point3D> aControlPoints;
+        aControlPoints.emplace_back(1,1,0);
+        aControlPoints.emplace_back(1.166666666666666,1.166666666666666,0);
+        aControlPoints.emplace_back(2,2.8333333333333333,0);
+        aControlPoints.emplace_back(2.8333333333333333,1.166666666666666,0);
+        aControlPoints.emplace_back(3,1,0);
 
-        revolve *pRevolve = new revolve(rResult, pLine1, Origin, Axis);
+        NUBcurve *pNUB=new NUBcurve(rResult,aControlPoints,aKnots);
+
+        SGM::Point3D Origin(1.0,3.0,0.0);
+        SGM::UnitVector3D Axis(1.0,2.0,0.0);
+
+        revolve *pRevolve = new revolve(rResult, pNUB, Origin, Axis);
 
         bAnswer = TestSurface(pRevolve, SGM::Point2D(0.5,0.2));
 
