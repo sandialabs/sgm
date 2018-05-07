@@ -905,11 +905,17 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         std::vector<SGM::Point3D> aPoints;
         aPoints.reserve(5);
-        aPoints.emplace_back(0,0,0);
-        aPoints.emplace_back(3,4,0);
-        aPoints.emplace_back(-1,4,0);
-        aPoints.emplace_back(-4,0,0);
-        aPoints.emplace_back(-4,-3,0);
+        //aPoints.emplace_back(0,0,0);
+        //aPoints.emplace_back(3,4,0);
+        //aPoints.emplace_back(-1,4,0);
+        //aPoints.emplace_back(-4,0,0);
+        //aPoints.emplace_back(-4,-3,0);
+
+        aPoints.emplace_back(-2,0,0);
+        aPoints.emplace_back(-1,0.1,0);
+        aPoints.emplace_back(0.0,0.0,0);
+        aPoints.emplace_back(1,0.1,0);
+        aPoints.emplace_back(2,0,0);
 
         SGM::Curve NUBID=SGM::CreateNUBCurve(rResult,aPoints);
         size_t Index1;

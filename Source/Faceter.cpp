@@ -818,14 +818,14 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             for(Index1=nNorthPoleStart+1;Index1<nNorthPoleStart+nPolePoints;++Index1)
                 {
                 aTriangles.push_back(nNorth);
-                aTriangles.push_back(Index1-1);
                 aTriangles.push_back(Index1);
+                aTriangles.push_back(Index1-1);
                 }
             for(Index1=nSouthPoleStart+1;Index1<nSouthPoleStart+nPolePoints;++Index1)
                 {
                 aTriangles.push_back(nSouth);
-                aTriangles.push_back(Index1-1);
                 aTriangles.push_back(Index1);
+                aTriangles.push_back(Index1-1);
                 }
             }
         }

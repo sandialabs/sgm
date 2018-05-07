@@ -26,6 +26,8 @@ namespace SGM
         NUBCurveType,
         NURBCurveType,
         PointCurveType,
+        HelixCurveType,
+        HermiteCurveType,
 
         SurfaceType,
 
@@ -34,10 +36,11 @@ namespace SGM
         ConeType,
         SphereType,
         TorusType,
-        RevolveType,
-        ExtrudeType,
         NUBSurfaceType,
-        NURBSurfaceType
+        NURBSurfaceType, 
+        RevolveType,    
+        ExtrudeType,
+        OffsetType
         };
 
     enum TorusKindType

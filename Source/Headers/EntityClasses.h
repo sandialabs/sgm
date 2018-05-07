@@ -58,8 +58,6 @@ class thing : public entity
 
         ~thing();
 
-        void AddTopLevelEntity(entity *pEntity) {m_sTopLevelEntities.insert(pEntity);}
-
         void AddToMap(size_t nID,entity *pEntity);
 
         void DeleteEntity(entity *pEntity);
@@ -72,9 +70,21 @@ class thing : public entity
 
         SGM::Interval3D const &GetBox() const;
         
-        size_t GetBodies(std::set<body *> &sBodies) const;
+        size_t GetBodies(std::set<body *> &sBodies,bool bTopLevel) const;
 
-        size_t GetComplexes(std::set<complex *> &sComplexes) const;
+        size_t GetVolumes(std::set<volume *> &sVolumes,bool bTopLevel) const;
+
+        size_t GetFaces(std::set<face *> &sFaces,bool bTopLevel) const;
+
+        size_t GetEdges(std::set<edge *> &sEdges,bool bTopLevel) const;
+
+        size_t GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const;
+
+        size_t GetComplexes(std::set<complex *> &sComplexes,bool bTopLevel) const;
+
+        size_t GetSurfaces(std::set<surface *> &sSurfaces,bool bTopLevel) const;
+
+        size_t GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const;
         
         // Find methods
         
@@ -83,12 +93,9 @@ class thing : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
-
-        std::set<entity *> const &GetEntities() const {return m_sTopLevelEntities;}
         
     private:
 
-        std::set<entity *>        m_sTopLevelEntities;
         std::map<size_t,entity* > m_mAllEntities;
         mutable SGM::Interval3D   m_Box;
         size_t                    m_nNextID;
@@ -118,10 +125,11 @@ class body : public topology
         
         std::set<volume *> const &GetVolumes() {return m_sVolumes;}
         
-
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
+
+        bool IsTopLevel() const {return true;}
 
     private:
 
@@ -160,6 +168,8 @@ class complex : public entity
 
         std::vector<size_t>       const &GetTriangles() const {return m_aTriangles;}
 
+        bool IsTopLevel() const {return true;}
+
         // Other methods
 
         double Area() const;
@@ -197,6 +207,10 @@ class volume : public topology
         std::set<edge *> const &GetEdges() const {return m_sEdges;}
 
         SGM::Interval3D const &GetBox() const;
+
+        bool IsTopLevel() const {return m_pBody==NULL;}
+
+        // Other methods
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -262,6 +276,8 @@ class face : public topology
         SGM::Interval3D const &GetBox() const;
 
         int GetSides() const {return m_nSides;}
+
+        bool IsTopLevel() const {return m_pVolume==NULL;}
         
         // Find methods
 
@@ -336,7 +352,9 @@ class edge : public topology
 
         double GetTolerance() const {return m_dTolerance;}
 
-        // Find Methods
+        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr;}
+
+        // Other Methods
 
         SGM::Point3D const &FindStartPoint() const;
 
@@ -378,6 +396,8 @@ class vertex : public topology
         std::set<edge *> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
+        
+        bool IsTopLevel() const {return m_sEdges.empty();}
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,

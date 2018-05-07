@@ -14,8 +14,10 @@ public:
 
 signals:
   void open();
-  void exit();
   void recent_file(const QString &filename);
+  void step();
+  void stl();
+  void exit();
 
 private slots:
   void recent_file_triggered();

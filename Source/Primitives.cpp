@@ -8,8 +8,37 @@
 #include <cmath>
 #include <algorithm>
 
+edge *CreateEdge(SGM::Result           &rResult,
+                 curve                 *pCurve,
+                 SGM::Interval1D const *pDomain)
+    {
+    edge *pEdge=new edge(rResult);
+    pEdge->SetCurve(pCurve);
+    SGM::Interval1D Domain;
+    if(pDomain)
+        {
+        Domain=*pDomain;
+        }
+    else
+        {
+        Domain=pCurve->GetDomain();
+        }
+    pEdge->SetDomain(Domain);
+    if( pCurve->GetClosed()==false ||
+        SGM::NearEqual(pCurve->GetDomain().Length(),Domain.Length(),SGM_MIN_TOL,false)==false)
+        {
+        SGM::Point3D StartPos,EndPos;
+        pCurve->Evaluate(Domain.m_dMin,&StartPos);
+        pCurve->Evaluate(Domain.m_dMin,&EndPos);
+        vertex *pStart=new vertex(rResult,StartPos);
+        vertex *pEnd=new vertex(rResult,EndPos);
+        pEdge->SetStart(pStart);
+        pEdge->SetEnd(pEnd);
+        }
+    return pEdge;
+    }
+
 body *CreateTorus(SGM::Result             &rResult,
-                  thing                   *pThing,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
                   double                   dMajorRadius,
@@ -18,7 +47,6 @@ body *CreateTorus(SGM::Result             &rResult,
     {
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
-    pThing->AddTopLevelEntity(pBody);
 
     torus *pTorus=new torus(rResult,Center,Axis,dMajorRadius,dMinorRadius,bApple);
 
@@ -31,13 +59,11 @@ body *CreateTorus(SGM::Result             &rResult,
     }
 
 body *CreateSphere(SGM::Result        &rResult,
-                   thing              *pThing,
                    SGM::Point3D const &Center,
                    double              dRadius)
     {
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
-    pThing->AddTopLevelEntity(pBody);
 
     sphere *pSphere=new sphere(rResult,Center,dRadius);
 
@@ -50,7 +76,6 @@ body *CreateSphere(SGM::Result        &rResult,
     }
 
 body *CreateCylinder(SGM::Result        &rResult,
-                     thing              *pThing,
                      SGM::Point3D const &BottomCenter,
                      SGM::Point3D const &TopCenter,
                      double              dRadius)
@@ -61,22 +86,21 @@ body *CreateCylinder(SGM::Result        &rResult,
 
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
-    pThing->AddTopLevelEntity(pBody);
 
     face *pBottom=new face(rResult);
     face *pSide=new face(rResult);
     face *pTop=new face(rResult);
 
-    edge *pEdge1=new edge(rResult);
-    edge *pEdge2=new edge(rResult);
+    edge *pEdgeBottom=new edge(rResult);
+    edge *pEdgeTop=new edge(rResult);
 
-    plane *pPlane0=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
-    plane *pPlane1=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
+    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
+    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
 
     cylinder *pCylinder=new cylinder(rResult,BottomCenter,TopCenter,dRadius,&XAxis);
 
-    circle *pCircle1=new circle(rResult,BottomCenter,-ZAxis,dRadius,&XAxis);
-    circle *pCircle2=new circle(rResult,TopCenter,ZAxis,dRadius,&XAxis);
+    circle *pCircleBottom=new circle(rResult,BottomCenter,-ZAxis,dRadius,&XAxis);
+    circle *pCircleTop=new circle(rResult,TopCenter,ZAxis,dRadius,&XAxis);
 
     // Connect everything.
 
@@ -86,26 +110,82 @@ body *CreateCylinder(SGM::Result        &rResult,
     pVolume->AddFace(pSide);
     pVolume->AddFace(pTop);
 
-    pBottom->AddEdge(pEdge1,SGM::FaceOnRightType);
-    pSide->AddEdge(pEdge1,SGM::FaceOnLeftType);
-    pSide->AddEdge(pEdge2,SGM::FaceOnLeftType);
-    pTop->AddEdge(pEdge2,SGM::FaceOnRightType);
+    pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
+    pSide->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
+    pSide->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+    pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
 
-    pBottom->SetSurface(pPlane0);
+    pBottom->SetSurface(pPlaneBottom);
     pSide->SetSurface(pCylinder);
-    pTop->SetSurface(pPlane1);
+    pTop->SetSurface(pPlaneTop);
 
-    pEdge1->SetCurve(pCircle1);
-    pEdge2->SetCurve(pCircle2);
+    pEdgeBottom->SetCurve(pCircleBottom);
+    pEdgeTop->SetCurve(pCircleTop);
 
-    pEdge1->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
-    pEdge2->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeBottom->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeTop->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+
+    return pBody;
+    }
+
+body *CreateCone(SGM::Result        &rResult,
+                 SGM::Point3D const &BottomCenter,
+                 SGM::Point3D const &TopCenter,
+                 double              dBottomRadius,
+                 double              dTopRadius)
+    {
+    SGM::UnitVector3D ZAxis=TopCenter-BottomCenter;
+    SGM::UnitVector3D XAxis=ZAxis.Orthogonal();
+    SGM::UnitVector3D YAxis=ZAxis*XAxis;
+
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+
+    face *pBottom=new face(rResult);
+    face *pSide=new face(rResult);
+    face *pTop=new face(rResult);
+
+    edge *pEdgeBottom=new edge(rResult);
+    edge *pEdgeTop=new edge(rResult);
+
+    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
+    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
+
+    double dy=dBottomRadius-dTopRadius;
+    double dx=TopCenter.Distance(BottomCenter);
+    double dHalfAngle=SGM::SAFEatan2(dy,dx);
+    cone *pCone=new cone(rResult,BottomCenter,ZAxis,dBottomRadius,dHalfAngle,&XAxis);
+
+    circle *pCircleBottom=new circle(rResult,BottomCenter,-ZAxis,dBottomRadius,&XAxis);
+    circle *pCircleTop=new circle(rResult,TopCenter,ZAxis,dTopRadius,&XAxis);
+
+    // Connect everything.
+
+    pBody->AddVolume(pVolume);
+
+    pVolume->AddFace(pBottom);
+    pVolume->AddFace(pSide);
+    pVolume->AddFace(pTop);
+
+    pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
+    pSide->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
+    pSide->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+    pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
+
+    pBottom->SetSurface(pPlaneBottom);
+    pSide->SetSurface(pCone);
+    pTop->SetSurface(pPlaneTop);
+
+    pEdgeBottom->SetCurve(pCircleBottom);
+    pEdgeTop->SetCurve(pCircleTop);
+
+    pEdgeBottom->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeTop->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
 
     return pBody;
     }
 
 body *CreateBlock(SGM::Result        &rResult,
-                  thing              *pThing,
                   SGM::Point3D const &Point1,
                   SGM::Point3D const &Point2)
     {
@@ -128,7 +208,6 @@ body *CreateBlock(SGM::Result        &rResult,
 
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
-    pThing->AddTopLevelEntity(pBody);
     pBody->AddVolume(pVolume);
 
     if(std::abs(Z0-Z1)<1E-6)
@@ -461,21 +540,21 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         double t=aLengths[Index1];
         size_t nSpanIndex=FindSpanIndex(Domain,nDegree,t,aKnots);
         FindBasisFunctions(nSpanIndex,t,nDegree,0,&aKnots[0],aaBasis);
-        if(Index1==1)
+        if(Index1==nInterpolate-2 && nDegree==3)
             {
-            aRow.push_back(0.0);
             aRow.push_back(dData[0]);
             aRow.push_back(dData[1]);
             aRow.push_back(dData[2]);
             aRow.push_back(dData[3]);
+            aRow.push_back(0.0);
             }
         else
             {
+            aRow.push_back(0.0);
             aRow.push_back(dData[0]);
             aRow.push_back(dData[1]);
             aRow.push_back(dData[2]);
             aRow.push_back(dData[3]);
-            aRow.push_back(0.0);
             }
         aRow.push_back(aInterpolate[Index1].m_x);
         aaXMatrix.push_back(aRow);
@@ -643,7 +722,6 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
     face   *pFace=new face(rResult);
     pVolume->AddFace(pFace);
     pBody->AddVolume(pVolume);
-    pThing->AddTopLevelEntity(pBody);
 
     // Copy the bounding edges
 

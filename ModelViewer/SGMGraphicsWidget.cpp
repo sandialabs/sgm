@@ -8,8 +8,13 @@
 #include "vtkPolyDataMapper.h"
 #include "vtkProperty.h"
 #include "vtkRenderer.h"
+#include "vtkCamera.h"
 #include "vtkTriangle.h"
 #include "vtkTriangleStrip.h"
+#include "vtkCellData.h"
+
+#include "vtkDoubleArray.h"
+#include "vtkSmartPointer.h"
 
 //#include "GView.hpp"
 
@@ -127,23 +132,36 @@ void SGMGraphicsWidget::clear()
   dPtr->mEdges.clear();
 }
 
-void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D> &points,
-                                 const std::vector<size_t> &triangles,
-                                 const std::vector<SGM::UnitVector3D> &)//normals)
+void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
+                                 const std::vector<size_t>            &triangles,
+                                 const std::vector<SGM::UnitVector3D> &)//norms)
 {
   pGraphicsFace *face = new pGraphicsFace;
   dPtr->mFaces.push_back(face);
 
-  // Add points to the face
+  // Add points and normals to the face
+
+  //vtkSmartPointer<vtkDoubleArray> normalsArray = 
+  //    vtkSmartPointer<vtkDoubleArray>::New();
+  //normalsArray->SetNumberOfComponents(3); //3d normals (ie x,y,z)
+  //normalsArray->SetNumberOfTuples(norms.size());
+
   size_t point_counter = 0;
   for(const SGM::Point3D &point : points)
-    face->points->InsertPoint(point_counter++, point.m_x, point.m_y, point.m_z);
+      {
+      //normalsArray->SetTuple(point_counter,(double *)&norms[point_counter]);
+      face->points->InsertPoint(point_counter++, point.m_x, point.m_y, point.m_z);
+      }
 
   // Setup the triangle strip
+
   vtkIdList* tri_vertex_ids = face->triangleStrip->GetPointIds();
   tri_vertex_ids->SetNumberOfIds(triangles.size());
   for(size_t i = 0; i < triangles.size(); i++)
     tri_vertex_ids->SetId(i, triangles[i]);
+
+  //face->polyData->GetCellData()->SetNormals(normalsArray);
+  //face->actor->GetProperty()->BackfaceCullingOff();
 
   face->cells->InsertNextCell(face->triangleStrip);
 
@@ -171,5 +189,7 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
 void SGMGraphicsWidget::reset_view()
 {
   dPtr->renderer->ResetCamera();
+  vtkCamera *camera=dPtr->renderer->GetActiveCamera();
+  camera->SetParallelProjection(1);
   this->renderVTK();
 }

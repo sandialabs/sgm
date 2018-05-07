@@ -33,6 +33,8 @@ class curve : public entity
 
         bool GetClosed() const {return m_bClosed;}
 
+        bool IsTopLevel() const {return m_sEdges.empty();}
+
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
                       SGM::Vector3D *D1=nullptr,

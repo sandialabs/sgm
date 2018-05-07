@@ -102,8 +102,8 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool body::Check(SGM::Result              &,//rResult,
-                 SGM::CheckOptions  const &,//Options,
+bool body::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -136,8 +136,8 @@ bool complex::Check(SGM::Result              &,//rResult,
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &,//rResult,
-                   SGM::CheckOptions  const &,//Options,
+bool volume::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -162,7 +162,7 @@ bool volume::Check(SGM::Result              &,//rResult,
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &,//Options,
+                 SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -219,6 +219,38 @@ bool face::Check(SGM::Result              &rResult,
             }
         }
 
+    // Check the facets
+
+    std::vector<SGM::Point3D> const &aPoints=GetPoints3D(rResult);
+    std::vector<SGM::UnitVector3D> const &aNormals=GetNormals(rResult);
+    std::vector<size_t> const &aTriangles=GetTriangles(rResult);
+    size_t nTriangles=aTriangles.size();
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+        SGM::Point3D const &A=aPoints[a];
+        SGM::Point3D const &B=aPoints[b];
+        SGM::Point3D const &C=aPoints[c];
+        SGM::UnitVector3D Norm=(B-A)*(C-A);
+        SGM::UnitVector3D const &NormalA=aNormals[a];
+        SGM::UnitVector3D const &NormalB=aNormals[b];
+        SGM::UnitVector3D const &NormalC=aNormals[c];
+        double dDotA=Norm%NormalA;
+        double dDotB=Norm%NormalB;
+        double dDotC=Norm%NormalC;
+        double dTol=0.93969262078590838405410927732473; // 20 degrees
+        if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer,sizeof(Buffer),"Facets of Face %ld are flipped.\n",this->GetID());
+            aCheckStrings.emplace_back(Buffer);
+            break;
+            }
+        }
+
     return bAnswer;
     }
 
@@ -252,7 +284,7 @@ bool edge::Check(SGM::Result              &,//rResult,
             aCheckStrings.emplace_back(Buffer);
             }
         }
-    else
+    else if(m_pCurve->GetClosed()==false)
         {
         bAnswer=false;
         char Buffer[1000];
@@ -280,7 +312,7 @@ bool edge::Check(SGM::Result              &,//rResult,
             aCheckStrings.emplace_back(Buffer);
             }
         }
-    else
+    else if(m_pCurve->GetClosed()==false)
         {
         bAnswer=false;
         char Buffer[1000];

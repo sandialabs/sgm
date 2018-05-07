@@ -9,35 +9,43 @@
 
 void FindBodies(SGM::Result      &rResult,
                 entity     const *pEntity,
-                std::set<body *> &sBodies);
+                std::set<body *> &sBodies,
+                bool              bTopLevel);
 
 void FindVolumes(SGM::Result        &rResult,
                  entity       const *pEntity,
-                 std::set<volume *> &sVolumes);
+                 std::set<volume *> &sVolumes,
+                 bool                bTopLevel=false);
 
 void FindFaces(SGM::Result      &rResult,
                entity     const *pEntity,
-               std::set<face *> &sFaces);
+               std::set<face *> &sFaces,
+                bool             bTopLevel=false);
 
 void FindEdges(SGM::Result      &rResult,
                entity     const *pEntity,
-               std::set<edge *> &sEdges);
+               std::set<edge *> &sEdges,
+               bool              bTopLevel=false);
 
 void FindVertices(SGM::Result        &rResult,
                   entity       const *pEntity,
-                  std::set<vertex *> &sVertices);
+                  std::set<vertex *> &sVertices,
+                  bool                bTopLevel=false);
 
 void FindComplexes(SGM::Result         &rResult,
                    entity        const *pEntity,
-                   std::set<complex *> &sComplexes);
+                   std::set<complex *> &sComplexes,
+                   bool                 bTopLevel=false);
 
 void FindSurfaces(SGM::Result         &rResult,
                   entity        const *pEntity,
-                  std::set<surface *> &sSurfaces);
+                  std::set<surface *> &sSurfaces,
+                  bool                 bTopLevel=false);
 
 void FindCurves(SGM::Result       &rResult,
                 entity      const *pEntity,
-                std::set<curve *> &sCurves);
+                std::set<curve *> &sCurves,
+                bool               bTopLevel=false);
 
 // Ordering Functions
 

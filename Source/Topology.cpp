@@ -5,7 +5,8 @@
 
 void FindBodies(SGM::Result      &,//rResult,
                 entity     const *pEntity,
-                std::set<body *> &sBodies)
+                std::set<body *> &sBodies,
+                bool              bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -14,7 +15,7 @@ void FindBodies(SGM::Result      &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)(pEntity))->GetBodies(sBodies);
+        ((thing *)(pEntity))->GetBodies(sBodies,bTopLevel);
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -96,7 +97,8 @@ void FindBodies(SGM::Result      &,//rResult,
 
 void FindVolumes(SGM::Result        &,//rResult,
                  entity       const *pEntity,
-                 std::set<volume *> &sVolumes)
+                 std::set<volume *> &sVolumes,
+                 bool                bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -105,16 +107,7 @@ void FindVolumes(SGM::Result        &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        std::set<body *> sBodies;
-        ((thing *)(pEntity))->GetBodies(sBodies);
-        std::set<body *>::const_iterator BodyIter=sBodies.begin();
-        while(BodyIter!=sBodies.end())
-            {
-            body *pBody=*BodyIter;
-            std::set<volume *> const &sBodyVolumes=pBody->GetVolumes();
-            sVolumes.insert(sBodyVolumes.begin(),sBodyVolumes.end());
-            ++BodyIter;
-            }
+        ((thing *)pEntity)->GetVolumes(sVolumes,bTopLevel);
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -191,7 +184,8 @@ void FindVolumes(SGM::Result        &,//rResult,
 
 void FindFaces(SGM::Result      &,//rResult,
                entity     const *pEntity,
-               std::set<face *> &sFaces)
+               std::set<face *> &sFaces,
+               bool              bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -200,24 +194,7 @@ void FindFaces(SGM::Result      &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        thing *pThing=(thing *)pEntity;
-        std::set<body *> sBodies;
-        pThing->GetBodies(sBodies);
-        std::set<body *>::const_iterator BodyIter=sBodies.begin();
-        while(BodyIter!=sBodies.end())
-            {
-            body *pBody=*BodyIter;
-            std::set<volume *> const &sBodyVolumes=pBody->GetVolumes();
-            std::set<volume *>::const_iterator VolumeIter=sBodyVolumes.begin();
-            while(VolumeIter!=sBodyVolumes.end())
-                {
-                volume *pVolume=*VolumeIter;
-                std::set<face *> const &sVolumeFaces=pVolume->GetFaces();
-                sFaces.insert(sVolumeFaces.begin(),sVolumeFaces.end());
-                ++VolumeIter;
-                }
-            ++BodyIter;
-            }
+        ((thing *)pEntity)->GetFaces(sFaces,bTopLevel);
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -274,7 +251,8 @@ void FindFaces(SGM::Result      &,//rResult,
 
 void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
-               std::set<edge *> &sEdges)
+               std::set<edge *> &sEdges,
+               bool              bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -283,37 +261,7 @@ void FindEdges(SGM::Result      &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        std::set<body *> sBodies;
-        ((thing *)(pEntity))->GetBodies(sBodies);
-        std::set<body *>::const_iterator BodyIter=sBodies.begin();
-        while(BodyIter!=sBodies.end())
-            {
-            body *pBody=*BodyIter;
-            std::set<volume *> const &sBodyVolumes=pBody->GetVolumes();
-            std::set<volume *>::const_iterator VolumeIter=sBodyVolumes.begin();
-            while(VolumeIter!=sBodyVolumes.end())
-                {
-                volume *pVolume=*VolumeIter;
-                std::set<face *> const &sVolumeFaces=pVolume->GetFaces();
-                std::set<face *>::const_iterator FaceIter=sVolumeFaces.begin();
-                while(FaceIter!=sVolumeFaces.end())
-                    {
-                    face *pFace=*FaceIter;
-                    std::set<edge *> const &sFaceEdges=pFace->GetEdges();
-                    sEdges.insert(sFaceEdges.begin(),sFaceEdges.end());
-                    ++FaceIter;
-                    }
-                std::set<edge *> const &sVolumeEdges=pVolume->GetEdges();
-                std::set<edge *>::const_iterator EdgeIter=sVolumeEdges.begin();
-                while(EdgeIter!=sVolumeEdges.end())
-                    {
-                    sEdges.insert(*EdgeIter);
-                    ++EdgeIter;
-                    }
-                    ++VolumeIter;
-                    }
-            ++BodyIter;
-            }
+        ((thing *)(pEntity))->GetEdges(sEdges,bTopLevel);
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -395,7 +343,8 @@ void FindEdges(SGM::Result      &,//rResult,
 
 void FindVertices(SGM::Result        &,//rResult,
                   entity       const *pEntity,
-                  std::set<vertex *> &sVertices)
+                  std::set<vertex *> &sVertices,
+                  bool                bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -404,52 +353,7 @@ void FindVertices(SGM::Result        &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        std::set<body *> sBodies;
-        ((thing *)(pEntity))->GetBodies(sBodies);
-        std::set<body *>::const_iterator BodyIter=sBodies.begin();
-        while(BodyIter!=sBodies.end())
-            {
-            body *pBody=*BodyIter;
-            std::set<volume *> const &sBodyVolumes=pBody->GetVolumes();
-            std::set<volume *>::const_iterator VolumeIter=sBodyVolumes.begin();
-            while(VolumeIter!=sBodyVolumes.end())
-                {
-                volume *pVolume=*VolumeIter;
-                std::set<face *> const &sVolumeFaces=pVolume->GetFaces();
-                std::set<face *>::const_iterator FaceIter=sVolumeFaces.begin();
-                while(FaceIter!=sVolumeFaces.end())
-                    {
-                    face *pFace=*FaceIter;
-                    std::set<edge *> const &sFaceEdges=pFace->GetEdges();
-                    std::set<edge *>::const_iterator EdgeIter=sFaceEdges.begin();
-                    while(EdgeIter!=sFaceEdges.end())
-                        {
-                        edge *pEdge=*EdgeIter;
-                        if(pEdge->GetStart())
-                            {
-                            sVertices.insert(pEdge->GetStart());
-                            sVertices.insert(pEdge->GetEnd());
-                            }
-                        ++EdgeIter;
-                        }
-                    ++FaceIter;
-                    }
-                std::set<edge *> const &sVolumeEdges=pVolume->GetEdges();
-                std::set<edge *>::const_iterator EdgeIter=sVolumeEdges.begin();
-                while(EdgeIter!=sVolumeEdges.end())
-                    {
-                    edge *pEdge=*EdgeIter;
-                    if(pEdge->GetStart())
-                        {
-                        sVertices.insert(pEdge->GetStart());
-                        sVertices.insert(pEdge->GetEnd());
-                        }
-                    ++EdgeIter;
-                    }
-                ++VolumeIter;
-                }
-            ++BodyIter;
-            }
+        ((thing *)pEntity)->GetVertices(sVertices,bTopLevel);
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -660,24 +564,15 @@ void OrderLoopEdges(SGM::Result                    &rResult,
 
 void FindComplexes(SGM::Result         &,//rResult,
                    entity        const *pEntity,
-                   std::set<complex *> &sComplexes)
+                   std::set<complex *> &sComplexes,
+                   bool                 bTopLevel)
     {
     SGM::EntityType nType=pEntity->GetType();
     switch(nType)
         {
         case SGM::ThingType:
             {
-            std::set<entity *> const &sEntities=((thing *)pEntity)->GetEntities();
-            std::set<entity *>::const_iterator iter=sEntities.begin();
-            while(iter!=sEntities.end())
-                {
-                entity *pEntityIter=*iter;
-                if(pEntityIter->GetType()==SGM::ComplexType)
-                    {
-                    sComplexes.insert((complex *)pEntityIter);
-                    }
-                ++iter;
-                }
+            ((thing *)pEntity)->GetComplexes(sComplexes,bTopLevel);
             break;
             }
         case SGM::ComplexType:
@@ -692,10 +587,16 @@ void FindComplexes(SGM::Result         &,//rResult,
 
 void FindSurfaces(SGM::Result         &rResult,
                   entity        const *pEntity,
-                  std::set<surface *> &sSurfaces)
+                  std::set<surface *> &sSurfaces,
+                  bool                 bTopLevel)
     {
+    if(pEntity->GetType()==SGM::EntityType::ThingType)
+        {
+        ((thing *)pEntity)->GetSurfaces(sSurfaces,bTopLevel);
+        return;
+        }
     std::set<face *> sFaces;
-    FindFaces(rResult,pEntity,sFaces);
+    FindFaces(rResult,pEntity,sFaces,false);
     std::set<face *>::iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
@@ -706,10 +607,16 @@ void FindSurfaces(SGM::Result         &rResult,
 
 void FindCurves(SGM::Result       &rResult,
                 entity      const *pEntity,
-                std::set<curve *> &sCurves)
+                std::set<curve *> &sCurves,
+                bool               bTopLevel)
     {
+    if(pEntity->GetType()==SGM::EntityType::ThingType)
+        {
+        ((thing *)pEntity)->GetCurves(sCurves,bTopLevel);
+        return;
+        }
     std::set<edge *> sEdges;
-    FindEdges(rResult,pEntity,sEdges);
+    FindEdges(rResult,pEntity,sEdges,false);
     std::set<edge *>::iterator iter=sEdges.begin();
     while(iter!=sEdges.end())
         {

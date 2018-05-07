@@ -2382,13 +2382,12 @@ bool ReadCreateEdge(SGM::Result                    &,//rResult,
     {
     bool bAnswer=true;
     
-    // Edge=CreateEdge(Curve,Point3D,Point3D);
+    // Edge=CreateEdge(Curve,Interval1D const *pDomain);
 
     std::vector<ArgumentType> aTypes;
     aTypes.push_back(EdgeType);
     aTypes.push_back(CurveType);
-    aTypes.push_back(Point3DType);
-    aTypes.push_back(Point3DType);
+    aTypes.push_back(Interval1DType);
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 

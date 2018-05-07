@@ -75,10 +75,9 @@ SGM_EXPORT SGM::Body CoverPlanarWire(SGM::Result &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-SGM_EXPORT SGM::Edge CreateEdge(SGM::Result  &rResult,
-                                SGM::Curve   &CurveID,
-                                SGM::Point3D &Start,
-                                SGM::Point3D &End);
+SGM_EXPORT SGM::Edge CreateEdge(SGM::Result           &rResult,
+                                SGM::Curve            &CurveID,
+                                SGM::Interval1D const *pDomain=nullptr);
 
 SGM_EXPORT SGM::Body CreateWireBody(SGM::Result               &rResult,
                                     std::set<SGM::Edge> const &sEdges);

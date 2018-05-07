@@ -955,7 +955,6 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nBodyID=aBodies[Index1];
         body *pBody=(body *)mEntityMap[nBodyID];
-        pThing->AddTopLevelEntity(pBody);
         aEntities.push_back(pBody);
         
         // VolumeID(s) ..., TransformID, JunkID
@@ -1231,7 +1230,6 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                 }
             }
         complex *pComplex=new complex(rResult,aPoints,aTriangles);
-        pThing->AddTopLevelEntity(pComplex);
         aEntities.push_back(pComplex);
         }
     fclose(pFile);

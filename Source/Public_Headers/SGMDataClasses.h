@@ -327,8 +327,6 @@ namespace SGM
 
            bool IntersectHalfSpace(Point3D const &, UnitVector3D const &);
 
-            // we can use IntersectLineAndPlane in Intersectors.h on each 6 faces
-        // then check if the intersection lies within the face
            bool IntersectLine(Point3D const &, UnitVector3D const &, double tol = 0.);
 
            bool IntersectPlane(Point3D const &, UnitVector3D const &);

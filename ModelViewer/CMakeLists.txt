@@ -22,6 +22,10 @@ set(MODEL_VIEWER_SRC
     ${UI_SRC}
     FileMenu.cpp
     FileMenu.hpp
+    TestMenu.cpp
+    TestMenu.hpp
+    PrimitiveMenu.cpp
+    PrimitiveMenu.hpp
     main.cpp
     MainWindow.cpp
     MainWindow.hpp

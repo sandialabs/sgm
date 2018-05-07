@@ -325,7 +325,7 @@ void OutputThing(SGM::Result                  &rResult,
     // Top level entities.
 
     std::set<body *> sBodies;
-    FindBodies(rResult,pThing,sBodies);
+    FindBodies(rResult,pThing,sBodies,true);
     size_t nBodies=sBodies.size();
     if(nBodies)
         {

@@ -15,7 +15,6 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
         }
     thing *pThing=rResult.GetThing();
     complex *pComplex=new complex(rResult,aPoints,aTriangles);
-    pThing->AddTopLevelEntity(pComplex);
     return SGM::Complex(pComplex->GetID());
     }
 
@@ -111,7 +110,6 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
         pComplex=new complex(rResult,aSegments,aPoints);
         }
 
-    pThing->AddTopLevelEntity(pComplex);
     return Complex(pComplex->GetID());
     }
 

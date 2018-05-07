@@ -62,6 +62,8 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv) const;
 
+        bool IsTopLevel() const {return m_sFaces.empty();}
+
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
         curve *UParamLine(SGM::Result &rResult,double dU) const;
@@ -160,7 +162,7 @@ class cone : public surface
         SGM::Point3D      m_Origin;
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
-        SGM::UnitVector3D m_ZAxis;  // Point from center to apex.
+        SGM::UnitVector3D m_ZAxis;  // Points from center to apex.
         double            m_dSinHalfAngle;
         double            m_dCosHalfAngle;
         double            m_dRadius;

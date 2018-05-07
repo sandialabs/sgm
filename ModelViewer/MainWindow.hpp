@@ -6,6 +6,8 @@
 #include "ModelData.hpp"
 
 class FileMenu;
+class TestMenu;
+class PrimitiveMenu;
 
 namespace Ui {
   class MainWindow;
@@ -24,23 +26,39 @@ protected:
 
 private slots:
   void file_open();
-  void file_exit();
   void file_open_recent(const QString &filename);
+  void file_step();
+  void file_stl();
+  void file_exit();
 
-  void on_actionRunAllTests_triggered();
+  void test_all();
+  void test_number();
+  void test_script();
+  void test_check();
 
-  void on_actionRunTestNumber_triggered();
+  void primitive_block();
+  void primitive_sphere();
+  void primitive_cylinder();
+  void primitive_cone();
+  void primitive_torus();
+  void primitive_NUBSurface();
+  void primitive_line();
+  void primitive_circle();
+  void primitive_ellipse();
+  void primitive_parabola();
+  void primitive_hyperbola();
+  void primitive_NUBcurve();
 
-  void on_actionRunScript_triggered();
+  //void on_actionCreateBlock_triggered();
 
-  void on_actionCreateBlock_triggered();
-
-  void on_actionCreateSphere_triggered();
+  //void on_actionCreateSphere_triggered();
 
 private:
   Ui::MainWindow *ui;
-  FileMenu* mFileMenu;
-  ModelData *mModel;
+  FileMenu       *mFileMenu;
+  TestMenu       *mTestMenu;
+  PrimitiveMenu  *mPrimitiveMenu;
+  ModelData      *mModel;
 
   void read_settings();
   void save_settings();
