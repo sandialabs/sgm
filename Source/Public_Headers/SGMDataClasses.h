@@ -70,6 +70,8 @@ namespace SGM
 
         Point3D operator*=(Transform3D const &Trans);
 
+        bool operator<(Point3D const &Pos) const;
+
         double m_x;
         double m_y;
         double m_z;

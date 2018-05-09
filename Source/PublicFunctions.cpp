@@ -215,7 +215,8 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                             std::vector<SGM::Point3D>          &aPoints,
                             std::vector<SGM::IntersectionType> &aTypes,
                             SGM::Edge                    const *pEdge1,
-                            SGM::Edge                    const *pEdge2)
+                            SGM::Edge                    const *pEdge2,
+                            double                              dTolerance)
     {
     SGMInternal::curve const *pCurve1=(SGMInternal::curve const *)rResult.GetThing()->FindEntity(CurveID1.m_ID);
     SGMInternal::curve const *pCurve2=(SGMInternal::curve const *)rResult.GetThing()->FindEntity(CurveID2.m_ID);
@@ -229,7 +230,7 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
         {
         pedge2=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(pEdge2->m_ID);
         }
-    return IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2);
+    return IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2,dTolerance);
     }
 
  size_t SGM::IntersectCurveAndSurface(SGM::Result                        &rResult,

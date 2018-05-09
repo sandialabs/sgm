@@ -600,7 +600,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     }
 
 NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
-                                       std::vector<SGM::Point3D> const &aInterpolate,
+                                       std::vector<SGM::Point3D> const &aPoints,
                                        SGM::Vector3D             const &StartVec,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams)
@@ -614,59 +614,59 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
         }
     else
         {
-        SGM::FindLengths3D(aInterpolate,aLengths,true);
+        SGM::FindLengths3D(aPoints,aLengths,true);
         }
     FindDegree3KnotsWithEndDirections(aLengths,aKnots);
     SGM::Interval1D Domain(0.0,1.0);
     
     // From "The NURBs Book" Algorithm A9.2, page 373.
 
-    int n=(int)aInterpolate.size()-1;
+    int nPoints=(int)aPoints.size()-1;
     std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.assign(n+3,SGM::Point3D(0,0,0));
-    aControlPoints[0]=aInterpolate[0];
-    aControlPoints[1]=aInterpolate[0]+(aKnots[4]/3.0)*StartVec;
-    aControlPoints[n+1]=aInterpolate[n]-((1-aKnots[n+2])/3.0)*EndVec;
-    aControlPoints[n+2]=aInterpolate[n];
+    aControlPoints.assign(nPoints+3,SGM::Point3D(0,0,0));
+    aControlPoints[0]=aPoints[0];
+    aControlPoints[1]=aPoints[0]+(aKnots[4]/3.0)*StartVec;
+    aControlPoints[nPoints+1]=aPoints[nPoints]-((1-aKnots[nPoints+2])/3.0)*EndVec;
+    aControlPoints[nPoints+2]=aPoints[nPoints];
 
     double *aaBasis[1];
     double dData[4];
     aaBasis[0]=dData;
 
-    if(n==2)
+    if(nPoints==2)
         {
         FindBasisFunctions(4,aKnots[4],3,0,&aKnots[0],aaBasis);
-        aControlPoints[2].m_x=(aInterpolate[1].m_x-dData[2]*aControlPoints[1].m_x-dData[0]*aControlPoints[3].m_x)/dData[1];
-        aControlPoints[2].m_y=(aInterpolate[1].m_y-dData[2]*aControlPoints[1].m_y-dData[0]*aControlPoints[3].m_y)/dData[1];
-        aControlPoints[2].m_z=(aInterpolate[1].m_z-dData[2]*aControlPoints[1].m_z-dData[0]*aControlPoints[3].m_z)/dData[1];
+        aControlPoints[2].m_x=(aPoints[1].m_x-dData[2]*aControlPoints[1].m_x-dData[0]*aControlPoints[3].m_x)/dData[1];
+        aControlPoints[2].m_y=(aPoints[1].m_y-dData[2]*aControlPoints[1].m_y-dData[0]*aControlPoints[3].m_y)/dData[1];
+        aControlPoints[2].m_z=(aPoints[1].m_z-dData[2]*aControlPoints[1].m_z-dData[0]*aControlPoints[3].m_z)/dData[1];
         }
-    else if(n>2)
+    else if(nPoints>2)
         {
         FindBasisFunctions(4,aKnots[4],3,0,&aKnots[0],aaBasis);
         double den=dData[1];
-        aControlPoints[2].m_x=(aInterpolate[1].m_x-dData[0]*aControlPoints[1].m_x)/den;
-        aControlPoints[2].m_y=(aInterpolate[1].m_y-dData[0]*aControlPoints[1].m_y)/den;
-        aControlPoints[2].m_z=(aInterpolate[1].m_z-dData[0]*aControlPoints[1].m_z)/den;
+        aControlPoints[2].m_x=(aPoints[1].m_x-dData[0]*aControlPoints[1].m_x)/den;
+        aControlPoints[2].m_y=(aPoints[1].m_y-dData[0]*aControlPoints[1].m_y)/den;
+        aControlPoints[2].m_z=(aPoints[1].m_z-dData[0]*aControlPoints[1].m_z)/den;
 
         std::vector<double> dd;
-        dd.assign(n+1,0.0);
+        dd.assign(nPoints+1,0.0);
         int Index1;
-        for(Index1=3;Index1<n;++Index1)
+        for(Index1=3;Index1<nPoints;++Index1)
             {
             dd[Index1]=dData[2]/den;
             FindBasisFunctions(Index1+2,aKnots[Index1+2],3,0,&aKnots[0],aaBasis);
             den=dData[1]-dData[0]*dd[Index1];
-            aControlPoints[Index1].m_x=(aInterpolate[Index1-1].m_x-dData[0]*aControlPoints[Index1-1].m_x)/den;
-            aControlPoints[Index1].m_y=(aInterpolate[Index1-1].m_y-dData[0]*aControlPoints[Index1-1].m_y)/den;
-            aControlPoints[Index1].m_z=(aInterpolate[Index1-1].m_z-dData[0]*aControlPoints[Index1-1].m_z)/den;
+            aControlPoints[Index1].m_x=(aPoints[Index1-1].m_x-dData[0]*aControlPoints[Index1-1].m_x)/den;
+            aControlPoints[Index1].m_y=(aPoints[Index1-1].m_y-dData[0]*aControlPoints[Index1-1].m_y)/den;
+            aControlPoints[Index1].m_z=(aPoints[Index1-1].m_z-dData[0]*aControlPoints[Index1-1].m_z)/den;
             }
-        dd[n]=dData[2]/den;
-        FindBasisFunctions(n+2,aKnots[n+2],3,0,&aKnots[0],aaBasis);
-        den=dData[1]-dData[0]*dd[n];
-        aControlPoints[n].m_x=(aInterpolate[n-1].m_x-dData[2]*aControlPoints[n+1].m_x-dData[0]*aControlPoints[n-1].m_x)/den;
-        aControlPoints[n].m_y=(aInterpolate[n-1].m_y-dData[2]*aControlPoints[n+1].m_y-dData[0]*aControlPoints[n-1].m_y)/den;
-        aControlPoints[n].m_z=(aInterpolate[n-1].m_z-dData[2]*aControlPoints[n+1].m_z-dData[0]*aControlPoints[n-1].m_z)/den;
-        for(Index1=n-1;Index1>=2;--Index1)
+        dd[nPoints]=dData[2]/den;
+        FindBasisFunctions(nPoints+2,aKnots[nPoints+2],3,0,&aKnots[0],aaBasis);
+        den=dData[1]-dData[0]*dd[nPoints];
+        aControlPoints[nPoints].m_x=(aPoints[nPoints-1].m_x-dData[2]*aControlPoints[nPoints+1].m_x-dData[0]*aControlPoints[nPoints-1].m_x)/den;
+        aControlPoints[nPoints].m_y=(aPoints[nPoints-1].m_y-dData[2]*aControlPoints[nPoints+1].m_y-dData[0]*aControlPoints[nPoints-1].m_y)/den;
+        aControlPoints[nPoints].m_z=(aPoints[nPoints-1].m_z-dData[2]*aControlPoints[nPoints+1].m_z-dData[0]*aControlPoints[nPoints-1].m_z)/den;
+        for(Index1=nPoints-1;Index1>=2;--Index1)
             {
             aControlPoints[Index1].m_x-=dd[Index1+1]*aControlPoints[Index1+1].m_x;
             aControlPoints[Index1].m_y-=dd[Index1+1]*aControlPoints[Index1+1].m_y;

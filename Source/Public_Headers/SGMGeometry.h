@@ -50,11 +50,11 @@ SGM_EXPORT SGM::Curve CreateHyperbola(SGM::Result             &rResult,
                                       double                   dB);
 
 SGM_EXPORT SGM::Curve CreateNUBCurve(SGM::Result                     &rResult,
-                                     std::vector<SGM::Point3D> const &aInterpolate,
+                                     std::vector<SGM::Point3D> const &aPoints,
                                      std::vector<double>       const *pParams=nullptr);
 
 SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
-                                                   std::vector<SGM::Point3D> const &aInterpolate,
+                                                   std::vector<SGM::Point3D> const &aPoints,
                                                    SGM::Vector3D             const &StartVec,
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);

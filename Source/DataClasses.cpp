@@ -167,6 +167,35 @@ SGM::Point3D SGM::Point3D::operator*=(SGM::Transform3D const &Trans)
     return *this;
     }
 
+bool SGM::Point3D::operator<(SGM::Point3D const &Pos) const
+    {
+    if(m_x<Pos.m_x)
+        {
+        return true;
+        }
+    if(Pos.m_x<m_x)
+        {
+        return false;
+        }
+    if(m_y<Pos.m_y)
+        {
+        return true;
+        }
+    if(Pos.m_y<m_y)
+        {
+        return false;
+        }
+    if(m_z<Pos.m_z)
+        {
+        return true;
+        }
+    if(Pos.m_z<m_z)
+        {
+        return false;
+        }
+    return false;
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Point4D methods

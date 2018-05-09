@@ -22,7 +22,8 @@ namespace SGM
                                       std::vector<SGM::Point3D>          &aPoints,
                                       std::vector<SGM::IntersectionType> &aTypes,
                                       SGM::Edge                    const *pEdge1=nullptr,
-                                      SGM::Edge                    const *pEdge2=nullptr);
+                                      SGM::Edge                    const *pEdge2=nullptr,
+                                      double                       const  dTolerance=0.0);
 
     SGM_EXPORT size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                                SGM::Curve                   const &CurveID,

@@ -6,6 +6,8 @@
 #include <cfloat>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+
 namespace SGMInternal
 {
 void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
@@ -558,6 +560,91 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
+                                SGM::UnitVector3D            const &Axis,
+                                SGM::Interval1D              const &,//Domain,
+                                NUBcurve                     const *pNUBCurve,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes)
+    {
+    // Find the starting points.
+
+    SGM::Segment3D LineSeg(Origin,Origin+Axis);
+    std::vector<SGM::Point3D> const &aSeedPoints=pNUBCurve->GetSeedPoints();
+    size_t nSeedPoints=aSeedPoints.size();
+    double dTan15=0.26794919243112270647255365849413;
+    std::vector<SGM::Point3D> aStartPoints;
+    size_t Index1;
+    for(Index1=1;Index1<nSeedPoints;++Index1)
+        {
+        SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
+        SGM::Point3D const &Pos1=aSeedPoints[Index1];
+        SGM::Segment3D Seg(Pos0,Pos1);
+        SGM::Point3D Pos2,Pos3;
+        Seg.Intersect(LineSeg,Pos2,Pos3);
+        double dLength=Pos0.Distance(Pos1);
+        double dTol=dTolerance+dLength*dTan15;
+        if(Pos2.DistanceSquared(Pos3)<dTol*dTol)
+            {
+            aStartPoints.push_back(Pos2);
+            }
+        }
+
+    // Find the intersection points.
+
+    std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
+    size_t nStartPoints=aStartPoints.size();
+    for(Index1=0;Index1<nStartPoints;++Index1)
+        {
+        SGM::Point3D Pos=aStartPoints[Index1];
+        size_t nCount=0;
+        double dOldDist=SGM_MAX;
+        while(nCount<100)
+            {
+            SGM::Point3D CPos;
+            double t=pNUBCurve->Inverse(Pos,&CPos);
+            Pos=Origin+Axis*((CPos-Origin)%Axis);
+            double dDist=Pos.Distance(CPos);
+            if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
+                {
+                aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                break;
+                }
+            dOldDist=dDist;
+            ++nCount;
+            }
+        }
+
+    // Remove dupicates and find the types.
+
+    std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
+    size_t nRefinedPoints=aRefinedPoints.size();
+    aPoints.push_back(aRefinedPoints[0].second);
+    for(Index1=1;Index1<nRefinedPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
+        double t=aRefinedPoints[Index1].first;
+        if(SGM_MIN_TOL<Pos.DistanceSquared(aPoints.back()))
+            {
+            SGM::Vector3D DPos;
+            pNUBCurve->Evaluate(t,NULL,&DPos);
+            aPoints.push_back(Pos);
+            SGM::UnitVector3D Test(DPos);
+            if(fabs(1.0-fabs(Test%Axis))<SGM_MIN_TOL)
+                {
+                aTypes.push_back(SGM::IntersectionType::TangentType);
+                }
+            else
+                {
+                aTypes.push_back(SGM::IntersectionType::PointType);
+                }
+            }
+        }
+
+    return aPoints.size();
+    }
+
 size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
                               SGM::UnitVector3D            const &Axis,
                               SGM::Interval1D              const &,//Domain,
@@ -972,7 +1059,7 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
              }
          case SGM::NUBCurveType:
              {
-             break;
+             return IntersectLineAndNUBCurve(Origin,Axis,Domain,(NUBcurve const *)pCurve,dTolerance,aPoints,aTypes);
              }
          case SGM::NURBCurveType:
              {
@@ -996,11 +1083,12 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
                         std::vector<SGM::Point3D>          &aPoints,
                         std::vector<SGM::IntersectionType> &aTypes,
                         edge                         const *pEdge1,
-                        edge                         const *pEdge2)
+                        edge                         const *pEdge2,
+                        double                              dTolerance)
       {
       double dTol1=pEdge1 ? pEdge1->GetTolerance() : SGM_MIN_TOL;
       double dTol2=pEdge1 ? pEdge2->GetTolerance() : SGM_MIN_TOL;
-      double dTol=dTol1+dTol2;
+      double dTol=dTol1+dTol2+dTolerance;
 
       switch(pCurve1->GetCurveType())
          {

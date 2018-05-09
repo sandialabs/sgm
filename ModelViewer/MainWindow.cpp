@@ -365,22 +365,12 @@ void MainWindow::primitive_hyperbola()
 
 void MainWindow::primitive_NUBcurve()
     {
-    /*
     std::vector<SGM::Point3D> aPoints;
     aPoints.push_back(SGM::Point3D(-2,0,0));
     aPoints.push_back(SGM::Point3D(-1,0.5,0));
     aPoints.push_back(SGM::Point3D(0,-0.5,0));
     aPoints.push_back(SGM::Point3D(1,0.5,0));
     aPoints.push_back(SGM::Point3D(2,0,0));
-    */
-    std::vector<SGM::Point3D> aPoints;
-    size_t Index1;
-    double d=0.2;
-    for(Index1=0;Index1<100;++Index1)
-        {
-        aPoints.push_back(SGM::Point3D(cos(Index1*d),sin(Index1*d),Index1*d*0.1));
-        }
-
     mModel->create_NUBcurve(aPoints);
     }
 

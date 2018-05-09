@@ -1,0 +1,3 @@
+// Tests line NUBcurve intersection;
+RunCPPTest(27);
+

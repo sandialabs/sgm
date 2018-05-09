@@ -19,7 +19,8 @@ size_t IntersectCurves(SGM::Result                        &rResult,
                        std::vector<SGM::Point3D>          &aPoints,
                        std::vector<SGM::IntersectionType> &aTypes,
                        edge                         const *pEdge1,
-                       edge                         const *pEdge2);
+                       edge                         const *pEdge2,
+                       double                       const dTolerance);
 
 size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                 curve                        const *pCurve,
@@ -120,6 +121,14 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 SGM::Interval1D              const &Domain,
                                 parabola                     const *pParabola,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
+                                SGM::UnitVector3D            const &Axis,
+                                SGM::Interval1D              const &Domain,
+                                NUBcurve                     const *pNUBCurve,
                                 double                              dTolerance,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes);

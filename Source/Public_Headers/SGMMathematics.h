@@ -12,6 +12,7 @@
 #define SGM_MAX     1E+12
 #define SGM_ZERO    1E-12
 #define SGM_MIN_TOL 1E-6
+#define SGM_FIT     1E-3
 
 namespace SGM
     {

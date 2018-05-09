@@ -1773,6 +1773,49 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==27)
+        {
+        // Test the intersection of a line and NUBcurve.
+
+        bool bAnswer=true;
+    
+        std::vector<SGM::Point3D> aPoints;
+        size_t Index1;
+        double d=0.2;
+        for(Index1=0;Index1<100;++Index1)
+            {
+            aPoints.push_back(SGM::Point3D(cos(Index1*d),sin(Index1*d),Index1*d*0.1));
+            }
+        SGMInternal::NUBcurve *pNUB=SGMInternal::CreateNUBCurve(rResult,aPoints);
+        SGM::Point3D Pos0(1,0,0),Pos1(1,0,10);
+        SGMInternal::line *pLine=new SGMInternal::line(rResult,Pos0,Pos1);
+        std::vector<SGM::Point3D> aHits;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGMInternal::IntersectCurves(rResult,pLine,pNUB,aHits,aTypes,nullptr,nullptr,SGM_FIT);
+
+        size_t nHits=aHits.size();
+        if(nHits!=4)
+            {
+            bAnswer=false;
+            }
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(SGM_FIT<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+
+        rResult.GetThing()->DeleteEntity(pNUB);
+
+        return bAnswer;
+        }
+
     return false;
     }
 

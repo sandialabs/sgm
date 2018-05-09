@@ -38,11 +38,11 @@ edge *CreateEdge(SGM::Result           &rResult,
                  SGM::Interval1D const *pDomain);
 
 NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
-                         std::vector<SGM::Point3D> const &aInterpolate,
+                         std::vector<SGM::Point3D> const &aPoints,
                          std::vector<double>       const *pParams=nullptr);
 
 NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
-                                       std::vector<SGM::Point3D> const &aInterpolate,
+                                       std::vector<SGM::Point3D> const &aPoints,
                                        SGM::Vector3D             const &StartVec,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams);
