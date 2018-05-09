@@ -113,7 +113,7 @@ namespace SGM
     // for that edges.
 
     SGM_EXPORT size_t FindAdjacences2D(std::vector<size_t> const &aTriangles,
-                                       std::vector<size_t>       &aAdjacency);
+                                       std::vector<size_t>       &aAdjacences);
 
     ///////////////////////////////////////////////////////////////////////////
     //

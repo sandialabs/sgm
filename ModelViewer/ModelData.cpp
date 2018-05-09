@@ -36,6 +36,7 @@ ModelData::ModelData() :
   dPtr(new pModelData)
 {
   mwire_mode=false;
+  mfacet_mode=false;
   muvspace_mode=false;
   mperspective_mode=false;
 }
@@ -97,6 +98,12 @@ void ModelData::wire_mode()
   rebuild_graphics();
 }
 
+void ModelData::facet_mode()
+{
+  mfacet_mode = !mfacet_mode;
+  rebuild_graphics();
+}
+
 void ModelData::uvspace_mode()
 {
   muvspace_mode = !muvspace_mode;
@@ -149,6 +156,17 @@ void ModelData::create_cone(SGM::Point3D const &Bottom,
                             double              dTopRadius)
 {
   SGM::CreateCone(dPtr->mResult,Bottom,Top,dBottomRadius,dTopRadius);
+
+  rebuild_tree();
+  rebuild_graphics();
+}
+
+void ModelData::create_torus(SGM::Point3D      const &Center,
+                             SGM::UnitVector3D const &Axis,
+                             double                   dMinorRadius,
+                             double                   dMajorRadius)
+{
+  SGM::CreateTorus(dPtr->mResult,Center,Axis,dMinorRadius,dMajorRadius);
 
   rebuild_tree();
   rebuild_graphics();
@@ -334,28 +352,99 @@ void ModelData::rebuild_graphics()
 
   dPtr->mGraphics->clear();
 
-  std::set<SGM::Face> face_list;
-  SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
-  for(const SGM::Face &face : face_list)
+  if(muvspace_mode || mfacet_mode)
   {
-    const std::vector<SGM::Point3D> &face_points =
-        SGM::GetFacePoints(dPtr->mResult, face);
-    const std::vector<size_t> &face_tris =
-        SGM::GetFaceTriangles(dPtr->mResult, face);
-    const std::vector<SGM::UnitVector3D> &face_normals =
-        SGM::GetFaceNormals(dPtr->mResult, face);
+    std::set<SGM::Face> face_list;
+    SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
+    for(const SGM::Face &face : face_list)
+    {
+      const std::vector<SGM::Point2D> &face_points2D =
+          SGM::GetFacePoints2D(dPtr->mResult, face);
+      const std::vector<SGM::Point3D> &face_points3D =
+          SGM::GetFacePoints3D(dPtr->mResult, face);
+      const std::vector<size_t> &face_tris =
+          SGM::GetFaceTriangles(dPtr->mResult, face);
 
-    dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
+      size_t Index1;
+      size_t nTriangles=face_tris.size();
+      for(Index1=0;Index1<nTriangles;Index1+=3)
+          {
+          std::vector<SGM::Point3D> side;
+          size_t a=face_tris[Index1];
+          size_t b=face_tris[Index1+1];
+          size_t c=face_tris[Index1+2];
+          if(mfacet_mode)
+              {
+              SGM::Point3D const &PosA=face_points3D[a];
+              SGM::Point3D const &PosB=face_points3D[b];
+              SGM::Point3D const &PosC=face_points3D[c];
+              side.push_back(PosA);
+              side.push_back(PosB);
+              dPtr->mGraphics->add_edge(side);
+              side.clear();
+              side.push_back(PosB);
+              side.push_back(PosC);
+              dPtr->mGraphics->add_edge(side);
+              side.clear();
+              side.push_back(PosC);
+              side.push_back(PosA);
+              dPtr->mGraphics->add_edge(side);
+              }
+          else
+              {
+              SGM::Point2D const &Auv=face_points2D[a];
+              SGM::Point2D const &Buv=face_points2D[b];
+              SGM::Point2D const &Cuv=face_points2D[c];
+              SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);
+              SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
+              SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
+              side.push_back(PosA);
+              side.push_back(PosB);
+              dPtr->mGraphics->add_edge(side);
+              side.clear();
+              side.push_back(PosB);
+              side.push_back(PosC);
+              dPtr->mGraphics->add_edge(side);
+              side.clear();
+              side.push_back(PosC);
+              side.push_back(PosA);
+              dPtr->mGraphics->add_edge(side);
+              }
+          }
+    }
   }
-
-  std::set<SGM::Edge> edge_list;
-  SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
-  for(const SGM::Edge &edge : edge_list)
+  else
   {
-    const std::vector<SGM::Point3D> &edge_points =
-        SGM::GetEdgePoints(dPtr->mResult, edge);
+    if(mwire_mode==false)
+    {
+      std::set<SGM::Face> face_list;
+      SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
+      for(const SGM::Face &face : face_list)
+      {
+        const std::vector<SGM::Point3D> &face_points =
+            SGM::GetFacePoints3D(dPtr->mResult, face);
+        const std::vector<size_t> &face_tris =
+            SGM::GetFaceTriangles(dPtr->mResult, face);
+        const std::vector<SGM::UnitVector3D> &face_normals =
+            SGM::GetFaceNormals(dPtr->mResult, face);
 
-    dPtr->mGraphics->add_edge(edge_points);
+        dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
+      }
+    }
+    else
+    {
+      dPtr->mGraphics->remove_faces();   
+    }
+
+    std::set<SGM::Edge> edge_list;
+    SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
+    for(const SGM::Edge &edge : edge_list)
+    {
+      const std::vector<SGM::Point3D> &edge_points =
+          SGM::GetEdgePoints(dPtr->mResult, edge);
+
+      dPtr->mGraphics->add_edge(edge_points);
+    }
   }
 
   dPtr->mGraphics->reset_view();

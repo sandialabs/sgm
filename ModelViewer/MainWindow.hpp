@@ -34,6 +34,7 @@ private slots:
 
   void view_zoom();
   void view_wire();
+  void view_facet();
   void view_uvspace();
   void view_perspective();
 

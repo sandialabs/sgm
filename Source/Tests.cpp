@@ -453,8 +453,8 @@ bool TestSurface(SGMInternal::surface const *pSurface,
     SGM::UnitVector3D Norm;
     SGM::Vector3D dU,dV,dUU,dUV,dVV;
     pSurface->Evaluate(uv1,&Pos,&dU,&dV,&Norm,&dUU,&dUV,&dVV);
-    SGM::Point2D uv2=pSurface->Inverse(Pos,&CPos);
 
+    SGM::Point2D uv2=pSurface->Inverse(Pos,&CPos);
     if(SGM::NearEqual(uv1,uv2,SGM_ZERO)==false)
         {
         bAnswer=false;

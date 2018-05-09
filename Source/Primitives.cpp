@@ -499,7 +499,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     }
 
  NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
-                          std::vector<SGM::Point3D> const &aInterpolate,
+                          std::vector<SGM::Point3D> const &aPoints,
                           std::vector<double>       const *pParams)
     {
     // Find the knot vector.
@@ -511,7 +511,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         }
     else
         {
-        SGM::FindLengths3D(aInterpolate,aLengths,true);
+        SGM::FindLengths3D(aPoints,aLengths,true);
         }
     int nDegree;
     FindDegree3Knots(aLengths,aKnots,nDegree);
@@ -519,9 +519,9 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
 
     // Set up the banded matrix.
 
-    size_t nInterpolate=aInterpolate.size();
+    size_t nPoints=aPoints.size();
     std::vector<std::vector<double> > aaXMatrix;
-    aaXMatrix.reserve(nInterpolate);
+    aaXMatrix.reserve(nPoints);
     size_t Index1;
     std::vector<double> aRow;
     aRow.reserve(6);
@@ -530,9 +530,9 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     aRow.push_back(1.0);
     aRow.push_back(0.0);
     aRow.push_back(0.0);
-    aRow.push_back(aInterpolate[0].m_x);
+    aRow.push_back(aPoints[0].m_x);
     aaXMatrix.push_back(aRow);
-    for(Index1=1;Index1<nInterpolate-1;++Index1)
+    for(Index1=1;Index1<nPoints-1;++Index1)
         {
         aRow.clear();
         double *aaBasis[1];
@@ -541,7 +541,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         double t=aLengths[Index1];
         size_t nSpanIndex=FindSpanIndex(Domain,nDegree,t,aKnots);
         FindBasisFunctions(nSpanIndex,t,nDegree,0,&aKnots[0],aaBasis);
-        if(Index1==nInterpolate-2 && nDegree==3)
+        if(nSpanIndex-Index1==1 && nDegree==3)
             {
             aRow.push_back(dData[0]);
             aRow.push_back(dData[1]);
@@ -557,7 +557,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
             aRow.push_back(dData[2]);
             aRow.push_back(dData[3]);
             }
-        aRow.push_back(aInterpolate[Index1].m_x);
+        aRow.push_back(aPoints[Index1].m_x);
         aaXMatrix.push_back(aRow);
         }
     aRow.clear();
@@ -566,17 +566,17 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     aRow.push_back(1.0);
     aRow.push_back(0.0);
     aRow.push_back(0.0);
-    aRow.push_back(aInterpolate[nInterpolate-1].m_x);
+    aRow.push_back(aPoints[nPoints-1].m_x);
     aaXMatrix.push_back(aRow);
 
     // Solve for x, y, and z of the control points.
 
     std::vector<std::vector<double> > aaYMatrix=aaXMatrix;
     std::vector<std::vector<double> > aaZMatrix=aaXMatrix;
-    for(Index1=0;Index1<nInterpolate;++Index1)
+    for(Index1=0;Index1<nPoints;++Index1)
         {
-        aaYMatrix[Index1][5]=aInterpolate[Index1].m_y;
-        aaZMatrix[Index1][5]=aInterpolate[Index1].m_z;
+        aaYMatrix[Index1][5]=aPoints[Index1].m_y;
+        aaZMatrix[Index1][5]=aPoints[Index1].m_z;
         }
     SGM::BandedSolve(aaXMatrix);
     SGM::BandedSolve(aaYMatrix);
@@ -585,13 +585,18 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     // Create the curve.
 
     std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.reserve(nInterpolate);
-    for(Index1=0;Index1<nInterpolate;++Index1)
+    aControlPoints.reserve(nPoints);
+    for(Index1=0;Index1<nPoints;++Index1)
         {
         SGM::Point3D Pos(aaXMatrix[Index1].back(),aaYMatrix[Index1].back(),aaZMatrix[Index1].back());
         aControlPoints.push_back(Pos);
         }
-    return new NUBcurve(rResult,aControlPoints,aKnots);
+    NUBcurve *pAnswer=new NUBcurve(rResult,aControlPoints,aKnots);
+
+    SGM::Point3D CPos;
+    pAnswer->Inverse(aPoints[1],&CPos);
+
+    return pAnswer;
     }
 
 NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,

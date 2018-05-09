@@ -761,7 +761,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     }
 
 void CreateEntities(SGM::Result                   &rResult,
-                    thing                         *pThing,
+                    thing                         *,//pThing,
                     std::map<size_t,STEPLineData> &mSTEPData,
                     std::map<size_t,entity *>     &mEntityMap,
                     std::vector<entity *>         &aEntities)
@@ -1176,7 +1176,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
 size_t ReadSTLFile(SGM::Result                  &rResult,
                    std::string            const &FileName,
-                   thing                        *pThing,
+                   thing                        *,//pThing,
                    std::vector<entity *>        &aEntities,
                    std::vector<std::string>     &,//aLog,
                    SGM::TranslatorOptions const &)//Options)

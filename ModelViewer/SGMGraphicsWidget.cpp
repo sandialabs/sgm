@@ -132,6 +132,11 @@ void SGMGraphicsWidget::clear()
   dPtr->mEdges.clear();
 }
 
+void SGMGraphicsWidget::remove_faces()
+{
+  dPtr->renderer->RemoveAllViewProps();
+}
+
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
                                  const std::vector<size_t>            &triangles,
                                  const std::vector<SGM::UnitVector3D> &)//norms)
@@ -164,7 +169,7 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
 
   //face->polyData->GetCellData()->SetNormals(normalsArray);
   face->cells->InsertNextCell(face->triangleStrip);
-
+      
   dPtr->renderer->AddActor(face->actor);
 }
 

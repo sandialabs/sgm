@@ -1088,7 +1088,7 @@ bool ReadGetFacePoints(SGM::Result                    &rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    std::vector<SGM::Point3D> const &aFacePoints=SGM::GetFacePoints(rResult,aArguments[1].m_Face);
+    std::vector<SGM::Point3D> const &aFacePoints=SGM::GetFacePoints3D(rResult,aArguments[1].m_Face);
 
     Argument Arg;
     Arg.m_aPoint3D=aFacePoints;

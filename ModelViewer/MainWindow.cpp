@@ -48,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(view_zoom()));
   connect(mViewMenu, SIGNAL(wire()),
           this, SLOT(view_wire()));
+  connect(mViewMenu, SIGNAL(facet()),
+          this, SLOT(view_facet()));
   connect(mViewMenu, SIGNAL(uvspace()),
           this, SLOT(view_uvspace()));
   connect(mViewMenu, SIGNAL(perspective()),
@@ -179,17 +181,22 @@ void MainWindow::view_zoom()
 
 void MainWindow::view_wire()
     {
-    
+    mModel->wire_mode();
+    }
+
+void MainWindow::view_facet()
+    {
+    mModel->facet_mode();
     }
 
 void MainWindow::view_uvspace()
     {
-    
+    mModel->uvspace_mode();
     }
 
 void MainWindow::view_perspective()
     {
-    
+    mModel->perspective_mode();
     }
 
 void MainWindow::test_all()
@@ -304,7 +311,9 @@ void MainWindow::primitive_cone()
 
 void MainWindow::primitive_torus()
     {
-    
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D Axis(0,0,1);
+    mModel->create_torus(Center,Axis,1,3);
     }
 
 void MainWindow::primitive_NUBSurface()
@@ -356,12 +365,22 @@ void MainWindow::primitive_hyperbola()
 
 void MainWindow::primitive_NUBcurve()
     {
+    /*
     std::vector<SGM::Point3D> aPoints;
     aPoints.push_back(SGM::Point3D(-2,0,0));
     aPoints.push_back(SGM::Point3D(-1,0.5,0));
     aPoints.push_back(SGM::Point3D(0,-0.5,0));
     aPoints.push_back(SGM::Point3D(1,0.5,0));
     aPoints.push_back(SGM::Point3D(2,0,0));
+    */
+    std::vector<SGM::Point3D> aPoints;
+    size_t Index1;
+    double d=0.2;
+    for(Index1=0;Index1<100;++Index1)
+        {
+        aPoints.push_back(SGM::Point3D(cos(Index1*d),sin(Index1*d),Index1*d*0.1));
+        }
+
     mModel->create_NUBcurve(aPoints);
     }
 

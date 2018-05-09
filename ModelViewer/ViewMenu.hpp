@@ -13,6 +13,7 @@ public:
 signals:
   void zoom();
   void wire();
+  void facet();
   void uvspace();
   void perspective();
 };

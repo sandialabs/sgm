@@ -25,6 +25,8 @@
 
 #include <algorithm>
 
+__pragma(warning(disable: 4996 ))
+
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
                                   std::vector<size_t>       const &aTriangles)
@@ -34,7 +36,6 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
         rResult.SetResult(SGM::ResultTypeInsufficientData);
         return SGM::Complex(0);
         }
-    SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints,aTriangles);
     return SGM::Complex(pComplex->GetID());
     }
@@ -89,8 +90,6 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
                                   SGM::Point2D const &Pos1,
                                   bool                bFilled)
     {
-    SGMInternal::thing *pThing=rResult.GetThing();
-
     double dMinX=std::min(Pos0.m_u,Pos1.m_u);
     double dMaxX=std::max(Pos0.m_u,Pos1.m_u);
     double dMinY=std::min(Pos0.m_v,Pos1.m_v);
@@ -134,7 +133,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
     return Complex(pComplex->GetID());
     }
 
-SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
+SGM::Complex SGM::CreateSlice(SGM::Result   &,//rResult,
                     SGM::Complex      const &,//ComplexID,
                     SGM::Point3D      const &,//Point,
                     SGM::UnitVector3D const &,//Normal,
@@ -143,9 +142,9 @@ SGM::Complex SGM::CreateSlice(SGM::Result             &,//rResult,
     return Complex(0);
     }
 
-SGM::Complex SGM::CreatePolygon(SGM::Result                     &,//rResult,
-                      std::vector<Point3D> const &,//aPoints,
-                      bool                             )//bFilled)
+SGM::Complex SGM::CreatePolygon(SGM::Result                &,//rResult,
+                                std::vector<Point3D> const &,//aPoints,
+                                bool                        )//bFilled)
     {
     return Complex(0);
     }
@@ -156,9 +155,26 @@ std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetTriangles(rResult);    
     }
+/*
+size_t 
 
-std::vector<SGM::Point3D> const &SGM::GetFacePoints(SGM::Result     &rResult,
-                                                    SGM::Face const &FaceID)
+size_t FindTriStrips(SGM::Result                       &rResult,
+                     SGM::Face                   const &FaceID,
+                     std::vector<std::vector<size_t> > &aaStrips)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID); 
+    return FindTriStrips(rResult,pFace,aaStrips);
+    }
+    */
+std::vector<SGM::Point2D> const &SGM::GetFacePoints2D(SGM::Result     &rResult,
+                                                      SGM::Face const &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    return pFace->GetPoints2D(rResult);
+    }
+
+std::vector<SGM::Point3D> const &SGM::GetFacePoints3D(SGM::Result     &rResult,
+                                                      SGM::Face const &FaceID)
     {
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetPoints3D(rResult);
@@ -861,6 +877,14 @@ bool SGM::GetTorusData(SGM::Result        &rResult,
         return false;
         }
     SGMInternal::torus const *pTorus=(SGMInternal::torus const *)pSurface;
+
+    Center=pTorus->m_Center;
+    XAxis=pTorus->m_XAxis;
+    YAxis=pTorus->m_YAxis;
+    ZAxis=pTorus->m_ZAxis;
+    dMinorRadius=pTorus->m_dMinorRadius;
+    dMajorRadius=pTorus->m_dMajorRadius;
+    nKind=pTorus->m_nKind;
 
     return true;
     }

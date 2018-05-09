@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <cstdio>
+#include <algorithm>
 
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -105,8 +106,8 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool body::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &Options,
+bool body::Check(SGM::Result              &,//rResult,
+                 SGM::CheckOptions  const &,//Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -139,8 +140,8 @@ bool complex::Check(SGM::Result              &,//rResult,
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
+bool volume::Check(SGM::Result              &,//rResult,
+                   SGM::CheckOptions  const &,//Options,
                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -165,7 +166,7 @@ bool volume::Check(SGM::Result              &rResult,
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &Options,
+                 SGM::CheckOptions  const &,//Options,
                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
@@ -228,6 +229,7 @@ bool face::Check(SGM::Result              &rResult,
     std::vector<SGM::UnitVector3D> const &aNormals=GetNormals(rResult);
     std::vector<size_t> const &aTriangles=GetTriangles(rResult);
     size_t nTriangles=aTriangles.size();
+    double dMaxAngle=0;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
         size_t a=aTriangles[Index1];
@@ -246,12 +248,29 @@ bool face::Check(SGM::Result              &rResult,
         double dTol=0.93969262078590838405410927732473; // 20 degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
-            bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Facets of Face %ld are flipped.\n",this->GetID());
-            aCheckStrings.emplace_back(Buffer);
-            break;
+            double dAngleA=SGM::SAFEacos(dDotA)*180/SGM_PI;
+            double dAngleB=SGM::SAFEacos(dDotB)*180/SGM_PI;
+            double dAngleC=SGM::SAFEacos(dDotC)*180/SGM_PI;
+            if(dMaxAngle<dAngleA)
+                {
+                dMaxAngle=dAngleA;
+                }
+            if(dMaxAngle<dAngleB)
+                {
+                dMaxAngle=dAngleB;
+                }
+            if(dMaxAngle<dAngleC)
+                {
+                dMaxAngle=dAngleC;
+                }
             }
+        }
+    if(dMaxAngle!=0)
+        {
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Facets of Face %ld differ from surface normal by %lf.\n",this->GetID(),dMaxAngle);
+        aCheckStrings.emplace_back(Buffer);
         }
 
     return bAnswer;

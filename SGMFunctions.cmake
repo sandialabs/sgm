@@ -57,10 +57,10 @@ macro(sgm_project_setup)
   # Increase warning level
   if(CMAKE_C_COMPILER_ID MATCHES GNU OR CMAKE_C_COMPILER_ID MATCHES Clang)
     if(NOT CMAKE_C_FLAGS MATCHES Wall)
-      set(CMAKE_C_FLAGS "-Wall -Wsign-compare ${CMAKE_C_FLAGS}")
+      set(CMAKE_C_FLAGS "-Wall -WX -Wsign-compare ${CMAKE_C_FLAGS}")
     endif()
     if(NOT CMAKE_CXX_FLAGS MATCHES Wall)
-      set(CMAKE_CXX_FLAGS "-Wall -Wsign-compare ${CMAKE_CXX_FLAGS}")
+      set(CMAKE_CXX_FLAGS "-Wall -WX -Wsign-compare ${CMAKE_CXX_FLAGS}")
     endif()
   endif()
 

@@ -689,20 +689,82 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             {
             // The torus case.
 
-//            SGM::Interval2D const &Domain=pSurface->GetDomain();
-//            double dMinU=Domain.m_UDomain.m_dMin;
-//            double dMaxU=Domain.m_UDomain.m_dMax;
-//            double dMinV=Domain.m_VDomain.m_dMin;
-//            double dMaxV=Domain.m_VDomain.m_dMax;
-//
-//            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
-//            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
-//
-//            dMaxU;
-//            dMaxV;
-//
-//            pUSeam->Remove(rResult);
-//            pVSeam->Remove(rResult);
+            SGM::Interval2D const &Domain=pSurface->GetDomain();
+            double dMinU=Domain.m_UDomain.m_dMin;
+            double dMaxU=Domain.m_UDomain.m_dMax;
+            double dMinV=Domain.m_VDomain.m_dMin;
+            double dMaxV=Domain.m_VDomain.m_dMax;
+
+            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
+            std::vector<SGM::Point3D> aUTemp3D;
+            FacetCurve(pUSeam,Domain.m_UDomain,Options,aUTemp3D);
+            rResult.GetThing()->DeleteEntity(pUSeam);
+            
+            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
+            std::vector<SGM::Point3D> aVTemp3D;
+            FacetCurve(pVSeam,Domain.m_VDomain,Options,aVTemp3D);
+            rResult.GetThing()->DeleteEntity(pVSeam);
+
+            size_t nUTemp3D=aUTemp3D.size();
+            size_t nVTemp3D=aVTemp3D.size();
+            size_t Index1;
+            for(Index1=0;Index1<nVTemp3D-1;++Index1)
+                {
+                SGM::Point3D const &Pos=aVTemp3D[Index1];
+                SGM::Point2D uv=pSurface->Inverse(Pos);
+                uv.m_v=dMinV;
+                if(Index1==0)
+                    {
+                    uv.m_u=dMinU;
+                    }
+                aPoints2D.push_back(uv);
+                aPoints3D.push_back(Pos);
+                }
+            for(Index1=0;Index1<nUTemp3D-1;++Index1)
+                {
+                SGM::Point3D const &Pos=aUTemp3D[Index1];
+                SGM::Point2D uv=pSurface->Inverse(Pos);
+                uv.m_u=dMaxU;
+                if(Index1==0)
+                    {
+                    uv.m_v=dMinV;
+                    }
+                aPoints2D.push_back(uv);
+                aPoints3D.push_back(Pos);
+                }
+            for(Index1=nUTemp3D-1;0<Index1;--Index1)
+                {
+                SGM::Point3D const &Pos=aVTemp3D[Index1];
+                SGM::Point2D uv=pSurface->Inverse(Pos);
+                uv.m_v=dMaxV;
+                if(Index1==nUTemp3D-1)
+                    {
+                    uv.m_u=dMaxU;
+                    }
+                aPoints2D.push_back(uv);
+                aPoints3D.push_back(Pos);
+                }
+            for(Index1=nVTemp3D-1;0<Index1;--Index1)
+                {
+                SGM::Point3D const &Pos=aUTemp3D[Index1];
+                SGM::Point2D uv=pSurface->Inverse(Pos);
+                uv.m_u=dMinU;
+                if(Index1==nVTemp3D-1)
+                    {
+                    uv.m_v=dMaxV;
+                    }
+                aPoints2D.push_back(uv);
+                aPoints3D.push_back(Pos);
+                }
+            size_t nPoints=aPoints3D.size();
+            aEntities.assign(nPoints,(entity *)pFace);
+            std::vector<size_t> aPolygon;
+            aPolygon.reserve(nPoints);
+            for(Index1=0;Index1<nPoints;++Index1)
+                {
+                aPolygon.push_back(Index1);
+                }
+            aaPolygons.push_back(aPolygon);
             }
         else if(pSurface->SingularLowV() && pSurface->SingularHighV())
             {
@@ -718,7 +780,6 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
 
             curve *pSeam=pSurface->UParamLine(rResult,dMinU);
             std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
-            std::vector<double> aSeamVs;
             FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D);
             
             // Trim off the two singularities.
@@ -736,6 +797,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             dMinV=pSurface->Inverse(LowPos).m_v;
             dMaxV=pSurface->Inverse(HighPos).m_v;
 
+            std::vector<double> aSeamVs;
             aSeamVs.reserve(nSeamPoints3D);
             for(Index1=0;Index1<nSeamPoints3D;++Index1)
                 {
@@ -1440,7 +1502,6 @@ void RefineTriangles(face                     const *pFace,
             }
         }
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
-    dDotTol=0.93969262078590838405410927732473;
     bool bSplit=true;
     size_t nCount=0;
     while(bSplit && !sEdgeData.empty())

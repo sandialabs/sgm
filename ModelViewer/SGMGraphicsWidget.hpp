@@ -23,6 +23,8 @@ public:
                 const std::vector<size_t> &triangles,
                 const std::vector<SGM::UnitVector3D> &normals);
 
+  void remove_faces();
+
   void add_edge(const std::vector<SGM::Point3D> &points);
 
   void reset_view();

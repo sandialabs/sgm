@@ -32,6 +32,8 @@ public:
 
   void wire_mode();
 
+  void facet_mode();
+
   void uvspace_mode();
 
   void perspective_mode();
@@ -52,6 +54,11 @@ public:
                    SGM::Point3D const &Top,
                    double              dBottomRadius,
                    double              dTopRadius);
+
+  void create_torus(SGM::Point3D      const &Center,
+                    SGM::UnitVector3D const &Axis,
+                    double                   dMinorRadius,
+                    double                   dMajorRadius);
 
   void create_line(SGM::Point3D      const &Origin,
                    SGM::UnitVector3D const &Axis,
@@ -87,6 +94,7 @@ private:
   SGMTreeWidget *mTree;
 
   bool mwire_mode;
+  bool mfacet_mode;
   bool muvspace_mode;
   bool mperspective_mode;
 

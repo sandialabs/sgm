@@ -14,11 +14,18 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::Point3D> const &GetEdgePoints(SGM::Result     &rResult,
                                                               SGM::Edge const &EdgeID);
 
-    SGM_EXPORT std::vector<SGM::Point3D> const &GetFacePoints(SGM::Result     &rResult,
-                                                              SGM::Face const &FaceID);
+    SGM_EXPORT std::vector<SGM::Point3D> const &GetFacePoints3D(SGM::Result     &rResult,
+                                                                SGM::Face const &FaceID);
+
+    SGM_EXPORT std::vector<SGM::Point2D> const &GetFacePoints2D(SGM::Result     &rResult,
+                                                                SGM::Face const &FaceID);
 
     SGM_EXPORT std::vector<size_t> const &GetFaceTriangles(SGM::Result     &rResult,
                                                            SGM::Face const &FaceID);
+
+    SGM_EXPORT size_t FindTriStrips(SGM::Result                       &rResult,
+                                    SGM::Face                   const &FaceID,
+                                    std::vector<std::vector<size_t> > &aaStrips);
 
     SGM_EXPORT std::vector<SGM::UnitVector3D> const &GetFaceNormals(SGM::Result     &rResult,
                                                                     SGM::Face const &FaceID);
