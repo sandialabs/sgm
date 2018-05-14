@@ -6,6 +6,8 @@ file(GLOB SGM_PUBLIC_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} Public_Headers
 # create the SGM library with sources and headers
 add_sgm_library(SGM ${SGM_SOURCES} ${SGM_HEADERS} ${SGM_PUBLIC_HEADERS})
 
+source_group("Public Headers" FILES ${SGM_PUBLIC_HEADERS})
+
 # the include directories needed to build this code
 # PUBLIC includes directories are added to libraries that link against SGM
 target_include_directories(SGM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Public_Headers>
