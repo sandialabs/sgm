@@ -5,17 +5,15 @@
 #include "Surface.h"
 #include "Curve.h"
 
-revolve::revolve(SGM::Result             &rResult,
-                 curve                   *pCurve,
-                 SGM::Point3D      const &pAxisOrigin,
-                 SGM::UnitVector3D const &uAxisVector)
-                 : surface(rResult, SGM::RevolveType)
+namespace SGMInternal
+{
+    revolve::revolve(SGM::Result             &rResult,
+                     curve                   *pCurve,
+                     SGM::Point3D      const &pAxisOrigin,
+                     SGM::UnitVector3D const &uAxisVector)
+                     : surface(rResult, SGM::RevolveType)
     {
-    this->m_bClosedU = true;
-    this->m_bClosedV = pCurve->GetClosed();
-    m_Domain.m_UDomain.m_dMin = 0.0;
-    m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
-    m_Domain.m_VDomain = pCurve->GetDomain();
+    m_pCurve = pCurve;
 
     SGM::Point3D start;
     pCurve->Evaluate(0.0, &start);
@@ -23,10 +21,17 @@ revolve::revolve(SGM::Result             &rResult,
 
     m_ZAxis = uAxisVector;
     m_XAxis = start - m_Origin;
-    m_YAxis = m_ZAxis * m_YAxis;
+    m_YAxis = m_ZAxis * m_XAxis;
+
+    this->m_bClosedU = true;
+    this->m_bClosedV = pCurve->GetClosed();
+    m_Domain.m_UDomain.m_dMin = 0.0;
+    m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
+    m_Domain.m_VDomain = pCurve->GetDomain();
     }
 
 revolve::~revolve()
     {
     // remove curve ownership
     }
+}

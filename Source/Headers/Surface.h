@@ -305,7 +305,6 @@ class NURBsurface: public surface
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<SGM::Point2D> m_aSeedParams;
     };
-}
 
 class revolve : public surface
     {
@@ -329,5 +328,7 @@ class revolve : public surface
         SGM::UnitVector3D  m_YAxis;
         SGM::UnitVector3D  m_ZAxis;
     };
+
+}
 
 #endif // SURFACE_H

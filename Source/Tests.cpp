@@ -1822,35 +1822,69 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         bool bAnswer=true;
 
-        // revolve a line
-        //SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
-        //line *pLine1=new line(rResult,Pos0,Pos1);
-        //SGM::Interval3D box = pLine1->GetBox();
+        // relatively easy testcase to debug
+        // NUB curve is a straight line parallel to the axis
+        // both have a slope of 2:1, and distance between is sqrt(5.0)
+        std::vector<double> aKnots1={0,0,0,0,0.5,1,1,1,1};
+        std::vector<SGM::Point3D> aControlPoints1;
+        aControlPoints1.emplace_back(3.5,1,0);
+        aControlPoints1.emplace_back(3.75,1.5,0);
+        aControlPoints1.emplace_back(4,2,0);
+        aControlPoints1.emplace_back(4.25,2.5,0);
+        aControlPoints1.emplace_back(4.5,3,0);
 
-        // create a NUB to revolve
-        std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
-        std::vector<SGM::Point3D> aControlPoints;
-        aControlPoints.emplace_back(1,1,0);
-        aControlPoints.emplace_back(1.166666666666666,1.166666666666666,0);
-        aControlPoints.emplace_back(2,2.8333333333333333,0);
-        aControlPoints.emplace_back(2.8333333333333333,1.166666666666666,0);
-        aControlPoints.emplace_back(3,1,0);
+        SGMInternal::NUBcurve *pNUB1=new SGMInternal::NUBcurve(rResult,aControlPoints1,aKnots1);
 
-        NUBcurve *pNUB=new NUBcurve(rResult,aControlPoints,aKnots);
+        SGM::Point3D Origin1(1.0,1.0,0.0);
+        SGM::UnitVector3D Axis1(1.0,2.0,0.0);
+        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, pNUB1, Origin1, Axis1);
 
-        SGM::Point3D Origin(1.0,3.0,0.0);
-        SGM::UnitVector3D Axis(1.0,2.0,0.0);
+        SGM::Point3D Pos;
+        SGM::Vector3D Du, Dv, Duu, Duv, Dvv;
+        SGM::UnitVector3D Norm;
+        pRevolve1->Evaluate(SGM::Point2D(SGM_PI/2.0, 0.5), &Pos, &Du, &Dv);
 
-        revolve *pRevolve = new revolve(rResult, pNUB, Origin, Axis);
+        bool bAnswer1 = true;
+        double dDistance = sqrt(5.0);
+        if(SGM::NearEqual(Pos, SGM::Point3D(2.0,3.0,-dDistance), SGM_ZERO)==false)
+            {
+            bAnswer1=false;
+            }
+        SGM::UnitVector3D uDuDirection(-2,1,0);
+        SGM::UnitVector3D UnitDu = Du;
+        if(SGM::NearEqual(uDuDirection,UnitDu,SGM_ZERO)==false)
+            {
+            bAnswer1=false;
+            }
+        SGM::UnitVector3D uDvDirection(1,2,0);
+        SGM::UnitVector3D UnitDv = Dv;
+        if(SGM::NearEqual(uDvDirection,UnitDv,SGM_ZERO)==false)
+            {
+            bAnswer1=false;
+            }
 
-        bAnswer = TestSurface(pRevolve, SGM::Point2D(0.5,0.2));
 
-        //SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
-        //SGM::UnitVector3D Axis(7,8,9);
-        //double dScale=10;
+        // create a more general NUB to revolve
+        std::vector<double> aKnots2={0,0,0,0,0.5,1,1,1,1};
+        std::vector<SGM::Point3D> aControlPoints2;
+        aControlPoints2.emplace_back(1,1,0);
+        aControlPoints2.emplace_back(1.166666666666666,1.166666666666666,0);
+        aControlPoints2.emplace_back(2,2.8333333333333333,0);
+        aControlPoints2.emplace_back(2.8333333333333333,2.8333333333333333,0);
+        aControlPoints2.emplace_back(3,3,0);
 
-        //line *pLine1=new line(rResult,Pos0,Pos1);
+        SGMInternal::NUBcurve *pNUB2=new SGMInternal::NUBcurve(rResult,aControlPoints2,aKnots2);
 
+        SGM::Point3D Origin2(1.0,3.0,0.0);
+        SGM::UnitVector3D Axis2(1.0,2.0,0.0);
+        SGMInternal::revolve *pRevolve = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
+
+
+
+        bool bAnswer2 = TestSurface(pRevolve, SGM::Point2D(0.5,0.2));
+
+        bAnswer = (bAnswer1 && bAnswer2);
+        
         return bAnswer;
         }
     return false;
