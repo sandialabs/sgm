@@ -1816,7 +1816,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==27)
+    if(nTestNumber==28)
         {
         // Test Revolve Surface
 
@@ -1877,13 +1877,18 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin2(1.0,3.0,0.0);
         SGM::UnitVector3D Axis2(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
+        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
 
 
 
-        bool bAnswer2 = TestSurface(pRevolve, SGM::Point2D(0.5,0.2));
+        bool bAnswer2 = TestSurface(pRevolve2, SGM::Point2D(0.5,0.2));
 
         bAnswer = (bAnswer1 && bAnswer2);
+
+        rResult.GetThing()->DeleteEntity(pRevolve1);
+        rResult.GetThing()->DeleteEntity(pNUB1);
+        rResult.GetThing()->DeleteEntity(pRevolve2);
+        rResult.GetThing()->DeleteEntity(pNUB2);
         
         return bAnswer;
         }
