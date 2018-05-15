@@ -625,5 +625,17 @@ void FindCurves(SGM::Result       &rResult,
         sCurves.insert((curve *)((*iter)->GetCurve()));
         ++iter;
         }
+    std::set<face *> sFaces;
+    FindFaces(rResult,pEntity,sFaces,false);
+    std::set<face *>::iterator iter2=sFaces.begin();
+    while(iter2!=sFaces.end())
+        {
+        surface *pSurf=(surface *)((*iter2)->GetSurface());
+        if(pSurf->GetSurfaceType()==SGM::EntityType::RevolveType)
+            {
+            sCurves.insert(((revolve *)pSurf)->m_pCurve);
+            }
+        ++iter2;
+        }
     }
 }

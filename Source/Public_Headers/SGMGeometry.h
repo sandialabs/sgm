@@ -72,6 +72,11 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
 
+SGM_EXPORT SGM::Surface CreateRevolve(SGM::Result             &rResult,
+                                      SGM::Point3D      const &Origin,
+                                      SGM::UnitVector3D const &Axis,
+                                      SGM::Curve        const &CurveID);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interrogation Functions
@@ -219,6 +224,12 @@ SGM_EXPORT bool GetTorusData(SGM::Result        &rResult,
                              double             &dMinorRadius,
                              double             &dMajorRadius,
                              SGM::TorusKindType &nKind);
+
+SGM_EXPORT bool GetRevolveData(SGM::Result       &rResult,
+                               SGM::Surface      &SurfaceID,
+                               SGM::Point3D      &Origin,
+                               SGM::UnitVector3D &Axis,
+                               SGM::Curve        &CurveID);
             
 SGM_EXPORT bool GetNUBSurfaceData(SGM::Result                             &rResult,
                                   SGM::Surface                      const &SurfaceID,

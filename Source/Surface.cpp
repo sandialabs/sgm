@@ -177,8 +177,26 @@ void surface::Transform(SGM::Transform3D const &Trans)
                 }
             break;
             }
-        default:
+        case SGM::RevolveType:
+            {
+            revolve *pRevolve=(revolve *)this;
+            SGM::Point3D &Origin=pRevolve->m_Origin;
+            SGM::UnitVector3D &XAxis=pRevolve->m_XAxis;
+            SGM::UnitVector3D &YAxis=pRevolve->m_YAxis;
+            SGM::UnitVector3D &ZAxis=pRevolve->m_ZAxis;
+
+            Origin=Trans*Origin;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
+
             break;
+            }
+        default:
+            {
+            throw;
+            break;
+            }
         }
     }
 
@@ -1042,7 +1060,6 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::UnitVector3D const &YAxis  =pRevolve->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pRevolve->m_ZAxis;
 
-
             SGM::Point3D   CurvePos;
             SGM::Vector3D  DvCurve;
             SGM::Vector3D *pDvCurve = &DvCurve;
@@ -1065,7 +1082,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Vector3D vRadius = CurvePos - AxisPos;
             double dRadius = vRadius.Magnitude();
 
-            if (nullptr != Dv || nullptr != Duv || nullptr != Dvv || nullptr != Norm)
+            if (pDvCurve)
             {
                 dvAxisPos = (DvCurve % ZAxis) * ZAxis;
                 A1_half = ((vRadius.m_x) * (DvCurve.m_x - dvAxisPos.m_x) +
@@ -1074,34 +1091,27 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 dvRadius = A1_half / dRadius;
             }
 
-            if (nullptr != Dvv)
-            {
-                dvvAxisPos = (DvvCurve % ZAxis) * ZAxis;
-                double A2_half = (((DvCurve.m_x - dvAxisPos.m_x) * (DvCurve.m_x - dvAxisPos.m_x) + (vRadius.m_x) * (DvvCurve.m_x - dvvAxisPos.m_x)) +
-                                  ((DvCurve.m_y - dvAxisPos.m_y) * (DvCurve.m_y - dvAxisPos.m_y) + (vRadius.m_y) * (DvvCurve.m_y - dvvAxisPos.m_y)) +
-                                  ((DvCurve.m_z - dvAxisPos.m_z) * (DvCurve.m_z - dvAxisPos.m_z) + (vRadius.m_z) * (DvvCurve.m_z - dvvAxisPos.m_z)));
-                double dvvRadius = ((-1 * A1_half * A1_half) / (dRadius * dRadius * dRadius)) + ((A2_half) / (dRadius));
-            }
-
             // find radius and derivatives with respect to v
+            double dCos=cos(uv.m_u);
+            double dSin=sin(uv.m_u);
 
             if (nullptr != Pos)
-                *Pos = AxisPos + dRadius * cos(uv.m_u) * XAxis + dRadius * sin(uv.m_u) * YAxis;
+                *Pos = AxisPos + dRadius * dCos * XAxis + dRadius * dSin * YAxis;
 
             if (nullptr != Du)
-                *Du = (dRadius * cos(uv.m_u) * YAxis) - (dRadius * sin(uv.m_u) * XAxis);
+                *Du = (dRadius * dCos * YAxis) - (dRadius * dSin * XAxis);
 
             if (nullptr != Dv)
-                *Dv = dvAxisPos + (dvRadius * cos(uv.m_u) * XAxis) + (dvRadius * sin(uv.m_u) * YAxis);
+                *Dv = dvAxisPos + (dvRadius * dCos * XAxis) + (dvRadius * dSin * YAxis);
 
             if (nullptr != Norm)
                 *Norm = (*Du) * (*Dv);
 
             if (nullptr != Duu)
-                *Duu = (-1) * ( (dRadius * sin(uv.m_u) * YAxis) + (dRadius * cos(uv.m_u) * XAxis) );
+                *Duu = (-1) * ( (dRadius * dSin * YAxis) + (dRadius * dCos * XAxis) );
 
             if (nullptr != Duv)
-                *Duv = (dvRadius * cos(uv.m_u) * YAxis) - (dvRadius * sin(uv.m_u) * XAxis);
+                *Duv = (dvRadius * dCos * YAxis) - (dvRadius * dSin * XAxis);
 
             if (nullptr != Dvv)
             {
@@ -1110,9 +1120,8 @@ void surface::Evaluate(SGM::Point2D const &uv,
                                   ((DvCurve.m_y - dvAxisPos.m_y) * (DvCurve.m_y - dvAxisPos.m_y) + (vRadius.m_y) * (DvvCurve.m_y - dvvAxisPos.m_y)) +
                                   ((DvCurve.m_z - dvAxisPos.m_z) * (DvCurve.m_z - dvAxisPos.m_z) + (vRadius.m_z) * (DvvCurve.m_z - dvvAxisPos.m_z)));
                 double dvvRadius = ((-1 * A1_half * A1_half) / (dRadius * dRadius * dRadius)) + ((A2_half) / (dRadius));
-                *Dvv = dvvAxisPos + (dvvRadius * cos(uv.m_u) * XAxis) + (dvvRadius * sin(uv.m_u) * YAxis);
+                *Dvv = dvvAxisPos + (dvvRadius * dCos * XAxis) + (dvvRadius * dSin * YAxis);
             }
-
 
            break;
             }
@@ -1714,7 +1723,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             SGM::UnitVector3D const &YAxis  =pRevolve->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pRevolve->m_ZAxis;
 
-            uv.m_u = 0;// default u output to 0
+            uv.m_u = 0; // default u output to 0
 
             // get x and y in the local coordinate system
             double dLocalX = (Pos - pRevolve->m_Origin) % pRevolve->m_XAxis;
@@ -1736,7 +1745,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 {
                     uv.m_u = SGM::SAFEatan2(dLocalY, dLocalX);
 
-                    if (uv.m_u < SGM_ZERO) // on the seam
+                    if (fabs(uv.m_u) < SGM_MIN_TOL) // on the seam
                     {
                         if (pGuess != nullptr)
                         {

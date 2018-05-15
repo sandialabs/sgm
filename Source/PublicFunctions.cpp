@@ -900,6 +900,25 @@ bool SGM::GetSphereData(SGM::Result        &rResult,
     dRadius=pSphere->m_dRadius;
     return true;
     }
+
+bool SGM::GetRevolveData(SGM::Result       &rResult,
+                         SGM::Surface      &SurfaceID,
+                         SGM::Point3D      &Origin,
+                         SGM::UnitVector3D &Axis,
+                         SGM::Curve        &CurveID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    if(pSurface->GetSurfaceType()!=SGM::EntityType::TorusType)
+        {
+        return false;
+        }
+    SGMInternal::revolve const *pRevolve=(SGMInternal::revolve const *)pSurface;
+
+    Origin=pRevolve->m_Origin;
+    Axis=pRevolve->m_ZAxis;
+    CurveID=SGM::Curve(pRevolve->m_pCurve->GetID());
+    return true;
+    }
  
 bool SGM::GetTorusData(SGM::Result        &rResult,
                        SGM::Surface const &SurfaceID,

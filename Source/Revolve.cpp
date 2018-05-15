@@ -13,6 +13,7 @@ namespace SGMInternal
                      SGM::UnitVector3D const &uAxisVector)
                      : surface(rResult, SGM::RevolveType)
     {
+    pCurve->AddOwner(this);
     m_pCurve = pCurve;
 
     SGM::Point3D start;
@@ -32,6 +33,6 @@ namespace SGMInternal
 
 revolve::~revolve()
     {
-    // remove curve ownership
+    m_pCurve->RemoveOwner(this);
     }
 }

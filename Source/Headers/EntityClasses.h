@@ -40,11 +40,17 @@ class entity
 
         SGM::Interval3D const &GetBox() const {return m_Box;}
 
+        void AddOwner(entity *pEntity) const {m_Owners.insert(pEntity);}
+
+        void RemoveOwner(entity *pEntity) const {m_Owners.erase(pEntity);}
+
     protected:
 
         size_t                  m_ID;
         SGM::EntityType         m_Type;
-        mutable SGM::Interval3D m_Box;
+
+        mutable std::set<entity *> m_Owners;
+        mutable SGM::Interval3D    m_Box;
 
         // Only to be called from the thing constructor.
 
@@ -132,7 +138,7 @@ class body : public topology
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        bool IsTopLevel() const {return true;}
+        bool IsTopLevel() const {return m_Owners.empty();}
 
     private:
 
@@ -171,7 +177,7 @@ class complex : public entity
 
         std::vector<size_t>       const &GetTriangles() const {return m_aTriangles;}
 
-        bool IsTopLevel() const {return true;}
+        bool IsTopLevel() const {return m_Owners.empty();}
 
         // Other methods
 
@@ -211,7 +217,7 @@ class volume : public topology
 
         SGM::Interval3D const &GetBox() const;
 
-        bool IsTopLevel() const {return m_pBody==NULL;}
+        bool IsTopLevel() const {return m_pBody==NULL && m_Owners.empty();}
 
         // Other methods
 
@@ -280,7 +286,7 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const {return m_pVolume==NULL;}
+        bool IsTopLevel() const {return m_pVolume==NULL && m_Owners.empty();}
         
         // Find methods
 
@@ -355,7 +361,7 @@ class edge : public topology
 
         double GetTolerance() const {return m_dTolerance;}
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr;}
+        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr && m_Owners.empty();}
 
         // Other Methods
 
@@ -400,7 +406,7 @@ class vertex : public topology
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
         
-        bool IsTopLevel() const {return m_sEdges.empty();}
+        bool IsTopLevel() const {return m_sEdges.empty() && m_Owners.empty();}
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,

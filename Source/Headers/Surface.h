@@ -71,7 +71,7 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv) const;
 
-        bool IsTopLevel() const {return m_sFaces.empty();}
+        bool IsTopLevel() const {return m_sFaces.empty() && m_Owners.empty();}
 
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
@@ -334,6 +334,7 @@ class revolve : public surface
                 curve                   *pCurve,
                 SGM::Point3D      const &pAxisOrigin,
                 SGM::UnitVector3D const &uAxisVector);
+
         ~revolve();
 //        
 //        curve *UParamLine(double dU) const;
