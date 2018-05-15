@@ -106,6 +106,13 @@ double SGM::Vector3D::MagnitudeSquared() const
     return m_x*m_x+m_y*m_y+m_z*m_z;
     }
 
+void SGM::Vector3D::Negate()
+    {
+    m_x=-m_x;
+    m_y=-m_y;
+    m_z=-m_z;
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Vector4D methods
@@ -332,11 +339,23 @@ SGM::UnitVector3D SGM::UnitVector3D::operator*=(SGM::Transform3D const &Trans)
     return *this;
     }
 
-void SGM::UnitVector3D::Negate()
+// Returns the a number between zero and pi which is the angle between
+// this vector and the given vector.
+
+double SGM::UnitVector3D::Angle(SGM::UnitVector3D const &Vec) const
     {
-    m_x=-m_x;
-    m_y=-m_y;
-    m_z=-m_z;
+    return SAFEacos((*this)%Vec);
+    }
+
+// Returns the a number between zero and 2*pi which is the angle between
+// this vector and the given vector with respect to the given normal 
+// vector in the right handed direction.
+
+double SGM::UnitVector3D::Angle(SGM::UnitVector3D const &Vec,
+                                SGM::UnitVector3D const &Norm) const
+    {
+    SGM::UnitVector3D YVec=Norm*(*this);
+    return SAFEatan2(YVec%Vec,(*this)%Vec);
     }
 
 ///////////////////////////////////////////////////////////////////////////////

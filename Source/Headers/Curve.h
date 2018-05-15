@@ -55,6 +55,8 @@ class curve : public entity
 
         void Transform(SGM::Transform3D const &Trans);
 
+        void Negate();
+
     protected:
 
         std::set<edge *> m_sEdges;
@@ -260,6 +262,35 @@ class parabola: public curve
         SGM::UnitVector3D m_YAxis;
         SGM::UnitVector3D m_Normal;
         double            m_dA;
+    };
+
+class hermite: public curve
+    {
+    public:
+
+        hermite(SGM::Result                      &rResult,
+                std::vector<SGM::Point3D>  const &aPoints,
+                std::vector<SGM::Vector3D> const &aTangents,
+                std::vector<double>        const &aParams);
+
+        size_t FindSpan(double t) const;
+
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<double> const &GetSeedParams() const;
+
+        // Concatenate / adds pEndHermite to the end of this.
+
+        void Concatenate(hermite const *pEndHermite);
+
+    public:
+
+        std::vector<SGM::Point3D>  m_aPoints;
+        std::vector<SGM::Vector3D> m_aTangents;
+        std::vector<double>        m_aParams;
+    
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<double>       m_aSeedParams;
     };
 
 ///////////////////////////////////////////////////////////////////////////////

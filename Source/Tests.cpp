@@ -549,6 +549,45 @@ bool TestCurve(SGMInternal::curve *pCurve,
     return bAnswer;
     }    
 
+bool TestIntersections(SGM::Result                &rResult,
+                       SGMInternal::surface const *pSurface1,
+                       SGMInternal::surface const *pSurface2,
+                       size_t                      nExpectedCurves)
+    {
+    bool bAnswer=true;
+    std::vector<SGMInternal::curve *> aCurves;
+    size_t nCurves=SGMInternal::IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,nullptr,nullptr,SGM_MIN_TOL);
+    if(nCurves!=nExpectedCurves)
+        {
+        bAnswer=false;
+        }
+    else
+        {
+        size_t Index1,Index2;
+        size_t nTestPoint=10;
+        for(Index1=0;bAnswer && Index1<nCurves;++Index1)
+            {
+            SGMInternal::curve *pCurve=aCurves[Index1];
+            for(Index2=1;Index2<nTestPoint;++Index2)
+                {
+                double dFraction=Index2/(nTestPoint-1.0);
+                double t=pCurve->GetDomain().MidPoint(dFraction);
+                SGM::Point3D Pos;
+                pCurve->Evaluate(t,&Pos);
+                SGM::Point3D CPos1,CPos2;
+                pSurface1->Inverse(Pos,&CPos1);
+                pSurface2->Inverse(Pos,&CPos2);
+                if(SGM_FIT<Pos.Distance(CPos1) && SGM_FIT<Pos.Distance(CPos2))
+                    {
+                    bAnswer=false;
+                    break;
+                    }
+                }
+            }
+        }
+    return bAnswer;
+    }
+
 bool SGM::RunCPPTest(SGM::Result &rResult,
                      size_t       nTestNumber)
     {
@@ -877,7 +916,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::Point2D uv(0.0,0.0);
         SGM::UnitVector3D Vec1,Vec2;
         double k1,k2;
-        pTorus->Curvature(uv,Vec1,Vec2,k1,k2);
+        pTorus->PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
         rResult.GetThing()->DeleteEntity(pTorus);
 
         if(SGM::NearEqual(Vec1,SGM::UnitVector3D(0.0,1.0,0),SGM_ZERO)==false)
@@ -1301,7 +1340,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D Vec1,Vec2;
         double k1,k2;
         SGM::Point2D uv(0.5,0.5);
-        pNUB->Curvature(uv,Vec1,Vec2,k1,k2);
+        pNUB->PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
 
         if(SGM::NearEqual(Vec1,SGM::UnitVector3D(1.0,-1.0,0),SGM_ZERO)==false)
             {
@@ -1812,7 +1851,282 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
 
         rResult.GetThing()->DeleteEntity(pNUB);
+        rResult.GetThing()->DeleteEntity(pLine);
 
+        return bAnswer;
+        }
+
+    if(nTestNumber==28)
+        {
+        // Test NUB surface line intersection.
+
+        bool bAnswer=true;
+
+        std::vector<double> aUKnots,aVKnots;
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(0.0);
+        aUKnots.push_back(1.0);
+        aUKnots.push_back(1.0);
+        aUKnots.push_back(1.0);
+        aVKnots=aUKnots;
+        std::vector<std::vector<SGM::Point3D> > aaPoints;
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.assign(3,SGM::Point3D(0,0,0));
+        aaPoints.push_back(aPoints);
+        aaPoints.push_back(aPoints);
+        aaPoints.push_back(aPoints);
+        aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
+        aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
+        aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
+        aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
+        aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+        aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
+        aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
+        aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
+        aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
+        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
+
+        // Test with a line that hits the saddle point.
+
+        SGM::Point3D Pos0(0,0,0.0),Pos1(2,2,0.0);
+        SGMInternal::line *pLine1=new SGMInternal::line(rResult,Pos0,Pos1);
+
+        std::vector<SGM::Point3D> aHits1;
+        std::vector<SGM::IntersectionType> aTypes1;
+        size_t nHits1=SGMInternal::IntersectCurveAndSurface(rResult,pLine1,pNUB,aHits1,aTypes1,nullptr,nullptr,0.0);
+
+        if(nHits1!=1)
+            {
+            bAnswer=false;
+            }
+        else if(aTypes1[0]!=SGM::IntersectionType::TangentType)
+            {
+            bAnswer=false;
+            }
+        size_t Index1;
+        for(Index1=0;Index1<nHits1;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits1[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine1->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(SGM_ZERO<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pLine1);
+
+        // Test with a line that hits two points.
+
+        SGM::Point3D Pos2(0,0,0.5),Pos3(2,2,0.5);
+        SGMInternal::line *pLine2=new SGMInternal::line(rResult,Pos2,Pos3);
+
+        std::vector<SGM::Point3D> aHits2;
+        std::vector<SGM::IntersectionType> aTypes2;
+        size_t nHits2=SGMInternal::IntersectCurveAndSurface(rResult,pLine2,pNUB,aHits2,aTypes2,nullptr,nullptr,0.0);
+
+        if(nHits2!=2)
+            {
+            bAnswer=false;
+            }
+        for(Index1=0;Index1<nHits2;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits2[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine2->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(SGM_ZERO<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pLine2);
+
+        // Test with a line that just misses the saddle but within tolernace.
+
+        SGM::Point3D Pos4(2,0,0.0001),Pos5(0,2,0.0001);
+        SGMInternal::line *pLine3=new SGMInternal::line(rResult,Pos4,Pos5);
+
+        std::vector<SGM::Point3D> aHits3;
+        std::vector<SGM::IntersectionType> aTypes3;
+        double dTestTol=0.001;
+        size_t nHits3=SGMInternal::IntersectCurveAndSurface(rResult,pLine3,pNUB,aHits3,aTypes3,nullptr,nullptr,dTestTol);
+
+        if(nHits3!=1)
+            {
+            bAnswer=false;
+            }
+        else if(aTypes3[0]!=SGM::IntersectionType::TangentType)
+            {
+            bAnswer=false;
+            }
+        for(Index1=0;Index1<nHits3;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits3[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine3->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(dTestTol<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pLine3);
+
+        rResult.GetThing()->DeleteEntity(pNUB);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==29)
+        {
+        // Test the intersection of a line and NUBcurve.
+
+        bool bAnswer=true;
+    
+        std::vector<SGM::Point3D> aPoints;
+        size_t Index1;
+        aPoints.emplace_back(SGM::Point3D(0,0,0));
+        aPoints.emplace_back(SGM::Point3D(1.1,1,0));
+        aPoints.emplace_back(SGM::Point3D(2,0,0));
+        SGMInternal::NUBcurve *pNUB=SGMInternal::CreateNUBCurve(rResult,aPoints);
+
+        // Test with two hits.
+
+        SGM::Point3D Pos0(0,0.5,0),Pos1(2,0.5,0);
+        SGMInternal::line *pLine1=new SGMInternal::line(rResult,Pos0,Pos1);
+        std::vector<SGM::Point3D> aHits1;
+        std::vector<SGM::IntersectionType> aTypes1;
+        SGMInternal::IntersectCurves(rResult,pLine1,pNUB,aHits1,aTypes1,nullptr,nullptr,SGM_FIT);
+
+        size_t nHits1=aHits1.size();
+        if(nHits1!=2)
+            {
+            bAnswer=false;
+            }
+        for(Index1=0;Index1<nHits1;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits1[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine1->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(SGM_ZERO<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pLine1);
+
+        // Test with one tangent hit.
+
+        SGM::Point3D Pos2(0,1,0),Pos3(2,1,0);
+        SGMInternal::line *pLine2=new SGMInternal::line(rResult,Pos2,Pos3);
+        std::vector<SGM::Point3D> aHits2;
+        std::vector<SGM::IntersectionType> aTypes2;
+        SGMInternal::IntersectCurves(rResult,pLine2,pNUB,aHits2,aTypes2,nullptr,nullptr,SGM_FIT);
+
+        size_t nHits2=aHits2.size();
+        if(nHits2!=1)
+            {
+            bAnswer=false;
+            }
+        else if(aTypes2[0]!=SGM::IntersectionType::TangentType)
+            {
+            bAnswer=false;
+            }
+        for(Index1=0;Index1<nHits2;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits2[Index1];
+            SGM::Point3D CPos1,CPos2;
+            pLine2->Inverse(Pos,&CPos1);
+            pNUB->Inverse(Pos,&CPos2);
+            double dDist=CPos1.Distance(CPos2);
+            if(SGM_ZERO<dDist)
+                {
+                bAnswer=false;
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pLine2);
+
+        rResult.GetThing()->DeleteEntity(pNUB);
+        
+        return bAnswer;
+        }
+
+    if(nTestNumber==30)
+        {
+        // Test sphere cylinder intersections
+
+        bool bAnswer=true;
+
+        SGM::Point3D Bottom(0,0,-10),Top(0,0,10),Pos0(1,0,0),Pos1(3,0,0),Pos2(0,0,0),Pos3(2,0,0),Pos4(4,0,0);
+        double dRadius=2.0;
+        SGMInternal::cylinder *pCylinder=new SGMInternal::cylinder(rResult,Bottom,Top,dRadius);
+
+        SGMInternal::sphere *pSphere1=new SGMInternal::sphere(rResult,Pos2,1.0);
+        SGMInternal::sphere *pSphere2=new SGMInternal::sphere(rResult,Pos2,2.0);
+        SGMInternal::sphere *pSphere3=new SGMInternal::sphere(rResult,Pos2,3.0);
+        SGMInternal::sphere *pSphere4=new SGMInternal::sphere(rResult,Pos0,1.0);
+        SGMInternal::sphere *pSphere5=new SGMInternal::sphere(rResult,Pos1,1.0);
+        SGMInternal::sphere *pSphere6=new SGMInternal::sphere(rResult,Pos3,2.0);
+        SGMInternal::sphere *pSphere7=new SGMInternal::sphere(rResult,Pos3,4.0);
+        SGMInternal::sphere *pSphere8=new SGMInternal::sphere(rResult,Pos3,6.0);
+        SGMInternal::sphere *pSphere9=new SGMInternal::sphere(rResult,Pos4,1.0);
+
+        if(!TestIntersections(rResult,pCylinder,pSphere1,0))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere2,1))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere3,2))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere4,1))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere5,1))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere6,1))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere7,7))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere8,8))
+            {
+            bAnswer=false;
+            }
+        if(!TestIntersections(rResult,pCylinder,pSphere9,0))
+            {
+            bAnswer=false;
+            }
+
+        rResult.GetThing()->DeleteEntity(pCylinder);
+        rResult.GetThing()->DeleteEntity(pSphere1);
+        rResult.GetThing()->DeleteEntity(pSphere2);
+        rResult.GetThing()->DeleteEntity(pSphere3);
+        rResult.GetThing()->DeleteEntity(pSphere4);
+        rResult.GetThing()->DeleteEntity(pSphere5);
+        rResult.GetThing()->DeleteEntity(pSphere6);
+        rResult.GetThing()->DeleteEntity(pSphere7);
+        rResult.GetThing()->DeleteEntity(pSphere8);
+        rResult.GetThing()->DeleteEntity(pSphere9);
+    
         return bAnswer;
         }
 

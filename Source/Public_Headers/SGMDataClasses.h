@@ -133,6 +133,8 @@ namespace SGM
 
         Vector3D operator*=(Transform3D const &Trans);
 
+        void Negate();
+
         double m_x;
         double m_y;
         double m_z;
@@ -186,10 +188,20 @@ namespace SGM
         UnitVector3D(double x,double y,double z);
 
         UnitVector3D(SGM::Vector3D const &Vec);
+        
+        // Returns the a number between zero and pi which is the angle between
+        // this vector and the given vector.
+
+        double Angle(SGM::UnitVector3D const &Vec) const;
+
+        // Returns the a number between zero and 2*pi which is the angle between
+        // this vector and the given vector with respect to the given normal 
+        // vector in the right handed direction.
+
+        double Angle(SGM::UnitVector3D const &Vec,
+                     SGM::UnitVector3D const &Norm) const;
 
         UnitVector3D operator*=(Transform3D const &Trans);
-
-        void Negate();
         };
 
     class SGM_EXPORT UnitVector4D : public SGM::Vector4D

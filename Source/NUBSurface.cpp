@@ -3,6 +3,7 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Faceter.h"
+
 namespace SGMInternal
 {
 NUBsurface::NUBsurface(SGM::Result                                   &rResult,
@@ -27,12 +28,15 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     rResult.GetThing()->DeleteEntity(pUCurve);
     rResult.GetThing()->DeleteEntity(pVCurve);
     size_t Index1,Index2;
-    size_t nUParams=aUParams.size();
-    size_t nVParams=aVParams.size();
-    for(Index1=0;Index1<nUParams;++Index1)
+    m_nUParams=aUParams.size();
+    m_nVParams=aVParams.size();
+    size_t nParams=m_nUParams*m_nVParams;
+    m_aSeedParams.reserve(nParams);
+    m_aSeedPoints.reserve(nParams);
+    for(Index1=0;Index1<m_nUParams;++Index1)
         {
         double u=aUParams[Index1];
-        for(Index2=0;Index2<nVParams;++Index2)
+        for(Index2=0;Index2<m_nVParams;++Index2)
             {
             double v=aVParams[Index2];
             SGM::Point2D uv(u,v);

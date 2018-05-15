@@ -1100,39 +1100,115 @@ bool surface::IsSingularity(SGM::Point2D const &uv) const
     return false;
     }
 
-void surface::Curvature(SGM::Point2D const &uv,
-                        SGM::UnitVector3D  &Vec1,
-                        SGM::UnitVector3D  &Vec2,
-                        double             &k1,
-                        double             &k2) const
+void surface::PrincipleCurvature(SGM::Point2D const &uv,
+                                 SGM::UnitVector3D  &Vec1,
+                                 SGM::UnitVector3D  &Vec2,
+                                 double             &k1,
+                                 double             &k2) const
     {
-    // Find the Eigen vectors and values of the second fundamental form
-    // 
-    //  | L M |  L = Duu % Norm, M = Duv % Norm, N = Dvv % Norm.
-    //  | M N |
+    switch(m_SurfaceType)
+        {
+        case SGM::EntityType::PlaneType:
+            {
+            plane const *pPlane=(plane const *)this;
+            k1=0;
+            k2=0;
+            Vec1=pPlane->m_XAxis;
+            Vec2=pPlane->m_YAxis;
+            }
+        case SGM::EntityType::SphereType:
+            {
+            sphere const *pSphere=(sphere const *)this;
+            k1=1.0/pSphere->m_dRadius;
+            k2=1.0/pSphere->m_dRadius;
+            SGM::Vector3D dU,dV;
+            pSphere->Evaluate(uv,nullptr,&dU,&dV);
+            Vec1=dU;
+            Vec2=dV;
+            }
+        case SGM::EntityType::CylinderType:
+            {
+            cylinder const *pCylinder=(cylinder const *)this;
+            k1=1.0/pCylinder->m_dRadius;
+            k2=0.0;
+            SGM::Vector3D dU,dV;
+            pCylinder->Evaluate(uv,nullptr,&dU,&dV);
+            Vec1=dU;
+            Vec2=dV;
+            }
+        case SGM::EntityType::ConeType:
+            {
+            cone const *pCone=(cone const *)this;
+            SGM::Vector3D dU,dV;
+            SGM::Point3D Pos;
+            pCone->Evaluate(uv,&Pos,&dU,&dV);
+            double dDist=Pos.Distance(pCone->m_Origin+(pCone->m_ZAxis)*((Pos-pCone->m_Origin)%(pCone->m_ZAxis)));
+            if(SGM_ZERO<dDist)
+                {
+                k1=1.0/dDist;
+                }
+            else
+                {
+                k1=SGM_MAX;
+                }
+            k2=0.0;
+            Vec1=dU;
+            Vec2=dV;
+            }
+        case SGM::EntityType::TorusType:
+            {
+            torus const *pTorus=(torus const *)this;
+            k1=1.0/pTorus->m_dMajorRadius;
+            k2=1.0/pTorus->m_dMinorRadius;
+            SGM::Vector3D dU,dV;
+            pTorus->Evaluate(uv,nullptr,&dU,&dV);
+            Vec1=dU;
+            Vec2=dV;
+            }
+        default:
+            {
+            // Find the eigen vectors and values of the second fundamental form.
+            // 
+            //  | L M |  L = Duu % Norm, M = Duv % Norm, N = Dvv % Norm.
+            //  | M N |
 
-    SGM::UnitVector3D Norm;
-    SGM::Vector3D Du,Dv,Duu,Duv,Dvv;
-    Evaluate(uv,nullptr,&Du,&Dv,&Norm,&Duu,&Duv,&Dvv);
-    double L=Duu%Norm;
-    double M=Duv%Norm;
-    double N=Dvv%Norm;
-    const double aaMatrix[2][2] =
-        {
-        L, M,
-        M, N
-        };
-    std::vector<double> aValues;
-    std::vector<SGM::UnitVector2D> aVectors;
-    size_t nValues=SGM::FindEigenVectors2D(&aaMatrix[0],aValues,aVectors);
-    if(nValues==2)
-        {
-        SGM::UnitVector3D UDu=Du,UDv=Dv;
-        k1=aValues[0];
-        k2=aValues[1];
-        Vec1=aVectors[0].m_u*UDu+aVectors[0].m_v*UDv;
-        Vec2=aVectors[1].m_u*UDu+aVectors[1].m_v*UDv;
+            SGM::UnitVector3D Norm;
+            SGM::Vector3D Du,Dv,Duu,Duv,Dvv;
+            Evaluate(uv,nullptr,&Du,&Dv,&Norm,&Duu,&Duv,&Dvv);
+            double L=Duu%Norm;
+            double M=Duv%Norm;
+            double N=Dvv%Norm;
+            const double aaMatrix[2][2] =
+                {
+                L, M,
+                M, N
+                };
+            std::vector<double> aValues;
+            std::vector<SGM::UnitVector2D> aVectors;
+            size_t nValues=SGM::FindEigenVectors2D(&aaMatrix[0],aValues,aVectors);
+            if(nValues==2)
+                {
+                SGM::UnitVector3D UDu=Du,UDv=Dv;
+                k1=aValues[0];
+                k2=aValues[1];
+                Vec1=aVectors[0].m_u*UDu+aVectors[0].m_v*UDv;
+                Vec2=aVectors[1].m_u*UDu+aVectors[1].m_v*UDv;
+                }
+            }
         }
+    }
+
+double surface::DirectionalCurvature(SGM::Point2D      const &uv,
+                                     SGM::UnitVector3D const &Direction) const
+    {
+    SGM::UnitVector3D Vec1,Vec2,Norm;
+    double k1,k2;
+    PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
+    Norm=Vec1*Vec2;
+    double dt=Direction.Angle(Vec1,Norm);
+    double dCos=cos(dt);
+    double dSin=sin(dt);
+    return k1*dCos*dCos+k2*dSin*dSin;
     }
 
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,

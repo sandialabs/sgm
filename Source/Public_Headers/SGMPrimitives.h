@@ -65,6 +65,8 @@ SGM_EXPORT SGM::Body CreateTorus(SGM::Result             &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// If edges are not given then the whole surface is used to make a sheet body.
+
 SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result               &rResult,
                                      SGM::Surface              &SurfaceID,
                                      std::set<SGM::Edge> const &sEdges);

@@ -272,6 +272,39 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             return dAnswer;
             }
+        case SGM::HermiteCurveType:
+            {
+            double dParam=0;
+            if(pGuess)
+                {
+                dParam=*pGuess;
+                }
+            else
+                {
+                hermite const *pHermite=(hermite const *)this;
+                std::vector<SGM::Point3D> const &aPoints=pHermite->GetSeedPoints();
+                std::vector<double> const &aParams=pHermite->GetSeedParams();
+                double dMin=std::numeric_limits<double>::max();
+                size_t Index1;
+                size_t nPoints=aPoints.size();
+                for(Index1=0;Index1<nPoints;++Index1)
+                    {
+                    SGM::Point3D const &TestPos=aPoints[Index1];
+                    double dDist=TestPos.DistanceSquared(Pos);
+                    if(dDist<dMin)
+                        {
+                        dMin=dDist;
+                        dParam=aParams[Index1];
+                        }
+                    }
+                }
+            double dAnswer=NewtonsMethod(this,dParam,Pos);
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            return dAnswer;
+            }
         case SGM::NURBCurveType:
             {
             double dParam=0;
@@ -304,6 +337,32 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 Evaluate(dAnswer,ClosePos);
                 }
             return dAnswer;
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
+void curve::Negate()
+    {
+    switch(m_CurveType)
+        {
+        case SGM::HermiteCurveType:
+            {
+            hermite *pHermite=(hermite *)this;
+            std::reverse(pHermite->m_aParams.begin(),pHermite->m_aParams.end());
+            std::reverse(pHermite->m_aPoints.begin(),pHermite->m_aPoints.end());
+            std::reverse(pHermite->m_aTangents.begin(),pHermite->m_aTangents.end());
+            size_t nTangents=pHermite->m_aTangents.size();
+            size_t Index1;
+            for(Index1=0;Index1<nTangents;++Index1)
+                {
+                pHermite->m_aTangents[Index1].Negate();
+                }
+            std::reverse(pHermite->m_aSeedParams.begin(),pHermite->m_aSeedParams.end());
+            std::reverse(pHermite->m_aSeedPoints.begin(),pHermite->m_aSeedPoints.end());
             }
         default:
             {
@@ -440,6 +499,24 @@ void curve::Transform(SGM::Transform3D const &Trans)
                 SGM::Point3D Pos3D(Pos.m_x,Pos.m_y,Pos.m_z);
                 Pos3D=Trans*Pos3D;
                 aControlPoints[Index1]=SGM::Point4D(Pos3D.m_x,Pos3D.m_y,Pos3D.m_z,Pos.m_w);
+                }
+            break;
+            }
+        case SGM::HermiteCurveType:
+            {
+            hermite *pHermite=(hermite *)this;
+            std::vector<SGM::Point3D> &aPoints=pHermite->m_aPoints;
+            std::vector<SGM::Vector3D> &aTangents=pHermite->m_aTangents;
+            size_t nPoints=aPoints.size();
+            size_t Index1;
+            for(Index1=0;Index1<nPoints;++Index1)
+                {
+                SGM::Point3D Pos=aPoints[Index1];
+                Pos=Trans*Pos;
+                aPoints[Index1]=SGM::Point3D(Pos.m_x,Pos.m_y,Pos.m_z);
+                SGM::Vector3D Tangent=aTangents[Index1];
+                Tangent=Trans*Tangent;
+                aTangents[Index1]=SGM::Vector3D(Tangent.m_x,Tangent.m_y,Tangent.m_z);
                 }
             break;
             }
@@ -586,6 +663,70 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 D2->m_x=YAxis.m_x*ddy;
                 D2->m_y=YAxis.m_y*ddy;
                 D2->m_z=YAxis.m_z*ddy;
+                }
+            break;
+            }
+        case SGM::HermiteCurveType:
+            {
+            hermite const *pHermite=(hermite const *)this;
+            std::vector<SGM::Point3D> const &aPoints=pHermite->m_aPoints;
+            std::vector<SGM::Vector3D> const &aTangents=pHermite->m_aTangents;
+            std::vector<double> const &aParams=pHermite->m_aParams;
+            size_t nSpan=pHermite->FindSpan(t);
+            SGM::Point3D const &P0=aPoints[nSpan];
+            SGM::Point3D const &P1=aPoints[nSpan+1];
+            SGM::Vector3D const &T0=aTangents[nSpan];
+            SGM::Vector3D const &T1=aTangents[nSpan+1];
+            double t0=aParams[nSpan];
+            double t1=aParams[nSpan+1];
+            double s=(t-t0)/(t1-t0);
+
+            // h1(s) =  2s^3 - 3s^2 + 1 = (s^2)(2s-3)+1
+            // h2(s) = -2s^3 + 3s^2     = 1-h1(s)
+            // h3(s) =   s^3 - 2s^2 + s = s(s(s-2)+1) 
+            // h4(s) =   s^3 -  s^2     = (s^2)(s-1)
+            //
+            // h1'(s) =  6s^2 -6s     = s(6s-6)
+            // h2'(s) = -6s^2 + 6s    = -h1'(s)
+            // h3'(s) =  3s^2 - 4s +1 = s(3s-4)+1
+            // h4'(s) =  3s^2 - 2s    = s(3s-2)
+            //
+            // h1''(s) =  12s - 6
+            // h2''(s) = -12s + 6
+            // h3''(s) =   6s - 4
+            // h4''(s) =   6s - 2
+            //
+            // f(t) =  h1*P0 + h2*P1 + h3*T0 +  h4*T1
+
+            if(Pos)
+                {
+                double h1=(s*s)*(2*s-3)+1;
+                double h2=1-h1;
+                double h3=s*(s*(s-2)+1);
+                double h4=(s*s)*(s-1);
+                Pos->m_x=h1*P0.m_x+h2*P1.m_x+h3*T0.m_x+h4*T1.m_x;
+                Pos->m_y=h1*P0.m_y+h2*P1.m_y+h3*T0.m_y+h4*T1.m_y;
+                Pos->m_z=h1*P0.m_z+h2*P1.m_z+h3*T0.m_z+h4*T1.m_z;
+                }
+            if(D1)
+                {
+                double h1=s*(6*s-6);        
+                double h2=-h1;              
+                double h3=s*(3*s-4)+1;      
+                double h4=s*(3*s-2);        
+                D1->m_x=h1*P0.m_x+h2*P1.m_x+h3*T0.m_x+h4*T1.m_x;
+                D1->m_y=h1*P0.m_y+h2*P1.m_y+h3*T0.m_y+h4*T1.m_y;
+                D1->m_z=h1*P0.m_z+h2*P1.m_z+h3*T0.m_z+h4*T1.m_z;
+                }
+            if(D2)
+                {
+                double h1=12*s-6;
+                double h2=-12*s+6;
+                double h3=6*s-4;
+                double h4=6*s-2;
+                D2->m_x=h1*P0.m_x+h2*P1.m_x+h3*T0.m_x+h4*T1.m_x;
+                D2->m_y=h1*P0.m_y+h2*P1.m_y+h3*T0.m_y+h4*T1.m_y;
+                D2->m_z=h1*P0.m_z+h2*P1.m_z+h3*T0.m_z+h4*T1.m_z;
                 }
             break;
             }

@@ -40,11 +40,18 @@ class surface : public entity
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const;
 
-        void Curvature(SGM::Point2D const &uv,
-                       SGM::UnitVector3D  &Vec1,
-                       SGM::UnitVector3D  &Vec2,
-                       double             &k1,
-                       double             &k2) const;
+        // Returns the principle curvature vectors and values at the given uv point.
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const;
+
+        // Returns the curvature in the given direction at the given uv point.
+
+        double DirectionalCurvature(SGM::Point2D      const &uv,
+                                    SGM::UnitVector3D const &Direction) const;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -258,23 +265,30 @@ class NUBsurface: public surface
 
         std::vector<SGM::Point2D> const &GetSeedParams() const;
 
+        size_t GetUParams() const {return m_nUParams;}
+
+        size_t GetVParams() const {return m_nVParams;}
+
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
         std::vector<double>                     m_aUKnots;
         std::vector<double>                     m_aVKnots;
 
-        mutable std::vector<SGM::Point3D> m_aSeedPoints;
-        mutable std::vector<SGM::Point2D> m_aSeedParams;
+        std::vector<SGM::Point3D> m_aSeedPoints;
+        std::vector<SGM::Point2D> m_aSeedParams;
+        size_t                    m_nUParams;
+        size_t                    m_nVParams;
     };
 
 class NURBsurface: public surface
     {
     public:
 
-        NURBsurface(SGM::Result                     &rResult,
-                    std::vector<SGM::Point4D> const &aControlPoints,
-                    std::vector<double>       const &aKnots);
+        NURBsurface(SGM::Result                                   &rResult,
+                    std::vector<std::vector<SGM::Point4D> > const &aControlPoints,
+                    std::vector<double>                     const &aUKnots,
+                    std::vector<double>                     const &aVKnots);
 
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
@@ -295,6 +309,10 @@ class NURBsurface: public surface
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
         std::vector<SGM::Point2D> const &GetSeedParams() const;
+        
+        size_t GetUParams() const {return m_nUParams;}
+
+        size_t GetVParams() const {return m_nVParams;}
 
     public:
 
@@ -302,8 +320,10 @@ class NURBsurface: public surface
         std::vector<double>                     m_aUKnots;
         std::vector<double>                     m_aVKnots;
 
-        mutable std::vector<SGM::Point3D> m_aSeedPoints;
-        mutable std::vector<SGM::Point2D> m_aSeedParams;
+        std::vector<SGM::Point3D> m_aSeedPoints;
+        std::vector<SGM::Point2D> m_aSeedParams;
+        size_t                    m_nUParams;
+        size_t                    m_nVParams;
     };
 }
 

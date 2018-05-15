@@ -11,14 +11,9 @@ namespace SGM
     {
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Creation Functions
+//  Curve Creation Functions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
-                                    SGM::Point3D const &Origin,
-                                    SGM::Point3D const &XPos,
-                                    SGM::Point3D const &YPos);
 
 SGM_EXPORT SGM::Curve CreateLine(SGM::Result             &rResult,
                                  SGM::Point3D      const &Origin,
@@ -58,6 +53,24 @@ SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                  
                                                    SGM::Vector3D             const &StartVec,
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Surface Creation Functions
+//
+///////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
+                                    SGM::Point3D const &Origin,
+                                    SGM::Point3D const &XPos,
+                                    SGM::Point3D const &YPos);
+
+SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                                   &rResult,
+                                         std::vector<std::vector<SGM::Point3D> > const &aaPoints,
+                                         std::vector<SGM::Vector3D>              const *paStartVecs=nullptr,
+                                         std::vector<SGM::Vector3D>              const *paEndVecs=nullptr,
+                                         std::vector<double>                     const *pUParams=nullptr,
+                                         std::vector<double>                     const *pVParams=nullptr);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
