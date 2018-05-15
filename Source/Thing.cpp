@@ -76,6 +76,9 @@ void thing::DeleteEntity(entity *pEntity)
               case SGM::NURBSurfaceType:
                 delete reinterpret_cast<NUBsurface*>(pEntity);
                 break;
+              case SGM::RevolveType:
+                delete reinterpret_cast<revolve*>(pEntity);
+                break;
               default:
                 std::abort();
             }

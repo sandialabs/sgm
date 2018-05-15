@@ -25,7 +25,9 @@
 
 #include <algorithm>
 
+#ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
+#endif
 
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,

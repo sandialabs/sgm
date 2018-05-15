@@ -12,6 +12,7 @@
 #include "vtkTriangle.h"
 #include "vtkTriangleStrip.h"
 #include "vtkCellData.h"
+#include "vtkPointData.h"
 
 #include "vtkDoubleArray.h"
 #include "vtkSmartPointer.h"
@@ -22,7 +23,6 @@ class pGraphicsFace
 {
 public:
   vtkPoints* points;
-  vtkTriangleStrip* triangleStrip;
   vtkCellArray* cells;
   vtkDataArray* normals;
   vtkPolyData* polyData;
@@ -31,7 +31,6 @@ public:
 
   pGraphicsFace() :
     points(vtkPoints::New()),
-    triangleStrip(vtkTriangleStrip::New()),
     cells(vtkCellArray::New()),
     normals(nullptr),
     polyData(vtkPolyData::New()),
@@ -39,7 +38,7 @@ public:
     actor(vtkActor::New())
   {
     polyData->SetPoints(points);
-    polyData->SetStrips(cells);
+    polyData->SetPolys(cells);
 
     mapper->SetInputData(polyData);
     actor->SetMapper(mapper);
@@ -139,37 +138,40 @@ void SGMGraphicsWidget::remove_faces()
 
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
                                  const std::vector<size_t>            &triangles,
-                                 const std::vector<SGM::UnitVector3D> &)//norms)
+                                 const std::vector<SGM::UnitVector3D> &norms)
 {
   pGraphicsFace *face = new pGraphicsFace;
   dPtr->mFaces.push_back(face);
 
   // Add points and normals to the face
 
-  //vtkSmartPointer<vtkDoubleArray> normalsArray = 
-  //    vtkSmartPointer<vtkDoubleArray>::New();
-  //normalsArray->SetNumberOfComponents(3); //3d normals (ie x,y,z)
-  //normalsArray->SetNumberOfTuples(norms.size());
+  vtkSmartPointer<vtkDoubleArray> normalsArray =
+      vtkSmartPointer<vtkDoubleArray>::New();
+  normalsArray->SetNumberOfComponents(3); //3d normals (ie x,y,z)
+  normalsArray->SetNumberOfTuples(norms.size());
 
-  size_t point_counter = 0;
-  for(const SGM::Point3D &point : points)
+  face->polyData->GetPointData()->SetNormals(normalsArray);
+  face->points->SetNumberOfPoints(points.size());
+
+  for(size_t i=0; i<points.size(); i++)
       {
-      //SGM::UnitVector3D Norm=norms[point_counter];
+      SGM::UnitVector3D Norm=norms[i];
       //Norm.Negate();
-      //normalsArray->SetTuple(point_counter,(double *)&Norm);
-      face->points->InsertPoint(point_counter++, point.m_x, point.m_y, point.m_z);
+      normalsArray->SetTypedTuple(i, &Norm.m_x);
+      SGM::Point3D point = points[i];
+      face->points->SetPoint(i, point.m_x, point.m_y, point.m_z);
       }
 
-  // Setup the triangle strip
+  // set up triangles
+  size_t num_tris = triangles.size()/3;
+  for(size_t i=0; i<num_tris; i++)
+      {
+      face->cells->InsertNextCell(3);
+      face->cells->InsertCellPoint(triangles[i*3]);
+      face->cells->InsertCellPoint(triangles[i*3+1]);
+      face->cells->InsertCellPoint(triangles[i*3+2]);
+      }
 
-  vtkIdList* tri_vertex_ids = face->triangleStrip->GetPointIds();
-  tri_vertex_ids->SetNumberOfIds(triangles.size());
-  for(size_t i = 0; i < triangles.size(); i++)
-    tri_vertex_ids->SetId(i, triangles[i]);
-
-  //face->polyData->GetCellData()->SetNormals(normalsArray);
-  face->cells->InsertNextCell(face->triangleStrip);
-      
   dPtr->renderer->AddActor(face->actor);
 }
 
