@@ -44,6 +44,12 @@ class entity
 
         void RemoveOwner(entity *pEntity) const {m_Owners.erase(pEntity);}
 
+        void SeverOwners() const
+        {
+          for (entity *pOwner : m_Owners)
+            pOwner->RemoveOwner((entity*)this);
+        }
+
     protected:
 
         size_t                  m_ID;
@@ -70,6 +76,8 @@ class thing : public entity
         void AddToMap(size_t nID,entity *pEntity);
 
         void DeleteEntity(entity *pEntity);
+
+        void SeverOwners(entity *pEntity);
 
         // Get methods
 
