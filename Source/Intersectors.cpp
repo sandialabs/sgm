@@ -881,7 +881,6 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
     std::vector<SGM::Point2D> const &aSeedParams=pNUBSurface->GetSeedParams();
     size_t nUParams=pNUBSurface->GetUParams();
     size_t nVParams=pNUBSurface->GetVParams();
-    double dTan15=0.26794919243112270647255365849413;
     std::vector<SGM::Point3D> aStartPoints;
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
@@ -1001,7 +1000,6 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     std::vector<SGM::Point2D> const &aSeedParams=pNURBSurface->GetSeedParams();
     size_t nUParams=pNURBSurface->GetUParams();
     size_t nVParams=pNURBSurface->GetVParams();
-    double dTan15=0.26794919243112270647255365849413;
     std::vector<SGM::Point3D> aStartPoints;
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
