@@ -7,6 +7,8 @@
 #include "SGMGeometry.h"
 #include "SGMQuery.h"
 #include "SGMTree.h"
+#include "SGMTopology.h"
+#include "SGMDisplay.h"
 
 #include "FileFunctions.h"
 #include "EntityClasses.h"
@@ -2206,6 +2208,26 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         
         return bAnswer;
         }
+
+    if(nTestNumber==34)
+        {
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(-2,.5,0));
+        aPoints.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints.push_back(SGM::Point3D(0,1,0));
+        aPoints.push_back(SGM::Point3D(1,1.5,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+        SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult, BodyID, sFaces);
+
+        for(Face FaceID : sFaces)
+          SGM::GetFaceTriangles(rResult, FaceID);
+        } 
     return false;
     }
 
