@@ -90,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(primitive_hyperbola()));
   connect(mPrimitiveMenu, SIGNAL(NUBcurve()),
           this, SLOT(primitive_NUBcurve()));
+  connect(mPrimitiveMenu, SIGNAL(revolve()),
+          this, SLOT(primitive_revolve()));
 
   mModel->set_tree_widget(ui->twTree);
   mModel->set_graphics_widget(ui->mGraphics);
@@ -372,6 +374,25 @@ void MainWindow::primitive_NUBcurve()
     aPoints.push_back(SGM::Point3D(1,0.5,0));
     aPoints.push_back(SGM::Point3D(2,0,0));
     mModel->create_NUBcurve(aPoints);
+    }
+
+void MainWindow::primitive_revolve()
+    {
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(-2,.5,0));
+    aPoints.push_back(SGM::Point3D(-1,.5,0));
+    aPoints.push_back(SGM::Point3D(0,.5,0));
+    aPoints.push_back(SGM::Point3D(1,.5,0));
+    aPoints.push_back(SGM::Point3D(2,.5,0));
+    //aPoints.push_back(SGM::Point3D(-2,.5,0));
+    //aPoints.push_back(SGM::Point3D(-1,1.5,0));
+    //aPoints.push_back(SGM::Point3D(0,1,0));
+    //aPoints.push_back(SGM::Point3D(1,1.5,0));
+    //aPoints.push_back(SGM::Point3D(2,2,0));
+    SGM::Curve IDCurve = mModel->create_NUBcurve(aPoints);
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    mModel->create_revolve(Origin, Axis, IDCurve);
     }
 
 void MainWindow::save_settings()

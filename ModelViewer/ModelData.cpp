@@ -207,10 +207,22 @@ void ModelData::create_ellipse(SGM::Point3D      const &Center,
   rebuild_graphics();
 }
 
-void ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
+SGM::Curve ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
 {
   SGM::Curve IDCurve=SGM::CreateNUBCurve(dPtr->mResult,aPoints);
   SGM::CreateEdge(dPtr->mResult,IDCurve);
+
+  rebuild_tree();
+  rebuild_graphics();
+
+  return IDCurve;
+}
+
+void ModelData::create_revolve(SGM::Point3D      const &Origin,
+                               SGM::UnitVector3D const &Axis,
+                               SGM::Curve        const &IDCurve)
+{
+  SGM::CreateRevolve(dPtr->mResult, Origin, Axis, IDCurve);
 
   rebuild_tree();
   rebuild_graphics();

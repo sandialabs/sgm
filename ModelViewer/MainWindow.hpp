@@ -55,6 +55,7 @@ private slots:
   void primitive_parabola();
   void primitive_hyperbola();
   void primitive_NUBcurve();
+  void primitive_revolve();
 
   //void on_actionCreateBlock_triggered();
 

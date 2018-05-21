@@ -396,6 +396,8 @@ bool surface::Check(SGM::Result              &,//rResult,
     {
     bool bAnswer=true;
 
+//    SGMInternal::TestSurface()
+
     return bAnswer;
     }
 

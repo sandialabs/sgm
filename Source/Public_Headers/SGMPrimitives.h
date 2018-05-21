@@ -59,6 +59,11 @@ SGM_EXPORT SGM::Body CreateTorus(SGM::Result             &rResult,
                                  double                   dMinorRadius,
                                  bool                     bApple=true);
 
+SGM_EXPORT SGM::Body CreateRevolve(SGM::Result             &rResult,
+                                   SGM::Point3D      const &Origin,
+                                   SGM::UnitVector3D const &Axis,
+                                   SGM::Curve        const &IDCurve);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Two Dimensional Creation Functions
@@ -68,7 +73,7 @@ SGM_EXPORT SGM::Body CreateTorus(SGM::Result             &rResult,
 // If edges are not given then the whole surface is used to make a sheet body.
 
 SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result               &rResult,
-                                     SGM::Surface              &SurfaceID,
+                                     SGM::Surface        const &SurfaceID,
                                      std::set<SGM::Edge> const &sEdges);
 
 SGM_EXPORT SGM::Body CoverPlanarWire(SGM::Result &rResult,

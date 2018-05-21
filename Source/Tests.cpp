@@ -2130,7 +2130,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==28)
+    if(nTestNumber==31)
         {
         // Test Revolve Surface
 
@@ -2151,7 +2151,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin1(1.0,1.0,0.0);
         SGM::UnitVector3D Axis1(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, pNUB1, Origin1, Axis1);
+        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, Origin1, Axis1, pNUB1);
 
         SGM::Point3D Pos;
         SGM::Vector3D Du, Dv, Duu, Duv, Dvv;
@@ -2191,7 +2191,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin2(1.0,3.0,0.0);
         SGM::UnitVector3D Axis2(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
+        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, Origin2, Axis2, pNUB2);
 
 
 

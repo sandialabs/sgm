@@ -348,6 +348,10 @@ curve *surface::UParamLine(SGM::Result &rResult,
                 }
             break;
             }
+        case SGM::RevolveType:
+            {
+
+            }
         default:
             {
             throw;
@@ -1067,6 +1071,8 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Vector3D *pDvvCurve = &DvvCurve;
             SGM::Vector3D  dvAxisPos;
             SGM::Vector3D  dvvAxisPos;
+            SGM::Vector3D  DuLocal;
+            SGM::Vector3D  DvLocal;
             double A1_half = 0.0;
             double A2_half = 0.0;
             double dvRadius = 0.0;
@@ -1094,21 +1100,29 @@ void surface::Evaluate(SGM::Point2D const &uv,
             // find radius and derivatives with respect to v
             double dCos=cos(uv.m_u);
             double dSin=sin(uv.m_u);
+            double dRSin=dRadius * dSin;
+            double dRCos=dRadius * dCos;
 
             if (nullptr != Pos)
-                *Pos = AxisPos + dRadius * dCos * XAxis + dRadius * dSin * YAxis;
+                *Pos = AxisPos + dRCos * XAxis + dRSin * YAxis;
+
+            if (nullptr != Du || nullptr != Norm )
+                DuLocal = (dRCos * YAxis) - (dRSin * XAxis);
+
+            if (nullptr != Dv || nullptr != Norm )
+                DvLocal = dvAxisPos + (dvRadius * dCos * XAxis) + (dvRadius * dSin * YAxis);
 
             if (nullptr != Du)
-                *Du = (dRadius * dCos * YAxis) - (dRadius * dSin * XAxis);
+                *Du = DuLocal;
 
-            if (nullptr != Dv)
-                *Dv = dvAxisPos + (dvRadius * dCos * XAxis) + (dvRadius * dSin * YAxis);
+            if (nullptr != Du)
+                *Dv = DvLocal;
 
             if (nullptr != Norm)
-                *Norm = (*Du) * (*Dv);
+                *Norm = DuLocal * DvLocal;
 
             if (nullptr != Duu)
-                *Duu = (-1) * ( (dRadius * dSin * YAxis) + (dRadius * dCos * XAxis) );
+                *Duu = (-1) * ( (dRSin * YAxis) + (dRCos * XAxis) );
 
             if (nullptr != Duv)
                 *Duv = (dvRadius * dCos * YAxis) - (dvRadius * dSin * XAxis);
@@ -1759,6 +1773,9 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             {
                 uv.m_u = SGM::SAFEatan2(dLocalY, dLocalX);
             }
+
+            if (uv.m_u < 0)
+              uv.m_u += SGM_TWO_PI;
 
             // rotate the point to the local X-Z plane and use the curve Inverse to find v
             double dRadius = sqrt(dLocalX*dLocalX + dLocalY*dLocalY);

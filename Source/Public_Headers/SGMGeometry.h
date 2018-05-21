@@ -72,7 +72,7 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
 
-SGM_EXPORT SGM::Surface CreateRevolve(SGM::Result             &rResult,
+SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
                                       SGM::Point3D      const &Origin,
                                       SGM::UnitVector3D const &Axis,
                                       SGM::Curve        const &CurveID);
