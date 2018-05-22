@@ -261,7 +261,7 @@ size_t thing::GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const
     while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::EdgeType)
+        if(pEntity->GetType()==SGM::EntityType::VertexType)
             {
             vertex *pVertex=(vertex *)pEntity;
             if(bTopLevel)
@@ -313,7 +313,7 @@ size_t thing::GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const
     while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::ComplexType)
+        if(pEntity->GetType()==SGM::EntityType::CurveType)
             {
             curve *pCurve=(curve *)pEntity;
             if(bTopLevel)
