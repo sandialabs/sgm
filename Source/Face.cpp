@@ -169,6 +169,11 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
+double face::FindArea() const
+    {
+    return 0;
+    }
+
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const

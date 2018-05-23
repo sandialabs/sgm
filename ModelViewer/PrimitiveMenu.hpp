@@ -23,6 +23,7 @@ signals:
   void parabola();
   void hyperbola();
   void NUBcurve();
+  void TorusKnot();
 };
 
 #endif // PRIMITIVIEMENU_HPP

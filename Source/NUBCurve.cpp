@@ -51,7 +51,7 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
     }
@@ -62,7 +62,7 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
     }

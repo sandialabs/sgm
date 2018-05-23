@@ -24,6 +24,7 @@ edge *CreateEdge(SGM::Result           &rResult,
         {
         Domain=pCurve->GetDomain();
         }
+    
     pEdge->SetDomain(Domain);
     if( pCurve->GetClosed()==false ||
         SGM::NearEqual(pCurve->GetDomain().Length(),Domain.Length(),SGM_MIN_TOL,false)==false)
@@ -42,8 +43,8 @@ edge *CreateEdge(SGM::Result           &rResult,
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
-                  double                   dMajorRadius,
                   double                   dMinorRadius,
+                  double                   dMajorRadius,
                   bool                     bApple)
     {
     body   *pBody=new body(rResult); 
@@ -53,6 +54,12 @@ body *CreateTorus(SGM::Result             &rResult,
 
     pBody->AddVolume(pVolume);
     face *pFace=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        }
+
     pVolume->AddFace(pFace);
     pFace->SetSurface(pTorus);
 
@@ -70,6 +77,12 @@ body *CreateSphere(SGM::Result        &rResult,
 
     pBody->AddVolume(pVolume);
     face *pFace=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        }
+
     pVolume->AddFace(pFace);
     pFace->SetSurface(pSphere);
 
@@ -91,6 +104,13 @@ body *CreateCylinder(SGM::Result        &rResult,
     face *pBottom=new face(rResult);
     face *pSide=new face(rResult);
     face *pTop=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pSide->GetID()),SGM::LogType::LogMain);
+        rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
+        rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
+        }
 
     edge *pEdgeBottom=new edge(rResult);
     edge *pEdgeTop=new edge(rResult);
@@ -677,4 +697,31 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     return new NUBcurve(rResult,aControlPoints,aKnots);
     }
 
+body *CreateSheetBody(SGM::Result                    &rResult,
+                      surface                        *pSurface,
+                      std::vector<edge *>            &aEdges,
+                      std::vector<SGM::EdgeSideType> &aTypes)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    face *pFace=new face(rResult);
+    pVolume->AddFace(pFace);
+    pFace->SetSurface(pSurface);
+
+    size_t nEdges=aEdges.size();
+    size_t Index1;
+    for(Index1=0;Index1<nEdges;++Index1)
+        {
+        edge *pEdge=aEdges[Index1];
+        if(pEdge->GetStart())
+            {
+            // More code needs to be added to merge vertices.
+            throw;
+            }
+        pFace->AddEdge(pEdge,aTypes[Index1]);
+        }
+
+    return pBody;
+    }
 }

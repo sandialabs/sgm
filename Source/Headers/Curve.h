@@ -14,6 +14,41 @@
 namespace SGMInternal
 {
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  The check list for adding a new curve type.
+//
+//  Derive a class from curve.
+//  Add a constructor.
+//      Set m_CurveType, m_Domain and m_Closed.
+//  Add a copy constructor.
+//      Set m_CurveType, m_Domain and m_Closed.
+//  Add to the MakeCopy method of curve.
+//  Add to the Evalute method of curve.
+//  Add to the Inverse method of curve.
+//  Add to the Transform method of curve.
+//  Add to the Negate method of curve.
+//
+//  Optional check list functions.
+//
+//  Add to the Curvature method of curve.
+//  Add to the Check method of curve.
+//  Add to the FindLength method of curve.
+//
+//  Additional functions that check the curve type.
+//
+//  Add to the function FacetCurve.
+//  Add to the function IntersectCurveAndSurface.
+//  Add to the function IntersectLineAndCurve.
+//  Add to the function IntersectCircleAndCurve.
+//  Add to the function IntersectCurves.
+//  Add to the function FindClosestPointOnEdge.
+//  Add to the function OutputCurve.
+//  Add to the function WriteCurves in STEP.cpp.
+//  Add to the function DeleteEntity in Thing.cpp
+//
+//////////////////////////////////////////////////////////////////////////////
+
 class curve : public entity
     {
     public:
@@ -57,8 +92,10 @@ class curve : public entity
 
         void Negate();
 
-    protected:
+        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
 
+    protected:
+        
         std::set<edge *> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
@@ -262,6 +299,41 @@ class parabola: public curve
         SGM::UnitVector3D m_YAxis;
         SGM::UnitVector3D m_Normal;
         double            m_dA;
+    };
+
+class TorusKnot: public curve
+    {
+    public:
+
+        // Creates a right handed screw around the circle
+        // in the center of the torus with the given center,
+        // radii.  The curve winds dA times around the torus
+        // normal and dB times around the center circle.  nA
+        // and nB must be positive and relatively prime.
+        // In addition, dMinorRadius must be less than dMajorRadius.
+
+        TorusKnot(SGM::Result             &rResult,
+                  SGM::Point3D      const &Center,
+                  SGM::UnitVector3D const &XAxis,
+                  SGM::UnitVector3D const &YAxis,
+                  double                   dMinorRadius,
+                  double                   dMajorRadius,
+                  size_t                   nA,
+                  size_t                   nB);
+
+        TorusKnot(SGM::Result     &rResult,
+                  TorusKnot const *pTorusKnot);
+
+    public:
+
+        SGM::Point3D      m_Center;
+        SGM::UnitVector3D m_XAxis;
+        SGM::UnitVector3D m_YAxis;
+        SGM::UnitVector3D m_Normal;
+        double            m_dMinorRadius;
+        double            m_dMajorRadius;
+        size_t            m_nA;
+        size_t            m_nB;
     };
 
 class hermite: public curve

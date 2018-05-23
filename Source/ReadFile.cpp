@@ -1,7 +1,7 @@
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
-#include "SGMQuery.h"
+#include "SGMInterrogate.h"
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"

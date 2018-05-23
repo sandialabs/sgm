@@ -32,8 +32,10 @@ PrimitiveMenu::PrimitiveMenu(QWidget *parent) :
   parabola_action->setShortcut(tr("Ctrl+P"));
   QAction* hyperbola_action = addAction("&Hyperbola", this, SIGNAL(hyperbola()));
   hyperbola_action->setShortcut(tr("Ctrl+H"));
-  QAction* nub_curve_action = addAction("&NUB Cu&rve", this, SIGNAL(NUBcurve()));
+  QAction* nub_curve_action = addAction("NUB Cu&rve", this, SIGNAL(NUBcurve()));
   nub_curve_action->setShortcut(tr("Ctrl+r"));
+  QAction* torus_knot_action = addAction("Torus &Knot", this, SIGNAL(TorusKnot()));
+  torus_knot_action->setShortcut(tr("Ctrl+K"));
 }
 
 PrimitiveMenu::~PrimitiveMenu()

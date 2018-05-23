@@ -31,7 +31,7 @@ std::vector<SGM::Point3D> const &hermite::GetSeedPoints() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
     }
@@ -42,7 +42,7 @@ std::vector<double> const &hermite::GetSeedParams() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
     }
@@ -60,24 +60,31 @@ size_t hermite::FindSpan(double t) const
         }
     else
         {
-        nSpan=(size_t)(std::upper_bound(m_aParams.begin(),m_aParams.end(),t)-m_aParams.begin());
+        nSpan=(size_t)(std::upper_bound(m_aParams.begin(),m_aParams.end(),t)-m_aParams.begin()-1);
         }
     return nSpan;
     }
 
 void hermite::Concatenate(hermite const *pEndHermite)
     {
-    double dEndParam=m_aParams.back();
+    m_aParams.clear();
     size_t nPoints=pEndHermite->m_aPoints.size();
     size_t Index1;
     for(Index1=1;Index1<nPoints;++Index1)
         {
-        m_aParams.push_back(pEndHermite->m_aParams[Index1]+dEndParam);
         m_aPoints.push_back(pEndHermite->m_aPoints[Index1]);
         m_aTangents.push_back(pEndHermite->m_aTangents[Index1]);
         }
+    SGM::FindLengths3D(m_aPoints,m_aParams);
     m_aSeedParams.clear();
     m_aSeedPoints.clear();
+    m_Domain.m_dMin=m_aParams.front();
+    m_Domain.m_dMax=m_aParams.back();
+    if(SGM::NearEqual(m_aPoints.front(),m_aPoints.back(),SGM_MIN_TOL))
+        {
+        m_aPoints.back()=m_aPoints.front();
+        m_bClosed=true;
+        }
     }
 
 } // End of SGMInternal namespace

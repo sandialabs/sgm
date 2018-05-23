@@ -2,7 +2,10 @@
 #define SGM_MATHEMATICS_H
 
 #include "SGMDataClasses.h"
+#include "SGMResult.h"
+
 #include <vector>
+#include <set>
 
 #include "sgm_export.h"
 
@@ -69,12 +72,16 @@ namespace SGM
     //
     /////////////////////////////////////////////////////////////////////////
 
-    //  Cycles that loop counter clockwise return positive area.
+    // Counter clockwise polygons return positive areas.  Clockwise polygons
+    // return negative areas.
 
     SGM_EXPORT double PolygonArea(std::vector<SGM::Point2D> const &aPolygon);
 
     SGM_EXPORT size_t FindConcavePoints(std::vector<SGM::Point2D> const &aPolygon,
                                         std::vector<size_t>             &aConcavePoints);
+
+    // If the given point is only the polygon then the returned answer may
+    // be either true or false.
 
     SGM_EXPORT bool PointInPolygon(SGM::Point2D              const &Pos,
                                    std::vector<SGM::Point2D> const &aPolygon);
@@ -140,6 +147,73 @@ namespace SGM
                                    SGM::Point2D const &B,
                                    SGM::Point2D const &C,
                                    SGM::Point2D const &D);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Number Theory Functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Returns the greatest common divisor of nA and nB or zero if nA and
+    // nB are not both positive.
+
+    size_t GreatestCommonDivisor(size_t nA,
+                                 size_t nB);
+    
+    // Returns true if nA and nB are positive and relatively prime.
+
+    bool RelativelyPrime(size_t nA,
+                         size_t nB);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Order theory Functions
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Given a partial order, definded by a set of ordered pairs of indices,
+    // such that a<=b if and only if <a,b> is in the set, find the maximal
+    // elements.  An element is m is maximal if there does not exist an
+    // element p, not equal to m, such that m<p.
+    
+    size_t FindMaximalElements(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                               std::vector<size_t>                       &aMaximalElements);
+
+    // Given a partial order, definded by a set of ordered pairs of indices,
+    // such that a<=b if and only if <a,b> is in the set, find the decendents of
+    // a given nParent element.  An element a is a decendent of b if a<b.
+
+    size_t FindDecendents(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                          size_t                                     nParent,
+                          std::vector<size_t>                       &aDecendents);
+
+    // Given a partial order, definded by a set of ordered pairs of indices,
+    // such that a<=b if and only if <a,b> is in the set, find the decendents of
+    // a given group of parent elements.  An element a is a decendent of b if a<b.
+
+    size_t FindDecendentsOfGroup(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                                 std::vector<size_t>                 const &aParents,
+                                 std::vector<size_t>                       &aDecendents);
+
+    // Given a partial order, definded by a set of ordered pairs of indices,
+    // such that a<=b if and only if <a,b> is in the set, find the childern of
+    // a given nParent element.  An element c is a child of p if c<p and
+    // there does not exist an element e such that a<e and e<b.
+
+    size_t FindChildern(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                        size_t                                     nParent,
+                        std::vector<size_t>                       &aChildern);
+
+    // Returns all the decendents by their generation from a given nParent.
+
+    size_t FindGenerations(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                           size_t                                     nParent,
+                           std::vector<std::vector<size_t> >         &aaGenerations);
+
+    // Subsets a partial order to the only contain the given elements.
+
+    void SubsetPartailOrder(std::vector<size_t>           const &aKeep,
+                            std::set<std::pair<size_t,size_t> > &sPartialOrder);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -298,6 +372,11 @@ namespace SGM
 
     SGM_EXPORT double SAFEacos(double x);
 
+    // Snaps x to -1 or 1 if x is outside the interval [-1,1] so that
+    // asin will not return an error.
+
+    SGM_EXPORT double SAFEasin(double x);
+
     // Returns zero if both y and x are zero so that atan2 will not return 
     // an error.
 
@@ -398,6 +477,17 @@ namespace SGM
         dDFXY=SGM::FirstDerivative<Pos,Vec>(Pos(dfx0),Pos(dfx1),Pos(dfx3),Pos(dfx4),dy);
         dDFYY=SGM::SecondDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][2],aMatrix[2][3],aMatrix[2][4],dy);
         }
+
+    // Returns the definite integral of the given function, f, from a to b.  
+    // The integration is numerically performed using Romberg integration.
+    // The void * passed into f is optional data that may be used be the 
+    // function to return a value for x.
+
+    double Integrate(double f(double x,void const *pData),
+                     double      a,
+                     double      b,
+                     void const *pData=nullptr,
+                     double      dTolerance=SGM_ZERO);
     
     } // End of SGM namespace
 

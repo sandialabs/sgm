@@ -105,6 +105,12 @@ void thing::DeleteEntity(entity *pEntity)
               case SGM::PointCurveType:
                 delete reinterpret_cast<PointCurve*>(pEntity);
                 break;
+              case SGM::HermiteCurveType:
+                delete reinterpret_cast<hermite*>(pEntity);
+                break;
+              case SGM::TorusKnotCurveType:
+                delete reinterpret_cast<TorusKnot*>(pEntity);
+                break;
               default:
                 std::abort();
             }

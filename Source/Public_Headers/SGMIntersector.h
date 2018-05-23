@@ -1,9 +1,12 @@
 #ifndef SGM_INTERSECTOR_H
 #define SGM_INTERSECTOR_H
 
+#include "SGMMathematics.h"
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
 #include "SGMEnums.h"
+#include "SGMResult.h"
+
 #include <vector>
 
 #include "sgm_export.h"
@@ -23,7 +26,7 @@ namespace SGM
                                       std::vector<SGM::IntersectionType> &aTypes,
                                       SGM::Edge                    const *pEdge1=nullptr,
                                       SGM::Edge                    const *pEdge2=nullptr,
-                                      double                              dTolerance=0.0);
+                                      double                              dTolerance=SGM_ZERO);
 
     SGM_EXPORT size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                                SGM::Curve                   const &CurveID,
@@ -32,7 +35,7 @@ namespace SGM
                                                std::vector<SGM::IntersectionType> &aTypes,
                                                SGM::Edge                    const *pEdge=nullptr,
                                                SGM::Face                    const *pFace=nullptr,
-                                               double                              dTolerance=0.0);
+                                               double                              dTolerance=SGM_ZERO);
 
     SGM_EXPORT size_t IntersectSurfaces(SGM::Result               &rResult,
                                         SGM::Surface        const &SurfaceID1,
@@ -40,7 +43,7 @@ namespace SGM
                                         std::vector<SGM::Curve>   &aCurves,
                                         SGM::Face           const *pFace1=nullptr,
                                         SGM::Face           const *pFace2=nullptr,
-                                        double                     dTolerance=0.0);
+                                        double                     dTolerance=SGM_ZERO);
 
     SGM_EXPORT size_t IntersectSegment(SGM::Result               &rResult,
                                        SGM::Segment3D      const &Segment,

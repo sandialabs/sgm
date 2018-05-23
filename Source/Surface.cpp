@@ -184,11 +184,22 @@ void surface::Transform(SGM::Transform3D const &Trans)
             SGM::UnitVector3D &XAxis=pRevolve->m_XAxis;
             SGM::UnitVector3D &YAxis=pRevolve->m_YAxis;
             SGM::UnitVector3D &ZAxis=pRevolve->m_ZAxis;
+            curve *pCurve=pRevolve->m_pCurve;
 
             Origin=Trans*Origin;
             XAxis=Trans*XAxis;
             YAxis=Trans*YAxis;
             ZAxis=Trans*ZAxis;
+
+            if(pCurve->GetEdges().empty() && pCurve->GetOwners().size()==1)
+                {
+                pCurve->Transform(Trans);
+                }
+            else
+                {
+                // Make a copy and tranform the copy.
+                throw;
+                }
 
             break;
             }
@@ -1207,6 +1218,7 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             k2=0;
             Vec1=pPlane->m_XAxis;
             Vec2=pPlane->m_YAxis;
+            break;
             }
         case SGM::EntityType::SphereType:
             {
@@ -1217,6 +1229,7 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             pSphere->Evaluate(uv,nullptr,&dU,&dV);
             Vec1=dU;
             Vec2=dV;
+            break;
             }
         case SGM::EntityType::CylinderType:
             {
@@ -1227,6 +1240,7 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             pCylinder->Evaluate(uv,nullptr,&dU,&dV);
             Vec1=dU;
             Vec2=dV;
+            break;
             }
         case SGM::EntityType::ConeType:
             {
@@ -1246,6 +1260,7 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             k2=0.0;
             Vec1=dU;
             Vec2=dV;
+            break;
             }
         case SGM::EntityType::TorusType:
             {
@@ -1256,6 +1271,8 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             pTorus->Evaluate(uv,nullptr,&dU,&dV);
             Vec1=dU;
             Vec2=dV;
+            break;
+
             }
         default:
             {
@@ -1364,7 +1381,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 {
                 // Check for points on the axis, and on the seam.
 
-               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+               if(m_Domain.m_UDomain.InInterval(uv.m_u,SGM_ZERO)==false)
                     {
                     if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                         SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
@@ -1444,7 +1461,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 {
                 // Check for points on the axis, and on the seam.
 
-               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+               if(m_Domain.m_UDomain.InInterval(uv.m_u,SGM_ZERO)==false)
                     {
                     if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                         SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
@@ -1526,7 +1543,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                     {
                     uv=*pGuess;
                     }
-                else if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+                else if(m_Domain.m_UDomain.InInterval(uv.m_u,SGM_ZERO)==false)
                     {
                     if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                         SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
@@ -1610,7 +1627,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             if( pTorus->GetKind()==SGM::TorusKindType::AppleType ||
                 pTorus->GetKind()==SGM::TorusKindType::LemonType)
                 {
-                if(m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                if(m_Domain.m_VDomain.InInterval(uv.m_v,SGM_ZERO)==false)
                     {
                     SGM::Point3D NorthPole,SouthPole;
                     SGM::Point2D uv1(uv.m_u,m_Domain.m_VDomain.m_dMax);
@@ -1634,7 +1651,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 {
                 // Check for points on the axis, and on the seam.
 
-               if(m_Domain.m_UDomain.InInterval(uv.m_u)==false)
+               if(m_Domain.m_UDomain.InInterval(uv.m_u,SGM_ZERO)==false)
                     {
                     if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                         SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
@@ -1649,7 +1666,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                     }
                if( pTorus->m_nKind!=SGM::TorusKindType::LemonType &&
                    pTorus->m_nKind!=SGM::TorusKindType::AppleType &&
-                   m_Domain.m_VDomain.InInterval(uv.m_v)==false)
+                   m_Domain.m_VDomain.InInterval(uv.m_v,SGM_ZERO)==false)
                     {
                     if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false) &&
                         SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
@@ -1737,7 +1754,7 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 {
                     if (pGuess != nullptr)
                     {
-                        if (pRevolve->m_pCurve->GetDomain().InInterval(pGuess->m_u))
+                        if (pRevolve->m_pCurve->GetDomain().InInterval(pGuess->m_u,SGM_ZERO))
                             uv.m_u = pGuess->m_u;
                     }
                 }

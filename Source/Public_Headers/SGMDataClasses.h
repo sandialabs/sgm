@@ -4,6 +4,7 @@
 #include "SGMEnums.h"
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "sgm_export.h"
 
@@ -240,7 +241,7 @@ namespace SGM
 
             double Length() const {return m_dMax-m_dMin;}
 
-            bool InInterval(double Pos) const;
+            bool InInterval(double Pos,double dTol) const;
 
             bool OnBoundary(double Pos,double dTol) const;
 
@@ -283,7 +284,9 @@ namespace SGM
 
             double HalfPerimeter() const; 
 
-            bool InInterval(SGM::Point2D const &Pos) const;
+            bool InInterval(SGM::Point2D const &Pos,double dTol) const;
+
+            bool OnBoundary(SGM::Point2D const &Pos,double dTol) const;
 
             // Unites this interval with the given interval.
 
@@ -499,7 +502,7 @@ namespace SGM
                            m_Matrix[2]=SGM::Vector4D(XAxis.m_z,YAxis.m_z,ZAxis.m_z,Translate.m_z);
                            m_Matrix[3]=SGM::Vector4D(XAxis.m_w,YAxis.m_w,ZAxis.m_w,Translate.m_w);}
 
-            // Returns a transform Trans such that this*Trans = Trans*this = Identity.
+            // Returns a transform, Trans, such that this*Trans = Trans*this = Identity.
 
             void Inverse(Transform3D &Trans) const;
 
@@ -520,38 +523,13 @@ namespace SGM
             SGM::Vector4D m_Matrix[4];
         };
 
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  Miscellaneous data classes
-    //
-    ///////////////////////////////////////////////////////////////////////////
+    // Returns a transform, Trans, that rotates space about the given Origin and Axis
+    // by the given aAngle in a right handed direction about the axis.
 
-    class Result
-        {
-        public:
-
-            SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr) {}
-
-            SGM_EXPORT explicit Result(SGMInternal::thing *pThing);
-
-            SGM_EXPORT void SetResult(SGM::ResultType nType);
-
-            SGM_EXPORT void SetMessage(std::string const &sMessage);
-
-            SGM_EXPORT void Clear();
-
-            SGM_EXPORT SGM::ResultType GetResult() const {return m_nType;}
-
-            SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
-
-            SGM_EXPORT SGMInternal::thing *GetThing() const {return m_pThing;}
-
-        private:
-
-            SGM::ResultType     m_nType;
-            std::string         m_sMessage;
-            SGMInternal::thing *m_pThing;
-        };
+    SGM_EXPORT void Rotate(SGM::Point3D      const &Origin,
+                           SGM::UnitVector3D const &Axis,
+                           double                   dAngle,
+                           SGM::Transform3D        &Trans);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -602,6 +580,12 @@ namespace SGM
     SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec);
 
     SGM_EXPORT SGM::UnitVector3D operator-(SGM::UnitVector3D const &UVec);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  MidPoint and NearEqual functions.
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT SGM::Point3D MidPoint(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1,double dFraction=0.5);
     

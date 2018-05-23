@@ -38,6 +38,8 @@ public:
 
   void perspective_mode();
 
+  bool RunCPPTest(size_t nTest);
+
   void check(std::vector<std::string> &aLog);
 
   void create_block(SGM::Point3D const &Pos0,
@@ -88,6 +90,14 @@ public:
                         SGM::Interval1D   const &Domain);
 
   void create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
+
+  void create_torus_knot(SGM::Point3D      const &Center,
+                         SGM::UnitVector3D const &XAxis,
+                         SGM::UnitVector3D const &YAxis,
+                         double                  dr,
+                         double                  dR,
+                         size_t                  nA,
+                         size_t                  nB);
 
 private:
   pModelData* dPtr;

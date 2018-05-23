@@ -90,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(primitive_hyperbola()));
   connect(mPrimitiveMenu, SIGNAL(NUBcurve()),
           this, SLOT(primitive_NUBcurve()));
+  connect(mPrimitiveMenu, SIGNAL(TorusKnot()),
+          this, SLOT(primitive_torus_knot()));
 
   mModel->set_tree_widget(ui->twTree);
   mModel->set_graphics_widget(ui->mGraphics);
@@ -213,9 +215,7 @@ void MainWindow::test_all()
 void MainWindow::test_number()
 {
   int nTest=QInputDialog::getInt(this, tr("Test Number"), tr("C++ Test"));
-  SGMInternal::thing *pThing=SGM::CreateThing();
-  SGM::Result rResult(pThing);
-  if(SGM::RunCPPTest(rResult,nTest))
+  if(mModel->RunCPPTest(nTest))
       {
       QMessageBox Msgbox;
         Msgbox.setText("Passed");
@@ -372,6 +372,15 @@ void MainWindow::primitive_NUBcurve()
     aPoints.push_back(SGM::Point3D(1,0.5,0));
     aPoints.push_back(SGM::Point3D(2,0,0));
     mModel->create_NUBcurve(aPoints);
+    }
+
+void MainWindow::primitive_torus_knot()
+    {
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
+    size_t nA=2,nB=3;
+    double dR=5.0,dr=2;
+    mModel->create_torus_knot(Center,XAxis,YAxis,dr,dR,nA,nB);
     }
 
 void MainWindow::save_settings()

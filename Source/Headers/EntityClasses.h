@@ -44,6 +44,13 @@ class entity
 
         void RemoveOwner(entity *pEntity) const {m_Owners.erase(pEntity);}
 
+        std::set<entity *> const &GetOwners() const {return m_Owners;}
+
+        entity *Copy(SGM::Result &rResult) const;
+
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans);
+
     protected:
 
         size_t                  m_ID;
@@ -228,6 +235,8 @@ class volume : public topology
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *> > &aShells) const;
 
+        double FindVolume() const;
+
     private:
     
         std::set<face *>         m_sFaces;
@@ -303,6 +312,8 @@ class face : public topology
                          SGM::Point3D       *ClosePos=nullptr,    // The closest point.
                          entity            **pBoundary=nullptr,   // The closest sub element.
                          SGM::Point3D       *pPos=nullptr) const; // Found point on boundary.
+
+        double FindArea() const;
                         
     private:
     
@@ -357,7 +368,9 @@ class edge : public topology
 
         SGM::Interval3D const &GetBox() const;
 
-        std::vector<SGM::Point3D> const &GetFacets() const;
+        std::vector<SGM::Point3D> const &GetFacets(SGM::Result &rResult) const;
+
+        std::vector<double> const &GetParams(SGM::Result &rResult) const;
 
         double GetTolerance() const {return m_dTolerance;}
 
@@ -375,6 +388,8 @@ class edge : public topology
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        double FindLength(double dTolerance) const;
+
     private:
 
         mutable vertex   *m_pStart;
@@ -384,6 +399,7 @@ class edge : public topology
         curve            *m_pCurve;
 
         mutable std::vector<SGM::Point3D> m_aPoints3D;
+        mutable std::vector<double>       m_aParams;
         mutable SGM::Interval1D           m_Domain;
         mutable SGM::Interval3D           m_Box;
         mutable double                    m_dTolerance;

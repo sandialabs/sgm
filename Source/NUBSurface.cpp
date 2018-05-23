@@ -23,8 +23,8 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
-    FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,&aUParams);
-    FacetCurve(pVCurve,pVCurve->GetDomain(),Options,aVPoints,&aVParams);
+    FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aUParams);
+    FacetCurve(pVCurve,pVCurve->GetDomain(),Options,aVPoints,aVParams);
     rResult.GetThing()->DeleteEntity(pUCurve);
     rResult.GetThing()->DeleteEntity(pVCurve);
     size_t Index1,Index2;

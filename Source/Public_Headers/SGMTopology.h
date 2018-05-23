@@ -11,6 +11,13 @@
 
 namespace SGM
     {
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  General Topology Traversal Functions.
+//
+//////////////////////////////////////////////////////////////////////////////
+
     SGM_EXPORT void FindBodies(SGM::Result         &rResult,
                                SGM::Entity   const &EntityID,
                                std::set<SGM::Body> &sBodies,
@@ -50,6 +57,15 @@ namespace SGM
                                  SGM::Entity     const &EntityID,
                                  std::set<SGM::Vertex> &sVertices,
                                  bool                   bTopLevel=false);
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Specific Topology Traversal Functions.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+    SGM_EXPORT SGM::Surface GetSurfaceOfFace(SGM::Result     &rResult,
+                                             SGM::Face const &FaceID);
 
     } // End of SGM namespace
 
