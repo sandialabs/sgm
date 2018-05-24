@@ -56,6 +56,7 @@ private slots:
   void primitive_hyperbola();
   void primitive_NUBcurve();
   void primitive_torus_knot();
+  void primitive_revolve();
 
   //void on_actionCreateBlock_triggered();
 

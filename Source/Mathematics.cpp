@@ -228,7 +228,7 @@ double FindAngle(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &PosC=aPoints[aPolygon[nC]];
     SGM::UnitVector2D VecAB=PosA-PosB;
     SGM::UnitVector2D VecCB=PosC-PosB;
-    double dUp=VecAB.m_u*VecCB.m_v-VecAB.m_v*VecCB.m_u;
+    double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
     if(dUp<SGM_ZERO)
         {
         return 10;
@@ -486,7 +486,7 @@ double SGM::PolygonArea(std::vector<SGM::Point2D> const &aPolygon)
         SGM::Point2D const &Pos1=aPolygon[(Index1+1)%nPoints];
         dArea+=Pos0.m_u*Pos1.m_v-Pos1.m_u*Pos0.m_v;
         }
-    return -dArea*0.5;
+    return dArea*0.5;
     }
 
 size_t SGM::FindConcavePoints(std::vector<SGM::Point2D> const &aPolygon,
@@ -805,7 +805,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
         SGM::Point2D const &PosC=aPoints[aPolygon[(Index1+1)%nPolygon]];
         SGM::UnitVector2D VecAB=PosA-PosB;
         SGM::UnitVector2D VecCB=PosC-PosB;
-        double dUp=VecAB.m_u*VecCB.m_v-VecAB.m_v*VecCB.m_u;
+        double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
         if(dUp<SGM_ZERO)
             {
             sAngles.insert(std::pair<double,size_t>(10.0,Index1));
@@ -832,8 +832,8 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
                 size_t nB=aPolygon[nEar];
                 size_t nEarC=GetNext(nEar,aCutOff);
                 size_t nC=aPolygon[nEarC];
-                aTriangles.push_back(nB);
                 aTriangles.push_back(nA);
+                aTriangles.push_back(nB);
                 aTriangles.push_back(nC);
             
                 // Fix angles at nEar

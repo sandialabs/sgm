@@ -169,6 +169,9 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
+        NUBcurve(SGM::Result    &rResult,
+                 NUBcurve const *pNUB);
+
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point3D> const &GetControlPoints() const {return m_aControlPoints;}

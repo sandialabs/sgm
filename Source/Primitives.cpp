@@ -50,7 +50,7 @@ body *CreateTorus(SGM::Result             &rResult,
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
 
-    torus *pTorus=new torus(rResult,Center,Axis,dMajorRadius,dMinorRadius,bApple);
+    torus *pTorus=new torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
 
     pBody->AddVolume(pVolume);
     face *pFace=new face(rResult);
@@ -721,6 +721,63 @@ body *CreateSheetBody(SGM::Result                    &rResult,
             }
         pFace->AddEdge(pEdge,aTypes[Index1]);
         }
+
+    return pBody;
+    }
+
+body *CreateRevolve(SGM::Result             &rResult,
+                    SGM::Point3D      const &Origin,
+                    SGM::UnitVector3D const &Axis,
+                    curve             const *pCurve)
+    {
+    SGM::Point3D pCurveStart;
+    SGM::Point3D pCurveEnd;
+
+
+    // TODO
+    // check for valid curve input
+    // check for planar curve
+    // check for axis in plane of curve
+    // check for curve intersection with axis
+
+    pCurve->Evaluate(pCurve->GetDomain().m_dMin, &pCurveStart);
+    pCurve->Evaluate(pCurve->GetDomain().m_dMax, &pCurveEnd);
+
+    body   *pBody=new body(rResult);
+    volume *pVolume=new volume(rResult);
+
+    face *pFace=new face(rResult);
+
+    edge *pEdgeStart=new edge(rResult);
+    edge *pEdgeEnd=new edge(rResult);
+
+    revolve *pRevolve=new revolve(rResult,Origin,Axis,pCurve);
+
+    SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
+    SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
+    SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+    double dRadiusStart = pCurveStart.Distance(StartCenter);
+    double dRadiusEnd = pCurveEnd.Distance(EndCenter);
+
+    circle *pCircleStart=new circle(rResult,StartCenter,-Axis,dRadiusStart,&XAxis);
+    circle *pCircleEnd=new circle(rResult,EndCenter,Axis,dRadiusEnd,&XAxis);
+
+    // Connect everything.
+
+    pBody->AddVolume(pVolume);
+
+    pVolume->AddFace(pFace);
+
+    pFace->AddEdge(pEdgeStart,SGM::FaceOnRightType);
+    pFace->AddEdge(pEdgeEnd,SGM::FaceOnRightType);
+
+    pFace->SetSurface(pRevolve);
+
+    pEdgeStart->SetCurve(pCircleStart);
+    pEdgeEnd->SetCurve(pCircleEnd);
+
+    pEdgeStart->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeEnd->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
 
     return pBody;
     }

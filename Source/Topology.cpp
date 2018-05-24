@@ -633,7 +633,7 @@ void FindCurves(SGM::Result       &rResult,
         surface *pSurf=(surface *)((*iter2)->GetSurface());
         if(pSurf->GetSurfaceType()==SGM::EntityType::RevolveType)
             {
-            sCurves.insert(((revolve *)pSurf)->m_pCurve);
+            sCurves.insert((curve*)(((revolve *)pSurf)->m_pCurve));
             }
         ++iter2;
         }

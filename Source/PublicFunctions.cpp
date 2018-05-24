@@ -493,15 +493,6 @@ SGM::Body SGM::CreateCone(SGM::Result        &rResult,
     return SGM::Body(pBody->GetID());
     }
 
-SGM::Curve CreateCircle(SGM::Result             &rResult,
-                        SGM::Point3D      const &Center,
-                        SGM::UnitVector3D const &Normal,
-                        double                   dRadius)
-    {
-    SGMInternal::curve *pCurve=new SGMInternal::circle(rResult,Center,Normal,dRadius);
-    return SGM::Curve(pCurve->GetID());
-    }
-
 SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
                            SGM::Point3D      const &Center,
                            SGM::UnitVector3D const &Axis,
@@ -510,6 +501,17 @@ SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
                            bool                     bApple)
     {
     SGMInternal::body *pBody=SGMInternal::CreateTorus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    return SGM::Body(pBody->GetID());
+    }
+
+SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
+                             SGM::Point3D      const &Origin,
+                             SGM::UnitVector3D const &Axis,
+                             SGM::Curve        const &IDCurve)
+    {
+    SGMInternal::curve const *pCurve = (SGMInternal::curve const *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
+    SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
+
     return SGM::Body(pBody->GetID());
     }
 
@@ -632,7 +634,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     return pEntity->Check(rResult,Options,aCheckStrings);
     }
 
-SGM::Interval1D const &GetCurveDomain(SGM::Result      &rResult,
+SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
                                       SGM::Curve const &CurveID)
     {
     SGMInternal::thing *pThing=rResult.GetThing();
@@ -1193,7 +1195,6 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
         }
     return aFaces.size();
     }
-
 
 size_t SGM::ReadFile(SGM::Result                  &rResult,
                      std::string            const &FileName,

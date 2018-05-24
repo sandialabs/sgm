@@ -45,6 +45,10 @@ curve *curve::MakeCopy(SGM::Result &rResult) const
             {
             return new TorusKnot(rResult,(TorusKnot const *)this);
             }
+        case SGM::NUBCurveType:
+            {
+            return new NUBcurve(rResult,(NUBcurve const *)this);
+            }
         default:
             {
             throw;

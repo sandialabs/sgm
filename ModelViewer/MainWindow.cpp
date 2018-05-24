@@ -92,6 +92,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(primitive_NUBcurve()));
   connect(mPrimitiveMenu, SIGNAL(TorusKnot()),
           this, SLOT(primitive_torus_knot()));
+  connect(mPrimitiveMenu, SIGNAL(revolve()),
+          this, SLOT(primitive_revolve()));
 
   mModel->set_tree_widget(ui->twTree);
   mModel->set_graphics_widget(ui->mGraphics);
@@ -381,6 +383,25 @@ void MainWindow::primitive_torus_knot()
     size_t nA=2,nB=3;
     double dR=5.0,dr=2;
     mModel->create_torus_knot(Center,XAxis,YAxis,dr,dR,nA,nB);
+    }
+
+void MainWindow::primitive_revolve()
+    {
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(-2,.5,0));
+    aPoints.push_back(SGM::Point3D(-1,.5,0));
+    aPoints.push_back(SGM::Point3D(0,.5,0));
+    aPoints.push_back(SGM::Point3D(1,.5,0));
+    aPoints.push_back(SGM::Point3D(2,.5,0));
+    //aPoints.push_back(SGM::Point3D(-2,.5,0));
+    //aPoints.push_back(SGM::Point3D(-1,1.5,0));
+    //aPoints.push_back(SGM::Point3D(0,1,0));
+    //aPoints.push_back(SGM::Point3D(1,1.5,0));
+    //aPoints.push_back(SGM::Point3D(2,2,0));
+    SGM::Curve IDCurve = mModel->create_NUBcurve(aPoints);
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    mModel->create_revolve(Origin, Axis, IDCurve);
     }
 
 void MainWindow::save_settings()

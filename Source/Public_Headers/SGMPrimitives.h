@@ -61,6 +61,11 @@ SGM_EXPORT SGM::Body CreateTorus(SGM::Result             &rResult,
                                  double                   dMajorRadius,
                                  bool                     bApple=true);
 
+SGM_EXPORT SGM::Body CreateRevolve(SGM::Result             &rResult,
+                                   SGM::Point3D      const &Origin,
+                                   SGM::UnitVector3D const &Axis,
+                                   SGM::Curve        const &IDCurve);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Two Dimensional Creation Functions

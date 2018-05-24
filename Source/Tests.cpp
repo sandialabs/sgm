@@ -9,6 +9,8 @@
 #include "SGMInterrogate.h"
 #include "SGMTree.h"
 #include "SGMIntersector.h"
+#include "SGMTopology.h"
+#include "SGMDisplay.h"
 
 #include "FileFunctions.h"
 #include "EntityClasses.h"
@@ -2347,7 +2349,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin1(1.0,1.0,0.0);
         SGM::UnitVector3D Axis1(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, pNUB1, Origin1, Axis1);
+        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, Origin1, Axis1, pNUB1);
 
         SGM::Point3D Pos;
         SGM::Vector3D Du, Dv, Duu, Duv, Dvv;
@@ -2386,7 +2388,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin2(1.0,3.0,0.0);
         SGM::UnitVector3D Axis2(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
+        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, Origin2, Axis2, pNUB2);
 
         bool bAnswer2 = TestSurface(pRevolve2, SGM::Point2D(0.5,0.2));
 
@@ -2451,33 +2453,25 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
     if(nTestNumber==34)
         {
-        std::vector<SGM::Point2D> aPoints;
-        aPoints.push_back(SGM::Point2D(0,3));
-        aPoints.push_back(SGM::Point2D(3,3));
-        aPoints.push_back(SGM::Point2D(4,2));
-        aPoints.push_back(SGM::Point2D(5,1));
-        aPoints.push_back(SGM::Point2D(6,0));
-        aPoints.push_back(SGM::Point2D(3,0));
-        aPoints.push_back(SGM::Point2D(2,1));
-        aPoints.push_back(SGM::Point2D(1,2));
-        std::vector<std::vector<size_t> > aaPolygons;
-        std::vector<size_t> aPolygon;
-        aPolygon.push_back(0);
-        aPolygon.push_back(1);
-        aPolygon.push_back(2);
-        aPolygon.push_back(3);
-        aPolygon.push_back(4);
-        aPolygon.push_back(5);
-        aPolygon.push_back(6);
-        aPolygon.push_back(7);
-        aaPolygons.push_back(aPolygon);
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(-2,.5,0));
+        aPoints.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints.push_back(SGM::Point3D(0,1,0));
+        aPoints.push_back(SGM::Point3D(1,1.5,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+        SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
 
-        std::vector<size_t> aTriangles,aAdjacencies;
-        SGM::TriangulatePolygon(rResult,aPoints,aaPolygons,aTriangles,aAdjacencies);
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult, BodyID, sFaces);
+
+        for(Face FaceID : sFaces)
+          SGM::GetFaceTriangles(rResult, FaceID);
 
         return true;
-        }
-
+        } 
     return false;
     }
 

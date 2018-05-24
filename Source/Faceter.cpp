@@ -1128,12 +1128,12 @@ void Refine(face         const *pFace,
     SGM::UnitVector3D NormA,NormB;
     pSurface->Evaluate(uvA,nullptr,nullptr,nullptr,&NormA);
     pSurface->Evaluate(uvB,nullptr,nullptr,nullptr,&NormB);
-    if(NormA%NormB<dCosRefine)
+    SGM::Point2D uv=SGM::MidPoint(uvA,uvB);
+    SGM::Point3D Pos;
+    SGM::UnitVector3D Norm;
+    pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
+    if(NormA%NormB<dCosRefine || Norm%NormA<dCosRefine)
         {
-        SGM::Point2D uv=SGM::MidPoint(uvA,uvB);
-        SGM::Point3D Pos;
-        SGM::UnitVector3D Norm;
-        pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
         Node MidNode;
         MidNode.m_Entity=(entity *)pFace;
         MidNode.m_Pos=Pos;
@@ -1367,13 +1367,13 @@ void FindSeamCrossings(SGM::Result        &rResult,
             double v2=aUInLow[Index1].first;
             size_t nNodeA=aUOutLow[Index1].second;
             size_t nNodeB=aUInLow[Index1].second;
-            if(v2>v1)
+            if(v2<v1)
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
                 Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
                 }
-            else if(Index1<nUOutLow-2)
+            else if(Index1<nUOutLow-1)
                 {
                 nNodeB=aUInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
@@ -1399,13 +1399,13 @@ void FindSeamCrossings(SGM::Result        &rResult,
             double u2=aVInLow[Index1].first;
             size_t nNodeA=aVOutLow[Index1].second;
             size_t nNodeB=aVInLow[Index1].second;
-            if(u1>u2)
+            if(u1<u2)
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
                 Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
                 }
-            else if(Index1<nVOutLow-2)
+            else if(Index1<nVOutLow-1)
                 {
                 nNodeB=aVInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
@@ -1431,13 +1431,13 @@ void FindSeamCrossings(SGM::Result        &rResult,
             double v2=aUInHigh[Index1].first;
             size_t nNodeA=aUOutHigh[Index1].second;
             size_t nNodeB=aUInHigh[Index1].second;
-            if(v1>v2)
+            if(v1<v2)
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
                 Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
                 }
-            else if(Index1<nUOutHigh-2)
+            else if(Index1<nUOutHigh-1)
                 {
                 nNodeB=aUInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
@@ -1447,7 +1447,7 @@ void FindSeamCrossings(SGM::Result        &rResult,
             else // Must go around the corner.
                 {
                 // Through (max u,max v)
-                nNodeB=aVInHigh.back().second;
+                nNodeB=aVInHigh[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
                 aNodes[nNodeA].m_nNext=nNodeC;
                 aNodes[nNodeB].m_nPrevious=nNodeC;
@@ -1463,13 +1463,13 @@ void FindSeamCrossings(SGM::Result        &rResult,
             double u2=aVInHigh[Index1].first;
             size_t nNodeA=aVOutHigh[Index1].second;
             size_t nNodeB=aVInHigh[Index1].second;
-            if(u2>u1)
+            if(u2<u1)
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
                 Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
                 }
-            else if(Index1<nVOutHigh-2)
+            else if(Index1<nVOutHigh-1)
                 {
                 nNodeB=aVInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
@@ -1479,7 +1479,7 @@ void FindSeamCrossings(SGM::Result        &rResult,
             else // Must go around the corner.
                 {
                 // Through (min u,max v)
-                nNodeB=aUInLow.back().second;
+                nNodeB=aUInLow[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
                 aNodes[nNodeA].m_nNext=nNodeC;
                 aNodes[nNodeB].m_nPrevious=nNodeC;
@@ -1539,6 +1539,42 @@ void FindPolygons(std::vector<Node>                 &aNodes,
         }
     }
 
+void FindOuterLoop(SGM::Result        &rResult,
+                   face         const *pFace,
+                   FacetOptions const &Options,
+                   std::vector<Node>  &aNodes)
+    {
+    surface const *pSurface=pFace->GetSurface();
+    size_t Index1;
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    std::vector<SGM::Point2D> aCorners;
+    aCorners.push_back(Domain.LowerLeft());
+    aCorners.push_back(Domain.LowerRight());
+    aCorners.push_back(Domain.UpperRight());
+    aCorners.push_back(Domain.UpperLeft());
+    if(pFace->GetFlipped())
+        {
+        std::reverse(aCorners.begin(),aCorners.end());
+        }
+    double dCosRefine=cos(Options.m_dEdgeAngleTol);
+    for(Index1=0;Index1<4;++Index1)
+        {
+        SGM::Point3D Pos;
+        pSurface->Evaluate(aCorners[Index1],&Pos);
+        Node CornerNode;
+        CornerNode.m_Entity=(entity *)pFace;
+        CornerNode.m_uv=aCorners[Index1];
+        CornerNode.m_Pos=Pos;
+        CornerNode.m_nNext= Index1==3 ? 0 : Index1+1;
+        CornerNode.m_nPrevious = Index1==0 ? 3 : Index1-1;
+        aNodes.push_back(CornerNode);
+        }
+    Refine(pFace,dCosRefine,aNodes,0,1);
+    Refine(pFace,dCosRefine,aNodes,1,2);
+    Refine(pFace,dCosRefine,aNodes,2,3);
+    Refine(pFace,dCosRefine,aNodes,3,0);
+    }
+
 size_t FacetFaceLoops(SGM::Result                       &rResult,
                       face                        const *pFace,
                       FacetOptions                const &Options,
@@ -1568,6 +1604,7 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
         std::vector<edge *> const &aLoop=aaLoops[Index1];
         std::vector<SGM::EdgeSideType> const &aSides=aaEdgeSideTypes[Index1];
         size_t nLoop=aLoop.size();
+        size_t nLoopStartNode=aNodes.size();
         for(Index2=0;Index2<nLoop;++Index2)
             {
             size_t nStartNode=aNodes.size();
@@ -1609,11 +1646,20 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                 aNodes[Index3].m_uv=pSurface->Inverse(aNodes[Index3].m_Pos);
                 }
             }
+
+        // Make sure that last node is pointing to the start.
+
+        aNodes.back().m_nNext=nLoopStartNode;
         }
 
-    // Find and fix all seam crossings.
-
-    FindSeamCrossings(rResult,pFace,Options,aNodes);
+    if(nLoops==0)
+        {
+        FindOuterLoop(rResult,pFace,Options,aNodes);
+        }
+    else
+        {
+        FindSeamCrossings(rResult,pFace,Options,aNodes);
+        }
     
     // Find the polygons.
 
@@ -2222,95 +2268,36 @@ void FlipTriangles(size_t               nTri,
     FixBackPointers(nTri,aTriangles,aAdjacencies);
     }
 
-void DelaunayFlips3D(std::vector<SGM::Point3D>      const &aPoints3D,
-                     std::vector<size_t>                  &aTriangles,
-                     std::vector<size_t>                  &aAdjacencies)
+void DelaunayFlips3D(std::vector<SGM::Point3D> const &aPoints3D,
+                     std::vector<size_t>             &aTriangles,
+                     std::vector<size_t>             &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
-    size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    bool bFlipped=true;
+    while(bFlipped)
         {
-        size_t T0=aAdjacencies[Index1];
-        size_t T1=aAdjacencies[Index1+1];
-        size_t T2=aAdjacencies[Index1+2];
-        if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
-            {
-            FlipTriangles(Index1,0,aTriangles,aAdjacencies);
-            T1=aAdjacencies[Index1+1];
-            T2=aAdjacencies[Index1+2];
-            }
-        else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
-            {
-            FlipTriangles(Index1,1,aTriangles,aAdjacencies);
-            T2=aAdjacencies[Index1+2];
-            }
-        else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
-            {
-            FlipTriangles(Index1,2,aTriangles,aAdjacencies);
-            }
-        }
-    }
-
-void StarSmoothing(face                     const *pFace,
-                   std::vector<SGM::Point2D>      &aPoints2D,
-                   std::vector<SGM::Point3D>      &aPoints3D,
-                   std::vector<SGM::UnitVector3D> &aNormals,
-                   std::vector<size_t>            &aTriangles,
-                   size_t                          nStiner)
-    {
-    size_t nPoints=aPoints2D.size();
-    if(nStiner<nPoints)
-        {
-        std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
-        size_t Index1,Index2;
-        for(Index1=0;Index1<nPoints;++Index1)
-            {
-            sVertices.insert(Index1);
-            }
-        size_t nTriangles=aTriangles.size();
-        size_t nCount=0;
+        bFlipped=false;
+        size_t Index1;
         for(Index1=0;Index1<nTriangles;Index1+=3)
             {
-            size_t a=aTriangles[Index1];
-            size_t b=aTriangles[Index1+1];
-            size_t c=aTriangles[Index1+2];
-            if(a<b)
+            size_t T0=aAdjacencies[Index1];
+            size_t T1=aAdjacencies[Index1+1];
+            size_t T2=aAdjacencies[Index1+2];
+            if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
                 {
-                sEdges.insert(GraphEdge(a,b,nCount));
-                ++nCount;
+                FlipTriangles(Index1,0,aTriangles,aAdjacencies);
+                bFlipped=true;
                 }
-            if(b<c)
+            else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
                 {
-                sEdges.insert(GraphEdge(b,c,nCount));
-                ++nCount;
+                FlipTriangles(Index1,1,aTriangles,aAdjacencies);
+                bFlipped=true;
                 }
-            if(c<a)
+            else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
                 {
-                sEdges.insert(GraphEdge(c,a,nCount));
-                ++nCount;
+                FlipTriangles(Index1,2,aTriangles,aAdjacencies);
+                bFlipped=true;
                 }
-            }
-        Graph graph(sVertices,sEdges);
-        surface const *pSurface=pFace->GetSurface();
-        for(Index1=nStiner;Index1<nPoints;++Index1)
-            {
-            std::vector<size_t> const &aStar=graph.GetStar(Index1);
-            size_t nStar=aStar.size();
-            double dUTotal=0,dVTotal=0;
-            for(Index2=0;Index2<nStar;++Index2)
-                {
-                SGM::Point2D const &uv=aPoints2D[aStar[Index2]];
-                dUTotal+=uv.m_u;
-                dVTotal+=uv.m_v;
-                }
-            SGM::Point2D Center(dUTotal/nStar,dVTotal/nStar);
-            aPoints2D[Index1]=Center;
-            SGM::Point3D Pos;
-            SGM::UnitVector3D Norm;
-            pSurface->Evaluate(Center,&Pos,nullptr,nullptr,&Norm);
-            aPoints3D[Index1]=Pos;
-            aNormals[Index1]=Norm;
             }
         }
     }
@@ -2346,11 +2333,5 @@ void FacetFace(SGM::Result                    &rResult,
         {
         aTriangles.push_back(aPoles[Index1]);
         }
-    /*
-    for(Index1=0;Index1<5;++Index1)
-        {
-        StarSmoothing(pFace,aPoints2D,aPoints3D,aNormals,aTriangles,nOldSize);
-        }
-    */
     }
 }

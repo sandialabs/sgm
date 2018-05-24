@@ -537,6 +537,26 @@ bool SGM::Interval2D::operator&&(SGM::Interval2D const &domain) const
            std::max(m_VDomain.m_dMin,domain.m_VDomain.m_dMin)<=std::min(m_VDomain.m_dMax,domain.m_VDomain.m_dMax);
     }
 
+SGM::Point2D SGM::Interval2D::LowerLeft() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMin,m_VDomain.m_dMin);
+    }
+
+SGM::Point2D SGM::Interval2D::LowerRight() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMax,m_VDomain.m_dMin);
+    }
+
+SGM::Point2D SGM::Interval2D::UpperLeft() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMin,m_VDomain.m_dMax);
+    }
+
+SGM::Point2D SGM::Interval2D::UpperRight() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMax,m_VDomain.m_dMax);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interval3D methods

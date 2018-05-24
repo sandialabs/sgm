@@ -35,6 +35,14 @@ entity *entity::Copy(SGM::Result &rResult) const
         }
     }
 
+void entity::SeverOwners() const
+    {
+    for (entity *pOwner : m_Owners)
+        {
+        pOwner->RemoveOwner((entity*)this);
+        }
+    }
+
 void entity::Transform(SGM::Result            &,//rResult,
                        SGM::Transform3D const &Trans)
     {

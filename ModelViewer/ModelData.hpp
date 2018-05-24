@@ -62,6 +62,10 @@ public:
                     double                   dMinorRadius,
                     double                   dMajorRadius);
 
+  void create_revolve(SGM::Point3D      const &Origin,
+                      SGM::UnitVector3D const &Axis,
+                      SGM::Curve        const &IDCurve);
+
   void create_line(SGM::Point3D      const &Origin,
                    SGM::UnitVector3D const &Axis,
                    SGM::Interval1D   const &Domain);
@@ -89,7 +93,7 @@ public:
                         double                   dB,
                         SGM::Interval1D   const &Domain);
 
-  void create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
+  SGM::Curve create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
 
   void create_torus_knot(SGM::Point3D      const &Center,
                          SGM::UnitVector3D const &XAxis,

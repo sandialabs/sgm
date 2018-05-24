@@ -17,6 +17,7 @@ signals:
   void cone();
   void torus();
   void NUBSurface();
+  void revolve();
   void line();
   void circle();
   void ellipse();

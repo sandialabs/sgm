@@ -300,6 +300,15 @@ namespace SGM
 
             bool operator&&(SGM::Interval2D const &) const;
 
+            // Returns the four corners of the interval.  Left and Right 
+            // mean the min and max of m_UDomain, and Lower and Upper
+            // mean the min and max of m_VDomain.
+
+            SGM::Point2D LowerLeft() const;
+            SGM::Point2D LowerRight() const;
+            SGM::Point2D UpperLeft() const;
+            SGM::Point2D UpperRight() const;
+
         public:
 
             SGM::Interval1D m_UDomain;

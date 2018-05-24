@@ -51,6 +51,8 @@ class entity
         void Transform(SGM::Result            &rResult,
                        SGM::Transform3D const &Trans);
 
+        void SeverOwners() const;
+
     protected:
 
         size_t                  m_ID;
@@ -77,6 +79,8 @@ class thing : public entity
         void AddToMap(size_t nID,entity *pEntity);
 
         void DeleteEntity(entity *pEntity);
+
+        void SeverOwners(entity *pEntity);
 
         // Get methods
 
