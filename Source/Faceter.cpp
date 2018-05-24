@@ -2273,31 +2273,23 @@ void DelaunayFlips3D(std::vector<SGM::Point3D> const &aPoints3D,
                      std::vector<size_t>             &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
-    bool bFlipped=true;
-    while(bFlipped)
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        bFlipped=false;
-        size_t Index1;
-        for(Index1=0;Index1<nTriangles;Index1+=3)
+        size_t T0=aAdjacencies[Index1];
+        size_t T1=aAdjacencies[Index1+1];
+        size_t T2=aAdjacencies[Index1+2];
+        if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
             {
-            size_t T0=aAdjacencies[Index1];
-            size_t T1=aAdjacencies[Index1+1];
-            size_t T2=aAdjacencies[Index1+2];
-            if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
-                {
-                FlipTriangles(Index1,0,aTriangles,aAdjacencies);
-                bFlipped=true;
-                }
-            else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
-                {
-                FlipTriangles(Index1,1,aTriangles,aAdjacencies);
-                bFlipped=true;
-                }
-            else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
-                {
-                FlipTriangles(Index1,2,aTriangles,aAdjacencies);
-                bFlipped=true;
-                }
+            FlipTriangles(Index1,0,aTriangles,aAdjacencies);
+            }
+        else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
+            {
+            FlipTriangles(Index1,1,aTriangles,aAdjacencies);
+            }
+        else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
+            {
+            FlipTriangles(Index1,2,aTriangles,aAdjacencies);
             }
         }
     }
