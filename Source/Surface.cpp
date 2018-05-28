@@ -1095,7 +1095,6 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Vector3D  DuLocal;
             SGM::Vector3D  DvLocal;
             double A1_half = 0.0;
-            double A2_half = 0.0;
             double dvRadius = 0.0;
 
             if (nullptr == Dv && nullptr == Duv && nullptr == Dvv && nullptr == Norm)
@@ -1761,7 +1760,6 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             SGM::Point3D      const &Origin =pRevolve->m_Origin;
             SGM::UnitVector3D const &XAxis  =pRevolve->m_XAxis;
-            SGM::UnitVector3D const &YAxis  =pRevolve->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pRevolve->m_ZAxis;
 
             uv.m_u = 0; // default u output to 0
