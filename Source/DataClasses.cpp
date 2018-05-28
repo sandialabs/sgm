@@ -639,7 +639,8 @@ bool SGM::Interval3D::operator&&(SGM::Interval3D const &domain) const
 ///////////////////////////////////////////////////////////////////////////////
 
 SGM::Result::Result(SGMInternal::thing *pThing): 
-    m_nType(ResultType::ResultTypeOK), m_pThing(pThing) 
+    m_nType(ResultType::ResultTypeOK), m_pThing(pThing),
+    m_bLog(false)
     {
     }
     
