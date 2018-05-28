@@ -29,7 +29,7 @@ class Result
 
         SGM_EXPORT void SetMessage(std::string const &sMessage);
 
-        SGM_EXPORT void SGM::Result::ClearMessage();
+        SGM_EXPORT void ClearMessage();
 
         SGM_EXPORT SGM::ResultType GetResult() const {return m_nType;}
 
