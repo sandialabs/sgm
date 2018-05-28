@@ -5,11 +5,11 @@
 #include "SGMChecker.h"
 #include "SGMComplex.h"
 #include "SGMTopology.h"
-#include "SGMIntersecors.h"
+#include "SGMIntersector.h"
 #include "SGMDisplay.h"
 #include "SGMEntityFunctions.h"
 #include "SGMMathematics.h"
-#include "SGMQuery.h"
+#include "SGMInterrogate.h"
 #include "SGMTranslators.h"
 
 #include "Primitive.h"
@@ -186,7 +186,7 @@ std::vector<SGM::Point3D> const &SGM::GetEdgePoints(SGM::Result     &rResult,
                                                     SGM::Edge const &EdgeID)
     {
     SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);    
-    return pEdge->GetFacets();
+    return pEdge->GetFacets(rResult);
     }
 
 std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResult,
@@ -281,7 +281,13 @@ size_t SGM::IntersectSurfaces(SGM::Result               &rResult,
         pface2=(SGMInternal::face const *)rResult.GetThing()->FindEntity(pFace2->m_ID);
         }
     std::vector<SGMInternal::curve *> acurves;
-    return IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,pface1,pface2,dTolerance);
+    size_t nAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,pface1,pface2,dTolerance);
+    size_t Index1;
+    for(Index1=0;Index1<nAnswer;++Index1)
+        {
+        aCurves.push_back(SGM::Curve(acurves[Index1]->GetID()));
+        }
+    return nAnswer;
     }
 
 
@@ -435,6 +441,13 @@ void SGM::FindVertices(SGM::Result           &rResult,
         }
     }
 
+SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
+                                   SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return SGM::Surface(pFace->GetSurface()->GetID());
+    }
+
 SGMInternal::thing *SGM::CreateThing()
     {
     return new SGMInternal::thing();
@@ -480,33 +493,45 @@ SGM::Body SGM::CreateCone(SGM::Result        &rResult,
     return SGM::Body(pBody->GetID());
     }
 
-SGM::Curve CreateCircle(SGM::Result             &rResult,
-                        SGM::Point3D      const &Center,
-                        SGM::UnitVector3D const &Normal,
-                        double                   dRadius)
-    {
-    SGMInternal::curve *pCurve=new SGMInternal::circle(rResult,Center,Normal,dRadius);
-    return SGM::Curve(pCurve->GetID());
-    }
-
 SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
                            SGM::Point3D      const &Center,
                            SGM::UnitVector3D const &Axis,
-                           double                   dMajorRadius,
                            double                   dMinorRadius,
+                           double                   dMajorRadius,
                            bool                     bApple)
     {
-    SGMInternal::body *pBody=SGMInternal::CreateTorus(rResult,Center,Axis,dMajorRadius,dMinorRadius,bApple);
+    SGMInternal::body *pBody=SGMInternal::CreateTorus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
     return SGM::Body(pBody->GetID());
     }
 
-SGM::Body CreateSheetBody(SGM::Result               &rResult,
-                          SGM::Surface              &SurfaceID,
-                          std::set<SGM::Edge> const &sEdges)
+SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
+                             SGM::Point3D      const &Origin,
+                             SGM::UnitVector3D const &Axis,
+                             SGM::Curve        const &IDCurve)
+    {
+    SGMInternal::curve const *pCurve = (SGMInternal::curve const *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
+    SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
+
+    return SGM::Body(pBody->GetID());
+    }
+
+SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
+                               SGM::Surface                   &SurfaceID,
+                               std::vector<SGM::Edge>         &aEdges,
+                               std::vector<SGM::EdgeSideType> &aTypes)
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::surface *pSurface=(SGMInternal::surface *)pThing->FindEntity(SurfaceID.m_ID);
-    SGMInternal::body *pBody=nullptr;
+    std::vector<SGMInternal::edge *> aedges;
+    size_t Index1;
+    size_t nEdges=aEdges.size();
+    aedges.reserve(nEdges);
+    for(Index1=0;Index1<nEdges;++Index1)
+        {
+        SGMInternal::edge *pEdge=(SGMInternal::edge *)pThing->FindEntity(aEdges[Index1].m_ID);
+        aedges.push_back(pEdge);
+        }
+    SGMInternal::body *pBody=SGMInternal::CreateSheetBody(rResult,pSurface,aedges,aTypes);
     return SGM::Body(pBody->GetID());
     }
 
@@ -559,6 +584,19 @@ SGM::Curve SGM::CreateHyperbola(SGM::Result             &rResult,
     return SGM::Curve(pCurve->GetID());
     }
 
+SGM::Curve SGM::CreateTorusKnot(SGM::Result             &rResult,
+                                SGM::Point3D      const &Center,
+                                SGM::UnitVector3D const &XAxis,
+                                SGM::UnitVector3D const &YAxis,
+                                double                   dMinorRadius,
+                                double                   dMajorRadius,
+                                size_t                   nA,
+                                size_t                   nB)
+    {
+    SGMInternal::curve *pCurve=new SGMInternal::TorusKnot(rResult,Center,XAxis,YAxis,dMinorRadius,dMajorRadius,nA,nB);
+    return SGM::Curve(pCurve->GetID());
+    }
+
 SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
                           SGM::Curve            &CurveID,
                           SGM::Interval1D const *pDomain)
@@ -567,6 +605,23 @@ SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
     SGMInternal::curve *pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
     SGMInternal::edge *pEdge=CreateEdge(rResult,pCurve,pDomain);
     return SGM::Edge(pEdge->GetID());
+    }
+
+SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
+                            SGM::Entity const &EntityID)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    return SGM::Entity(pEntity->Copy(rResult)->GetID());
+    }
+
+void SGM::TransformEntity(SGM::Result            &rResult,
+                          SGM::Transform3D const &Trans,
+                          SGM::Entity            &EntityID)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
+    pEntity->Transform(rResult,Trans);
     }
 
 bool SGM::CheckEntity(SGM::Result              &rResult,
@@ -579,7 +634,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     return pEntity->Check(rResult,Options,aCheckStrings);
     }
 
-SGM::Interval1D const &GetCurveDomain(SGM::Result      &rResult,
+SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
                                       SGM::Curve const &CurveID)
     {
     SGMInternal::thing *pThing=rResult.GetThing();
@@ -653,6 +708,17 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     {
     SGMInternal::curve *pCurve=SGMInternal::CreateNUBCurveWithEndVectors(rResult,aInterpolate,StartVec,EndVec,pParams);
     return SGM::Curve(pCurve->GetID());
+    }
+
+SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
+                                     SGM::Point3D      const &Center,
+                                     SGM::UnitVector3D const &Axis,
+                                     double                   dMinorRadius,
+                                     double                   dMajorRadius,
+                                     bool                     bApple)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    return SGM::Surface(pSurface->GetID());
     }
 
 bool SGM::GetLineData(SGM::Result       &rResult,
@@ -1130,7 +1196,6 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
     return aFaces.size();
     }
 
-
 size_t SGM::ReadFile(SGM::Result                  &rResult,
                      std::string            const &FileName,
                      std::vector<SGM::Entity>     &aEntities,
@@ -1207,4 +1272,26 @@ void SGM::SaveSGM(SGM::Result                  &rResult,
                   SGM::TranslatorOptions const &Options)
     {
     SGMInternal::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
+    }
+
+double FindLength(SGM::Result     &rResult,
+                  SGM::Edge const &EdgeID,
+                  double           dTolerance)
+    {
+    SGMInternal::edge const *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pEdge->FindLength(dTolerance);
+    }
+
+double FindArea(SGM::Result     &rResult,
+                SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->FindArea();
+    }
+
+double FindVolume(SGM::Result       &rResult,
+                  SGM::Volume const &VolumeID)
+    {
+    SGMInternal::volume const *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
+    return pVolume->FindVolume();
     }

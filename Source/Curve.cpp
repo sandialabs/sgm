@@ -1,8 +1,10 @@
 #include "SGMDataClasses.h"
 #include "SGMMathematics.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Curve.h"
+
 #include <limits>
 #include <cmath>
 #include <vector>
@@ -38,6 +40,14 @@ curve *curve::MakeCopy(SGM::Result &rResult) const
         case SGM::CircleType:
             {
             return new circle(rResult,(circle const *)this);
+            }
+        case SGM::TorusKnotCurveType:
+            {
+            return new TorusKnot(rResult,(TorusKnot const *)this);
+            }
+        case SGM::NUBCurveType:
+            {
+            return new NUBcurve(rResult,(NUBcurve const *)this);
             }
         default:
             {
@@ -202,6 +212,96 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 }
             return dAnswer;
             }
+        case SGM::TorusKnotCurveType:
+            {
+            TorusKnot const *pTorusKnot=(TorusKnot const *)this;
+
+            double dBestT=0;
+            if(pGuess)
+                {
+                dBestT=*pGuess;
+                }
+            else
+                {
+                SGM::Point3D      const &Center =pTorusKnot->m_Center;
+                SGM::UnitVector3D const &XAxis  =pTorusKnot->m_XAxis;
+                SGM::UnitVector3D const &YAxis  =pTorusKnot->m_YAxis;
+                SGM::UnitVector3D const &ZAxis  =pTorusKnot->m_Normal;
+                double dMajorRadius=pTorusKnot->m_dMajorRadius;
+                double dMinorRadius=pTorusKnot->m_dMinorRadius;
+                size_t nA=pTorusKnot->m_nA;
+                size_t nB=pTorusKnot->m_nB;
+
+                // Find the u value.
+
+                double x=Pos.m_x-Center.m_x;
+                double y=Pos.m_y-Center.m_y;
+                double z=Pos.m_z-Center.m_z;
+
+                double dUx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
+                double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
+                double du=SGM::SAFEatan2(dUy,dUx);
+
+                // Find the v value.
+
+                SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
+                double cx=Pos.m_x-Center.m_x-Spoke.m_x*dMajorRadius;
+                double cy=Pos.m_y-Center.m_y-Spoke.m_y*dMajorRadius;
+                double cz=Pos.m_z-Center.m_z-Spoke.m_z*dMajorRadius;
+                double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
+                double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
+                double dv=SGM::SAFEatan2(dVy,dVx);
+
+                size_t Index1;
+                std::vector<double> aStarts;
+                double t=du/nA;
+                aStarts.push_back(t);
+                for(Index1=0;Index1<nA;++Index1)
+                    {
+                    t+=SGM_TWO_PI;
+                    aStarts.push_back(t);
+                    }
+                t=du/nB;
+                aStarts.push_back(t);
+                for(Index1=0;Index1<nB;++Index1)
+                    {
+                    t+=SGM_TWO_PI;
+                    aStarts.push_back(t);
+                    }
+
+                double dBestDist=std::numeric_limits<double>::max();
+                size_t nStarts=aStarts.size();
+                for(Index1=0;Index1<nStarts;++Index1)
+                    {
+                    double dT=aStarts[Index1];
+                    double dX=dMajorRadius*cos(nA*dT);
+                    double dY=dMajorRadius*sin(nA*dT);
+                    double dZ=-dMinorRadius*sin(nB*dT);
+                    SGM::Point3D TPos=Center+XAxis*dX+YAxis*dY+ZAxis*dZ;
+                    double dDist=TPos.DistanceSquared(Pos);
+                    if(dDist<dBestDist)
+                        {
+                        dBestDist=dDist;
+                        dBestT=dT;
+                        }
+                    }
+                }
+            double dAnswer=NewtonsMethod(this,dBestT,Pos);
+            if(dBestT<-SGM_ZERO)
+                {
+                dBestT+=SGM_TWO_PI;
+                }
+            if(SGM_TWO_PI+SGM_ZERO<dBestT)
+                {
+                dBestT-=SGM_TWO_PI;
+                }
+
+            if(ClosePos)
+                {
+                Evaluate(dAnswer,ClosePos);
+                }
+            return dAnswer;
+            }
         case SGM::ParabolaType:
             {
             parabola const *pParabola=(parabola const *)this;
@@ -345,6 +445,38 @@ double curve::Inverse(SGM::Point3D const &Pos,
         }
     }
 
+double DerivativeMagnitude(double t,void const *pData) 
+    {
+    curve const *pCurve=(curve const*)pData;
+    SGM::Vector3D Vec;
+    pCurve->Evaluate(t,nullptr,&Vec);
+    return Vec.Magnitude();
+    }
+
+double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
+    {
+    switch(m_CurveType)
+        {
+        case SGM::LineType:
+            {
+            line const *pLine=(line const *)this;
+            return Domain.Length()/pLine->m_dScale;
+            break;
+            }
+        case SGM::CircleType:
+            {
+            circle const *pCircle=(circle const *)this;
+            return Domain.Length()*pCircle->m_dRadius;
+            break;
+            }
+        default:
+            {
+            return SGM::Integrate(DerivativeMagnitude,Domain.m_dMin,Domain.m_dMax,this,dTolerance);
+            break;
+            }
+        }
+    }
+
 void curve::Negate()
     {
     switch(m_CurveType)
@@ -352,7 +484,6 @@ void curve::Negate()
         case SGM::HermiteCurveType:
             {
             hermite *pHermite=(hermite *)this;
-            std::reverse(pHermite->m_aParams.begin(),pHermite->m_aParams.end());
             std::reverse(pHermite->m_aPoints.begin(),pHermite->m_aPoints.end());
             std::reverse(pHermite->m_aTangents.begin(),pHermite->m_aTangents.end());
             size_t nTangents=pHermite->m_aTangents.size();
@@ -361,8 +492,10 @@ void curve::Negate()
                 {
                 pHermite->m_aTangents[Index1].Negate();
                 }
-            std::reverse(pHermite->m_aSeedParams.begin(),pHermite->m_aSeedParams.end());
-            std::reverse(pHermite->m_aSeedPoints.begin(),pHermite->m_aSeedPoints.end());
+            pHermite->m_aSeedParams.clear();
+            pHermite->m_aSeedPoints.clear();
+            SGM::FindLengths3D(pHermite->m_aPoints,pHermite->m_aParams);
+            break;
             }
         default:
             {
@@ -399,12 +532,12 @@ void curve::Transform(SGM::Transform3D const &Trans)
 
             if(double dScale=Trans.Scale())
                 {
-                Center=Trans*Center;
-                XAxis=Trans*XAxis;
-                YAxis=Trans*YAxis;
-                ZAxis=Trans*ZAxis;
                 dRadius*=dScale;
                 }
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            ZAxis=Trans*ZAxis;
 
             break;
             }
@@ -414,15 +547,17 @@ void curve::Transform(SGM::Transform3D const &Trans)
             SGM::Point3D &Center=pParabola->m_Center;
             SGM::UnitVector3D &XAxis=pParabola->m_XAxis;
             SGM::UnitVector3D &YAxis=pParabola->m_YAxis;
+            SGM::UnitVector3D &Normal=pParabola->m_Normal;
             double &dA=pParabola->m_dA;
 
             if(double dScale=Trans.Scale())
                 {
-                Center=Trans*Center;
-                XAxis=Trans*XAxis;
-                YAxis=Trans*YAxis;
                 dA*=dScale;
                 }
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            Normal=Trans*Normal;
 
             break;
             }
@@ -434,17 +569,19 @@ void curve::Transform(SGM::Transform3D const &Trans)
             SGM::Point3D &Center=pHyperbola->m_Center;
             SGM::UnitVector3D &XAxis=pHyperbola->m_XAxis;
             SGM::UnitVector3D &YAxis=pHyperbola->m_YAxis;
+            SGM::UnitVector3D &Normal=pHyperbola->m_Normal;
             double &dA=pHyperbola->m_dA;
             double &dB=pHyperbola->m_dB;
 
             if(double dScale=Trans.Scale())
                 {
-                Center=Trans*Center;
-                XAxis=Trans*XAxis;
-                YAxis=Trans*YAxis;
                 dA*=dScale;
                 dB*=dScale;
                 }
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            Normal=Trans*Normal;
 
             break;
             }
@@ -454,19 +591,41 @@ void curve::Transform(SGM::Transform3D const &Trans)
             SGM::Point3D &Center=pEllipse->m_Center;
             SGM::UnitVector3D &XAxis=pEllipse->m_XAxis;
             SGM::UnitVector3D &YAxis=pEllipse->m_YAxis;
+            SGM::UnitVector3D &Normal=pEllipse->m_Normal;
             double &dA=pEllipse->m_dA;
             double &dB=pEllipse->m_dB;
 
             if(double dScale=Trans.Scale())
                 {
-                Center=Trans*Center;
-                XAxis=Trans*XAxis;
-                YAxis=Trans*YAxis;
                 dA*=dScale;
                 dB*=dScale;
                 }
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            Normal=Trans*Normal;
 
             break;
+            }
+        case SGM::TorusKnotCurveType:
+            {
+            TorusKnot *pTorusKnot=(TorusKnot *)this;
+            SGM::Point3D       &Center=pTorusKnot->m_Center;
+            SGM::UnitVector3D  &XAxis=pTorusKnot->m_XAxis;
+            SGM::UnitVector3D  &YAxis=pTorusKnot->m_YAxis;
+            SGM::UnitVector3D  &Normal=pTorusKnot->m_Normal;
+            double             &dMinorRadius=pTorusKnot->m_dMinorRadius;
+            double             &dMajorRadius=pTorusKnot->m_dMajorRadius;
+
+            if(double dScale=Trans.Scale())
+                {
+                dMinorRadius*=dScale;
+                dMajorRadius*=dScale;
+                }
+            Center=Trans*Center;
+            XAxis=Trans*XAxis;
+            YAxis=Trans*YAxis;
+            Normal=Trans*Normal;
             }
         case SGM::PointCurveType:
             {
@@ -485,6 +644,8 @@ void curve::Transform(SGM::Transform3D const &Trans)
                 {
                 aControlPoints[Index1]=Trans*aControlPoints[Index1];
                 }
+            pNUB->m_aSeedParams.clear();
+            pNUB->m_aSeedPoints.clear();
             break;
             }
         case SGM::NURBCurveType:
@@ -500,6 +661,8 @@ void curve::Transform(SGM::Transform3D const &Trans)
                 Pos3D=Trans*Pos3D;
                 aControlPoints[Index1]=SGM::Point4D(Pos3D.m_x,Pos3D.m_y,Pos3D.m_z,Pos.m_w);
                 }
+            pNURB->m_aSeedParams.clear();
+            pNURB->m_aSeedPoints.clear();
             break;
             }
         case SGM::HermiteCurveType:
@@ -518,6 +681,8 @@ void curve::Transform(SGM::Transform3D const &Trans)
                 Tangent=Trans*Tangent;
                 aTangents[Index1]=SGM::Vector3D(Tangent.m_x,Tangent.m_y,Tangent.m_z);
                 }
+            pHermite->m_aSeedParams.clear();
+            pHermite->m_aSeedPoints.clear();
             break;
             }
         default:
@@ -626,6 +791,58 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 D2->m_x=YAxis.m_x*ddy;
                 D2->m_y=YAxis.m_y*ddy;
                 D2->m_z=YAxis.m_z*ddy;
+                }
+            break;
+            }
+        case SGM::TorusKnotCurveType:
+            {
+            TorusKnot const *pTorusKnot=(TorusKnot const *)this;
+            SGM::Point3D const &Center=pTorusKnot->m_Center;
+            SGM::UnitVector3D const &XAxis=pTorusKnot->m_XAxis;
+            SGM::UnitVector3D const &YAxis=pTorusKnot->m_YAxis;
+            SGM::UnitVector3D const &ZAxis=pTorusKnot->m_Normal;
+            double dR=pTorusKnot->m_dMajorRadius;
+            double dr=pTorusKnot->m_dMinorRadius;
+            size_t nA=pTorusKnot->m_nA;
+            size_t nB=pTorusKnot->m_nB;
+
+            double dCosA=cos(nA*t);
+            double dSinA=sin(nA*t);
+            double dCosB=dr*cos(nB*t);
+            double dSinB=dr*sin(nB*t);
+
+            if(Pos)
+                {
+                Pos->m_x=Center.m_x+(XAxis.m_x*dCosA+YAxis.m_x*dSinA)*(dR+dCosB)-ZAxis.m_x*dSinB;
+                Pos->m_y=Center.m_y+(XAxis.m_y*dCosA+YAxis.m_y*dSinA)*(dR+dCosB)-ZAxis.m_y*dSinB;
+                Pos->m_z=Center.m_z+(XAxis.m_z*dCosA+YAxis.m_z*dSinA)*(dR+dCosB)-ZAxis.m_z*dSinB;
+                }
+            if(D1)
+                {
+                double dCosAnA=dCosA*nA;
+                double dSinAnA=dSinA*nA;
+                double dCosBnB=dCosB*nB;
+                double dSinBnB=dSinB*nB;
+                D1->m_x=(YAxis.m_x*dCosAnA-XAxis.m_x*dSinAnA)*(dR+dCosB)-(XAxis.m_x*dCosA+YAxis.m_x*dSinA)*dSinBnB-ZAxis.m_x*dCosBnB;
+                D1->m_y=(YAxis.m_y*dCosAnA-XAxis.m_y*dSinAnA)*(dR+dCosB)-(XAxis.m_y*dCosA+YAxis.m_y*dSinA)*dSinBnB-ZAxis.m_y*dCosBnB;
+                D1->m_z=(YAxis.m_z*dCosAnA-XAxis.m_z*dSinAnA)*(dR+dCosB)-(XAxis.m_z*dCosA+YAxis.m_z*dSinA)*dSinBnB-ZAxis.m_z*dCosBnB;
+                }                                  
+            if(D2)                                 
+                {      
+                double dCosAnA=dCosA*nA;
+                double dSinAnA=dSinA*nA;
+                double dCosBnB=dCosB*nB;
+                double dSinBnB=dSinB*nB;
+                double dCosAnAnA=dCosAnA*nA;
+                double dSinAnAnA=dSinAnA*nA;
+                double dCosBnBnB=dCosBnB*nB;
+                double dSinBnBnB=dSinBnB*nB;
+                D2->m_x=(-YAxis.m_x*dSinAnAnA-XAxis.m_x*dCosAnAnA)*(dR+dCosB)-(YAxis.m_x*dCosAnA-XAxis.m_x*dSinAnA)*dSinBnB-
+                    (XAxis.m_x*dCosA+YAxis.m_x*dSinA)*dCosBnBnB+(XAxis.m_x*dSinAnA-YAxis.m_x*dCosAnA)*dSinBnB+ZAxis.m_x*dSinBnBnB;
+                D2->m_y=(-YAxis.m_y*dSinAnAnA-XAxis.m_y*dCosAnAnA)*(dR+dCosB)-(YAxis.m_y*dCosAnA-XAxis.m_y*dSinAnA)*dSinBnB-
+                    (XAxis.m_y*dCosA+YAxis.m_y*dSinA)*dCosBnBnB+(XAxis.m_y*dSinAnA-YAxis.m_y*dCosAnA)*dSinBnB+ZAxis.m_y*dSinBnBnB;
+                D2->m_z=(-YAxis.m_z*dSinAnAnA-XAxis.m_z*dCosAnAnA)*(dR+dCosB)-(YAxis.m_z*dCosAnA-XAxis.m_z*dSinAnA)*dSinBnB-
+                    (XAxis.m_z*dCosA+YAxis.m_z*dSinA)*dCosBnBnB+(XAxis.m_z*dSinAnA-YAxis.m_z*dCosAnA)*dSinBnB+ZAxis.m_z*dSinBnBnB;
                 }
             break;
             }

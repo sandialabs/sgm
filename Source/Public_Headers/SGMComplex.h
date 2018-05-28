@@ -3,6 +3,7 @@
 
 #include "SGMEntityClasses.h"
 #include "SGMDataClasses.h"
+#include "SGMResult.h"
 
 #include "sgm_export.h"
 

@@ -19,6 +19,8 @@ PrimitiveMenu::PrimitiveMenu(QWidget *parent) :
   torus_action->setShortcut(tr("Ctrl+T"));
   QAction* nub_surface_action = addAction("&NUB S&urface", this, SIGNAL(NUBSurface()));
   nub_surface_action->setShortcut(tr("Ctrl+u"));
+  QAction* revolve_action = addAction("Re&volve", this, SIGNAL(revolve()));
+  revolve_action->setShortcut(tr("Ctrl+v"));
 
   addSeparator();
 
@@ -32,8 +34,10 @@ PrimitiveMenu::PrimitiveMenu(QWidget *parent) :
   parabola_action->setShortcut(tr("Ctrl+P"));
   QAction* hyperbola_action = addAction("&Hyperbola", this, SIGNAL(hyperbola()));
   hyperbola_action->setShortcut(tr("Ctrl+H"));
-  QAction* nub_curve_action = addAction("&NUB Cu&rve", this, SIGNAL(NUBcurve()));
+  QAction* nub_curve_action = addAction("NUB Cu&rve", this, SIGNAL(NUBcurve()));
   nub_curve_action->setShortcut(tr("Ctrl+r"));
+  QAction* torus_knot_action = addAction("Torus &Knot", this, SIGNAL(TorusKnot()));
+  torus_knot_action->setShortcut(tr("Ctrl+K"));
 }
 
 PrimitiveMenu::~PrimitiveMenu()

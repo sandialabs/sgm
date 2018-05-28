@@ -1,4 +1,4 @@
-#include "SGMQuery.h"
+#include "SGMInterrogate.h"
 #include "SGMDataClasses.h"
 #include "SGMEntityClasses.h"
 #include "Topology.h"
@@ -19,10 +19,10 @@ void FindClosestPointOnEdge(SGM::Result        &,//rResult,
     curve const *pCurve=pEdge->GetCurve();
     double t=pCurve->Inverse(Point,&ClosestPoint);
     double dEdge=Point.DistanceSquared(ClosestPoint);
-    if(pEdge->GetDomain().InInterval(t)==false)
+    if(pEdge->GetDomain().InInterval(t,SGM_ZERO)==false)
         {
-        SGM::EntityType nType=pCurve->GetCurveType();
-        switch(nType)
+        SGM::EntityType nCurveType=pCurve->GetCurveType();
+        switch(nCurveType)
             {
             case SGM::LineType:
                 {
@@ -180,8 +180,8 @@ void FindClosestPointOnEntity(SGM::Result        &rResult,
                               entity            *&pCloseEntity,
                               bool                bBoundary)
     {
-    SGM::EntityType nType=pEntity->GetType();
-    switch(nType)
+    SGM::EntityType nTopologyType=pEntity->GetType();
+    switch(nTopologyType)
         {
         case SGM::ThingType:
             {

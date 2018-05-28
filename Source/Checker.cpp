@@ -217,7 +217,7 @@ bool face::Check(SGM::Result              &rResult,
                 {
                 bAnswer=false;
                 char Buffer[1000];
-                snprintf(Buffer,sizeof(Buffer),"Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
+                snprintf(Buffer,sizeof(Buffer),"Vertices of Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
                 aCheckStrings.emplace_back(Buffer);
                 }
             }
@@ -245,7 +245,7 @@ bool face::Check(SGM::Result              &rResult,
         double dDotA=Norm%NormalA;
         double dDotB=Norm%NormalB;
         double dDotC=Norm%NormalC;
-        double dTol=0.93969262078590838405410927732473; // 20 degrees
+        double dTol=0.43633231299858239423092269212215; // 25 degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
             double dAngleA=SGM::SAFEacos(dDotA)*180/SGM_PI;
@@ -270,6 +270,13 @@ bool face::Check(SGM::Result              &rResult,
         bAnswer=false;
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"Facets of Face %ld differ from surface normal by %lf.\n",this->GetID(),dMaxAngle);
+        aCheckStrings.emplace_back(Buffer);
+        }
+    if(nTriangles==0)
+        {
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Face %ld does not have facets.\n",this->GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 
@@ -395,6 +402,8 @@ bool surface::Check(SGM::Result              &,//rResult,
                     std::vector<std::string> &) const//aCheckStrings) const
     {
     bool bAnswer=true;
+
+//    SGMInternal::TestSurface()
 
     return bAnswer;
     }

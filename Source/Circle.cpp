@@ -49,9 +49,7 @@ circle::circle(SGM::Result  &rResult,
     m_Normal(pCircle->m_Normal),m_XAxis(pCircle->m_XAxis),
     m_YAxis(pCircle->m_YAxis),m_dRadius(pCircle->m_dRadius)
     {
-    m_bClosed=true;
-    m_Domain.m_dMin=0;
-    m_Domain.m_dMax=SGM_TWO_PI;
-    m_bClosed = true;
+    m_bClosed=pCircle->m_bClosed;
+    m_Domain=pCircle->m_Domain;
     }
 }

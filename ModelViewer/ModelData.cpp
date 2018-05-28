@@ -7,10 +7,11 @@
 #include "SGMTopology.h"
 #include "SGMTranslators.h"
 #include "SGMChecker.h"
+#include "SGMResult.h"
+#include "SGMEntityFunctions.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
-
 
 struct pModelData
 {
@@ -116,6 +117,16 @@ void ModelData::perspective_mode()
   rebuild_graphics();
 }
 
+bool ModelData::RunCPPTest(size_t nTest)
+{
+  bool bAnswer=SGM::RunCPPTest(dPtr->mResult,nTest);
+
+  rebuild_tree();
+  rebuild_graphics();
+
+  return bAnswer;
+}
+
 void ModelData::check(std::vector<std::string> &aLog)
 {
   SGM::CheckOptions Options;
@@ -207,10 +218,58 @@ void ModelData::create_ellipse(SGM::Point3D      const &Center,
   rebuild_graphics();
 }
 
-void ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
+SGM::Curve ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
 {
   SGM::Curve IDCurve=SGM::CreateNUBCurve(dPtr->mResult,aPoints);
   SGM::CreateEdge(dPtr->mResult,IDCurve);
+
+  rebuild_tree();
+  rebuild_graphics();
+
+  return IDCurve;
+}
+
+void ModelData::create_revolve(SGM::Point3D      const &Origin,
+                               SGM::UnitVector3D const &Axis,
+                               SGM::Curve        const &IDCurve)
+{
+  SGM::CreateRevolve(dPtr->mResult, Origin, Axis, IDCurve);
+
+  rebuild_tree();
+  rebuild_graphics();
+}
+
+void ModelData::create_torus_knot(SGM::Point3D      const &Center,
+                                  SGM::UnitVector3D const &XAxis,
+                                  SGM::UnitVector3D const &YAxis,
+                                  double                  dr,
+                                  double                  dR,
+                                  size_t                  nA,
+                                  size_t                  nB)
+{
+  SGM::Curve IDCurve=SGM::CreateTorusKnot(dPtr->mResult,Center,XAxis,YAxis,dr,dR,nA,nB);
+  SGM::Edge Edge1=SGM::CreateEdge(dPtr->mResult,IDCurve);
+
+#if 1
+  SGM::Curve IDCurve2=SGM::Curve(SGM::CopyEntity(dPtr->mResult,IDCurve).m_ID);
+  SGM::Transform3D Trans;
+  SGM::Point3D Origin(0,0,0);
+  SGM::UnitVector3D Axis(0,0,1);
+  double dAngle=0.52359877559829887307710723054658; // 30 degrees.
+  SGM::Rotate(Origin,Axis,dAngle,Trans);
+  SGM::TransformEntity(dPtr->mResult,Trans,IDCurve2);
+  SGM::Edge Edge2=SGM::CreateEdge(dPtr->mResult,IDCurve2);
+
+  SGM::UnitVector3D Normal=XAxis*YAxis;
+  SGM::Surface SurfaceID=SGM::CreateTorusSurface(dPtr->mResult,Center,Normal,dr,dR);
+  std::vector<SGM::Edge> aEdges;
+  aEdges.push_back(Edge1);
+  aEdges.push_back(Edge2);
+  std::vector<SGM::EdgeSideType> aTypes;
+  aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
+  aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
+  SGM::Body BodyID=SGM::CreateSheetBody(dPtr->mResult,SurfaceID,aEdges,aTypes);
+#endif
 
   rebuild_tree();
   rebuild_graphics();

@@ -8,9 +8,9 @@
 namespace SGMInternal
 {
     revolve::revolve(SGM::Result             &rResult,
-                     curve                   *pCurve,
                      SGM::Point3D      const &pAxisOrigin,
-                     SGM::UnitVector3D const &uAxisVector)
+                     SGM::UnitVector3D const &uAxisVector,
+                     curve             const *pCurve)
                      : surface(rResult, SGM::RevolveType)
     {
     pCurve->AddOwner(this);
@@ -33,6 +33,7 @@ namespace SGMInternal
 
 revolve::~revolve()
     {
-    m_pCurve->RemoveOwner(this);
+    if (m_pCurve)
+        m_pCurve->RemoveOwner(this);
     }
 }

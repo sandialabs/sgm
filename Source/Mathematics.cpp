@@ -229,7 +229,7 @@ double FindAngle(std::vector<SGM::Point2D> const &aPoints,
     SGM::UnitVector2D VecAB=PosA-PosB;
     SGM::UnitVector2D VecCB=PosC-PosB;
     double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
-    if(dUp<0)
+    if(dUp<SGM_ZERO)
         {
         return 10;
         }
@@ -609,6 +609,7 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
                          SGM::Point2D const &C,
                          SGM::Point2D const &D)
     {
+    
     const double a00 = A.m_u-D.m_u;
     const double a01 = A.m_v-D.m_v;
     const double a02 = a00*a00+a01*a01;
@@ -618,7 +619,6 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
     const double a20 = C.m_u-D.m_u;
     const double a21 = C.m_v-D.m_v;
     const double a22 = a20*a20+a21*a21;
-
     const double aMatrix[3][3] =
         {
         a00, a01, a02,
@@ -698,6 +698,31 @@ size_t SGM::FindAdjacences2D(std::vector<size_t> const &aTriangles,
     return nTriangles;
     }
 
+size_t GreatestCommonDivisor(size_t nA,
+                             size_t nB)
+    {
+    size_t dR=0;
+    if(nA && nB)
+        {
+        do
+            {
+            dR = nA % nB;
+            if(dR == 0)
+                break;
+            nA = nB;
+            nB = dR;
+            }
+        while(true);
+        }
+    return nB;
+    }
+
+bool RelativelyPrime(size_t nA,
+                     size_t nB)
+    {
+    return GreatestCommonDivisor(nA,nB)==1;
+    }
+
 bool SGM::CramersRule(double a1,double b1,double c1,
                       double a2,double b2,double c2,
                       double &x,double &y)
@@ -714,19 +739,13 @@ bool SGM::CramersRule(double a1,double b1,double c1,
     return true;
     }
 
-void SGM::TriangulatePolygon(SGM::Result                             &rResult,
-                             std::vector<SGM::Point2D>         const &aPoints,
-                             std::vector<std::vector<size_t> > const &aaPolygons,
-                             std::vector<size_t>                     &aTriangles,
-                             std::vector<size_t>                     &aAdjacencies)
+void TriangulatePolygonSub(SGM::Result                             &rResult,
+                           std::vector<SGM::Point2D>         const &aPoints,
+                           std::vector<std::vector<size_t> > const &aaPolygons,
+                           std::vector<size_t>                     &aTriangles,
+                           std::vector<size_t>                     &aAdjacencies)
     {
-    if(aaPolygons.empty() || aPoints.empty())
-        {
-        rResult.SetResult(ResultTypeInsufficientData);
-        return;
-        }
-
-    // First create one polygon.
+    // Create one polygon.
 
     std::vector<size_t> aPolygon=aaPolygons[0];
     size_t nPolygons=aaPolygons.size();
@@ -770,7 +789,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
 
     // Find and cut off ears with the smallest angle first.
     // First find the angle of each vertex of the polygon.
-    // Then cut on the nPolygon-3 ears.
+    // Then cut off the nPolygon-3 ears.
 
     size_t nPolygon=aPolygon.size();
     std::vector<bool> aCutOff;
@@ -787,7 +806,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
         SGM::UnitVector2D VecAB=PosA-PosB;
         SGM::UnitVector2D VecCB=PosC-PosB;
         double dUp=VecAB.m_v*VecCB.m_u-VecAB.m_u*VecCB.m_v;
-        if(dUp<0)
+        if(dUp<SGM_ZERO)
             {
             sAngles.insert(std::pair<double,size_t>(10.0,Index1));
             aAngles.push_back(10.0);
@@ -851,6 +870,62 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
 
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
     SGMInternal::DelaunayFlips(aPoints,aTriangles,aAdjacencies);
+    }
+
+void SGM::TriangulatePolygon(SGM::Result                             &rResult,
+                             std::vector<SGM::Point2D>         const &aPoints,
+                             std::vector<std::vector<size_t> > const &aaPolygons,
+                             std::vector<size_t>                     &aTriangles,
+                             std::vector<size_t>                     &aAdjacencies)
+    {
+    if(aaPolygons.empty() || aPoints.empty())
+        {
+        rResult.SetResult(ResultTypeInsufficientData);
+        return;
+        }
+
+    // Split into nexted groups.  Note that counter clockwise 
+    // polygons are outside and clockwise polygons are inside.
+
+    std::vector<size_t> aOutside,aInside;
+    size_t nPolygons=aaPolygons.size();
+    size_t Index1,Index2;
+    for(Index1=0;Index1<nPolygons;++Index1)
+        {
+        std::vector<SGM::Point2D> aPolyPoints;
+        std::vector<size_t> const &aPolygon=aaPolygons[Index1];
+        size_t nPolygon=aPolygon.size();
+        aPolyPoints.reserve(nPolygon);
+        for(Index2=0;Index2<nPolygon;++Index2)
+            {
+            aPolyPoints.push_back(aPoints[aPolygon[Index2]]);
+            }
+        double dArea=PolygonArea(aPolyPoints);
+        if(dArea<0)
+            {
+            aInside.push_back(Index1);
+            }
+        else
+            {
+            aOutside.push_back(Index1);
+            }
+        }
+
+    size_t nOutside=aOutside.size();
+    for(Index1=0;Index1<nOutside;++Index1)
+        {
+        std::vector<std::vector<size_t> > aaSubPolygons;
+        aaSubPolygons.push_back(aaPolygons[aOutside[Index1]]);
+        std::vector<size_t> aSubTriangles,aSubAdjacencies;
+        TriangulatePolygonSub(rResult,aPoints,aaSubPolygons,aSubTriangles,aSubAdjacencies);
+        size_t nSubTriangles=aSubTriangles.size();
+        for(Index2=0;Index2<nSubTriangles;++Index2)
+            {
+            aTriangles.push_back(aSubTriangles[Index2]);
+            }
+        }
+
+    SGM::FindAdjacences2D(aTriangles,aAdjacencies);
     }
 
 bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)
@@ -1283,6 +1358,22 @@ double SGM::SAFEacos(double x)
         }
     }
 
+double SGM::SAFEasin(double x)
+    {
+    if(1.0<x)
+        {
+        return SGM_HALF_PI;
+        }
+    else if(x<-1.0)
+        {
+        return -SGM_HALF_PI;
+        }
+    else
+        {
+        return asin(x);
+        }
+    }
+
 double SGM::SAFEatan2(double y,double x)
     {
     if(y==0 && x==0)
@@ -1290,6 +1381,43 @@ double SGM::SAFEatan2(double y,double x)
         return 0.0;
         }
     return atan2(y,x);
+    }
+
+double SGM::Integrate(double f(double x,void const *pData),
+                      double      a,
+                      double      b,
+                      void const *pData,
+                      double      dTolerance)
+    {
+    std::vector<std::vector<double> > aaData;
+    double dAnswer=0;
+    double dh=b-a;
+    std::vector<double> aData;
+    aData.push_back(0.5*dh*(f(a,pData)+f(b,pData)));
+    aaData.push_back(aData);
+    double dError=dTolerance+1;
+    size_t Index1=0,Index2;
+    size_t nMin=4;
+    while(Index1<nMin || dTolerance<dError)
+        {
+        ++Index1;
+        dh*=0.5;
+        double dSum=0.0;
+        for(Index2=1;Index2<=pow(2,Index1)-1;Index2+=2)
+            {
+            dSum+=f(a+Index2*dh,pData);
+            }
+        aData.clear();
+        aData.push_back(0.5*aaData[Index1-1][0]+dSum*dh);
+        for(Index2=1;Index2<=Index1;++Index2)
+            {
+            aData.push_back(aData[Index2-1]+(aData[Index2-1]-aaData[Index1-1][Index2-1])/(pow(4,Index2)-1));
+            }
+        aaData.push_back(aData);
+        dAnswer=aData.back();
+        dError=fabs(aaData[Index1-1].back()-dAnswer);
+        }
+    return dAnswer;
     }
 
 size_t SGM::Cubic(double c3,double c2,double c1,double c0,
@@ -1454,192 +1582,6 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
     return aRoots.size();
     }
 
-/* Old Quartic code.
-
-size_t SGM::Quartic(double a,double b,double c,double d,double e,
-                    std::vector<double> &aRoots)
-    {
-    if(fabs(a)<SGM_ZERO)
-        {
-        return SGM::Cubic(b,c,d,e,aRoots);
-        }
-
-    std::vector<double> aDRoots,aDRootValues;
-    size_t nDRoots=SGM::Cubic(4.0*a,3.0*b,2.0*c,d,aDRoots);
-    size_t Index1,Index2;
-    for(Index1=0;Index1<nDRoots;++Index1)
-        {
-        double t=aDRoots[Index1];
-        double t2=t*t;
-        double t3=t2*t;
-        double t4=t2*t2;
-        aDRootValues.push_back(a*t4+b*t3+c*t2+d*t+e);
-        }
-
-    double a2=a*a;
-    double b2=b*b;
-    double c2=c*c;
-    double d2=d*d;
-    double a3=a2*a;
-    double b3=b2*b;
-    double c3=c2*c;
-    
-    double p=(8*a*c-3*b2)/(8*a2);
-    double q=(b3-4*a*b*c+8*a2*d)/(8*a3);
-    double D0=c2-3*b*d+12*a*e;
-    double D1=2*c3-9*b*c*d+27*b2*e+27*a*d2-72*a*c*e;
-    if(fabs(D0)<SGM_ZERO)
-        {
-        if(fabs(D1)<SGM_ZERO)
-            {
-            // Look for a triple root, which is a root of 12a*x^2+6*b*x+2*c
-            std::vector<double> aQuadRoots;
-            size_t nQuadRoots=Quadratic(12*a,6*b,2*c,aQuadRoots);
-            size_t Index1;
-            for(Index1=0;Index1<nQuadRoots;++Index1)
-                {
-                double u=aQuadRoots[Index1];
-                double u2=u*u;
-                double u3=u2*u;
-                double u4=u2*u2;
-                double f=a*u4+b*u3+c*u2+d*u+e;
-                if(fabs(f)<SGM_ZERO)
-                    {
-                    // Then given a triple root u the other root is -3u-b/a
-                    double v=-3*u-b/a;
-                    if(fabs(u-v)<SGM_ZERO)
-                        {
-                        aRoots.push_back(u); // quadruple root.
-                        }
-                    else
-                        {
-                        aRoots.push_back(u);
-                        aRoots.push_back(-3*u-b/a);
-                        }
-                    break;
-                    }
-                }
-            }
-        else
-            {
-            throw;
-            }
-        }
-    else
-        {
-        double D03=D0*D0*D0;
-        double r=D1*D1-4*D03;
-        double Q=0;
-        if(0<=r)
-            {
-            double cr=(D1+sqrt(r))/2.0;
-            if(cr<0)
-                {
-                Q=pow(-cr,1.0/3.0);
-                }
-            else
-                {
-                Q=pow(cr,1.0/3.0);
-                }
-            }
-        double S=0;
-        if(Q<SGM_ZERO)
-            {
-            double T=SGM::SAFEacos(D1/(2*sqrt(D03)));
-            S=0.5*sqrt((2*sqrt(D0)*cos(T/3)/a-2*p)/3);
-            }
-        else
-            {
-            S=0.5*sqrt(((Q+D0/Q)/a-2.0*p)/3.0);
-            }
-
-        if(SGM_ZERO<fabs(S))
-            {
-            double S2=S*S;
-            double QS=q/S;
-            double E=p*2+S2*4;
-            double R12=QS-E;
-            double R34=-QS-E;
-            double b4a=-b/(4*a);
-
-            if(fabs(R12)<SGM_ZERO)
-                {
-                aRoots.push_back(b4a-S);
-                }
-            else if(0<R12)
-                {
-                double F=0.5*sqrt(R12);
-                aRoots.push_back(b4a-S-F);
-                aRoots.push_back(b4a-S+F);
-                }
-
-            if(fabs(R34)<SGM_ZERO)
-                {
-                aRoots.push_back(b4a+S);
-                }
-            else if(0<R34)
-                {
-                double F=0.5*sqrt(R34);
-                aRoots.push_back(b4a+S-F);
-                aRoots.push_back(b4a+S+F);
-                }
-            }
-        else
-            {
-            // Use the roots of the derivative to find where to look for roots.
-            if((a>0 && aDRootValues.front()<0) || (a<0 && aDRootValues.front()>0))
-                {
-                double x=aDRoots.front()-1.0;
-                NewtonMethod(a,b,c,d,e,x);
-                aRoots.push_back(x);
-                }
-            if((a>0 && aDRootValues.back()<0) || (a<0 && aDRootValues.back()>0))
-                {
-                double x=aDRoots.back()+1.0;
-                NewtonMethod(a,b,c,d,e,x);
-                aRoots.push_back(x);
-                }
-            }
-        }
-
-    // Polish roots.
-
-    size_t nAnswer=aRoots.size();
-    for(Index1=0;Index1<nAnswer;++Index1)
-        {
-        NewtonMethod(a,b,c,d,e,aRoots[Index1]);
-        }
-
-    // Check for double roots.
-
-    for(Index1=0;Index1<nDRoots;++Index1)
-        {
-        if(fabs(aDRootValues[Index1])<SGM_MIN_TOL)
-            {
-            bool bFound=false;
-            for(Index2=0;Index2<nAnswer;++Index2)
-                {
-                if(fabs(aRoots[Index2]-aDRoots[Index1])<1E-4)
-                    {
-                    aRoots[Index2]=aDRoots[Index1];
-                    bFound=true;
-                    }
-                }
-            if(bFound==false)
-                {
-                aRoots.push_back(aDRoots[Index1]);
-                nAnswer=aRoots.size();
-                }
-            }
-        }
-
-    std::sort(aRoots.begin(),aRoots.end());
-    aRoots.erase(unique(aRoots.begin(),aRoots.end() ),aRoots.end());
-        
-    return aRoots.size();
-    }
-*/
-
 bool SGM::PolynomialFit(std::vector<SGM::Point2D> aPoints,
                         std::vector<double>       aCoefficients)
     {
@@ -1674,4 +1616,143 @@ bool SGM::PolynomialFit(std::vector<SGM::Point2D> aPoints,
         aCoefficients.push_back(aaMatrix[nPoints-Index1][nPoints]);
         }
     return true;
+    }
+
+size_t SGM::FindMaximalElements(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                                std::vector<size_t>                       &aMaximalElements)
+    {
+    std::set<size_t> sParents,sChildern;
+    std::set<std::pair<size_t,size_t> >::const_iterator iter=sPartialOrder.begin();
+    while(iter!=sPartialOrder.end())
+        {
+        sParents.insert(iter->second);
+        ++iter;
+        }
+    iter=sPartialOrder.begin();
+    while(iter!=sPartialOrder.end())
+        {
+        size_t a=iter->first;
+        size_t b=iter->second;
+        if(a!=b)
+            {
+            sChildern.insert(a);
+            }
+        ++iter;
+        }
+    std::set<size_t>::iterator Piter=sParents.begin();
+    while(Piter!=sParents.end())
+        {
+        size_t p=*Piter;
+        if(sChildern.find(p)==sChildern.end())
+            {
+            aMaximalElements.push_back(p);
+            }
+        ++Piter;
+        }
+    std::sort(aMaximalElements.begin(),aMaximalElements.end());
+    return aMaximalElements.size();
+    }
+
+size_t SGM::FindDecendents(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                           size_t                                     nParent,
+                           std::vector<size_t>                       &aDecendents)
+    {
+    std::set<std::pair<size_t,size_t> >::const_iterator iter=sPartialOrder.begin();
+    while(iter!=sPartialOrder.end())
+        {
+        if(iter->second==nParent)
+            {
+            aDecendents.push_back(iter->first);
+            }
+        ++iter;
+        }
+    std::sort(aDecendents.begin(),aDecendents.end());
+    return aDecendents.size();
+    }
+
+void SGM::SubsetPartailOrder(std::vector<size_t>           const &aKeep,
+                             std::set<std::pair<size_t,size_t> > &sPartialOrder)
+    {
+    std::set<std::pair<size_t,size_t> > sNewOrder;
+    std::set<size_t> sKeep;
+    size_t nKeep=aKeep.size();
+    size_t Index1;
+    for(Index1=0;Index1<nKeep;++Index1)
+        {
+        sKeep.insert(aKeep[Index1]);
+        }
+    std::set<std::pair<size_t,size_t> >::const_iterator iter=sPartialOrder.begin();
+    while(iter!=sPartialOrder.end())
+        {
+        size_t a=iter->first;
+        size_t b=iter->second;
+        if(sKeep.find(a)!=sKeep.end() && sKeep.find(b)!=sKeep.end())
+            {
+            sNewOrder.insert(std::pair<size_t,size_t>(a,b));
+            }
+        ++iter;
+        }
+    sPartialOrder=sNewOrder;
+    }
+
+size_t SGM::FindChildern(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                         size_t                                     nParent,
+                         std::vector<size_t>                       &aChildern)
+    {
+    std::vector<size_t> aDecendents;
+    FindDecendents(sPartialOrder,nParent,aDecendents);
+    std::set<std::pair<size_t,size_t> > sDecendents=sPartialOrder;
+    SubsetPartailOrder(aDecendents,sDecendents);
+    FindMaximalElements(sPartialOrder,aChildern);
+    return aChildern.size();
+    }
+
+size_t SGM::FindDecendentsOfGroup(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                                  std::vector<size_t>                 const &aParents,
+                                  std::vector<size_t>                       &aDecendents)
+    {
+    std::set<size_t> sParents;
+    size_t nParents=aParents.size();
+    size_t Index1;
+    for(Index1=0;Index1<nParents;++Index1)
+        {
+        sParents.insert(aParents[Index1]);
+        }
+    std::set<std::pair<size_t,size_t> >::const_iterator iter=sPartialOrder.begin();
+    while(iter!=sPartialOrder.end())
+        {
+        if(sParents.find(iter->second)!=sParents.end())
+            {
+            aDecendents.push_back(iter->first);
+            }
+        ++iter;
+        }
+    std::sort(aDecendents.begin(),aDecendents.end());
+    return aDecendents.size();
+    }
+
+size_t SGM::FindGenerations(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+                            size_t                                     nParent,
+                            std::vector<std::vector<size_t> >         &aaGenerations)
+    {
+    std::set<std::pair<size_t,size_t> > sOrder=sPartialOrder;
+    std::vector<size_t> aParents;
+    aParents.push_back(nParent);
+    bool bFound=true;
+    while(bFound)
+        {
+        bFound=false;
+        std::vector<size_t> aDecendents;
+        FindDecendentsOfGroup(sOrder,aParents,aDecendents);
+        std::vector<size_t> aGeneration;
+        FindMaximalElements(sOrder,aGeneration);
+        if(aGeneration.empty()==false)
+            {
+            aParents=aGeneration;
+            aaGenerations.push_back(aGeneration);
+            SubsetPartailOrder(aDecendents,sOrder);
+            bFound=true;
+            }
+        }
+    return aaGenerations.size();
     }

@@ -14,9 +14,21 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
                    std::vector<double>       const &aKnots):
     curve(rResult,SGM::NUBCurveType),m_aControlPoints(aControlPoints),m_aKnots(aKnots)
     {
-    m_Domain.m_dMin=aKnots.front();
-    m_Domain.m_dMax=aKnots.back();
+    m_Domain.m_dMin=m_aKnots.front();
+    m_Domain.m_dMax=m_aKnots.back();
     if(SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL))
+        {
+        m_bClosed=true;
+        }
+    }
+
+NUBcurve::NUBcurve(SGM::Result    &rResult,
+                   NUBcurve const *pNUB):
+    curve(rResult,SGM::NUBCurveType),m_aControlPoints(pNUB->m_aControlPoints),m_aKnots(pNUB->m_aKnots)
+    {
+    m_Domain.m_dMin=m_aKnots.front();
+    m_Domain.m_dMax=m_aKnots.back();
+    if(SGM::NearEqual(m_aControlPoints.front(),m_aControlPoints.back(),SGM_MIN_TOL))
         {
         m_bClosed=true;
         }
@@ -51,7 +63,7 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
     }
@@ -62,7 +74,7 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
         {
         FacetOptions Options;
         Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,&m_aSeedParams);
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
     }

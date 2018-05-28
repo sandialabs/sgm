@@ -3,10 +3,14 @@
 #include "SGMComplex.h"
 #include "SGMMathematics.h"
 #include "SGMTranslators.h"
+#include "SGMTopology.h"
 #include "SGMDataClasses.h"
 #include "SGMGeometry.h"
-#include "SGMQuery.h"
+#include "SGMInterrogate.h"
 #include "SGMTree.h"
+#include "SGMIntersector.h"
+#include "SGMTopology.h"
+#include "SGMDisplay.h"
 
 #include "FileFunctions.h"
 #include "EntityClasses.h"
@@ -568,6 +572,8 @@ bool TestIntersections(SGM::Result                &rResult,
         for(Index1=0;bAnswer && Index1<nCurves;++Index1)
             {
             SGMInternal::curve *pCurve=aCurves[Index1];
+            double dLength=pCurve->FindLength(pCurve->GetDomain(),SGM_MIN_TOL);
+            double dTol=SGM_FIT*dLength;
             for(Index2=1;Index2<nTestPoint;++Index2)
                 {
                 double dFraction=Index2/(nTestPoint-1.0);
@@ -577,7 +583,7 @@ bool TestIntersections(SGM::Result                &rResult,
                 SGM::Point3D CPos1,CPos2;
                 pSurface1->Inverse(Pos,&CPos1);
                 pSurface2->Inverse(Pos,&CPos2);
-                if(SGM_FIT<Pos.Distance(CPos1) && SGM_FIT<Pos.Distance(CPos2))
+                if(dTol<Pos.Distance(CPos1) && dTol<Pos.Distance(CPos2))
                     {
                     bAnswer=false;
                     break;
@@ -586,6 +592,198 @@ bool TestIntersections(SGM::Result                &rResult,
             }
         }
     return bAnswer;
+    }
+
+
+bool SGM::CompareSizes(size_t nSize1,size_t nSize2)
+    {
+    return nSize1==nSize2;
+    }
+
+bool SGM::RunTestFile(SGM::Result       &rResult,
+                      std::string const &sTestDirectory,
+                      std::string const &sTestFileName,
+                      std::string const &sOutputFileName)
+    {
+    std::map<std::string,SGMFunction> mFunctionMap;
+    CreateFunctionMap(mFunctionMap);
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
+    if(pOutputFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage(sOutputFileName);
+        return false;
+        }
+
+    std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
+    FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
+    if(pTestFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage(sFullPathName);
+        return false;
+        }
+    bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
+    fclose(pTestFile);
+    fclose(pOutputFile);
+    return bAnswer;
+    }
+
+void SGM::RunTestDirectory(SGM::Result       &rResult,
+                           std::string const &sTestDirectory,
+                           std::string const &sOutputFileName)
+    {
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Temp code to test STEP read.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    //std::vector<Entity> aEntities;
+    //std::vector<std::string> aLog;
+    //SGM::TranslatorOptions Options;
+    //SGM::ReadFile(rResult,sTestDirectory+"/Sphere.stp",aEntities,aLog,Options);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  End of Temp code to test STEP read.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    std::vector<std::string> aFileNames;
+    SGMInternal::ReadDirectory(sTestDirectory,aFileNames);
+
+    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
+    std::map<std::string,SGMFunction> mFunctionMap;
+    CreateFunctionMap(mFunctionMap);
+
+    size_t nFiles=aFileNames.size();
+    size_t nPassed=0,nFailed=0;
+    size_t Index1;
+    for(Index1=0;Index1<nFiles;++Index1)
+        {
+        if(aFileNames[Index1].c_str()[0]!='.')
+            {
+            std::string sExtension;
+            SGMInternal::FindFileExtension(aFileNames[Index1],sExtension);
+            if(sExtension=="txt")
+                {
+                std::string FullPath=sTestDirectory;
+                FullPath+="/";
+                FullPath+=aFileNames[Index1];
+                FILE *pTestFile = fopen(FullPath.c_str(),"rt");
+                try
+                    {
+                    if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
+                        {
+                        ++nPassed;
+                        }
+                    else
+                        {
+                        ++nFailed;
+                        }
+                    }
+                catch(...)
+                    {
+                    ++nFailed;
+                    }
+                fclose(pTestFile);
+                }
+            }
+        }
+    fprintf(pOutputFile,"\n%ld Passed %ld Failed\n",nPassed,nFailed);
+    fclose(pOutputFile);
+    }
+
+bool SGM::CompareFiles(SGM::Result       &rResult,
+                       std::string const &sFile1,
+                       std::string const &sFile2)
+    {
+    // Find the file types.
+
+    std::string Ext1,Ext2;
+    SGMInternal::FindFileExtension(sFile1,Ext1);
+    SGMInternal::FindFileExtension(sFile2,Ext2);
+    if(Ext1!=Ext2)
+        {
+        return false;
+        }
+
+    // Open the files.
+
+    FILE *pFile1 = fopen(sFile1.c_str(),"rt");
+    FILE *pFile2 = fopen(sFile2.c_str(),"rt");
+
+    // Compare the files.
+
+    bool bAnswer=false;
+    if(Ext1=="stl")
+        {
+        bAnswer=true;
+        SGM::TranslatorOptions Options;
+        std::vector<std::string> aLog;
+        std::vector<SGM::Entity> aEntities1,aEntities2;
+        size_t nEntities1=ReadFile(rResult,sFile1,aEntities1,aLog,Options);
+        size_t nEntities2=ReadFile(rResult,sFile2,aEntities2,aLog,Options);
+        SGMInternal::thing *pThing=rResult.GetThing();
+        std::vector<double> aAreas1,aAreas2;
+        aAreas1.reserve(nEntities1);
+        aAreas2.reserve(nEntities2);
+        size_t Index1;
+        for(Index1=0;Index1<nEntities1;++Index1)
+            {
+            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
+            aAreas1.push_back(pComplex->Area());
+            pThing->DeleteEntity(pComplex);
+            }
+        for(Index1=0;Index1<nEntities1;++Index1)
+            {
+            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
+            aAreas2.push_back(pComplex->Area());
+            pThing->DeleteEntity(pComplex);
+            }
+        if(nEntities1==nEntities2)
+            {
+            std::sort(aAreas1.begin(),aAreas1.end());
+            std::sort(aAreas2.begin(),aAreas2.end());
+            bAnswer=true;
+            for(Index1=0;Index1<nEntities1;++Index1)
+                {
+                double dArea1=aAreas1[Index1];
+                double dArea2=aAreas1[Index1];
+                if(SGM::NearEqual(dArea1,dArea2,0.01,true)==false)
+                    {
+                    bAnswer=false;
+                    break;
+                    }
+                }
+            }
+        }
+    else if(Ext1=="spt")
+        {
+        SGMInternal::ReadToString(pFile1,"Data;");
+        SGMInternal::ReadToString(pFile2,"Data;");
+        bAnswer=true;
+        while(bAnswer)
+            {
+            char data1,data2;
+            fread(&data1,1,1,pFile1);
+            fread(&data2,1,1,pFile2);
+            if(data1!=data2)
+                {
+                bAnswer=false;
+                }
+            }
+        }
+
+    fclose(pFile1);
+    fclose(pFile2);
+    return bAnswer;
+    }
+
+double TestIntegrand(double x,void const *)
+    {
+    return 4.0/(1.0+x*x);
     }
 
 bool SGM::RunCPPTest(SGM::Result &rResult,
@@ -2103,11 +2301,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             {
             bAnswer=false;
             }
-        if(!TestIntersections(rResult,pCylinder,pSphere7,7))
+        if(!TestIntersections(rResult,pCylinder,pSphere7,2))
             {
             bAnswer=false;
             }
-        if(!TestIntersections(rResult,pCylinder,pSphere8,8))
+        if(!TestIntersections(rResult,pCylinder,pSphere8,2))
             {
             bAnswer=false;
             }
@@ -2130,7 +2328,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==28)
+    if(nTestNumber==31)
         {
         // Test Revolve Surface
 
@@ -2151,7 +2349,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin1(1.0,1.0,0.0);
         SGM::UnitVector3D Axis1(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, pNUB1, Origin1, Axis1);
+        SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, Origin1, Axis1, pNUB1);
 
         SGM::Point3D Pos;
         SGM::Vector3D Du, Dv, Duu, Duv, Dvv;
@@ -2177,7 +2375,6 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer1=false;
             }
 
-
         // create a more general NUB to revolve
         std::vector<double> aKnots2={0,0,0,0,0.5,1,1,1,1};
         std::vector<SGM::Point3D> aControlPoints2;
@@ -2191,9 +2388,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D Origin2(1.0,3.0,0.0);
         SGM::UnitVector3D Axis2(1.0,2.0,0.0);
-        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, pNUB2, Origin2, Axis2);
-
-
+        SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, Origin2, Axis2, pNUB2);
 
         bool bAnswer2 = TestSurface(pRevolve2, SGM::Point2D(0.5,0.2));
 
@@ -2206,192 +2401,77 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         
         return bAnswer;
         }
-    return false;
-    }
 
-bool SGM::CompareSizes(size_t nSize1,size_t nSize2)
-    {
-    return nSize1==nSize2;
-    }
-
-bool SGM::RunTestFile(SGM::Result       &rResult,
-                      std::string const &sTestDirectory,
-                      std::string const &sTestFileName,
-                      std::string const &sOutputFileName)
-    {
-    std::map<std::string,SGMFunction> mFunctionMap;
-    CreateFunctionMap(mFunctionMap);
-    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    if(pOutputFile==nullptr)
+    if(nTestNumber==32)
         {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage(sOutputFileName);
-        return false;
-        }
+        bool bAnswer=true;
 
-    std::string sFullPathName=sTestDirectory+"/"+sTestFileName;
-    FILE *pTestFile = fopen(sFullPathName.c_str(),"rt");
-    if(pTestFile==nullptr)
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage(sFullPathName);
-        return false;
-        }
-    bool bAnswer=RunTestFile(rResult,mFunctionMap,sTestDirectory,sTestFileName,pTestFile,pOutputFile);
-    fclose(pTestFile);
-    fclose(pOutputFile);
-    return bAnswer;
-    }
+        SGM::Point3D Bottom(0,0,-5),Top(0,0,5),Pos3(2,0,0);
+        double dRadius=2.0;
+        rResult.SetLog(true);
+        SGM::CreateCylinder(rResult,Bottom,Top,dRadius);
+        SGM::CreateSphere(rResult,Pos3,6.0);
 
-void SGM::RunTestDirectory(SGM::Result       &rResult,
-                           std::string const &sTestDirectory,
-                           std::string const &sOutputFileName)
-    {
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  Temp code to test STEP read.
-    //
-    ///////////////////////////////////////////////////////////////////////////
+        std::vector<SGM::Entity> const &aLog=rResult.GetLogEntities();
+        SGM::Face CylinderFace(aLog[0].m_ID);
+        SGM::Face SphereFace(aLog[3].m_ID);
+        SGM::Surface CylinderSurf=SGM::GetSurfaceOfFace(rResult,CylinderFace);
+        SGM::Surface SphereSurf=SGM::GetSurfaceOfFace(rResult,SphereFace);
 
-    //std::vector<Entity> aEntities;
-    //std::vector<std::string> aLog;
-    //SGM::TranslatorOptions Options;
-    //SGM::ReadFile(rResult,sTestDirectory+"/Sphere.stp",aEntities,aLog,Options);
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  End of Temp code to test STEP read.
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    
-    std::vector<std::string> aFileNames;
-    SGMInternal::ReadDirectory(sTestDirectory,aFileNames);
-
-    FILE *pOutputFile = fopen(sOutputFileName.c_str(),"w");
-    std::map<std::string,SGMFunction> mFunctionMap;
-    CreateFunctionMap(mFunctionMap);
-
-    size_t nFiles=aFileNames.size();
-    size_t nPassed=0,nFailed=0;
-    size_t Index1;
-    for(Index1=0;Index1<nFiles;++Index1)
-        {
-        if(aFileNames[Index1].c_str()[0]!='.')
-            {
-            std::string sExtension;
-            SGMInternal::FindFileExtension(aFileNames[Index1],sExtension);
-            if(sExtension=="txt")
-                {
-                std::string FullPath=sTestDirectory;
-                FullPath+="/";
-                FullPath+=aFileNames[Index1];
-                FILE *pTestFile = fopen(FullPath.c_str(),"rt");
-                try
-                    {
-                    if(RunTestFile(rResult,mFunctionMap,sTestDirectory,aFileNames[Index1],pTestFile,pOutputFile))
-                        {
-                        ++nPassed;
-                        }
-                    else
-                        {
-                        ++nFailed;
-                        }
-                    }
-                catch(...)
-                    {
-                    ++nFailed;
-                    }
-                fclose(pTestFile);
-                }
-            }
-        }
-    fprintf(pOutputFile,"\n%ld Passed %ld Failed\n",nPassed,nFailed);
-    fclose(pOutputFile);
-    }
-
-bool SGM::CompareFiles(SGM::Result       &rResult,
-                       std::string const &sFile1,
-                       std::string const &sFile2)
-    {
-    // Find the file types.
-
-    std::string Ext1,Ext2;
-    SGMInternal::FindFileExtension(sFile1,Ext1);
-    SGMInternal::FindFileExtension(sFile2,Ext2);
-    if(Ext1!=Ext2)
-        {
-        return false;
-        }
-
-    // Open the files.
-
-    FILE *pFile1 = fopen(sFile1.c_str(),"rt");
-    FILE *pFile2 = fopen(sFile2.c_str(),"rt");
-
-    // Compare the files.
-
-    bool bAnswer=false;
-    if(Ext1=="stl")
-        {
-        bAnswer=true;
-        SGM::TranslatorOptions Options;
-        std::vector<std::string> aLog;
-        std::vector<SGM::Entity> aEntities1,aEntities2;
-        size_t nEntities1=ReadFile(rResult,sFile1,aEntities1,aLog,Options);
-        size_t nEntities2=ReadFile(rResult,sFile2,aEntities2,aLog,Options);
-        SGMInternal::thing *pThing=rResult.GetThing();
-        std::vector<double> aAreas1,aAreas2;
-        aAreas1.reserve(nEntities1);
-        aAreas2.reserve(nEntities2);
+        std::vector<SGM::Curve> aCurves;
         size_t Index1;
-        for(Index1=0;Index1<nEntities1;++Index1)
+        size_t nCurves=SGM::IntersectSurfaces(rResult,CylinderSurf,SphereSurf,aCurves);
+        for(Index1=0;Index1<nCurves;++Index1)
             {
-            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities1[Index1].m_ID));
-            aAreas1.push_back(pComplex->Area());
-            pThing->DeleteEntity(pComplex);
+            SGM::CreateEdge(rResult,aCurves[Index1]);
             }
-        for(Index1=0;Index1<nEntities1;++Index1)
-            {
-            SGMInternal::complex *pComplex=(SGMInternal::complex *)(pThing->FindEntity(aEntities2[Index1].m_ID));
-            aAreas2.push_back(pComplex->Area());
-            pThing->DeleteEntity(pComplex);
-            }
-        if(nEntities1==nEntities2)
-            {
-            std::sort(aAreas1.begin(),aAreas1.end());
-            std::sort(aAreas2.begin(),aAreas2.end());
-            bAnswer=true;
-            for(Index1=0;Index1<nEntities1;++Index1)
-                {
-                double dArea1=aAreas1[Index1];
-                double dArea2=aAreas1[Index1];
-                if(SGM::NearEqual(dArea1,dArea2,0.01,true)==false)
-                    {
-                    bAnswer=false;
-                    break;
-                    }
-                }
-            }
-        }
-    else if(Ext1=="spt")
-        {
-        SGMInternal::ReadToString(pFile1,"Data;");
-        SGMInternal::ReadToString(pFile2,"Data;");
-        bAnswer=true;
-        while(bAnswer)
-            {
-            char data1,data2;
-            fread(&data1,1,1,pFile1);
-            fread(&data2,1,1,pFile2);
-            if(data1!=data2)
-                {
-                bAnswer=false;
-                }
-            }
+        return bAnswer;
         }
 
-    fclose(pFile1);
-    fclose(pFile2);
-    return bAnswer;
+    if(nTestNumber==33)
+        {
+        bool bAnswer=true;
+
+        double dValue=SGM::Integrate(TestIntegrand,0.0,1.0,nullptr,SGM_ZERO);
+        if(SGM::NearEqual(dValue,SGM_PI,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        SGM::Point3D Center(0,0,0);
+        SGM::UnitVector3D Normal(0,0,1);
+        SGMInternal::curve *pCurve=new SGMInternal::circle(rResult,Center,Normal,1.0);
+        dValue=pCurve->FindLength(pCurve->GetDomain(),SGM_MIN_TOL);
+        if(SGM::NearEqual(dValue,SGM_TWO_PI,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        rResult.GetThing()->DeleteEntity(pCurve);
+        
+        return bAnswer;
+        }
+
+    if(nTestNumber==34)
+        {
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(-2,.5,0));
+        aPoints.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints.push_back(SGM::Point3D(0,1,0));
+        aPoints.push_back(SGM::Point3D(1,1.5,0));
+        aPoints.push_back(SGM::Point3D(2,2,0));
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+        SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult, BodyID, sFaces);
+
+        for(Face FaceID : sFaces)
+          SGM::GetFaceTriangles(rResult, FaceID);
+
+        return true;
+        } 
+    return false;
     }
 

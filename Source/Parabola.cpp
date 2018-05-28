@@ -5,6 +5,7 @@
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Topology.h"
+
 namespace SGMInternal
 {
 parabola::parabola(SGM::Result             &rResult,

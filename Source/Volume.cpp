@@ -26,6 +26,11 @@ void volume::AddEdge(edge *pEdge)
     pEdge->SetVolume(this);
     }
 
+double volume::FindVolume() const
+    {
+    return 0;
+    }
+
 size_t volume::FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *> > &aShells) const
     {

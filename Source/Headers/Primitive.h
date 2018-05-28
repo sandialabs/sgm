@@ -29,9 +29,14 @@ body *CreateCone(SGM::Result        &rResult,
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
-                  double                   dMajorRadius,
                   double                   dMinorRadius,
+                  double                   dMajorRadius,
                   bool                     bApple);
+
+body *CreateRevolve(SGM::Result             &rResult,
+                    SGM::Point3D      const &Origin,
+                    SGM::UnitVector3D const &Axis,
+                    curve             const *pCurve);
 
 edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
@@ -46,5 +51,10 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
                                        SGM::Vector3D             const &StartVec,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams);
+
+body *CreateSheetBody(SGM::Result                    &rResult,
+                      surface                        *pSurface,
+                      std::vector<edge *>            &aEdges,
+                      std::vector<SGM::EdgeSideType> &aTypes);
     }
 #endif // PRIMITIVE_H

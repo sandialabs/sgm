@@ -438,13 +438,13 @@ bool SGM::Interval1D::operator&&(SGM::Interval1D const &domain) const
     return std::max(m_dMin,domain.m_dMin)<=std::min(m_dMax,domain.m_dMax);
     }
 
-bool SGM::Interval1D::InInterval(double Pos) const
+bool SGM::Interval1D::InInterval(double Pos,double dTol) const
     {
     if(m_dMax<m_dMin)
         {
         return false;
         }
-    return m_dMin<=Pos && Pos<=m_dMax;
+    return m_dMin-dTol<=Pos && Pos<=m_dMax+dTol;
     }
 
 bool SGM::Interval1D::OnBoundary(double Pos,double dTol) const
@@ -476,6 +476,16 @@ SGM::Interval2D::Interval2D(SGM::Point2D const &Pos):
 double SGM::Interval2D::Area() const 
     {
     return m_UDomain.Length()*m_VDomain.Length();
+    }
+
+bool SGM::Interval2D::InInterval(SGM::Point2D const &Pos,double dTol) const
+    {
+    return m_UDomain.InInterval(Pos.m_u,dTol) && m_VDomain.InInterval(Pos.m_v,dTol);
+    }
+
+bool SGM::Interval2D::OnBoundary(SGM::Point2D const &Pos,double dTol) const
+    {
+    return InInterval(Pos,dTol) && (m_UDomain.OnBoundary(Pos.m_u,dTol) || m_VDomain.OnBoundary(Pos.m_u,dTol));
     }
 
 double SGM::Interval2D::HalfPerimeter() const 
@@ -525,6 +535,26 @@ bool SGM::Interval2D::operator&&(SGM::Interval2D const &domain) const
         }
     return std::max(m_UDomain.m_dMin,domain.m_UDomain.m_dMin)<=std::min(m_UDomain.m_dMax,domain.m_UDomain.m_dMax) &&
            std::max(m_VDomain.m_dMin,domain.m_VDomain.m_dMin)<=std::min(m_VDomain.m_dMax,domain.m_VDomain.m_dMax);
+    }
+
+SGM::Point2D SGM::Interval2D::LowerLeft() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMin,m_VDomain.m_dMin);
+    }
+
+SGM::Point2D SGM::Interval2D::LowerRight() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMax,m_VDomain.m_dMin);
+    }
+
+SGM::Point2D SGM::Interval2D::UpperLeft() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMin,m_VDomain.m_dMax);
+    }
+
+SGM::Point2D SGM::Interval2D::UpperRight() const 
+    {
+    return SGM::Point2D(m_UDomain.m_dMax,m_VDomain.m_dMax);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -623,7 +653,7 @@ void SGM::Result::SetMessage(std::string const &sMessage)
     m_sMessage+=sMessage;
     }
 
-void SGM::Result::Clear()
+void SGM::Result::ClearMessage()
     {
     m_sMessage.clear();
     m_nType=SGM::ResultType::ResultTypeOK;
@@ -737,6 +767,25 @@ double SGM::Transform3D::Scale() const
         return dX;
         }
     return 0.0;
+    }
+
+void SGM::Rotate(SGM::Point3D      const &Origin,
+                 SGM::UnitVector3D const &Axis,
+                 double                   dAngle,
+                 SGM::Transform3D        &Trans)
+    {
+    SGM::UnitVector3D XAxis=Axis.Orthogonal();
+    SGM::UnitVector3D YAxis=Axis*XAxis;
+    SGM::Transform3D Trans0(XAxis,YAxis,Axis,SGM::Vector3D(Origin));
+    SGM::Transform3D Trans1;
+    Trans0.Inverse(Trans1);
+    double dCos=cos(dAngle);
+    double dSin=sin(dAngle);
+    SGM::UnitVector3D ZAxis(0,0,1);
+    SGM::UnitVector3D XRotate=XAxis*dCos+YAxis*dSin;
+    SGM::UnitVector3D YRotate=ZAxis*XRotate;
+    SGM::Transform3D Trans2(XRotate,YRotate,ZAxis);
+    Trans=(Trans1*Trans2)*Trans0;
     }
 
 void SGM::Transform3D::Inverse(SGM::Transform3D &Trans) const
@@ -950,15 +999,15 @@ double SGM::operator%(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1)
 
 SGM::Point3D SGM::MidPoint(SGM::Point3D const &Pos0,SGM::Point3D const &Pos1,double dFraction)
     {
-    return SGM::Point3D((Pos0.m_x+Pos1.m_x)*dFraction,
-                        (Pos0.m_y+Pos1.m_y)*dFraction,
-                        (Pos0.m_z+Pos1.m_z)*dFraction);
+    return SGM::Point3D(Pos0.m_x*(1.0-dFraction)+Pos1.m_x*dFraction,
+                        Pos0.m_y*(1.0-dFraction)+Pos1.m_y*dFraction,
+                        Pos0.m_z*(1.0-dFraction)+Pos1.m_z*dFraction);
     }
     
 SGM::Point2D SGM::MidPoint(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1,double dFraction)
     {
-    return SGM::Point2D((Pos0.m_u+Pos1.m_u)*dFraction,
-                        (Pos0.m_v+Pos1.m_v)*dFraction);
+    return SGM::Point2D(Pos0.m_u*(1.0-dFraction)+Pos1.m_u*dFraction,
+                        Pos0.m_v*(1.0-dFraction)+Pos1.m_v*dFraction);
     }
 
 bool SGM::NearEqual(double d1,double d2,double dTolerance,bool bPercent)

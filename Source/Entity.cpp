@@ -1,4 +1,5 @@
 #include "EntityClasses.h"
+#include "Curve.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -16,5 +17,47 @@ entity::entity(SGM::Result &rResult,SGM::EntityType nType):
 entity::entity():
     m_ID(0),m_Type(SGM::ThingType) 
     {
+    }
+
+entity *entity::Copy(SGM::Result &rResult) const
+    {
+    switch(m_Type)
+        {
+        case SGM::CurveType:
+            {
+            curve const *pCurve=(curve const *)this;
+            return pCurve->MakeCopy(rResult);
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
+void entity::SeverOwners() const
+    {
+    for (entity *pOwner : m_Owners)
+        {
+        pOwner->RemoveOwner((entity*)this);
+        }
+    }
+
+void entity::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &Trans)
+    {
+    switch(m_Type)
+        {
+        case SGM::CurveType:
+            {
+            curve *pCurve=(curve *)this;
+            pCurve->Transform(Trans);
+            break;
+            }
+        default:
+            {
+            throw;
+            }
+        }
     }
 }

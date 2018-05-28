@@ -3,6 +3,8 @@
 
 #include "SGMEntityClasses.h"
 #include "SGMDataClasses.h"
+#include "SGMResult.h"
+
 #include <vector>
 
 #include "sgm_export.h"
@@ -44,6 +46,15 @@ SGM_EXPORT SGM::Curve CreateHyperbola(SGM::Result             &rResult,
                                       double                   dA,
                                       double                   dB);
 
+SGM_EXPORT SGM::Curve CreateTorusKnot(SGM::Result             &rResult,
+                                      SGM::Point3D      const &Center,
+                                      SGM::UnitVector3D const &XAxis,
+                                      SGM::UnitVector3D const &YAxis,
+                                      double                   dMinorRadius,
+                                      double                   dMajorRadius,
+                                      size_t                   nA,
+                                      size_t                   nB);
+
 SGM_EXPORT SGM::Curve CreateNUBCurve(SGM::Result                     &rResult,
                                      std::vector<SGM::Point3D> const &aPoints,
                                      std::vector<double>       const *pParams=nullptr);
@@ -65,6 +76,13 @@ SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
                                     SGM::Point3D const &XPos,
                                     SGM::Point3D const &YPos);
 
+SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
+                                           SGM::Point3D      const &Center,
+                                           SGM::UnitVector3D const &Axis,
+                                           double                   dMinorRadius,
+                                           double                   dMajorRadius,
+                                           bool                     bApple=true);
+
 SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                                   &rResult,
                                          std::vector<std::vector<SGM::Point3D> > const &aaPoints,
                                          std::vector<SGM::Vector3D>              const *paStartVecs=nullptr,
@@ -72,7 +90,7 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
 
-SGM_EXPORT SGM::Surface CreateRevolve(SGM::Result             &rResult,
+SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
                                       SGM::Point3D      const &Origin,
                                       SGM::UnitVector3D const &Axis,
                                       SGM::Curve        const &CurveID);

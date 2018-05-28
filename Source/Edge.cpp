@@ -77,14 +77,24 @@ void edge::SetCurve(curve *pCurve)
     m_pCurve->AddEdge(this);
     }
 
-std::vector<SGM::Point3D> const &edge::GetFacets() const
+std::vector<SGM::Point3D> const &edge::GetFacets(SGM::Result &rResult) const
     {
     if(m_aPoints3D.empty())
         {
         FacetOptions Options;
-        FacetEdge(this,Options,m_aPoints3D);
+        FacetEdge(rResult,this,Options,m_aPoints3D,m_aParams);
         }
     return m_aPoints3D;
+    }
+
+std::vector<double> const &edge::GetParams(SGM::Result &rResult) const
+    {
+    if(m_aPoints3D.empty())
+        {
+        FacetOptions Options;
+        FacetEdge(rResult,this,Options,m_aPoints3D,m_aParams);
+        }
+    return m_aParams;
     }
 
 SGM::Point3D const &edge::FindStartPoint() const
@@ -103,5 +113,10 @@ SGM::Point3D edge::FindMidPoint(double dFraction) const
     double t=m_Domain.MidPoint(dFraction);
     m_pCurve->Evaluate(t,&Pos);
     return Pos;
+    }
+
+double edge::FindLength(double dTolerance) const
+    {
+    return m_pCurve->FindLength(m_Domain,dTolerance);
     }
 }

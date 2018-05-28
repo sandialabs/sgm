@@ -31,11 +31,13 @@ void FacetCurve(curve               const *pCurve,
                 SGM::Interval1D     const &Domain,
                 FacetOptions        const &Options,
                 std::vector<SGM::Point3D> &aPoints3D,
-                std::vector<double>       *aParams=nullptr);
+                std::vector<double>       &aParams);
 
-void FacetEdge(edge                const *pEdge,
+void FacetEdge(SGM::Result               &rResult,
+               edge                const *pEdge,
                FacetOptions        const &Options,
-               std::vector<SGM::Point3D> &aPoints3D);
+               std::vector<SGM::Point3D> &aPoints3D,
+               std::vector<double>       &aParams);
 
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,

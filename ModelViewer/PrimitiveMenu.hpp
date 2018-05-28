@@ -17,12 +17,14 @@ signals:
   void cone();
   void torus();
   void NUBSurface();
+  void revolve();
   void line();
   void circle();
   void ellipse();
   void parabola();
   void hyperbola();
   void NUBcurve();
+  void TorusKnot();
 };
 
 #endif // PRIMITIVIEMENU_HPP

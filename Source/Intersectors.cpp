@@ -1,12 +1,15 @@
 #include "SGMDataClasses.h"
-#include "SGMIntersecors.h"
+#include "SGMIntersector.h"
+
 #include "Intersectors.h"
 #include "EntityClasses.h"
 #include "FacetToBRep.h"
+
 #include <cfloat>
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <list>
 
 namespace SGMInternal
 {
@@ -221,6 +224,7 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
     {
     std::vector<SGM::Point3D> aPoints2;
     std::vector<SGM::IntersectionType> aTypes2;
+    dTolerance=std::max(dTolerance,SGM_ZERO);
     IntersectLineAndPlane(Origin,Axis,Domain,Center,Normal,dTolerance,aPoints2,aTypes2);
     if(aPoints2.size()==2)
         {
@@ -1216,23 +1220,16 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
     return aPoints.size();
     }
 
-size_t IntersectCircleAndCylinder(SGM::Point3D                 const &Center,
-                                  SGM::UnitVector3D            const &Normal,
-                                  double                              dRadius,
-                                  cylinder                     const *pCylinder,
-                                  double                              dTolerance,
-                                  std::vector<SGM::Point3D>          &aPoints,
-                                  std::vector<SGM::IntersectionType> &aTypes)
+size_t IntersectCircleAndCylinder(SGM::Point3D                 const &/*Center*/,
+                                  SGM::UnitVector3D            const &/*Normal*/,
+                                  double                              /*dRadius*/,
+                                  cylinder                     const * /*pCylinder*/,
+                                  double                              /*dTolerance*/,
+                                  std::vector<SGM::Point3D>          &/*aPoints*/,
+                                  std::vector<SGM::IntersectionType> &/*aTypes*/)
     {
     // Intersect the circle's plane and the cylinder, then
     // intersect the line(s), circle, or ellipse with the circle.
-    Center;
-    Normal;
-    dRadius;
-    pCylinder;
-    dTolerance;
-    aPoints;
-    aTypes;
     return 0;
     }
 
@@ -1765,39 +1762,25 @@ size_t IntersectPlaneCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectPlaneTorus(SGM::Result                &rResult,
-                           plane                const *pPlane,
-                           torus                const *pTorus,
-                           std::vector<curve *>       &aCurves,
-                           face                 const *pFace1,
-                           face                 const *pFace2,
-                           double                      dTolerance)
+size_t IntersectPlaneTorus(SGM::Result                & /*rResult*/,
+                           plane                const * /*pPlane*/,
+                           torus                const * /*pTorus*/,
+                           std::vector<curve *>       & /*aCurves*/,
+                           face                 const * /*pFace1*/,
+                           face                 const * /*pFace2*/,
+                           double                       /*dTolerance*/)
     {
-    rResult;
-    pPlane;
-    pTorus;
-    aCurves;
-    pFace1;
-    pFace2;
-    dTolerance;
     return 0;
     }
 
-size_t IntersectPlaneSurface(SGM::Result                &rResult,
-                             plane                const *pPlane,
-                             surface              const *pSurface,
-                             std::vector<curve *>       &aCurves,
-                             face                 const *pFace1,
-                             face                 const *pFace2,
-                             double                      dTolerance)
+size_t IntersectPlaneSurface(SGM::Result                & /*rResult*/,
+                             plane                const * /*pPlane*/,
+                             surface              const * /*pSurface*/,
+                             std::vector<curve *>       & /*aCurves*/,
+                             face                 const * /*pFace1*/,
+                             face                 const * /*pFace2*/,
+                             double                       /*dTolerance*/)
     {
-    rResult;
-    pPlane;
-    pSurface;
-    aCurves;
-    pFace1;
-    pFace2;
-    dTolerance;
     return 0;
     }
 
@@ -1995,19 +1978,14 @@ size_t IntersectSphereCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectSphereSurface(SGM::Result                &rResult,
-                              sphere               const *pSphere,
-                              surface              const *pSurface,
-                              std::vector<curve *>       &aCurves,
+size_t IntersectSphereSurface(SGM::Result                & /*rResult*/,
+                              sphere               const * /*pSphere*/,
+                              surface              const * /*pSurface*/,
+                              std::vector<curve *>       & /*aCurves*/,
                               face                 const *,//pFace1,
                               face                 const *,//pFace2,
-                              double                      dTolerance)
+                              double                       /*dTolerance*/)
     {
-    rResult;
-    pSphere;
-    pSurface;
-    aCurves;
-    dTolerance;
     return 0;
     }
 
@@ -2106,22 +2084,76 @@ SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
     {
     SGM::Point3D Answer=Pos;
     double dDist=SGM_MAX;
-    while(SGM_ZERO<dDist)
+    size_t nCount=0;
+    while(SGM_ZERO<dDist && nCount<100)
         {
-        SGM::Point2D uv1=pSurface1->Inverse(Answer);
-        SGM::Point2D uv2=pSurface2->Inverse(Answer);
-        SGM::UnitVector3D Norm1,Norm2,Axis;
-        SGM::Point3D Pos1,Pos2,Origin;
-        pSurface1->Evaluate(uv1,&Pos1,nullptr,&Norm1);
-        pSurface1->Evaluate(uv2,&Pos2,nullptr,&Norm2);
-        IntersectNonParallelPlanes(Pos1,Norm1,Pos2,Norm2,Origin,Axis);
-        Pos1=Origin+Axis*((Pos1-Origin)%Axis);
-        Pos2=Origin+Axis*((Pos2-Origin)%Axis);
         SGM::Point3D OldAnswer=Answer;
-        Answer=SGM::MidPoint(Pos1,Pos2);
+        SGM::Point3D CPos;
+        pSurface1->Inverse(Answer,&CPos);
+        pSurface2->Inverse(CPos,&Answer);
         dDist=OldAnswer.Distance(Answer);
+        ++nCount;
         }
     return Answer;
+    }
+
+class HermiteNode
+    {
+    public:
+
+        HermiteNode() {};
+
+        HermiteNode(double               dParam,
+                    SGM::Point3D  const &Pos,
+                    SGM::Vector3D const &Tan):m_dParam(dParam),m_Pos(Pos),m_Tan(Tan){}
+
+        double        m_dParam;
+        SGM::Point3D  m_Pos;
+        SGM::Vector3D m_Tan;
+    };
+
+bool MidPointIsOff(HermiteNode const &iter1,
+                   HermiteNode const &iter2,
+                   surface     const *pSurface1,
+                   surface     const *pSurface2,
+                   double             dLength,
+                   HermiteNode       &HNode)
+    {
+    SGM::Point3D Pos1=iter1.m_Pos;
+    SGM::Point3D Pos2=iter2.m_Pos;
+    SGM::Vector3D Vec1=iter1.m_Tan;
+    SGM::Vector3D Vec2=iter2.m_Tan;
+    double t1=iter1.m_dParam;
+    double t2=iter2.m_dParam;
+    double t3=(t1+t2)*0.5;
+    double s=(t3-t1)/(t2-t1);
+    double h1=(s*s)*(2*s-3)+1;
+    double h2=1-h1;
+    double h3=s*(s*(s-2)+1);
+    double h4=(s*s)*(s-1);
+    SGM::Point3D MidPos(h1*Pos1.m_x+h2*Pos2.m_x+h3*Vec1.m_x+h4*Vec2.m_x,
+                        h1*Pos1.m_y+h2*Pos2.m_y+h3*Vec1.m_y+h4*Vec2.m_y,
+                        h1*Pos1.m_z+h2*Pos2.m_z+h3*Vec1.m_z+h4*Vec2.m_z);
+
+    SGM::Point3D ExactMidPos=ZoomInFrom(MidPos,pSurface1,pSurface2);
+    double dDist2=ExactMidPos.DistanceSquared(MidPos);
+    double dTol2=SGM_FIT*dLength;
+    dTol2*=dTol2;
+    bool bAnswer=false;
+    if(1E-4<dDist2)
+        {
+        SGM::Point2D uv1=pSurface1->Inverse(ExactMidPos);
+        SGM::Point2D uv2=pSurface2->Inverse(ExactMidPos);
+        SGM::UnitVector3D Norm1,Norm2;
+        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+        SGM::UnitVector3D WalkDir=Norm1*Norm2;
+        HNode.m_dParam=t3;
+        HNode.m_Pos=ExactMidPos;
+        HNode.m_Tan=WalkDir*((Vec1.Magnitude()+Vec2.Magnitude())*0.5);
+        bAnswer=true;
+        }
+    return bAnswer;
     }
 
 hermite *WalkFromTo(SGM::Result        &rResult,
@@ -2134,38 +2166,42 @@ hermite *WalkFromTo(SGM::Result        &rResult,
     std::vector<SGM::Vector3D> aTangents;
     std::vector<double> aParams;
     SGM::Point3D CurrentPos=StartPos;
+    SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
+    SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
+    SGM::UnitVector3D Norm1,Norm2;
+    pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+    pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+    SGM::UnitVector3D WalkDir=Norm1*Norm2;
+    double dWalkFraction=0.5; 
     bool bWalk=true;
+    double dScale=0.5;
     while(bWalk)
         {
-        // Find the walking direction.
-
-        SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
-        SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
-        SGM::UnitVector3D Norm1,Norm2,Axis;
-        SGM::Point3D Pos1,Pos2,Origin;
-        pSurface1->Evaluate(uv1,&Pos1,nullptr,&Norm1);
-        pSurface1->Evaluate(uv2,&Pos2,nullptr,&Norm2);
-        SGM::UnitVector3D WalkDir=Norm1*Norm2;
-
         // Find how far to walk.
 
         double c1=pSurface1->DirectionalCurvature(uv1,WalkDir);
         double c2=pSurface2->DirectionalCurvature(uv2,WalkDir);
         double dMax=std::max(fabs(c1),fabs(c2));
         double dR=dMax<SGM_ZERO ? SGM_MAX : 1.0/dMax;
-        double dWalkFraction=0.17453292519943295769236907684886; // 2Pi/36, 10 degrees.
         double dWalkDist=dR*dWalkFraction;
         SGM::Point3D Pos=CurrentPos+WalkDir*dWalkDist;
         aPoints.push_back(CurrentPos);
-        aTangents.push_back(WalkDir);
+        aTangents.push_back(WalkDir*dScale);
 
-        // Check to see if we are at the EndPos.
+        // Find the walking direction.
 
         CurrentPos=ZoomInFrom(Pos,pSurface1,pSurface2);
-        SGM::Vector3D Vec=CurrentPos-aPoints.back();
-        SGM::UnitVector3D UVec=Vec;
-        double dDist=Vec.Magnitude();
-        if(SGM_ZERO<dDist && dDist<dWalkDist && 0<UVec%WalkDir)
+        SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
+        SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
+        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+        WalkDir=Norm1*Norm2;
+
+        // Check to see if we are at the EndPos.
+        
+        double dEndDist=EndPos.Distance(CurrentPos);
+        SGM::UnitVector3D UVec=EndPos-CurrentPos;
+        if(dEndDist<dWalkDist && 0<UVec%WalkDir)
             {
             aPoints.push_back(EndPos);
             if(SGM::NearEqual(StartPos,EndPos,SGM_ZERO))
@@ -2176,14 +2212,67 @@ hermite *WalkFromTo(SGM::Result        &rResult,
                 {
                 uv1=pSurface1->Inverse(EndPos);
                 uv2=pSurface2->Inverse(EndPos);
-                pSurface1->Evaluate(uv1,nullptr,nullptr,&Norm1);
-                pSurface1->Evaluate(uv2,nullptr,nullptr,&Norm2);
-                aTangents.push_back(Norm1*Norm2);
+                pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+                pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+                SGM::Vector3D Vec=Norm1*Norm2;
+                if(Vec.Magnitude()<SGM_MIN_TOL)
+                    {
+                    SGM::Point3D StepBack=SGM::MidPoint(aPoints[aPoints.size()-2],EndPos,0.99);
+                    uv1=pSurface1->Inverse(StepBack);
+                    uv2=pSurface2->Inverse(StepBack);
+                    pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+                    pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+                    Vec=Norm1*Norm2;
+                    }
+                Vec=SGM::UnitVector3D(Vec);
+                aTangents.push_back(Vec*dScale);
                 }
             break;
             }
         }
+
+    // Refine points to meet SGM_FIT times the cord length of the curve tolerance.
+
     SGM::FindLengths3D(aPoints,aParams);
+    std::list<HermiteNode> lNodes;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        lNodes.push_back(HermiteNode(aParams[Index1],aPoints[Index1],aTangents[Index1]));
+        }
+    double dLength=aParams.back();
+    std::list<HermiteNode>::iterator iter=lNodes.begin();
+    std::list<HermiteNode>::iterator LastIter=iter;
+    ++iter;
+    while(iter!=lNodes.end())
+        {
+        HermiteNode HNode;
+        if(MidPointIsOff(*LastIter,*iter,pSurface1,pSurface2,dLength,HNode))
+            {
+            iter=lNodes.insert(iter,HNode);
+            }
+        else
+            {
+            ++LastIter;
+            ++iter;
+            }
+        }
+
+    // Create the Hermite curve.
+
+    aPoints.clear();
+    aTangents.clear();
+    aParams.clear();
+    iter=lNodes.begin();
+    while(iter!=lNodes.end())
+        {
+        aPoints.push_back(iter->m_Pos);
+        aParams.push_back(iter->m_dParam);
+        aTangents.push_back(iter->m_Tan);
+        ++iter;
+        }
+
     return new hermite(rResult,aPoints,aTangents,aParams);
     }
 

@@ -19,7 +19,12 @@ size_t entity::GetID() const
 
 thing::~thing()
     {
-    while (!m_mAllEntities.empty()) {
+    for (std::pair<size_t,entity* > pair : m_mAllEntities)
+    {
+      SeverOwners(pair.second);
+    }
+    while (!m_mAllEntities.empty())
+    {
       auto pEntity = m_mAllEntities.begin()->second;
       DeleteEntity(pEntity);
     }
@@ -105,6 +110,12 @@ void thing::DeleteEntity(entity *pEntity)
               case SGM::PointCurveType:
                 delete reinterpret_cast<PointCurve*>(pEntity);
                 break;
+              case SGM::HermiteCurveType:
+                delete reinterpret_cast<hermite*>(pEntity);
+                break;
+              case SGM::TorusKnotCurveType:
+                delete reinterpret_cast<TorusKnot*>(pEntity);
+                break;
               default:
                 std::abort();
             }
@@ -112,6 +123,25 @@ void thing::DeleteEntity(entity *pEntity)
           }
           default:
             std::abort();
+        }
+    }
+
+void thing::SeverOwners(entity *pEntity)
+    {
+    switch(pEntity->GetType()) {
+          case SGM::SurfaceType: {
+            surface* pSurface = reinterpret_cast<surface*>(pEntity);
+            switch (pSurface->GetSurfaceType()) {
+              case SGM::RevolveType:
+                revolve *pRevolve = reinterpret_cast<revolve*>(pEntity);
+                pRevolve->m_pCurve->RemoveOwner(this);
+                pRevolve->m_pCurve = nullptr;
+                break;
+            }
+            break;
+          }
+          default:
+            break;
         }
     }
 
@@ -237,7 +267,7 @@ size_t thing::GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const
     while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::EdgeType)
+        if(pEntity->GetType()==SGM::EntityType::VertexType)
             {
             vertex *pVertex=(vertex *)pEntity;
             if(bTopLevel)
@@ -289,7 +319,7 @@ size_t thing::GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const
     while(iter!=m_mAllEntities.end())
         {
         entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::ComplexType)
+        if(pEntity->GetType()==SGM::EntityType::CurveType)
             {
             curve *pCurve=(curve *)pEntity;
             if(bTopLevel)

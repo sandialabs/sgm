@@ -28,6 +28,7 @@ namespace SGM
         PointCurveType,
         HelixCurveType,
         HermiteCurveType,
+        TorusKnotCurveType,
 
         SurfaceType,
 
@@ -76,6 +77,19 @@ namespace SGM
         ResultTypeUnknownCommand,   // An unknown script command was used.
         ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
         ResultTypeUnknownEntityID   // No matching entity for given ID
+        };
+
+    enum LogType
+        {
+        LogCreate,      // Indicates that the entity was created for an unknown reason.
+        LogDelete,      // Indicates that the entity was deleted for an unknown reason.
+        LogBottom,      // Bottom Face of a primitive.
+        LogTop,         // Top Face of a primitive.
+        LogMain,        // Main Face of a primitive.
+        LogFront,       // Front Face of a block, i.e. -Y.
+        LogBack,        // Back Face of a block, i.e. +Y.
+        LogLeft,        // Left Face of a block, i.e. -X.
+        LogRight        // Right Face of a block, i.e. +X.
         };
 
     } // End of SGM namespace

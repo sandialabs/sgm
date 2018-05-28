@@ -2,9 +2,12 @@
 #define GRAPH_H
 
 #include "SGMDataClasses.h"
+#include "SGMResult.h"
+
 #include <set>
 #include <map>
 #include <vector>
+
 namespace SGMInternal
 {
 class edge;

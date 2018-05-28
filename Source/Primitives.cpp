@@ -24,6 +24,7 @@ edge *CreateEdge(SGM::Result           &rResult,
         {
         Domain=pCurve->GetDomain();
         }
+    
     pEdge->SetDomain(Domain);
     if( pCurve->GetClosed()==false ||
         SGM::NearEqual(pCurve->GetDomain().Length(),Domain.Length(),SGM_MIN_TOL,false)==false)
@@ -42,17 +43,23 @@ edge *CreateEdge(SGM::Result           &rResult,
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
-                  double                   dMajorRadius,
                   double                   dMinorRadius,
+                  double                   dMajorRadius,
                   bool                     bApple)
     {
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
 
-    torus *pTorus=new torus(rResult,Center,Axis,dMajorRadius,dMinorRadius,bApple);
+    torus *pTorus=new torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
 
     pBody->AddVolume(pVolume);
     face *pFace=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        }
+
     pVolume->AddFace(pFace);
     pFace->SetSurface(pTorus);
 
@@ -70,6 +77,12 @@ body *CreateSphere(SGM::Result        &rResult,
 
     pBody->AddVolume(pVolume);
     face *pFace=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        }
+
     pVolume->AddFace(pFace);
     pFace->SetSurface(pSphere);
 
@@ -91,6 +104,13 @@ body *CreateCylinder(SGM::Result        &rResult,
     face *pBottom=new face(rResult);
     face *pSide=new face(rResult);
     face *pTop=new face(rResult);
+
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pSide->GetID()),SGM::LogType::LogMain);
+        rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
+        rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
+        }
 
     edge *pEdgeBottom=new edge(rResult);
     edge *pEdgeTop=new edge(rResult);
@@ -677,4 +697,88 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     return new NUBcurve(rResult,aControlPoints,aKnots);
     }
 
+body *CreateSheetBody(SGM::Result                    &rResult,
+                      surface                        *pSurface,
+                      std::vector<edge *>            &aEdges,
+                      std::vector<SGM::EdgeSideType> &aTypes)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    face *pFace=new face(rResult);
+    pVolume->AddFace(pFace);
+    pFace->SetSurface(pSurface);
+
+    size_t nEdges=aEdges.size();
+    size_t Index1;
+    for(Index1=0;Index1<nEdges;++Index1)
+        {
+        edge *pEdge=aEdges[Index1];
+        if(pEdge->GetStart())
+            {
+            // More code needs to be added to merge vertices.
+            throw;
+            }
+        pFace->AddEdge(pEdge,aTypes[Index1]);
+        }
+
+    return pBody;
+    }
+
+body *CreateRevolve(SGM::Result             &rResult,
+                    SGM::Point3D      const &Origin,
+                    SGM::UnitVector3D const &Axis,
+                    curve             const *pCurve)
+    {
+    SGM::Point3D pCurveStart;
+    SGM::Point3D pCurveEnd;
+
+
+    // TODO
+    // check for valid curve input
+    // check for planar curve
+    // check for axis in plane of curve
+    // check for curve intersection with axis
+
+    pCurve->Evaluate(pCurve->GetDomain().m_dMin, &pCurveStart);
+    pCurve->Evaluate(pCurve->GetDomain().m_dMax, &pCurveEnd);
+
+    body   *pBody=new body(rResult);
+    volume *pVolume=new volume(rResult);
+
+    face *pFace=new face(rResult);
+
+    edge *pEdgeStart=new edge(rResult);
+    edge *pEdgeEnd=new edge(rResult);
+
+    revolve *pRevolve=new revolve(rResult,Origin,Axis,pCurve);
+
+    SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
+    SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
+    SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+    double dRadiusStart = pCurveStart.Distance(StartCenter);
+    double dRadiusEnd = pCurveEnd.Distance(EndCenter);
+
+    circle *pCircleStart=new circle(rResult,StartCenter,-Axis,dRadiusStart,&XAxis);
+    circle *pCircleEnd=new circle(rResult,EndCenter,Axis,dRadiusEnd,&XAxis);
+
+    // Connect everything.
+
+    pBody->AddVolume(pVolume);
+
+    pVolume->AddFace(pFace);
+
+    pFace->AddEdge(pEdgeStart,SGM::FaceOnRightType);
+    pFace->AddEdge(pEdgeEnd,SGM::FaceOnRightType);
+
+    pFace->SetSurface(pRevolve);
+
+    pEdgeStart->SetCurve(pCircleStart);
+    pEdgeEnd->SetCurve(pCircleEnd);
+
+    pEdgeStart->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeEnd->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+
+    return pBody;
+    }
 }
