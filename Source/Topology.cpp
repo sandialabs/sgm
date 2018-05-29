@@ -512,6 +512,10 @@ edge *FindNextEdge(SGM::Result  &,//rResult,
         return (edge *)pEdge;
         }
     std::set<edge *> const &sEdges=pVertex->GetEdges();
+    if (sEdges.size() == 1)
+        {
+        return (edge *)pEdge;
+        }
     std::set<edge *>::const_iterator iter=sEdges.begin();
     while(iter!=sEdges.end())
         {
@@ -658,17 +662,26 @@ void FindCurves(SGM::Result       &rResult,
         sCurves.insert((curve *)((*iter)->GetCurve()));
         ++iter;
         }
-    std::set<face *> sFaces;
-    FindFaces(rResult,pEntity,sFaces,false);
-    std::set<face *>::iterator iter2=sFaces.begin();
-    while(iter2!=sFaces.end())
+    }
+
+void ImprintVerticesOnClosedEdges(SGM::Result &rResult)
+{
+    std::set<edge *> sEdges;
+    FindEdges(rResult, rResult.GetThing(), sEdges, false);
+
+    for(SGMInternal::edge *pEdge : sEdges)
+    {
+        if (nullptr == pEdge->GetStart())
         {
-        surface *pSurf=(surface *)((*iter2)->GetSurface());
-        if(pSurf->GetSurfaceType()==SGM::EntityType::RevolveType)
-            {
-            sCurves.insert((curve*)(((revolve *)pSurf)->m_pCurve));
-            }
-        ++iter2;
+            SGM::Point3D VertexPos;
+            curve const *pCurve = pEdge->GetCurve();
+            pCurve->Evaluate(pCurve->GetDomain().m_dMin,&VertexPos);
+            vertex *pVertex=new vertex(rResult,VertexPos);
+            pEdge->SetStart(pVertex);
+            pEdge->SetEnd(pVertex);
         }
     }
 }
+
+
+} // end namespace SGMInternal

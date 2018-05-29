@@ -142,14 +142,14 @@ void WriteNUBCurve(FILE                    *pFile,
             sMultiplicity+=",";
             }
         }
-    sMultiplicity=")";
+    sMultiplicity+=")";
 
     // Set up the unique knot string.
 
     std::string sUniqueKnots="(";
     for(Index1=0;Index1<nUniqueKnots;++Index1)
         {
-        char Arg[10];
+        char Arg[100];
         snprintf(Arg,sizeof(Arg),"%#.15G",aUniqueKnots[Index1]);
         sUniqueKnots+=Arg;
         if(Index1<nUniqueKnots-1)
@@ -157,7 +157,7 @@ void WriteNUBCurve(FILE                    *pFile,
             sUniqueKnots+=",";
             }
         }
-    sUniqueKnots=")";
+    sUniqueKnots+=")";
 
     // Write out the b-spline
 
@@ -225,9 +225,16 @@ void WriteCoedges(FILE                                      *pFile,
 
             vertex *pStart=pEdge->GetStart();
             vertex *pEnd=pEdge->GetEnd();
-            size_t nStart=mVertexMap[pStart->GetID()];
-            size_t nEnd=mVertexMap[pEnd->GetID()];
-            fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
+            if (nullptr == pStart)
+                {
+                fprintf(pFile,"#%ld=EDGE_CURVE('',*,*,#%ld,.T.);\n",nLine++,nCurve);
+                }
+            else
+                {
+                size_t nStart=mVertexMap[pStart->GetID()];
+                size_t nEnd=mVertexMap[pEnd->GetID()];
+                fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
+                }
             std::set<face *> const &sFaces=pEdge->GetFaces();
             std::set<face *>::const_iterator FaceIter=sFaces.begin();
             while(FaceIter!=sFaces.end())
@@ -416,6 +423,39 @@ void WriteCone(FILE                    *pFile,
     fprintf(pFile,"#%ld=CONICAL_SURFACE('',#%ld,%#.15G,%#.15G);\n",nLine++,nAxis3D,dRadius,dHalfAngle);
     }
 
+void WriteRevolve(FILE                    *pFile,
+                  size_t                  &nLine,
+                  revolve           const *pRevolve,
+                  std::map<size_t,size_t> &mSurfaceMap)
+    {
+    //#914=CARTESIAN_POINT('',(0.E0,-1.307493617253E2,0.E0));
+    //#915=DIRECTION('',(0.E0,1.E0,0.E0));
+    //#916=AXIS1_PLACEMENT('',#914,#915);
+    //#913=B_SPLINE_CURVE_WITH_KNOTS('',3,(#905,#906,#907,#908,#909,#910,#911,#912),
+    //.UNSPECIFIED.,.F.,.F.,(4,1,1,1,1,4),(0.E0,1.025034494080E-2,5.905206385276E-2,
+    //5.411131718827E-1,9.950198866069E-1,1.E0),.UNSPECIFIED.);
+    //#917=SURFACE_OF_REVOLUTION('',#913,#916);
+
+    SGM::Point3D const &Pos=pRevolve->m_Origin;
+    SGM::UnitVector3D const &Norm=pRevolve->m_ZAxis;
+
+    size_t nPos=nLine;
+    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    size_t nNorm=nLine;
+    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    size_t nAxis1=nLine;
+    fprintf(pFile,"#%ld=AXIS1_PLACEMENT('',#%ld,#%ld);\n",nLine++,nPos,nNorm);
+
+    std::set<curve const *> sRevolveCurve;
+    sRevolveCurve.insert(pRevolve->m_pCurve);
+    std::map<size_t,size_t> CurveMap;
+    WriteCurves(pFile, nLine, sRevolveCurve, CurveMap);
+    size_t nCurve = CurveMap[pRevolve->m_pCurve->GetID()];
+
+    mSurfaceMap[pRevolve->GetID()]=nLine;
+    fprintf(pFile,"#%ld=SURFACE_OF_REVOLUTION('',#%ld,#%ld);\n",nLine++,nCurve,nAxis1);
+    }
+
 void WriteSurfaces(FILE                            *pFile,
                    size_t                          &nLine,
                    std::set<surface const *> const &sSurfaces,
@@ -450,6 +490,11 @@ void WriteSurfaces(FILE                            *pFile,
             case SGM::EntityType::ConeType :
                 {
                 WriteCone(pFile,nLine,(cone const *)pSurface,mSurfaceMap);
+                break;
+                }
+            case SGM::EntityType::RevolveType :
+                {
+                WriteRevolve(pFile,nLine,(revolve const *)pSurface,mSurfaceMap);
                 break;
                 }
             default:
@@ -716,6 +761,9 @@ void SaveSTEP(SGM::Result                  &rResult,
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return;
         }
+
+    // Add a vertex to any closed Edges
+    ImprintVerticesOnClosedEdges(rResult);
 
     // Write out the header
 

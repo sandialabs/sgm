@@ -56,5 +56,10 @@ void OrderLoopEdges(SGM::Result                    &rResult,
                     std::set<edge *>         const &sEdges,
                     std::vector<edge *>            &aEdges,
                     std::vector<SGM::EdgeSideType> &aFlips);
+
+// Modify Functions
+
+void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
+
 }
 #endif // TOPOLOGY_H

@@ -1305,3 +1305,8 @@ double SGM::FindVolume(SGM::Result       &rResult,
     SGMInternal::volume const *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
     return pVolume->FindVolume();
     }
+
+void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
+    {
+      SGMInternal::ImprintVerticesOnClosedEdges(rResult);
+    }

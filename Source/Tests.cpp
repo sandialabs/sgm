@@ -2577,6 +2577,289 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==44)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints1;
+        aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints1.push_back(SGM::Point3D(1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(2,2,0));
+
+        // simple case
+        //aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        //aPoints1.push_back(SGM::Point3D(0,.5,0));
+        //aPoints1.push_back(SGM::Point3D(1,.5,0));
+        //aPoints1.push_back(SGM::Point3D(2,.5,0));
+
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+
+        SGMInternal::curve* pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+        SGMInternal::revolve *pRevolve=new SGMInternal::revolve(rResult,Origin,Axis,pCurve);
+
+        SGM::Point3D pCurveStart;
+        SGM::Point3D pCurveEnd;
+        pCurve->Evaluate(pCurve->GetDomain().m_dMin, &pCurveStart);
+        pCurve->Evaluate(pCurve->GetDomain().m_dMax, &pCurveEnd);
+
+        SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
+        SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        double dRadiusStart = pCurveStart.Distance(StartCenter);
+        double dRadiusEnd = pCurveEnd.Distance(EndCenter);
+
+        SGMInternal::circle *pCircleStart=new SGMInternal::circle(rResult,StartCenter,-Axis,dRadiusStart,&XAxis);
+        SGMInternal::circle *pCircleEnd=new SGMInternal::circle(rResult,EndCenter,Axis,dRadiusEnd,&XAxis);
+
+
+        SGMInternal::body   *pBody=new SGMInternal::body(rResult); 
+        SGMInternal::volume *pVolume=new SGMInternal::volume(rResult);
+
+        SGMInternal::face *pRevolveFace=new SGMInternal::face(rResult);
+
+        SGMInternal::edge *pEdgeBottom=new SGMInternal::edge(rResult);
+        SGMInternal::edge *pEdgeTop=new SGMInternal::edge(rResult);
+
+        // Connect everything.
+
+        pBody->AddVolume(pVolume);
+        pVolume->AddFace(pRevolveFace);
+
+        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+
+        pRevolveFace->SetSurface(pRevolve);
+        pRevolveFace->SetSides(2);
+
+        pEdgeBottom->SetCurve(pCircleStart);
+        pEdgeTop->SetCurve(pCircleEnd);
+
+        pEdgeBottom->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+        pEdgeTop->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+
+        SGM::TranslatorOptions TranslatorOpts;
+        SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
+
+        SGM::CheckOptions Options;
+        std::vector<std::string> CheckStrings;
+
+        bAnswer = pRevolveFace->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        bAnswer = pBody->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        return true;
+        } 
+
+    if(nTestNumber==45)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints1;
+        aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints1.push_back(SGM::Point3D(1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(2,2,0));
+
+        // simple case
+        //aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        //aPoints1.push_back(SGM::Point3D(0,.5,0));
+        //aPoints1.push_back(SGM::Point3D(1,.5,0));
+        //aPoints1.push_back(SGM::Point3D(2,.5,0));
+
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+
+        SGMInternal::curve* pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+        SGMInternal::revolve *pRevolve=new SGMInternal::revolve(rResult,Origin,Axis,pCurve);
+
+        SGM::Point3D pCurveStart;
+        SGM::Point3D pCurveEnd;
+        pCurve->Evaluate(pCurve->GetDomain().m_dMin, &pCurveStart);
+        pCurve->Evaluate(pCurve->GetDomain().m_dMax, &pCurveEnd);
+
+        SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
+        SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        double dRadiusStart = pCurveStart.Distance(StartCenter);
+        double dRadiusEnd = pCurveEnd.Distance(EndCenter);
+
+        SGMInternal::circle *pCircleStart=new SGMInternal::circle(rResult,StartCenter,-Axis,dRadiusStart,&XAxis);
+        SGMInternal::circle *pCircleEnd=new SGMInternal::circle(rResult,EndCenter,Axis,dRadiusEnd,&XAxis);
+
+
+        SGMInternal::body   *pBody=new SGMInternal::body(rResult); 
+        SGMInternal::volume *pVolume=new SGMInternal::volume(rResult);
+
+        SGMInternal::face *pRevolveFace=new SGMInternal::face(rResult);
+
+        SGMInternal::edge *pEdgeBottom=new SGMInternal::edge(rResult);
+        SGMInternal::edge *pEdgeTop=new SGMInternal::edge(rResult);
+
+        SGMInternal::vertex *pBottom = new SGMInternal::vertex(rResult,SGM::Point3D(-2,.5,0));
+        SGMInternal::vertex *pTop = new SGMInternal::vertex(rResult,SGM::Point3D(2,2,0));
+
+        // Connect everything.
+
+        pBody->AddVolume(pVolume);
+        pVolume->AddFace(pRevolveFace);
+
+        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+
+        pRevolveFace->SetSurface(pRevolve);
+        pRevolveFace->SetSides(2);
+
+        pEdgeBottom->SetCurve(pCircleStart);
+        pEdgeTop->SetCurve(pCircleEnd);
+
+        pEdgeBottom->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+        pEdgeTop->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+
+        pEdgeBottom->SetStart(pBottom);
+        pEdgeBottom->SetEnd(pBottom);
+        pEdgeTop->SetStart(pTop);
+        pEdgeTop->SetEnd(pTop);
+
+        SGM::TranslatorOptions TranslatorOpts;
+        SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
+
+        SGM::CheckOptions Options;
+        std::vector<std::string> CheckStrings;
+
+        bAnswer = pRevolveFace->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        bAnswer = pBody->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        return true;
+        } 
+
+    if(nTestNumber==46)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints1;
+        aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints1.push_back(SGM::Point3D(1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(2,2,0));
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+        std::vector<SGM::Point3D> aPoints2;
+        aPoints2.push_back(SGM::Point3D(-2,0,.5));
+        aPoints2.push_back(SGM::Point3D(-1,0,1.5));
+        aPoints2.push_back(SGM::Point3D(0,0,1));
+        aPoints2.push_back(SGM::Point3D(1,0,1.5));
+        aPoints2.push_back(SGM::Point3D(2,0,2));
+        SGM::Curve LeftCurveID = SGM::CreateNUBCurve(rResult, aPoints2);
+
+        std::vector<SGM::Point3D> aPoints3;
+        aPoints3.push_back(SGM::Point3D(-2,0,-.5));
+        aPoints3.push_back(SGM::Point3D(-1,0,-1.5));
+        aPoints3.push_back(SGM::Point3D(0,0,-1));
+        aPoints3.push_back(SGM::Point3D(1,0,-1.5));
+        aPoints3.push_back(SGM::Point3D(2,0,-2));
+        SGM::Curve RightCurveID = SGM::CreateNUBCurve(rResult, aPoints3);
+
+        SGM::Point3D Origin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+
+        SGMInternal::curve* pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+        SGMInternal::revolve *pRevolve=new SGMInternal::revolve(rResult,Origin,Axis,pCurve);
+
+        SGM::Point3D pCurveStart;
+        SGM::Point3D pCurveEnd;
+        pCurve->Evaluate(pCurve->GetDomain().m_dMin, &pCurveStart);
+        pCurve->Evaluate(pCurve->GetDomain().m_dMax, &pCurveEnd);
+
+        SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
+        SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        double dRadiusStart = pCurveStart.Distance(StartCenter);
+        double dRadiusEnd = pCurveEnd.Distance(EndCenter);
+
+        SGMInternal::circle *pCircleStart=new SGMInternal::circle(rResult,StartCenter,-Axis,dRadiusStart,&XAxis);
+        SGMInternal::circle *pCircleEnd=new SGMInternal::circle(rResult,EndCenter,Axis,dRadiusEnd,&XAxis);
+
+
+        SGMInternal::body   *pBody=new SGMInternal::body(rResult); 
+        SGMInternal::volume *pVolume=new SGMInternal::volume(rResult);
+
+        SGMInternal::face *pRevolveFace=new SGMInternal::face(rResult);
+
+        SGMInternal::edge *pEdgeBottom=new SGMInternal::edge(rResult);
+        SGMInternal::edge *pEdgeTop=new SGMInternal::edge(rResult);
+        SGMInternal::edge *pEdgeLeft=new SGMInternal::edge(rResult);
+        SGMInternal::edge *pEdgeRight=new SGMInternal::edge(rResult);
+
+        SGMInternal::vertex *pBottomLeft=new SGMInternal::vertex(rResult,SGM::Point3D(-2,0,.5));
+        SGMInternal::vertex *pBottomRight=new SGMInternal::vertex(rResult,SGM::Point3D(-2,0,-.5));
+        SGMInternal::vertex *pTopLeft=new SGMInternal::vertex(rResult,SGM::Point3D(2,0,2));
+        SGMInternal::vertex *pTopRight=new SGMInternal::vertex(rResult,SGM::Point3D(2,0,-2));
+
+        // Connect everything.
+
+        pBody->AddVolume(pVolume);
+        pVolume->AddFace(pRevolveFace);
+
+        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(pEdgeRight,SGM::FaceOnLeftType);
+        pRevolveFace->AddEdge(pEdgeLeft,SGM::FaceOnRightType);
+
+        pRevolveFace->SetSurface(pRevolve);
+        pRevolveFace->SetSides(2);
+
+        pEdgeBottom->SetStart(pBottomRight);
+        pEdgeBottom->SetEnd(pBottomLeft);
+        pEdgeRight->SetStart(pBottomRight);
+        pEdgeRight->SetEnd(pTopRight);
+        pEdgeTop->SetStart(pTopLeft);
+        pEdgeTop->SetEnd(pTopRight);
+        pEdgeLeft->SetStart(pBottomLeft);
+        pEdgeLeft->SetEnd(pTopLeft);
+
+        pEdgeBottom->SetCurve(pCircleStart);
+        pEdgeTop->SetCurve(pCircleEnd);
+        pEdgeLeft->SetCurve((SGMInternal::curve *)rResult.GetThing()->FindEntity(LeftCurveID.m_ID));
+        pEdgeRight->SetCurve((SGMInternal::curve *)rResult.GetThing()->FindEntity(RightCurveID.m_ID));
+
+        pEdgeBottom->SetDomain(SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
+        pEdgeTop->SetDomain(SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
+        pEdgeLeft->SetDomain(SGM::Interval1D(0,1));
+        pEdgeRight->SetDomain(SGM::Interval1D(0,1));
+
+        SGM::TranslatorOptions TranslatorOpts;
+        SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
+
+        SGM::CheckOptions Options;
+        std::vector<std::string> CheckStrings;
+
+        bAnswer = pRevolveFace->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        bAnswer = pVolume->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        bAnswer = pBody->Check(rResult, Options, CheckStrings);
+        if (!bAnswer) return bAnswer;
+
+        return true;
+        }
+
     return false;
     }
-

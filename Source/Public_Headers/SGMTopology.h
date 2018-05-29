@@ -67,6 +67,14 @@ namespace SGM
     SGM_EXPORT SGM::Surface GetSurfaceOfFace(SGM::Result     &rResult,
                                              SGM::Face const &FaceID);
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Topology Modification Functions.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+    SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
+
     } // End of SGM namespace
 
 #endif // SGM_TOPOLOGY_CLASSES_H
