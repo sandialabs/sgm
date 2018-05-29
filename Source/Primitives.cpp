@@ -772,6 +772,7 @@ body *CreateRevolve(SGM::Result             &rResult,
     pFace->AddEdge(pEdgeEnd,SGM::FaceOnRightType);
 
     pFace->SetSurface(pRevolve);
+    pFace->SetSides(2);
 
     pEdgeStart->SetCurve(pCircleStart);
     pEdgeEnd->SetCurve(pCircleEnd);
