@@ -53,6 +53,7 @@ size_t NUBcurve::FindMultiplicity(std::vector<int> &aMultiplicity,
             size_t nSize=aMultiplicity.size();
             aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
             }
+        dLastKnot = dKnot;
         }
     return aMultiplicity.size();
     }
