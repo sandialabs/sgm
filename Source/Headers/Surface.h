@@ -341,11 +341,7 @@ class revolve : public surface
                 curve             const *pCurve);
 
         ~revolve();
-//        
-//        curve *UParamLine(double dU) const;
-//
-//        curve *VParamLine(double dV) const;
-//
+
     public:
 
         curve             const *m_pCurve;
