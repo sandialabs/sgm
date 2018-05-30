@@ -2577,7 +2577,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==44)
+    if(nTestNumber==37)
         {
         bool bAnswer=true;
 
@@ -2658,7 +2658,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return true;
         } 
 
-    if(nTestNumber==45)
+    if(nTestNumber==38)
         {
         bool bAnswer=true;
 
@@ -2747,7 +2747,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return true;
         } 
 
-    if(nTestNumber==46)
+    if(nTestNumber==39)
         {
         bool bAnswer=true;
 

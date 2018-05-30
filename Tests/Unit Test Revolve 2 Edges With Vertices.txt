@@ -1,0 +1,3 @@
+// Tests revolve surface 2 edges with vertices with STEP export;
+RunCPPTest(38);
+
