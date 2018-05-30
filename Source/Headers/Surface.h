@@ -342,6 +342,8 @@ class revolve : public surface
 
         ~revolve();
 
+        void SetCurve(curve const *pCurve);
+
     public:
 
         curve             const *m_pCurve;

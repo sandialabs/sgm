@@ -396,6 +396,13 @@ void ProcessSphere(SGM::Result       &,//rResult,
     FindLastDouble(sphere,STEPData.m_aDoubles);
     }
 
+void ProcessRevolve(SGM::Result       &,//rResult,
+                    std::string const &revolve,
+                    STEPLineData      &STEPData)
+    {
+    FindIndices(revolve,STEPData.m_aIDs);
+    }
+
 void ProcessVector(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
@@ -471,6 +478,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::ADVANCED_FACE:
                         {
                         ProcessFace(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::AXIS1_PLACEMENT:
+                        {
+                        ProcessAxis(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -595,6 +608,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::SPHERICAL_SURFACE:
                         {
                         ProcessSphere(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
+                        {
+                        ProcessRevolve(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -931,6 +950,19 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
                 break;    
                 }
+            case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
+                {
+                size_t nAxis=DataIter->second.m_aIDs[1];
+                STEPLineData SLDAxis=mSTEPData[nAxis];
+                size_t nPoint=SLDAxis.m_aIDs[0];
+                size_t nDirection=SLDAxis.m_aIDs[1];
+                STEPLineData SLDPoint=mSTEPData[nPoint];
+                STEPLineData SLDDirection=mSTEPData[nDirection];
+                SGM::Point3D Pos(SLDPoint.m_aDoubles[0],SLDPoint.m_aDoubles[1],SLDPoint.m_aDoubles[2]);
+                SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
+                mEntityMap[nID]=new revolve(rResult,Pos,ZAxis,nullptr);
+                break;
+                }
             case SGMInternal::STEPTags::TRIMMED_CURVE:
                 {
                 mEntityMap[nID]=new edge(rResult);
@@ -1036,8 +1068,22 @@ void CreateEntities(SGM::Result                   &rResult,
             pFace->SetFlipped(true);
             }
         std::vector<size_t> const &aBoundIDs=SLD->second.m_aIDs;
-        surface *pSurface=(surface *)mEntityMap[aBoundIDs.back()];
+        size_t nSurfaceID=aBoundIDs.back();
+        surface *pSurface=(surface *)mEntityMap[nSurfaceID];
         pFace->SetSurface(pSurface);
+        switch (pSurface->GetSurfaceType())
+        {
+        case SGM::RevolveType:
+            {
+            revolve *pRevolve = (revolve *)pSurface;
+            std::map<size_t,STEPLineData>::iterator SLDRevolve=mSTEPData.find(nSurfaceID);
+            curve *pCurve = (curve *)mEntityMap[SLDRevolve->second.m_aIDs.front()];
+            pRevolve->SetCurve(pCurve);
+            }
+            break;
+        default:
+            break;
+        }
         size_t nBounds=aBoundIDs.size()-1;
         for(Index2=0;Index2<nBounds;++Index2)
             {

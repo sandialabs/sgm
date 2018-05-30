@@ -13,27 +13,37 @@ namespace SGMInternal
                      curve             const *pCurve)
                      : surface(rResult, SGM::RevolveType)
     {
-    pCurve->AddOwner(this);
-    m_pCurve = pCurve;
-
-    SGM::Point3D start;
-    pCurve->Evaluate(0.0, &start);
-    m_Origin = pAxisOrigin + ((start - pAxisOrigin) % uAxisVector) * uAxisVector;
-
     m_ZAxis = uAxisVector;
-    m_XAxis = start - m_Origin;
-    m_YAxis = m_ZAxis * m_XAxis;
-
+    m_Origin = pAxisOrigin;
     this->m_bClosedU = true;
-    this->m_bClosedV = pCurve->GetClosed();
     m_Domain.m_UDomain.m_dMin = 0.0;
     m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
-    m_Domain.m_VDomain = pCurve->GetDomain();
+
+    if (nullptr != pCurve)
+        {
+        SetCurve(pCurve);
+        }
     }
 
 revolve::~revolve()
     {
     if (m_pCurve)
         m_pCurve->RemoveOwner(this);
+    }
+
+void revolve::SetCurve(curve const *pCurve)
+    {
+    pCurve->AddOwner(this);
+    m_pCurve = pCurve;
+
+    SGM::Point3D start;
+    pCurve->Evaluate(0.0, &start);
+    m_Origin = m_Origin + ((start - m_Origin) % m_ZAxis) * m_ZAxis;
+
+    m_XAxis = start - m_Origin;
+    m_YAxis = m_ZAxis * m_XAxis;
+
+    this->m_bClosedV = pCurve->GetClosed();
+    m_Domain.m_VDomain = pCurve->GetDomain();
     }
 }
