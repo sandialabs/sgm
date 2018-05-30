@@ -9,12 +9,36 @@
 
 #include "sgm_export.h"
 
+// Special Numerical Values
+
 #define SGM_PI      3.1415926535897932384626433832795
 #define SGM_TWO_PI  6.283185307179586476925286766559
 #define SGM_HALF_PI 1.570796326794896619231321691639
-#define SGM_MAX     1E+12
-#define SGM_ZERO    1E-12
-#define SGM_MIN_TOL 1E-6
+
+// SGM Tolerances
+
+// Used as an upper bound for the distance to all topology.  As a general
+// rule all topology should have distance to the origin well within this bound.
+
+#define SGM_MAX     1E+12   
+
+// Used as a lower error bound for all numerical values.  As a general 
+// rule all algorithums attempt to converge to error values lower than this
+// value even though more error may be acceptable.
+
+#define SGM_ZERO    1E-12   
+
+// Used as a lower bound on the size and parameters of all non-zero dimensional 
+// topology and geometry. That is to say that edges, sphere radii, the difference 
+// between the major and minor axies of an ellipse, the half angle of a cone... 
+// should all be larger than this value.
+
+#define SGM_MIN_TOL 1E-6    
+
+// Used to determine the upper bound of acceptable error of a polynomoal 
+// aproximation.  The actual upper bound is this number times the length or
+// width of the geometry.
+
 #define SGM_FIT     1E-3
 
 namespace SGM
@@ -483,11 +507,32 @@ namespace SGM
     // The void * passed into f is optional data that may be used be the 
     // function to return a value for x.
 
-    double Integrate(double f(double x,void const *pData),
-                     double      a,
-                     double      b,
-                     void const *pData=nullptr,
-                     double      dTolerance=SGM_ZERO);
+    double Integrate1D(double f(double x,void const *pData),
+                       SGM::Interval1D        const &Domain,
+                       void                   const *pData=nullptr,
+                       double                        dTolerance=SGM_ZERO);
+
+    // Returns the definite integral of the given function, f, over the given domain.  
+    // The integration is numerically performed using Romberg integration.
+    // The void * passed into f is optional data that may be used be the 
+    // function to return a value for uv.
+
+    double Integrate2D(double f(SGM::Point2D const &uv,void const *pData),
+                       SGM::Interval2D                      const &Domain,
+                       void                                 const *pData=nullptr,
+                       double                                      dTolerance=SGM_ZERO);
+
+    // Returns the definite integral of the given function, f, over the given triangle ABC. 
+    // The integration is numerically performed using Romberg integration.
+    // The void * passed into f is optional data that may be used be the 
+    // function to return a value for uv.
+
+    double IntegrateTriangle(double f(SGM::Point2D const &uv,void const *pData),
+                             SGM::Point2D                         const &PosA,
+                             SGM::Point2D                         const &PosB,
+                             SGM::Point2D                         const &PosC,
+                             void                                 const *pData=nullptr,
+                             double                                      dTolerance=SGM_ZERO);
     
     } // End of SGM namespace
 

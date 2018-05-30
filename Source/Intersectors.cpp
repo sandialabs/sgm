@@ -885,7 +885,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
     std::vector<SGM::Point2D> const &aSeedParams=pNUBSurface->GetSeedParams();
     size_t nUParams=pNUBSurface->GetUParams();
     size_t nVParams=pNUBSurface->GetVParams();
-    double dTan15=0.26794919243112270647255365849413;
+    //double dTan15=0.26794919243112270647255365849413;
     std::vector<SGM::Point3D> aStartPoints;
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
@@ -1005,7 +1005,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     std::vector<SGM::Point2D> const &aSeedParams=pNURBSurface->GetSeedParams();
     size_t nUParams=pNURBSurface->GetUParams();
     size_t nVParams=pNURBSurface->GetVParams();
-    double dTan15=0.26794919243112270647255365849413;
+    //double dTan15=0.26794919243112270647255365849413;
     std::vector<SGM::Point3D> aStartPoints;
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
@@ -1384,7 +1384,7 @@ size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
      return aPoints.size();
      }
 
-size_t IntersectCircles(SGM::Result                        &rResult,
+size_t IntersectCircles(SGM::Result                        &,//rResult,
                         circle                       const *pCircle1,
                         circle                       const *pCircle2,
                         std::vector<SGM::Point3D>          &aPoints,
@@ -1452,7 +1452,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                                curve                        const *pCurve,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes,
-                               edge                         const *pEdge1,
+                               edge                         const *,//pEdge1,
                                edge                         const *pEdge2,
                                double                              dTolerance)
     {
@@ -1477,7 +1477,6 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
         default:
             {
             throw;
-            return 0;
             }
         }
     }
@@ -1700,7 +1699,6 @@ size_t IntersectPlaneSphere(SGM::Result                &rResult,
         {
         if(dFABSDist<dRadius-dTolerance)
             {
-            double dCircleRadius=sqrt(dRadius*dRadius-dDist*dDist);
             SGM::Point3D CircleCenter=Center-dDist*Norm;
             aCurves.push_back(new circle(rResult,CircleCenter,Norm,dRadius));
             }
@@ -1845,7 +1843,6 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
         case SGM::EntityType::RevolveType:
             {
             throw;
-            return 0;
             }
         default:
             {
@@ -2068,7 +2065,6 @@ size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
         default:
             {
             throw;
-            return 0;
             }
         }
     }

@@ -96,11 +96,11 @@ void FixBackPointers(size_t                     nTri,
         }
     }
 
-bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies,
-                   size_t                           nTri,
-                   size_t                           nEdge)
+bool FlipTriangles(std::vector<SGM::Point2D>  const &aPoints,
+                   std::vector<size_t>              &aTriangles,
+                   std::vector<size_t>              &aAdjacencies,
+                   size_t                            nTri,
+                   size_t                            nEdge)
     {
     size_t a=aTriangles[nTri];
     size_t b=aTriangles[nTri+1];
@@ -194,6 +194,31 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
         return true;
         }
     return false;
+    }
+
+void FindScales(surface                   const *pSurface,
+                std::vector<SGM::Point2D> const &aPoints,
+                std::vector<SGM::Vector2D>      &aScales)
+    {
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point2D const &uv=aPoints[Index1];
+        SGM::UnitVector3D Vec1,Vec2;
+        double k1,k2;
+        pSurface->PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
+        double r1=fabs(k1)<0.001 ? 1000.0 : 1.0/fabs(k1);
+        double r2=fabs(k2)<0.001 ? 1000.0 : 1.0/fabs(k2);
+        SGM::Vector3D DU,DV;
+        pSurface->Evaluate(uv,nullptr,&DU,&DV);
+        SGM::UnitVector3D UnitU=DU,UnitV=DV;
+        double dDotU=Vec1%UnitU;
+        double dDotV=Vec1%UnitV;
+        SGM::Vector2D UVec(1,0),VVec(0,1);
+        SGM::Vector2D PVec=(dDotU*UVec+dDotV*VVec)*(r2/r1);
+        aScales.push_back(PVec);
+        }
     }
 
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
@@ -1116,15 +1141,15 @@ size_t AddNode(std::vector<Node>  &aNodes,
     return nAnswer;
     }
 
-void Refine(face         const *pFace,
-            double              dCosRefine,
-            std::vector<Node>  &aNodes,
-            size_t              nNodeA,
-            size_t              nNodeB)
+void Refine(face        const *pFace,
+            double             dCosRefine,
+            std::vector<Node> &aNodes,
+            size_t             nNodeA,
+            size_t             nNodeB)
     {
     surface const *pSurface=pFace->GetSurface();
-    SGM::Point2D const &uvA=aNodes[nNodeA].m_uv;
-    SGM::Point2D const &uvB=aNodes[nNodeB].m_uv;
+    SGM::Point2D uvA=aNodes[nNodeA].m_uv;
+    SGM::Point2D uvB=aNodes[nNodeB].m_uv;
     SGM::UnitVector3D NormA,NormB;
     pSurface->Evaluate(uvA,nullptr,nullptr,nullptr,&NormA);
     pSurface->Evaluate(uvB,nullptr,nullptr,nullptr,&NormB);
@@ -1132,7 +1157,7 @@ void Refine(face         const *pFace,
     SGM::Point3D Pos;
     SGM::UnitVector3D Norm;
     pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-    if(NormA%NormB<dCosRefine || Norm%NormA<dCosRefine)
+    if(NormA%NormB<dCosRefine || Norm%NormA<dCosRefine || Norm%NormB<dCosRefine)
         {
         Node MidNode;
         MidNode.m_Entity=(entity *)pFace;
@@ -1147,14 +1172,57 @@ void Refine(face         const *pFace,
         Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeC);
         Refine(pFace,dCosRefine,aNodes,nNodeC,nNodeB);
         }
+    else if(pSurface->IsSingularity(uv))
+        {
+        SGM::Interval2D const &Domain=pSurface->GetDomain();
+        size_t nCuts=0;
+        if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+            {
+            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
+            }
+        else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+            {
+            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
+            }
+        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+            {
+            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
+            }
+        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+            {
+            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
+            }
+
+        if(nCuts)
+            {
+            size_t Index1;
+            for(Index1=0;Index1<nCuts;++Index1)
+                {
+                double dFraction=(Index1+1.0)/(nCuts+1.0);
+                uv=SGM::MidPoint(uvA,uvB,dFraction);
+                pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
+                Node MidNode;
+                MidNode.m_Entity=(entity *)pFace;
+                MidNode.m_Pos=Pos;
+                MidNode.m_uv=uv;
+                size_t nNodeC=aNodes.size();
+                aNodes[nNodeA].m_nNext=nNodeC;
+                aNodes[nNodeB].m_nPrevious=nNodeC;
+                MidNode.m_nNext=nNodeB;
+                MidNode.m_nPrevious=nNodeA;
+                aNodes.push_back(MidNode);
+                nNodeA=nNodeC;
+                }
+            }
+        }
     }
 
-void FindSeamCrossings(SGM::Result        &rResult,
+void FindSeamCrossings(SGM::Result        &,//rResult,
                        face         const *pFace,
                        FacetOptions const &Options,
                        std::vector<Node>  &aNodes)
     {
-    surface const *pSurface=pFace->GetSurface();
+   surface const *pSurface=pFace->GetSurface();
     std::vector<size_t> aCrossesU,aCrossesV;
     size_t Index1;
     if(pSurface->ClosedInU())
@@ -1192,72 +1260,145 @@ void FindSeamCrossings(SGM::Result        &rResult,
     // the crossing nodes and sever the links between them.
     // If a node points to itself, then it is an end node.
 
+    SGM::Interval2D const &FullDomain=pSurface->GetDomain();
     std::vector<std::pair<double,size_t> > aUInLow,aUOutLow,aUInHigh,aUOutHigh;
     size_t nCrossesU=aCrossesU.size();
     if(nCrossesU)
         {
-        SGM::Interval1D const &Domain=pSurface->GetDomain().m_UDomain;
+        SGM::Interval1D const &Domain=FullDomain.m_UDomain;
         for(Index1=0;Index1<nCrossesU;++Index1)
             {
             size_t nA=aCrossesU[Index1];
-            Node &NodeA=aNodes[nA];
+            Node NodeA=aNodes[nA];
             size_t nB=NodeA.m_nNext;
-            Node &NodeB=aNodes[nB];
+            Node NodeB=aNodes[nB];
             if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeA;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_u=Domain.m_dMax;
-                NodeC.m_nNext=nB;
-                NodeC.m_nPrevious=nC;
-                aNodes.push_back(NodeC);
-                NodeB.m_nPrevious=nC;
-                NodeA.m_nNext=nA;
-                aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                if(NodeA.m_nNext==NodeA.m_nPrevious)
+                    {
+                    if(NodeA.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        }
+                    else
+                        {
+                        aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
+                    {
+                    aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
+                    }
+                else
+                    {
+                    Node NodeC=NodeA;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_u=Domain.m_dMax;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeA;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_u=Domain.m_dMin;
-                NodeC.m_nNext=nB;
-                NodeC.m_nPrevious=nC;
-                aNodes.push_back(NodeC);
-                NodeB.m_nPrevious=nC;
-                NodeA.m_nNext=nA;
-                aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                if(NodeA.m_nNext==NodeA.m_nPrevious)
+                    {
+                    if(NodeA.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        }
+                    else
+                        {
+                        aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
+                    {
+                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
+                    }
+                else
+                    {
+                    Node NodeC=NodeA;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_u=Domain.m_dMin;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeB;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_u=Domain.m_dMax;
-                NodeC.m_nPrevious=nA;
-                NodeC.m_nNext=nC;
-                aNodes.push_back(NodeC);
-                NodeA.m_nNext=nC;
-                NodeB.m_nPrevious=nB;
-                aUInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
-                aUOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
+                if(NodeB.m_nNext==NodeB.m_nPrevious)
+                    {
+                    if(NodeB.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        }
+                    else
+                        {
+                        aUInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
+                    {
+                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
+                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    }
+                else
+                    {
+                    Node NodeC=NodeB;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_u=Domain.m_dMax;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aUInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                    aUOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeB;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_u=Domain.m_dMin;
-                NodeC.m_nPrevious=nA;
-                NodeC.m_nNext=nC;
-                aNodes.push_back(NodeC);
-                NodeA.m_nNext=nC;
-                NodeB.m_nPrevious=nB;
-                aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
-                aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
-                }
-            else
-                {
-                throw;
+                if(NodeB.m_nNext==NodeB.m_nPrevious)
+                    {
+                    if(NodeB.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aUOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        }
+                    else
+                        {
+                        aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
+                    {
+                    aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                    aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nA));
+                    }
+                else
+                    {
+                    Node NodeC=NodeB;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_u=Domain.m_dMin;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                    aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
+                    }
                 }
             }
         }
@@ -1275,59 +1416,131 @@ void FindSeamCrossings(SGM::Result        &rResult,
             Node &NodeB=aNodes[nB];
             if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeA;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_v=Domain.m_dMax;
-                NodeC.m_nNext=nB;
-                NodeC.m_nPrevious=nC;
-                aNodes.push_back(NodeC);
-                NodeB.m_nPrevious=nC;
-                NodeA.m_nNext=nA;
-                aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                if(NodeA.m_nNext==NodeA.m_nPrevious)
+                    {
+                    if(NodeA.m_uv.m_u<FullDomain.m_UDomain.MidPoint())
+                        {
+                        aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        }
+                    else
+                        {
+                        aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
+                    {
+                    aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
+                    }
+                else
+                    {
+                    Node NodeC=NodeA;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_v=Domain.m_dMax;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeA;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_v=Domain.m_dMin;
-                NodeC.m_nNext=nB;
-                NodeC.m_nPrevious=nC;
-                aNodes.push_back(NodeC);
-                NodeB.m_nPrevious=nC;
-                NodeA.m_nNext=nA;
-                aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                if(NodeA.m_nNext==NodeA.m_nPrevious)
+                    {
+                    if(NodeA.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        }
+                    else
+                        {
+                        aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
+                    {
+                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
+                    }
+                else
+                    {
+                    Node NodeC=NodeA;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_v=Domain.m_dMin;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeB;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_v=Domain.m_dMax;
-                NodeC.m_nPrevious=nA;
-                NodeC.m_nNext=nC;
-                aNodes.push_back(NodeC);
-                NodeA.m_nNext=nC;
-                NodeB.m_nPrevious=nB;
-                aVInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
-                aVOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
+                if(NodeB.m_nNext==NodeB.m_nPrevious)
+                    {
+                    if(NodeB.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        }
+                    else
+                        {
+                        aVInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
+                    {
+                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
+                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    }
+                else
+                    {
+                    Node NodeC=NodeB;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_v=Domain.m_dMax;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aVInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                    aVOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
+                    }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
                 {
-                Node NodeC=NodeB;
-                size_t nC=aNodes.size();
-                NodeC.m_uv.m_v=Domain.m_dMin;
-                NodeC.m_nPrevious=nA;
-                NodeC.m_nNext=nC;
-                aNodes.push_back(NodeC);
-                NodeA.m_nNext=nC;
-                NodeB.m_nPrevious=nB;
-                aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
-                aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
-                }
-            else
-                {
-                throw;
+                if(NodeB.m_nNext==NodeB.m_nPrevious)
+                    {
+                    if(NodeB.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
+                        {
+                        aVOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        }
+                    else
+                        {
+                        aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        }
+                    }
+                else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
+                    {
+                    aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                    aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nA));
+                    }
+                else
+                    {
+                    Node NodeC=NodeB;
+                    size_t nC=aNodes.size();
+                    NodeC.m_uv.m_v=Domain.m_dMin;
+                    NodeC.m_nNext=nB;
+                    NodeC.m_nPrevious=nA;
+                    aNodes.push_back(NodeC);
+                    aNodes[nB].m_nPrevious=nC;
+                    aNodes[nA].m_nNext=nC;
+                    aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                    aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
+                    }
                 }
             }
         }
@@ -1371,14 +1584,20 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else if(Index1<nUOutLow-1)
                 {
                 nNodeB=aUInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else // Must go around the corner.
                 {
@@ -1389,8 +1608,11 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    }
                 }
             }
         for(Index1=0;Index1<nVOutLow;++Index1)
@@ -1403,14 +1625,20 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else if(Index1<nVOutLow-1)
                 {
                 nNodeB=aVInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else // Must go around the corner.
                 {
@@ -1421,8 +1649,11 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    }
                 }
             }
         for(Index1=0;Index1<nUOutHigh;++Index1)
@@ -1435,14 +1666,20 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else if(Index1<nUOutHigh-1)
                 {
                 nNodeB=aUInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else // Must go around the corner.
                 {
@@ -1453,8 +1690,11 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    }
                 }
             }
         for(Index1=0;Index1<nVOutHigh;++Index1)
@@ -1467,14 +1707,20 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else if(Index1<nVOutHigh-1)
                 {
                 nNodeB=aVInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
+                    }
                 }
             else // Must go around the corner.
                 {
@@ -1485,8 +1731,11 @@ void FindSeamCrossings(SGM::Result        &rResult,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                if(Options.m_bParametric==false)
+                    {
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
+                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    }
                 }
             }
         }
@@ -1539,7 +1788,7 @@ void FindPolygons(std::vector<Node>                 &aNodes,
         }
     }
 
-void FindOuterLoop(SGM::Result        &rResult,
+void FindOuterLoop(SGM::Result        &,//rResult,
                    face         const *pFace,
                    FacetOptions const &Options,
                    std::vector<Node>  &aNodes)
@@ -1569,10 +1818,147 @@ void FindOuterLoop(SGM::Result        &rResult,
         CornerNode.m_nPrevious = Index1==0 ? 3 : Index1-1;
         aNodes.push_back(CornerNode);
         }
-    Refine(pFace,dCosRefine,aNodes,0,1);
-    Refine(pFace,dCosRefine,aNodes,1,2);
-    Refine(pFace,dCosRefine,aNodes,2,3);
-    Refine(pFace,dCosRefine,aNodes,3,0);
+
+    if(Options.m_bParametric==false)
+        {
+        Refine(pFace,dCosRefine,aNodes,0,1);
+        Refine(pFace,dCosRefine,aNodes,1,2);
+        Refine(pFace,dCosRefine,aNodes,2,3);
+        Refine(pFace,dCosRefine,aNodes,3,0);
+        }
+    }
+
+bool PointOnNodes(SGM::Point3D      const &Pos,
+                  std::vector<Node> const &aNodes)
+    {
+    size_t nNodes=aNodes.size();
+    size_t Index1;
+    for(Index1=0;Index1<nNodes;++Index1)
+        {
+        if(aNodes[Index1].m_Pos.DistanceSquared(Pos)<SGM_ZERO)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+void AddNodesAtSingularites(SGM::Result        &rResult,
+                            face         const *pFace,
+                            FacetOptions const &Options,
+                            std::vector<Node>  &aNodes)
+    {
+    surface const *pSurface=pFace->GetSurface();
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    double dCosRefine=cos(Options.m_dEdgeAngleTol);
+    if(pSurface->SingularHighU())
+        {
+        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
+        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
+        SGM::Point3D Pos;
+        pSurface->Evaluate(uvA,&Pos);
+        if( PointOnNodes(Pos,aNodes)==false &&
+            pFace->PointInFace(rResult,uvA)==true)
+            {
+            Node NodeA,NodeB;
+            size_t nNodeA=aNodes.size();
+            size_t nNodeB=nNodeA+1;
+            NodeA.m_Entity=(entity *)pFace;
+            NodeA.m_nNext=nNodeB;
+            NodeA.m_nPrevious=nNodeB;
+            NodeA.m_uv=uvA;
+            NodeA.m_Pos=Pos;
+            NodeB.m_Entity=(entity *)pFace;
+            NodeB.m_nNext=nNodeA;
+            NodeB.m_nPrevious=nNodeA;
+            NodeB.m_uv=uvB;
+            NodeB.m_Pos=Pos;
+            aNodes.push_back(NodeA);
+            aNodes.push_back(NodeB);
+            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        }
+    if(pSurface->SingularHighV())
+        {
+        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
+        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
+        SGM::Point3D Pos;
+        pSurface->Evaluate(uvA,&Pos);
+        if( PointOnNodes(Pos,aNodes)==false &&
+            pFace->PointInFace(rResult,uvA)==true)
+            {
+            Node NodeA,NodeB;
+            size_t nNodeA=aNodes.size();
+            size_t nNodeB=nNodeA+1;
+            NodeA.m_Entity=(entity *)pFace;
+            NodeA.m_nNext=nNodeB;
+            NodeA.m_nPrevious=nNodeB;
+            NodeA.m_uv=uvA;
+            NodeA.m_Pos=Pos;
+            NodeB.m_Entity=(entity *)pFace;
+            NodeB.m_nNext=nNodeA;
+            NodeB.m_nPrevious=nNodeA;
+            NodeB.m_uv=uvB;
+            NodeB.m_Pos=Pos;
+            aNodes.push_back(NodeA);
+            aNodes.push_back(NodeB);
+            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        }
+    if(pSurface->SingularLowU())
+        {
+        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
+        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
+        SGM::Point3D Pos;
+        pSurface->Evaluate(uvA,&Pos);
+        if( PointOnNodes(Pos,aNodes)==false &&
+            pFace->PointInFace(rResult,uvA)==true)
+            {
+            Node NodeA,NodeB;
+            size_t nNodeA=aNodes.size();
+            size_t nNodeB=nNodeA+1;
+            NodeA.m_Entity=(entity *)pFace;
+            NodeA.m_nNext=nNodeB;
+            NodeA.m_nPrevious=nNodeB;
+            NodeA.m_uv=uvA;
+            NodeA.m_Pos=Pos;
+            NodeB.m_Entity=(entity *)pFace;
+            NodeB.m_nNext=nNodeA;
+            NodeB.m_nPrevious=nNodeA;
+            NodeB.m_uv=uvB;
+            NodeB.m_Pos=Pos;
+            aNodes.push_back(NodeA);
+            aNodes.push_back(NodeB);
+            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        }
+    if(pSurface->SingularLowV())
+        {
+        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
+        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
+        SGM::Point3D Pos;
+        pSurface->Evaluate(uvA,&Pos);
+        if( PointOnNodes(Pos,aNodes)==false &&
+            pFace->PointInFace(rResult,uvA)==true)
+            {
+            Node NodeA,NodeB;
+            size_t nNodeA=aNodes.size();
+            size_t nNodeB=nNodeA+1;
+            NodeA.m_Entity=(entity *)pFace;
+            NodeA.m_nNext=nNodeB;
+            NodeA.m_nPrevious=nNodeB;
+            NodeA.m_uv=uvA;
+            NodeA.m_Pos=Pos;
+            NodeB.m_Entity=(entity *)pFace;
+            NodeB.m_nNext=nNodeA;
+            NodeB.m_nPrevious=nNodeA;
+            NodeB.m_uv=uvB;
+            NodeB.m_Pos=Pos;
+            aNodes.push_back(NodeA);
+            aNodes.push_back(NodeB);
+            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        }
     }
 
 size_t FacetFaceLoops(SGM::Result                       &rResult,
@@ -1581,17 +1967,16 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                       std::vector<SGM::Point2D>         &aPoints2D,
                       std::vector<SGM::Point3D>         &aPoints3D,
                       std::vector<entity *>             &aEntities,
-                      std::vector<std::vector<size_t> > &aaPolygons,
-                      std::vector<size_t>               &)//aTriangles)
+                      std::vector<std::vector<size_t> > &aaPolygons)
     {
     // Find all the needed face information.
 
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
     size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
-    bool bFlip=pFace->GetFlipped();
+    //bool bFlip=pFace->GetFlipped();
     surface const *pSurface=pFace->GetSurface();
-    std::set<edge *> const &sFaceEdges=pFace->GetEdges();
+    //std::set<edge *> const &sFaceEdges=pFace->GetEdges();
     std::set<vertex *> sVertices;
     FindVertices(rResult,pFace,sVertices);
 
@@ -1628,28 +2013,19 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
             size_t nNodes=aNodes.size();
             for(Index3=nStartNode;Index3<nNodes;++Index3)
                 {
-                if(Index3==nStartNode)
-                    {
-                    aNodes[Index3].m_nPrevious=nNodes-1;
-                    aNodes[Index3].m_nNext=Index3+1;
-                    }
-                else if(Index3==nNodes-1)
+                if(Index3)
                     {
                     aNodes[Index3].m_nPrevious=Index3-1;
-                    aNodes[Index3].m_nNext=nStartNode;
                     }
-                else
-                    {
-                    aNodes[Index3].m_nPrevious=Index3-1;
-                    aNodes[Index3].m_nNext=Index3+1;
-                    }
+                aNodes[Index3].m_nNext=Index3+1;
                 aNodes[Index3].m_uv=pSurface->Inverse(aNodes[Index3].m_Pos);
                 }
             }
-
+        
         // Make sure that last node is pointing to the start.
 
         aNodes.back().m_nNext=nLoopStartNode;
+        aNodes[nLoopStartNode].m_nPrevious=aNodes.size()-1;
         }
 
     if(nLoops==0)
@@ -1658,11 +2034,10 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
         }
     else
         {
+        AddNodesAtSingularites(rResult,pFace,Options,aNodes);
         FindSeamCrossings(rResult,pFace,Options,aNodes);
         }
-    
-    // Find the polygons.
-
+     
     FindPolygons(aNodes,aPoints2D,aPoints3D,aEntities,aaPolygons);
 
     return aaPolygons.size();
@@ -1726,7 +2101,28 @@ void FixBackPointer(size_t               nA,
         }
     }
 
-void FixEdgeData(size_t                                     nTri1,
+double FindNormalDiff(surface                        const *pSurface,
+                      std::vector<SGM::UnitVector3D> const &aNormals,
+                      std::vector<SGM::Point2D>      const &aPoints2D,
+                      size_t                                nPos0,
+                      size_t                                nPos1)
+    {
+    SGM::Point2D const &uv0=aPoints2D[nPos0];
+    SGM::Point2D const &uv1=aPoints2D[nPos1];
+    SGM::Point2D uv=SGM::MidPoint(uv0,uv1);
+    SGM::UnitVector3D const &Norm0=aNormals[nPos0];
+    SGM::UnitVector3D const &Norm1=aNormals[nPos1];
+    SGM::UnitVector3D MidNorm;
+    pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&MidNorm);
+    double dVal0=Norm0%Norm1;
+    double dVal1=Norm0%MidNorm;
+    double dVal2=Norm1%MidNorm;
+    return std::min(dVal0,std::min(dVal1,dVal2));
+    }
+
+void FixEdgeData(surface                             const *pSurface,
+                 std::vector<SGM::Point2D>           const &aPoints2D,
+                 size_t                                     nTri1,
                  size_t                                     nTri2,
                  std::vector<SGM::UnitVector3D>      const &aNormals,
                  std::vector<size_t>                 const &aTriangles,
@@ -1741,52 +2137,60 @@ void FixEdgeData(size_t                                     nTri1,
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri2,1)],nTri2,1));
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri2,2)],nTri2,2));
 
-    SGM::UnitVector3D const &NormA2=aNormals[aTriangles[nTri1]];
-    SGM::UnitVector3D const &NormB2=aNormals[aTriangles[nTri1+1]];
-    SGM::UnitVector3D const &NormC2=aNormals[aTriangles[nTri1+2]];
-    SGM::UnitVector3D const &NormD2=aNormals[aTriangles[nTri2]];
-    SGM::UnitVector3D const &NormE2=aNormals[aTriangles[nTri2+1]];
-    SGM::UnitVector3D const &NormF2=aNormals[aTriangles[nTri2+2]];
+    size_t A2=aTriangles[nTri1];
+    size_t B2=aTriangles[nTri1+1];
+    size_t C2=aTriangles[nTri1+2];
+    size_t D2=aTriangles[nTri2];
+    size_t E2=aTriangles[nTri2+1];
+    size_t F2=aTriangles[nTri2+2];
+
+    //SGM::UnitVector3D const &NormA2=aNormals[A2];
+    //SGM::UnitVector3D const &NormB2=aNormals[B2];
+    //SGM::UnitVector3D const &NormC2=aNormals[C2];
+    //SGM::UnitVector3D const &NormD2=aNormals[D2];
+    //SGM::UnitVector3D const &NormE2=aNormals[E2];
+    //SGM::UnitVector3D const &NormF2=aNormals[F2];
 
     if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=SIZE_MAX)
         {
-        double dVal=NormA2%NormB2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,A2,B2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,0));
         mEdgeData[std::pair<size_t,size_t>(nTri1,0)]=dVal;
         }
     if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=SIZE_MAX)
         {
-        double dVal=NormB2%NormC2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,B2,C2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,1));
         mEdgeData[std::pair<size_t,size_t>(nTri1,1)]=dVal;
         }
     if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=SIZE_MAX)
         {
-        double dVal=NormC2%NormA2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,C2,A2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,2));
         mEdgeData[std::pair<size_t,size_t>(nTri1,2)]=dVal;
         }
     if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=SIZE_MAX)
         {
-        double dVal=NormD2%NormE2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,D2,E2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,0));
         mEdgeData[std::pair<size_t,size_t>(nTri2,0)]=dVal;
         }
     if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=SIZE_MAX)
         {
-        double dVal=NormE2%NormF2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,E2,F2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,1));
         mEdgeData[std::pair<size_t,size_t>(nTri2,1)]=dVal;
         }
     if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=SIZE_MAX)
         {
-        double dVal=NormF2%NormD2;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,F2,D2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,2));
         mEdgeData[std::pair<size_t,size_t>(nTri2,2)]=dVal;
         }
     }
 
-void IncrementalDelaunay(std::set<size_t>                          &sSearchTris,
+void IncrementalDelaunay(surface                             const *pSurface,
+                         std::set<size_t>                          &sSearchTris,
                          std::vector<SGM::Point2D>           const &aPoints2D,
                          std::vector<SGM::UnitVector3D>      const &aNormals,
                          std::vector<size_t>                       &aTriangles,
@@ -1809,7 +2213,7 @@ void IncrementalDelaunay(std::set<size_t>                          &sSearchTris,
                 sSearchTris.insert(nT0);
                 nT1=aAdjacencies[nT+1];
                 nT2=aAdjacencies[nT+2];
-                FixEdgeData(nT,nT0,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+                FixEdgeData(pSurface,aPoints2D,nT,nT0,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         if(nT1!=SIZE_MAX)
@@ -1819,7 +2223,7 @@ void IncrementalDelaunay(std::set<size_t>                          &sSearchTris,
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT1);
                 nT2=aAdjacencies[nT+2];
-                FixEdgeData(nT,nT1,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+                FixEdgeData(pSurface,aPoints2D,nT,nT1,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         if(nT2!=SIZE_MAX)
@@ -1828,11 +2232,11 @@ void IncrementalDelaunay(std::set<size_t>                          &sSearchTris,
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT2);
-                FixEdgeData(nT,nT2,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+                FixEdgeData(pSurface,aPoints2D,nT,nT2,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
         }
-    }
+    } 
 
 void SplitEdge(EdgeValue                           const &EV,
                face                                const *pFace,
@@ -1937,11 +2341,11 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Fix edge data.
 
-    SGM::UnitVector3D const &NormA=aNormals[a];
-    SGM::UnitVector3D const &NormB=aNormals[b];
-    SGM::UnitVector3D const &NormC=aNormals[c];
-    SGM::UnitVector3D const &NormD=aNormals[d];
-    SGM::UnitVector3D const &NormM=aNormals[m];
+    //SGM::UnitVector3D const &NormA=aNormals[a];
+    //SGM::UnitVector3D const &NormB=aNormals[b];
+    //SGM::UnitVector3D const &NormC=aNormals[c];
+    //SGM::UnitVector3D const &NormD=aNormals[d];
+    //SGM::UnitVector3D const &NormM=aNormals[m];
     
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,nEdge)],nT0,nEdge));
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
@@ -1952,50 +2356,50 @@ void SplitEdge(EdgeValue                           const &EV,
 
     if(aAdjacencies[nT0+0]!=SIZE_MAX)
         {
-        double dVal=NormA%NormM;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,m);
         sEdgeData.insert(EdgeValue(dVal,nT0,0));
         mEdgeData[std::pair<size_t,size_t>(nT0,0)]=dVal;
         }
     if(aAdjacencies[nT3+0]!=SIZE_MAX)
         {
-        double dVal=NormB%NormM;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,b,m);
         sEdgeData.insert(EdgeValue(dVal,nT3,0));
         mEdgeData[std::pair<size_t,size_t>(nT3,0)]=dVal;
         }
     if(aAdjacencies[nT1+2]!=SIZE_MAX)
         {
-        double dVal=NormC%NormM;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,c,m);
         sEdgeData.insert(EdgeValue(dVal,nT1,2));
         mEdgeData[std::pair<size_t,size_t>(nT1,2)]=dVal;
         }
     if(aAdjacencies[nT2+2]!=SIZE_MAX)
         {
-        double dVal=NormD%NormM;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,d,m);
         sEdgeData.insert(EdgeValue(dVal,nT2,2));
         mEdgeData[std::pair<size_t,size_t>(nT2,2)]=dVal;
         }
 
     if(c<a && aAdjacencies[nT0+2]!=SIZE_MAX)
         {
-        double dVal=NormC%NormA;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,c);
         sEdgeData.insert(EdgeValue(dVal,nT0,2));
         mEdgeData[std::pair<size_t,size_t>(nT0,2)]=dVal;
         }
     if(b<c && aAdjacencies[nT1+1]!=SIZE_MAX)
         {
-        double dVal=NormB%NormC;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,b,c);
         sEdgeData.insert(EdgeValue(dVal,nT1,1));
         mEdgeData[std::pair<size_t,size_t>(nT1,1)]=dVal;
         }
     if(a<d  && aAdjacencies[nT2+1]!=SIZE_MAX)
         {
-        double dVal=NormA%NormD;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,d);
         sEdgeData.insert(EdgeValue(dVal,nT2,1));
         mEdgeData[std::pair<size_t,size_t>(nT2,1)]=dVal;
         }
     if(d<b && aAdjacencies[nT3+2]!=SIZE_MAX)
         {
-        double dVal=NormD%NormB;
+        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,d,b);;
         sEdgeData.insert(EdgeValue(dVal,nT3,2));
         mEdgeData[std::pair<size_t,size_t>(nT3,2)]=dVal;
         }
@@ -2005,7 +2409,7 @@ void SplitEdge(EdgeValue                           const &EV,
     sSearchTris.insert(nT1);
     sSearchTris.insert(nT2);
     sSearchTris.insert(nT3);
-    IncrementalDelaunay(sSearchTris,aPoints2D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+    IncrementalDelaunay(pSurface,sSearchTris,aPoints2D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
     }            
 
 void RefineTriangles(face                     const *pFace,
@@ -2019,30 +2423,28 @@ void RefineTriangles(face                     const *pFace,
     std::set<EdgeValue> sEdgeData;
     std::map<std::pair<size_t,size_t>,double> mEdgeData;
     size_t nTriangles=aTriangles.size();
+    surface const *pSurface=pFace->GetSurface();
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
         size_t a=aTriangles[Index1];
         size_t b=aTriangles[Index1+1];
         size_t c=aTriangles[Index1+2];
-        SGM::UnitVector3D const &NormA=aNormals[a];
-        SGM::UnitVector3D const &NormB=aNormals[b];
-        SGM::UnitVector3D const &NormC=aNormals[c];
         if(a<b && aAdjacencies[Index1]!=SIZE_MAX)
             {
-            double dVal=NormA%NormB;
-            sEdgeData.insert(EdgeValue(NormA%NormB,Index1,0));
+            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,b);
+            sEdgeData.insert(EdgeValue(dVal,Index1,0));
             mEdgeData[std::pair<size_t,size_t>(Index1,0)]=dVal;
             }
         if(b<c && aAdjacencies[Index1+1]!=SIZE_MAX)
             {
-            double dVal=NormB%NormC;
+            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,c,b);
             sEdgeData.insert(EdgeValue(dVal,Index1,1));
             mEdgeData[std::pair<size_t,size_t>(Index1,1)]=dVal;
             }
         if(c<a && aAdjacencies[Index1+2]!=SIZE_MAX)
             {
-            double dVal=NormC%NormA;
+            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,c);
             sEdgeData.insert(EdgeValue(dVal,Index1,2));
             mEdgeData[std::pair<size_t,size_t>(Index1,2)]=dVal;
             }
@@ -2066,234 +2468,46 @@ void RefineTriangles(face                     const *pFace,
         }
     }
 
-bool FlipIt(std::vector<SGM::Point3D>      const &aPoints3D,
-            size_t                                a,
-            size_t                                b,
-            size_t                                c,
-            size_t                                d)
+void FindNormals(SGM::Result                    &,//rResult,
+                 face                     const *pFace,
+                 std::vector<SGM::Point2D>      &aPoints2D,
+                 std::vector<SGM::UnitVector3D> &aNormals)
     {
-    SGM::Point3D const &A=aPoints3D[a];
-    SGM::Point3D const &B=aPoints3D[b];
-    SGM::Point3D const &C=aPoints3D[c];
-    SGM::Point3D const &D=aPoints3D[d];
-
-    // CD has to be shorter than AB and 
-    // The angle at C with A and B and the
-    // angle at D with A and B should be obtuse.
-
-    double CD=C.DistanceSquared(D);
-    double AB=A.DistanceSquared(B);
-    if(AB<CD)
-        {
-        return false;
-        }
-    if(0<(A-C)%(B-C) || 0<(A-D)%(B-D))
-        {
-        return false;
-        }
-    return true;
-    }
-
-bool Flip3D(std::vector<SGM::Point3D>      const &aPoints3D,
-            std::vector<size_t>                  &aTriangles,
-            size_t                                T0,
-            size_t                                nEdge,
-            size_t                                T1)
-    {
-    size_t a=aTriangles[T0];
-    size_t b=aTriangles[T0+1];
-    size_t c=aTriangles[T0+2];
-    size_t d=aTriangles[T1];
-    size_t e=aTriangles[T1+1];
-    size_t f=aTriangles[T1+2];
-    if(nEdge==0)
-        {
-        if(d!=a && d!=b)
-            {
-            if(FlipIt(aPoints3D,a,b,c,d))
-                {
-                return true;
-                }
-            }
-        else if(e!=a && e!=b)
-            {
-            if(FlipIt(aPoints3D,a,b,c,e))
-                {
-                return true;
-                }
-            }
-        else
-            {
-            if(FlipIt(aPoints3D,a,b,c,f))
-                {
-                return true;
-                }
-            }
-        }
-    else if(nEdge==1)
-        {
-        if(d!=c && d!=b)
-            {
-            if(FlipIt(aPoints3D,c,b,a,d))
-                {
-                return true;
-                }
-            }
-        else if(e!=c && e!=b)
-            {
-            if(FlipIt(aPoints3D,c,b,a,e))
-                {
-                return true;
-                }
-            }
-        else
-            {
-            if(FlipIt(aPoints3D,c,b,a,f))
-                {
-                return true;
-                }
-            }
-        }
-    else
-        {
-        if(d!=a && d!=c)
-            {
-            if(FlipIt(aPoints3D,c,a,b,d))
-                {
-                return true;
-                }
-            }
-        else if(e!=a && e!=c)
-            {
-            if(FlipIt(aPoints3D,c,a,b,e))
-                {
-                return true;
-                }
-            }
-        else
-            {
-            if(FlipIt(aPoints3D,c,a,b,f))
-                {
-                return true;
-                }
-            }
-        }
-    return false;
-    }
-
-void FlipTriangles(size_t               nTri,
-                   size_t               nEdge,
-                   std::vector<size_t> &aTriangles,
-                   std::vector<size_t> &aAdjacencies)
-    {
-    size_t a=aTriangles[nTri];
-    size_t b=aTriangles[nTri+1];
-    size_t c=aTriangles[nTri+2];
-    size_t nT=aAdjacencies[nTri+nEdge];
-    size_t d=aTriangles[nT];
-    size_t e=aTriangles[nT+1];
-    size_t f=aTriangles[nT+2];
-    size_t g,nTA,nTB;
-    if(d!=a && d!=b && d!=c)
-        {
-        g=d;
-        nTA=aAdjacencies[nT+2];
-        nTB=aAdjacencies[nT];
-        }
-    else if(e!=a && e!=b && e!=c)
-        {
-        g=e;
-        nTA=aAdjacencies[nT];
-        nTB=aAdjacencies[nT+1];
-        }
-    else
-        {
-        g=f;
-        nTA=aAdjacencies[nT+1];
-        nTB=aAdjacencies[nT+2];
-        }
-    
-    size_t nT0=aAdjacencies[nTri];
-    size_t nT1=aAdjacencies[nTri+1];
-    size_t nT2=aAdjacencies[nTri+2];
-    if(nEdge==0)
-        {
-        aTriangles[nTri]=g;
-        aTriangles[nTri+1]=c;
-        aTriangles[nTri+2]=a;
-        aTriangles[nT]=g;
-        aTriangles[nT+1]=b;
-        aTriangles[nT+2]=c;
-
-        aAdjacencies[nTri]=nT;
-        aAdjacencies[nTri+1]=nT2;
-        aAdjacencies[nTri+2]=nTA;
-        aAdjacencies[nT]=nTB;
-        aAdjacencies[nT+1]=nT1;
-        aAdjacencies[nT+2]=nTri;
-        }
-    else if(nEdge==1)
-        {
-        aTriangles[nTri]=g;
-        aTriangles[nTri+1]=a;
-        aTriangles[nTri+2]=b;
-        aTriangles[nT]=g;
-        aTriangles[nT+1]=c;
-        aTriangles[nT+2]=a;
-
-        aAdjacencies[nTri]=nT;
-        aAdjacencies[nTri+1]=nT0;
-        aAdjacencies[nTri+2]=nTA;
-        aAdjacencies[nT]=nTB;
-        aAdjacencies[nT+1]=nT2;
-        aAdjacencies[nT+2]=nTri;
-        }
-    else
-        {
-        aTriangles[nTri]=g;
-        aTriangles[nTri+1]=a;
-        aTriangles[nTri+2]=b;
-        aTriangles[nT]=g;
-        aTriangles[nT+1]=b;
-        aTriangles[nT+2]=c;
-
-        aAdjacencies[nTri]=nTB;
-        aAdjacencies[nTri+1]=nT0;
-        aAdjacencies[nTri+2]=nT;
-        aAdjacencies[nT]=nTri;
-        aAdjacencies[nT+1]=nT1;
-        aAdjacencies[nT+2]=nTA;
-        }
-    FixBackPointers(nT,aTriangles,aAdjacencies);
-    FixBackPointers(nTri,aTriangles,aAdjacencies);
-    }
-
-void DelaunayFlips3D(std::vector<SGM::Point3D> const &aPoints3D,
-                     std::vector<size_t>             &aTriangles,
-                     std::vector<size_t>             &aAdjacencies)
-    {
-    size_t nTriangles=aTriangles.size();
+    size_t nPoints2D=aPoints2D.size();
+    surface const *pSurface=pFace->GetSurface();
     size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    for(Index1=0;Index1<nPoints2D;++Index1)
         {
-        size_t T0=aAdjacencies[Index1];
-        size_t T1=aAdjacencies[Index1+1];
-        size_t T2=aAdjacencies[Index1+2];
-        if(T0!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,0,T0))
-            {
-            FlipTriangles(Index1,0,aTriangles,aAdjacencies);
-            }
-        else if(T1!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,1,T1))
-            {
-            FlipTriangles(Index1,1,aTriangles,aAdjacencies);
-            }
-        else if(T2!=SIZE_MAX && Flip3D(aPoints3D,aTriangles,Index1,2,T2))
-            {
-            FlipTriangles(Index1,2,aTriangles,aAdjacencies);
-            }
+        SGM::Point2D const &uv=aPoints2D[Index1];
+        SGM::UnitVector3D Norm;
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+        aNormals.push_back(Norm);
         }
     }
 
+void ScaledDelaunayFlips(face                      const *pFace,
+                         std::vector<SGM::Point2D> const &aPoints2D,
+                         std::vector<size_t>             &aTriangles,
+                         std::vector<size_t>             &aAdjacencies)
+    {
+    surface const *pSurface=pFace->GetSurface();
+    SGM::Vector3D DU,DV;
+    SGM::Point2D uv=pSurface->GetDomain().MidPoint();
+    pSurface->Evaluate(uv,nullptr,&DU,&DV);
+    double dScale=DV.Magnitude()/DU.Magnitude();
+    size_t nPoints=aPoints2D.size();
+    std::vector<SGM::Point2D> aScaled;
+    aScaled.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point2D uv=aPoints2D[Index1];
+        uv.m_v*=dScale;
+        aScaled.push_back(uv);
+        }
+    DelaunayFlips(aScaled,aTriangles,aAdjacencies);
+    }
+    
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -2305,25 +2519,14 @@ void FacetFace(SGM::Result                    &rResult,
     {
     std::vector<std::vector<size_t> > aaPolygons;
     std::vector<size_t> aAdjacencies;
-    std::vector<size_t> aPoles;
-    FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons,aPoles);
+    FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
-    size_t nOldSize=aPoints2D.size();
-    surface const *pSurface=pFace->GetSurface();
-    size_t Index1;
-    for(Index1=0;Index1<nOldSize;++Index1)
+    if(Options.m_bParametric==false)
         {
-        SGM::Point2D const &uv=aPoints2D[Index1];
-        SGM::UnitVector3D Norm;
-        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
-        aNormals.push_back(Norm);
+        FindNormals(rResult,pFace,aPoints2D,aNormals);
+        RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies);
         }
-    RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies);
-    DelaunayFlips3D(aPoints3D,aTriangles,aAdjacencies);
-    size_t nPoles=aPoles.size();
-    for(Index1=0;Index1<nPoles;++Index1)
-        {
-        aTriangles.push_back(aPoles[Index1]);
-        }
+    ScaledDelaunayFlips(pFace,aPoints2D,aTriangles,aAdjacencies);
     }
-}
+
+} // End of SGMInternal namespace

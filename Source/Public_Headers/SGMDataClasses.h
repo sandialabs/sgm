@@ -108,6 +108,8 @@ namespace SGM
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
 
+        Vector2D operator*(double dScale) const;
+
         double m_u;
         double m_v;
         };
@@ -272,6 +274,8 @@ namespace SGM
 
             Interval2D(SGM::Point2D const &Pos0,SGM::Point2D const &Pos1);
 
+            Interval2D(double dMinU,double dMaxU,double dMinV,double dMaxV);
+
             explicit Interval2D(SGM::Point2D const &Pos);
 
             // Interrogation methods.
@@ -308,6 +312,8 @@ namespace SGM
             SGM::Point2D LowerRight() const;
             SGM::Point2D UpperLeft() const;
             SGM::Point2D UpperRight() const;
+
+            SGM::Point2D MidPoint(double dUFraction=0.5,double dVFraction=0.5) const;
 
         public:
 
@@ -564,9 +570,13 @@ namespace SGM
 
     SGM_EXPORT SGM::Point4D operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec);
 
+    SGM_EXPORT SGM::Vector2D operator+(SGM::Vector2D const &Vec0,SGM::Vector2D const &Vec1);
+
     SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
 
     SGM_EXPORT SGM::Vector3D operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1);
+
+    SGM_EXPORT SGM::Vector2D operator*(double dValue,SGM::Vector2D const &Vec);
 
     SGM_EXPORT SGM::Vector3D operator*(double dValue,SGM::Vector3D const &Vec);
 

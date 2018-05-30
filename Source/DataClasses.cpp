@@ -53,6 +53,17 @@ bool SGM::Point2D::operator<(SGM::Point2D const &Pos) const
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//  Vector2D methods
+//
+///////////////////////////////////////////////////////////////////////////////
+
+SGM::Vector2D SGM::Vector2D::operator*(double dScale) const
+    {
+    return SGM::Vector2D(m_u*dScale,m_v*dScale);
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //  Vector3D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -468,6 +479,11 @@ SGM::Interval2D::Interval2D(SGM::Point2D const &Min,SGM::Point2D const &Max):
     {
     }
 
+SGM::Interval2D::Interval2D(double dMinU,double dMaxU,double dMinV,double dMaxV):
+    m_UDomain(dMinU,dMaxU),m_VDomain(dMinV,dMaxV)
+    {
+    }
+
 SGM::Interval2D::Interval2D(SGM::Point2D const &Pos):
     m_UDomain(Pos.m_u),m_VDomain(Pos.m_v)
     {
@@ -555,6 +571,11 @@ SGM::Point2D SGM::Interval2D::UpperLeft() const
 SGM::Point2D SGM::Interval2D::UpperRight() const 
     {
     return SGM::Point2D(m_UDomain.m_dMax,m_VDomain.m_dMax);
+    }
+
+SGM::Point2D SGM::Interval2D::MidPoint(double dUFraction,double dVFraction) const 
+    {
+    return SGM::Point2D(m_UDomain.MidPoint(dUFraction),m_VDomain.MidPoint(dVFraction));
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -940,6 +961,11 @@ SGM::UnitVector3D SGM::operator-(SGM::UnitVector3D const &UVec)
     return SGM::Vector3D(-UVec.m_x,-UVec.m_y,-UVec.m_z);
     }
 
+SGM::Vector2D SGM::operator*(double dValue,SGM::Vector2D const &Vec)
+    {
+    return SGM::Vector2D(Vec.m_u*dValue,Vec.m_v*dValue);
+    }
+
 SGM::Vector3D SGM::operator*(double dValue,SGM::Vector3D const &Vec)
     {
     return SGM::Vector3D(Vec.m_x*dValue,Vec.m_y*dValue,Vec.m_z*dValue);
@@ -980,6 +1006,11 @@ SGM::Point3D SGM::operator-(SGM::Point3D const &Pos,SGM::Vector3D const &Vec)
 SGM::Point4D SGM::operator-(SGM::Point4D const &Pos,SGM::Vector4D const &Vec)
     {
     return SGM::Point4D(Pos.m_x-Vec.m_x,Pos.m_y-Vec.m_y,Pos.m_z-Vec.m_z,Pos.m_w-Vec.m_w);
+    }
+
+SGM::Vector2D SGM::operator+(SGM::Vector2D const &Vec0,SGM::Vector2D const &Vec1)
+    {
+    return SGM::Vector2D(Vec0.m_u+Vec1.m_u,Vec0.m_v+Vec1.m_v);
     }
 
 SGM::Vector3D SGM::operator-(SGM::Vector3D const &Vec0,SGM::Vector3D const &Vec1)

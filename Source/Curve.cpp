@@ -242,16 +242,6 @@ double curve::Inverse(SGM::Point3D const &Pos,
                 double dUy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
                 double du=SGM::SAFEatan2(dUy,dUx);
 
-                // Find the v value.
-
-                SGM::UnitVector3D Spoke=(Pos-ZAxis*((Pos-Center)%ZAxis))-Center;
-                double cx=Pos.m_x-Center.m_x-Spoke.m_x*dMajorRadius;
-                double cy=Pos.m_y-Center.m_y-Spoke.m_y*dMajorRadius;
-                double cz=Pos.m_z-Center.m_z-Spoke.m_z*dMajorRadius;
-                double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
-                double dVy=cx*ZAxis.m_x+cy*ZAxis.m_y+cz*ZAxis.m_z;
-                double dv=SGM::SAFEatan2(dVy,dVx);
-
                 size_t Index1;
                 std::vector<double> aStarts;
                 double t=du/nA;
@@ -471,7 +461,7 @@ double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
             }
         default:
             {
-            return SGM::Integrate(DerivativeMagnitude,Domain.m_dMin,Domain.m_dMax,this,dTolerance);
+            return SGM::Integrate1D(DerivativeMagnitude,Domain,this,dTolerance);
             break;
             }
         }

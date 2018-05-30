@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cfloat>
 
-namespace {
+namespace SGMInternal
+{
+
 double sign(SGM::Point2D const &P1,
             SGM::Point2D const &P2,
             SGM::Point2D const &P3)
@@ -273,7 +275,123 @@ class EdgeData
         size_t m_nTriangle;
         int    m_nEdge;
     };
-} // end anonymous namespace
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Internal Integration Functions
+//
+///////////////////////////////////////////////////////////////////////////////
+
+typedef double (*SGMIntegrand)(SGM::Point2D const &uv,void const *pData);
+
+class Integrate2DData
+    {
+    public:
+
+        Integrate2DData() {};
+
+        SGMIntegrand     m_f;
+        double           m_y;
+        double           m_dTolerance;
+        void            *m_Data;
+        SGM::Interval1D  m_Domain;
+    };
+
+double Integrate2DFx(double x,void const *pData)
+    {
+    Integrate2DData *XYData=(Integrate2DData *)pData;
+    SGM::Point2D uv(x,XYData->m_y);
+    return XYData->m_f(uv,XYData->m_Data);
+    }
+
+double Integrate2DFy(double y,void const *pData)
+    {
+    Integrate2DData *pSubData=(Integrate2DData *)pData;
+    pSubData->m_y=y;
+    return SGM::Integrate1D(Integrate2DFx,pSubData->m_Domain,pData,pSubData->m_dTolerance);
+    }
+
+class IntegrateTetraData
+    {
+    public:
+
+        IntegrateTetraData() {};
+
+        SGMIntegrand  m_f;
+        double        m_y;
+        double        m_dTolerance;
+        void         *m_Data;
+        SGM::Point2D  m_PosA;
+        SGM::Point2D  m_PosB;
+        SGM::Point2D  m_PosC;
+        SGM::Point2D  m_PosD;
+    };
+
+double IntegrateTetraX(double x,void const *pData)
+    {
+    IntegrateTetraData *XYData=(IntegrateTetraData *)pData;
+    SGM::Point2D uv(x,XYData->m_y);
+    return XYData->m_f(uv,XYData->m_Data);
+    }
+
+double IntegrateTetraY(double y,void const *pData)
+    {
+    IntegrateTetraData *pSubData=(IntegrateTetraData *)pData;
+    pSubData->m_y=y;
+    SGM::Point2D const &PosA=pSubData->m_PosA;
+    SGM::Point2D const &PosB=pSubData->m_PosB;
+    SGM::Point2D const &PosC=pSubData->m_PosC;
+    SGM::Point2D const &PosD=pSubData->m_PosD;
+    double dFraction=(y-PosC.m_v)/(PosA.m_v-PosC.m_v);
+    double x0=SGM::MidPoint(PosA,PosC,dFraction).m_u;
+    double x1=SGM::MidPoint(PosB,PosD,dFraction).m_u;
+    SGM::Interval1D Domain(x0,x1);
+    return SGM::Integrate1D(IntegrateTetraX,Domain,pData,pSubData->m_dTolerance);
+    }
+
+double IntegrateTetra(double f(SGM::Point2D const &uv,void const *pData),
+                      SGM::Point2D                         const &PosA,
+                      SGM::Point2D                         const &PosB,
+                      SGM::Point2D                         const &PosC,
+                      SGM::Point2D                         const &PosD,
+                      void                                 const *pData,
+                      double                                      dTolerance)
+    {
+    //   A----------B         _ay  _Line(d,b)          
+    //    \        /         /    /                    
+    //     \      /        _/   _/         f(x,y)dx,dy 
+    //      C----D        cy   Line(a,c)    
+
+    //     _Ay _Line(d,b)        _Ay
+    //    /   /                 /  
+    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),Line(a,c),Line(d,b))(y) = 
+    //  Cy  Line(a,c)         Cy   
+    //
+    //  Integrate1D(Integrate1D(f(x),Line(a,c),Line(d,b))(y),Cy,Ay)
+
+    SGMInternal::IntegrateTetraData XYData;
+    XYData.m_Data=(void *)pData;
+    XYData.m_PosA=PosA;
+    XYData.m_PosB=PosB;
+    XYData.m_PosC=PosC;
+    XYData.m_PosD=PosD;
+
+    if(PosB.m_u<PosA.m_u)
+        {
+        std::swap(XYData.m_PosA,XYData.m_PosB);
+        }
+    if(PosD.m_u<PosC.m_u)
+        {
+        std::swap(XYData.m_PosC,XYData.m_PosD);
+        }
+
+    XYData.m_dTolerance=dTolerance;
+    XYData.m_f=f;
+    SGM::Interval1D Domain(PosC.m_v,PosA.m_v);
+    return SGM::Integrate1D(SGMInternal::IntegrateTetraY,Domain,&XYData,dTolerance);
+    }
+
+} // End SGMInternal namespace
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -598,9 +716,9 @@ bool SGM::InTriangle(SGM::Point2D const &A,
                      SGM::Point2D const &C,
                      SGM::Point2D const &D)
     {
-    bool b1=sign(D,A,B)<0;
-    bool b2=sign(D,B,C)<0;
-    bool b3=sign(D,C,A)<0;
+    bool b1=SGMInternal::sign(D,A,B)<0;
+    bool b2=SGMInternal::sign(D,B,C)<0;
+    bool b3=SGMInternal::sign(D,C,A)<0;
     return ((b1==b2) && (b2==b3));
     }
 
@@ -656,7 +774,7 @@ bool SGM::FindCircle(SGM::Point3D const &Pos0,
 size_t SGM::FindAdjacences2D(std::vector<size_t> const &aTriangles,
                              std::vector<size_t>       &aAdjacency)
     {
-    std::vector<EdgeData> aEdges;
+    std::vector<SGMInternal::EdgeData> aEdges;
     size_t nTriangles=aTriangles.size();
     aAdjacency.assign(nTriangles,SIZE_MAX);
     aEdges.reserve(nTriangles);
@@ -687,8 +805,8 @@ size_t SGM::FindAdjacences2D(std::vector<size_t> const &aTriangles,
             }
         for(Index2=nStart;Index2<Index1;++Index2)
             {
-            EdgeData const &ED1=aEdges[Index2];
-            EdgeData const &ED2=aEdges[Index2+1<Index1 ? Index2+1 : nStart];
+            SGMInternal::EdgeData const &ED1=aEdges[Index2];
+            SGMInternal::EdgeData const &ED2=aEdges[Index2+1<Index1 ? Index2+1 : nStart];
             if(ED1.m_nTriangle!=ED2.m_nTriangle)
                 {
                 aAdjacency[ED1.m_nTriangle+ED1.m_nEdge]=ED2.m_nTriangle;
@@ -712,7 +830,7 @@ size_t GreatestCommonDivisor(size_t nA,
             nA = nB;
             nB = dR;
             }
-        while(true);
+        while(dR);
         }
     return nB;
     }
@@ -739,7 +857,7 @@ bool SGM::CramersRule(double a1,double b1,double c1,
     return true;
     }
 
-void TriangulatePolygonSub(SGM::Result                             &rResult,
+void TriangulatePolygonSub(SGM::Result                             &,//rResult,
                            std::vector<SGM::Point2D>         const &aPoints,
                            std::vector<std::vector<size_t> > const &aaPolygons,
                            std::vector<size_t>                     &aTriangles,
@@ -754,7 +872,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
         {
         // Sort the inside polygons by extream u value.
 
-        std::vector<PolyData> aUValues;
+        std::vector<SGMInternal::PolyData> aUValues;
         for(Index1=1;Index1<nPolygons;++Index1)
             {
             double dUValue=-DBL_MAX;
@@ -770,7 +888,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
                     nWhere=Index2;
                     }
                 }
-            PolyData PD{};
+            SGMInternal::PolyData PD{};
             PD.dExtreamU=dUValue;
             PD.nWhichPoint=nWhere;
             PD.nWhichPoly=Index1;
@@ -780,7 +898,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
 
         for(Index1=0;Index1<nPolygons-1;++Index1)
             {
-            BridgePolygon(aPoints,
+            SGMInternal::BridgePolygon(aPoints,
                           aaPolygons[aUValues[Index1].nWhichPoly],
                           aUValues[Index1].nWhichPoint,
                           aPolygon);
@@ -825,12 +943,12 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
             {
             std::pair<double,size_t> Angle=*iter;
             size_t nEar=Angle.second;
-            if(GoodEar(aPoints,aPolygon,aCutOff,nEar))
+            if(SGMInternal::GoodEar(aPoints,aPolygon,aCutOff,nEar))
                 {
-                size_t nEarA=GetPrevious(nEar,aCutOff);
+                size_t nEarA=SGMInternal::GetPrevious(nEar,aCutOff);
                 size_t nA=aPolygon[nEarA];
                 size_t nB=aPolygon[nEar];
-                size_t nEarC=GetNext(nEar,aCutOff);
+                size_t nEarC=SGMInternal::GetNext(nEar,aCutOff);
                 size_t nC=aPolygon[nEarC];
                 aTriangles.push_back(nA);
                 aTriangles.push_back(nB);
@@ -848,7 +966,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
 
                 std::pair<double,size_t> AngleA(aAngles[nEarA],nEarA);
                 sAngles.erase(AngleA);
-                AngleA.first=FindAngle(aPoints,aPolygon,aCutOff,nEarA);
+                AngleA.first=SGMInternal::FindAngle(aPoints,aPolygon,aCutOff,nEarA);
                 sAngles.insert(AngleA);
                 aAngles[nEarA]=AngleA.first;
 
@@ -856,7 +974,7 @@ void TriangulatePolygonSub(SGM::Result                             &rResult,
 
                 std::pair<double,size_t> AngleC(aAngles[nEarC],nEarC);
                 sAngles.erase(AngleC);
-                AngleC.first=FindAngle(aPoints,aPolygon,aCutOff,nEarC);
+                AngleC.first=SGMInternal::FindAngle(aPoints,aPolygon,aCutOff,nEarC);
                 sAngles.insert(AngleC);
                 aAngles[nEarC]=AngleC.first;
 
@@ -1383,27 +1501,29 @@ double SGM::SAFEatan2(double y,double x)
     return atan2(y,x);
     }
 
-double SGM::Integrate(double f(double x,void const *pData),
-                      double      a,
-                      double      b,
-                      void const *pData,
-                      double      dTolerance)
+double SGM::Integrate1D(double f(double x,void const *pData),
+                        SGM::Interval1D        const &Domain,
+                        void                   const *pData,
+                        double                        dTolerance)
     {
     std::vector<std::vector<double> > aaData;
     double dAnswer=0;
-    double dh=b-a;
+    double dh=Domain.Length();
+    double a=Domain.m_dMin;
+    double b=Domain.m_dMax;
     std::vector<double> aData;
     aData.push_back(0.5*dh*(f(a,pData)+f(b,pData)));
     aaData.push_back(aData);
     double dError=dTolerance+1;
     size_t Index1=0,Index2;
-    size_t nMin=4;
+    size_t nMin=3;
     while(Index1<nMin || dTolerance<dError)
         {
         ++Index1;
         dh*=0.5;
         double dSum=0.0;
-        for(Index2=1;Index2<=pow(2,Index1)-1;Index2+=2)
+        size_t nBound=(size_t)pow(2,Index1);
+        for(Index2=1;Index2<nBound;Index2+=2)
             {
             dSum+=f(a+Index2*dh,pData);
             }
@@ -1417,6 +1537,145 @@ double SGM::Integrate(double f(double x,void const *pData),
         dAnswer=aData.back();
         dError=fabs(aaData[Index1-1].back()-dAnswer);
         }
+    return dAnswer;
+    }
+
+double SGM::Integrate2D(double f(SGM::Point2D const &uv,void const *pData),
+                        SGM::Interval2D                      const &Domain,
+                        void                                 const *pData,
+                        double                                      dTolerance)
+    {    
+    //     _b  _d                _b
+    //    /   /                 /  
+    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),c,d)(y) = Integrate1D(Integrate1D(f(x),c,d)(y),a,b)
+    //  a   c                 a   
+
+    SGMInternal::Integrate2DData XYData;
+    XYData.m_Data=(void *)pData;
+    XYData.m_Domain=Domain.m_UDomain;
+    XYData.m_dTolerance=dTolerance;
+    XYData.m_f=f;
+    return SGM::Integrate1D(SGMInternal::Integrate2DFy,Domain.m_VDomain,&XYData,dTolerance);
+    }
+
+double SGM::IntegrateTriangle(double f(SGM::Point2D const &uv,void const *pData),
+                              SGM::Point2D                         const &PosA,
+                              SGM::Point2D                         const &PosB,
+                              SGM::Point2D                         const &PosC,
+                              void                                 const *pData,
+                              double                                      dTolerance)
+    {
+    //  With A being the highest left point and C being the lowest right point 
+    //  there are four case as follows;
+    //
+    //   Case 1
+    //
+    //       A   
+    //     / |         _by  _Line(a,c)                _ay  _Line(a,c)         
+    //   B   |        /    /                         /    /            
+    //     \ |      _/   _/         f(x,y)dx,dy +  _/   _/         f(x,y)dx,dy
+    //       C      cy   Line(b,c)                 by   Line(b,a)    
+    //
+    //   OR Case 2
+    //
+    //   A        
+    //   | \           _by  _Line(b,c)                _ay  _Line(a,b)         
+    //   |   B        /    /                         /    /            
+    //   | /        _/   _/         f(x,y)dx,dy +  _/   _/         f(x,y)dx,dy
+    //   C          cy   Line(a,c)                 by   Line(a,c)    
+    //
+    //   OR Case 3
+    //
+    //   A              
+    //   | \              _ay  _Line(a,c)         
+    //   |   \           /    /                   
+    //   |     \       _/   _/         f(x,y)dx,dy
+    //   B-------C     cy   Line(a,b)             
+    //
+    //   OR Case 4
+    //
+    //   A-------B
+    //   |     /         _ay  _Line(b,c)         
+    //   |   /          /    /                   
+    //   | /          _/   _/         f(x,y)dx,dy
+    //   C            cy   Line(a,c)             
+
+    // Find the three points.
+    
+    SGM::Point2D PosHigh,PosLow,PosMid;
+    if(PosB.m_v<=PosA.m_v && PosC.m_v<=PosA.m_v)
+        {
+        PosHigh=PosA;
+        if(PosB.m_v<=PosC.m_v)
+            {
+            PosLow=PosB;
+            PosMid=PosC;
+            }
+        else 
+            {
+            PosLow=PosC;
+            PosMid=PosB;
+            }
+        }
+    else if(PosA.m_v<=PosB.m_v && PosC.m_v<=PosB.m_v)
+        {
+        PosHigh=PosB;
+        if(PosA.m_v<=PosC.m_v)
+            {
+            PosLow=PosA;
+            PosMid=PosC;
+            }
+        else 
+            {
+            PosLow=PosC;
+            PosMid=PosA;
+            }
+        }
+    else
+        {
+        PosHigh=PosC;
+        if(PosB.m_v<=PosA.m_v)
+            {
+            PosLow=PosB;
+            PosMid=PosA;
+            }
+        else 
+            {
+            PosLow=PosA;
+            PosMid=PosB;
+            }
+        }
+
+    // Figure out which case we have and call IntegrateTetra one or two times.
+
+    //   A----------B         _ay  _Line(d,b)          
+    //    \        /         /    /                    
+    //     \      /        _/   _/         f(x,y)dx,dy 
+    //      C----D        cy   Line(a,c)    
+
+    double dAnswer;
+    if(PosHigh.m_v==PosMid.m_v)
+        {
+        // Case 4
+
+        dAnswer=SGMInternal::IntegrateTetra(f,PosHigh,PosMid,PosLow,PosLow,pData,dTolerance);
+        }
+    else if(PosLow.m_v==PosMid.m_v)
+        {
+        // Case 3
+
+        dAnswer=SGMInternal::IntegrateTetra(f,PosHigh,PosHigh,PosLow,PosMid,pData,dTolerance);
+        }
+    else
+        {
+        // Case 1 or 2
+
+        double dFraction=(PosMid.m_v-PosLow.m_v)/(PosHigh.m_v-PosLow.m_v);
+        SGM::Point2D PosMidLine=SGM::MidPoint(PosLow,PosHigh,dFraction);
+        dAnswer=SGMInternal::IntegrateTetra(f,PosHigh,PosHigh,PosMid,PosMidLine,pData,dTolerance)+
+                SGMInternal::IntegrateTetra(f,PosMid,PosMidLine,PosLow,PosLow,pData,dTolerance);
+        }
+
     return dAnswer;
     }
 
@@ -1574,7 +1833,7 @@ size_t SGM::Quartic(double a,double b,double c,double d,double e,
     size_t nLookFrom=aLookFrom.size();
     for(Index1=0;Index1<nLookFrom;++Index1)
         {
-        NewtonMethod(a,b,c,d,e,aLookFrom[Index1]);
+        SGMInternal::NewtonMethod(a,b,c,d,e,aLookFrom[Index1]);
         aRoots.push_back(aLookFrom[Index1]);
         }
 

@@ -39,6 +39,22 @@ void surface::RemoveFace(face *pFace)
         }
     }
 
+double AreaIntegrand(SGM::Point2D const &uv,void const *pData)
+    {
+    surface const *pSurface=(surface const *)pData;
+    SGM::Vector3D VecU,VecV;
+    pSurface->Evaluate(uv,nullptr,&VecU,&VecV);
+    return (VecU*VecV).Magnitude();
+    }
+
+double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
+                                             SGM::Point2D const &PosA,
+                                             SGM::Point2D const &PosB,
+                                             SGM::Point2D const &PosC) const
+    {
+    return SGM::IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
+    }
+
 void surface::Transform(SGM::Transform3D const &Trans)
     {
     switch(m_SurfaceType)
@@ -1095,7 +1111,6 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::Vector3D  DuLocal;
             SGM::Vector3D  DvLocal;
             double A1_half = 0.0;
-            double A2_half = 0.0;
             double dvRadius = 0.0;
 
             if (nullptr == Dv && nullptr == Duv && nullptr == Dvv && nullptr == Norm)
@@ -1285,18 +1300,6 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
             Vec1=dU;
             Vec2=dV;
             break;
-            }
-        case SGM::EntityType::TorusType:
-            {
-            torus const *pTorus=(torus const *)this;
-            k1=1.0/pTorus->m_dMajorRadius;
-            k2=1.0/pTorus->m_dMinorRadius;
-            SGM::Vector3D dU,dV;
-            pTorus->Evaluate(uv,nullptr,&dU,&dV);
-            Vec1=dU;
-            Vec2=dV;
-            break;
-
             }
         default:
             {
@@ -1761,7 +1764,6 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             SGM::Point3D      const &Origin =pRevolve->m_Origin;
             SGM::UnitVector3D const &XAxis  =pRevolve->m_XAxis;
-            SGM::UnitVector3D const &YAxis  =pRevolve->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pRevolve->m_ZAxis;
 
             uv.m_u = 0; // default u output to 0

@@ -53,6 +53,8 @@ class entity
 
         void SeverOwners() const;
 
+        void FindAllChildern(std::set<entity *> &sChildern) const;
+
     protected:
 
         size_t                  m_ID;
@@ -143,7 +145,7 @@ class body : public topology
 
         SGM::Interval3D const &GetBox() const;
         
-        std::set<volume *> const &GetVolumes() {return m_sVolumes;}
+        std::set<volume *> const &GetVolumes() const {return m_sVolumes;}
         
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -317,7 +319,7 @@ class face : public topology
                          entity            **pBoundary=nullptr,   // The closest sub element.
                          SGM::Point3D       *pPos=nullptr) const; // Found point on boundary.
 
-        double FindArea() const;
+        double FindArea(SGM::Result &rResult) const;
                         
     private:
     

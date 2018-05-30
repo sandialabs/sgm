@@ -9,6 +9,7 @@
 #include "SGMDisplay.h"
 #include "SGMEntityFunctions.h"
 #include "SGMMathematics.h"
+#include "SGMMeasure.h"
 #include "SGMInterrogate.h"
 #include "SGMTranslators.h"
 
@@ -19,6 +20,7 @@
 #include "STEP.h"
 #include "Query.h"
 #include "FileFunctions.h"
+#include "EntityFunctions.h"
 #include "Curve.h"
 #include "Faceter.h"
 #include "Surface.h"
@@ -207,7 +209,7 @@ void SGM::DeleteEntity(SGM::Result &rResult,
                        SGM::Entity &EntityID)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    rResult.GetThing()->DeleteEntity(pEntity);
+    SGMInternal::DeleteEntity(rResult,pEntity);
     }
 
 
@@ -718,6 +720,14 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      bool                     bApple)
     {
     SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    return SGM::Surface(pSurface->GetID());
+    }
+
+SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
+                                      SGM::Point3D const &Center,
+                                      double              dRadius)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::sphere(rResult,Center,dRadius);
     return SGM::Surface(pSurface->GetID());
     }
 
@@ -1274,23 +1284,23 @@ void SGM::SaveSGM(SGM::Result                  &rResult,
     SGMInternal::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }
 
-double FindLength(SGM::Result     &rResult,
-                  SGM::Edge const &EdgeID,
-                  double           dTolerance)
+double SGM::FindLength(SGM::Result     &rResult,
+                       SGM::Edge const &EdgeID,
+                       double           dTolerance)
     {
     SGMInternal::edge const *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     return pEdge->FindLength(dTolerance);
     }
 
-double FindArea(SGM::Result     &rResult,
-                SGM::Face const &FaceID)
+double SGM::FindArea(SGM::Result     &rResult,
+                     SGM::Face const &FaceID)
     {
     SGMInternal::face const *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    return pFace->FindArea();
+    return pFace->FindArea(rResult);
     }
 
-double FindVolume(SGM::Result       &rResult,
-                  SGM::Volume const &VolumeID)
+double SGM::FindVolume(SGM::Result       &rResult,
+                       SGM::Volume const &VolumeID)
     {
     SGMInternal::volume const *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
     return pVolume->FindVolume();

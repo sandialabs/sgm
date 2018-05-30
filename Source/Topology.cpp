@@ -1,7 +1,10 @@
 #include "SGMDataClasses.h"
+
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
+
+#include <limits>
 
 namespace SGMInternal
 {
@@ -529,15 +532,23 @@ void OrderLoopEdges(SGM::Result                    &rResult,
                     std::vector<edge *>            &aEdges,
                     std::vector<SGM::EdgeSideType> &aFlips)
     {
-    if(sEdges.empty())
+    size_t nSize=sEdges.size();
+    if(nSize==0)
         {
         return;
         }
+    std::vector<edge *> aTempEdges;
+    std::vector<SGM::EdgeSideType> aTempFlips;
+    aTempEdges.reserve(nSize);
+    aTempFlips.reserve(nSize);
+    aEdges.reserve(nSize);
+    aFlips.reserve(nSize);
+
     edge *pStartEdge=*(sEdges.begin());
-    aEdges.push_back(pStartEdge);
+    aTempEdges.push_back(pStartEdge);
     SGM::EdgeSideType nEdgeType=pFace->GetEdgeType(pStartEdge);
     bool bFlipped=pFace->GetFlipped();
-    aFlips.push_back(nEdgeType);
+    aTempFlips.push_back(nEdgeType);
     vertex *pVertex;
     if(bFlipped)
         {
@@ -550,8 +561,8 @@ void OrderLoopEdges(SGM::Result                    &rResult,
     edge *pNextEdge=FindNextEdge(rResult,pFace,pStartEdge,pVertex);
     while(pNextEdge!=pStartEdge)
         {
-        aEdges.push_back(pNextEdge);
-        aFlips.push_back(pFace->GetEdgeType(pNextEdge));
+        aTempEdges.push_back(pNextEdge);
+        aTempFlips.push_back(pFace->GetEdgeType(pNextEdge));
         if(pNextEdge->GetStart()==pVertex)
             {
             pVertex=pNextEdge->GetEnd();
@@ -561,6 +572,28 @@ void OrderLoopEdges(SGM::Result                    &rResult,
             pVertex=pNextEdge->GetStart();
             }
         pNextEdge=FindNextEdge(rResult,pFace,pNextEdge,pVertex);
+        }
+
+    // Order the edges of loop to start at the lowest ID edge.
+
+    size_t nTempEdges=aTempEdges.size();
+    size_t Index1;
+    size_t nStart=0;
+    size_t nStartID=std::numeric_limits<size_t>::max();
+    for(Index1=0;Index1<nTempEdges;++Index1)
+        {
+        size_t nID=aTempEdges[Index1]->GetID();
+        if(nID<nStartID)
+            {
+            nStartID=nID;
+            nStart=Index1;
+            }
+        }
+    for(Index1=0;Index1<nTempEdges;++Index1)
+        {
+        size_t nWhere=(Index1+nStart)%nTempEdges;
+        aEdges.push_back(aTempEdges[nWhere]);
+        aFlips.push_back(aTempFlips[nWhere]);
         }
     }
 

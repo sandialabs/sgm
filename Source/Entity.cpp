@@ -1,5 +1,6 @@
 #include "EntityClasses.h"
 #include "Curve.h"
+#include "Surface.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -40,6 +41,107 @@ void entity::SeverOwners() const
     for (entity *pOwner : m_Owners)
         {
         pOwner->RemoveOwner((entity*)this);
+        }
+    }
+
+void entity::FindAllChildern(std::set<entity *> &sChildern) const
+    {
+    switch(m_Type)
+        {
+        case SGM::BodyType:
+            {
+            body const *pBody=(body const *)this;
+            std::set<volume *> const &sVolumes=pBody->GetVolumes();
+            std::set<volume *>::iterator iter=sVolumes.begin();
+            while(iter!=sVolumes.end())
+                {
+                volume *pVolume=*iter;
+                sChildern.insert(pVolume);
+                pVolume->FindAllChildern(sChildern);
+                ++iter;
+                }
+            break;
+            }
+        case SGM::VolumeType:
+            {
+            volume const *pVolume=(volume const *)this;
+            std::set<face *> const &sFaces=pVolume->GetFaces();
+            std::set<face *>::iterator iter1=sFaces.begin();
+            while(iter1!=sFaces.end())
+                {
+                face *pFace=*iter1;
+                sChildern.insert(pFace);
+                pFace->FindAllChildern(sChildern);
+                ++iter1;
+                }
+            std::set<edge *> const &sEdges=pVolume->GetEdges();
+            std::set<edge *>::iterator iter2=sEdges.begin();
+            while(iter2!=sEdges.end())
+                {
+                edge *pEdge=*iter2;
+                sChildern.insert(pEdge);
+                pEdge->FindAllChildern(sChildern);
+                ++iter2;
+                }
+            break;
+            }
+        case SGM::FaceType:
+            {
+            face const *pFace=(face const *)this;
+            sChildern.insert((entity *)(pFace->GetSurface()));
+            std::set<edge *> const &sEdges=pFace->GetEdges();
+            std::set<edge *>::iterator iter=sEdges.begin();
+            while(iter!=sEdges.end())
+                {
+                edge *pEdge=*iter;
+                sChildern.insert(pEdge);
+                pEdge->FindAllChildern(sChildern);
+                ++iter;
+                }
+            break;
+            }
+        case SGM::EdgeType:
+            {
+            edge const *pEdge=(edge const *)this;
+            sChildern.insert((entity *)(pEdge->GetCurve()));
+            if(pEdge->GetStart())
+                {
+                sChildern.insert(pEdge->GetStart());
+                }
+            if(pEdge->GetEnd())
+                {
+                sChildern.insert(pEdge->GetEnd());
+                }
+            break;
+            }
+        case SGM::VertexType:
+            {
+            break;
+            }
+        case SGM::CurveType:
+            {
+            break;
+            }
+        case SGM::SurfaceType:
+            {
+            surface const *pSurface=(surface const *)this;
+            switch(pSurface->GetSurfaceType())
+                {
+                case SGM::RevolveType:
+                    {
+                    revolve const *pRevole=(revolve const *)this;
+                    sChildern.insert((entity *)(pRevole->m_pCurve));
+                    break;
+                    }
+                default:
+                    break;
+                }
+            break;
+            }
+        default:
+            {
+            throw;
+            }
         }
     }
 

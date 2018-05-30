@@ -1,5 +1,6 @@
 #include "SGMMathematics.h"
 #include "SGMDataClasses.h"
+
 #include "EntityClasses.h"
 #include "Faceter.h"
 #include "Graph.h"
@@ -7,7 +8,9 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Query.h"
+
 #include <cfloat>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -169,9 +172,121 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
-double face::FindArea() const
+double TriangleArea(surface      const *pSurface,
+                    SGM::Point3D const &A,
+                    SGM::Point3D const &B,
+                    SGM::Point3D const &C,
+                    SGM::Point2D const &a,
+                    SGM::Point2D const &b,
+                    SGM::Point2D const &c)
     {
-    return 0;
+    SGM::Point3D AAB,AB,ABB,AAC,AC,ACC,BBC,BC,BCC,ABBC,ACBC,ABAC;
+    SGM::Point2D aab,ab,abb,aac,ac,acc,bbc,bc,bcc,abbc,acbc,abac;
+
+    aab=SGM::MidPoint(a,b,0.25);
+    ab =SGM::MidPoint(a,b,0.5);
+    abb=SGM::MidPoint(a,b,0.75);
+
+    pSurface->Evaluate(aab,&AAB);
+    pSurface->Evaluate(ab ,&AB );
+    pSurface->Evaluate(abb,&ABB);
+
+    aac=SGM::MidPoint(a,c,0.25);
+    ac =SGM::MidPoint(a,c,0.5);
+    acc=SGM::MidPoint(a,c,0.75);
+
+    pSurface->Evaluate(aac,&AAC);
+    pSurface->Evaluate(ac ,&AC );
+    pSurface->Evaluate(acc,&ACC);
+
+    bbc=SGM::MidPoint(b,c,0.25);
+    bc =SGM::MidPoint(b,c,0.5);
+    bcc=SGM::MidPoint(b,c,0.75);
+
+    pSurface->Evaluate(bbc,&BBC);
+    pSurface->Evaluate(bc ,&BC );
+    pSurface->Evaluate(bcc,&BCC);
+
+    abbc=SGM::MidPoint(ab,bc);
+    acbc=SGM::MidPoint(ac,bc);
+    abac=SGM::MidPoint(ab,ac);
+
+    pSurface->Evaluate(abbc,&ABBC);
+    pSurface->Evaluate(acbc,&ACBC);
+    pSurface->Evaluate(abac,&ABAC);
+
+    double dArea=0;
+    dArea+=((AAB-A)*(AAC-A)).Magnitude();
+
+    dArea+=((AB-AAB)*(ABAC-AAB)).Magnitude();
+    dArea+=((AAB-ABAC)*(AAC-ABAC)).Magnitude();
+    dArea+=((ABAC-AAC)*(AC-AAC)).Magnitude();
+
+    dArea+=((ABB-AB)*(ABBC-AB)).Magnitude();
+    dArea+=((AB-ABBC)*(ABAC-ABBC)).Magnitude();
+    dArea+=((ABBC-ABAC)*(ACBC-ABAC)).Magnitude();
+    dArea+=((ABAC-ACBC)*(AC-ACBC)).Magnitude();
+    dArea+=((ACBC-AC)*(ACC-AC)).Magnitude();
+
+    dArea+=((ABB-B)*(BBC-B)).Magnitude();
+    dArea+=((ABB-BBC)*(ABBC-BBC)).Magnitude();
+    dArea+=((BBC-ABBC)*(BC-ABBC)).Magnitude();
+    dArea+=((BBC-BC)*(ABBC-BC)).Magnitude();
+    dArea+=((BCC-BC)*(ACBC-BC)).Magnitude();
+    dArea+=((BCC-ACBC)*(ACC-ACBC)).Magnitude();
+    dArea+=((ACC-C)*(BCC-C)).Magnitude();
+
+    return dArea*0.5;
+    }
+
+double face::FindArea(SGM::Result &rResult) const
+    {
+    // Method one. 
+    // Using Romberg integration on a reduced set of parametric triangles.
+
+    SGMInternal::FacetOptions Options;
+    Options.m_bParametric=true;
+    std::vector<SGM::Point2D> aPoints2D;
+    std::vector<SGM::Point3D> aPoints3D;
+    std::vector<size_t> aTriangles;
+    std::vector<SGM::UnitVector3D> aNormals;
+    std::vector<entity *> aEntities;
+    SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
+    size_t nTriangles=aTriangles.size();
+    double dMethod1=0;
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+        SGM::Point2D const &PosA=aPoints2D[a];
+        SGM::Point2D const &PosB=aPoints2D[b];
+        SGM::Point2D const &PosC=aPoints2D[c];
+        dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
+        }
+
+    // Method two.  
+    // Refining the full set of parametric triangles twice and taking their area.
+
+    GetPoints2D(rResult);
+    nTriangles=m_aTriangles.size();
+    double dMethod2=0;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=m_aTriangles[Index1];
+        size_t b=m_aTriangles[Index1+1];
+        size_t c=m_aTriangles[Index1+2];
+        SGM::Point2D const &PosA=m_aPoints2D[a];
+        SGM::Point2D const &PosB=m_aPoints2D[b];
+        SGM::Point2D const &PosC=m_aPoints2D[c];
+        SGM::Point3D const &A=m_aPoints3D[a];
+        SGM::Point3D const &B=m_aPoints3D[b];
+        SGM::Point3D const &C=m_aPoints3D[c];
+        dMethod2+=TriangleArea(m_pSurface,A,B,C,PosA,PosB,PosC);
+        }
+
+    return std::max(dMethod1,dMethod2);
     }
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
@@ -184,6 +299,11 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     size_t nLoops=graph.FindComponents(aComponents);
     aaLoops.reserve(nLoops);
     aaFlipped.reserve(nLoops);
+    std::vector<std::vector<edge *> > aaTempLoops;
+    std::vector<std::vector<SGM::EdgeSideType> > aaTempFlipped;
+    aaTempLoops.reserve(nLoops);
+    aaTempFlipped.reserve(nLoops);
+
     size_t Index1;
     for(Index1=0;Index1<nLoops;++Index1)
         {
@@ -200,10 +320,26 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         std::vector<edge *> aEdges;
         std::vector<SGM::EdgeSideType> aFlips;
         OrderLoopEdges(rResult,this,sEdges,aEdges,aFlips);
-        aaLoops.push_back(aEdges);
-        aaFlipped.push_back(aFlips);
+        aaTempLoops.push_back(aEdges);
+        aaTempFlipped.push_back(aFlips);
         }
-    return aaLoops.size();
+
+    // Order the loops by start ID of the first edge.
+
+    std::vector<std::pair<size_t,size_t> > aOrder;
+    aOrder.reserve(nLoops);
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        aOrder.push_back(std::pair<size_t,size_t>(aaTempLoops[Index1][0]->GetID(),Index1));
+        }
+    std::sort(aaTempLoops.begin(),aaTempLoops.end());
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        aaLoops.push_back(aaTempLoops[aOrder[Index1].second]);
+        aaFlipped.push_back(aaTempFlipped[aOrder[Index1].second]);
+        }
+
+    return nLoops;
     }
 
 void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)

@@ -81,6 +81,11 @@ class surface : public entity
 
         void Transform(SGM::Transform3D const &Trans);
 
+        double FindAreaOfParametricTriangle(SGM::Result        &rResult,
+                                            SGM::Point2D const &PosA,
+                                            SGM::Point2D const &PosB,
+                                            SGM::Point2D const &PosC) const;
+
     protected:
 
         std::set<face *> m_sFaces;

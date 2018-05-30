@@ -76,6 +76,10 @@ SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
                                     SGM::Point3D const &XPos,
                                     SGM::Point3D const &YPos);
 
+SGM_EXPORT SGM::Surface CreateSphereSurface(SGM::Result        &rResult,
+                                            SGM::Point3D const &Center,
+                                            double              dRadius);
+
 SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
                                            SGM::Point3D      const &Center,
                                            SGM::UnitVector3D const &Axis,

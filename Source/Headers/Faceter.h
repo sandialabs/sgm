@@ -17,7 +17,8 @@ class FacetOptions
             m_dFreeEdgeAngleTol(0.08726646259971647884618453842443), //  5 degrees.
             m_dMaxLength(0),
             m_dCordHight(0),
-            m_nMaxFacets(10000) {}
+            m_nMaxFacets(10000),
+            m_bParametric(false) {}
 
         double m_dFaceAngleTol;
         double m_dEdgeAngleTol;
@@ -25,6 +26,7 @@ class FacetOptions
         double m_dMaxLength;
         double m_dCordHight;
         size_t m_nMaxFacets;
+        bool   m_bParametric;
     };
 
 void FacetCurve(curve               const *pCurve,
