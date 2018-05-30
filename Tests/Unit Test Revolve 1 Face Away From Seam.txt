@@ -1,3 +1,3 @@
 // Tests revolve surface, 1 face not touching or crossing the seam, and STEP export;
-RunCPPTest(39);
+// RunCPPTest(39);
 
