@@ -3,7 +3,7 @@
 #include "SGMDataClasses.h"
 #include "SGMPrimitives.h"
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv[]*/)
     {
     SGMInternal::thing *pThing = SGM::CreateThing();
     SGM::Result rResult(pThing);

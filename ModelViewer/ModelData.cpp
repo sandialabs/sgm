@@ -63,9 +63,7 @@ bool ModelData::open_file(const QString &filename)
   std::vector<std::string> log;
   SGM::TranslatorOptions options;
 
-  size_t num_ents_read = SGM::ReadFile(dPtr->mResult,
-                                       filename.toUtf8().data(),
-                                       ents, log, options);
+  SGM::ReadFile(dPtr->mResult, filename.toUtf8().data(), ents, log, options);
 
   if(dPtr->mResult.GetResult() != SGM::ResultTypeOK)
     return false;

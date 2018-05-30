@@ -10,14 +10,14 @@ SGMTreeWidget::~SGMTreeWidget()
 {}
 
 
-void SGMTreeWidget::add_entity(const SGM::Entity &ent,
-                               const std::set<SGM::Entity> &parents,
-                               const std::set<SGM::Entity> &children)
+void SGMTreeWidget::add_entity(const SGM::Entity &,//ent,
+                               const std::set<SGM::Entity> &,//parents,
+                               const std::set<SGM::Entity> &)//children)
 {
 
 }
 
-void SGMTreeWidget::remove_entity(const SGM::Entity &ent)
+void SGMTreeWidget::remove_entity(const SGM::Entity &)//ent)
 {
 
 }

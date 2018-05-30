@@ -4,9 +4,14 @@ cmake_minimum_required(VERSION 3.3)
 
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
-find_package(VTK)
 
+
+find_package(VTK)
 include(${VTK_USE_FILE})
+# When we drop VTK see if we can stop hiding this warning
+if(MSVC)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4996")
+endif()
 
 get_target_property(_loc Qt5::qmake LOCATION)
 get_filename_component(_qmake_dir ${_loc} DIRECTORY)
