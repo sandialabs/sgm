@@ -2101,23 +2101,28 @@ void FixBackPointer(size_t               nA,
         }
     }
 
-double FindNormalDiff(surface                        const *pSurface,
+double FindNormalDiff(bool                                  bFirst,
+                      surface                        const *pSurface,
                       std::vector<SGM::UnitVector3D> const &aNormals,
                       std::vector<SGM::Point2D>      const &aPoints2D,
                       size_t                                nPos0,
                       size_t                                nPos1)
     {
-    SGM::Point2D const &uv0=aPoints2D[nPos0];
-    SGM::Point2D const &uv1=aPoints2D[nPos1];
-    SGM::Point2D uv=SGM::MidPoint(uv0,uv1);
     SGM::UnitVector3D const &Norm0=aNormals[nPos0];
     SGM::UnitVector3D const &Norm1=aNormals[nPos1];
-    SGM::UnitVector3D MidNorm;
-    pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&MidNorm);
-    double dVal0=Norm0%Norm1;
-    double dVal1=Norm0%MidNorm;
-    double dVal2=Norm1%MidNorm;
-    return std::min(dVal0,std::min(dVal1,dVal2));
+    if(bFirst==true)
+        {
+        SGM::Point2D const &uv0=aPoints2D[nPos0];
+        SGM::Point2D const &uv1=aPoints2D[nPos1];
+        SGM::Point2D uv=SGM::MidPoint(uv0,uv1);
+        SGM::UnitVector3D MidNorm;
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&MidNorm);
+        double dVal0=Norm0%Norm1;
+        double dVal1=Norm0%MidNorm;
+        double dVal2=Norm1%MidNorm;
+        return std::min(dVal0,std::min(dVal1,dVal2));
+        }
+    return Norm0%Norm1;
     }
 
 void FixEdgeData(surface                             const *pSurface,
@@ -2144,46 +2149,39 @@ void FixEdgeData(surface                             const *pSurface,
     size_t E2=aTriangles[nTri2+1];
     size_t F2=aTriangles[nTri2+2];
 
-    //SGM::UnitVector3D const &NormA2=aNormals[A2];
-    //SGM::UnitVector3D const &NormB2=aNormals[B2];
-    //SGM::UnitVector3D const &NormC2=aNormals[C2];
-    //SGM::UnitVector3D const &NormD2=aNormals[D2];
-    //SGM::UnitVector3D const &NormE2=aNormals[E2];
-    //SGM::UnitVector3D const &NormF2=aNormals[F2];
-
     if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,A2,B2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,A2,B2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,0));
         mEdgeData[std::pair<size_t,size_t>(nTri1,0)]=dVal;
         }
     if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,B2,C2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,B2,C2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,1));
         mEdgeData[std::pair<size_t,size_t>(nTri1,1)]=dVal;
         }
     if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,C2,A2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,C2,A2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,2));
         mEdgeData[std::pair<size_t,size_t>(nTri1,2)]=dVal;
         }
     if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,D2,E2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,D2,E2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,0));
         mEdgeData[std::pair<size_t,size_t>(nTri2,0)]=dVal;
         }
     if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,E2,F2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,E2,F2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,1));
         mEdgeData[std::pair<size_t,size_t>(nTri2,1)]=dVal;
         }
     if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,F2,D2);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,F2,D2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,2));
         mEdgeData[std::pair<size_t,size_t>(nTri2,2)]=dVal;
         }
@@ -2341,12 +2339,6 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Fix edge data.
 
-    //SGM::UnitVector3D const &NormA=aNormals[a];
-    //SGM::UnitVector3D const &NormB=aNormals[b];
-    //SGM::UnitVector3D const &NormC=aNormals[c];
-    //SGM::UnitVector3D const &NormD=aNormals[d];
-    //SGM::UnitVector3D const &NormM=aNormals[m];
-    
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,nEdge)],nT0,nEdge));
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
     sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,(nEdge+2)%3)],nT0,(nEdge+2)%3));
@@ -2356,50 +2348,50 @@ void SplitEdge(EdgeValue                           const &EV,
 
     if(aAdjacencies[nT0+0]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,m);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,m);
         sEdgeData.insert(EdgeValue(dVal,nT0,0));
         mEdgeData[std::pair<size_t,size_t>(nT0,0)]=dVal;
         }
     if(aAdjacencies[nT3+0]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,b,m);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,m);
         sEdgeData.insert(EdgeValue(dVal,nT3,0));
         mEdgeData[std::pair<size_t,size_t>(nT3,0)]=dVal;
         }
     if(aAdjacencies[nT1+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,c,m);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,c,m);
         sEdgeData.insert(EdgeValue(dVal,nT1,2));
         mEdgeData[std::pair<size_t,size_t>(nT1,2)]=dVal;
         }
     if(aAdjacencies[nT2+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,d,m);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,m);
         sEdgeData.insert(EdgeValue(dVal,nT2,2));
         mEdgeData[std::pair<size_t,size_t>(nT2,2)]=dVal;
         }
 
     if(c<a && aAdjacencies[nT0+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,c);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,c);
         sEdgeData.insert(EdgeValue(dVal,nT0,2));
         mEdgeData[std::pair<size_t,size_t>(nT0,2)]=dVal;
         }
     if(b<c && aAdjacencies[nT1+1]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,b,c);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,c);
         sEdgeData.insert(EdgeValue(dVal,nT1,1));
         mEdgeData[std::pair<size_t,size_t>(nT1,1)]=dVal;
         }
     if(a<d  && aAdjacencies[nT2+1]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,d);
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,d);
         sEdgeData.insert(EdgeValue(dVal,nT2,1));
         mEdgeData[std::pair<size_t,size_t>(nT2,1)]=dVal;
         }
     if(d<b && aAdjacencies[nT3+2]!=SIZE_MAX)
         {
-        double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,d,b);;
+        double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,b);;
         sEdgeData.insert(EdgeValue(dVal,nT3,2));
         mEdgeData[std::pair<size_t,size_t>(nT3,2)]=dVal;
         }
@@ -2432,19 +2424,19 @@ void RefineTriangles(face                     const *pFace,
         size_t c=aTriangles[Index1+2];
         if(a<b && aAdjacencies[Index1]!=SIZE_MAX)
             {
-            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,b);
+            double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,a,b);
             sEdgeData.insert(EdgeValue(dVal,Index1,0));
             mEdgeData[std::pair<size_t,size_t>(Index1,0)]=dVal;
             }
         if(b<c && aAdjacencies[Index1+1]!=SIZE_MAX)
             {
-            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,c,b);
+            double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,c,b);
             sEdgeData.insert(EdgeValue(dVal,Index1,1));
             mEdgeData[std::pair<size_t,size_t>(Index1,1)]=dVal;
             }
         if(c<a && aAdjacencies[Index1+2]!=SIZE_MAX)
             {
-            double dVal=FindNormalDiff(pSurface,aNormals,aPoints2D,a,c);
+            double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,a,c);
             sEdgeData.insert(EdgeValue(dVal,Index1,2));
             mEdgeData[std::pair<size_t,size_t>(Index1,2)]=dVal;
             }

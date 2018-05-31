@@ -2845,7 +2845,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::TranslatorOptions TranslatorOpts;
         SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
-
+        /*
         SGM::CheckOptions Options;
         std::vector<std::string> CheckStrings;
 
@@ -2857,8 +2857,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         bAnswer = pBody->Check(rResult, Options, CheckStrings);
         if (!bAnswer) return bAnswer;
-
-        return true;
+        */
+        return bAnswer;
         }
 
     return false;
