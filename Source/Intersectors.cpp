@@ -1205,6 +1205,54 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t IntersectLineAndRevolve(SGM::Result                        &,//rResult,
+                               SGM::Point3D                 const &,//Origin,
+                               SGM::UnitVector3D            const &,//Axis,
+                               SGM::Interval1D              const &,//Domain,
+                               revolve                      const *,//pRevolve,
+                               double                              ,//dTolerance,
+                               std::vector<SGM::Point3D>          &,//aPoints,
+                               std::vector<SGM::IntersectionType> &)//aTypes)
+    {
+//    if (Axis % pRevolve->m_ZAxis < SGM_ZERO)
+//        {
+//        // find closest points on axis and line
+//
+//        SGM::Segment3D RevolveAxisSeg(pRevolve->m_Origin, pRevolve->m_Origin + pRevolve->m_ZAxis);
+//        SGM::Segment3D LineSeg(Origin, Origin + Axis);
+//        SGM::Point3D PosAxis, PosLine;
+//        RevolveAxisSeg.Intersect(LineSeg,PosAxis,PosLine);
+//
+////        IntersectCurveAndPlane(rResult, PosAxis,,   )
+//
+//        // intersect line from closest point on axis in revolve's x-direction with curve
+//        // OR
+//        // intersect curve with plane  
+//        //
+//        // for each intersection point
+//        //   get radius and intersect line with circle
+//
+//
+//
+//
+//
+//        //return IntersectLineAndCircle(Origin, Axis, Domain, 
+//        //                              SGM::Point3D                 const &Center,
+//        //                  SGM::UnitVector3D            const &Normal,
+//        //                  double                              dRadius,
+//        //                  double                              dTolerance,
+//        //                  std::vector<SGM::Point3D>          &aPoints,
+//        //                  std::vector<SGM::IntersectionType> &aTypes)
+//        throw;
+//        }
+//    else
+//        {
+//          throw;
+//        }
+//        return aPoints.size();
+    return 0;
+    }
+
 size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
                                SGM::UnitVector3D            const &Axis,
                                SGM::Interval1D              const &Domain,
@@ -1238,6 +1286,11 @@ size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
         case SGM::EntityType::NURBSurfaceType:
             {
             return IntersectLineAndNURBSurface(Origin,Axis,Domain,(NURBsurface const *)pSurface,dTolerance,aPoints,aTypes);
+            }
+        case SGM::EntityType::RevolveType:
+            {
+            //return IntersectLineAndRevolve(Origin,Axis,Domain,(revolve const *)pSurface,dTolerance,aPoints,aTypes);
+            return 0;
             }
         default:
             {
@@ -1472,12 +1525,12 @@ size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
      return aPoints.size();
      }
 
-size_t IntersectCircles(SGM::Result                        &,//rResult,
-                        circle                       const *pCircle1,
-                        circle                       const *pCircle2,
-                        std::vector<SGM::Point3D>          &aPoints,
-                        std::vector<SGM::IntersectionType> &aTypes,
-                        double                              dTolerance)
+size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
+                                circle                       const *pCircle1,
+                                circle                       const *pCircle2,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                double                              dTolerance)
     {
     SGM::Point3D const &Center1=pCircle1->m_Center;
     SGM::Point3D const &Center2=pCircle2->m_Center;
@@ -1560,7 +1613,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
             }
         case SGM::CircleType:
             {
-            return IntersectCircles(rResult,pCircle,(circle const *)pCurve,aPoints,aTypes,dTolerance);
+            return IntersectCircleAndCircle(rResult,pCircle,(circle const *)pCurve,aPoints,aTypes,dTolerance);
             }
         default:
             {
@@ -1660,7 +1713,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
      return FindConic(rResult,aPoints,SGM_MIN_TOL);
      }
 
- size_t IntersectPlaneCone(SGM::Result                        &rResult,
+ size_t IntersectPlaneAndCone(SGM::Result                        &rResult,
                            plane                        const *pPlane,
                            cone                         const *pCone,
                            std::vector<curve *>               &aCurves,
@@ -1747,13 +1800,13 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
      return aCurves.size();
      }
 
-size_t IntersectPlanePlane(SGM::Result                &rResult,
-                           plane                const *pPlane1,
-                           plane                const *pPlane2,
-                           std::vector<curve *>       &aCurves,
-                           face                 const *,//pFace1,
-                           face                 const *,//pFace2,
-                           double                      dTolerance)
+size_t IntersectPlaneAndPlane(SGM::Result                &rResult,
+                              plane                const *pPlane1,
+                              plane                const *pPlane2,
+                              std::vector<curve *>       &aCurves,
+                              face                 const *,//pFace1,
+                              face                 const *,//pFace2,
+                              double                      dTolerance)
      {
      SGM::UnitVector3D const &Norm1=pPlane1->m_ZAxis;
      SGM::UnitVector3D const &Norm2=pPlane2->m_ZAxis;
@@ -1769,13 +1822,13 @@ size_t IntersectPlanePlane(SGM::Result                &rResult,
      return aCurves.size();
      }
 
-size_t IntersectPlaneSphere(SGM::Result                &rResult,
-                            plane                const *pPlane,
-                            sphere               const *pSphere,
-                            std::vector<curve *>       &aCurves,
-                            face                 const *,//pFace1,
-                            face                 const *,//pFace2,
-                            double                      dTolerance)
+size_t IntersectPlaneAndSphere(SGM::Result                &rResult,
+                               plane                const *pPlane,
+                               sphere               const *pSphere,
+                               std::vector<curve *>       &aCurves,
+                               face                 const *,//pFace1,
+                               face                 const *,//pFace2,
+                               double                      dTolerance)
     {
     SGM::Point3D const &Center=pSphere->m_Center;
     SGM::Point3D const &Origin=pPlane->m_Origin;
@@ -1798,13 +1851,13 @@ size_t IntersectPlaneSphere(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectPlaneCylinder(SGM::Result                &rResult,
-                              plane                const *pPlane,
-                              cylinder             const *pCylinder,
-                              std::vector<curve *>       &aCurves,
-                              face                 const *,//pFace1,
-                              face                 const *,//pFace2,
-                              double                      dTolerance)
+size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
+                                 plane                const *pPlane,
+                                 cylinder             const *pCylinder,
+                                 std::vector<curve *>       &aCurves,
+                                 face                 const *,//pFace1,
+                                 face                 const *,//pFace2,
+                                 double                      dTolerance)
     {
     // Return one or two lines, a circle, an ellipse, or nothing.
 
@@ -1857,24 +1910,13 @@ size_t IntersectPlaneCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectPlaneTorus(SGM::Result                & /*rResult*/,
-                           plane                const * /*pPlane*/,
-                           torus                const * /*pTorus*/,
-                           std::vector<curve *>       & /*aCurves*/,
-                           face                 const * /*pFace1*/,
-                           face                 const * /*pFace2*/,
-                           double                       /*dTolerance*/)
-    {
-    return 0;
-    }
-
-size_t IntersectPlaneSurface(SGM::Result                & /*rResult*/,
-                             plane                const * /*pPlane*/,
-                             surface              const * /*pSurface*/,
-                             std::vector<curve *>       & /*aCurves*/,
-                             face                 const * /*pFace1*/,
-                             face                 const * /*pFace2*/,
-                             double                       /*dTolerance*/)
+size_t IntersectPlaneAndTorus(SGM::Result                & /*rResult*/,
+                              plane                const * /*pPlane*/,
+                              torus                const * /*pTorus*/,
+                              std::vector<curve *>       & /*aCurves*/,
+                              face                 const * /*pFace1*/,
+                              face                 const * /*pFace2*/,
+                              double                       /*dTolerance*/)
     {
     return 0;
     }
@@ -1892,27 +1934,27 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
         case SGM::EntityType::PlaneType:
             {
             plane const *pPlane2=(plane const *)pSurface;
-            return IntersectPlanePlane(rResult,pPlane,pPlane2,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndPlane(rResult,pPlane,pPlane2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::SphereType:
             {
             sphere const *pSphere=(sphere const *)pSurface;
-            return IntersectPlaneSphere(rResult,pPlane,pSphere,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndSphere(rResult,pPlane,pSphere,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::CylinderType:
             {
             cylinder const *pCylinder=(cylinder const *)pSurface;
-            return IntersectPlaneCylinder(rResult,pPlane,pCylinder,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndCylinder(rResult,pPlane,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::ConeType:
             {
             cone const *pCone=(cone const *)pSurface;
-            return IntersectPlaneCone(rResult,pPlane,pCone,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndCone(rResult,pPlane,pCone,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::TorusType:
             {
             torus const *pTorus=(torus const *)pSurface;
-            return IntersectPlaneTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::RevolveType:
             {
@@ -1920,12 +1962,12 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
             }
         default:
             {
-            return IntersectPlaneSurface(rResult,pPlane,pSurface,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectPlaneAndSurface(rResult,pPlane,pSurface,aCurves,pFace1,pFace2,dTolerance);
             }
         }
      }
 
-size_t IntersectSphereSphere(SGM::Result                &rResult,
+size_t IntersectSphereAndSphere(SGM::Result                &rResult,
                              sphere               const *pSphere1,
                              sphere               const *pSphere2,
                              std::vector<curve *>       &aCurves,
@@ -1956,13 +1998,13 @@ size_t IntersectSphereSphere(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectSphereCylinder(SGM::Result                &rResult,
-                               sphere               const *pSphere,
-                               cylinder             const *pCylinder,
-                               std::vector<curve *>       &aCurves,
-                               face                 const *,//pFace1,
-                               face                 const *,//pFace2,
-                               double                      dTolerance)
+size_t IntersectSphereAndCylinder(SGM::Result                &rResult,
+                                  sphere               const *pSphere,
+                                  cylinder             const *pCylinder,
+                                  std::vector<curve *>       &aCurves,
+                                  face                 const *,//pFace1,
+                                  face                 const *,//pFace2,
+                                  double                      dTolerance)
     {
     double dSphereRadius=pSphere->m_dRadius;
     double dCylinderRadius=pCylinder->m_dRadius;
@@ -2072,17 +2114,6 @@ size_t IntersectSphereCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectSphereSurface(SGM::Result                & /*rResult*/,
-                              sphere               const * /*pSphere*/,
-                              surface              const * /*pSurface*/,
-                              std::vector<curve *>       & /*aCurves*/,
-                              face                 const *,//pFace1,
-                              face                 const *,//pFace2,
-                              double                       /*dTolerance*/)
-    {
-    return 0;
-    }
-
 size_t IntersectSphereAndSurface(SGM::Result                &rResult,
                                  sphere               const *pSphere,
                                  surface              const *pSurface,
@@ -2096,21 +2127,21 @@ size_t IntersectSphereAndSurface(SGM::Result                &rResult,
         case SGM::EntityType::PlaneType:
             {
             plane const *pPlane=(plane const *)pSurface;
-            return IntersectPlaneSphere(rResult,pPlane,pSphere,aCurves,pFace2,pFace1,dTolerance);
+            return IntersectPlaneAndSphere(rResult,pPlane,pSphere,aCurves,pFace2,pFace1,dTolerance);
             }
         case SGM::EntityType::SphereType:
             {
             sphere const *pSphere2=(sphere const *)pSurface;
-            return IntersectSphereSphere(rResult,pSphere,pSphere2,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectSphereAndSphere(rResult,pSphere,pSphere2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::CylinderType:
             {
             cylinder const *pCylinder=(cylinder const *)pSurface;
-            return IntersectSphereCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectSphereAndCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         default:
             {
-            return IntersectSphereSurface(rResult,pSphere,pSurface,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectSphereAndSurface(rResult,pSphere,pSurface,aCurves,pFace1,pFace2,dTolerance);
             }
         }
     }
@@ -2129,7 +2160,7 @@ size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
         case SGM::EntityType::SphereType:
             {
             sphere const *pSphere=(sphere const *)pSurface;
-            return IntersectSphereCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
+            return IntersectSphereAndCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         default:
             {
@@ -2368,5 +2399,31 @@ hermite *WalkFromTo(SGM::Result        &rResult,
 
     return new hermite(rResult,aPoints,aTangents,aParams);
     }
+
+size_t IntersectCurveAndPlane(SGM::Result                        &,//rResult,
+                              curve                        const *,//pCurve,
+                              plane                        const *,//pPlane,
+                              std::vector<SGM::Point3D>          &,//aPoints,
+                              std::vector<SGM::IntersectionType> &,//aTypes,
+                              double                              )//dTolerance)
+{
+  throw;
+}
+
+size_t IntersectCurveAndPlane(SGM::Result                        &,//rResult,
+                              curve                        const *,//pCurve,
+                              SGM::Point3D                 const &,//PlaneOrigin,
+                              SGM::UnitVector3D            const &,//PlaneNorm,
+                              std::vector<SGM::Point3D>          &,//aPoints,
+                              std::vector<SGM::IntersectionType> &,//aTypes,
+                              double                              )//dTolerance)
+{
+  throw;
+}
+
+size_t IntersectNUBCurveAndPlane()
+{
+  throw;
+}
 
 } // End of SGMInternal namespace

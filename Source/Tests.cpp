@@ -3009,5 +3009,40 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==50)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints1;
+        aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints1.push_back(SGM::Point3D(1,1.5,0));
+        aPoints1.push_back(SGM::Point3D(2,2,0));
+
+        // simple case
+        //aPoints1.push_back(SGM::Point3D(-2,.5,0));
+        //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+        //aPoints1.push_back(SGM::Point3D(0,.5,0));
+        //aPoints1.push_back(SGM::Point3D(1,.5,0));
+        //aPoints1.push_back(SGM::Point3D(2,.5,0));
+
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+        SGM::Point3D AxisOrigin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+
+        SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
+
+        SGM::Point3D LineOrigin(1,0,0);
+        SGM::UnitVector3D uDirection(0,0,1);
+        SGM::Curve LineID = SGM::CreateLine(rResult, LineOrigin, uDirection);
+
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGM::IntersectCurveAndSurface(rResult, LineID, RevolveID, aPoints, aTypes);
+
+        return bAnswer;
+        }
     return false;
     }
