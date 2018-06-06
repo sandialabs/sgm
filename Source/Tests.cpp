@@ -472,7 +472,7 @@ bool TestSurface(SGMInternal::surface const *pSurface,
 
     // Test all the derivatives.
 
-    double dx=1E-3,dy=1E-3;
+    double dx=SGM_FIT,dy=SGM_FIT;
     SGM::Vector3D dNU,dNV,dNUU,dNUV,dNVV;
     SGM::Point3D aMatrix[5][5];
     size_t Index1,Index2;
@@ -533,7 +533,7 @@ bool TestCurve(SGMInternal::curve *pCurve,
         bAnswer=false;
         }
 
-    double h=1E-3;
+    double h=SGM_FIT;
     SGM::Point3D Pos0,Pos1,Pos2,Pos3;
     pCurve->Evaluate(t1-2*h,&Pos0);
     pCurve->Evaluate(t1-h,&Pos1);
@@ -2547,7 +2547,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::FindFaces(rResult,BodyID,sFaces);
         SGM::Face FaceID=*(sFaces.begin());
         double dArea=SGM::FindArea(rResult,FaceID);
-        if(SGM::NearEqual(dArea,6.283185307179586476925286766559,SGM_FIT,true)==false)
+        if(SGM::NearEqual(dArea,6.283185307179586476925286766559,SGM_MIN_TOL,true)==false)
             {
             bAnswer=false;
             }

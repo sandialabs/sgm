@@ -241,6 +241,8 @@ namespace SGM
 
             double MidPoint(double dFraction=0.5) const {return m_dMin*(1-dFraction)+m_dMax*dFraction;}
 
+            double Fraction(double t) const {return (t-m_dMin)/(m_dMax-m_dMin);}
+
             double Length() const {return m_dMax-m_dMin;}
 
             bool InInterval(double Pos,double dTol) const;
@@ -291,6 +293,8 @@ namespace SGM
             bool InInterval(SGM::Point2D const &Pos,double dTol) const;
 
             bool OnBoundary(SGM::Point2D const &Pos,double dTol) const;
+
+            bool OnCorner(SGM::Point2D const &Pos,double dTol) const;
 
             // Unites this interval with the given interval.
 

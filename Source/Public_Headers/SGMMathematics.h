@@ -26,7 +26,8 @@
 // rule all algorithums attempt to converge to error values lower than this
 // value even though more error may be acceptable.
 
-#define SGM_ZERO    1E-12   
+#define SGM_ZERO         1E-12   
+#define SGM_ZERO_SQUARED 1E-24
 
 // Used as a lower bound on the size and parameters of all non-zero dimensional 
 // topology and geometry. That is to say that edges, sphere radii, the difference 
@@ -38,8 +39,9 @@
 // Used to determine the upper bound of acceptable error of a polynomoal 
 // aproximation.  The actual upper bound is this number times the length or
 // width of the geometry.
-
-#define SGM_FIT     1E-3
+ 
+#define SGM_FIT       1E-3
+#define SGM_FIT_SMALL 1E-4 // Used to make sure we are below SGM_FIT.
 
 namespace SGM
     {
@@ -113,9 +115,12 @@ namespace SGM
     // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
     // counter clockwise.  The following polygons are assumed to be inside the
-    // first one, disjoint, clockwise.
+    // first one, disjoint, clockwise.  The function returns false is aaPolygons
+    // or aPoints is empty with an error of ResultTypeInsufficientData.
+    // If the clockwise polygons are not contained inside a counter clockwise
+    // polygon then false is returned with an error of 
 
-    SGM_EXPORT void TriangulatePolygon(SGM::Result                             &rResult,
+    SGM_EXPORT bool TriangulatePolygon(SGM::Result                             &rResult,
                                        std::vector<SGM::Point2D>         const &aPoints,
                                        std::vector<std::vector<size_t> > const &aaPolygons,
                                        std::vector<size_t>                     &aTriangles,

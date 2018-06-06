@@ -95,7 +95,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         m_pSurface->Evaluate(uv,&Pos);
         }
-    std::set<edge *>::iterator iter=m_sEdges.begin();
+    std::set<edge *,EntityCompare>::iterator iter=m_sEdges.begin();
     while(iter!=m_sEdges.end())
         {
         edge *pEdge=*iter;
@@ -133,7 +133,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
-        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mFaceType.find(pEdge);
+        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
         if(EdgeTypeIter->second==SGM::FaceOnRightType)
             {
             dZ=-dZ;
@@ -172,70 +172,19 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
-double TriangleArea(surface      const *pSurface,
-                    SGM::Point3D const &A,
-                    SGM::Point3D const &B,
-                    SGM::Point3D const &C,
-                    SGM::Point2D const &a,
-                    SGM::Point2D const &b,
-                    SGM::Point2D const &c)
+double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
+                    std::vector<size_t>       const &aTriangles)
     {
-    SGM::Point3D AAB,AB,ABB,AAC,AC,ACC,BBC,BC,BCC,ABBC,ACBC,ABAC;
-    SGM::Point2D aab,ab,abb,aac,ac,acc,bbc,bc,bcc,abbc,acbc,abac;
-
-    aab=SGM::MidPoint(a,b,0.25);
-    ab =SGM::MidPoint(a,b,0.5);
-    abb=SGM::MidPoint(a,b,0.75);
-
-    pSurface->Evaluate(aab,&AAB);
-    pSurface->Evaluate(ab ,&AB );
-    pSurface->Evaluate(abb,&ABB);
-
-    aac=SGM::MidPoint(a,c,0.25);
-    ac =SGM::MidPoint(a,c,0.5);
-    acc=SGM::MidPoint(a,c,0.75);
-
-    pSurface->Evaluate(aac,&AAC);
-    pSurface->Evaluate(ac ,&AC );
-    pSurface->Evaluate(acc,&ACC);
-
-    bbc=SGM::MidPoint(b,c,0.25);
-    bc =SGM::MidPoint(b,c,0.5);
-    bcc=SGM::MidPoint(b,c,0.75);
-
-    pSurface->Evaluate(bbc,&BBC);
-    pSurface->Evaluate(bc ,&BC );
-    pSurface->Evaluate(bcc,&BCC);
-
-    abbc=SGM::MidPoint(ab,bc);
-    acbc=SGM::MidPoint(ac,bc);
-    abac=SGM::MidPoint(ab,ac);
-
-    pSurface->Evaluate(abbc,&ABBC);
-    pSurface->Evaluate(acbc,&ACBC);
-    pSurface->Evaluate(abac,&ABAC);
-
-    double dArea=0;
-    dArea+=((AAB-A)*(AAC-A)).Magnitude();
-
-    dArea+=((AB-AAB)*(ABAC-AAB)).Magnitude();
-    dArea+=((AAB-ABAC)*(AAC-ABAC)).Magnitude();
-    dArea+=((ABAC-AAC)*(AC-AAC)).Magnitude();
-
-    dArea+=((ABB-AB)*(ABBC-AB)).Magnitude();
-    dArea+=((AB-ABBC)*(ABAC-ABBC)).Magnitude();
-    dArea+=((ABBC-ABAC)*(ACBC-ABAC)).Magnitude();
-    dArea+=((ABAC-ACBC)*(AC-ACBC)).Magnitude();
-    dArea+=((ACBC-AC)*(ACC-AC)).Magnitude();
-
-    dArea+=((ABB-B)*(BBC-B)).Magnitude();
-    dArea+=((ABB-BBC)*(ABBC-BBC)).Magnitude();
-    dArea+=((BBC-ABBC)*(BC-ABBC)).Magnitude();
-    dArea+=((BBC-BC)*(ABBC-BC)).Magnitude();
-    dArea+=((BCC-BC)*(ACBC-BC)).Magnitude();
-    dArea+=((BCC-ACBC)*(ACC-ACBC)).Magnitude();
-    dArea+=((ACC-C)*(BCC-C)).Magnitude();
-
+    double dArea=0.0;
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+        dArea+=((aPoints3D[b]-aPoints3D[a])*(aPoints3D[c]-aPoints3D[a])).Magnitude();
+        }
     return dArea*0.5;
     }
 
@@ -269,29 +218,34 @@ double face::FindArea(SGM::Result &rResult) const
     // Method two.  
     // Refining the full set of parametric triangles twice and taking their area.
 
-    GetPoints2D(rResult);
-    nTriangles=m_aTriangles.size();
-    double dMethod2=0;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    this->GetPoints2D(rResult);
+    aPoints2D=m_aPoints2D;
+    aPoints3D=m_aPoints3D;
+    aTriangles=m_aTriangles;
+    aEntities=m_aEntities;
+
+    double dDiff=SGM_MAX;
+    double dOldArea=SGM_MAX;
+    double dArea2=0;
+    double dArea0=TriangleArea(aPoints3D,aTriangles);
+    size_t nCount=0;
+    while(SGM_MIN_TOL<dDiff && nCount<4)
         {
-        size_t a=m_aTriangles[Index1];
-        size_t b=m_aTriangles[Index1+1];
-        size_t c=m_aTriangles[Index1+2];
-        SGM::Point2D const &PosA=m_aPoints2D[a];
-        SGM::Point2D const &PosB=m_aPoints2D[b];
-        SGM::Point2D const &PosC=m_aPoints2D[c];
-        SGM::Point3D const &A=m_aPoints3D[a];
-        SGM::Point3D const &B=m_aPoints3D[b];
-        SGM::Point3D const &C=m_aPoints3D[c];
-        dMethod2+=TriangleArea(m_pSurface,A,B,C,PosA,PosB,PosC);
+        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        double dArea1=TriangleArea(aPoints3D,aTriangles);
+        dArea2=(4*dArea1-dArea0)/3;
+        dArea0=dArea1;
+        dDiff=fabs(dArea2-dOldArea);
+        dOldArea=dArea2;
+        ++nCount;
         }
 
-    return std::max(dMethod1,dMethod2);
+    return std::max(dMethod1,dArea2);
     }
 
-size_t face::FindLoops(SGM::Result                                  &rResult,
-                       std::vector<std::vector<edge *> >            &aaLoops,
-                       std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
+size_t face::FindLoops(SGM::Result                                     &rResult,
+                       std::vector<std::vector<edge *> > &aaLoops,
+                       std::vector<std::vector<SGM::EdgeSideType> >    &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
     Graph graph(rResult,m_sEdges);
@@ -309,7 +263,7 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         {
         Graph const &comp=aComponents[Index1];
         std::set<GraphEdge> const &sGEdges=comp.GetEdges();
-        std::set<edge *> sEdges;
+        std::set<edge *,EntityCompare> sEdges;
         std::set<GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
         while(GEdgeIter!=sGEdges.end())
             {
@@ -332,7 +286,7 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         {
         aOrder.push_back(std::pair<size_t,size_t>(aaTempLoops[Index1][0]->GetID(),Index1));
         }
-    std::sort(aaTempLoops.begin(),aaTempLoops.end());
+    std::sort(aOrder.begin(),aOrder.end());
     for(Index1=0;Index1<nLoops;++Index1)
         {
         aaLoops.push_back(aaTempLoops[aOrder[Index1].second]);
@@ -346,7 +300,7 @@ void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
     {
     m_sEdges.insert(pEdge);
     pEdge->AddFace(this);
-    m_mFaceType[pEdge]=nEdgeType;
+    m_mSideType[pEdge]=nEdgeType;
     }
 
 void face::SetSurface(surface *pSurface)
@@ -359,9 +313,9 @@ void face::SetSurface(surface *pSurface)
     pSurface->AddFace(this);
     }
 
-SGM::EdgeSideType face::GetEdgeType(edge const *pEdge) const 
+SGM::EdgeSideType face::GetSideType(edge const *pEdge) const 
     {
-    std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mFaceType.find((edge *)pEdge);
+    std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mSideType.find((edge *)pEdge);
     return iter->second;
     }
 
@@ -369,4 +323,233 @@ bool face::GetFlipped() const
     {
     return m_bFlipped;
     }
-}
+
+SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
+                                   face const *pFace)
+    {
+    surface const *pSurface=pFace->GetSurface();
+    if(pSurface->ClosedInU() || pSurface->ClosedInV())
+        {
+        SGM::Point3D MidPos=pEdge->FindMidPoint();
+        SGM::Point2D uv=pSurface->Inverse(MidPos);
+        SGM::Interval2D const &Domain=pSurface->GetDomain();
+        if(Domain.OnBoundary(uv,SGM_MIN_TOL))
+            {
+            SGM::Point3D MidPosPlus=pEdge->FindMidPoint(0.501);
+            SGM::Point2D uvPlus=pSurface->Inverse(MidPosPlus);
+            if(Domain.OnBoundary(uvPlus,SGM_MIN_TOL))
+                {
+                if(Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
+                    {
+                    if(uv.m_v<uvPlus.m_v)
+                        {
+                        return SGM::EdgeSeamType::UpperUSeamType;
+                        }
+                    else
+                        {
+                        return SGM::EdgeSeamType::LowerUSeamType;
+                        }
+                    }
+                if(Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
+                    {
+                    if(uv.m_u<uvPlus.m_u)
+                        {
+                        return SGM::EdgeSeamType::LowerVSeamType;
+                        }
+                    else
+                        {
+                        return SGM::EdgeSeamType::UpperVSeamType;
+                        }
+                    }
+                }
+            }
+        }
+    return SGM::EdgeSeamType::NotASeamType;
+    }
+
+SGM::EdgeSeamType face::GetSeamType(edge const *pEdge) const 
+    {
+    std::map<edge *,SGM::EdgeSeamType>::const_iterator iter=m_mSeamType.find((edge *)pEdge);
+    if(iter==m_mSeamType.end())
+        {
+        SGM::EdgeSeamType nSeamType=FindEdgeSeamType(pEdge,this);
+        m_mSeamType[(edge *)pEdge]=nSeamType;
+        return nSeamType;
+        }
+    return iter->second;
+    }
+
+SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
+                                      SGM::EdgeSideType   nType,
+                                      SGM::Point3D const &Pos) const
+    {
+    SGM::EdgeSeamType nSeamType=GetSeamType(pEdge);
+    SGM::Point2D uv=m_pSurface->Inverse(Pos);
+    SGM::Interval2D const &Domain=m_pSurface->GetDomain();
+    if(Domain.OnBoundary(uv,SGM_MIN_TOL))
+        {
+        if(nSeamType!=SGM::EdgeSeamType::NotASeamType)
+            {
+            if(m_bFlipped)
+                {
+                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMin;
+                        }
+                    else
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMax;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        }
+                    else
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        }
+                    }
+                }
+            else
+                {
+                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMin;
+                        }
+                    else
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMax;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        }
+                    else
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_u=Domain.m_UDomain.m_dMin;
+                        }
+                    }
+                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
+                    {
+                    if(nType==SGM::EdgeSideType::FaceOnRightType)
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        }
+                    else
+                        {
+                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        }
+                    }
+                }
+            }
+        else if(Domain.OnBoundary(uv,SGM_MIN_TOL))
+            {
+            double t=pEdge->GetCurve()->Inverse(Pos);
+            SGM::Interval1D const &EdgeDomain=pEdge->GetDomain();
+            double dFraction=EdgeDomain.Fraction(t);
+            double t2;
+            if(0.5<dFraction)
+                {
+                t2=dFraction-SGM_FIT;
+                }
+            else
+                {
+                t2=dFraction+SGM_FIT;
+                }
+            SGM::Point3D TestPos=pEdge->FindMidPoint(t2);
+            SGM::Point2D TestUV=m_pSurface->Inverse(TestPos);
+            if(Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
+                {
+                if(TestUV.m_u<Domain.m_UDomain.MidPoint())
+                    {
+                    uv.m_u=Domain.m_UDomain.m_dMin;
+                    }
+                else
+                    {
+                    uv.m_u=Domain.m_UDomain.m_dMax;
+                    }
+                }
+            if(Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
+                {
+                if(TestUV.m_v<Domain.m_VDomain.MidPoint())
+                    {
+                    uv.m_v=Domain.m_VDomain.m_dMin;
+                    }
+                else
+                    {
+                    uv.m_v=Domain.m_VDomain.m_dMax;
+                    }
+                }
+            }
+
+        // Deal with the case of a point at (0,0) on a torus.
+
+        if( m_pSurface->ClosedInU() && 
+            m_pSurface->ClosedInV() &&
+            Domain.OnCorner(uv,SGM_MIN_TOL))
+            {
+            double t=pEdge->GetCurve()->Inverse(Pos);
+            SGM::Interval1D const &EdgeDomain=pEdge->GetDomain();
+            double dFraction=EdgeDomain.Fraction(t);
+            double t2;
+            if(0.5<dFraction)
+                {
+                t2=dFraction-SGM_FIT;
+                }
+            else
+                {
+                t2=dFraction+SGM_FIT;
+                }
+            SGM::Point3D TestPos=pEdge->FindMidPoint(t2);
+            SGM::Point2D TestUV=EvaluateParamSpace(pEdge,nType,TestPos);
+            uv.m_u=TestUV.m_u<Domain.m_UDomain.MidPoint() ? Domain.m_UDomain.m_dMin : Domain.m_UDomain.m_dMax;
+            uv.m_v=TestUV.m_v<Domain.m_VDomain.MidPoint() ? Domain.m_VDomain.m_dMin : Domain.m_VDomain.m_dMax;
+            }
+        }
+    return uv;
+    }
+
+} // End SGMInternal namespace

@@ -15,6 +15,135 @@
 
 namespace SGMInternal
 {
+
+edge *FindEdge(SGM::Result &rResult,
+               face  const *pFace,
+               entity      *pEntA,
+               entity      *pEntB)
+    {
+    if(pEntA->GetType()==SGM::FaceType || pEntB->GetType()==SGM::FaceType)
+        {
+        return nullptr;
+        }
+    if(pEntA->GetType()==SGM::EdgeType)
+        {
+        return (edge *)pEntA;
+        }
+    if(pEntB->GetType()==SGM::EdgeType)
+        {
+        return (edge *)pEntB;
+        }
+    vertex *pVertex1=(vertex *)pEntA;
+    vertex *pVertex2=(vertex *)pEntB;
+    std::vector<edge *> aEdges;
+    size_t nEdges=FindCommonEdges(rResult,pVertex1,pVertex2,aEdges,pFace);
+    if(nEdges)
+        {
+        return aEdges[0];
+        }
+    return nullptr;
+    }
+
+void SubdivideFacets(SGM::Result               &rResult,
+                     face                const *pFace,
+                     std::vector<SGM::Point3D> &aPoints3D,
+                     std::vector<SGM::Point2D> &aPoints2D,
+                     std::vector<size_t>       &aTriangles,
+                     std::vector<entity *>     &aEntities)
+    {
+    size_t nTriangles=aTriangles.size();
+    surface const *pSurface=pFace->GetSurface();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+        entity *pEntA=aEntities[a];
+        entity *pEntB=aEntities[b];
+        entity *pEntC=aEntities[c];
+        edge *pEdge0=FindEdge(rResult,pFace,pEntA,pEntB);
+        edge *pEdge1=FindEdge(rResult,pFace,pEntB,pEntC);
+        edge *pEdge2=FindEdge(rResult,pFace,pEntC,pEntA);
+        SGM::Point3D const &A=aPoints3D[a];
+        SGM::Point3D const &B=aPoints3D[b];
+        SGM::Point3D const &C=aPoints3D[c];
+        SGM::Point2D const &Auv=aPoints2D[a];
+        SGM::Point2D const &Buv=aPoints2D[b];
+        SGM::Point2D const &Cuv=aPoints2D[c];
+
+        SGM::Point2D ABuv,BCuv,CAuv;
+        SGM::Point3D AB,BC,CA;
+        if(pEdge0)
+            {
+            curve const *pCurve=pEdge0->GetCurve();
+            SGM::Point3D MidPos=SGM::MidPoint(A,B);
+            pCurve->Inverse(MidPos,&AB);
+            ABuv=pSurface->Inverse(AB);
+            }
+        else
+            {
+            ABuv=SGM::MidPoint(Auv,Buv);
+            pSurface->Evaluate(ABuv,&AB);
+            }
+
+        if(pEdge1)
+            {
+            curve const *pCurve=pEdge1->GetCurve();
+            SGM::Point3D MidPos=SGM::MidPoint(B,C);
+            pCurve->Inverse(MidPos,&BC);
+            BCuv=pSurface->Inverse(BC);
+            }
+        else
+            {
+            BCuv=SGM::MidPoint(Buv,Cuv);
+            pSurface->Evaluate(BCuv,&BC);
+            }
+
+        if(pEdge2)
+            {
+            curve const *pCurve=pEdge2->GetCurve();
+            SGM::Point3D MidPos=SGM::MidPoint(C,A);
+            pCurve->Inverse(MidPos,&CA);
+            CAuv=pSurface->Inverse(CA);
+            }
+        else
+            {
+            CAuv=SGM::MidPoint(Cuv,Auv);
+            pSurface->Evaluate(CAuv,&CA);
+            }
+
+        size_t ab=aPoints2D.size();
+        size_t bc=ab+1;
+        size_t ca=bc+1;
+        aPoints2D.push_back(ABuv);
+        aPoints2D.push_back(BCuv);
+        aPoints2D.push_back(CAuv);
+        aPoints3D.push_back(AB);
+        aPoints3D.push_back(BC);
+        aPoints3D.push_back(CA);
+        aEntities.push_back(pEdge0 ? pEdge0 : (entity *)pFace);
+        aEntities.push_back(pEdge1 ? pEdge1 : (entity *)pFace);
+        aEntities.push_back(pEdge2 ? pEdge2 : (entity *)pFace);
+
+        aTriangles[Index1]=a;
+        aTriangles[Index1+1]=ab;
+        aTriangles[Index1+2]=ca;
+
+        aTriangles.push_back(ab);
+        aTriangles.push_back(b);
+        aTriangles.push_back(bc);
+
+        aTriangles.push_back(ca);
+        aTriangles.push_back(ab);
+        aTriangles.push_back(bc);
+
+        aTriangles.push_back(ca);
+        aTriangles.push_back(bc);
+        aTriangles.push_back(c);
+        }
+    }
+
 class Node
     {
     public:
@@ -468,8 +597,8 @@ bool SplitAtSeams(SGM::Result                     &rResult,
     bool bFound=false;
     if(pSurface->ClosedInU() || pSurface->ClosedInV())
         {
-        aCrosses.push_back(pCurve->GetDomain().m_dMin);
-        aCrosses.push_back(pCurve->GetDomain().m_dMax);
+        aCrosses.push_back(aParams.front());
+        aCrosses.push_back(aParams.back());
         std::vector<Node> aNodes;
         size_t nParams=aParams.size();
         size_t Index1;
@@ -504,8 +633,11 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
-                    aCrosses.push_back(t);
-                    bFound=true;
+                    if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
+                        {
+                        aCrosses.push_back(t);
+                        bFound=true;
+                        }
                     }
                 }
             rResult.GetThing()->DeleteEntity(pSeam);
@@ -525,8 +657,11 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
-                    aCrosses.push_back(t);
-                    bFound=true;
+                    if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
+                        {
+                        aCrosses.push_back(t);
+                        bFound=true;
+                        }
                     }
                 }
             rResult.GetThing()->DeleteEntity(pSeam);
@@ -548,9 +683,9 @@ void FacetEdge(SGM::Result               &rResult,
     // Find where the facets cross the seams of their surfaces.
 
     std::vector<double> aCrosses;
-    std::set<surface *> sSurfaces;
+    std::set<surface *,EntityCompare> sSurfaces;
     FindSurfaces(rResult,pEdge,sSurfaces);
-    std::set<surface *>::iterator iter=sSurfaces.begin();
+    std::set<surface *,EntityCompare>::iterator iter=sSurfaces.begin();
     bool bFound=false;
     while(iter!=sSurfaces.end())
         {
@@ -1974,10 +2109,8 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
     size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
-    //bool bFlip=pFace->GetFlipped();
-    surface const *pSurface=pFace->GetSurface();
-    //std::set<edge *> const &sFaceEdges=pFace->GetEdges();
-    std::set<vertex *> sVertices;
+    bool bFlip=pFace->GetFlipped();
+    std::set<vertex *,EntityCompare> sVertices;
     FindVertices(rResult,pFace,sVertices);
 
     // Facet each loop.
@@ -1996,7 +2129,13 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
             edge *pEdge=aLoop[Index2];
             std::vector<SGM::Point3D> aFacets=pEdge->GetFacets(rResult);
             std::vector<double> aParams=pEdge->GetParams(rResult);
-            if(aSides[Index2]==SGM::EdgeSideType::FaceOnRightType)
+            SGM::EdgeSideType nSide=aSides[Index2];
+            if(bFlip==false && nSide==SGM::EdgeSideType::FaceOnRightType)
+                {
+                std::reverse(aFacets.begin(),aFacets.end());
+                std::reverse(aParams.begin(),aParams.end());
+                }
+            else if(bFlip==true && nSide==SGM::EdgeSideType::FaceOnLeftType)
                 {
                 std::reverse(aFacets.begin(),aFacets.end());
                 std::reverse(aParams.begin(),aParams.end());
@@ -2018,7 +2157,8 @@ size_t FacetFaceLoops(SGM::Result                       &rResult,
                     aNodes[Index3].m_nPrevious=Index3-1;
                     }
                 aNodes[Index3].m_nNext=Index3+1;
-                aNodes[Index3].m_uv=pSurface->Inverse(aNodes[Index3].m_Pos);
+                SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,aNodes[Index3].m_Pos);
+                aNodes[Index3].m_uv=uv;
                 }
             }
         
@@ -2516,7 +2656,14 @@ void FacetFace(SGM::Result                    &rResult,
     if(Options.m_bParametric==false)
         {
         FindNormals(rResult,pFace,aPoints2D,aNormals);
+        size_t nOldSize=aPoints2D.size();
         RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies);
+        size_t nNewSize=aPoints2D.size();
+        size_t Index1;
+        for(Index1=nOldSize;Index1<nNewSize;++Index1)
+            {
+            aEntities.push_back((entity *)pFace);
+            }
         }
     ScaledDelaunayFlips(pFace,aPoints2D,aTriangles,aAdjacencies);
     }

@@ -63,11 +63,13 @@ class curve : public entity
 
         void RemoveEdge(edge *pEdge);
 
-        std::set<edge *> const &GetEdges() const {return m_sEdges;}
+        std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::EntityType GetCurveType() const {return m_CurveType;}
 
         SGM::Interval1D const &GetDomain() const {return m_Domain;}
+
+        void SetDomain(SGM::Interval1D const &rDomain) {m_Domain=rDomain;}
 
         bool GetClosed() const {return m_bClosed;}
 
@@ -96,7 +98,7 @@ class curve : public entity
 
     protected:
         
-        std::set<edge *> m_sEdges;
+        std::set<edge *,EntityCompare> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
         bool             m_bClosed;

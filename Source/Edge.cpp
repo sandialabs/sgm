@@ -59,9 +59,14 @@ SGM::Interval1D const &edge::GetDomain() const
                 }
             if(m_Domain.Empty())
                 {
-                std::swap(m_pStart,m_pEnd);
-                std::swap(m_Domain.m_dMin,m_Domain.m_dMax);
+                throw;
                 }
+            }
+        if( m_Domain.Length()<SGM_ZERO && 
+            m_pStart==m_pEnd && 
+            m_pCurve->GetCurveType()!=SGM::PointCurveType)
+            {
+            m_Domain=m_pCurve->GetDomain();
             }
         }
     return m_Domain;

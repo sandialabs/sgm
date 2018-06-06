@@ -32,7 +32,7 @@ double volume::FindVolume() const
     }
 
 size_t volume::FindShells(SGM::Result                    &rResult,
-                          std::vector<std::set<face *> > &aShells) const
+                          std::vector<std::set<face *,EntityCompare> > &aShells) const
     {
     thing *pThing=rResult.GetThing();
     Graph graph(rResult,m_sFaces,false);
@@ -42,7 +42,7 @@ size_t volume::FindShells(SGM::Result                    &rResult,
     size_t Index1;
     for(Index1=0;Index1<nShells;++Index1)
         {
-        std::set<face *> sShell;
+        std::set<face *,EntityCompare> sShell;
         Graph const &Comp=aComps[Index1];
         std::set<size_t> const &sFaces=Comp.GetVertices();
         std::set<size_t>::const_iterator Iter=sFaces.begin();

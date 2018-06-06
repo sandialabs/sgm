@@ -295,6 +295,8 @@ void ProcessEdge(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
     {
+    // #509=EDGE_CURVE('',#605,#607,#608,.F.);
+    
     FindIndices(line,STEPData.m_aIDs);
     FindFlag(line,STEPData.m_bFlag);
     }
@@ -380,6 +382,22 @@ void ProcessCircle(SGM::Result       &,//rResult,
     FindLastDouble(circle,STEPData.m_aDoubles);
     }
 
+void ProcessCone(SGM::Result       &,//rResult,
+                 std::string const &cone,
+                 STEPLineData      &STEPData)
+    {
+    // #73=CONICAL_SURFACE('',#72,1.00000000000000,0.785398163397448);
+                
+    FindIndices(cone,STEPData.m_aIDs);
+    std::vector<std::string> aArgs;
+    FindListArguments(cone,aArgs);
+    double dRadius,dHalfAngle;
+    sscanf(aArgs[2].c_str(),"%lf",&dRadius);
+    sscanf(aArgs[3].c_str(),"%lf",&dHalfAngle);
+    STEPData.m_aDoubles.push_back(dRadius);
+    STEPData.m_aDoubles.push_back(dHalfAngle);        
+    }
+
 void ProcessCylinder(SGM::Result       &,//rResult,
                      std::string const &cylinder,
                      STEPLineData      &STEPData)
@@ -401,6 +419,39 @@ void ProcessRevolve(SGM::Result       &,//rResult,
                     STEPLineData      &STEPData)
     {
     FindIndices(revolve,STEPData.m_aIDs);
+    }
+
+void ProcessTorus(SGM::Result       &,//rResult,
+                    std::string const &torus,
+                    STEPLineData      &STEPData)
+    {
+    // #85=TOROIDAL_SURFACE('',#158,8.0,0.5);
+
+    FindIndices(torus,STEPData.m_aIDs);
+    std::vector<std::string> aArgs;
+    FindListArguments(torus,aArgs);
+    double dMajor,dMinor;
+    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
+    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
+    STEPData.m_aDoubles.push_back(dMajor);
+    STEPData.m_aDoubles.push_back(dMinor);
+    }
+
+void ProcessDegenerateTorus(SGM::Result       &,//rResult,
+                            std::string const &torus,
+                            STEPLineData      &STEPData)
+    {
+    // #112=DEGENERATE_TOROIDAL_SURFACE('',#111,9.02000000000000,20.0000000000000,.T.);
+
+    FindIndices(torus,STEPData.m_aIDs);
+    FindFlag(torus,STEPData.m_bFlag);
+    std::vector<std::string> aArgs;
+    FindListArguments(torus,aArgs);
+    double dMajor,dMinor;
+    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
+    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
+    STEPData.m_aDoubles.push_back(dMajor);
+    STEPData.m_aDoubles.push_back(dMinor);
     }
 
 void ProcessVector(SGM::Result       &,//rResult,
@@ -517,9 +568,21 @@ void ProcessLine(SGM::Result                        &rResult,
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
+                    case SGMInternal::STEPTags::CONICAL_SURFACE:
+                        {
+                        ProcessCone(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
                     case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
                         {
                         ProcessCylinder(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
+                        {
+                        ProcessDegenerateTorus(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -538,6 +601,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::EDGE_LOOP:
                         {
                         ProcessLoop(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::FACE_BOUND:
+                        {
+                        ProcessBound(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -614,6 +683,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                         {
                         ProcessRevolve(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::TOROIDAL_SURFACE:
+                        {
+                        ProcessTorus(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -848,6 +923,24 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=new circle(rResult,Center,ZAxis,dRadius,&XAxis);
                 break;    
                 }
+            case SGMInternal::STEPTags::CONICAL_SURFACE:
+                {
+                size_t nAxis=DataIter->second.m_aIDs[0];
+                double dRadius=DataIter->second.m_aDoubles[0];
+                double dHalfAngle=DataIter->second.m_aDoubles[1];
+                STEPLineData SLDA=mSTEPData[nAxis];
+                size_t nID0=SLDA.m_aIDs[0];
+                size_t nID1=SLDA.m_aIDs[1];
+                size_t nID2=SLDA.m_aIDs[2];
+                STEPLineData SLDP=mSTEPData[nID0];
+                STEPLineData SLDN=mSTEPData[nID1];
+                STEPLineData SLDX=mSTEPData[nID2];
+                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
+                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
+                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                mEntityMap[nID]=new cone(rResult,Center,ZAxis,dRadius,dHalfAngle,&XAxis);
+                break;
+                }
             case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
@@ -864,6 +957,25 @@ void CreateEntities(SGM::Result                   &rResult,
                 SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
+                }
+            case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
+                {
+                size_t nAxis=DataIter->second.m_aIDs[0];
+                double dMajor=DataIter->second.m_aDoubles[0];
+                double dMinor=DataIter->second.m_aDoubles[1];
+                bool bApple=DataIter->second.m_bFlag;
+                STEPLineData SLDA=mSTEPData[nAxis];
+                size_t nID0=SLDA.m_aIDs[0];
+                size_t nID1=SLDA.m_aIDs[1];
+                size_t nID2=SLDA.m_aIDs[2];
+                STEPLineData SLDP=mSTEPData[nID0];
+                STEPLineData SLDN=mSTEPData[nID1];
+                STEPLineData SLDX=mSTEPData[nID2];
+                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
+                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
+                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
+                break;
                 }
             case SGMInternal::STEPTags::EDGE_CURVE:
                 {
@@ -961,6 +1073,25 @@ void CreateEntities(SGM::Result                   &rResult,
                 SGM::Point3D Pos(SLDPoint.m_aDoubles[0],SLDPoint.m_aDoubles[1],SLDPoint.m_aDoubles[2]);
                 SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
                 mEntityMap[nID]=new revolve(rResult,Pos,ZAxis,nullptr);
+                break;
+                }
+            case SGMInternal::STEPTags::TOROIDAL_SURFACE:
+                {
+                size_t nAxis=DataIter->second.m_aIDs[0];
+                double dMajor=DataIter->second.m_aDoubles[0];
+                double dMinor=DataIter->second.m_aDoubles[1];
+                bool bApple=true;
+                STEPLineData SLDA=mSTEPData[nAxis];
+                size_t nID0=SLDA.m_aIDs[0];
+                size_t nID1=SLDA.m_aIDs[1];
+                size_t nID2=SLDA.m_aIDs[2];
+                STEPLineData SLDP=mSTEPData[nID0];
+                STEPLineData SLDN=mSTEPData[nID1];
+                STEPLineData SLDX=mSTEPData[nID2];
+                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
+                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
+                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
             case SGMInternal::STEPTags::TRIMMED_CURVE:
@@ -1072,23 +1203,25 @@ void CreateEntities(SGM::Result                   &rResult,
         surface *pSurface=(surface *)mEntityMap[nSurfaceID];
         pFace->SetSurface(pSurface);
         switch (pSurface->GetSurfaceType())
-        {
-        case SGM::RevolveType:
             {
-            revolve *pRevolve = (revolve *)pSurface;
-            std::map<size_t,STEPLineData>::iterator SLDRevolve=mSTEPData.find(nSurfaceID);
-            curve *pCurve = (curve *)mEntityMap[SLDRevolve->second.m_aIDs.front()];
-            pRevolve->SetCurve(pCurve);
+            case SGM::RevolveType:
+                {
+                revolve *pRevolve = (revolve *)pSurface;
+                std::map<size_t,STEPLineData>::iterator SLDRevolve=mSTEPData.find(nSurfaceID);
+                curve *pCurve = (curve *)mEntityMap[SLDRevolve->second.m_aIDs.front()];
+                pRevolve->SetCurve(pCurve);
+                break;
+                }
+            default:
+                {
+                break;
+                }
             }
-            break;
-        default:
-            break;
-        }
         size_t nBounds=aBoundIDs.size()-1;
         for(Index2=0;Index2<nBounds;++Index2)
             {
             std::map<size_t,STEPLineData>::iterator SLD2=mSTEPData.find(aBoundIDs[Index2]);
-            bool bBoundFlag=SLD2->second.m_bFlag;
+            bool bLoopFlag=SLD2->second.m_bFlag;
             std::vector<size_t> const &aLoopIDs=SLD2->second.m_aIDs;
             size_t nLoopIDs=aLoopIDs.size();
             for(Index3=0;Index3<nLoopIDs;++Index3)
@@ -1096,23 +1229,39 @@ void CreateEntities(SGM::Result                   &rResult,
                 std::map<size_t,STEPLineData>::iterator SLD3=mSTEPData.find(aLoopIDs[Index3]);
                 std::vector<size_t> const &aCoedgeIDs=SLD3->second.m_aIDs;
                 size_t nCoedgeIDs=aCoedgeIDs.size();
+                std::set<size_t> sEdgeIDs,sDoubleSided;
                 for(Index4=0;Index4<nCoedgeIDs;++Index4)
                     {
                     size_t nCoedgeID=aCoedgeIDs[Index4];
                     std::map<size_t,STEPLineData>::iterator SLD4=mSTEPData.find(nCoedgeID);
                     size_t nEdgeID=SLD4->second.m_aIDs[2];
-                    bool bCoedgeFlag=SLD4->second.m_bFlag;
-                    std::map<size_t,STEPLineData>::iterator SLD5=mSTEPData.find(nEdgeID);
-                    bool bEdgeFlag=SLD5->second.m_bFlag;
-                    SGM::EdgeSideType nEdgeSide=SGM::FaceOnLeftType; 
-                    if(bBoundFlag!=bCoedgeFlag)
+                    if(sEdgeIDs.find(nEdgeID)!=sEdgeIDs.end())
                         {
-                        if(bEdgeFlag==true)
+                        sDoubleSided.insert(nEdgeID);
+                        }
+                    sEdgeIDs.insert(nEdgeID);
+                    }
+                for(Index4=0;Index4<nCoedgeIDs;++Index4)
+                    {
+                    size_t nCoedgeID=aCoedgeIDs[Index4];
+                    std::map<size_t,STEPLineData>::iterator SLD4=mSTEPData.find(nCoedgeID);
+                    size_t nEdgeID=SLD4->second.m_aIDs[2];
+                    SGM::EdgeSideType nEdgeSide=SGM::FaceOnBothSidesType;
+                    edge *pEdge=(edge *)mEntityMap[nEdgeID];
+                    if(sDoubleSided.find(nEdgeID)==sDoubleSided.end())
+                        {
+                        bool bCoedgeFlag=SLD4->second.m_bFlag;
+                        std::map<size_t,STEPLineData>::iterator SLD5=mSTEPData.find(nEdgeID);
+                        bool bEdgeFlag=SLD5->second.m_bFlag;
+                        nEdgeSide=SGM::FaceOnLeftType; 
+                        if(bLoopFlag!=bCoedgeFlag)
                             {
-                            nEdgeSide=SGM::FaceOnRightType;
+                            if(bEdgeFlag==true)
+                                {
+                                nEdgeSide=SGM::FaceOnRightType;
+                                }
                             }
                         }
-                    edge *pEdge=(edge *)mEntityMap[nEdgeID];
                     pFace->AddEdge(pEdge,nEdgeSide);
                     }
                 }
@@ -1143,6 +1292,13 @@ void CreateEntities(SGM::Result                   &rResult,
             if(bEdgeFlag==false)
                 {
                 std::swap(pStart,pEnd);
+                }
+            if(pCurve->GetCurveType()==SGM::EntityType::CircleType)
+                {
+                SGM::Point3D StartPos=pStart->GetPoint();
+                double dStartParam=pCurve->Inverse(StartPos);
+                SGM::Interval1D Domain(dStartParam,dStartParam+SGM_TWO_PI);
+                pCurve->SetDomain(Domain);
                 }
             pEdge->SetStart(pStart);
             pEdge->SetEnd(pEnd);
@@ -1217,6 +1373,33 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         CreateEntities(rResult,pThing,mSTEPData,mEntityMap,aEntities);
         }
     fclose(pFile);
+
+    // Code for testing to be removed.
+
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,aEntities[0],sFaces);
+    std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
+    std::vector<std::pair<size_t,face *> > aFaces;
+    while(iter!=sFaces.end())
+        {
+        face *pFace=*iter;
+        size_t nID=pFace->GetID();
+        aFaces.push_back(std::pair<size_t,face *>(nID,pFace));
+        ++iter;
+        }
+    std::sort(aFaces.begin(),aFaces.end());
+    size_t nFaces=aFaces.size();
+    size_t Index1;
+    for(Index1=0;Index1<nFaces;++Index1)
+        {
+        face *pFace=aFaces[Index1].second;
+        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
+        size_t nID=pFace->GetID();
+        nID;
+        nType;
+        pFace->GetPoints2D(rResult);
+        }
+
     return aEntities.size();
     }
 

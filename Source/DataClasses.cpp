@@ -244,7 +244,7 @@ SGM::UnitVector2D::UnitVector2D(SGM::Vector2D const &Vec)
         m_u=Vec.m_u;
         m_v=Vec.m_v;
         }
-    else if(1E-24<dMagSquared)
+    else if(SGM_ZERO_SQUARED<dMagSquared)
         {
         double dMag=sqrt(dMagSquared);
         double dScale=1.0/dMag;
@@ -267,7 +267,7 @@ SGM::UnitVector2D::UnitVector2D(double u,double v)
         m_u=u;
         m_v=v;
         }
-    else if(1E-24<dMagSquared)
+    else if(SGM_ZERO_SQUARED<dMagSquared)
         {
         double dMag=sqrt(dMagSquared);
         double dScale=1.0/dMag;
@@ -302,7 +302,7 @@ SGM::UnitVector3D::UnitVector3D(SGM::Vector3D const &Vec)
         m_y=Vec.m_y;
         m_z=Vec.m_z;
         }
-    else if(1E-24<dMagSquared)
+    else if(SGM_ZERO_SQUARED<dMagSquared)
         {
         double dMag=sqrt(dMagSquared);
         double dScale=1.0/dMag;
@@ -328,7 +328,7 @@ SGM::UnitVector3D::UnitVector3D(double x,double y,double z)
         m_y=y;
         m_z=z;
         }
-    else if(1E-24<dMagSquared)
+    else if(SGM_ZERO_SQUARED<dMagSquared)
         {
         double dMag=sqrt(dMagSquared);
         double dScale=1.0/dMag;
@@ -386,7 +386,7 @@ SGM::UnitVector4D::UnitVector4D(SGM::Vector4D const &Vec)
         m_z=Vec.m_z;
         m_w=Vec.m_w;
         }
-    else if(1E-24<dMagSquared)
+    else if(SGM_ZERO_SQUARED<dMagSquared)
         {
         double dMag=sqrt(dMagSquared);
         double dScale=1.0/dMag;
@@ -501,7 +501,12 @@ bool SGM::Interval2D::InInterval(SGM::Point2D const &Pos,double dTol) const
 
 bool SGM::Interval2D::OnBoundary(SGM::Point2D const &Pos,double dTol) const
     {
-    return InInterval(Pos,dTol) && (m_UDomain.OnBoundary(Pos.m_u,dTol) || m_VDomain.OnBoundary(Pos.m_u,dTol));
+    return InInterval(Pos,dTol) && (m_UDomain.OnBoundary(Pos.m_u,dTol) || m_VDomain.OnBoundary(Pos.m_v,dTol));
+    }
+
+bool SGM::Interval2D::OnCorner(SGM::Point2D const &Pos,double dTol) const
+    {
+    return InInterval(Pos,dTol) && (m_UDomain.OnBoundary(Pos.m_u,dTol) && m_VDomain.OnBoundary(Pos.m_v,dTol));
     }
 
 double SGM::Interval2D::HalfPerimeter() const 
@@ -708,7 +713,7 @@ bool SGM::Segment2D::Intersect(Segment2D const &other,
     double c2=other.m_Start.m_v-m_End.m_v;
     double x,y;
     bool bAnswer=SGM::CramersRule(a1,b1,c1,a2,b2,c2,x,y);
-    double dTol=1E-12;
+    double dTol=SGM_ZERO;
     if(bAnswer && -dTol<x && x<1+dTol && -dTol<y && y<1+dTol)
         {
         Pos.m_u=m_Start.m_u+x*(m_End.m_u-m_Start.m_u);
@@ -744,7 +749,7 @@ bool SGM::Segment3D::Intersect(SGM::Segment3D const &Seg,
     double e=v%w;
     double denom=a*c-b*b;
     bool bAnswer=true;
-    if(1E-12<denom)
+    if(SGM_ZERO<denom)
         {
         double s=(b*e-c*d)/denom;
         double t=(a*e-b*d)/denom;

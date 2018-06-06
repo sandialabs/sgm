@@ -5,6 +5,7 @@
 
 #include "SGMDataClasses.h"
 #include "EntityClasses.h"
+
 namespace SGMInternal
 {
 body *CreateBlock(SGM::Result        &rResult,
@@ -52,9 +53,9 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams);
 
-body *CreateSheetBody(SGM::Result                    &rResult,
-                      surface                        *pSurface,
-                      std::vector<edge *>            &aEdges,
-                      std::vector<SGM::EdgeSideType> &aTypes);
+body *CreateSheetBody(SGM::Result                       &rResult,
+                      surface                           *pSurface,
+                      std::vector<edge *> &aEdges,
+                      std::vector<SGM::EdgeSideType>    &aTypes);
     }
 #endif // PRIMITIVE_H

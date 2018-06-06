@@ -159,17 +159,7 @@ std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetTriangles(rResult);    
     }
-/*
-size_t 
 
-size_t FindTriStrips(SGM::Result                       &rResult,
-                     SGM::Face                   const &FaceID,
-                     std::vector<std::vector<size_t> > &aaStrips)
-    {
-    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID); 
-    return FindTriStrips(rResult,pFace,aaStrips);
-    }
-    */
 std::vector<SGM::Point2D> const &SGM::GetFacePoints2D(SGM::Result     &rResult,
                                                       SGM::Face const &FaceID)
     {
@@ -321,7 +311,7 @@ void SGM::FindBodies(SGM::Result         &rResult,
                      bool                 bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::body *> sbodies;
+    std::set<SGMInternal::body *,SGMInternal::EntityCompare> sbodies;
     FindBodies(rResult,pEntity,sbodies,bTopLevel);
     std::set<SGMInternal::body *>::iterator iter=sbodies.begin();
     while(iter!=sbodies.end())
@@ -337,9 +327,9 @@ void SGM::FindComplexes(SGM::Result            &rResult,
                         bool                    bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::complex *> sComplex;
+    std::set<SGMInternal::complex *,SGMInternal::EntityCompare> sComplex;
     FindComplexes(rResult,pEntity,sComplex,bTopLevel);
-    std::set<SGMInternal::complex *>::iterator iter=sComplex.begin();
+    std::set<SGMInternal::complex *,SGMInternal::EntityCompare>::iterator iter=sComplex.begin();
     while(iter!=sComplex.end())
         {
         sComplexes.insert(SGM::Complex((*iter)->GetID()));
@@ -353,9 +343,9 @@ void SGM::FindVolumes(SGM::Result           &rResult,
                       bool                   bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::volume *> sVolume;
+    std::set<SGMInternal::volume *,SGMInternal::EntityCompare> sVolume;
     FindVolumes(rResult,pEntity,sVolume,bTopLevel);
-    std::set<SGMInternal::volume *>::iterator iter=sVolume.begin();
+    std::set<SGMInternal::volume *,SGMInternal::EntityCompare>::iterator iter=sVolume.begin();
     while(iter!=sVolume.end())
         {
         sVolumes.insert(SGM::Volume((*iter)->GetID()));
@@ -369,7 +359,7 @@ void SGM::FindFaces(SGM::Result         &rResult,
                     bool                 bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::face *> sFace;
+    std::set<SGMInternal::face *,SGMInternal::EntityCompare> sFace;
     FindFaces(rResult,pEntity,sFace,bTopLevel);
     std::set<SGMInternal::face *>::iterator iter=sFace.begin();
     while(iter!=sFace.end())
@@ -385,7 +375,7 @@ void SGM::FindSurfaces(SGM::Result            &rResult,
                        bool                    bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::surface *> sSurface;
+    std::set<SGMInternal::surface *,SGMInternal::EntityCompare> sSurface;
     FindSurfaces(rResult,pEntity,sSurface,bTopLevel);
     std::set<SGMInternal::surface *>::iterator iter=sSurface.begin();
     while(iter!=sSurface.end())
@@ -401,7 +391,7 @@ void SGM::FindEdges(SGM::Result         &rResult,
                     bool                 bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::edge *> sEdge;
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdge;
     FindEdges(rResult,pEntity,sEdge,bTopLevel);
     std::set<SGMInternal::edge *>::iterator iter=sEdge.begin();
     while(iter!=sEdge.end())
@@ -417,7 +407,7 @@ void SGM::FindCurves(SGM::Result         &rResult,
                      bool                 bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::curve *> sCurve;
+    std::set<SGMInternal::curve *,SGMInternal::EntityCompare> sCurve;
     FindCurves(rResult,pEntity,sCurve,bTopLevel);
     std::set<SGMInternal::curve *>::iterator iter=sCurve.begin();
     while(iter!=sCurve.end())
@@ -433,7 +423,7 @@ void SGM::FindVertices(SGM::Result           &rResult,
                        bool                   bTopLevel)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::vertex *> sVertex;
+    std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertex;
     FindVertices(rResult,pEntity,sVertex,bTopLevel);
     std::set<SGMInternal::vertex *>::iterator iter=sVertex.begin();
     while(iter!=sVertex.end())
@@ -1093,19 +1083,19 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
 
     // Copy the bounding edges
 
-    std::set<SGMInternal::edge *> sEdges;
-    std::set<SGMInternal::vertex *> sVertices;
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
+    std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertices;
     std::map<SGMInternal::vertex const *,SGMInternal::vertex *> mVertices;
     FindEdges(rResult,pEntity,sEdges);
     FindVertices(rResult,pEntity,sVertices);
-    std::set<SGMInternal::vertex *>::iterator VertexIter=sVertices.begin();
+    std::set<SGMInternal::vertex *,SGMInternal::EntityCompare>::iterator VertexIter=sVertices.begin();
     while(VertexIter!=sVertices.end())
         {
         SGMInternal::vertex *pVertex=*VertexIter;
         mVertices[pVertex]=new SGMInternal::vertex(rResult,pVertex);
         ++VertexIter;
         }
-    std::set<SGMInternal::edge *>::iterator EdgeIter=sEdges.begin();
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare>::iterator EdgeIter=sEdges.begin();
     while(EdgeIter!=EdgeIter)  //TODO: always false. fix? (kdcopps)
         {
         SGMInternal::edge *pEdge=*EdgeIter;
@@ -1160,10 +1150,10 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::edge *> sEdges;
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
     SGMInternal::FindEdges(rResult,pEntity,sEdges);
     double dTol=dMaxDistance*dMaxDistance;
-    std::set<SGMInternal::edge *>::iterator iter=sEdges.begin();
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare>::iterator iter=sEdges.begin();
     while(iter!=sEdges.end())
         {
         SGM::Point3D ClosestPoint;
@@ -1187,10 +1177,10 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::face *> sFaces;
+    std::set<SGMInternal::face *,SGMInternal::EntityCompare> sFaces;
     FindFaces(rResult,pEntity,sFaces);
     double dTol=dMaxDistance*dMaxDistance;
-    std::set<SGMInternal::face *>::iterator iter=sFaces.begin();
+    std::set<SGMInternal::face *,SGMInternal::EntityCompare>::iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
         SGM::Point3D ClosestPoint;

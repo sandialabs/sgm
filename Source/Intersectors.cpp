@@ -2136,7 +2136,7 @@ bool MidPointIsOff(HermiteNode const &iter1,
     double dTol2=SGM_FIT*dLength;
     dTol2*=dTol2;
     bool bAnswer=false;
-    if(1E-4<dDist2)
+    if(SGM_FIT_SMALL<dDist2)
         {
         SGM::Point2D uv1=pSurface1->Inverse(ExactMidPos);
         SGM::Point2D uv2=pSurface2->Inverse(ExactMidPos);

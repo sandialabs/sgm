@@ -160,7 +160,7 @@ void OutputFace(SGM::Result                  &rResult,
                 FILE                         *pFile,
                 SGM::TranslatorOptions const &)//Options)
     {
-    std::set<edge *> sEdges;
+    std::set<edge *,EntityCompare> sEdges;
     FindEdges(rResult,pFace,sEdges);
     fprintf(pFile,"    Face %ld;\n",pFace->GetID());
     if(pFace->GetFlipped())
@@ -173,7 +173,7 @@ void OutputFace(SGM::Result                  &rResult,
     if(nEdges)
         {
         fprintf(pFile,"      Edges %ld",nEdges);
-        std::set<edge *>::iterator EdgeIter=sEdges.begin();
+        std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
         while(EdgeIter!=sEdges.end())
             {
             fprintf(pFile," %ld",(*EdgeIter)->GetID());
@@ -185,7 +185,7 @@ void OutputFace(SGM::Result                  &rResult,
         EdgeIter=sEdges.begin();
         while(EdgeIter!=sEdges.end())
             {
-            SGM::EdgeSideType nType=pFace->GetEdgeType(*EdgeIter);
+            SGM::EdgeSideType nType=pFace->GetSideType(*EdgeIter);
             if(nType==SGM::EdgeSideType::FaceOnLeftType)
                 {
                 fprintf(pFile," Left ");
@@ -194,13 +194,9 @@ void OutputFace(SGM::Result                  &rResult,
                 {
                 fprintf(pFile," Right");
                 }
-            else if(nType==SGM::EdgeSideType::InteriorEdgeType)
+            else if(nType==SGM::EdgeSideType::FaceOnBothSidesType)
                 {
-                fprintf(pFile," Interior");
-                }
-            else if(nType==SGM::EdgeSideType::SeamType)
-                {
-                fprintf(pFile," Seam");
+                fprintf(pFile," Both");
                 }
             ++EdgeIter;
             }
@@ -213,13 +209,13 @@ void OutputVolume(SGM::Result                  &rResult,
                   FILE                         *pFile,
                   SGM::TranslatorOptions const &Options)
     {
-    std::set<face *> sFaces;
+    std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pVolume,sFaces);
     fprintf(pFile,"  Volume %ld;\n",pVolume->GetID());
     size_t nFaces=sFaces.size();
     fprintf(pFile,"    %ld Faces;\n",nFaces);
 
-    std::set<face *>::iterator FaceIter=sFaces.begin();
+    std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
     while(FaceIter!=sFaces.end())
         {
         OutputFace(rResult,*FaceIter,pFile,Options);
@@ -232,13 +228,13 @@ void OutputBody(SGM::Result                  &rResult,
                 FILE                         *pFile,
                 SGM::TranslatorOptions const &Options)
     {
-    std::set<volume *> sVolumes;
+    std::set<volume *,EntityCompare> sVolumes;
     FindVolumes(rResult,pBody,sVolumes);
     fprintf(pFile,"Body %ld;\n",pBody->GetID());
     size_t nVolumes=sVolumes.size();
     fprintf(pFile,"  %ld Volumes;\n",nVolumes);
 
-    std::set<volume *>::iterator VolumeIter=sVolumes.begin();
+    std::set<volume *,EntityCompare>::iterator VolumeIter=sVolumes.begin();
     while(VolumeIter!=sVolumes.end())
         {
         OutputVolume(rResult,*VolumeIter,pFile,Options);
@@ -284,10 +280,10 @@ void OutputThing(SGM::Result                  &rResult,
     {
     // Shareable entities.
 
-    std::set<curve *> sCurves;
-    std::set<surface *> sSurfaces;
-    std::set<vertex *> sVertices;
-    std::set<edge *> sEdges;
+    std::set<curve *,EntityCompare> sCurves;
+    std::set<surface *,EntityCompare> sSurfaces;
+    std::set<vertex *,EntityCompare> sVertices;
+    std::set<edge *,EntityCompare> sEdges;
 
     FindCurves(rResult,pThing,sCurves);
     FindSurfaces(rResult,pThing,sSurfaces);
@@ -296,28 +292,28 @@ void OutputThing(SGM::Result                  &rResult,
 
     fprintf(pFile,"\n");
 
-    std::set<curve *>::iterator CurveIter=sCurves.begin();
+    std::set<curve *,EntityCompare>::iterator CurveIter=sCurves.begin();
     while(CurveIter!=sCurves.end())
         {
         OutputCurve(rResult,*CurveIter,pFile,Options);
         ++CurveIter;
         }
 
-    std::set<surface *>::iterator SurfaceIter=sSurfaces.begin();
+    std::set<surface *,EntityCompare>::iterator SurfaceIter=sSurfaces.begin();
     while(SurfaceIter!=sSurfaces.end())
         {
         OutputSurface(rResult,*SurfaceIter,pFile,Options);
         ++SurfaceIter;
         }
 
-    std::set<vertex *>::iterator VertexIter=sVertices.begin();
+    std::set<vertex *,EntityCompare>::iterator VertexIter=sVertices.begin();
     while(VertexIter!=sVertices.end())
         {
         OutputVertex(rResult,*VertexIter,pFile,Options);
         ++VertexIter;
         }
 
-    std::set<edge *>::iterator EdgeIter=sEdges.begin();
+    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
     while(EdgeIter!=sEdges.end())
         {
         OutputEdge(rResult,*EdgeIter,pFile,Options);
@@ -326,7 +322,7 @@ void OutputThing(SGM::Result                  &rResult,
 
     // Top level entities.
 
-    std::set<body *> sBodies;
+    std::set<body *,EntityCompare> sBodies;
     FindBodies(rResult,pThing,sBodies,true);
     size_t nBodies=sBodies.size();
     if(nBodies)
@@ -334,7 +330,7 @@ void OutputThing(SGM::Result                  &rResult,
         fprintf(pFile,"%ld Bodies ",nBodies);
         }
 
-    std::set<complex *> sComplexes;
+    std::set<complex *,EntityCompare> sComplexes;
     FindComplexes(rResult,pThing,sComplexes);
     size_t nComplexes=sComplexes.size();
     if(nComplexes)
@@ -344,14 +340,14 @@ void OutputThing(SGM::Result                  &rResult,
 
     fprintf(pFile,";\n");
 
-    std::set<body *>::iterator BodyIter=sBodies.begin();
+    std::set<body *,EntityCompare>::iterator BodyIter=sBodies.begin();
     while(BodyIter!=sBodies.end())
         {
         OutputBody(rResult,*BodyIter,pFile,Options);
         ++BodyIter;
         }
 
-    std::set<complex *>::iterator ComplexIter=sComplexes.begin();
+    std::set<complex *,EntityCompare>::iterator ComplexIter=sComplexes.begin();
     while(ComplexIter!=sComplexes.end())
         {
         OutputComplex(rResult,*ComplexIter,pFile,Options);

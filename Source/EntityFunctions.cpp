@@ -9,9 +9,9 @@ namespace SGMInternal
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity)
     {
-    std::set<entity *> sChildern;
+    std::set<entity *,EntityCompare> sChildern;
     pEntity->FindAllChildern(sChildern);
-    std::set<entity *>::iterator iter=sChildern.begin();
+    std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
     while(iter!=sChildern.end())
         {
         entity *pEntity=*iter;

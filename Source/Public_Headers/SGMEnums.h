@@ -63,8 +63,16 @@ namespace SGM
         {
         FaceOnLeftType,
         FaceOnRightType,
-        SeamType,
-        InteriorEdgeType
+        FaceOnBothSidesType,
+        };
+
+    enum EdgeSeamType
+        {
+        NotASeamType,
+        LowerUSeamType,
+        UpperUSeamType,
+        LowerVSeamType,
+        UpperVSeamType,
         };
 
     enum ResultType 
@@ -76,7 +84,8 @@ namespace SGM
         ResultTypeInsufficientData, // Not enough data was given to the function.
         ResultTypeUnknownCommand,   // An unknown script command was used.
         ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
-        ResultTypeUnknownEntityID   // No matching entity for given ID
+        ResultTypeUnknownEntityID,  // No matching entity for given ID.
+        ResultTypeInconsistentData, // Inside polygons are not inside outside polygons.
         };
 
     enum LogType
