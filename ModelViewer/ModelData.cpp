@@ -5,6 +5,7 @@
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMTopology.h"
+#include "SGMTransform.h"
 #include "SGMTranslators.h"
 #include "SGMChecker.h"
 #include "SGMResult.h"
