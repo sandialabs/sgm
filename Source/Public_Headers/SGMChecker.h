@@ -1,7 +1,7 @@
 #ifndef SGM_CHECKER_H
 #define SGM_CHECKER_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
 #include <vector>

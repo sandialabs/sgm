@@ -2,7 +2,7 @@
 #define SGM_GEOMETRY_H
 
 #include "SGMEntityClasses.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMResult.h"
 
 #include <vector>

@@ -1,5 +1,5 @@
 #include "SGMMathematics.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 
 #include "EntityClasses.h"
 #include "Faceter.h"

@@ -1,11 +1,13 @@
-#include "SGMDataClasses.h"
-#include "SGMMathematics.h"
-#include "Faceter.h"
 #include <cmath>
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <cfloat>
+
+#include "SGMVector.h"
+#include "SGMMathematics.h"
+#include "SGMSegment.h"
+#include "Faceter.h"
 
 namespace SGMInternal
 {
@@ -519,47 +521,6 @@ double SGM::ProjectPointsToPlane(std::vector<SGM::Point3D> const &aPoints3D,
     return dAnswer;
     }
 
-SGM::Interval3D SGM::FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints)
-    {
-    SGM::Interval3D Answer;
-    Answer.m_XDomain.m_dMin=DBL_MAX;
-    Answer.m_XDomain.m_dMax=-DBL_MAX;
-    Answer.m_YDomain.m_dMin=DBL_MAX;
-    Answer.m_YDomain.m_dMax=-DBL_MAX;
-    Answer.m_ZDomain.m_dMin=DBL_MAX;
-    Answer.m_ZDomain.m_dMax=-DBL_MAX;
-    size_t nPoints=aPoints.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        SGM::Point3D const &Pos=aPoints[Index1];
-        if(Pos.m_x<Answer.m_XDomain.m_dMin)
-            {
-            Answer.m_XDomain.m_dMin=Pos.m_x;
-            }
-        if(Pos.m_y<Answer.m_YDomain.m_dMin)
-            {
-            Answer.m_YDomain.m_dMin=Pos.m_y;
-            }
-        if(Pos.m_z<Answer.m_ZDomain.m_dMin)
-            {
-            Answer.m_ZDomain.m_dMin=Pos.m_z;
-            }
-        if(Answer.m_XDomain.m_dMax<Pos.m_x)
-            {
-            Answer.m_XDomain.m_dMax=Pos.m_x;
-            }
-        if(Answer.m_YDomain.m_dMax<Pos.m_y)
-            {
-            Answer.m_YDomain.m_dMax=Pos.m_y;
-            }
-        if(Answer.m_ZDomain.m_dMax<Pos.m_z)
-            {
-            Answer.m_ZDomain.m_dMax=Pos.m_z;
-            }
-        }
-    return Answer;
-    }
 
 void SGM::FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
                         std::vector<double>             &aLengths,

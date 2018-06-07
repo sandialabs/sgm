@@ -1,7 +1,7 @@
 #ifndef SGM_QUERY_H
 #define SGM_QUERY_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
 

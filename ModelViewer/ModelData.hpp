@@ -4,7 +4,7 @@
 #include <QString>
 
 #include "SGMEntityClasses.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 
 #include <vector>
 #include <string>

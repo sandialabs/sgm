@@ -1,7 +1,7 @@
 #ifndef SGM_TREE_H
 #define SGM_TREE_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include <vector>
 #include <set>
 

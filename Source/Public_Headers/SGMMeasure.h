@@ -1,7 +1,7 @@
 #ifndef SGM_MEASURE_H
 #define SGM_MEASURE_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMMathematics.h"
 #include "SGMResult.h"

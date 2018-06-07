@@ -1,5 +1,6 @@
 #include "SGMPrimitives.h"
 #include "SGMMathematics.h"
+#include "SGMInterval.h"
 #include "SGMTree.h"
 #include "Topology.h"
 #include "EntityClasses.h"

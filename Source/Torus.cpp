@@ -1,5 +1,6 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMMathematics.h"
+#include "SGMInterval.h"
 #include "EntityClasses.h"
 #include "Surface.h"
 #include <cmath>

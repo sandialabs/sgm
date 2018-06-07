@@ -1,12 +1,15 @@
-#include "SGMDataClasses.h"
+#include <cmath>
+#include <algorithm>
+#include <limits>
+
+#include "SGMVector.h"
 #include "SGMMathematics.h"
+#include "SGMTransform.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
 #include "Topology.h"
-#include <cmath>
-#include <algorithm>
-#include <limits>
 
 namespace SGMInternal
 {

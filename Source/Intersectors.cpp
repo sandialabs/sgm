@@ -1,15 +1,18 @@
-#include "SGMDataClasses.h"
-#include "SGMIntersector.h"
-
-#include "Intersectors.h"
-#include "EntityClasses.h"
-#include "FacetToBRep.h"
-
 #include <cfloat>
 #include <cmath>
 #include <vector>
 #include <algorithm>
 #include <list>
+
+#include "SGMVector.h"
+#include "SGMInterval.h"
+#include "SGMSegment.h"
+#include "SGMTransform.h"
+#include "SGMIntersector.h"
+
+#include "Intersectors.h"
+#include "EntityClasses.h"
+#include "FacetToBRep.h"
 
 namespace SGMInternal
 {
@@ -63,7 +66,7 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes)
     {
-    // Empty, coincident, one tangent point, or two points.
+    // IsEmpty, coincident, one tangent point, or two points.
 
     SGM::Point3D Center=pCylinder->m_Origin;
     SGM::UnitVector3D CylinderAxis=pCylinder->m_ZAxis;
@@ -158,7 +161,7 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
                              std::vector<SGM::Point3D>          &aPoints,
                              std::vector<SGM::IntersectionType> &aTypes)
     {
-    // Empty, coincident, or one point.
+    // IsEmpty, coincident, or one point.
 
     SGM::Point3D Pos0=Origin+Axis*Domain.m_dMin;
     SGM::Point3D Pos1=Origin+Axis*Domain.m_dMax;
@@ -669,7 +672,7 @@ size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
                               std::vector<SGM::Point3D>          &aPoints,
                               std::vector<SGM::IntersectionType> &aTypes)
     {
-    // Empty, one tangent point or two points.
+    // IsEmpty, one tangent point or two points.
 
     SGM::Point3D const &Center=pSphere->m_Center;
     SGM::Point3D Pos=Origin+((Center-Origin)%Axis)*Axis;
@@ -699,7 +702,7 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
                             std::vector<SGM::Point3D>          &aPoints,
                             std::vector<SGM::IntersectionType> &)//aTypes)
     {
-    //  Empty, one point tangent or not, two points.
+    //  IsEmpty, one point tangent or not, two points.
 
     // A point is on a cone with apex at the origin and axis the positive 
     // z-axis if and only if x^2+y^2=(cos(half angle)/sin(half angle))^2*z^2.
@@ -783,7 +786,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              std::vector<SGM::Point3D>          &aPoints,
                              std::vector<SGM::IntersectionType> &)//aTypes)
     {
-    // Empty, one tangent point, two points, two tangents points, two points and one tangent point, 
+    // IsEmpty, one tangent point, two points, two tangents points, two points and one tangent point,
     // three points one tangent, four points.
 
     // A point is on a torus centered at the origin, with normal (0,0,1), major radius s and 
@@ -839,7 +842,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              std::vector<SGM::Point3D>          &aPoints,
                              std::vector<SGM::IntersectionType> &aTypes)
     {
-    // Empty, one tangent point, two points, two tangents points, two points and one tangent point, 
+    // IsEmpty, one tangent point, two points, two tangents points, two points and one tangent point,
     // three points one tangent, four points.
 
     // Set up the transforms.

@@ -1,4 +1,4 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"

@@ -1,10 +1,11 @@
 #ifndef SGM_INTERNAL_ENTITY_CLASSES_H
 #define SGM_INTERNAL_ENTITY_CLASSES_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMChecker.h"
 #include "SGMMathematics.h"
+#include "SGMInterval.h"
 #include "SGMEnums.h"
 #include <vector>
 #include <set>

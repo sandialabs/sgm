@@ -1,7 +1,7 @@
 #ifndef SGM_FACET_TO_BREP_H
 #define SGM_FACET_TO_BREP_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include <vector>
 

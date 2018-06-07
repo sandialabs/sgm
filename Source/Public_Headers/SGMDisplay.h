@@ -1,7 +1,7 @@
 #ifndef SGM_DISPLAY_CLASSES_H
 #define SGM_DISPLAY_CLASSES_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
 

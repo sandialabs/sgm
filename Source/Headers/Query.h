@@ -1,7 +1,7 @@
 #ifndef QUERY_H
 #define QUERY_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 namespace SGMInternal
 {

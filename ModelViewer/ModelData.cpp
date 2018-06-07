@@ -1,6 +1,6 @@
 #include "ModelData.hpp"
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMDisplay.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"

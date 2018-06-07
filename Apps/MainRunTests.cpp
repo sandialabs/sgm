@@ -1,6 +1,6 @@
 
 #include "SGMChecker.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMPrimitives.h"
 
 int main(int /*argc*/, char ** /*argv[]*/)

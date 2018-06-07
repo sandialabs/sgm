@@ -2,7 +2,7 @@
 #define SGM_PRIMITIVES_H
 
 #include "SGMEntityClasses.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMResult.h"
 
 #include <set>

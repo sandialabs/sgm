@@ -1,7 +1,7 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMResult.h"
 
 #include <set>

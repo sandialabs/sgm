@@ -1,5 +1,5 @@
 #include "SGMInterrogate.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "Topology.h"
 #include "EntityClasses.h"

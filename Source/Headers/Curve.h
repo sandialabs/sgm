@@ -1,7 +1,7 @@
 #ifndef SGM_INTERNAL_CURVE_H
 #define SGM_INTERNAL_CURVE_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMChecker.h"
 #include "SGMMathematics.h"

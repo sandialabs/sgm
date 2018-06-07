@@ -1,3 +1,4 @@
+#include "SGMInterval.h"
 #include "EntityClasses.h"
 #include "Faceter.h"
 #include "Curve.h"
@@ -39,12 +40,12 @@ void edge::SetEnd(vertex *pEnd)
 
 SGM::Interval1D const &edge::GetDomain() const 
     {
-    if(m_Domain.Empty())
+    if(m_Domain.IsEmpty())
         {
         SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
         m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
         m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
-        if(m_Domain.Empty())
+        if(m_Domain.IsEmpty())
             {
             if(m_pCurve->GetClosed())
                 {
@@ -57,7 +58,7 @@ SGM::Interval1D const &edge::GetDomain() const
                     m_Domain.m_dMin=CurveDomain.m_dMin;
                     }
                 }
-            if(m_Domain.Empty())
+            if(m_Domain.IsEmpty())
                 {
                 std::swap(m_pStart,m_pEnd);
                 std::swap(m_Domain.m_dMin,m_Domain.m_dMax);
