@@ -9,6 +9,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace SGMInternal
 {
+
+bool EntityCompare::operator()(entity const *ent1,entity const *ent2)
+    {
+    return ent1->GetID()<ent2->GetID();
+    }
+
+bool EntityPointerCompare(entity *pEnt0,entity *pEnt1)
+    {
+    return pEnt0->GetID()<pEnt1->GetID();
+    }
+
 entity::entity(SGM::Result &rResult,SGM::EntityType nType):
     m_ID(rResult.GetThing()->GetNextID()),m_Type(nType) 
     {
@@ -44,15 +55,15 @@ void entity::SeverOwners() const
         }
     }
 
-void entity::FindAllChildern(std::set<entity *> &sChildern) const
+void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
     {
     switch(m_Type)
         {
         case SGM::BodyType:
             {
             body const *pBody=(body const *)this;
-            std::set<volume *> const &sVolumes=pBody->GetVolumes();
-            std::set<volume *>::iterator iter=sVolumes.begin();
+            std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
+            std::set<volume *,EntityCompare>::iterator iter=sVolumes.begin();
             while(iter!=sVolumes.end())
                 {
                 volume *pVolume=*iter;
@@ -65,8 +76,8 @@ void entity::FindAllChildern(std::set<entity *> &sChildern) const
         case SGM::VolumeType:
             {
             volume const *pVolume=(volume const *)this;
-            std::set<face *> const &sFaces=pVolume->GetFaces();
-            std::set<face *>::iterator iter1=sFaces.begin();
+            std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
+            std::set<face *,EntityCompare>::iterator iter1=sFaces.begin();
             while(iter1!=sFaces.end())
                 {
                 face *pFace=*iter1;
@@ -74,8 +85,8 @@ void entity::FindAllChildern(std::set<entity *> &sChildern) const
                 pFace->FindAllChildern(sChildern);
                 ++iter1;
                 }
-            std::set<edge *> const &sEdges=pVolume->GetEdges();
-            std::set<edge *>::iterator iter2=sEdges.begin();
+            std::set<edge *,EntityCompare> const &sEdges=pVolume->GetEdges();
+            std::set<edge *,EntityCompare>::iterator iter2=sEdges.begin();
             while(iter2!=sEdges.end())
                 {
                 edge *pEdge=*iter2;
@@ -89,8 +100,8 @@ void entity::FindAllChildern(std::set<entity *> &sChildern) const
             {
             face const *pFace=(face const *)this;
             sChildern.insert((entity *)(pFace->GetSurface()));
-            std::set<edge *> const &sEdges=pFace->GetEdges();
-            std::set<edge *>::iterator iter=sEdges.begin();
+            std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+            std::set<edge *,EntityCompare>::iterator iter=sEdges.begin();
             while(iter!=sEdges.end())
                 {
                 edge *pEdge=*iter;

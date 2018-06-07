@@ -82,9 +82,12 @@ namespace SGM
     // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
     // counter clockwise.  The following polygons are assumed to be inside the
-    // first one, disjoint, clockwise.
+    // first one, disjoint, clockwise.  The function returns false is aaPolygons
+    // or aPoints is empty with an error of ResultTypeInsufficientData.
+    // If the clockwise polygons are not contained inside a counter clockwise
+    // polygon then false is returned with an error of 
 
-    SGM_EXPORT void TriangulatePolygon(SGM::Result                             &rResult,
+    SGM_EXPORT bool TriangulatePolygon(SGM::Result                             &rResult,
                                        std::vector<SGM::Point2D>         const &aPoints,
                                        std::vector<std::vector<size_t> > const &aaPolygons,
                                        std::vector<size_t>                     &aTriangles,

@@ -22,10 +22,10 @@ namespace SGMInternal
 {
 void WriteVertices(FILE                     *pFile,
                    size_t                   &nLine,
-                   std::set<vertex *> const &sVertices,
+                   std::set<vertex *,EntityCompare> const &sVertices,
                    std::map<size_t,size_t>  &mVertexMap)
     {
-    std::set<vertex *>::const_iterator iter=sVertices.begin();
+    std::set<vertex *,EntityCompare>::const_iterator iter=sVertices.begin();
     while(iter!=sVertices.end())
         {
         vertex const *pVertex=*iter;
@@ -203,13 +203,13 @@ void WriteCurves(FILE                          *pFile,
 
 void WriteCoedges(FILE                                      *pFile,
                   size_t                                    &nLine,
-                  std::set<edge *>                    const &sEdges,
+                  std::set<edge *,EntityCompare>                    const &sEdges,
                   std::map<size_t,size_t>                   &mVertexMap,
                   std::map<size_t,size_t>                   &mCurveMap,
                   std::map<std::pair<size_t,size_t>,size_t> &mCoedgeMap,
                   std::map<size_t,size_t>                   &mEdgeMap)
     {
-    std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+    std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
     while(EdgeIter!=sEdges.end())
         {
         edge *pEdge=*EdgeIter;
@@ -235,12 +235,12 @@ void WriteCoedges(FILE                                      *pFile,
                 size_t nEnd=mVertexMap[pEnd->GetID()];
                 fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
                 }
-            std::set<face *> const &sFaces=pEdge->GetFaces();
-            std::set<face *>::const_iterator FaceIter=sFaces.begin();
+            std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+            std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
             while(FaceIter!=sFaces.end())
                 {
                 face const *pFace=*FaceIter;
-                SGM::EdgeSideType bFlipped=pFace->GetEdgeType(pEdge);
+                SGM::EdgeSideType bFlipped=pFace->GetSideType(pEdge);
                 mCoedgeMap[std::pair<size_t,size_t>(pEdge->GetID(),pFace->GetID())]=nLine;
                 fprintf(pFile,"#%ld=ORIENTED_EDGE('',*,*,#%ld,.%c.));\n",nLine++,nEdgeCurve,bFlipped==SGM::FaceOnRightType ? 'F' : 'T');
                 ++FaceIter;
@@ -509,12 +509,12 @@ void WriteSurfaces(FILE                            *pFile,
 void WriteFaces(SGM::Result                               &rResult,
                 FILE                                      *pFile,
                 size_t                                    &nLine,
-                std::set<face *>                    const &sFaces,
+                std::set<face *,EntityCompare>                    const &sFaces,
                 std::map<size_t,size_t>                   &mSurfaceMap,
                 std::map<std::pair<size_t,size_t>,size_t> &mCoedgeMap,
                 std::map<size_t,size_t>                   &mFaceMap)
     {
-    std::set<face *>::const_iterator iter=sFaces.begin();
+    std::set<face *,EntityCompare>::const_iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
         face const *pFace=*iter;
@@ -522,7 +522,7 @@ void WriteFaces(SGM::Result                               &rResult,
         size_t nSurface=mSurfaceMap[pFace->GetSurface()->GetID()];
         bool nFlipped=pFace->GetFlipped();
         std::vector<std::vector<edge *> > aaLoops;
-        std::vector<std::vector<SGM::EdgeSideType> >   aaFlipped;
+        std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
         size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaFlipped);
         size_t Index1,Index2;
         std::string sLoops;
@@ -579,19 +579,19 @@ void WriteVolumes(SGM::Result              &rResult,
                   size_t                   &nLine,
                   size_t                   nGeoRepContext,
                   size_t                   nProductDefShape,
-                  std::set<volume *> const &sVolumes,
+                  std::set<volume *,EntityCompare> const &sVolumes,
                   std::map<size_t,size_t>  &mFaceMap,
                   std::map<size_t,size_t>  &mEdgeMap)
     {
     std::string sVolumeList;
-    std::set<volume *>::const_iterator VolumeIter=sVolumes.begin();
+    std::set<volume *,EntityCompare>::const_iterator VolumeIter=sVolumes.begin();
     bool bFirstVolume=true;
     int nSides=1;
     bool bWireBody=false;
     while(VolumeIter!=sVolumes.end())
         {
         volume const *pVolume=*VolumeIter;
-        std::vector<std::set<face *> > aShells;
+        std::vector<std::set<face *,EntityCompare> > aShells;
         size_t nShells=pVolume->FindShells(rResult,aShells);
         if(nShells>1)
             {
@@ -600,8 +600,8 @@ void WriteVolumes(SGM::Result              &rResult,
         if(nShells==1)
             {
             std::string sFaceList;
-            std::set<face *> const &sFaces=aShells[0];
-            std::set<face *>::const_iterator FaceIter=sFaces.begin();
+            std::set<face *,EntityCompare> const &sFaces=aShells[0];
+            std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
             nSides=(*FaceIter)->GetSides();
             bool bFirst=true;
             while(FaceIter!=sFaces.end())
@@ -646,10 +646,10 @@ void WriteVolumes(SGM::Result              &rResult,
             sVolumeList+=Buf2;
             bFirstVolume=false;
             }
-        std::set<edge *> const &sEdges=pVolume->GetEdges();
+        std::set<edge *,EntityCompare> const &sEdges=pVolume->GetEdges();
         if(!sEdges.empty())
             {
-            std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+            std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
             std::string sEdgeList;
             bool bFirst=true;
             while(EdgeIter!=sEdges.end())
@@ -781,10 +781,10 @@ void SaveSTEP(SGM::Result                  &rResult,
 
     fprintf(pFile,"DATA;\n");
 
-    std::set<volume *> sVolumes;
-    std::set<face *>   sFaces;
-    std::set<edge *>   sEdges;
-    std::set<vertex *> sVertices;
+    std::set<volume *,EntityCompare> sVolumes;
+    std::set<face *,EntityCompare>   sFaces;
+    std::set<edge *,EntityCompare>   sEdges;
+    std::set<vertex *,EntityCompare> sVertices;
 
     FindVolumes(rResult,pEntity,sVolumes);
     FindFaces(rResult,pEntity,sFaces);
@@ -792,7 +792,7 @@ void SaveSTEP(SGM::Result                  &rResult,
     FindVertices(rResult,pEntity,sVertices);
 
     std::set<surface const *> sSurfaces;
-    std::set<face *>::iterator FaceIter=sFaces.begin();
+    std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
     while(FaceIter!=sFaces.end())
         {
         sSurfaces.insert((*FaceIter)->GetSurface());
@@ -800,7 +800,7 @@ void SaveSTEP(SGM::Result                  &rResult,
         }
 
     std::set<curve const *> sCurves;
-    std::set<edge *>::iterator EdgeIter=sEdges.begin();
+    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
     while(EdgeIter!=sEdges.end())
         {
         sCurves.insert((*EdgeIter)->GetCurve());

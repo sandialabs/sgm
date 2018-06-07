@@ -67,11 +67,11 @@ bool GraphEdge::operator<(GraphEdge const &GEdge) const
     }
 
 Graph::Graph(SGM::Result            &rResult,
-             std::set<edge *> const &sEdges)
+             std::set<edge *,EntityCompare> const &sEdges)
     {
     if(!sEdges.empty())
         {
-        std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+        std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
         thing *pThing=rResult.GetThing();
         size_t nMaxID=pThing->GetMaxID();
         while(EdgeIter!=sEdges.end())
@@ -98,25 +98,25 @@ Graph::Graph(SGM::Result            &rResult,
     }
 
 Graph::Graph(SGM::Result            &rResult,
-             std::set<face *> const &sFaces,
+             std::set<face *,EntityCompare> const &sFaces,
              bool                    bEdgeConnected)
     {
     if(bEdgeConnected)
         {
-        std::set<face *>::const_iterator FaceIter=sFaces.begin();
+        std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
         while(FaceIter!=sFaces.end())
             {
             face *pFace=*FaceIter;
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
-            std::set<edge *> const &sEdges=pFace->GetEdges();
-            std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+            std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+            std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
             while(EdgeIter!=sEdges.end())
                 {
                 edge *pEdge=*EdgeIter;
                 size_t nEdge=pEdge->GetID();
-                std::set<face *> const &sEdgeFaces=pEdge->GetFaces();
-                std::set<face *>::const_iterator EdgeFaceIter=sEdgeFaces.begin();
+                std::set<face *,EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
+                std::set<face *,EntityCompare>::const_iterator EdgeFaceIter=sEdgeFaces.begin();
                 while(EdgeFaceIter!=sEdgeFaces.end())
                     {
                     face *pEdgeFace=*EdgeFaceIter;
@@ -133,22 +133,22 @@ Graph::Graph(SGM::Result            &rResult,
         }
     else
         {
-        std::set<face *>::const_iterator FaceIter=sFaces.begin();
+        std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
         while(FaceIter!=sFaces.end())
             {
             face *pFace=*FaceIter;
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
-            std::set<vertex *> sVertices;
+            std::set<vertex *,EntityCompare> sVertices;
             FindVertices(rResult,pFace,sVertices);
-            std::set<vertex *>::const_iterator VertexIter=sVertices.begin();
+            std::set<vertex *,EntityCompare>::const_iterator VertexIter=sVertices.begin();
             while(VertexIter!=sVertices.end())
                 {
                 vertex *pVertex=*VertexIter;
                 size_t nVertex=pVertex->GetID();
-                std::set<face *> sVertexFaces;
+                std::set<face *,EntityCompare> sVertexFaces;
                 FindFaces(rResult,pVertex,sVertexFaces);
-                std::set<face *>::const_iterator VertexFaceIter=sVertexFaces.begin();
+                std::set<face *,EntityCompare>::const_iterator VertexFaceIter=sVertexFaces.begin();
                 while(VertexFaceIter!=sVertexFaces.end())
                     {
                     face *pVertexFace=*VertexFaceIter;

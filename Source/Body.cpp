@@ -1,4 +1,5 @@
 #include "EntityClasses.h"
+
 namespace SGMInternal
 {
 

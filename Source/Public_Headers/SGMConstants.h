@@ -26,12 +26,13 @@
 // should all be larger than this value.
 
 #define SGM_MIN_TOL 1E-6
+#define SGM_ZERO_SQUARED 1E-24
 
 // Used to determine the upper bound of acceptable error of a polynomial
 // approximation. The actual upper bound is this number times the length or
 // width of the geometry.
 
 #define SGM_FIT     1E-3
-
+#define SGM_FIT_SMALL 1E-4 // Used to make sure we are below SGM_FIT.
 
 #endif //SGM_CONSTANTS_H

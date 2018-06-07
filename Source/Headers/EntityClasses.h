@@ -23,6 +23,12 @@ class edge;
 class vertex;
 class surface;
 class curve;
+class entity;
+
+struct EntityCompare
+    {
+    bool operator()(entity const *,entity const *);
+    };
 
 class entity
     {
@@ -45,7 +51,7 @@ class entity
 
         void RemoveOwner(entity *pEntity) const {m_Owners.erase(pEntity);}
 
-        std::set<entity *> const &GetOwners() const {return m_Owners;}
+        std::set<entity *,EntityCompare> const &GetOwners() const {return m_Owners;}
 
         entity *Copy(SGM::Result &rResult) const;
 
@@ -54,14 +60,14 @@ class entity
 
         void SeverOwners() const;
 
-        void FindAllChildern(std::set<entity *> &sChildern) const;
+        void FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const;
 
     protected:
 
         size_t                  m_ID;
         SGM::EntityType         m_Type;
 
-        mutable std::set<entity *> m_Owners;
+        mutable std::set<entity *,EntityCompare> m_Owners;
         mutable SGM::Interval3D    m_Box;
 
         // Only to be called from the thing constructor.
@@ -93,21 +99,21 @@ class thing : public entity
 
         SGM::Interval3D const &GetBox() const;
         
-        size_t GetBodies(std::set<body *> &sBodies,bool bTopLevel) const;
+        size_t GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const;
 
-        size_t GetVolumes(std::set<volume *> &sVolumes,bool bTopLevel) const;
+        size_t GetVolumes(std::set<volume *,EntityCompare> &sVolumes,bool bTopLevel) const;
 
-        size_t GetFaces(std::set<face *> &sFaces,bool bTopLevel) const;
+        size_t GetFaces(std::set<face *,EntityCompare> &sFaces,bool bTopLevel) const;
 
-        size_t GetEdges(std::set<edge *> &sEdges,bool bTopLevel) const;
+        size_t GetEdges(std::set<edge *,EntityCompare> &sEdges,bool bTopLevel) const;
 
-        size_t GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const;
+        size_t GetVertices(std::set<vertex *,EntityCompare> &sVertices,bool bTopLevel) const;
 
-        size_t GetComplexes(std::set<complex *> &sComplexes,bool bTopLevel) const;
+        size_t GetComplexes(std::set<complex *,EntityCompare> &sComplexes,bool bTopLevel) const;
 
-        size_t GetSurfaces(std::set<surface *> &sSurfaces,bool bTopLevel) const;
+        size_t GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const;
 
-        size_t GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const;
+        size_t GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const;
         
         // Find methods
         
@@ -146,7 +152,7 @@ class body : public topology
 
         SGM::Interval3D const &GetBox() const;
         
-        std::set<volume *> const &GetVolumes() const {return m_sVolumes;}
+        std::set<volume *,EntityCompare> const &GetVolumes() const {return m_sVolumes;}
         
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -156,7 +162,7 @@ class body : public topology
 
     private:
 
-        std::set<volume *>      m_sVolumes;
+        std::set<volume *,EntityCompare>      m_sVolumes;
         mutable SGM::Interval3D m_Box;
     };
 
@@ -225,9 +231,9 @@ class volume : public topology
         
         body *GetBody() const;
 
-        std::set<face *> const &GetFaces() const {return m_sFaces;}
+        std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
 
-        std::set<edge *> const &GetEdges() const {return m_sEdges;}
+        std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Interval3D const &GetBox() const;
 
@@ -240,16 +246,16 @@ class volume : public topology
                    std::vector<std::string> &aCheckStrings) const;
 
         size_t FindShells(SGM::Result                    &rResult,
-                          std::vector<std::set<face *> > &aShells) const;
+                          std::vector<std::set<face *,EntityCompare> > &aShells) const;
 
         double FindVolume() const;
 
     private:
     
-        std::set<face *>         m_sFaces;
-        std::set<edge *>         m_sEdges;
-        body                    *m_pBody;
-        mutable SGM::Interval3D  m_Box;
+        std::set<face *,EntityCompare>  m_sFaces;
+        std::set<edge *,EntityCompare>  m_sEdges;
+        body                           *m_pBody;
+        mutable SGM::Interval3D         m_Box;
     };
 
 class face : public topology
@@ -272,7 +278,7 @@ class face : public topology
 
         // Get methods
 
-        std::set<edge *> const &GetEdges() const {return m_sEdges;}
+        std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         volume *GetVolume() const; 
 
@@ -292,7 +298,13 @@ class face : public topology
         // start to end, while standing up in the direction of the face
         // normal.
 
-        SGM::EdgeSideType GetEdgeType(edge const *pEdge) const;
+        SGM::EdgeSideType GetSideType(edge const *pEdge) const;
+
+        SGM::EdgeSeamType GetSeamType(edge const *pEdge) const;
+
+        SGM::Point2D EvaluateParamSpace(edge         const *pEdge,
+                                        SGM::EdgeSideType   nType,
+                                        SGM::Point3D const &Pos) const;
 
         // Return true if the normal of the surface points into the body.
 
@@ -306,9 +318,9 @@ class face : public topology
         
         // Find methods
 
-        size_t FindLoops(SGM::Result                                  &rResult,
-                         std::vector<std::vector<edge *> >            &aaLoops,
-                         std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
+        size_t FindLoops(SGM::Result                                     &rResult,
+                         std::vector<std::vector<edge *> > &aaLoops,
+                         std::vector<std::vector<SGM::EdgeSideType> >    &aaFlipped) const;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -323,20 +335,21 @@ class face : public topology
         double FindArea(SGM::Result &rResult) const;
                         
     private:
-    
-        std::set<edge *>                    m_sEdges;
-        std::map<edge *,SGM::EdgeSideType>  m_mFaceType;
+
+        std::set<edge *,EntityCompare>                    m_sEdges;
+        std::map<edge *,SGM::EdgeSideType>  m_mSideType;
         volume                             *m_pVolume;
         surface                            *m_pSurface;
         bool                                m_bFlipped;
         int                                 m_nSides;
 
-        mutable std::vector<SGM::Point3D>      m_aPoints3D;
-        mutable std::vector<SGM::Point2D>      m_aPoints2D;
-        mutable std::vector<entity *>          m_aEntities;
-        mutable std::vector<size_t>            m_aTriangles;
-        mutable std::vector<SGM::UnitVector3D> m_aNormals;
-        mutable SGM::Interval3D                m_Box;
+        mutable std::vector<SGM::Point3D>          m_aPoints3D;
+        mutable std::vector<SGM::Point2D>          m_aPoints2D;
+        mutable std::vector<entity *>              m_aEntities;
+        mutable std::vector<size_t>                m_aTriangles;
+        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
+        mutable SGM::Interval3D                    m_Box;
+        mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
 
 class edge : public topology
@@ -369,7 +382,7 @@ class edge : public topology
 
         SGM::Interval1D const &GetDomain() const;
 
-        std::set<face *> const &GetFaces() const {return m_sFaces;}
+        std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
 
         volume *GetVolume() const {return m_pVolume;}
 
@@ -389,7 +402,7 @@ class edge : public topology
 
         SGM::Point3D const &FindEndPoint() const;
 
-        SGM::Point3D FindMidPoint(double dFraction) const;
+        SGM::Point3D FindMidPoint(double dFraction=0.5) const;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -399,9 +412,9 @@ class edge : public topology
 
     private:
 
-        mutable vertex   *m_pStart;
-        mutable vertex   *m_pEnd;
-        std::set<face *>  m_sFaces;
+        vertex           *m_pStart;
+        vertex           *m_pEnd;
+        std::set<face *,EntityCompare>  m_sFaces;
         volume           *m_pVolume; // Should be nullptr if this belongs to a face.
         curve            *m_pCurve;
 
@@ -425,7 +438,7 @@ class vertex : public topology
 
         void RemoveEdge(edge *pEdge);
 
-        std::set<edge *> const &GetEdges() const {return m_sEdges;}
+        std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
         
@@ -438,7 +451,7 @@ class vertex : public topology
     private:
 
         SGM::Point3D     m_Pos;
-        std::set<edge *> m_sEdges;
+        std::set<edge *,EntityCompare> m_sEdges;
     };
 }
 

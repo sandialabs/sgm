@@ -157,7 +157,7 @@ entity *thing::FindEntity(size_t ID) const
     return pAnswer;
     }
 
-size_t thing::GetBodies(std::set<body *> &sBodies,bool bTopLevel) const
+size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -183,7 +183,7 @@ size_t thing::GetBodies(std::set<body *> &sBodies,bool bTopLevel) const
     return sBodies.size();
     }
 
-size_t thing::GetVolumes(std::set<volume *> &sVolumes,bool bTopLevel) const
+size_t thing::GetVolumes(std::set<volume *,EntityCompare> &sVolumes,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -209,7 +209,7 @@ size_t thing::GetVolumes(std::set<volume *> &sVolumes,bool bTopLevel) const
     return sVolumes.size();
     }
 
-size_t thing::GetFaces(std::set<face *> &sFaces,bool bTopLevel) const
+size_t thing::GetFaces(std::set<face *,EntityCompare> &sFaces,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -235,7 +235,7 @@ size_t thing::GetFaces(std::set<face *> &sFaces,bool bTopLevel) const
     return sFaces.size();
     }
 
-size_t thing::GetEdges(std::set<edge *> &sEdges,bool bTopLevel) const
+size_t thing::GetEdges(std::set<edge *,EntityCompare> &sEdges,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -261,7 +261,7 @@ size_t thing::GetEdges(std::set<edge *> &sEdges,bool bTopLevel) const
     return sEdges.size();
     }
 
-size_t thing::GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const
+size_t thing::GetVertices(std::set<vertex *,EntityCompare> &sVertices,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -287,7 +287,7 @@ size_t thing::GetVertices(std::set<vertex *> &sVertices,bool bTopLevel) const
     return sVertices.size();
     }
 
-size_t thing::GetSurfaces(std::set<surface *> &sSurfaces,bool bTopLevel) const
+size_t thing::GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -313,7 +313,7 @@ size_t thing::GetSurfaces(std::set<surface *> &sSurfaces,bool bTopLevel) const
     return sSurfaces.size();
     }
 
-size_t thing::GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const
+size_t thing::GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())
@@ -339,7 +339,7 @@ size_t thing::GetCurves(std::set<curve *> &sCurves,bool bTopLevel) const
     return sCurves.size();
     }
 
-size_t thing::GetComplexes(std::set<complex *> &sComplexes,bool bTopLevel) const
+size_t thing::GetComplexes(std::set<complex *,EntityCompare> &sComplexes,bool bTopLevel) const
     {
     std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
     while(iter!=m_mAllEntities.end())

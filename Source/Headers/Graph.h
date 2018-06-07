@@ -4,6 +4,8 @@
 #include "SGMVector.h"
 #include "SGMResult.h"
 
+#include "EntityClasses.h"
+
 #include <set>
 #include <map>
 #include <vector>
@@ -38,10 +40,10 @@ class Graph
         // be added with potentially invalid IDs if the closed edge(s) do not have vertices.
 
         Graph(SGM::Result            &rResult,
-              std::set<edge *> const &sEdges);
+              std::set<edge *,EntityCompare> const &sEdges);
 
         Graph(SGM::Result            &rResult,
-              std::set<face *> const &sFaces,
+              std::set<face *,EntityCompare> const &sFaces,
               bool                    bEdgeConnected);
 
         // Get methods

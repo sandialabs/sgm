@@ -232,7 +232,7 @@ body *CreateBlock(SGM::Result        &rResult,
     volume *pVolume=new volume(rResult);
     pBody->AddVolume(pVolume);
 
-    if(std::abs(Z0-Z1)<1E-6)
+    if(std::abs(Z0-Z1)<SGM_MIN_TOL)
         {
         SGM::Point3D Pos0(X0,Y0,Z0);
         SGM::Point3D Pos1(X1,Y0,Z0);
@@ -698,10 +698,10 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     return new NUBcurve(rResult,aControlPoints,aKnots);
     }
 
-body *CreateSheetBody(SGM::Result                    &rResult,
-                      surface                        *pSurface,
-                      std::vector<edge *>            &aEdges,
-                      std::vector<SGM::EdgeSideType> &aTypes)
+body *CreateSheetBody(SGM::Result                       &rResult,
+                      surface                           *pSurface,
+                      std::vector<edge *> &aEdges,
+                      std::vector<SGM::EdgeSideType>    &aTypes)
     {
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);

@@ -51,9 +51,9 @@ void SaveSTL(SGM::Result                  &rResult,
 
     // Write out the complexes.
 
-    std::set<complex *> sComplexes;
+    std::set<complex *,EntityCompare> sComplexes;
     FindComplexes(rResult,pEntity,sComplexes);
-    std::set<complex *>::iterator ComplexIter=sComplexes.begin();
+    std::set<complex *,EntityCompare>::iterator ComplexIter=sComplexes.begin();
     while(ComplexIter!=sComplexes.end())
         {
         complex *pComplex=*ComplexIter;
@@ -85,9 +85,9 @@ void SaveSTL(SGM::Result                  &rResult,
 
     // Write out the faces.
 
-    std::set<face *> sFaces;
+    std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pEntity,sFaces);
-    std::set<face *>::iterator FaceIter=sFaces.begin();
+    std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
     while(FaceIter!=sFaces.end())
         {
         if(Options.m_b2D==false)

@@ -23,7 +23,7 @@ class surface : public entity
 
         void RemoveFace(face *pFace);
 
-        std::set<face *> const &GetFaces() const {return m_sFaces;}
+        std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
 
         SGM::EntityType GetSurfaceType() const {return m_SurfaceType;}
 
@@ -88,15 +88,15 @@ class surface : public entity
 
     protected:
 
-        std::set<face *> m_sFaces;
-        SGM::EntityType  m_SurfaceType;
-        SGM::Interval2D  m_Domain;
-        bool             m_bClosedU;
-        bool             m_bClosedV;
-        bool             m_bSingularLowU;
-        bool             m_bSingularHighU;
-        bool             m_bSingularLowV;
-        bool             m_bSingularHighV;
+        std::set<face *,EntityCompare> m_sFaces;
+        SGM::EntityType                m_SurfaceType;
+        SGM::Interval2D                m_Domain;
+        bool                           m_bClosedU;
+        bool                           m_bClosedV;
+        bool                           m_bSingularLowU;
+        bool                           m_bSingularHighU;
+        bool                           m_bSingularLowV;
+        bool                           m_bSingularHighV;
     };
 
 class plane : public surface

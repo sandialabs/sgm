@@ -705,7 +705,7 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
         a20, a21, a22
         };
     double dDet=SGM::Determinate3D(aMatrix);
-    return 1E-12<dDet;
+    return SGM_ZERO<dDet;
     }
 
 bool SGM::FindCircle(SGM::Point3D const &Pos0,
@@ -809,7 +809,7 @@ bool SGM::CramersRule(double a1,double b1,double c1,
     double D=a1*b2-b1*a2;
     double Dx=c1*b2-b1*c2;
     double Dy=a1*c2-c1*a2;
-    if(fabs(D)<1E-12)
+    if(fabs(D)<SGM_ZERO)
         {
         return false;
         }
@@ -951,7 +951,7 @@ void TriangulatePolygonSub(SGM::Result                             &,//rResult,
     SGMInternal::DelaunayFlips(aPoints,aTriangles,aAdjacencies);
     }
 
-void SGM::TriangulatePolygon(SGM::Result                             &rResult,
+bool SGM::TriangulatePolygon(SGM::Result                             &rResult,
                              std::vector<SGM::Point2D>         const &aPoints,
                              std::vector<std::vector<size_t> > const &aaPolygons,
                              std::vector<size_t>                     &aTriangles,
@@ -960,11 +960,11 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
     if(aaPolygons.empty() || aPoints.empty())
         {
         rResult.SetResult(ResultTypeInsufficientData);
-        return;
+        return false;
         }
 
-    // Split into nexted groups.  Note that counter clockwise 
-    // polygons are outside and clockwise polygons are inside.
+    // Find all the outside polygons that have positive area.
+    // and all the inside polygons that have negative area.
 
     std::vector<size_t> aOutside,aInside;
     size_t nPolygons=aaPolygons.size();
@@ -990,13 +990,54 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
             }
         }
 
+    // Find the nested groups by adding all the inside polygons to outside polygons.
+
+    size_t nInside=aInside.size();
     size_t nOutside=aOutside.size();
+    std::vector<std::vector<std::vector<size_t> > > aaaPolygonGroups;
+    aaaPolygonGroups.reserve(nOutside);
+    std::vector<std::vector<SGM::Point2D> > aaOutsidePolygons;
+    aaOutsidePolygons.reserve(nOutside);
     for(Index1=0;Index1<nOutside;++Index1)
         {
-        std::vector<std::vector<size_t> > aaSubPolygons;
-        aaSubPolygons.push_back(aaPolygons[aOutside[Index1]]);
+        std::vector<std::vector<size_t> > aaPolygonGroup;
+        std::vector<size_t> const &aPolygon=aaPolygons[aOutside[Index1]];
+        aaPolygonGroup.push_back(aPolygon);
+        aaaPolygonGroups.push_back(aaPolygonGroup);
+        size_t nPolygon=aPolygon.size();
+        std::vector<SGM::Point2D> aPolygonPoints;
+        aPolygonPoints.reserve(nPolygon);
+        for(Index2=0;Index2<nPolygon;++Index2)
+            {
+            aPolygonPoints.push_back(aPoints[aPolygon[Index2]]);
+            }
+        aaOutsidePolygons.push_back(aPolygonPoints);
+        }
+    for(Index1=0;Index1<nInside;++Index1)
+        {
+        bool bFound=false;
+        SGM::Point2D const &uv=aPoints[aaPolygons[aInside[Index1]][0]];
+        for(Index2=0;Index2<nOutside;++Index2)
+            {
+            if(SGM::PointInPolygon(uv,aaOutsidePolygons[Index2]))
+                {
+                bFound=true;
+                aaaPolygonGroups[Index1].push_back(aaPolygons[aInside[Index1]]);
+                }
+            }
+        if(bFound==false)
+            {
+            rResult.SetResult(ResultTypeInconsistentData);
+            return false;
+            }
+        }
+
+    // Triangulate each of the outside groups.
+
+    for(Index1=0;Index1<nOutside;++Index1)
+        {
         std::vector<size_t> aSubTriangles,aSubAdjacencies;
-        TriangulatePolygonSub(rResult,aPoints,aaSubPolygons,aSubTriangles,aSubAdjacencies);
+        TriangulatePolygonSub(rResult,aPoints,aaaPolygonGroups[Index1],aSubTriangles,aSubAdjacencies);
         size_t nSubTriangles=aSubTriangles.size();
         for(Index2=0;Index2<nSubTriangles;++Index2)
             {
@@ -1005,6 +1046,7 @@ void SGM::TriangulatePolygon(SGM::Result                             &rResult,
         }
 
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+    return true;
     }
 
 bool SGM::LinearSolve(std::vector<std::vector<double> > &aaMatrix)

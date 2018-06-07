@@ -71,6 +71,22 @@ void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<size_t>             &aTriangles,
                    std::vector<size_t>             &aAdjacencies);
 
+
+//  Devides all triangles into four triangles in the following way;
+//  Points on edges are moved to the edges.
+//       
+//      / \
+//     /___\
+//    / \  /\
+//   /___\/__\
+
+void SubdivideFacets(SGM::Result               &rResult,
+                     face                const *pFace,
+                     std::vector<SGM::Point3D> &aPoints3D,
+                     std::vector<SGM::Point2D> &aPoints2D,
+                     std::vector<size_t>       &aTriangles,
+                     std::vector<entity *>     &aEntities);
+
 }
 
 #endif // FACETER_H

@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <algorithm>
 
-
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #else
@@ -114,7 +113,7 @@ bool body::Check(SGM::Result              &,//rResult,
 
     // Check to see if all its volumes point to it.
 
-    std::set<volume *>::const_iterator VolumeIter=m_sVolumes.begin();
+    std::set<volume *,EntityCompare>::const_iterator VolumeIter=m_sVolumes.begin();
     while(VolumeIter!=m_sVolumes.end())
         {
         volume *pVolume=*VolumeIter;
@@ -148,7 +147,7 @@ bool volume::Check(SGM::Result              &,//rResult,
 
     // Check to see if all its faces point to it.
 
-    std::set<face *>::const_iterator FaceIter=m_sFaces.begin();
+    std::set<face *,EntityCompare>::const_iterator FaceIter=m_sFaces.begin();
     while(FaceIter!=m_sFaces.end())
         {
         face *pFace=*FaceIter;
@@ -173,11 +172,11 @@ bool face::Check(SGM::Result              &rResult,
 
     // Check to see if all its edges point to it.
 
-    std::set<edge *>::const_iterator EdgeIter=m_sEdges.begin();
+    std::set<edge *,EntityCompare>::const_iterator EdgeIter=m_sEdges.begin();
     while(EdgeIter!=m_sEdges.end())
         {
         edge *pEdge=*EdgeIter;
-        std::set<face *> const &sFaces=pEdge->GetFaces();
+        std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
         if(sFaces.find((face *)this)==sFaces.end())
             {
             bAnswer=false;
@@ -202,12 +201,25 @@ bool face::Check(SGM::Result              &rResult,
         std::vector<vertex *> aStarts,aEnds;
         aStarts.reserve(nEdges);
         aEnds.reserve(nEdges);
-        for(Index2=0;Index2<nEdges;++Index2)
+        if(m_bFlipped)
             {
-            edge *pEdge=aLoop[Index2];
-            aStarts.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
-            aEnds.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
+            for(Index2=0;Index2<nEdges;++Index2)
+                {
+                edge *pEdge=aLoop[Index2];
+                aStarts.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
+                aEnds.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
+                }
             }
+        else
+            {
+            for(Index2=0;Index2<nEdges;++Index2)
+                {
+                edge *pEdge=aLoop[Index2];
+                aStarts.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
+                aEnds.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
+                }
+            }
+        
         for(Index2=0;Index2<nEdges;++Index2)
             {
             edge *pEdge=aLoop[Index2];
@@ -293,8 +305,8 @@ bool edge::Check(SGM::Result              &,//rResult,
 
     if(m_pStart)
         {
-        std::set<edge *> const &sEdges=m_pStart->GetEdges();
-        std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+        std::set<edge *,EntityCompare> const &sEdges=m_pStart->GetEdges();
+        std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
         bool bFound=false;
         while(EdgeIter!=sEdges.end())
             {
@@ -322,8 +334,8 @@ bool edge::Check(SGM::Result              &,//rResult,
         }
     if(m_pEnd)
         {
-        std::set<edge *> const &sEdges=m_pEnd->GetEdges();
-        std::set<edge *>::const_iterator EdgeIter=sEdges.begin();
+        std::set<edge *,EntityCompare> const &sEdges=m_pEnd->GetEdges();
+        std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
         bool bFound=false;
         while(EdgeIter!=sEdges.end())
             {
@@ -353,12 +365,12 @@ bool edge::Check(SGM::Result              &,//rResult,
 
     if(m_sFaces.size()==2)
         {
-        std::set<face *>::const_iterator FaceIter=m_sFaces.begin();
+        std::set<face *,EntityCompare>::const_iterator FaceIter=m_sFaces.begin();
         face *pFace1=*FaceIter;
         ++FaceIter;
         face *pFace2=*FaceIter;
-        SGM::EdgeSideType bFlipped1=pFace1->GetEdgeType(this);
-        SGM::EdgeSideType bFlipped2=pFace2->GetEdgeType(this);
+        SGM::EdgeSideType bFlipped1=pFace1->GetSideType(this);
+        SGM::EdgeSideType bFlipped2=pFace2->GetSideType(this);
         if(bFlipped1==bFlipped2)
             {
             bAnswer=false;
