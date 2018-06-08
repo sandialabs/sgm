@@ -390,7 +390,7 @@ bool ParseLine(std::string const &sFileLine,
     }
 
 bool RunFileLine(SGM::Result                                &rResult,
-                 std::map<std::string,SGMFunction>    const &mFunctionMap,
+                 std::map<std::string,SGMFunction>          &mFunctionMap,
                  std::string                          const &sTestDirectory,
                  std::map<std::string,std::vector<size_t> > &mVariableMap,
                  std::string                          const &sFileLine,
@@ -399,27 +399,27 @@ bool RunFileLine(SGM::Result                                &rResult,
     TestCommand LineData;
     if(ParseLine(sFileLine,LineData))
         {
-        auto iter=mFunctionMap.find(LineData.m_sCommand);
+        std::map<std::string,SGMFunction>::const_iterator iter=mFunctionMap.find(LineData.m_sCommand);
         if(iter==mFunctionMap.end())
             {
             rResult.SetResult(SGM::ResultType::ResultTypeUnknownCommand);
             rResult.SetMessage(LineData.m_sCommand);
-            return false;
             }
         if((*(iter->second))(rResult,mVariableMap,sTestDirectory,LineData)==false)
             {
             return false;
             }
         }
+
     return true;
     }
 
-bool RunTestFile(SGM::Result                             &rResult,
-                 std::map<std::string,SGMFunction> const &mFunctionMap,
-                 std::string                       const &sTestDirectory,
-                 std::string                       const &sFileName,
-                 FILE                                    *pTestFile,
-                 FILE                                    *pOutputFile)
+bool RunTestFile(SGM::Result                       &rResult,
+                 std::map<std::string,SGMFunction> &mFunctionMap,
+                 std::string                 const &sTestDirectory,
+                 std::string                 const &sFileName,
+                 FILE                              *pTestFile,
+                 FILE                              *pOutputFile)
     {
     std::map<std::string,std::vector<size_t> > mVariableMap;
     bool bFound=true;
@@ -430,7 +430,10 @@ bool RunTestFile(SGM::Result                             &rResult,
         bFound=SGMInternal::ReadFileLine(pTestFile,sFileLine);
         if(bFound)
             {
-            bPassed = RunFileLine(rResult, mFunctionMap, sTestDirectory, mVariableMap, sFileLine, pOutputFile);
+            if(RunFileLine(rResult,mFunctionMap,sTestDirectory,mVariableMap,sFileLine,pOutputFile)==false)
+                {
+                bPassed=false;
+                }
             }
         }
     if(pOutputFile)
@@ -2609,7 +2612,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis(pCurveStart - StartCenter);
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
@@ -2690,7 +2693,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis(pCurveStart - StartCenter);
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
@@ -2787,7 +2790,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis(pCurveStart - StartCenter);
+        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
