@@ -756,7 +756,7 @@ body *CreateRevolve(SGM::Result             &rResult,
 
     SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
     SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-    SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+    SGM::UnitVector3D XAxis(pCurveStart - StartCenter);
     double dRadiusStart = pCurveStart.Distance(StartCenter);
     double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 

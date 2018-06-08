@@ -13,8 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #define SGM_INTERVAL_TOLERANCE 1E-12
-#define SGM_INTERVAL_POS_MAX std::numeric_limits<double>::max()
-#define SGM_INTERVAL_NEG_MIN -std::numeric_limits<double>::max()
+#define SGM_INTERVAL_POS_MAX (std::numeric_limits<double>::max())
+#define SGM_INTERVAL_NEG_MIN (-std::numeric_limits<double>::max())
 
 namespace SGM {
 
@@ -123,7 +123,7 @@ namespace SGM {
 
         Interval2D() = default;
 
-        Interval2D(Point2D const &Pos0, Point2D const &Pos1);
+        Interval2D(Point2D const &Min, Point2D const &Max);
 
         Interval2D(Interval1D const &u_domain, Interval1D const &v_domain);
 
@@ -202,8 +202,7 @@ namespace SGM {
 
         // Default constructor and IsEmpty() are analogous to Interval1D.
 
-        Interval3D()
-        {}
+        Interval3D() = default;
 
         Interval3D(const Interval3D &mE) = default;
 
