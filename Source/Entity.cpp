@@ -10,11 +10,6 @@
 namespace SGMInternal
 {
 
-bool EntityCompare::operator()(entity const *ent1,entity const *ent2)
-    {
-    return ent1->GetID()<ent2->GetID();
-    }
-
 bool EntityPointerCompare(entity *pEnt0,entity *pEnt1)
     {
     return pEnt0->GetID()<pEnt1->GetID();

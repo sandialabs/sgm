@@ -25,10 +25,9 @@ class surface;
 class curve;
 class entity;
 
-struct EntityCompare
-    {
-    bool operator()(entity const *,entity const *);
-    };
+struct EntityCompare {
+    bool operator()(entity* const& ent1, entity* const& ent2) const;
+};
 
 class entity
     {
@@ -74,6 +73,11 @@ class entity
 
         entity();
     };
+
+inline bool EntityCompare::operator()(entity* const& ent1, entity* const& ent2) const
+{
+    return ent1->GetID() < ent2->GetID();
+}
 
 class thing : public entity
     {
