@@ -172,7 +172,7 @@ namespace SGM {
 
     inline bool Interval2D::OnBoundary(Point2D const &Pos, double dTol) const
     {
-        return InInterval(Pos, dTol) && (m_UDomain.OnBoundary(Pos.m_u, dTol) || m_VDomain.OnBoundary(Pos.m_u, dTol));
+        return InInterval(Pos, dTol) && (m_UDomain.OnBoundary(Pos.m_u, dTol) || m_VDomain.OnBoundary(Pos.m_v, dTol));
     }
 
     inline bool Interval2D::OnCorner(Point2D const &Pos,double dTol) const
