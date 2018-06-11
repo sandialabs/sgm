@@ -162,6 +162,10 @@ bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
              std::vector<bool>         const &aCutOff,
              size_t                           nEar)
     {
+    if(aCutOff[nEar])
+        {
+        return false;
+        }
     size_t nPolygon=aPolygon.size();
     size_t nEarA=aPolygon[GetPrevious(nEar,aCutOff)];
     size_t nEarB=aPolygon[nEar];
@@ -744,7 +748,7 @@ bool SGM::InCircumcircle(SGM::Point2D const &A,
         a20, a21, a22
         };
     double dDet=SGM::Determinate3D(aMatrix);
-    return SGM_ZERO<dDet;
+    return SGM_MIN_TOL<dDet;
     }
 
 bool SGM::FindCircle(SGM::Point3D const &Pos0,
@@ -839,22 +843,6 @@ bool RelativelyPrime(size_t nA,
                      size_t nB)
     {
     return GreatestCommonDivisor(nA,nB)==1;
-    }
-
-bool SGM::CramersRule(double a1,double b1,double c1,
-                      double a2,double b2,double c2,
-                      double &x,double &y)
-    {
-    double D=a1*b2-b1*a2;
-    double Dx=c1*b2-b1*c2;
-    double Dy=a1*c2-c1*a2;
-    if(fabs(D)<SGM_ZERO)
-        {
-        return false;
-        }
-    x=Dx/D;
-    y=Dy/D;
-    return true;
     }
 
 void TriangulatePolygonSub(SGM::Result                             &,//rResult,
@@ -1061,7 +1049,7 @@ bool SGM::TriangulatePolygon(SGM::Result                             &rResult,
             if(SGM::PointInPolygon(uv,aaOutsidePolygons[Index2]))
                 {
                 bFound=true;
-                aaaPolygonGroups[Index1].push_back(aaPolygons[aInside[Index1]]);
+                aaaPolygonGroups[Index2].push_back(aaPolygons[aInside[Index1]]);
                 }
             }
         if(bFound==false)

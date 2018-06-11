@@ -219,6 +219,26 @@ void surface::Transform(SGM::Transform3D const &Trans)
 
             break;
             }
+        
+        case SGM::ExtrudeType:
+            {
+            extrude *pExtrude=(extrude *)this;
+            SGM::UnitVector3D &vAxis=pExtrude->m_vAxis;
+            vAxis=Trans*vAxis;
+            curve *pCurve=(curve *)pExtrude->m_pCurve;
+
+            if(pCurve->GetEdges().empty() && pCurve->GetOwners().size()==1)
+                {
+                pCurve->Transform(Trans);
+                }
+            else
+                {
+                // Make a copy and tranform the copy.
+                throw;
+                }
+
+            break;
+            }
         default:
             {
             throw;
@@ -332,7 +352,8 @@ curve *surface::UParamLine(SGM::Result &rResult,
                             SGM::Vector3D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
                         }
                     }
-                return new NUBcurve(rResult,aControlPoints,aUKnots);
+                curve *pCurve=new NUBcurve(rResult,aControlPoints,pNUBSurface->GetVKnots());
+                return pCurve;
                 }
             }
         case SGM::NURBSurfaceType:
@@ -377,7 +398,8 @@ curve *surface::UParamLine(SGM::Result &rResult,
                             SGM::Vector4D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
                         }
                     }
-                return new NURBcurve(rResult,aControlPoints,aUKnots);
+                curve *pParamCurve=new NURBcurve(rResult,aControlPoints,pNURBSurface->GetVKnots());
+                return pParamCurve;
                 }
             break;
             }
@@ -456,8 +478,8 @@ curve *surface::VParamLine(SGM::Result &rResult,
                 {
                 std::vector<double> const &aVKnots=pNUBSurface->GetVKnots();
                 std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUBSurface->GetControlPoints();
-                size_t nVDegree=pNUBSurface->GetVDegree();
-                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,dV,aVKnots);
+                size_t nUDegree=pNUBSurface->GetUDegree();
+                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nUDegree,dV,aVKnots);
 
                 double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
                 double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
@@ -466,20 +488,20 @@ curve *surface::VParamLine(SGM::Result &rResult,
                     {
                     aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
                     }
-                FindBasisFunctions(nSpanIndex,dV,nVDegree,0,&aVKnots[0],aaBasisFunctions);
+                FindBasisFunctions(nSpanIndex,dV,nUDegree,0,&aVKnots[0],aaBasisFunctions);
 
                 std::vector<SGM::Point3D> aControlPoints;
                 size_t nControlPoints=aaControlPoints.size();
                 aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
                 for(Index1=0;Index1<nControlPoints;++Index1)
                     {
-                    for(Index2=0;Index2<=nVDegree;++Index2)
+                    for(Index2=0;Index2<=nUDegree;++Index2)
                         {
                         aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
-                            SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nVDegree+Index2]);
+                            SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nUDegree+Index2]);
                         }
                     }
-                return new NUBcurve(rResult,aControlPoints,aVKnots);
+                return new NUBcurve(rResult,aControlPoints,pNUBSurface->GetUKnots());
                 }
             break;
             }
@@ -525,7 +547,7 @@ curve *surface::VParamLine(SGM::Result &rResult,
                             SGM::Vector4D(aaControlPoints[Index1][nSpanIndex-nVDegree+Index2]);
                         }
                     }
-                return new NURBcurve(rResult,aControlPoints,aVKnots);
+                return new NURBcurve(rResult,aControlPoints,pNURBSurface->GetUKnots());
                 }
             break;
             }
@@ -968,6 +990,8 @@ void surface::Evaluate(SGM::Point2D const &uv,
             }
         case SGM::NURBSurfaceType:
             {
+            // From "The NURBs Book" Algorithm A3.6.
+
             NURBsurface const *pNURB=(NURBsurface const *)this;
             std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURB->m_aaControlPoints;
             
@@ -1014,13 +1038,13 @@ void surface::Evaluate(SGM::Point2D const &uv,
                     temp[Index2]=SGM::Point4D(0.0,0.0,0.0,0.0);
                     for(Index3=0;Index3<=nUDegree;++Index3)
                         {
-                        double dFactor=aaUBasisFunctions[Index1][Index3];
                         SGM::Point4D const &ControlPos=aaControlPoints[nUSpanIndex-nUDegree+Index3]
                                                                       [nVSpanIndex-nVDegree+Index2];
-                        temp[Index2].m_x+=dFactor*ControlPos.m_x;
-                        temp[Index2].m_y+=dFactor*ControlPos.m_y;
-                        temp[Index2].m_z+=dFactor*ControlPos.m_z;
-                        temp[Index2].m_w+=dFactor*ControlPos.m_w;
+                        double dBasis=ControlPos.m_w*aaUBasisFunctions[Index1][Index3];
+                        temp[Index2].m_x+=dBasis*ControlPos.m_x;
+                        temp[Index2].m_y+=dBasis*ControlPos.m_y;
+                        temp[Index2].m_z+=dBasis*ControlPos.m_z;
+                        temp[Index2].m_w+=dBasis;
                         }
                     }
 
@@ -1039,55 +1063,139 @@ void surface::Evaluate(SGM::Point2D const &uv,
                         }
                     }
                 }
+            
+            // Convert to three-dimensional points.
+
+            SGM::Vector3D values[3][3],Aders[3][3];
+            double wders[3][3];
+
+            Aders[0][0].m_x=SKL[0][0].m_x;
+            Aders[0][0].m_y=SKL[0][0].m_y;
+            Aders[0][0].m_z=SKL[0][0].m_z;
+            wders[0][0]=SKL[0][0].m_w;
+
+            int nMaxDerivatives=0;
+            if(0<nUDerivatives || 0<nVDerivatives)
+                {
+                ++nMaxDerivatives;
+
+                Aders[1][0].m_x=SKL[1][0].m_x;
+                Aders[1][0].m_y=SKL[1][0].m_y;
+                Aders[1][0].m_z=SKL[1][0].m_z;
+                wders[1][0]=SKL[1][0].m_w;
+
+                Aders[0][1].m_x=SKL[0][1].m_x;
+                Aders[0][1].m_y=SKL[0][1].m_y;
+                Aders[0][1].m_z=SKL[0][1].m_z;
+                wders[0][1]=SKL[0][1].m_w;
+
+                if(1<nUDerivatives || 1<nVDerivatives)
+                    {
+                    ++nMaxDerivatives;
+
+                    Aders[2][0].m_x=SKL[2][0].m_x;
+                    Aders[2][0].m_y=SKL[2][0].m_y;
+                    Aders[2][0].m_z=SKL[2][0].m_z;
+                    wders[2][0]=SKL[2][0].m_w;
+
+                    Aders[1][1].m_x=SKL[1][1].m_x;
+                    Aders[1][1].m_y=SKL[1][1].m_y;
+                    Aders[1][1].m_z=SKL[1][1].m_z;
+                    wders[1][1]=SKL[1][1].m_w;
+
+                    Aders[0][2].m_x=SKL[0][2].m_x;
+                    Aders[0][2].m_y=SKL[0][2].m_y;
+                    Aders[0][2].m_z=SKL[0][2].m_z;
+                    wders[0][2]=SKL[0][2].m_w;
+                    }
+                }
+    
+            // Algorithm A4.4 from page 137-138 of the "NURB" book.
+
+            int i,j,k,s;
+            for(k=0;k<=nMaxDerivatives;++k)
+                {
+                for(s=0;s<=nMaxDerivatives-k;++s)
+                    {
+                    SGM::Vector3D v(Aders[k][s].m_x,Aders[k][s].m_y,Aders[k][s].m_z);
+                    for(j=1;j<=s;++j)
+                        {
+                        if(s==2 && j==1)
+                            {
+                            v=v-2*wders[0][j]*values[k][s-j];
+                            }
+                        else
+                            {
+                            v=v-wders[0][j]*values[k][s-j];
+                            }
+                        }
+                    for(i=1;i<=k;++i)
+                        {
+                        if(k==2 && i==1)
+                            {
+                            v=v-2*wders[i][0]*values[k-i][s];
+                            }
+                        else
+                            {
+                            v=v-wders[i][0]*values[k-i][s];
+                            }
+                        SGM::Vector3D v2(0.0,0.0,0.0);
+                        for(j=1;j<=s;++j)
+                            {
+                            if(s==2 && j==1)
+                                {
+                                v2=v2+2*wders[i][j]*values[k-i][s-j];
+                                }
+                            else
+                                {
+                                v2=v2+wders[i][j]*values[k-i][s-j];
+                                }
+                            }
+                        if(k==2 && i==1)
+                            {
+                            v=v-2*v2;
+                            }
+                        else
+                            {
+                            v=v-v2;
+                            }
+                        }
+                    double denom=1.0/wders[0][0];
+                    values[k][s].m_x=v.m_x*denom;
+                    values[k][s].m_y=v.m_y*denom;
+                    values[k][s].m_z=v.m_z*denom;
+                    }
+                }
 
             // Fill in the answers.
 
             if(Pos)
                 {
-                SGM::Point4D &Pos4D=SKL[0][0];
-                double dRW=1.0/Pos4D.m_w;
-                *Pos=SGM::Point3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Pos=SGM::Point3D(values[0][0]);
                 }
             if(Du)
                 {
-                SGM::Point4D &Pos4D=SKL[1][0];
-                double dRW=1.0/Pos4D.m_w;
-                *Du=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Du=values[1][0];
                 }
             if(Dv)
                 {
-                SGM::Point4D &Pos4D=SKL[0][1];
-                double dRW=1.0/Pos4D.m_w;
-                *Dv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Dv=values[0][1];
                 }
             if(Norm)
                 {
-                SGM::Point4D &Pos4DU=SKL[1][0];
-                double dRWU=1.0/Pos4DU.m_w;
-
-                SGM::Point4D &Pos4DV=SKL[0][1];
-                double dRWV=1.0/Pos4DV.m_w;
-
-                *Norm=SGM::Vector3D(Pos4DU.m_x*dRWU,Pos4DU.m_y*dRWU,Pos4DU.m_z*dRWU)*
-                      SGM::Vector3D(Pos4DV.m_x*dRWV,Pos4DV.m_y*dRWV,Pos4DV.m_z*dRWV);
+                *Norm=values[1][0]*values[0][1];
                 }
             if(Duu)
                 {
-                SGM::Point4D &Pos4D=SKL[2][0];
-                double dRW=1.0/Pos4D.m_w;
-                *Duu=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Duu=values[2][0];
                 }
             if(Duv)
                 {
-                SGM::Point4D &Pos4D=SKL[1][1];
-                double dRW=1.0/Pos4D.m_w;
-                *Duv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Duv=values[1][1];
                 }
             if(Dvv)
                 {
-                SGM::Point4D &Pos4D=SKL[0][2];
-                double dRW=1.0/Pos4D.m_w;
-                *Dvv=SGM::Vector3D(Pos4D.m_x*dRW,Pos4D.m_y*dRW,Pos4D.m_z*dRW);
+                *Dvv=values[0][2];
                 }
 
             break;
@@ -1173,7 +1281,60 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 *Dvv = dvvAxisPos + (dvvRadius * dCos * XAxis) + (dvvRadius * dSin * YAxis);
             }
 
-           break;
+            break;
+            }
+        case SGM::ExtrudeType:
+            {
+            extrude const *pExtrude=(extrude *)this;
+
+            SGM::UnitVector3D const &vAxis=pExtrude->m_vAxis;
+
+            SGM::Point3D   CurvePos;
+            SGM::Vector3D  DuCurve;
+            SGM::Vector3D *pDuCurve = &DuCurve;
+            SGM::Vector3D  DuuCurve;
+            SGM::Vector3D *pDuuCurve = &DuuCurve;
+
+            if (nullptr == Dv && nullptr == Duv && nullptr == Duu && nullptr == Norm)
+                pDuCurve = nullptr;
+            if (nullptr == Duu)
+                pDuuCurve = nullptr;
+
+            // Evaluate the defining curve.
+
+            pExtrude->m_pCurve->Evaluate(uv.m_u, &CurvePos, pDuCurve, pDuuCurve);
+
+            // Fill in the answers.
+
+            if(Pos)
+                {
+                *Pos=CurvePos+vAxis*uv.m_v;
+                }
+            if(Du)
+                {
+                *Du=*pDuCurve;
+                }
+            if(Dv)
+                {
+                *Dv=vAxis;
+                }
+            if(Norm)
+                {
+                *Norm=(*pDuCurve)*vAxis;
+                }
+            if(Duu)
+                {
+                *Duu=*pDuuCurve;
+                }
+            if(Duv)
+                {
+                *Duv=SGM::Vector3D(0,0,0);
+                }
+            if(Dvv)
+                {
+                *Dvv=SGM::Vector3D(0,0,0);
+                }
+            break;
             }
         default:
             {
@@ -1198,7 +1359,8 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO))
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
-        SGM::Point3D ProjectPos=Pos-Norm*((Pos-SurfPos)%Norm);
+        double dDot=(Pos-SurfPos)%Norm;
+        SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
         DeltaV=(S%DV)/DV.MagnitudeSquared();
@@ -1758,6 +1920,45 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             break;
             }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURBSurface=(NURBsurface const *)this;
+
+            SGM::Point2D StartUV(0.0,0.0);
+            if(pGuess)
+                {
+                StartUV=*pGuess;
+                }
+            else
+                {
+                std::vector<SGM::Point3D> const &aSeedPoints=pNURBSurface->GetSeedPoints();
+                std::vector<SGM::Point2D> const &aSeedParams=pNURBSurface->GetSeedParams();
+                size_t nSeedPoints=aSeedPoints.size();
+                size_t Index1;
+                double dMin=std::numeric_limits<double>::max();
+                for(Index1=0;Index1<nSeedPoints;++Index1)
+                    {
+                    double dDist=aSeedPoints[Index1].DistanceSquared(Pos);
+                    if(dDist<dMin)
+                        {
+                        dMin=dDist;
+                        StartUV=aSeedParams[Index1];
+                        }
+                    }
+                }
+
+            uv=NewtonsMethod(this,StartUV,Pos);
+            if(ClosePos)
+                {
+                Evaluate(uv,ClosePos);
+                }
+            if(pGuess)
+                {
+                throw;
+                }
+
+            break;
+            }
         case SGM::RevolveType:
             {
             revolve const *pRevolve=(revolve *)this;
@@ -1817,6 +2018,25 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 pRevolve->Evaluate(uv,ClosePos);
             }
 
+            break;
+            }
+        
+        case SGM::ExtrudeType:
+            {
+            extrude const *pExtrude=(extrude const *)this;
+            SGM::UnitVector3D const &vAxis=pExtrude->m_vAxis;
+            SGM::Point3D const &Origin=pExtrude->m_Origin;
+            
+            uv.m_v=(Pos-Origin)%vAxis;
+            SGM::Point3D PlanePos=Pos-vAxis*uv.m_v;
+            if(pGuess)
+                {
+                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos,ClosePos,&(pGuess->m_u));
+                }
+            else
+                {
+                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos,ClosePos);
+                }
             break;
             }
         default:

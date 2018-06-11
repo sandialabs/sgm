@@ -124,4 +124,26 @@ double edge::FindLength(double dTolerance) const
     {
     return m_pCurve->FindLength(m_Domain,dTolerance);
     }
+
+void edge::SnapToDomain(double &t,double dTol) const
+    {
+    if(m_pCurve->GetClosed())
+        {
+        SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
+        if(CurveDomain.OnBoundary(t,dTol))
+            {
+            if(m_Domain.InInterval(t,dTol)==false)
+                {
+                if(t<CurveDomain.MidPoint())
+                    {
+                    t+=CurveDomain.Length();
+                    }
+                else
+                    {
+                    t-=CurveDomain.Length();
+                    }
+                }
+            }
+        }
+    }
 }

@@ -13,6 +13,100 @@
 
 namespace SGMInternal
 {
+
+size_t RayFireFace(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   face                         const *pFace,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                              dTolerance)
+    {
+    SGM::Interval1D Domain(-dTolerance,SGM_MAX);
+    surface const *pSurface=pFace->GetSurface();
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectLineAndSurface(Origin,Axis,Domain,pSurface,dTolerance,aTempPoints,aTempTypes);
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aTempPoints[Index1];
+        SGM::Point2D uv=pSurface->Inverse(Pos);
+        if(pFace->PointInFace(rResult,uv))
+            {
+            aPoints.push_back(Pos);
+            aTypes.push_back(aTempTypes[Index1]);
+            }
+        }
+    return aPoints.size();
+    }
+
+size_t RayFireVolume(SGM::Result                        &rResult,
+                     SGM::Point3D                 const &Origin,
+                     SGM::UnitVector3D            const &Axis,
+                     volume                       const *pVolume,
+                     std::vector<SGM::Point3D>          &aPoints,
+                     std::vector<SGM::IntersectionType> &aTypes,
+                     double                              dTolerance)
+    {
+    rResult;
+    Origin;
+    Axis;
+    pVolume;
+    aPoints;
+    aTypes;
+    dTolerance;
+    return 0;
+    }
+
+size_t RayFireBody(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   body                         const *pBody,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                              dTolerance)
+    {
+    rResult;
+    Origin;
+    Axis;
+    pBody;
+    aPoints;
+    aTypes;
+    dTolerance;
+    return 0;
+    }
+
+size_t RayFire(SGM::Result                        &rResult,
+               SGM::Point3D                 const &Origin,
+               SGM::UnitVector3D            const &Axis,
+               entity                       const *pEntity,
+               std::vector<SGM::Point3D>          &aPoints,
+               std::vector<SGM::IntersectionType> &aTypes,
+               double                              dTolerance)
+    {
+    switch(pEntity->GetType())
+        {
+        case SGM::BodyType:
+            {
+            return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,dTolerance);
+            }
+        case SGM::VolumeType:
+            {
+            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,dTolerance);
+            }
+        case SGM::FaceType:
+            {
+            return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance);
+            }
+        default:
+            {
+            throw;
+            break;
+            }
+        }
+    }
+
 void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::UnitVector3D const &Normal1,
                                 SGM::Point3D      const &Origin2,
@@ -34,7 +128,7 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
     Axis.m_z=AxisZ/dLength;
 
     double dPlaneDist1=-Origin1.m_x*Normal1.m_x-Origin1.m_y*Normal1.m_y-Origin1.m_z*Normal1.m_z;
-    double dPlaneDist2=-Origin2.m_x*Normal1.m_x-Origin2.m_y*Normal1.m_y-Origin2.m_z*Normal1.m_z;
+    double dPlaneDist2=-Origin2.m_x*Normal2.m_x-Origin2.m_y*Normal2.m_y-Origin2.m_z*Normal2.m_z;
     if(dy<=dx && dz<=dx)
         {
         Origin.m_x=0.0;

@@ -12,7 +12,7 @@ namespace SGMInternal
 NURBcurve::NURBcurve(SGM::Result                     &rResult,
                      std::vector<SGM::Point4D> const &aControlPoints,
                      std::vector<double>       const &aKnots):
-    curve(rResult,SGM::NUBCurveType),m_aControlPoints(aControlPoints),m_aKnots(aKnots)
+    curve(rResult,SGM::NURBCurveType),m_aControlPoints(aControlPoints),m_aKnots(aKnots)
     {
     m_Domain.m_dMin=aKnots.front();
     m_Domain.m_dMax=aKnots.back();
@@ -55,7 +55,7 @@ std::vector<SGM::Point3D> const &NURBcurve::GetSeedPoints() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+        Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
@@ -66,7 +66,7 @@ std::vector<double> const &NURBcurve::GetSeedParams() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+        Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;

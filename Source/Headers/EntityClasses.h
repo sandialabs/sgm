@@ -161,8 +161,8 @@ class body : public topology
 
     private:
 
-        std::set<volume *,EntityCompare>      m_sVolumes;
-        mutable SGM::Interval3D m_Box;
+        std::set<volume *,EntityCompare> m_sVolumes;
+        mutable SGM::Interval3D          m_Box;
     };
 
 class complex : public entity
@@ -408,6 +408,11 @@ class edge : public topology
                    std::vector<std::string> &aCheckStrings) const;
 
         double FindLength(double dTolerance) const;
+
+        // Will pick the correct value of a closed curve's 
+        // domain that is in the domain of this edge.
+
+        void SnapToDomain(double &t,double dTol) const;
 
     private:
 

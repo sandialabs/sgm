@@ -19,6 +19,7 @@ namespace SGMInternal
 //  The check list for adding a new curve type.
 //
 //  Derive a class from curve.
+//  Add a type to SGM::EntityType.
 //  Add a constructor.
 //      Set m_CurveType, m_Domain and m_Closed.
 //  Add a copy constructor.
@@ -370,6 +371,9 @@ class hermite: public curve
         mutable std::vector<double>       m_aSeedParams;
     };
 
+bool TestCurve(SGMInternal::curve *pCurve,
+               double              t1);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Internal functions need by more than one class.
@@ -390,6 +394,7 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
                      size_t                     nDegree,
                      double                     t,
                      std::vector<double> const &aKnots);
-}
+
+} // End SGMInternal namespace
 
 #endif // SGM_INTERNAL_CURVE_H

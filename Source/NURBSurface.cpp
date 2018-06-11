@@ -10,7 +10,7 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
                          std::vector<std::vector<SGM::Point4D> > const &aControlPoints,
                          std::vector<double>                     const &aUKnots,
                          std::vector<double>                     const &aVKnots):
-    surface(rResult,SGM::NUBSurfaceType),m_aaControlPoints(aControlPoints),m_aUKnots(aUKnots),m_aVKnots(aVKnots)
+    surface(rResult,SGM::NURBSurfaceType),m_aaControlPoints(aControlPoints),m_aUKnots(aUKnots),m_aVKnots(aVKnots)
     {
     m_Domain.m_UDomain.m_dMin=aUKnots.front();
     m_Domain.m_UDomain.m_dMax=aUKnots.back();
@@ -20,7 +20,7 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
-    Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+    Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
     FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aUParams);

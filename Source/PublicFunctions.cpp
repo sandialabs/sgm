@@ -24,12 +24,25 @@
 #include "Curve.h"
 #include "Faceter.h"
 #include "Surface.h"
+#include "Interrogate.h"
 
 #include <algorithm>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
+
+size_t SGM::RayFire(SGM::Result                        &rResult,
+                    SGM::Point3D                 const &Origin,
+                    SGM::UnitVector3D            const &Axis,
+                    SGM::Entity                  const &EntityID,
+                    std::vector<SGM::Point3D>          &aPoints,
+                    std::vector<SGM::IntersectionType> &aTypes,
+                    double                              dTolerance)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);  
+    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance);
+    }
 
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
@@ -974,7 +987,7 @@ bool SGM::GetRevolveData(SGM::Result       &rResult,
                          SGM::Curve        &CurveID)
     {
     SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
-    if(pSurface->GetSurfaceType()!=SGM::EntityType::TorusType)
+    if(pSurface->GetSurfaceType()!=SGM::EntityType::RevolveType)
         {
         return false;
         }
@@ -1167,6 +1180,16 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
         ++iter;
         }
     return aEdges.size();
+    }
+
+bool SGM::PointInEntity(SGM::Result        &rResult,
+                        SGM::Point3D const &Point,
+                        SGM::Entity  const &EntityID,
+                        double              dTolerance)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::entity const *pEntity=pThing->FindEntity(EntityID.m_ID);
+    return SGMInternal::PointInEntity(rResult,Point,pEntity,dTolerance);
     }
 
 size_t SGM::FindCloseFaces(SGM::Result            &rResult,

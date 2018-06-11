@@ -478,6 +478,11 @@ void ModelData::rebuild_graphics()
       SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
       for(const SGM::Face &face : face_list)
       {
+      //size_t nID=face.m_ID;
+      //if(nID==397)
+      //    {
+      //    continue;
+      //    }
         const std::vector<SGM::Point3D> &face_points =
             SGM::GetFacePoints3D(dPtr->mResult, face);
         const std::vector<size_t> &face_tris =

@@ -225,11 +225,11 @@ void FixBackPointers(size_t                     nTri,
         }
     }
 
-bool FlipTriangles(std::vector<SGM::Point2D>  const &aPoints,
-                   std::vector<size_t>              &aTriangles,
-                   std::vector<size_t>              &aAdjacencies,
-                   size_t                            nTri,
-                   size_t                            nEdge)
+bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
+                   std::vector<size_t>             &aTriangles,
+                   std::vector<size_t>             &aAdjacencies,
+                   size_t                           nTri,
+                   size_t                           nEdge)
     {
     size_t a=aTriangles[nTri];
     size_t b=aTriangles[nTri+1];
@@ -378,12 +378,6 @@ void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
         }
     }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Facet Functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
 class FacetNode
     {
     public:
@@ -396,6 +390,20 @@ class FacetNode
     double       m_dParam;
     SGM::Point3D m_Pos;
     SGM::Point2D m_uv;
+    };
+
+class FacetNodeNormal
+    {
+    public:
+
+    FacetNodeNormal() {}
+
+    FacetNodeNormal(double              dParam,
+                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
+
+    double            m_dParam;
+    SGM::Point3D      m_Pos;
+    SGM::UnitVector3D m_Norm;
     };
 
 void FacetCurve(curve               const *pCurve,
@@ -500,6 +508,7 @@ void FacetCurve(curve               const *pCurve,
             SGM::Point3D Pos0,Pos1;
             double d0=Domain.m_dMin;
             double d1=Domain.m_dMax;
+            double dMinLength=Domain.Length()*SGM_FIT;
             pCurve->Evaluate(d0,&Pos0);
             pCurve->Evaluate(d1,&Pos1);
             lNodes.emplace_back(d0,Pos0);
@@ -511,7 +520,7 @@ void FacetCurve(curve               const *pCurve,
                 lNodes.emplace_back(d2,Pos2);
                 }
             lNodes.emplace_back(d1,Pos1);
-            double dAngle=SGM_PI-Options.m_dFreeEdgeAngleTol;
+            double dAngle=SGM_PI-Options.m_dEdgeAngleTol;
             double dCos=cos(dAngle);
             bool bRefine=true;
             while(bRefine)
@@ -541,7 +550,7 @@ void FacetCurve(curve               const *pCurve,
                     double a1=SGM::UnitVector3D(Pos0-PosA)%SGM::UnitVector3D(Pos1-PosA);
                     double a2=SGM::UnitVector3D(Pos0-PosB)%SGM::UnitVector3D(Pos1-PosB);
                     double a3=SGM::UnitVector3D(Pos0-PosC)%SGM::UnitVector3D(Pos1-PosC);
-                    if(dCos<a1 || dCos<a2 || dCos<a3)
+                    if(dMinLength<(dc-da) && (dCos<a1 || dCos<a2 || dCos<a3))
                         {
                         bRefine=true;
                         lNodes.insert(iter,FacetNode(db,PosB));
@@ -670,6 +679,77 @@ bool SplitAtSeams(SGM::Result                     &rResult,
     return bFound;
     }
 
+void SplitFacet(curve                          const *pCurve,
+                surface                        const *pSurface,
+                std::list<FacetNodeNormal>::iterator &NodeA,
+                std::list<FacetNodeNormal>::iterator &NodeB,
+                std::list<FacetNodeNormal>           &lNodes)
+    {
+    double dParamA=NodeA->m_dParam;
+    double dParamB=NodeB->m_dParam;
+    double dParamC=(dParamA+dParamB)*0.5;
+    SGM::Point3D Pos;
+    pCurve->Evaluate(dParamC,&Pos);
+    SGM::Point2D uv=pSurface->Inverse(Pos);
+    SGM::UnitVector3D Norm;
+    FacetNodeNormal NodeC(dParamC,Pos);
+    pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&NodeC.m_Norm);
+    lNodes.insert(NodeB,NodeC);
+    NodeB=NodeA;
+    ++NodeB;
+    }
+
+void SplitWithSurfaceNormals(FacetOptions        const &Options,
+                             surface             const *pSurface,
+                             curve               const *pCurve,
+                             std::vector<SGM::Point3D> &aPoints3D,
+                             std::vector<double>       &aParams)
+    {
+    std::list<FacetNodeNormal> lNodes;
+    size_t nPoints=aPoints3D.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints3D[Index1];
+        SGM::Point2D uv=pSurface->Inverse(Pos);
+        SGM::UnitVector3D Norm;
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+        FacetNodeNormal Node(aParams[Index1],Pos);
+        Node.m_Norm=Norm;
+        lNodes.push_back(Node);
+        }
+    bool bSplit=false;
+    double dDotTol=std::cos(Options.m_dEdgeAngleTol);
+    std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
+    std::list<FacetNodeNormal>::iterator LastIter=iter;
+    ++iter;
+    while(iter!=lNodes.end())
+        {
+        if(iter->m_Norm%LastIter->m_Norm<dDotTol)
+            {
+            SplitFacet(pCurve,pSurface,LastIter,iter,lNodes);
+            bSplit=true;
+            }
+        else
+            {
+            ++LastIter;
+            ++iter;
+            }
+        }
+    if(bSplit)
+        {
+        aPoints3D.clear();
+        aParams.clear();
+        std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
+        while(iter!=lNodes.end())
+            {
+            aPoints3D.push_back(iter->m_Pos);
+            aParams.push_back(iter->m_dParam);
+            ++iter;
+            }
+        }
+    }
+
 void FacetEdge(SGM::Result               &rResult,
                edge                const *pEdge,
                FacetOptions        const &Options,
@@ -730,6 +810,15 @@ void FacetEdge(SGM::Result               &rResult,
                 aParams.push_back(aTempParams[Index2]);
                 }
             }
+        }
+
+    // Subdivide facets by surface normals.
+
+    iter=sSurfaces.begin();
+    while(iter!=sSurfaces.end())
+        {
+        SplitWithSurfaceNormals(Options,*iter,pCurve,aPoints3D,aParams);
+        ++iter;
         }
     }
 
@@ -2330,6 +2419,7 @@ void FixEdgeData(surface                             const *pSurface,
 void IncrementalDelaunay(surface                             const *pSurface,
                          std::set<size_t>                          &sSearchTris,
                          std::vector<SGM::Point2D>           const &aPoints2D,
+                         std::vector<SGM::Point2D>           const &aScaled2D,
                          std::vector<SGM::UnitVector3D>      const &aNormals,
                          std::vector<size_t>                       &aTriangles,
                          std::vector<size_t>                       &aAdjacencies,
@@ -2345,7 +2435,7 @@ void IncrementalDelaunay(surface                             const *pSurface,
         sSearchTris.erase(nT);
         if(nT0!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,0))
+            if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,0))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT0);
@@ -2356,7 +2446,7 @@ void IncrementalDelaunay(surface                             const *pSurface,
             }
         if(nT1!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,1))
+            if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,1))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT1);
@@ -2366,7 +2456,7 @@ void IncrementalDelaunay(surface                             const *pSurface,
             }
         if(nT2!=SIZE_MAX)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,nT,2))
+            if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,2))
                 {
                 sSearchTris.insert(nT);
                 sSearchTris.insert(nT2);
@@ -2379,6 +2469,8 @@ void IncrementalDelaunay(surface                             const *pSurface,
 void SplitEdge(EdgeValue                           const &EV,
                face                                const *pFace,
                std::vector<SGM::Point2D>                 &aPoints2D,
+               std::vector<SGM::Point2D>                 &aScaled2D,
+               double                                     dScale,
                std::vector<SGM::Point3D>                 &aPoints3D,
                std::vector<SGM::UnitVector3D>            &aNormals,
                std::vector<size_t>                       &aTriangles,
@@ -2402,6 +2494,8 @@ void SplitEdge(EdgeValue                           const &EV,
     pSurface->Evaluate(Miduv,&Pos,nullptr,nullptr,&Norm);
     size_t m=aPoints2D.size();
     aPoints2D.push_back(Miduv);
+    SGM::Point2D ScaledMidUV(Miduv.m_u,Miduv.m_v*dScale);
+    aScaled2D.push_back(ScaledMidUV);
     aPoints3D.push_back(Pos);
     aNormals.push_back(Norm);
 
@@ -2541,12 +2635,14 @@ void SplitEdge(EdgeValue                           const &EV,
     sSearchTris.insert(nT1);
     sSearchTris.insert(nT2);
     sSearchTris.insert(nT3);
-    IncrementalDelaunay(pSurface,sSearchTris,aPoints2D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+    IncrementalDelaunay(pSurface,sSearchTris,aPoints2D,aScaled2D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
     }            
 
-void RefineTriangles(face                     const *pFace,
+void RefineTriangles(double                          dScale,
+                     face                     const *pFace,
                      FacetOptions             const &Options,
                      std::vector<SGM::Point2D>      &aPoints2D,
+                     std::vector<SGM::Point2D>      &aScaled,
                      std::vector<SGM::Point3D>      &aPoints3D,
                      std::vector<SGM::UnitVector3D> &aNormals,
                      std::vector<size_t>            &aTriangles,
@@ -2589,7 +2685,7 @@ void RefineTriangles(face                     const *pFace,
         EdgeValue EV=*(sEdgeData.begin());
         if(EV.m_dDot<dDotTol)
             {
-            SplitEdge(EV,pFace,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
+            SplitEdge(EV,pFace,aPoints2D,aScaled,dScale,aPoints3D,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
             bSplit=true;
             }
         else
@@ -2617,10 +2713,9 @@ void FindNormals(SGM::Result                    &,//rResult,
         }
     }
 
-void ScaledDelaunayFlips(face                      const *pFace,
-                         std::vector<SGM::Point2D> const &aPoints2D,
-                         std::vector<size_t>             &aTriangles,
-                         std::vector<size_t>             &aAdjacencies)
+double ScaledUVs(face                      const *pFace,
+                 std::vector<SGM::Point2D> const &aPoints2D,
+                 std::vector<SGM::Point2D>       &aScaled)
     {
     surface const *pSurface=pFace->GetSurface();
     SGM::Vector3D DU,DV;
@@ -2628,7 +2723,6 @@ void ScaledDelaunayFlips(face                      const *pFace,
     pSurface->Evaluate(uv,nullptr,&DU,&DV);
     double dScale=DV.Magnitude()/DU.Magnitude();
     size_t nPoints=aPoints2D.size();
-    std::vector<SGM::Point2D> aScaled;
     aScaled.reserve(nPoints);
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
@@ -2637,7 +2731,7 @@ void ScaledDelaunayFlips(face                      const *pFace,
         uv.m_v*=dScale;
         aScaled.push_back(uv);
         }
-    DelaunayFlips(aScaled,aTriangles,aAdjacencies);
+    return dScale;
     }
     
 void FacetFace(SGM::Result                    &rResult,
@@ -2656,16 +2750,18 @@ void FacetFace(SGM::Result                    &rResult,
     if(Options.m_bParametric==false)
         {
         FindNormals(rResult,pFace,aPoints2D,aNormals);
+        std::vector<SGM::Point2D> aScaled;
+        double dScale=ScaledUVs(pFace,aPoints2D,aScaled);
         size_t nOldSize=aPoints2D.size();
-        RefineTriangles(pFace,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aAdjacencies);
+        RefineTriangles(dScale,pFace,Options,aPoints2D,aScaled,aPoints3D,aNormals,aTriangles,aAdjacencies);
         size_t nNewSize=aPoints2D.size();
         size_t Index1;
         for(Index1=nOldSize;Index1<nNewSize;++Index1)
             {
             aEntities.push_back((entity *)pFace);
             }
+        DelaunayFlips(aScaled,aTriangles,aAdjacencies);
         }
-    ScaledDelaunayFlips(pFace,aPoints2D,aTriangles,aAdjacencies);
     }
 
 } // End of SGMInternal namespace

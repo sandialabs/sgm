@@ -250,14 +250,6 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    // Returns x and y given
-    // a1*x+b1*y=c1 and a2*x+b2*y=c2.
-    // Returns false if a unique answer does not exist.
-
-    SGM_EXPORT bool CramersRule(double a1,double b1,double c1,
-                                double a2,double b2,double c2,
-                                double &x,double &y);
-
     // Gaussian elimination with partial pivoting is used.
     // Given two or more linear equations in the form
     //

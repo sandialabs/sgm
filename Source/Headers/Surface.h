@@ -13,6 +13,27 @@
 
 namespace SGMInternal
 {
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Check list of adding a new surface type.
+//
+//  Methods to add
+//
+//  A Constructor
+//      Set it domain.
+//      Set if it is closed in U or V
+//      Set if it is singular at high or low U or V.
+//  Evaluate
+//  Inverse
+//  UParamLine
+//  VParamLine
+//  Transform
+//
+//  Get[Surface Name]Data
+//
+///////////////////////////////////////////////////////////////////////////////
+
 class surface : public entity
     {
     public:
@@ -353,6 +374,27 @@ class revolve : public surface
         SGM::UnitVector3D        m_ZAxis;
     };
 
+class extrude : public surface
+    {
+    public:
+
+        extrude(SGM::Result             &rResult,
+                SGM::UnitVector3D const &vAxis,
+                curve             const *pCurve);
+
+        ~extrude();
+
+        void SetCurve(curve const *pCurve);
+
+    public:
+
+        curve             const *m_pCurve;
+        SGM::Point3D             m_Origin;
+        SGM::UnitVector3D        m_vAxis;
+    };
+
+bool TestSurface(SGMInternal::surface const *pSurface,
+                 SGM::Point2D         const &uv1);
 }
 
 #endif // SURFACE_H

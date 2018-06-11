@@ -63,7 +63,7 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+        Options.m_dEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
@@ -74,7 +74,7 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dFreeEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+        Options.m_dEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
@@ -190,6 +190,7 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
     else
         {
         nSpanIndex=(int)(std::upper_bound(aKnots.begin(),aKnots.end(),t)-aKnots.begin()-1);
+        nSpanIndex=std::min(nSpanIndex,aKnots.size()-nDegree-2);
         }
     return nSpanIndex;
     }

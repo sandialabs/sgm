@@ -18,6 +18,7 @@ void FindClosestPointOnEdge(SGM::Result        &,//rResult,
     {
     curve const *pCurve=pEdge->GetCurve();
     double t=pCurve->Inverse(Point,&ClosestPoint);
+    pEdge->SnapToDomain(t,SGM_MIN_TOL);
     double dEdge=Point.DistanceSquared(ClosestPoint);
     if(pEdge->GetDomain().InInterval(t,SGM_ZERO)==false)
         {

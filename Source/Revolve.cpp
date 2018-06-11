@@ -37,7 +37,7 @@ void revolve::SetCurve(curve const *pCurve)
     m_pCurve = pCurve;
 
     SGM::Point3D start;
-    pCurve->Evaluate(0.0, &start);
+    pCurve->Evaluate(pCurve->GetDomain().MidPoint(), &start);
     m_Origin = m_Origin + ((start - m_Origin) % m_ZAxis) * m_ZAxis;
 
     m_XAxis = start - m_Origin;

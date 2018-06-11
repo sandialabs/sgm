@@ -13,6 +13,30 @@ namespace SGMInternal
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+size_t RayFire(SGM::Result                        &rResult,
+               SGM::Point3D                 const &Origin,
+               SGM::UnitVector3D            const &Axis,
+               entity                       const *pEntity,
+               std::vector<SGM::Point3D>          &aPoints,
+               std::vector<SGM::IntersectionType> &aTypes,
+               double                              dTolerance=SGM_ZERO);
+
+size_t RayFireBody(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   body                         const *pBody,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                       const dTolerance);
+
+size_t RayFireVolume(SGM::Result                        &rResult,
+                     SGM::Point3D                 const &Origin,
+                     SGM::UnitVector3D            const &Axis,
+                     volume                       const *pVolume,
+                     std::vector<SGM::Point3D>          &aPoints,
+                     std::vector<SGM::IntersectionType> &aTypes,
+                     double                       const dTolerance);
+
 size_t IntersectCurves(SGM::Result                        &rResult,
                        curve                        const *pCurve1,
                        curve                        const *pCurve2,

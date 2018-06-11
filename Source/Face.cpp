@@ -243,9 +243,9 @@ double face::FindArea(SGM::Result &rResult) const
     return std::max(dMethod1,dArea2);
     }
 
-size_t face::FindLoops(SGM::Result                                     &rResult,
-                       std::vector<std::vector<edge *> > &aaLoops,
-                       std::vector<std::vector<SGM::EdgeSideType> >    &aaFlipped) const
+size_t face::FindLoops(SGM::Result                                  &rResult,
+                       std::vector<std::vector<edge *> >            &aaLoops,
+                       std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
     Graph graph(rResult,m_sEdges);
@@ -339,7 +339,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
             SGM::Point2D uvPlus=pSurface->Inverse(MidPosPlus);
             if(Domain.OnBoundary(uvPlus,SGM_MIN_TOL))
                 {
-                if(Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
+                if(pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
                     {
                     if(uv.m_v<uvPlus.m_v)
                         {
@@ -350,7 +350,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                         return SGM::EdgeSeamType::LowerUSeamType;
                         }
                     }
-                if(Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
+                if(pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                     {
                     if(uv.m_u<uvPlus.m_u)
                         {
@@ -485,10 +485,12 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     }
                 }
             }
-        else if(Domain.OnBoundary(uv,SGM_MIN_TOL))
+        else if((m_pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL)) ||
+                (m_pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL)))
             {
             double t=pEdge->GetCurve()->Inverse(Pos);
             SGM::Interval1D const &EdgeDomain=pEdge->GetDomain();
+            pEdge->SnapToDomain(t,SGM_MIN_TOL);
             double dFraction=EdgeDomain.Fraction(t);
             double t2;
             if(0.5<dFraction)
@@ -501,7 +503,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 }
             SGM::Point3D TestPos=pEdge->FindMidPoint(t2);
             SGM::Point2D TestUV=m_pSurface->Inverse(TestPos);
-            if(Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
+            if(m_pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
                 {
                 if(TestUV.m_u<Domain.m_UDomain.MidPoint())
                     {
@@ -512,7 +514,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     uv.m_u=Domain.m_UDomain.m_dMax;
                     }
                 }
-            if(Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
+            if(m_pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                 {
                 if(TestUV.m_v<Domain.m_VDomain.MidPoint())
                     {
@@ -533,6 +535,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
             {
             double t=pEdge->GetCurve()->Inverse(Pos);
             SGM::Interval1D const &EdgeDomain=pEdge->GetDomain();
+            pEdge->SnapToDomain(t,SGM_MIN_TOL);
             double dFraction=EdgeDomain.Fraction(t);
             double t2;
             if(0.5<dFraction)

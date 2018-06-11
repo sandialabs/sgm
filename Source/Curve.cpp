@@ -63,13 +63,28 @@ double NewtonsMethod(curve        const *pCurve,
     SGM::Point3D Origin;
     SGM::Vector3D Vec;
     pCurve->Evaluate(dStart,&Origin,&Vec);
+    SGM::Interval1D const &Domain=pCurve->GetDomain();
     double dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
     dStart+=dt;
-    while(SGM_ZERO<dt || dt<-SGM_ZERO)
+    size_t nCount=0;
+    double dDist=(Pos-SGM::Point3D(0,0,0)).Magnitude();
+    double dTol=std::max(1.0,dDist)*SGM_ZERO;
+    while(nCount<100 && (dTol<dt || dt<-dTol))
         {
         pCurve->Evaluate(dStart,&Origin,&Vec);
         dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
         dStart+=dt;
+        if(dStart<Domain.m_dMin)
+            {
+            dStart=Domain.m_dMin;
+            break;
+            }
+        if(Domain.m_dMax<dStart)
+            {
+            dStart=Domain.m_dMax;
+            break;
+            }
+        ++nCount;
         }
     return dStart;
     }
@@ -1057,7 +1072,7 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
             }
         case SGM::NURBCurveType:
             {
-            // From "The NURBS Book", page 124-127, Algorithm A4.1 and A4.2.
+            // From "The NURBS Book", page 82, Algorithm A3.1.
 
             NURBcurve const *pNURB=(NURBcurve const *)this;
             std::vector<double> const &aKnots=pNURB->m_aKnots;
@@ -1075,35 +1090,41 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
                 }
             FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&aKnots[0],aaBasisFunctions);
-            if(Pos)
+            SGM::Point4D PosFour;
+            SGM::Vector4D D1Four,D2Four;
+            if(Pos || D1 || D2)
                 {
                 double *aBasis=aaBasisFunctions[0];
                 double x=0,y=0,z=0,w=0;
                 for(Index1=0;Index1<=nDegree;++Index1)
                     {
-                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-                    w+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    double dBasis=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    x+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    w+=dBasis;
                     }
-                Pos->m_x=x/w;
-                Pos->m_y=y/w;
-                Pos->m_z=z/w;
+                PosFour.m_x=x;
+                PosFour.m_y=y;
+                PosFour.m_z=z;
+                PosFour.m_w=w;
                 }
-            if(D1)
+            if(D1 || D2)
                 {
                 double *aBasis=aaBasisFunctions[1];
                 double x=0,y=0,z=0,w=0;
                 for(Index1=0;Index1<=nDegree;++Index1)
                     {
-                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-                    w+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    double dBasis=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    x+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    w+=dBasis;
                     }
-                D1->m_x=x/w;
-                D1->m_y=y/w;
-                D1->m_z=z/w;
+                D1Four.m_x=x;
+                D1Four.m_y=y;
+                D1Four.m_z=z;
+                D1Four.m_w=w;
                 }
             if(D2)
                 {
@@ -1111,15 +1132,41 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 double x=0,y=0,z=0,w=0;
                 for(Index1=0;Index1<=nDegree;++Index1)
                     {
-                    x+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-                    y+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-                    z+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-                    w+=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    double dBasis=aBasis[Index1]*aControlPoints[nSpanIndex-nDegree+Index1].m_w;
+                    x+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_x;
+                    y+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_y;
+                    z+=dBasis*aControlPoints[nSpanIndex-nDegree+Index1].m_z;
+                    w+=dBasis;
                     }
-                D2->m_x=x/w;
-                D2->m_y=y/w;
-                D2->m_z=z/w;
+                D2Four.m_x=x;
+                D2Four.m_y=y;
+                D2Four.m_z=z;
+                D2Four.m_w=w;
                 }
+
+            double rw=1.0/PosFour.m_w;
+            SGM::Vector3D vxyz,dvxyz;
+            if(Pos || D1 || D2)
+                {
+                vxyz=SGM::Vector3D(PosFour.m_x*rw,PosFour.m_y*rw,PosFour.m_z*rw);
+                if(Pos)
+                    {
+                    *Pos=SGM::Point3D(vxyz);
+                    }
+                }
+            if(D1 || D2)
+                {
+                dvxyz=(SGM::Vector3D(D1Four.m_x,D1Four.m_y,D1Four.m_z)-D1Four.m_w*vxyz)*rw;
+                if(D1)
+                    {
+                    *D1=dvxyz;
+                    }
+                }
+            if(D2)
+                {
+                *D2=(SGM::Vector3D(D2Four.m_x,D2Four.m_y,D2Four.m_z)-2*D1Four.m_w*dvxyz-D2Four.m_w*vxyz)*rw;
+                }
+
             break;
             }
         default:
