@@ -1799,8 +1799,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    // Code for testing to be removed.
     /*
+    // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,aEntities[0],sFaces);
     std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
@@ -1822,10 +1822,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        if(nID==508)
-            pFace->GetPoints2D(rResult);
+        pFace->GetPoints2D(rResult);
         }
     */
+
     return aEntities.size();
     }
 

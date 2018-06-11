@@ -326,7 +326,7 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
     if(aPoints2.size()==2)
         {
         SGM::Point3D Pos=Origin+((Center-Origin)%Axis)*Axis;
-        double dDist=Pos.DistanceSquared(Center);
+        double dDist=Pos.Distance(Center);
         if(dDist<=dRadius-dTolerance)
             {
             double t=sqrt(dRadius*dRadius-dDist*dDist);
@@ -770,7 +770,7 @@ size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
 
     SGM::Point3D const &Center=pSphere->m_Center;
     SGM::Point3D Pos=Origin+((Center-Origin)%Axis)*Axis;
-    double dDist=Pos.DistanceSquared(Center);
+    double dDist=Pos.Distance(Center);
     double dRadius=pSphere->m_dRadius;
     if(dDist<=dRadius-dTolerance)
         {
@@ -1299,7 +1299,7 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
         SGM::UnitVector3D Axis;
         IntersectNonParallelPlanes(Center,Normal,PlaneOrigin,PlaneNormal,Origin,Axis);
         SGM::Point3D Pos=Origin+((Center-Origin)%Axis)*Axis;
-        double dDist=Pos.DistanceSquared(Center);
+        double dDist=Pos.Distance(Center);
         if(dDist<=dRadius-dTolerance)
             {
             double t=sqrt(dRadius*dRadius-dDist*dDist);
