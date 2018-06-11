@@ -1,18 +1,8 @@
 #include <cassert>
+#include <algorithm>
 #include <limits>
 
 #include "SGMBoxTree.h"
-
-#if defined(__GNUC__) && defined(_OPENMP) && !defined(__clang__)
-#define BOX_TREE_USE_GCC_PARALLEL
-#endif
-
-#ifdef BOX_TREE_USE_GCC_PARALLEL
-#include <omp.h>
-#include <parallel/algorithm>
-#else
-#include <algorithm>
-#endif
 
 namespace SGM {
 
@@ -24,7 +14,7 @@ namespace SGM {
     const size_t BoxTree::MEMORY_POOL_BYTES = 4096; // chunk size of a multiple of 4096 may be best
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
-// minor note: these could potentially throw an exception that cannot be caught (static initialization)
+    // minor note: if these throw an exception they cannot be caught (static initialization)
     std::unique_ptr<MemoryPool<BoxTree::Leaf>> BoxTree::Leaf::m_MemoryPool(
             new MemoryPool<BoxTree::Leaf>(MEMORY_POOL_BYTES / sizeof(BoxTree::Leaf)));
 
@@ -42,13 +32,6 @@ namespace SGM {
         static_assert(REINSERT_CHILDREN >= 1 && REINSERT_CHILDREN <= MIN_CHILDREN, "REINSERT_CHILDREN out of range");
         static_assert(REINSERT_CHILDREN > 1, "REINSERT_CHILDREN must be greater than 1");
         static_assert(CHOOSE_SUBTREE <= MAX_CHILDREN, "CHOOSE_SUBTREE must be less or equal to MAX_CHILDREN");
-    }
-
-    BoxTree::~BoxTree()
-    {
-        Remove(IsAny(), RemoveLeaf());
-        // at this point there should only be an empty root node, get rid of it
-        delete m_root;
     }
 
     void BoxTree::Insert(const void *object, const Interval3D &bound)
@@ -71,16 +54,6 @@ namespace SGM {
         else
             InsertInternal(newLeaf, m_root);
         m_size += 1;
-    }
-
-    void BoxTree::RemoveBoundedArea(const Interval3D &bound)
-    {
-        Remove(IsEnclosing(bound), RemoveLeaf());
-    }
-
-    void BoxTree::RemoveItem(const void *&item, bool removeDuplicates)
-    {
-        Remove(IsAny(), RemoveSpecificLeaf(item, removeDuplicates));
     }
 
     BoxTree::Node *BoxTree::ChooseSubtree(BoxTree::Node *node, const Interval3D *bound)
@@ -286,12 +259,7 @@ namespace SGM {
         // so we recreate it and return the correct index (newNode)
 
         if (split_edge == 0)
-#ifdef BOX_TREE_USE_GCC_PARALLEL
-#pragma message("compiling with __gnu_parallel algorithm")
-            __gnu_parallel::sort(node->m_aItems.begin(), node->m_aItems.end(), Bounded::FirstEdgeLess(split_axis));
-#else
             std::sort(node->m_aItems.begin(), node->m_aItems.end(), Bounded::FirstEdgeLess(split_axis));
-#endif
         else if (split_axis != DIMENSION - 1) // only reinsert the sort key if we have to
             std::sort(node->m_aItems.begin(), node->m_aItems.end(), Bounded::SecondEdgeLess(split_axis));
 

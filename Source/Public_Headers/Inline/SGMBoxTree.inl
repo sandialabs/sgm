@@ -2,9 +2,27 @@
 
 namespace SGM {
 
+    ///////////////////////////////////////////////////////////////////////////
     //
-    // Some template function implementations
+    // template function and inline function implementations
     //
+    ///////////////////////////////////////////////////////////////////////////
+
+    inline BoxTree::~BoxTree()
+    {
+        Remove(IsAny(), RemoveLeaf());
+        delete m_root; // at this point there should only be an empty root node, get rid of it
+    }
+
+    inline void BoxTree::RemoveBoundedArea(const Interval3D &bound)
+    {
+        Remove(IsEnclosing(bound), RemoveLeaf());
+    }
+
+    inline void BoxTree::RemoveItem(const void *&item, bool removeDuplicates)
+    {
+        Remove(IsAny(), RemoveSpecificLeaf(item, removeDuplicates));
+    }
 
     template<typename Filter, typename Visitor>
     inline void BoxTree::VisitFunctor<Filter, Visitor>::operator()(Bounded *item)

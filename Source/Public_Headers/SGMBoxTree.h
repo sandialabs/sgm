@@ -1,6 +1,7 @@
 #ifndef SGM_BOXTREE_H
 #define SGM_BOXTREE_H
 
+#include "sgm_export.h"
 #include "SGMInterval.h"
 #include "SGMBounded.h"
 #include "SGMMemoryPool.h"
@@ -33,7 +34,7 @@ namespace SGM {
      * bounding box of the object must remain
      * identical to avoid violating the tree.
      */
-    class BoxTree
+    class SGM_EXPORT BoxTree
     {
     public:
 
