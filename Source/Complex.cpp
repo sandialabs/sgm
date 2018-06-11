@@ -1,50 +1,58 @@
 #include "SGMMathematics.h"
+#include "SGMInterval.h"
 #include "SGMComplex.h"
 #include "SGMTranslators.h"
 #include "EntityClasses.h"
-#include <algorithm>
 
 namespace SGMInternal
 {
 
-complex::complex(SGM::Result &rResult):
-    entity(rResult,SGM::EntityType::ComplexType)
-    {
-    m_pThing = rResult.GetThing();
-    m_Box.clear();
-    }
+    complex::complex(SGM::Result &rResult) :
+            entity(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(),
+            m_aSegments(),
+            m_aTriangles(),
+            m_pThing(rResult.GetThing()),
+            m_Box()
+    {}
 
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<SGM::Point3D> const &aPoints):
-    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints)
-    {
-    m_pThing = rResult.GetThing();
-    m_Box=SGM::FindBoundingBox3D(m_aPoints);
-    }
+    complex::complex(SGM::Result &rResult,
+                     std::vector<SGM::Point3D> const &aPoints) :
+            entity(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(aPoints),
+            m_aSegments(),
+            m_aTriangles(),
+            m_pThing(rResult.GetThing()),
+            m_Box(m_aPoints)
+    {}
 
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<size_t>       const &aSegments,
-                 std::vector<SGM::Point3D> const &aPoints):
-    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints),m_aSegments(aSegments)
-    {
-    m_pThing = rResult.GetThing();
-    m_Box=SGM::FindBoundingBox3D(m_aPoints);
-    }
+    complex::complex(SGM::Result &rResult,
+                     std::vector<size_t> const &aSegments,
+                     std::vector<SGM::Point3D> const &aPoints) :
+            entity(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(aPoints),
+            m_aSegments(aSegments),
+            m_aTriangles(),
+            m_pThing(rResult.GetThing()),
+            m_Box(m_aPoints)
+    {}
 
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<SGM::Point3D> const &aPoints,
-                 std::vector<size_t>       const &aTriangles):
-    entity(rResult,SGM::EntityType::ComplexType),m_aPoints(aPoints),m_aTriangles(aTriangles)
-    {
-    m_pThing = rResult.GetThing();
-    m_Box=SGM::FindBoundingBox3D(m_aPoints);
-    }
+    complex::complex(SGM::Result &rResult,
+                     std::vector<SGM::Point3D> const &aPoints,
+                     std::vector<size_t> const &aTriangles) :
+            entity(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(aPoints),
+            m_aSegments(),
+            m_aTriangles(aTriangles),
+            m_pThing(rResult.GetThing()),
+            m_Box(m_aPoints)
+    {}
 
 SGM::Interval3D const &complex::GetBox() const
     {
     if(m_Box.IsEmpty())
         {
-        m_Box=SGM::FindBoundingBox3D(m_aPoints);
+        m_Box = SGM::Interval3D(m_aPoints);
         }
     return m_Box;
     }

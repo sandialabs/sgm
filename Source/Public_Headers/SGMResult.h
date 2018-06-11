@@ -4,7 +4,6 @@
 #include "SGMEnums.h"
 #include "SGMEntityClasses.h"
 
-#include <string>
 #include <memory>
 #include <vector>
 
@@ -23,13 +22,16 @@ class Result
 
         SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr), m_bLog(false) {}
 
-        SGM_EXPORT explicit Result(SGMInternal::thing *pThing);
+        SGM_EXPORT explicit Result(SGMInternal::thing *pThing) :
+                m_nType(ResultType::ResultTypeOK), m_pThing(pThing),
+                m_bLog(false)
+        {}
 
-        SGM_EXPORT void SetResult(SGM::ResultType nType);
+        SGM_EXPORT void SetResult(SGM::ResultType nType) { m_nType = nType; }
 
-        SGM_EXPORT void SetMessage(std::string const &sMessage);
+        SGM_EXPORT void SetMessage(std::string const &sMessage) { m_sMessage += sMessage; }
 
-        SGM_EXPORT void ClearMessage();
+        SGM_EXPORT void ClearMessage() { m_sMessage.clear(); m_nType = ResultType::ResultTypeOK; }
 
         SGM_EXPORT SGM::ResultType GetResult() const {return m_nType;}
 
@@ -57,7 +59,7 @@ class Result
         bool                      m_bLog;
         std::vector<SGM::Entity>  m_aLog;
         std::vector<SGM::LogType> m_aLogEntries;
-    };
+};
 
 } // End of SGM namespace
 

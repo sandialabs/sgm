@@ -1,3 +1,4 @@
+#include <string>
 #include "SGMTranslators.h"
 
 SGM::TranslatorOptions::TranslatorOptions(std::string const &sOptions):

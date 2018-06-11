@@ -1,7 +1,7 @@
 #ifndef SGM_TOPOLOGY_CLASSES_H
 #define SGM_TOPOLOGY_CLASSES_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 
 #include <vector>

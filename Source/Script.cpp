@@ -1,4 +1,9 @@
-#include "SGMDataClasses.h"
+#include <vector>
+#include <map>
+#include <sstream>
+#include <limits>
+
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMEntityFunctions.h"
 #include "SGMChecker.h"
@@ -6,11 +11,7 @@
 #include "SGMPrimitives.h"
 #include "SGMDisplay.h"
 #include "SGMGeometry.h"
-
-#include <vector>
-#include <map>
-#include <sstream>
-#include <limits>
+#include "SGMSegment.h"
 
 namespace SGMInternal
 {

@@ -1,5 +1,6 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
+#include "SGMInterval.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMChecker.h"

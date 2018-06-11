@@ -1,7 +1,7 @@
 #ifndef STEP_H
 #define STEP_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMTranslators.h"
 
 namespace SGMInternal

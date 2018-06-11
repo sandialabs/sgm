@@ -1,7 +1,7 @@
 #ifndef SGM_ENTITY_FUNCTIONS_H
 #define SGM_ENTITY_FUNCTIONS_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
 

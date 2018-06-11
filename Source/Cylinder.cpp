@@ -1,4 +1,4 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMEntityClasses.h"
 #include "EntityClasses.h"

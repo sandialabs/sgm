@@ -1,7 +1,8 @@
 #ifndef INTERROGATE_H
 #define INTERROGATE_H
 
-#include "SGMDataClasses.h"
+#include "SGMResult.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"

@@ -1,10 +1,11 @@
 #include "ModelData.hpp"
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMDisplay.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMTopology.h"
+#include "SGMTransform.h"
 #include "SGMTranslators.h"
 #include "SGMChecker.h"
 #include "SGMResult.h"
@@ -65,12 +66,8 @@ bool ModelData::open_file(const QString &filename)
 
   SGM::ReadFile(dPtr->mResult, filename.toUtf8().data(), ents, log, options);
 
-  if(dPtr->mResult.GetResult() != SGM::ResultTypeOK)
-    return false;
-
   rebuild_tree();
   rebuild_graphics();
-
   return true;
 }
 

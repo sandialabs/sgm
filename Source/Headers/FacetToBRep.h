@@ -1,7 +1,7 @@
 #ifndef FACET_BREP_H
 #define FACET_BREP_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include <vector>
 namespace SGMInternal

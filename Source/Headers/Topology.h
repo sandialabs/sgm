@@ -1,7 +1,7 @@
 #ifndef TOPOLOGY_H
 #define TOPOLOGY_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include <set>
 

@@ -1,7 +1,7 @@
 #ifndef SGM_TRANSLATORS_H
 #define SGM_TRANSLATORS_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
 

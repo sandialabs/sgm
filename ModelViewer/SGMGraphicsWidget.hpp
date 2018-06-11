@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "QVTKOpenGLWidget.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 
 class GView;
 struct pGraphicsData;

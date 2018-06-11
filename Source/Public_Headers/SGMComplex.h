@@ -2,7 +2,7 @@
 #define SGM_COMPLEX_H
 
 #include "SGMEntityClasses.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMResult.h"
 
 #include "sgm_export.h"

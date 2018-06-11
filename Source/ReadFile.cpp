@@ -1,4 +1,4 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
 #include "SGMInterrogate.h"
@@ -9,6 +9,7 @@
 #include "STEP.h"
 #include "Curve.h"
 
+#include <utility>
 #include <string>
 #include <algorithm>
 
@@ -1821,8 +1822,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        //if(nID==397)
-            pFace->GetPoints2D(rResult);
+        pFace->GetPoints2D(rResult);
         }
 
     return aEntities.size();

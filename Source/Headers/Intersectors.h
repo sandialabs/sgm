@@ -1,7 +1,7 @@
 #ifndef INTERSECTOR_H
 #define INTERSECTOR_H
 
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"

@@ -1,6 +1,7 @@
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "EntityClasses.h"
 #include "Curve.h"
+#include <utility>
 #include <vector>
 #include <cmath>
 

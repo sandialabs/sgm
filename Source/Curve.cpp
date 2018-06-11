@@ -1,5 +1,6 @@
-#include "SGMDataClasses.h"
 #include "SGMMathematics.h"
+#include "SGMInterval.h"
+#include "SGMTransform.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"

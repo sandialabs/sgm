@@ -16,7 +16,7 @@
 
 #include "SGMChecker.h"
 #include "SGMPrimitives.h"
-#include "SGMDataClasses.h"
+#include "SGMVector.h"
 #include "SGMEntityClasses.h"
 
 MainWindow::MainWindow(QWidget *parent) :
