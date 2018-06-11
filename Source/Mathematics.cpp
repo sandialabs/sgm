@@ -166,6 +166,10 @@ bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
              std::vector<bool>         const &aCutOff,
              size_t                           nEar)
     {
+    if(aCutOff[nEar])
+        {
+        return false;
+        }
     size_t nPolygon=aPolygon.size();
     size_t nEarA=aPolygon[GetPrevious(nEar,aCutOff)];
     size_t nEarB=aPolygon[nEar];
@@ -687,29 +691,29 @@ namespace SGM {
         return ((b1 == b2) && (b2 == b3));
     }
 
-    bool InCircumcircle(Point2D const &A,
-                             Point2D const &B,
-                             Point2D const &C,
-                             Point2D const &D)
+bool SGM::InCircumcircle(SGM::Point2D const &A,
+                         SGM::Point2D const &B,
+                         SGM::Point2D const &C,
+                         SGM::Point2D const &D)
     {
-
-        const double a00 = A.m_u - D.m_u;
-        const double a01 = A.m_v - D.m_v;
-        const double a02 = a00 * a00 + a01 * a01;
-        const double a10 = B.m_u - D.m_u;
-        const double a11 = B.m_v - D.m_v;
-        const double a12 = a10 * a10 + a11 * a11;
-        const double a20 = C.m_u - D.m_u;
-        const double a21 = C.m_v - D.m_v;
-        const double a22 = a20 * a20 + a21 * a21;
-        const double aMatrix[3][3] =
-                {
-                        a00, a01, a02,
-                        a10, a11, a12,
-                        a20, a21, a22
-                };
-        double dDet = Determinate3D(aMatrix);
-        return SGM_ZERO < dDet;
+    
+    const double a00 = A.m_u-D.m_u;
+    const double a01 = A.m_v-D.m_v;
+    const double a02 = a00*a00+a01*a01;
+    const double a10 = B.m_u-D.m_u;
+    const double a11 = B.m_v-D.m_v;
+    const double a12 = a10*a10+a11*a11;
+    const double a20 = C.m_u-D.m_u;
+    const double a21 = C.m_v-D.m_v;
+    const double a22 = a20*a20+a21*a21;
+    const double aMatrix[3][3] =
+        {
+        a00, a01, a02,
+        a10, a11, a12,
+        a20, a21, a22
+        };
+    double dDet=SGM::Determinate3D(aMatrix);
+    return SGM_MIN_TOL<dDet;
     }
 
     bool FindCircle(Point3D const &Pos0,
@@ -806,27 +810,12 @@ namespace SGM {
         return GreatestCommonDivisor(nA, nB) == 1;
     }
 
-    bool CramersRule(double a1, double b1, double c1,
-                          double a2, double b2, double c2,
-                          double &x, double &y)
-    {
-        double D = a1 * b2 - b1 * a2;
-        double Dx = c1 * b2 - b1 * c2;
-        double Dy = a1 * c2 - c1 * a2;
-        if (fabs(D) < SGM_ZERO)
-            {
-            return false;
-            }
-        x = Dx / D;
-        y = Dy / D;
-        return true;
-    }
+void TriangulatePolygonSub(SGM::Result                             &,//rResult,
+                           std::vector<SGM::Point2D>         const &aPoints,
+                           std::vector<std::vector<size_t> > const &aaPolygons,
+                           std::vector<size_t>                     &aTriangles,
+                           std::vector<size_t>                     &aAdjacencies)
 
-    void TriangulatePolygonSub(Result &,//rResult,
-                               std::vector<Point2D> const &aPoints,
-                               std::vector<std::vector<size_t> > const &aaPolygons,
-                               std::vector<size_t> &aTriangles,
-                               std::vector<size_t> &aAdjacencies)
     {
         // Create one polygon.
 
@@ -955,105 +944,105 @@ namespace SGM {
         SGMInternal::DelaunayFlips(aPoints, aTriangles, aAdjacencies);
     }
 
-    bool TriangulatePolygon(Result &rResult,
-                                 std::vector<Point2D> const &aPoints,
-                                 std::vector<std::vector<size_t> > const &aaPolygons,
-                                 std::vector<size_t> &aTriangles,
-                                 std::vector<size_t> &aAdjacencies)
+bool TriangulatePolygon(Result                                  &rResult,
+                        std::vector<Point2D>              const &aPoints,
+                        std::vector<std::vector<size_t> > const &aaPolygons,
+                        std::vector<size_t>                     &aTriangles,
+                        std::vector<size_t>                     &aAdjacencies)
     {
-        if (aaPolygons.empty() || aPoints.empty())
+    if (aaPolygons.empty() || aPoints.empty())
+        {
+        rResult.SetResult(ResultTypeInsufficientData);
+        return false;
+        }
+
+    // Find all the outside polygons that have positive area.
+    // and all the inside polygons that have negative area.
+
+    std::vector<size_t> aOutside, aInside;
+    size_t nPolygons = aaPolygons.size();
+    size_t Index1, Index2;
+    for (Index1 = 0; Index1 < nPolygons; ++Index1)
+        {
+        std::vector<Point2D> aPolyPoints;
+        std::vector<size_t> const &aPolygon = aaPolygons[Index1];
+        size_t nPolygon = aPolygon.size();
+        aPolyPoints.reserve(nPolygon);
+        for (Index2 = 0; Index2 < nPolygon; ++Index2)
             {
-            rResult.SetResult(ResultTypeInsufficientData);
+            aPolyPoints.push_back(aPoints[aPolygon[Index2]]);
+            }
+        double dArea = PolygonArea(aPolyPoints);
+        if (dArea < 0)
+            {
+            aInside.push_back(Index1);
+            }
+        else
+            {
+            aOutside.push_back(Index1);
+            }
+        }
+
+    // Find the nested groups by adding all the inside polygons to outside polygons.
+
+    size_t nInside = aInside.size();
+    size_t nOutside = aOutside.size();
+    std::vector<std::vector<std::vector<size_t> > > aaaPolygonGroups;
+    aaaPolygonGroups.reserve(nOutside);
+    std::vector<std::vector<Point2D> > aaOutsidePolygons;
+    aaOutsidePolygons.reserve(nOutside);
+    for (Index1 = 0; Index1 < nOutside; ++Index1)
+        {
+        std::vector<std::vector<size_t> > aaPolygonGroup;
+        std::vector<size_t> const &aPolygon = aaPolygons[aOutside[Index1]];
+        aaPolygonGroup.push_back(aPolygon);
+        aaaPolygonGroups.push_back(aaPolygonGroup);
+        size_t nPolygon = aPolygon.size();
+        std::vector<Point2D> aPolygonPoints;
+        aPolygonPoints.reserve(nPolygon);
+        for (Index2 = 0; Index2 < nPolygon; ++Index2)
+            {
+            aPolygonPoints.push_back(aPoints[aPolygon[Index2]]);
+            }
+        aaOutsidePolygons.push_back(aPolygonPoints);
+        }
+    for (Index1 = 0; Index1 < nInside; ++Index1)
+        {
+        bool bFound = false;
+        Point2D const &uv = aPoints[aaPolygons[aInside[Index1]][0]];
+        for (Index2 = 0; Index2 < nOutside; ++Index2)
+            {
+            if (PointInPolygon(uv, aaOutsidePolygons[Index2]))
+                {
+                bFound = true;
+                aaaPolygonGroups[Index2].push_back(aaPolygons[aInside[Index1]]);
+                }
+            }
+        if (bFound == false)
+            {
+            rResult.SetResult(ResultTypeInconsistentData);
             return false;
             }
+        }
 
-        // Find all the outside polygons that have positive area.
-        // and all the inside polygons that have negative area.
+    // Triangulate each of the outside groups.
 
-        std::vector<size_t> aOutside, aInside;
-        size_t nPolygons = aaPolygons.size();
-        size_t Index1, Index2;
-        for (Index1 = 0; Index1 < nPolygons; ++Index1)
+    for (Index1 = 0; Index1 < nOutside; ++Index1)
+        {
+        std::vector<size_t> aSubTriangles, aSubAdjacencies;
+        TriangulatePolygonSub(rResult, aPoints, aaaPolygonGroups[Index1], aSubTriangles, aSubAdjacencies);
+        size_t nSubTriangles = aSubTriangles.size();
+        for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
             {
-            std::vector<Point2D> aPolyPoints;
-            std::vector<size_t> const &aPolygon = aaPolygons[Index1];
-            size_t nPolygon = aPolygon.size();
-            aPolyPoints.reserve(nPolygon);
-            for (Index2 = 0; Index2 < nPolygon; ++Index2)
-                {
-                aPolyPoints.push_back(aPoints[aPolygon[Index2]]);
-                }
-            double dArea = PolygonArea(aPolyPoints);
-            if (dArea < 0)
-                {
-                aInside.push_back(Index1);
-                }
-            else
-                {
-                aOutside.push_back(Index1);
-                }
+            aTriangles.push_back(aSubTriangles[Index2]);
             }
+        }
 
-        // Find the nested groups by adding all the inside polygons to outside polygons.
-
-        size_t nInside = aInside.size();
-        size_t nOutside = aOutside.size();
-        std::vector<std::vector<std::vector<size_t> > > aaaPolygonGroups;
-        aaaPolygonGroups.reserve(nOutside);
-        std::vector<std::vector<Point2D> > aaOutsidePolygons;
-        aaOutsidePolygons.reserve(nOutside);
-        for (Index1 = 0; Index1 < nOutside; ++Index1)
-            {
-            std::vector<std::vector<size_t> > aaPolygonGroup;
-            std::vector<size_t> const &aPolygon = aaPolygons[aOutside[Index1]];
-            aaPolygonGroup.push_back(aPolygon);
-            aaaPolygonGroups.push_back(aaPolygonGroup);
-            size_t nPolygon = aPolygon.size();
-            std::vector<Point2D> aPolygonPoints;
-            aPolygonPoints.reserve(nPolygon);
-            for (Index2 = 0; Index2 < nPolygon; ++Index2)
-                {
-                aPolygonPoints.push_back(aPoints[aPolygon[Index2]]);
-                }
-            aaOutsidePolygons.push_back(aPolygonPoints);
-            }
-        for (Index1 = 0; Index1 < nInside; ++Index1)
-            {
-            bool bFound = false;
-            Point2D const &uv = aPoints[aaPolygons[aInside[Index1]][0]];
-            for (Index2 = 0; Index2 < nOutside; ++Index2)
-                {
-                if (PointInPolygon(uv, aaOutsidePolygons[Index2]))
-                    {
-                    bFound = true;
-                    aaaPolygonGroups[Index1].push_back(aaPolygons[aInside[Index1]]);
-                    }
-                }
-            if (bFound == false)
-                {
-                rResult.SetResult(ResultTypeInconsistentData);
-                return false;
-                }
-            }
-
-        // Triangulate each of the outside groups.
-
-        for (Index1 = 0; Index1 < nOutside; ++Index1)
-            {
-            std::vector<size_t> aSubTriangles, aSubAdjacencies;
-            TriangulatePolygonSub(rResult, aPoints, aaaPolygonGroups[Index1], aSubTriangles, aSubAdjacencies);
-            size_t nSubTriangles = aSubTriangles.size();
-            for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
-                {
-                aTriangles.push_back(aSubTriangles[Index2]);
-                }
-            }
-
-        FindAdjacences2D(aTriangles, aAdjacencies);
-        return true;
+    FindAdjacences2D(aTriangles, aAdjacencies);
+    return true;
     }
 
-    bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
+bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
     {
         // Remove the lower left triangle.
 

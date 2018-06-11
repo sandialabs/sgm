@@ -12,9 +12,8 @@ class FacetOptions
     public:
 
         FacetOptions():
-            m_dFaceAngleTol(0.26179938779914943653855361527329),     // 15 degrees.
-            m_dEdgeAngleTol(0.17453292519943295769236907684886),     // 10 degrees.
-            m_dFreeEdgeAngleTol(0.08726646259971647884618453842443), //  5 degrees.
+            m_dFaceAngleTol(0.17453292519943295769236907684886), // 10 degrees.
+            m_dEdgeAngleTol(0.08726646259971647884618453842443), //  5 degrees.
             m_dMaxLength(0),
             m_dCordHight(0),
             m_nMaxFacets(10000),
@@ -22,7 +21,6 @@ class FacetOptions
 
         double m_dFaceAngleTol;
         double m_dEdgeAngleTol;
-        double m_dFreeEdgeAngleTol;
         double m_dMaxLength;
         double m_dCordHight;
         size_t m_nMaxFacets;

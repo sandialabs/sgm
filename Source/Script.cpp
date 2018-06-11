@@ -1800,30 +1800,6 @@ bool ReadInCircumcircle(SGM::Result                    &,//rResult,
     return bAnswer;
     }
 
-bool ReadCramersRule(SGM::Result                    &,//rResult,
-                     std::string                    &sLineString,
-                     std::map<std::string,Argument> &mArgumentMap)
-    {
-    bool bAnswer=true;
-
-    // bool=CramersRule(double,double,double,double,double,double,double,double);
-    
-    std::vector<ArgumentType> aTypes;
-    aTypes.push_back(boolType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    aTypes.push_back(DoubleType);
-    std::vector<Argument> aArguments;
-    FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
-
-    return bAnswer;
-    }
-
 bool ReadLinearSolve(SGM::Result                    &,//rResult,
                      std::string                    &sLineString,
                      std::map<std::string,Argument> &mArgumentMap)
@@ -2816,7 +2792,6 @@ void FindFunctionMap(std::map<std::string,SGMFunction> &FunctionMap)
     FunctionMap["FindCircle"]    =ReadFindCircle;
     FunctionMap["InCircumcircle"]=ReadInCircumcircle;
 
-    FunctionMap["CramersRule"]               =ReadCramersRule;
     FunctionMap["LinearSolve"]               =ReadLinearSolve;
     FunctionMap["BandedSolve"]               =BandedSolve;
     FunctionMap["Determinate2D"]             =ReadDeterminate2D;

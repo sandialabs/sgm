@@ -1,6 +1,7 @@
 #ifndef SGM_POINT_INL
 #define SGM_POINT_INL
 
+#include <algorithm>
 #include <cmath>
 
 #include "SGMConstants.h"

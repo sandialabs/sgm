@@ -6,7 +6,7 @@
 #include "sgm_export.h"
 
 namespace SGM
-{
+    {
     class Result;
     class Point3D;
     class UnitVector3D;
@@ -17,11 +17,13 @@ namespace SGM
     class Face;
     class Surface;
 
-    SGM_EXPORT size_t RayFire(SGM::Result &rResult,
-                              SGM::Point3D const &Origin,
-                              SGM::UnitVector3D const &Axis,
-                              SGM::Entity const &EntityID,
-                              std::vector<SGM::Point3D> &aPoints);
+    SGM_EXPORT size_t RayFire(SGM::Result                        &rResult,
+                              SGM::Point3D                 const &Origin,
+                              SGM::UnitVector3D            const &Axis,
+                              SGM::Entity                  const &EntityID,
+                              std::vector<SGM::Point3D>          &aPoints,
+                              std::vector<SGM::IntersectionType> &aTypes,
+                              double                              dTolerance=SGM_ZERO);
 
     SGM_EXPORT size_t IntersectCurves(SGM::Result &rResult,
                                       SGM::Curve const &CurveID1,

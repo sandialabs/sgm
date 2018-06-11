@@ -66,12 +66,8 @@ bool ModelData::open_file(const QString &filename)
 
   SGM::ReadFile(dPtr->mResult, filename.toUtf8().data(), ents, log, options);
 
-  if(dPtr->mResult.GetResult() != SGM::ResultTypeOK)
-    return false;
-
   rebuild_tree();
   rebuild_graphics();
-
   return true;
 }
 
@@ -479,6 +475,11 @@ void ModelData::rebuild_graphics()
       SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
       for(const SGM::Face &face : face_list)
       {
+      //size_t nID=face.m_ID;
+      //if(nID==397)
+      //    {
+      //    continue;
+      //    }
         const std::vector<SGM::Point3D> &face_points =
             SGM::GetFacePoints3D(dPtr->mResult, face);
         const std::vector<size_t> &face_tris =

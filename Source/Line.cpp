@@ -4,6 +4,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Curve.h"
+
 namespace SGMInternal
 {
 line::line(SGM::Result        &rResult,

@@ -49,11 +49,11 @@ namespace SGM {
 
         Interval1D(const Interval1D &interval) = default;
 
-        Interval1D(Interval1D &&interval) = default;
+        //Interval1D(Interval1D &&interval) = default;
 
         Interval1D &operator=(const Interval1D &interval) = default;
 
-        Interval1D &operator=(Interval1D &&interval)      = default;
+        //Interval1D &operator=(Interval1D &&interval)      = default;
 
         ~Interval1D() = default;
 
@@ -206,11 +206,11 @@ namespace SGM {
 
         Interval3D(const Interval3D &mE) = default;
 
-        Interval3D(Interval3D &&mE) = default;
+        //Interval3D(Interval3D &&mE) = default;
 
         Interval3D &operator=(const Interval3D &mE) = default;
 
-        Interval3D &operator=(Interval3D &&mE)      = default;
+        //Interval3D &operator=(Interval3D &&mE)      = default;
 
         Interval3D(Point3D const &Pos0, Point3D const &Pos1);
 

@@ -4,6 +4,7 @@
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMResult.h"
+#include "SGMMathematics.h"
 
 #include <vector>
 #include <set>
@@ -64,7 +65,8 @@ namespace SGM
 
     SGM_EXPORT bool PointInEntity(SGM::Result        &rResult,
                                   SGM::Point3D const &Point,
-                                  SGM::Entity  const &EntityID);
+                                  SGM::Entity  const &EntityID,
+                                  double              dTolerance=SGM_MIN_TOL);
 
     } // End of SGM namespace
 
