@@ -64,11 +64,6 @@ namespace SGM
 
         explicit Point3D(Vector3D const &Vec);
 
-        //Point3D(const Point3D& other)            = default;
-        //Point3D(Point3D&& other)                 = default;
-        //Point3D& operator=(const Point3D& other) = default;
-        //Point3D& operator=(Point3D&& other)      = default;
-
         const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
         double& operator []( const size_t axis )             { assert(axis < N); return (&m_x)[axis]; }
 
@@ -132,11 +127,6 @@ namespace SGM
         Vector3D() {}
 
         Vector3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
-
-        //Vector3D(const Vector3D& other)            = default;
-        //Vector3D(Vector3D&& other)                 = default;
-        //Vector3D& operator=(const Vector3D& other) = default;
-        //Vector3D& operator=(Vector3D&& other)      = default;
 
         explicit Vector3D(Point3D const &Pos);
 
@@ -215,11 +205,6 @@ namespace SGM
 
         UnitVector3D(Vector3D const &Vec);
 
-        //UnitVector3D(const UnitVector3D& other)            = default;
-        //UnitVector3D(UnitVector3D&& other)                 = default;
-        //UnitVector3D& operator=(const UnitVector3D& other) = default;
-        //UnitVector3D& operator=(UnitVector3D&& other)      = default;
-
         // Returns the a number between zero and pi which is the angle between
         // this vector and the given vector.
 
@@ -253,8 +238,7 @@ namespace SGM
     class Ray3D
     {
     public:
-        //Ray3D() = delete; // the default constructor is disallowed
-
+        
         Ray3D(const Point3D &orig, const UnitVector3D &dir) :
                 m_Origin(orig),
                 m_Direction(dir),
@@ -272,6 +256,7 @@ namespace SGM
 
         Point3D      m_Origin;
         UnitVector3D m_Direction;
+
         Vector3D     m_InverseDirection;
         int          m_xSign;
         int          m_ySign;

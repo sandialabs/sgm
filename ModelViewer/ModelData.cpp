@@ -68,7 +68,8 @@ bool ModelData::open_file(const QString &filename)
 
   rebuild_tree();
   rebuild_graphics();
-  return true;
+
+  return dPtr->mResult.GetResult()==SGM::ResultType::ResultTypeOK;
 }
 
 void ModelData::step(QString const &SaveName)

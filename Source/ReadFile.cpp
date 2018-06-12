@@ -1799,7 +1799,6 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    /*
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,aEntities[0],sFaces);
@@ -1822,9 +1821,9 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        pFace->GetPoints2D(rResult);
+        if(nID==508)
+            pFace->GetTriangles(rResult);
         }
-    */
 
     return aEntities.size();
     }
