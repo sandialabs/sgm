@@ -57,14 +57,14 @@ namespace SGM {
          * @param object the item
          * @param bound the bounding box containing the item
          */
-        void Insert(const void *object, const Interval3D &bound);
+        void Insert(void const *object, Interval3D const *bound);
 
         /**
          * Remove any entries contained in the given bounding box.
          *
          * @param bound a bounding box
          */
-        void RemoveBoundedArea(const Interval3D &bound);
+        void RemoveBoundedArea(const Interval3D *bound);
 
         /**
          * Remove a specific entry (void*).
@@ -100,17 +100,17 @@ namespace SGM {
          */
         struct IsOverlapping
         {
-            const Interval3D &m_bound;
+            Interval3D const *m_bound;
 
             IsOverlapping() = delete;
 
-            explicit IsOverlapping(const Interval3D &bound)
+            explicit IsOverlapping(Interval3D const *bound)
                     : m_bound(bound)
             {}
 
-            bool operator()(const Node *const node) const;
+            bool operator()(Node *const node) const;
 
-            bool operator()(const Leaf *const leaf) const;
+            bool operator()(Leaf *const leaf) const;
         };
 
         /**
@@ -119,17 +119,17 @@ namespace SGM {
          */
         struct IsEnclosing
         {
-            const Interval3D &m_bound;
+            Interval3D const *m_bound;
 
             IsEnclosing() = delete;
 
-            explicit IsEnclosing(const Interval3D &bound)
+            explicit IsEnclosing(Interval3D const *bound)
                     : m_bound(bound)
             {}
 
-            bool operator()(const Node *const node) const;
+            bool operator()(Node *const node) const;
 
-            bool operator()(const Leaf *const leaf) const;
+            bool operator()(Leaf *const leaf) const;
         };
 
         /**
@@ -137,13 +137,13 @@ namespace SGM {
          */
         struct RemoveLeaf
         {
-            const bool m_bContinue; // if false, visitor stops as soon as possible
+            bool m_bContinue; // if false, visitor stops as soon as possible
 
             RemoveLeaf()
                     : m_bContinue(true)
             {}
 
-            bool operator()(const Leaf *const leaf) const
+            bool operator()(Leaf *const) const
             { return true; }
         };
 
@@ -160,11 +160,11 @@ namespace SGM {
 
             RemoveSpecificLeaf() = delete;
 
-            explicit RemoveSpecificLeaf(const void *object, bool remove_duplicates = false)
+            explicit RemoveSpecificLeaf(void const *object, bool remove_duplicates = false)
                     : m_bContinue(true), m_bRemoveDuplicates(remove_duplicates), m_pLeafObject(object)
             {}
 
-            bool operator()(const Leaf *const leaf) const;
+            bool operator()(Leaf *const leaf) const;
         };
 
         /**
@@ -201,7 +201,7 @@ namespace SGM {
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
             static std::unique_ptr<MemoryPool<Leaf>> m_MemoryPool;
-            void *operator new(size_t size) { return m_MemoryPool->Alloc(); }
+            void *operator new(size_t) { return m_MemoryPool->Alloc(); }
             void operator delete(void *p) { m_MemoryPool->Free(p); }
 #endif
         };
@@ -223,7 +223,7 @@ namespace SGM {
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
             static std::unique_ptr<MemoryPool<Node>> m_MemoryPool;
-            void *operator new(size_t size) { return m_MemoryPool->Alloc(); }
+            void *operator new(size_t) { return m_MemoryPool->Alloc(); }
             void operator delete(void *p) { m_MemoryPool->Free(p); }
 #endif
         };
@@ -248,7 +248,7 @@ namespace SGM {
         template<typename Filter, typename Visitor>
         struct VisitFunctor
         {
-            const Filter &m_filter;
+            Filter &m_filter;
             Visitor &m_visitor;
 
             explicit VisitFunctor(const Filter &a, Visitor &v)
@@ -261,7 +261,7 @@ namespace SGM {
         template<typename Filter, typename Visitor>
         struct QueryFunctor
         {
-            const Filter &m_filter;
+            Filter &m_filter;
             Visitor &m_visitor;
 
             explicit QueryFunctor(const Filter &a, Visitor &v)
@@ -274,7 +274,7 @@ namespace SGM {
         template<typename Filter, typename LeafRemover>
         struct RemoveLeafFunctor
         {
-            const Filter &m_filter;
+            Filter &m_filter;
             LeafRemover &m_leafRemover;
             std::size_t *size;
 
@@ -288,17 +288,34 @@ namespace SGM {
         template<typename Filter, typename LeafRemover>
         struct RemoveFunctor
         {
-            const Filter &accept;
+            Filter      &accept;
             LeafRemover &remove;
 
             // parameters that are passed in
             LeafContainerType *itemsToReinsert;
-            std::size_t *m_size;
+            size_t            *m_size;
 
             // the third parameter is a list holding the items that need to be reinserted
-            explicit RemoveFunctor(const Filter &na, LeafRemover &lr, LeafContainerType *ir, std::size_t *size)
+            explicit RemoveFunctor(Filter &na, LeafRemover &lr, LeafContainerType *ir, size_t *size)
                     : accept(na), remove(lr), itemsToReinsert(ir), m_size(size)
             {}
+
+            RemoveFunctor(const SGM::BoxTree::RemoveFunctor<Filter,LeafRemover> &RF)
+                : accept(const_cast<Filter>(RF.accept)), 
+                  remove(const_cast<LeafRemover>(RF.remove)), 
+                  itemsToReinsert(const_cast<LeafContainerType *>(RF.itemsToReinsert)), 
+                  m_size(const_cast<size_t *>(RF.m_size))
+                {
+                }
+
+            RemoveFunctor &operator=(const SGM::BoxTree::RemoveFunctor<Filter,LeafRemover> &RF)
+                {
+                accept=const_cast<Filter>(RF.accept); 
+                remove=const_cast<LeafRemover>(RF.remove); 
+                itemsToReinsert=const_cast<LeafContainerType *>(RF.itemsToReinsert); 
+                m_size=const_cast<size_t *>(RF.m_size);
+                return *this;
+                }
 
             bool operator()(Bounded *item, bool isRoot = false);
 

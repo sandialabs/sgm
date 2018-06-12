@@ -106,7 +106,7 @@ namespace SGM {
         // Increase the ends of this interval if necessary to contain the given interval.
         // Returns true if this interval was modified.
 
-        bool Extend(const Interval1D &other);
+        bool Stretch(const Interval1D &other);
 
     public:
 
@@ -245,9 +245,8 @@ namespace SGM {
 
         // Increase the intervals of this box if necessary to contain the given box.
         // Returns true if this box was modified.
-        // On return, Encloses(bb) == true.
 
-        bool Extend(const Interval3D &bb);
+        bool Stretch(const Interval3D &bb);
 
         // One fourth the sum of the lengths of all edges
 

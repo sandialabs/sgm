@@ -34,10 +34,11 @@ namespace SGM {
         static_assert(CHOOSE_SUBTREE <= MAX_CHILDREN, "CHOOSE_SUBTREE must be less or equal to MAX_CHILDREN");
     }
 
-    void BoxTree::Insert(const void *object, const Interval3D &bound)
+    void BoxTree::Insert(const void *object, Interval3D const *bound)
     {
         auto newLeaf = new Leaf();
-        newLeaf->m_Bound = bound;
+        newLeaf->m_Bound = const_cast<Interval3D *>(bound); // Note that only leaf nodes are inserted 
+                                                            // and that interior nodes are changes.
         newLeaf->m_pObject = object;
 
         // create a new root node if necessary
@@ -49,7 +50,7 @@ namespace SGM {
             // reserve memory
             m_root->m_aItems.reserve(RESERVE_CHILDREN);
             m_root->m_aItems.push_back(newLeaf);
-            m_root->m_Bound = bound;
+            m_root->m_Bound = const_cast<Interval3D *>(bound);
             }
         else
             InsertInternal(newLeaf, m_root);
@@ -97,7 +98,7 @@ namespace SGM {
 
         // Enlarge all covering boxes in the insertion path such that they are minimum bounding boxes
         // enclosing the children boxes
-        node->m_Bound.Extend(leaf->m_Bound);
+        node->m_Bound->Stretch(*(leaf->m_Bound));
 
         // If we're at a leaf, then use that level
         if (node->m_bHasLeaves)
@@ -111,7 +112,7 @@ namespace SGM {
             // on which to place the new leaf
 
             // determine whether we need to split the overflow or not
-            Node *tmp_node = InsertInternal(leaf, ChooseSubtree(node, &leaf->m_Bound), firstInsert);
+            Node *tmp_node = InsertInternal(leaf, ChooseSubtree(node, leaf->m_Bound), firstInsert);
 
             if (!tmp_node)
                 return nullptr;
@@ -154,8 +155,8 @@ namespace SGM {
             newRoot->m_aItems.push_back(splitItem);
 
             // Handle the new root item
-            newRoot->m_Bound.Reset();
-            for_each(newRoot->m_aItems.begin(), newRoot->m_aItems.end(), Bounded::Stretch(&newRoot->m_Bound));
+            newRoot->m_Bound->Reset();
+            for_each(newRoot->m_aItems.begin(), newRoot->m_aItems.end(), Bounded::Stretch(newRoot->m_Bound));
 
             m_root = newRoot;
             return nullptr;  // we are done at this level
@@ -268,11 +269,11 @@ namespace SGM {
         node->m_aItems.erase(node->m_aItems.begin() + split_index, node->m_aItems.end());
 
         // adjust the bounding box for both "new" Nodes
-        node->m_Bound.Reset();
-        std::for_each(node->m_aItems.begin(), node->m_aItems.end(), Bounded::Stretch(&node->m_Bound));
+        node->m_Bound->Reset();
+        std::for_each(node->m_aItems.begin(), node->m_aItems.end(), Bounded::Stretch(node->m_Bound));
 
-        newNode->m_Bound.Reset();
-        std::for_each(newNode->m_aItems.begin(), newNode->m_aItems.end(), Bounded::Stretch(&newNode->m_Bound));
+        newNode->m_Bound->Reset();
+        std::for_each(newNode->m_aItems.begin(), newNode->m_aItems.end(), Bounded::Stretch(newNode->m_Bound));
 
         return newNode;
     }
@@ -289,7 +290,7 @@ namespace SGM {
         // Sort the the first (1 - P)(M + 1) children in increasing order of their distance from the center of
         // their box and the center of the bounding box of N
         std::partial_sort(node->m_aItems.begin(), node->m_aItems.end() - p, node->m_aItems.end(),
-                          Bounded::CenterDistanceLess(&node->m_Bound));
+                          Bounded::CenterDistanceLess(node->m_Bound));
 
         // Remove the last P items from N
         NodeChildrenContainerType removed_items;
@@ -297,8 +298,8 @@ namespace SGM {
         node->m_aItems.erase(node->m_aItems.end() - p, node->m_aItems.end());
 
         // Adjust the bounding box of N
-        node->m_Bound.Reset();
-        for_each(node->m_aItems.begin(), node->m_aItems.end(), Bounded::Stretch(&node->m_Bound));
+        node->m_Bound->Reset();
+        for_each(node->m_aItems.begin(), node->m_aItems.end(), Bounded::Stretch(node->m_Bound));
 
         // From the sort, above, starting with the minimum distance (= close reinsert), invoke Insert
         // to reinsert the items starting at the root node

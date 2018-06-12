@@ -15,7 +15,7 @@ namespace SGM {
     struct Bounded
     {
 
-        Interval3D m_Bound;
+        Interval3D *m_Bound; // Note that Bounded does not own m_Bound.
 
         /**
          * Functor that stretches the bounding box to include the given bounding box.
@@ -28,9 +28,9 @@ namespace SGM {
                     : m_bound(bound)
             {}
 
-            void operator()(const Bounded *const item)
+            void operator()(Bounded const *item)
             {
-                m_bound->Extend(item->m_Bound);
+                m_bound->Stretch(*(item->m_Bound));
             }
         };
 
@@ -40,19 +40,19 @@ namespace SGM {
          */
         struct FirstEdgeLess
         {
-            const std::size_t m_axis;
+            std::size_t m_axis;
 
             explicit FirstEdgeLess(const std::size_t axis)
                     : m_axis(axis)
             {}
 
-            bool operator()(const Bounded *const bi1, const Bounded *const bi2) const
+            bool operator()(Bounded *const bi1, Bounded *const bi2) const
             {
                 if (m_axis == 0)
-                    return bi1->m_Bound.m_XDomain.m_dMin < bi2->m_Bound.m_XDomain.m_dMin;
+                    return bi1->m_Bound->m_XDomain.m_dMin < bi2->m_Bound->m_XDomain.m_dMin;
                 if (m_axis == 1)
-                    return bi1->m_Bound.m_YDomain.m_dMin < bi2->m_Bound.m_YDomain.m_dMin;
-                return bi1->m_Bound.m_ZDomain.m_dMin < bi2->m_Bound.m_ZDomain.m_dMin;
+                    return bi1->m_Bound->m_YDomain.m_dMin < bi2->m_Bound->m_YDomain.m_dMin;
+                return bi1->m_Bound->m_ZDomain.m_dMin < bi2->m_Bound->m_ZDomain.m_dMin;
             }
         };
 
@@ -62,19 +62,19 @@ namespace SGM {
          */
         struct SecondEdgeLess
         {
-            const std::size_t m_axis;
+            std::size_t m_axis;
 
             explicit SecondEdgeLess(const std::size_t axis)
                     : m_axis(axis)
             {}
 
-            bool operator()(const Bounded *const bi1, const Bounded *const bi2) const
+            bool operator()(Bounded *const bi1, Bounded *const bi2) const
             {
                 if (m_axis == 0)
-                    return bi1->m_Bound.m_XDomain.m_dMax < bi2->m_Bound.m_XDomain.m_dMax;
+                    return bi1->m_Bound->m_XDomain.m_dMax < bi2->m_Bound->m_XDomain.m_dMax;
                 if (m_axis == 1)
-                    return bi1->m_Bound.m_YDomain.m_dMax < bi2->m_Bound.m_YDomain.m_dMax;
-                return bi1->m_Bound.m_ZDomain.m_dMax < bi2->m_Bound.m_ZDomain.m_dMax;
+                    return bi1->m_Bound->m_YDomain.m_dMax < bi2->m_Bound->m_YDomain.m_dMax;
+                return bi1->m_Bound->m_ZDomain.m_dMax < bi2->m_Bound->m_ZDomain.m_dMax;
             }
         };
 
@@ -83,15 +83,15 @@ namespace SGM {
          */
         struct CenterDistanceLess
         {
-            const Interval3D *const m_center;
+            Interval3D const *m_center;
 
-            explicit CenterDistanceLess(const Interval3D *const center)
+            explicit CenterDistanceLess(Interval3D const *center)
                     : m_center(center)
             {}
 
-            bool operator()(const Bounded *const bi1, const Bounded *const bi2) const
+            bool operator()(Bounded *const bi1, Bounded *const bi2) const
             {
-                return bi1->m_Bound.SquaredDistanceFromCenters(*m_center) < bi2->m_Bound.SquaredDistanceFromCenters(
+                return bi1->m_Bound->SquaredDistanceFromCenters(*m_center) < bi2->m_Bound->SquaredDistanceFromCenters(
                         *m_center);
             }
         };
@@ -105,29 +105,29 @@ namespace SGM {
          */
         struct VolumeLess
         {
-            const double volume;
+            double volume;
 
             explicit VolumeLess(const Interval3D *center)
                     : volume(center->Volume())
             {}
 
-            bool operator()(const Bounded *const bi1, const Bounded *const bi2) const
+            bool operator()(Bounded *const bi1, Bounded *const bi2) const
             {
-                return volume - bi1->m_Bound.Volume() < volume - bi2->m_Bound.Volume();
+                return volume - bi1->m_Bound->Volume() < volume - bi2->m_Bound->Volume();
             }
         };
 
         struct OverlapLess
         {
-            const Interval3D *const m_bbox;
+            Interval3D const *m_bbox;
 
-            explicit OverlapLess(const Interval3D *const bbox)
+            explicit OverlapLess(Interval3D const *bbox)
                     : m_bbox(bbox)
             {}
 
-            bool operator()(const Bounded *const bi1, const Bounded *const bi2) const
+            bool operator()(Bounded *const bi1, Bounded *const bi2) const
             {
-                return bi1->m_Bound.IntersectingVolume(*m_bbox) < bi2->m_Bound.IntersectingVolume(*m_bbox);
+                return bi1->m_Bound->IntersectingVolume(*m_bbox) < bi2->m_Bound->IntersectingVolume(*m_bbox);
             }
         };
     };

@@ -90,7 +90,7 @@ namespace SGM {
         return distance * distance;
     }
 
-    inline bool Interval1D::Extend(const Interval1D &other)
+    inline bool Interval1D::Stretch(const Interval1D &other)
     {
         bool result = false;
         if (m_dMin > other.m_dMin)
@@ -328,10 +328,10 @@ namespace SGM {
                 m_ZDomain.m_dMin-tolerance, m_ZDomain.m_dMax+tolerance};
     }
 
-    inline bool Interval3D::Extend(const Interval3D& bb) {
-        bool result = m_XDomain.Extend(bb.m_XDomain);
-        result = m_YDomain.Extend(bb.m_YDomain) || result;
-        result = m_ZDomain.Extend(bb.m_ZDomain) || result;
+    inline bool Interval3D::Stretch(const Interval3D& bb) {
+        bool result = m_XDomain.Stretch(bb.m_XDomain);
+        result = m_YDomain.Stretch(bb.m_YDomain) || result;
+        result = m_ZDomain.Stretch(bb.m_ZDomain) || result;
         return result;
     }
 

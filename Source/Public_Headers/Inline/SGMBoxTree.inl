@@ -1,6 +1,8 @@
 #include <algorithm>
 
+#if 0
 namespace SGM {
+
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -14,7 +16,7 @@ namespace SGM {
         delete m_root; // at this point there should only be an empty root node, get rid of it
     }
 
-    inline void BoxTree::RemoveBoundedArea(const Interval3D &bound)
+    inline void BoxTree::RemoveBoundedArea(const Interval3D *bound)
     {
         Remove(IsEnclosing(bound), RemoveLeaf());
     }
@@ -61,13 +63,13 @@ namespace SGM {
         return false;
     }
 
-    inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Node *const node) const
-    { return m_bound.IntersectsBox(node->m_Bound); }
+    inline bool BoxTree::IsEnclosing::operator()(BoxTree::Node *const node) const
+    { return m_bound->IntersectsBox(*(node->m_Bound)); }
 
-    inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Leaf *const leaf) const
-    { return m_bound.EnclosesBox(leaf->m_Bound); }
+    inline bool BoxTree::IsEnclosing::operator()(BoxTree::Leaf *const leaf) const
+    { return m_bound->EnclosesBox(*(leaf->m_Bound)); }
 
-    inline bool BoxTree::RemoveSpecificLeaf::operator()(const BoxTree::Leaf *const leaf) const
+    inline bool BoxTree::RemoveSpecificLeaf::operator()(BoxTree::Leaf *const leaf) const
     {
         if (m_bContinue && m_pLeafObject == leaf->m_pObject)
             {
@@ -78,11 +80,11 @@ namespace SGM {
         return false;
     }
 
-    inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Node *const node) const
-    { return m_bound.IntersectsBox(node->m_Bound); }
+    inline bool BoxTree::IsOverlapping::operator()(BoxTree::Node *const node) const
+    { return m_bound->IntersectsBox(*(node->m_Bound)); }
 
-    inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Leaf *const leaf) const
-    { return m_bound.IntersectsBox(leaf->m_Bound); }
+    inline bool BoxTree::IsOverlapping::operator()(BoxTree::Leaf *const leaf) const
+    { return m_bound->IntersectsBox(*(leaf->m_Bound)); }
 
     template<typename Filter, typename Visitor>
     inline Visitor BoxTree::Query(const Filter &accept, Visitor visitor)
@@ -166,5 +168,7 @@ namespace SGM {
             }
         return false; // anything else, don't remove it
     }
-
 } // namespace SGM
+
+
+#endif
