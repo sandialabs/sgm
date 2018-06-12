@@ -5,6 +5,7 @@
 #include "SGMEntityClasses.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "sgm_export.h"

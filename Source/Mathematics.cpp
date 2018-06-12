@@ -691,7 +691,7 @@ namespace SGM {
         return ((b1 == b2) && (b2 == b3));
     }
 
-bool SGM::InCircumcircle(SGM::Point2D const &A,
+bool InCircumcircle(SGM::Point2D const &A,
                          SGM::Point2D const &B,
                          SGM::Point2D const &C,
                          SGM::Point2D const &D)

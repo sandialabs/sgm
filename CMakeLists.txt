@@ -53,6 +53,7 @@ endfunction()
 # the projects we are building
 add_subdirectory(Source)
 add_subdirectory(Apps)
+add_subdirectory(Tests)
 
 option(BUILD_MODEL_VIEWER "Build the Qt/VTK based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
