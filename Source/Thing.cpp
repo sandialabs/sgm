@@ -1,8 +1,6 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
-#include <algorithm>
-#include <cstdlib>
 
 namespace SGMInternal
 {
@@ -128,19 +126,33 @@ void thing::DeleteEntity(entity *pEntity)
 
 void thing::SeverOwners(entity *pEntity)
     {
-    switch(pEntity->GetType()) {
-          case SGM::SurfaceType: {
-            surface* pSurface = reinterpret_cast<surface*>(pEntity);
-            switch (pSurface->GetSurfaceType()) {
-              case SGM::RevolveType:
-                revolve *pRevolve = reinterpret_cast<revolve*>(pEntity);
-                pRevolve->m_pCurve->RemoveOwner(this);
-                pRevolve->m_pCurve = nullptr;
-                break;
-            }
+    switch (pEntity->GetType())
+        {
+        case SGM::SurfaceType:
+            {
+            surface *pSurface = reinterpret_cast<surface *>(pEntity);
+            switch (pSurface->GetSurfaceType())
+                {
+                case SGM::RevolveType:
+                    {
+                    revolve *pRevolve = reinterpret_cast<revolve *>(pEntity);
+                    pRevolve->m_pCurve->RemoveOwner(this);
+                    pRevolve->m_pCurve = nullptr;
+                    break;
+                    }
+                case SGM::ExtrudeType:
+                    {
+                    extrude *pExtrude = reinterpret_cast<extrude *>(pEntity);
+                    pExtrude->m_pCurve->RemoveOwner(this);
+                    pExtrude->m_pCurve = nullptr;
+                    break;
+                    }
+                default:
+                    break;
+                }
             break;
-          }
-          default:
+            }
+        default:
             break;
         }
     }
