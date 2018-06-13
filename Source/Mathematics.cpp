@@ -530,6 +530,34 @@ namespace SGM {
     }
 
 
+bool SGM::ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
+                            double                           dTolerance,
+                            SGM::Point3D                    *Origin,
+                            SGM::UnitVector3D               *Normal)
+{
+    bool bCoplanar = false;
+    SGM::Point3D PlaneOrigin;
+    SGM::UnitVector3D XVec;
+    SGM::UnitVector3D YVec;
+    SGM::UnitVector3D ZVec;
+    if (SGM::FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
+    {
+        std::vector<SGM::Point2D> aPoints2D;
+        double dMaxDist = SGM::ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
+        if (dMaxDist < dTolerance)
+            bCoplanar = true;
+    }
+
+    if (bCoplanar)
+    {
+        if (nullptr != Origin)
+            *Origin = PlaneOrigin;
+        if (nullptr != Normal)
+            *Normal = ZVec;
+    }
+    return bCoplanar;
+}
+
     void FindLengths3D(std::vector<Point3D> const &aPoints,
                             std::vector<double> &aLengths,
                             bool bNormalize)

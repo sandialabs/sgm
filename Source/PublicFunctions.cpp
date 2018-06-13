@@ -521,6 +521,17 @@ SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
     return SGM::Body(pBody->GetID());
     }
 
+SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
+                                       SGM::Point3D      const &Origin,
+                                       SGM::UnitVector3D const &Axis,
+                                       SGM::Curve        const &IDCurve)
+    {
+    SGMInternal::curve const *pCurve = (SGMInternal::curve const *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
+    SGMInternal::surface *pSurface=SGMInternal::CreateRevolveSurface(rResult, Origin, Axis, pCurve);
+
+    return SGM::Surface(pSurface->GetID());
+    }
+
 SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
                                SGM::Surface                   &SurfaceID,
                                std::vector<SGM::Edge>         &aEdges,
@@ -733,6 +744,15 @@ SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
     {
     SGMInternal::surface *pSurface=new SGMInternal::sphere(rResult,Center,dRadius);
     return SGM::Surface(pSurface->GetID());
+    }
+
+SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
+                         SGM::Point3D const &Origin,
+                         SGM::Point3D const &XPos,
+                         SGM::Point3D const &YPos)
+    {
+    SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
+    return SGM::Surface(pPlane->GetID());
     }
 
 bool SGM::GetLineData(SGM::Result       &rResult,
