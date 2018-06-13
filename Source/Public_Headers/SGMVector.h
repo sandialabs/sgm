@@ -2,6 +2,7 @@
 #define SGM_POINT_H
 
 #include <cassert>
+#include <cstddef>
 #include <vector>
 
 #include "sgm_export.h"
