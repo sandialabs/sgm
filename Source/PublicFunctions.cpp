@@ -746,6 +746,15 @@ SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
     return SGM::Surface(pSurface->GetID());
     }
 
+SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
+                         SGM::Point3D const &Origin,
+                         SGM::Point3D const &XPos,
+                         SGM::Point3D const &YPos)
+    {
+    SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
+    return SGM::Surface(pPlane->GetID());
+    }
+
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,

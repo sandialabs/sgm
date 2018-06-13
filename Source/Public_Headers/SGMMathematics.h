@@ -18,10 +18,6 @@ namespace SGM
     //
     /////////////////////////////////////////////////////////////////////////
 
-    SGM_EXPORT SGM::Interval2D FindBoundingBox2D(std::vector<SGM::Point2D> const &aPoints);
-
-    SGM_EXPORT SGM::Interval3D FindBoundingBox3D(std::vector<SGM::Point3D> const &aPoints);
-
     SGM_EXPORT bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
                                          SGM::Point3D                    &Origin,
                                          SGM::UnitVector3D               &XVec,
@@ -43,9 +39,14 @@ namespace SGM
                                            SGM::UnitVector3D         const &ZVec,
                                            std::vector<SGM::Point2D>       &aPoints2D);
 
-    SGM_EXPORT SGM::Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
+    SGM_EXPORT bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints3D,
+                                      double                           dTolerance,
+                                      SGM::Point3D                    *Origin = nullptr,
+                                      SGM::UnitVector3D               *Normal = nullptr);
+
+    SGM_EXPORT Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
     
-    SGM_EXPORT SGM::Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
+    SGM_EXPORT Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
     
     // Returns the cumulative cord lengths between the given vector of points.
     // If bNormalize=true, then the lengths are scales to go from zero to one.

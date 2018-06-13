@@ -803,6 +803,29 @@ double TestIntegrand2D(SGM::Point2D const &uv,void const *)
     return x*x+4*y;
     }
 
+bool Test_IntersectNonParallelPlanes(SGM::Point3D       const &Origin1,
+                                     SGM::UnitVector3D  const &Norm1,
+                                     SGM::Point3D       const &Origin2,
+                                     SGM::UnitVector3D  const &Norm2)
+{
+        SGM::Point3D LineOrigin;
+        SGM::UnitVector3D LineDirection;
+        SGMInternal::IntersectNonParallelPlanes(Origin1, Norm1, Origin2, Norm2, LineOrigin, LineDirection);
+
+        double dDistLineOriginToPlane1 = ((LineOrigin - Origin1) % Norm1);
+        double dDistLineOriginToPlane2 = ((LineOrigin - Origin2) % Norm2);
+
+        SGM::Point3D Pos2 = LineOrigin + 7 * LineDirection;
+
+        double dDistPos2ToPlane1 = ((Pos2 - Origin1) % Norm1);
+        double dDistPos2ToPlane2 = ((Pos2 - Origin2) % Norm2);
+
+        return (dDistLineOriginToPlane1 < SGM_MIN_TOL &&
+                dDistLineOriginToPlane2 < SGM_MIN_TOL ||
+                dDistPos2ToPlane1       < SGM_MIN_TOL ||
+                dDistPos2ToPlane2       < SGM_MIN_TOL);
+}
+
 bool SGM::RunCPPTest(SGM::Result &rResult,
                      size_t       nTestNumber)
     {
@@ -2523,15 +2546,16 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aPoints.push_back(SGM::Point3D(1,1.5,0));
         aPoints.push_back(SGM::Point3D(2,2,0));
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
-        SGM::Point3D Origin(-1,0,0);
-        SGM::UnitVector3D Axis(1,0,0);
-        SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
+        CreateEdge(rResult,CurveID);
+        //SGM::Point3D Origin(-1,0,0);
+        //SGM::UnitVector3D Axis(1,0,0);
+        //SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
 
-        std::set<SGM::Face> sFaces;
-        SGM::FindFaces(rResult, BodyID, sFaces);
+        //std::set<SGM::Face> sFaces;
+        //SGM::FindFaces(rResult, BodyID, sFaces);
 
-        for(Face FaceID : sFaces)
-          SGM::GetFaceTriangles(rResult, FaceID);
+        //for(Face FaceID : sFaces)
+        //  SGM::GetFaceTriangles(rResult, FaceID);
 
         return true;
         } 
@@ -3009,7 +3033,63 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==50)
+    if(nTestNumber==47)
+        {
+        bool bAnswer = true;
+
+        SGM::Point3D Origin(1,1,-1.2);
+        SGM::UnitVector3D Direction(0,-1,0);
+        SGM::Point3D Center(1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+        double dRadius = 1.5;
+        double dTolerance = SGM_MIN_TOL;
+
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGMInternal::IntersectLineAndCircle(Origin, Direction, SGM::Interval1D(-SGM_MAX, SGM_MAX), Center, Axis, dRadius, SGM_MIN_TOL, aPoints, aTypes);
+
+        if (aPoints.size() != 2)
+            return false;
+
+        for (SGM::IntersectionType IType : aTypes )
+            if (IType != SGM::PointType)
+                return false;
+
+        std::vector<SGM::Point3D> aExpected(2);
+        aExpected[0] = SGM::Point3D(1,0.9,-1.2);
+        aExpected[1] = SGM::Point3D(1,-0.9,-1.2);
+
+        int found=0;
+        for (SGM::Point3D PosExpected : aExpected)
+            {
+            for (SGM::Point3D PosComputed : aPoints)
+                if (SGM::NearEqual(PosExpected, PosComputed, dTolerance))
+                    found++;
+            }
+        
+        bAnswer = (found == 2);
+        return bAnswer;
+        }
+
+    if(nTestNumber==48)
+        {
+        SGM::Point3D Origin1(1,0,0);
+        SGM::UnitVector3D Norm1(1,0,0);
+        SGM::Point3D Origin2(-1,1,0);
+        SGM::UnitVector3D Norm2(0,0,-1);
+        bool bAnswer1 = Test_IntersectNonParallelPlanes(Origin1, Norm1, Origin2, Norm2);
+
+
+        Origin1 = SGM::Point3D(1,1,1);
+        Norm1 = SGM::UnitVector3D(1,0,0);
+        Origin2= SGM::Point3D(-1,1,0);
+        Norm2 = SGM::UnitVector3D(0,0,-1);
+        bool bAnswer2 = Test_IntersectNonParallelPlanes(Origin1, Norm1, Origin2, Norm2);
+
+        return (bAnswer1 && bAnswer2);
+        }
+
+    if(nTestNumber==49)
         {
         bool bAnswer=true;
 
@@ -3029,20 +3109,103 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
-        SGM::Point3D AxisOrigin(-1,0,0);
-        SGM::UnitVector3D Axis(1,0,0);
+        SGM::Point3D Origin(1,0,0);
+        SGM::Point3D XPos(1,0,-1);
+        SGM::Point3D YPos(1,1,0);
 
-        SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
-
-        SGM::Point3D LineOrigin(1,0,0);
-        SGM::UnitVector3D uDirection(0,0,1);
-        SGM::Curve LineID = SGM::CreateLine(rResult, LineOrigin, uDirection);
+        SGM::Surface PlaneID = SGM::CreatePlane(rResult, Origin, XPos, YPos);
 
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        SGM::IntersectCurveAndSurface(rResult, LineID, RevolveID, aPoints, aTypes);
+        double dTolerance = SGM_MIN_TOL;
+        SGM::IntersectCurveAndSurface(rResult, CurveID, PlaneID, aPoints, aTypes, nullptr, nullptr, dTolerance);
 
+        if (aPoints.size() != 1)
+            return false;
+        else
+            {
+              SGM::Point3D Expected(1, 1.5, 0);
+              bAnswer = SGM::NearEqual(aPoints[0], Expected, dTolerance);
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==50)
+        {
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aNUBPoints;
+        aNUBPoints.push_back(SGM::Point3D(-2,.5,0));
+        aNUBPoints.push_back(SGM::Point3D(-1,1.5,0));
+        aNUBPoints.push_back(SGM::Point3D(0,1,0));
+        aNUBPoints.push_back(SGM::Point3D(1,1.5,0));
+        aNUBPoints.push_back(SGM::Point3D(2,2,0));
+        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aNUBPoints);
+
+        SGM::Point3D AxisOrigin(-1,0,0);
+        SGM::UnitVector3D Axis(1,0,0);
+        SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
+
+        SGM::Point3D LineOrigin1(1,0,0);
+        SGM::UnitVector3D uDirection1(0,0,1);
+        SGM::Curve Line1ID = SGM::CreateLine(rResult, LineOrigin1, uDirection1);
+
+        std::vector<SGM::Point3D> aPoints1;
+        std::vector<SGM::IntersectionType> aTypes1;
+        double dTolerance = SGM_MIN_TOL;
+        SGM::IntersectCurveAndSurface(rResult, Line1ID, RevolveID, aPoints1, aTypes1, nullptr, nullptr, dTolerance);
+
+        if (aPoints1.size() != 2)
+            return false;
+
+        for (SGM::IntersectionType IType : aTypes1 )
+            if (IType != SGM::PointType)
+                return false;
+
+        std::vector<SGM::Point3D> aExpected1(2);
+        aExpected1[0] = SGM::Point3D(1,0,1.5);
+        aExpected1[1] = SGM::Point3D(1,0,-1.5);
+        int found1=0;
+        for (SGM::Point3D PosExpected : aExpected1)
+            {
+            for (SGM::Point3D PosComputed : aPoints1)
+                if (SGM::NearEqual(PosExpected, PosComputed, dTolerance))
+                    found1++;
+            }
+
+
+        SGM::Point3D LineOrigin2(1,1,-1.2);
+        SGM::UnitVector3D uDirection2(0,-1,0);
+        SGM::Curve Line2ID = SGM::CreateLine(rResult, LineOrigin2, uDirection2);
+
+        std::vector<SGM::Point3D> aPoints2;
+        std::vector<SGM::IntersectionType> aTypes2;
+        SGM::IntersectCurveAndSurface(rResult, Line2ID, RevolveID, aPoints2, aTypes2, nullptr, nullptr, dTolerance);
+
+        if (aPoints2.size() != 2)
+            return false;
+
+        for (SGM::IntersectionType IType : aTypes2 )
+            if (IType != SGM::PointType)
+                return false;
+
+        std::vector<SGM::Point3D> aExpected2(2);
+        aExpected2[0] = SGM::Point3D(1,0.9,-1.2);
+        aExpected2[1] = SGM::Point3D(1,-0.9,-1.2);
+
+        int found2=0;
+        for (SGM::Point3D PosExpected : aExpected2)
+            {
+            for (SGM::Point3D PosComputed : aPoints2)
+                if (SGM::NearEqual(PosExpected, PosComputed, dTolerance))
+                    found2++;
+            }
+
+
+        bAnswer = ((found1 == 2) && (found2 == 2));
         return bAnswer;
         }
     return false;
     }
+

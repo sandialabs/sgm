@@ -263,7 +263,8 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
+size_t IntersectLineAndSurface(SGM::Result                        &rResult,
+                               SGM::Point3D                 const &Origin,
                                SGM::UnitVector3D            const &Axis,
                                SGM::Interval1D              const &Domain,
                                surface                      const *pSurface,
@@ -271,7 +272,8 @@ size_t IntersectLineAndSurface(SGM::Point3D                 const &Origin,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes);
 
-size_t IntersectLineAndSurface(line                         const *pLine,
+size_t IntersectLineAndSurface(SGM::Result                        &rResult,
+                               line                         const *pLine,
                                surface                      const *pSurface,
                                double                              dTolerance,
                                std::vector<SGM::Point3D>          &aPoints,
@@ -407,6 +409,14 @@ size_t IntersectCircleAndTorus(SGM::Point3D                 const &Center,
                                double                              dTolerance,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectNUBCurveAndPlane(SGM::Result                        &rResult,
+                                 NUBcurve                     const *pCurve,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNorm,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes,
+                                 double                              dTolerance);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
