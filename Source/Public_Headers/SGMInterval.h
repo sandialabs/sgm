@@ -133,7 +133,7 @@ namespace SGM {
 
         // find bounding box around collection of points
 
-        explicit Interval2D(std::vector<Point2D> const &points);
+        explicit Interval2D(const std::vector<Point2D> &points);
 
         ~Interval2D() = default;
 
@@ -212,15 +212,15 @@ namespace SGM {
 
         //Interval3D &operator=(Interval3D &&mE)      = default;
 
-        Interval3D(Point3D const &Pos0, Point3D const &Pos1);
+        Interval3D(Point3D const &Min, Point3D const &Max);
 
-        Interval3D(Point3D const &Pos0, double tol);
+        Interval3D(Point3D const &Pos, double tol);
 
         explicit Interval3D(Point3D const &Pos);
 
         // find bounding box around collection of points
 
-        explicit Interval3D(std::vector<Point3D> const &points);
+        explicit Interval3D(const std::vector<Point3D> &points);
 
         Interval3D(Interval1D const& x_domain, Interval1D const& y_domain, Interval1D const& z_domain);
 
@@ -282,7 +282,7 @@ namespace SGM {
 
         bool IntersectsPlane(Point3D const &p, UnitVector3D const &u, double tolerance) const;
 
-        bool IntersectsPoint(Point3D const &point, double tolerance) const;
+        bool InInterval(Point3D const &point, double tolerance) const;
 
         bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
@@ -291,8 +291,6 @@ namespace SGM {
         bool IntersectsSphere(Point3D const &center, double radius, double tolerance) const;
 
         bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_INTERVAL_TOLERANCE) const;
-
-        bool InInterval(Point3D const &Pos) const;
 
         // Unites this interval with the given interval.
 
