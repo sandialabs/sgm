@@ -1842,6 +1842,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
+    /*
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,aEntities[0],sFaces);
@@ -1865,7 +1866,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         nID;
         nType;
         pFace->GetTriangles(rResult);
+        if(nID==508)
+            pFace->GetTriangles(rResult);
         }
+    */
 
     Heal(rResult,aEntities);
 

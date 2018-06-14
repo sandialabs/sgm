@@ -1,5 +1,5 @@
-#ifndef SGM_POINT_INL
-#define SGM_POINT_INL
+#ifndef SGM_VECTOR_INL
+#define SGM_VECTOR_INL
 
 #include <algorithm>
 #include <cmath>
@@ -528,4 +528,4 @@ namespace SGM {
 
 } // namespace SGM
 
-#endif //SGM_POINT_INL
+#endif //SGM_VECTOR_INL

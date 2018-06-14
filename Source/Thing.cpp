@@ -1,8 +1,6 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
-#include <algorithm>
-#include <cstdlib>
 
 namespace SGMInternal
 {
@@ -180,7 +178,6 @@ void thing::SeverOwners(entity *pEntity)
                     break;
                     }
                 }
-            break;
             }
         default:
             {

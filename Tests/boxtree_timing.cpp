@@ -9,12 +9,13 @@
 
 #include "SGMBoxTree.h"
 
+#if 0
 int main(int /*argc*/, char ** /*argv*/)
     {
     return 0;
     }
+#endif
 
-#if 0
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Example of timing the insertion of a large number of randomly
@@ -81,20 +82,15 @@ int main(int /*argc*/, char ** /*argv*/)
 
 	std::cout << "Insert: " << nodes << " nodes " << std::flush;
     start = std::chrono::steady_clock::now();
-
-    std::vector<SGM::Interval3D> aBoxes;
-    aBoxes.reserve(nodes);
-
     for (int i = 0; i<nodes; i++) {
-		double xmin = dist_origin();
-		double ymin = dist_origin();
-		double zmin = dist_origin();
-		double xlen = dist_length();
+        double xmin = dist_origin();
+        double ymin = dist_origin();
+        double zmin = dist_origin();
+        double xlen = dist_length();
         double ylen = dist_length();
         double zlen = dist_length();
-        aBoxes.push_back(SGM::Interval3D(xmin, xmin+xlen, ymin, ymin+ylen, zmin, zmin+zlen));
-        tree.Insert(ptr,&(aBoxes.back()));
-	}
+        tree.Insert(ptr, SGM::Interval3D(xmin, xmin+xlen, ymin, ymin+ylen, zmin, zmin+zlen));
+        }
     sum += print_elapsed_time(start);
 
 	SGM::Interval3D bound(100.0, 300.0, 100.0, 400.0, 100.0, 500.0);
@@ -102,30 +98,29 @@ int main(int /*argc*/, char ** /*argv*/)
     std::cout << "Visit all nodes: " << std::flush;
     start = std::chrono::steady_clock::now();
     leafCounter = tree.Query(SGM::BoxTree::IsAny(), LeafCounter());
-	std::cout << "IsAny: " << leafCounter.count << " nodes visited (" << tree.GetSize() << " nodes in tree) ";
-	sum += print_elapsed_time(start);
-
-	std::cout << "Search in a box: " << std::flush;
-    start = std::chrono::steady_clock::now();
-    leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(&bound), LeafCounter());
-	std::cout << "IsEnclosing " << leafCounter.count << " nodes (" << tree.GetSize() << " nodes in tree) ";
+    std::cout << "IsAny: " << leafCounter.count << " nodes visited (" << tree.GetSize() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
-	std::cout << "Remove enclosed in box: " << std::flush;
+    std::cout << "Search in a box: " << std::flush;
     start = std::chrono::steady_clock::now();
-    tree.RemoveBoundedArea(&bound);
+    leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
+    std::cout << "IsEnclosing " << leafCounter.count << " nodes (" << tree.GetSize() << " nodes in tree) ";
+    sum += print_elapsed_time(start);
+
+    std::cout << "Remove enclosed in box: " << std::flush;
+    start = std::chrono::steady_clock::now();
+    tree.RemoveBoundedArea(bound);
     std::cout << "RemoveBoundedArea " << ToString(bound) << " ";
     sum += print_elapsed_time(start);
 
     std::cout << "Search in a box: " << std::flush;
-	start = std::chrono::steady_clock::now();
-    leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(&bound), LeafCounter());
-	std::cout << "IsEnclosing " << leafCounter.count << " nodes. (" << tree.GetSize() << " nodes in tree) ";
-	sum += print_elapsed_time(start);
+    start = std::chrono::steady_clock::now();
+    leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
+    std::cout << "IsEnclosing " << leafCounter.count << " nodes. (" << tree.GetSize() << " nodes in tree) ";
+    sum += print_elapsed_time(start);
 
-	std::cout << "Total time: " << std::chrono::duration<double, std::milli>(sum).count() << " ms" << std::endl;
+    std::cout << "Total time: " << std::chrono::duration<double, std::milli>(sum).count() << " ms" << std::endl;
 
 	return 0;
 }
 
-#endif

@@ -53,7 +53,7 @@ namespace SGM {
 
             // Storage of the object T. Note that this is a union
             // so memory is shared with the pointer above.
-            StorageType m_Storage;
+            /* TODO: alignas(alignof(T)) */ StorageType m_Storage;
         };
 
         class Arena

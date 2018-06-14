@@ -817,4 +817,15 @@ body *CreateRevolve(SGM::Result             &rResult,
 
     return pBody;
     }
-}
+
+surface *CreateRevolveSurface(SGM::Result             &rResult,
+                             SGM::Point3D      const &Origin,
+                             SGM::UnitVector3D const &Axis,
+                             curve             const *pCurve)
+    {
+    surface *pRevolve=new revolve(rResult,Origin,Axis,pCurve);
+
+    return pRevolve;
+    }
+
+} // end namespace SGMInternal

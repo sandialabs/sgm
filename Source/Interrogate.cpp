@@ -20,6 +20,8 @@ bool PointInVolume(SGM::Result        &rResult,
     size_t nHits=0;
     bool bFound=true;
     size_t nCount=1;
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
     SGM::UnitVector3D Axis(0,0,1);
     while(bFound)
         {

@@ -39,6 +39,11 @@ body *CreateRevolve(SGM::Result             &rResult,
                     SGM::UnitVector3D const &Axis,
                     curve             const *pCurve);
 
+surface *CreateRevolveSurface(SGM::Result             &rResult,
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Axis,
+                              curve             const *pCurve);
+
 edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
                  SGM::Interval1D const *pDomain);

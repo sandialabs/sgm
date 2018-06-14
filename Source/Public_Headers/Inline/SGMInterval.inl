@@ -129,7 +129,7 @@ namespace SGM {
             m_UDomain(Pos.m_u), m_VDomain(Pos.m_v)
     {}
 
-    inline Interval2D::Interval2D(std::vector<Point2D> const &points) :
+    inline Interval2D::Interval2D(const std::vector<Point2D> &points) :
             m_UDomain(), m_VDomain()
     {
         for (auto &&p : points)
@@ -256,8 +256,6 @@ namespace SGM {
         return {m_UDomain.MidPoint(dUFraction), m_VDomain.MidPoint(dVFraction)};
     }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interval3D methods
@@ -268,13 +266,17 @@ namespace SGM {
             m_XDomain(std::min(Min.m_x, Max.m_x), std::max(Min.m_x, Max.m_x)),
             m_YDomain(std::min(Min.m_y, Max.m_y), std::max(Min.m_y, Max.m_y)),
             m_ZDomain(std::min(Min.m_z, Max.m_z), std::max(Min.m_z, Max.m_z))
-    {
-    }
+    {}
+
+    inline Interval3D::Interval3D(Point3D const &Pos, double tol) :
+            m_XDomain(Pos.m_x - tol, Pos.m_x + tol),
+            m_YDomain(Pos.m_y - tol, Pos.m_y + tol),
+            m_ZDomain(Pos.m_z - tol, Pos.m_z + tol)
+    {}
 
     inline Interval3D::Interval3D(Point3D const &Pos) :
             m_XDomain(Pos.m_x), m_YDomain(Pos.m_y), m_ZDomain(Pos.m_z)
-    {
-    }
+    {}
 
     inline Interval3D::Interval3D(Interval1D const &x_domain, Interval1D const &y_domain, Interval1D const &z_domain) :
             m_XDomain(x_domain), m_YDomain(y_domain), m_ZDomain(z_domain)
@@ -284,7 +286,7 @@ namespace SGM {
             m_XDomain(x_min, x_max), m_YDomain(y_min, y_max), m_ZDomain(z_min, z_max)
     {}
 
-    inline Interval3D::Interval3D(std::vector<Point3D> const &points) :
+    inline Interval3D::Interval3D(const std::vector<SGM::Point3D> &points) :
             m_XDomain(), m_YDomain(), m_ZDomain()
     {
         for (auto &&p : points)
@@ -407,7 +409,7 @@ namespace SGM {
         return (IntersectsPlaneImpl(p, u, tolerance) == 0);
     }
 
-    inline bool Interval3D::IntersectsPoint(Point3D const & point, double tolerance) const
+    inline bool Interval3D::InInterval(Point3D const &point, double tolerance) const
     {
         // tolerance treated separately on each of the axes
         double tol = std::abs(tolerance);

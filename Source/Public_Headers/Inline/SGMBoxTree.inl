@@ -1,8 +1,6 @@
 #include <algorithm>
 
-#if 0
 namespace SGM {
-
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -13,17 +11,49 @@ namespace SGM {
     inline BoxTree::~BoxTree()
     {
         Remove(IsAny(), RemoveLeaf());
-        delete m_root; // at this point there should only be an empty root node, get rid of it
+        // at this point there should only be an empty root node, get rid of it
+        delete m_root;
     }
 
-    inline void BoxTree::RemoveBoundedArea(const Interval3D *bound)
+    inline void BoxTree::RemoveBoundedArea(const Interval3D& bound)
     {
         Remove(IsEnclosing(bound), RemoveLeaf());
     }
 
-    inline void BoxTree::RemoveItem(const void *&item, bool removeDuplicates)
+    inline void BoxTree::RemoveItem(const void*& item, bool removeDuplicates)
     {
         Remove(IsAny(), RemoveSpecificLeaf(item, removeDuplicates));
+    }
+
+    inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Node *node) const
+    {
+        return m_bound.IntersectsBox(node->m_Bound);
+    }
+
+    inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Leaf *leaf) const
+    {
+        return m_bound.IntersectsBox(leaf->m_Bound);
+    }
+
+    inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Node *node) const
+    {
+        return m_bound.IntersectsBox(node->m_Bound);
+    }
+
+    inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Leaf *leaf) const
+    {
+        return m_bound.EnclosesBox(leaf->m_Bound);
+    }
+
+    inline bool BoxTree::RemoveSpecificLeaf::operator()(const BoxTree::Leaf *leaf) const
+    {
+        if (m_bContinue && m_pLeafObject == leaf->m_pObject)
+            {
+            if (!m_bRemoveDuplicates)
+                m_bContinue = false;
+            return true;
+            }
+        return false;
     }
 
     template<typename Filter, typename Visitor>
@@ -63,31 +93,8 @@ namespace SGM {
         return false;
     }
 
-    inline bool BoxTree::IsEnclosing::operator()(BoxTree::Node *const node) const
-    { return m_bound->IntersectsBox(*(node->m_Bound)); }
-
-    inline bool BoxTree::IsEnclosing::operator()(BoxTree::Leaf *const leaf) const
-    { return m_bound->EnclosesBox(*(leaf->m_Bound)); }
-
-    inline bool BoxTree::RemoveSpecificLeaf::operator()(BoxTree::Leaf *const leaf) const
-    {
-        if (m_bContinue && m_pLeafObject == leaf->m_pObject)
-            {
-            if (!m_bRemoveDuplicates)
-                m_bContinue = false;
-            return true;
-            }
-        return false;
-    }
-
-    inline bool BoxTree::IsOverlapping::operator()(BoxTree::Node *const node) const
-    { return m_bound->IntersectsBox(*(node->m_Bound)); }
-
-    inline bool BoxTree::IsOverlapping::operator()(BoxTree::Leaf *const leaf) const
-    { return m_bound->IntersectsBox(*(leaf->m_Bound)); }
-
     template<typename Filter, typename Visitor>
-    inline Visitor BoxTree::Query(const Filter &accept, Visitor visitor)
+    inline Visitor BoxTree::Query(Filter const &accept, Visitor visitor)
     {
         if (m_root)
             {
@@ -98,7 +105,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename LeafRemover>
-    inline void BoxTree::Remove(const Filter &accept, LeafRemover leafRemover)
+    inline void BoxTree::Remove(Filter const &accept, LeafRemover leafRemover)
     {
         if (!m_root)
             return;
@@ -128,7 +135,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename LeafRemover>
-    inline bool BoxTree::RemoveFunctor<Filter, LeafRemover>::operator()(Bounded *item, bool isRoot)
+    bool BoxTree::RemoveFunctor<Filter, LeafRemover>::operator()(Bounded *item, bool isRoot)
     {
         auto node = static_cast<Node *>(item);
 
@@ -168,7 +175,5 @@ namespace SGM {
             }
         return false; // anything else, don't remove it
     }
+
 } // namespace SGM
-
-
-#endif

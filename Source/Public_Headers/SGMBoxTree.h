@@ -38,6 +38,8 @@ namespace SGM {
     {
     public:
 
+        enum { DIMENSION = 3};
+
         struct Leaf;
         struct Node;
 
@@ -57,94 +59,89 @@ namespace SGM {
          * @param object the item
          * @param bound the bounding box containing the item
          */
-        void Insert(void const *object, Interval3D const *bound);
+        void Insert(void const* object, Interval3D const & bound);
 
         /**
          * Remove any entries contained in the given bounding box.
          *
          * @param bound a bounding box
          */
-        void RemoveBoundedArea(const Interval3D *bound);
+        void RemoveBoundedArea(Interval3D const & bound);
 
         /**
-         * Remove a specific entry (void*).
+         * Remove a specific entry.
          *
          * @param item the item to remove
          * @param removeDuplicates if false, only the first item found will be removed.
          */
-        void RemoveItem(const void *&item, bool removeDuplicates = true);
+        void RemoveItem(const void*& item, bool removeDuplicates = true);
 
         /**
          * The number of items in the tree.
          *
          * @return count of items
          */
-        std::size_t GetSize() const { return m_size; }
+        size_t GetSize() const { return m_size; }
 
         /**
-         * A Filter that matches any node and leaf of the tree.
+         * A convenience Filter that matches any node and leaf of the tree.
          *
          * Other Filters must match the signature of this interface.
          */
-        struct IsAny
-        {
-            bool operator()(const Node *const node) const
-            { return node != nullptr; }
+        struct IsAny {
+            bool operator()(Node const* node) const { return node!=nullptr; }
 
-            bool operator()(const Leaf *const leaf) const
-            { return leaf != nullptr; }
+            bool operator()(Leaf const* leaf) const { return leaf!=nullptr; }
         };
 
         /**
          * A Filter that matches node or leaf when when the given bounding box intersects.
          */
-        struct IsOverlapping
-        {
-            Interval3D const *m_bound;
+        struct IsOverlapping {
+
+            Interval3D m_bound;
 
             IsOverlapping() = delete;
 
-            explicit IsOverlapping(Interval3D const *bound)
-                    : m_bound(bound)
-            {}
+            explicit IsOverlapping(Interval3D const & bound)
+                    :m_bound(bound) { }
 
-            bool operator()(Node *const node) const;
+            bool operator()(Node const * node) const;
 
-            bool operator()(Leaf *const leaf) const;
+            bool operator()(Leaf const * leaf) const;
         };
 
         /**
-         * A Filter that matches node or leaf if their bounding box completely
-         * covers the given bounding box.
+         * A Filter that matches node or leaf if their bounding box completely covers the given bounding box.
          */
-        struct IsEnclosing
-        {
-            Interval3D const *m_bound;
+        struct IsEnclosing {
+
+            Interval3D m_bound;
 
             IsEnclosing() = delete;
 
-            explicit IsEnclosing(Interval3D const *bound)
-                    : m_bound(bound)
-            {}
+            explicit IsEnclosing(Interval3D const & bound)
+                    :m_bound(bound) { }
 
-            bool operator()(Node *const node) const;
+            bool operator()(Node const * node) const;
 
-            bool operator()(Leaf *const leaf) const;
+            bool operator()(Leaf const * leaf) const;
         };
 
         /**
          * Visitor operation for removing objects (leaf nodes) from the tree.
          */
-        struct RemoveLeaf
-        {
+        struct RemoveLeaf {
+
             bool m_bContinue; // if false, visitor stops as soon as possible
 
             RemoveLeaf()
-                    : m_bContinue(true)
-            {}
+                    :m_bContinue(true) { }
 
-            bool operator()(Leaf *const) const
-            { return true; }
+            bool operator()(Leaf const * /*leaf*/) const
+            {
+                return true;
+            }
         };
 
         /**
@@ -152,19 +149,18 @@ namespace SGM {
          *
          * When remove duplicates is true, it searches for all possible instances of the given object.
          */
-        struct RemoveSpecificLeaf
-        {
+        struct RemoveSpecificLeaf {
+
             mutable bool m_bContinue;
             bool m_bRemoveDuplicates;
-            const void *m_pLeafObject;
+            void const* m_pLeafObject;
 
             RemoveSpecificLeaf() = delete;
 
-            explicit RemoveSpecificLeaf(void const *object, bool remove_duplicates = false)
-                    : m_bContinue(true), m_bRemoveDuplicates(remove_duplicates), m_pLeafObject(object)
-            {}
+            explicit RemoveSpecificLeaf(void const* object, bool remove_duplicates = false)
+                    :m_bContinue(true), m_bRemoveDuplicates(remove_duplicates), m_pLeafObject(object) { }
 
-            bool operator()(Leaf *const leaf) const;
+            bool operator()(Leaf const* leaf) const;
         };
 
         /**
@@ -177,7 +173,7 @@ namespace SGM {
          * @return the visitor instance object, allowing retrieval of data inside it (for example, count of items visited)
          */
         template<typename Filter, typename Operation>
-        Operation Query(const Filter &accept, Operation visitor);
+        Operation Query(Filter const& accept, Operation visitor);
 
         /**
          * Traverse the tree and remove leaf nodes on branches that pass a filter.
@@ -190,32 +186,29 @@ namespace SGM {
          * @see RemoveBoundedArea, RemoveItem
          */
         template<typename Filter, typename LeafRemover>
-        void Remove(const Filter &accept, LeafRemover leafRemover);
+        void Remove(Filter const & accept, LeafRemover leafRemover);
 
-        /**
-         * Leaf node class with no children holding void* entries.
-         */
-        struct Leaf : Bounded
-        {
-            const void *m_pObject{};
+        //
+        // The Leaf and Node types
+        //
+
+        typedef std::vector<Bounded*> NodeChildrenContainerType;
+        typedef std::list<Leaf*> LeafContainerType;
+
+        // Leaf node class with no children holding void* to objects
+        struct Leaf : Bounded {
+
+            void const* m_pObject{};
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
-            static std::unique_ptr<MemoryPool<Leaf>> m_MemoryPool;
-            void *operator new(size_t) { return m_MemoryPool->Alloc(); }
-            void operator delete(void *p) { m_MemoryPool->Free(p); }
+            static std::unique_ptr<MemoryPool<Leaf>> m_MemoryPool;  //TODO: remove #define
+            void* operator new(size_t /*size*/) { return m_MemoryPool->Alloc(); }
+            void operator delete(void* p) { m_MemoryPool->Free(p); }
 #endif
         };
 
-        /**
-         * Container type holding the children of non-leaf nodes.
-         */
-        typedef std::vector<Bounded *> NodeChildrenContainerType;
-
-        /**
-         * Node class holding children and a minimal bounding box enclosing the children.
-         */
-        struct Node : Bounded
-        {
+        // Node class with child nodes and a minimal bounding box enclosing the children.
+        struct Node : Bounded {
 
             NodeChildrenContainerType m_aItems;
 
@@ -223,111 +216,81 @@ namespace SGM {
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
             static std::unique_ptr<MemoryPool<Node>> m_MemoryPool;
-            void *operator new(size_t) { return m_MemoryPool->Alloc(); }
-            void operator delete(void *p) { m_MemoryPool->Free(p); }
+            void* operator new(size_t /*size*/) { return m_MemoryPool->Alloc(); }
+            void operator delete(void* p) { m_MemoryPool->Free(p); }
 #endif
         };
 
-        /**
-         * Container type holding leaf nodes.
-         */
-        typedef std::list<Leaf *> LeafContainerType;
-
     private:
 
-        Node *ChooseSubtree(Node *node, const Interval3D *bound);
+        Node* ChooseSubtree(Node* node, Interval3D const* bound);
 
-        Node *InsertInternal(Leaf *leaf, Node *node, bool firstInsert = true);
+        Node* InsertInternal(Leaf* leaf, Node* node, bool firstInsert = true);
 
-        Node *OverflowTreatment(Node *level, bool firstInsert);
+        Node* OverflowTreatment(Node* level, bool firstInsert);
 
-        Node *Split(Node *node);
+        Node* Split(Node* node);
 
-        void Reinsert(Node *node);
+        void Reinsert(Node* node);
 
         template<typename Filter, typename Visitor>
-        struct VisitFunctor
-        {
-            Filter &m_filter;
-            Visitor &m_visitor;
+        struct VisitFunctor {
+            Filter m_filter;
+            Visitor m_visitor;
 
-            explicit VisitFunctor(const Filter &a, Visitor &v)
-                    : m_filter(a), m_visitor(v)
-            {}
+            explicit VisitFunctor(Filter const & a, Visitor& v)
+                    :m_filter(a), m_visitor(v) { }
 
-            void operator()(Bounded *item);
+            void operator()(Bounded* item);
         };
 
         template<typename Filter, typename Visitor>
-        struct QueryFunctor
-        {
-            Filter &m_filter;
-            Visitor &m_visitor;
+        struct QueryFunctor {
+            Filter m_filter;
+            Visitor m_visitor;
 
-            explicit QueryFunctor(const Filter &a, Visitor &v)
-                    : m_filter(a), m_visitor(v)
-            {}
+            explicit QueryFunctor(Filter const & a, Visitor& v)
+                    :m_filter(a), m_visitor(v) { }
 
-            void operator()(Bounded *item);
+            void operator()(Bounded* item);
         };
 
         template<typename Filter, typename LeafRemover>
-        struct RemoveLeafFunctor
-        {
-            Filter &m_filter;
-            LeafRemover &m_leafRemover;
-            std::size_t *size;
+        struct RemoveLeafFunctor {
+            Filter m_filter;
+            LeafRemover m_leafRemover;
+            size_t* size;
 
-            explicit RemoveLeafFunctor(const Filter &a, LeafRemover &r, std::size_t *s)
-                    : m_filter(a), m_leafRemover(r), size(s)
-            {}
+            explicit RemoveLeafFunctor(Filter const & a, LeafRemover& r, size_t* s)
+                    :m_filter(a), m_leafRemover(r), size(s) { }
 
-            bool operator()(Bounded *item) const;
+            bool operator()(Bounded* item) const;
         };
 
         template<typename Filter, typename LeafRemover>
-        struct RemoveFunctor
-        {
-            Filter      &accept;
-            LeafRemover &remove;
+        struct RemoveFunctor {
+            Filter accept;
+            LeafRemover remove;
 
             // parameters that are passed in
-            LeafContainerType *itemsToReinsert;
-            size_t            *m_size;
+            LeafContainerType* itemsToReinsert;
+            size_t* m_size;
 
             // the third parameter is a list holding the items that need to be reinserted
-            explicit RemoveFunctor(Filter &na, LeafRemover &lr, LeafContainerType *ir, size_t *size)
-                    : accept(na), remove(lr), itemsToReinsert(ir), m_size(size)
-            {}
+            explicit RemoveFunctor(Filter const & na, LeafRemover& lr, LeafContainerType* ir, size_t* size)
+                    :accept(na), remove(lr), itemsToReinsert(ir), m_size(size) { }
 
-            RemoveFunctor(const SGM::BoxTree::RemoveFunctor<Filter,LeafRemover> &RF)
-                : accept(const_cast<Filter>(RF.accept)), 
-                  remove(const_cast<LeafRemover>(RF.remove)), 
-                  itemsToReinsert(const_cast<LeafContainerType *>(RF.itemsToReinsert)), 
-                  m_size(const_cast<size_t *>(RF.m_size))
-                {
-                }
-
-            RemoveFunctor &operator=(const SGM::BoxTree::RemoveFunctor<Filter,LeafRemover> &RF)
-                {
-                accept=const_cast<Filter>(RF.accept); 
-                remove=const_cast<LeafRemover>(RF.remove); 
-                itemsToReinsert=const_cast<LeafContainerType *>(RF.itemsToReinsert); 
-                m_size=const_cast<size_t *>(RF.m_size);
-                return *this;
-                }
-
-            bool operator()(Bounded *item, bool isRoot = false);
+            bool operator()(Bounded* item, bool isRoot = false);
 
             // traverse and finds any leaves, and adds them to a
             // list of items that will later be reinserted
-            void QueueItemsToReinsert(Node *node);
+            void QueueItemsToReinsert(Node* node);
         };
 
     private:
-        Node *m_root;
+        Node* m_root;
 
-        std::size_t m_size;
+        size_t m_size;
 
         static const size_t REINSERT_CHILDREN;  // in [1 <= m <= MIN_CHILDREN]
         static const size_t MIN_CHILDREN;       // in [1 <= m < M)
