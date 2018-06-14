@@ -83,6 +83,25 @@ void edge::SetCurve(curve *pCurve)
     m_pCurve->AddEdge(this);
     }
 
+void edge::SetDomain(SGM::Result           &rResult,
+                     SGM::Interval1D const &Domain)
+    {
+    m_Domain=Domain;
+    if(m_aPoints3D.empty()==false)
+        {
+        m_aPoints3D.clear();
+        m_aParams.clear();
+        m_Box.Reset();
+        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
+        while(iter!=m_sFaces.end())
+            {
+            face *pFace=*iter;
+            pFace->ClearFacets(rResult);
+            ++iter;
+            }
+        }
+    }
+
 std::vector<SGM::Point3D> const &edge::GetFacets(SGM::Result &rResult) const
     {
     if(m_aPoints3D.empty())

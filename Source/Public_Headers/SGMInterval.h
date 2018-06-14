@@ -19,17 +19,11 @@
 namespace SGM {
 
     class UnitVector3D;
-
     class Vector2D;
-
     class Vector3D;
-
     class Point2D;
-
     class Point3D;
-
     class Ray3D;
-
 
     class SGM_EXPORT Interval1D
     {
@@ -206,11 +200,7 @@ namespace SGM {
 
         Interval3D(const Interval3D &mE) = default;
 
-        //Interval3D(Interval3D &&mE) = default;
-
         Interval3D &operator=(const Interval3D &mE) = default;
-
-        //Interval3D &operator=(Interval3D &&mE)      = default;
 
         Interval3D(Point3D const &Pos0, Point3D const &Pos1);
 

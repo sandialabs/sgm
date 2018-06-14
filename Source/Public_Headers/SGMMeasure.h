@@ -20,8 +20,11 @@ namespace SGM
     SGM_EXPORT double FindArea(SGM::Result     &rResult,
                                SGM::Face const &FaceID);
 
+    // FindVolume takes a Body or a Volume.
+
     SGM_EXPORT double FindVolume(SGM::Result       &rResult,
-                                 SGM::Volume const &VolumeID);
+                                 SGM::Entity const &EntityID,
+                                 bool               bApproximate);
     } // End of SGM namespace
 
 #endif // SGM_MEASURE_H

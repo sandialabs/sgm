@@ -72,6 +72,11 @@ SGM_EXPORT SGM::Body CreateRevolve(SGM::Result             &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+SGM_EXPORT SGM::Body CreateDisk(SGM::Result             &rResult,
+                                SGM::Point3D      const &Center,
+                                SGM::UnitVector3D const &Normal,
+                                double                   dRadius);
+
 // If edges are not given then the whole surface is used to make a sheet body.
 
 SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result                    &rResult,

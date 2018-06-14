@@ -53,16 +53,25 @@ void FindCurves(SGM::Result                     &rResult,
 // pVertex2.  If pFace is not nullptr, then only edges on pFace are 
 // returned.
 
-size_t FindCommonEdges(SGM::Result                       &rResult,
-                       vertex                      const *pVertex1,       // Input
-                       vertex                      const *pVertex2,       // Input
-                       std::vector<edge *> &aEdges,         // Ouput
-                       face                        const *pFace=nullptr); // Optional input
+size_t FindCommonEdgesFromVertices(SGM::Result         &rResult,
+                                   vertex        const *pVertex1,       // Input
+                                   vertex        const *pVertex2,       // Input
+                                   std::vector<edge *> &aEdges,         // Ouput
+                                   face          const *pFace=nullptr); // Optional input
 
-size_t FindEdgesOnFaceAtVertex(SGM::Result                       &rResult,
-                               vertex                      const *pVertex,
-                               face                        const *pFace,
+size_t FindCommonEdgesFromFaces(SGM::Result         &rResult,
+                                face          const *pFace1,   
+                                face          const *pFace2,   
+                                std::vector<edge *> &aEdges);
+
+size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
+                               vertex        const *pVertex,
+                               face          const *pFace,
                                std::vector<edge *> &aEdges);
+
+size_t FindAdjacentFaces(SGM::Result                    &rResult,
+                         face                     const *pFace,
+                         std::set<face *,EntityCompare> &sFaces);
 
 // Ordering Functions
 
@@ -80,6 +89,9 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
 // Modify Functions
 
 void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
+
+void RemoveFace(SGM::Result &rResult,
+                face        *pFace);
 
 }
 #endif // TOPOLOGY_H

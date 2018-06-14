@@ -521,6 +521,15 @@ SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
     return SGM::Body(pBody->GetID());
     }
 
+SGM_EXPORT SGM::Body SGM::CreateDisk(SGM::Result             &rResult,
+                                     SGM::Point3D      const &Center,
+                                     SGM::UnitVector3D const &Normal,
+                                     double                   dRadius)
+    {
+    SGMInternal::body *pBody=SGMInternal::CreateDisk(rResult,Center,Normal,dRadius);
+    return SGM::Body(pBody->GetID());
+    }
+
 SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
                                SGM::Surface                   &SurfaceID,
                                std::vector<SGM::Edge>         &aEdges,
@@ -1124,7 +1133,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         pNewEdge->SetStart(pNewStart);
         pNewEdge->SetEnd(pNewEnd);
         pNewEdge->SetCurve(pNewCurve);
-        pNewEdge->SetDomain(Domain);
+        pNewEdge->SetDomain(rResult,Domain);
         pFace->AddEdge(pNewEdge,SGM::FaceOnLeftType);
         }
 
@@ -1314,10 +1323,20 @@ double SGM::FindArea(SGM::Result     &rResult,
     }
 
 double SGM::FindVolume(SGM::Result       &rResult,
-                       SGM::Volume const &VolumeID)
+                       SGM::Entity const &EntityID,
+                       bool               bApproximate)
     {
-    SGMInternal::volume const *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
-    return pVolume->FindVolume();
+    double dAnswer=0;
+    SGMInternal::entity const *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    if(pEntity->GetType()==SGM::EntityType::BodyType)
+        {
+        dAnswer=((SGMInternal::body *)pEntity)->FindVolume(rResult,bApproximate);
+        }
+    else if(pEntity->GetType()==SGM::EntityType::VolumeType)
+        {
+        dAnswer=((SGMInternal::volume *)pEntity)->FindVolume(rResult,bApproximate);
+        }
+    return dAnswer;
     }
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)

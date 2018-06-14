@@ -63,6 +63,12 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
                          face                 const *pFace2,
                          double                      dTolerance);
 
+void IntersectThreeSurfaces(SGM::Result               &rResult,
+                            surface             const *pSurface1,
+                            surface             const *pSurface2,
+                            surface             const *pSurface3,
+                            std::vector<SGM::Point3D> &aPoints);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Specific Surface Surface Intersectors.

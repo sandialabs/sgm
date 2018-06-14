@@ -42,14 +42,6 @@ entity *entity::Copy(SGM::Result &rResult) const
         }
     }
 
-void entity::SeverOwners() const
-    {
-    for (entity *pOwner : m_Owners)
-        {
-        pOwner->RemoveOwner((entity*)this);
-        }
-    }
-
 void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
     {
     switch(m_Type)

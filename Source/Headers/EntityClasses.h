@@ -57,8 +57,6 @@ class entity
         void Transform(SGM::Result            &rResult,
                        SGM::Transform3D const &Trans);
 
-        void SeverOwners() const;
-
         void FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const;
 
     protected:
@@ -126,6 +124,8 @@ class thing : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
+
+        void ClearBox() {m_Box.Reset();}
         
     private:
 
@@ -163,6 +163,10 @@ class body : public topology
                    std::vector<std::string> &aCheckStrings) const;
 
         bool IsTopLevel() const {return m_Owners.empty();}
+
+        void ClearBox(SGM::Result &rResult);
+
+        double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
     private:
 
@@ -211,6 +215,8 @@ class complex : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        double FindVolume(SGM::Result &rResult) const;
+
     private:
 
         std::vector<SGM::Point3D>  m_aPoints;
@@ -228,6 +234,8 @@ class volume : public topology
         explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
 
         void AddFace(face *pFace);
+
+        void RemoveFace(face *pFace);
 
         void AddEdge(edge *pEdge);
 
@@ -252,7 +260,9 @@ class volume : public topology
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
 
-        double FindVolume() const;
+        double FindVolume(SGM::Result &rResult,bool bApproximate) const;
+
+        void ClearBox(SGM::Result &rResult);
 
     private:
     
@@ -271,6 +281,8 @@ class face : public topology
         explicit face(SGM::Result &rResult);
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
+
+        void RemoveEdge(edge *pEdge);
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
@@ -322,9 +334,9 @@ class face : public topology
         
         // Find methods
 
-        size_t FindLoops(SGM::Result                                     &rResult,
-                         std::vector<std::vector<edge *> > &aaLoops,
-                         std::vector<std::vector<SGM::EdgeSideType> >    &aaFlipped) const;
+        size_t FindLoops(SGM::Result                                  &rResult,
+                         std::vector<std::vector<edge *> >            &aaLoops,
+                         std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -337,10 +349,17 @@ class face : public topology
                          SGM::Point3D       *pPos=nullptr) const; // Found point on boundary.
 
         double FindArea(SGM::Result &rResult) const;
+
+        // FindVolume returns the part of the volume that this face adds to 
+        // the total volume of the Face's Volume time six.
+
+        double FindVolume(SGM::Result &rResult,bool bApproximate) const;
+
+        void ClearFacets(SGM::Result &rResult);
                         
     private:
 
-        std::set<edge *,EntityCompare>                    m_sEdges;
+        std::set<edge *,EntityCompare>      m_sEdges;
         std::map<edge *,SGM::EdgeSideType>  m_mSideType;
         volume                             *m_pVolume;
         surface                            *m_pSurface;
@@ -362,7 +381,7 @@ class edge : public topology
 
         explicit edge(SGM::Result &rResult);
 
-        // Set Methods
+        // Set and Remove Methods
 
         void SetStart(vertex *pStart);
 
@@ -370,11 +389,14 @@ class edge : public topology
 
         void SetCurve(curve *pCurve);
 
-        void SetDomain(SGM::Interval1D const &Domain) {m_Domain=Domain;}
+        void SetDomain(SGM::Result           &rResult,
+                       SGM::Interval1D const &Domain);
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
         void AddFace(face *pFace) {m_sFaces.insert(pFace);}
+
+        void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 
         // Get Methods
 
@@ -421,11 +443,11 @@ class edge : public topology
 
     private:
 
-        vertex           *m_pStart;
-        vertex           *m_pEnd;
+        vertex                         *m_pStart;
+        vertex                         *m_pEnd;
         std::set<face *,EntityCompare>  m_sFaces;
-        volume           *m_pVolume; // Should be nullptr if this belongs to a face.
-        curve            *m_pCurve;
+        volume                         *m_pVolume; // Should be nullptr if this belongs to a face.
+        curve                          *m_pCurve;
 
         mutable std::vector<SGM::Point3D> m_aPoints3D;
         mutable std::vector<double>       m_aParams;
@@ -450,7 +472,7 @@ class vertex : public topology
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
-        
+
         bool IsTopLevel() const {return m_sEdges.empty() && m_Owners.empty();}
 
         bool Check(SGM::Result              &rResult,

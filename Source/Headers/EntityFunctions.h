@@ -26,6 +26,9 @@ void TransformEntity(SGM::Result            &rResult,
 SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
                                       entity const *pEntity);
 
+void Heal(SGM::Result           &rResult,
+          std::vector<entity *> &aEntities);
+
 }  // End of SGMInternal namespace
 
 #endif // SGM_INTERNAL_ENTITY_FUNCTIONS_H

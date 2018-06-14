@@ -8,6 +8,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(sgm_tests
         interval_check.cpp
+	volume_check.cpp
         )
 
 target_link_libraries(sgm_tests gtest gtest_main SGM)

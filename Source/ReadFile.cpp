@@ -2,6 +2,8 @@
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
 #include "SGMInterrogate.h"
+
+#include "EntityFunctions.h"
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"
@@ -462,6 +464,22 @@ void ProcessCone(SGM::Result       &,//rResult,
     STEPData.m_aDoubles.push_back(dHalfAngle);        
     }
 
+void ProcessEllipse(SGM::Result       &,//rResult,
+                    std::string const &ellipse,
+                    STEPLineData      &STEPData)
+    {
+    // #6314=ELLIPSE('',#10514,0.553426824431198,0.2475);
+
+    FindIndices(ellipse,STEPData.m_aIDs);
+    std::vector<std::string> aArgs;
+    FindListArguments(ellipse,aArgs);
+    double dMajor,dMinor;
+    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
+    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
+    STEPData.m_aDoubles.push_back(dMajor);
+    STEPData.m_aDoubles.push_back(dMinor);
+    }
+
 void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
                              std::string const &spline,
                              STEPLineData      &STEPData)
@@ -863,6 +881,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::EDGE_LOOP:
                         {
                         ProcessLoop(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::ELLIPSE:
+                        {
+                        ProcessEllipse(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -1369,6 +1393,25 @@ void CreateEntities(SGM::Result                   &rResult,
                 aEdges.push_back(nID);
                 break;
                 }
+            case SGMInternal::STEPTags::ELLIPSE:
+                {
+                size_t nAxis=DataIter->second.m_aIDs[0];
+                double dMajor=DataIter->second.m_aDoubles[0];
+                double dMinor=DataIter->second.m_aDoubles[1];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
+                size_t nID0=SLDA.m_aIDs[0];
+                size_t nID1=SLDA.m_aIDs[1];
+                size_t nID2=SLDA.m_aIDs[2];
+                STEPLineData const &SLDP=mSTEPData[nID0];
+                STEPLineData const &SLDN=mSTEPData[nID1];
+                STEPLineData const &SLDX=mSTEPData[nID2];
+                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
+                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
+                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                SGM::UnitVector3D YAxis=ZAxis*XAxis;
+                mEntityMap[nID]=new ellipse(rResult,Center,XAxis,YAxis,dMajor,dMinor);
+                break;    
+                }
             case SGMInternal::STEPTags::FACE_SURFACE:
                 {
                 mEntityMap[nID]=new face(rResult);
@@ -1821,9 +1864,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        if(nID==508)
-            pFace->GetTriangles(rResult);
+        pFace->GetTriangles(rResult);
         }
+
+    Heal(rResult,aEntities);
 
     return aEntities.size();
     }
