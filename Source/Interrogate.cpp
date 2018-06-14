@@ -17,7 +17,6 @@ bool PointInVolume(SGM::Result        &rResult,
                    volume       const *pVolume,
                    double              dTolerance)
     {
-    dTolerance;
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::UnitVector3D Axis(0,0,1);

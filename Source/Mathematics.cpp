@@ -530,7 +530,7 @@ namespace SGM {
     }
 
 
-bool SGM::ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
+bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                             double                           dTolerance,
                             SGM::Point3D                    *Origin,
                             SGM::UnitVector3D               *Normal)
