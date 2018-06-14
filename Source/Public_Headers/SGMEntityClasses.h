@@ -1,7 +1,7 @@
 #ifndef SGM_ENTITY_CLASSES_H
 #define SGM_ENTITY_CLASSES_H
 
-#include <stddef.h>
+#include <cstddef>
 
 #include "sgm_export.h"
 

@@ -50,7 +50,7 @@ void entity::SeverOwners() const
         }
     }
 
-void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
+void entity::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     switch(m_Type)
         {
@@ -62,8 +62,8 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
             while(iter!=sVolumes.end())
                 {
                 volume *pVolume=*iter;
-                sChildern.insert(pVolume);
-                pVolume->FindAllChildern(sChildern);
+                sChildren.insert(pVolume);
+                pVolume->FindAllChildren(sChildren);
                 ++iter;
                 }
             break;
@@ -76,8 +76,8 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
             while(iter1!=sFaces.end())
                 {
                 face *pFace=*iter1;
-                sChildern.insert(pFace);
-                pFace->FindAllChildern(sChildern);
+                sChildren.insert(pFace);
+                pFace->FindAllChildren(sChildren);
                 ++iter1;
                 }
             std::set<edge *,EntityCompare> const &sEdges=pVolume->GetEdges();
@@ -85,8 +85,8 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
             while(iter2!=sEdges.end())
                 {
                 edge *pEdge=*iter2;
-                sChildern.insert(pEdge);
-                pEdge->FindAllChildern(sChildern);
+                sChildren.insert(pEdge);
+                pEdge->FindAllChildren(sChildren);
                 ++iter2;
                 }
             break;
@@ -94,14 +94,14 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
         case SGM::FaceType:
             {
             face const *pFace=(face const *)this;
-            sChildern.insert((entity *)(pFace->GetSurface()));
+            sChildren.insert((entity *)(pFace->GetSurface()));
             std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
             std::set<edge *,EntityCompare>::iterator iter=sEdges.begin();
             while(iter!=sEdges.end())
                 {
                 edge *pEdge=*iter;
-                sChildern.insert(pEdge);
-                pEdge->FindAllChildern(sChildern);
+                sChildren.insert(pEdge);
+                pEdge->FindAllChildren(sChildren);
                 ++iter;
                 }
             break;
@@ -109,14 +109,14 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
         case SGM::EdgeType:
             {
             edge const *pEdge=(edge const *)this;
-            sChildern.insert((entity *)(pEdge->GetCurve()));
+            sChildren.insert((entity *)(pEdge->GetCurve()));
             if(pEdge->GetStart())
                 {
-                sChildern.insert(pEdge->GetStart());
+                sChildren.insert(pEdge->GetStart());
                 }
             if(pEdge->GetEnd())
                 {
-                sChildern.insert(pEdge->GetEnd());
+                sChildren.insert(pEdge->GetEnd());
                 }
             break;
             }
@@ -136,7 +136,7 @@ void entity::FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const
                 case SGM::RevolveType:
                     {
                     revolve const *pRevole=(revolve const *)this;
-                    sChildern.insert((entity *)(pRevole->m_pCurve));
+                    sChildren.insert((entity *)(pRevole->m_pCurve));
                     break;
                     }
                 default:

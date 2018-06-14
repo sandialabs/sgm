@@ -10,7 +10,8 @@ add_executable(sgm_tests
         interval_check.cpp
         )
 
-target_link_libraries(sgm_tests gtest gtest_main SGM)
+target_link_libraries(sgm_tests gtest_main gtest)
+target_link_libraries(sgm_tests SGM)
 
 add_executable(boxtree_timing
         boxtree_timing.cpp)

@@ -59,7 +59,7 @@ class entity
 
         void SeverOwners() const;
 
-        void FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const;
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
 
     protected:
 
@@ -241,7 +241,7 @@ class volume : public topology
 
         SGM::Interval3D const &GetBox() const;
 
-        bool IsTopLevel() const {return m_pBody==NULL && m_Owners.empty();}
+        bool IsTopLevel() const {return m_pBody==nullptr && m_Owners.empty();}
 
         // Other methods
 
@@ -318,7 +318,7 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const {return m_pVolume==NULL && m_Owners.empty();}
+        bool IsTopLevel() const {return m_pVolume==nullptr && m_Owners.empty();}
         
         // Find methods
 

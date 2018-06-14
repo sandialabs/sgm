@@ -821,8 +821,8 @@ bool Test_IntersectNonParallelPlanes(SGM::Point3D       const &Origin1,
         double dDistPos2ToPlane2 = ((Pos2 - Origin2) % Norm2);
 
         return (dDistLineOriginToPlane1 < SGM_MIN_TOL &&
-                dDistLineOriginToPlane2 < SGM_MIN_TOL ||
-                dDistPos2ToPlane1       < SGM_MIN_TOL ||
+                dDistLineOriginToPlane2 < SGM_MIN_TOL &&
+                dDistPos2ToPlane1       < SGM_MIN_TOL &&
                 dDistPos2ToPlane2       < SGM_MIN_TOL);
 }
 

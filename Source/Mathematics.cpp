@@ -4,10 +4,8 @@
 #include <utility>
 #include <vector>
 #include <set>
-#include <algorithm>
 
 #include "SGMVector.h"
-#include "SGMMathematics.h"
 #include "SGMSegment.h"
 #include "Faceter.h"
 
@@ -519,7 +517,7 @@ namespace SGM {
             Vector3D Vec = aPoints3D[Index1] - Origin;
             double dx = Vec % XVec;
             double dy = Vec % YVec;
-            aPoints2D.push_back(Point2D(dx, dy));
+            aPoints2D.emplace_back(dx, dy);
             double dz = fabs(Vec % ZVec);
             if (dAnswer < dz)
                 {
@@ -530,33 +528,33 @@ namespace SGM {
     }
 
 
-bool SGM::ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
-                            double                           dTolerance,
-                            SGM::Point3D                    *Origin,
-                            SGM::UnitVector3D               *Normal)
-{
-    bool bCoplanar = false;
-    SGM::Point3D PlaneOrigin;
-    SGM::UnitVector3D XVec;
-    SGM::UnitVector3D YVec;
-    SGM::UnitVector3D ZVec;
-    if (SGM::FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
+    bool ArePointsCoplanar(std::vector<Point3D> const &aPoints,
+                           double dTolerance,
+                           Point3D *Origin,
+                           UnitVector3D *Normal)
     {
-        std::vector<SGM::Point2D> aPoints2D;
-        double dMaxDist = SGM::ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
-        if (dMaxDist < dTolerance)
-            bCoplanar = true;
-    }
+        bool bCoplanar = false;
+        Point3D PlaneOrigin;
+        UnitVector3D XVec;
+        UnitVector3D YVec;
+        UnitVector3D ZVec;
+        if (FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
+            {
+            std::vector<Point2D> aPoints2D;
+            double dMaxDist = ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
+            if (dMaxDist < dTolerance)
+                bCoplanar = true;
+            }
 
-    if (bCoplanar)
-    {
-        if (nullptr != Origin)
-            *Origin = PlaneOrigin;
-        if (nullptr != Normal)
-            *Normal = ZVec;
+        if (bCoplanar)
+            {
+            if (nullptr != Origin)
+                *Origin = PlaneOrigin;
+            if (nullptr != Normal)
+                *Normal = ZVec;
+            }
+        return bCoplanar;
     }
-    return bCoplanar;
-}
 
     void FindLengths3D(std::vector<Point3D> const &aPoints,
                             std::vector<double> &aLengths,

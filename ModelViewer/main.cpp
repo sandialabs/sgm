@@ -29,6 +29,6 @@ int main(int argc, char** argv)
   mw.show();
 
   // Run the application
-  return app.exec();
+  return QApplication::exec();
 }
 

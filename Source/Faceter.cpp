@@ -741,12 +741,12 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
         {
         aPoints3D.clear();
         aParams.clear();
-        std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
-        while(iter!=lNodes.end())
+        std::list<FacetNodeNormal>::iterator iterNodeSplit=lNodes.begin();
+        while(iterNodeSplit!=lNodes.end())
             {
-            aPoints3D.push_back(iter->m_Pos);
-            aParams.push_back(iter->m_dParam);
-            ++iter;
+            aPoints3D.push_back(iterNodeSplit->m_Pos);
+            aParams.push_back(iterNodeSplit->m_dParam);
+            ++iterNodeSplit;
             }
         }
     }
@@ -1503,17 +1503,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeA.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
                         {
-                        aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        aUInLow.emplace_back(NodeA.m_uv.m_v,nA);
                         }
                     else
                         {
-                        aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        aUOutLow.emplace_back(NodeA.m_uv.m_v,nA);
                         }
                     }
                 else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
                     {
-                    aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                    aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
+                    aUOutLow.emplace_back(NodeA.m_uv.m_v,nA);
+                    aUInHigh.emplace_back(NodeA.m_uv.m_v,nB);
                     }
                 else
                     {
@@ -1525,8 +1525,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aUOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                    aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                    aUOutLow.emplace_back(NodeA.m_uv.m_v,nA);
+                    aUInHigh.emplace_back(NodeA.m_uv.m_v,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
@@ -1535,17 +1535,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeA.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
                         {
-                        aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        aUOutHigh.emplace_back(NodeA.m_uv.m_v,nA);
                         }
                     else
                         {
-                        aUInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                        aUInHigh.emplace_back(NodeA.m_uv.m_v,nA);
                         }
                     }
                 else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
                     {
-                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
+                    aUOutHigh.emplace_back(NodeA.m_uv.m_v,nA);
+                    aUInLow.emplace_back(NodeA.m_uv.m_v,nB);
                     }
                 else
                     {
@@ -1557,8 +1557,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
-                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nC));
+                    aUOutHigh.emplace_back(NodeA.m_uv.m_v,nA);
+                    aUInLow.emplace_back(NodeA.m_uv.m_v,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
@@ -1567,17 +1567,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeB.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
                         {
-                        aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        aUOutLow.emplace_back(NodeB.m_uv.m_v,nB);
                         }
                     else
                         {
-                        aUInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        aUInLow.emplace_back(NodeB.m_uv.m_v,nB);
                         }
                     }
                 else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
                     {
-                    aUInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nB));
-                    aUOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_v,nA));
+                    aUInLow.emplace_back(NodeA.m_uv.m_v,nB);
+                    aUOutHigh.emplace_back(NodeA.m_uv.m_v,nA);
                     }
                 else
                     {
@@ -1589,8 +1589,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aUInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
-                    aUOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
+                    aUInLow.emplace_back(NodeB.m_uv.m_v,nB);
+                    aUOutHigh.emplace_back(NodeB.m_uv.m_v,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
@@ -1599,17 +1599,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeB.m_uv.m_v<FullDomain.m_VDomain.MidPoint())
                         {
-                        aUOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        aUOutHigh.emplace_back(NodeB.m_uv.m_v,nB);
                         }
                     else
                         {
-                        aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
+                        aUInHigh.emplace_back(NodeB.m_uv.m_v,nB);
                         }
                     }
                 else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
                     {
-                    aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
-                    aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nA));
+                    aUInHigh.emplace_back(NodeB.m_uv.m_v,nB);
+                    aUOutLow.emplace_back(NodeB.m_uv.m_v,nA);
                     }
                 else
                     {
@@ -1621,8 +1621,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aUInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nB));
-                    aUOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_v,nC));
+                    aUInHigh.emplace_back(NodeB.m_uv.m_v,nB);
+                    aUOutLow.emplace_back(NodeB.m_uv.m_v,nC);
                     }
                 }
             }
@@ -1645,17 +1645,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeA.m_uv.m_u<FullDomain.m_UDomain.MidPoint())
                         {
-                        aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        aVInLow.emplace_back(NodeA.m_uv.m_u,nA);
                         }
                     else
                         {
-                        aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        aVOutLow.emplace_back(NodeA.m_uv.m_u,nA);
                         }
                     }
                 else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
                     {
-                    aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                    aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
+                    aVOutLow.emplace_back(NodeA.m_uv.m_u,nA);
+                    aVInHigh.emplace_back(NodeA.m_uv.m_u,nB);
                     }
                 else
                     {
@@ -1667,8 +1667,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aVOutLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                    aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                    aVOutLow.emplace_back(NodeA.m_uv.m_u,nA);
+                    aVInHigh.emplace_back(NodeA.m_uv.m_u,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
@@ -1677,17 +1677,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeA.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
                         {
-                        aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        aVOutHigh.emplace_back(NodeA.m_uv.m_u,nA);
                         }
                     else
                         {
-                        aVInHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                        aVInHigh.emplace_back(NodeA.m_uv.m_u,nA);
                         }
                     }
                 else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
                     {
-                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
+                    aVOutHigh.emplace_back(NodeA.m_uv.m_u,nA);
+                    aVInLow.emplace_back(NodeA.m_uv.m_u,nB);
                     }
                 else
                     {
@@ -1699,8 +1699,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
-                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nC));
+                    aVOutHigh.emplace_back(NodeA.m_uv.m_u,nA);
+                    aVInLow.emplace_back(NodeA.m_uv.m_u,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
@@ -1709,17 +1709,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeB.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
                         {
-                        aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        aVOutLow.emplace_back(NodeB.m_uv.m_u,nB);
                         }
                     else
                         {
-                        aVInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        aVInLow.emplace_back(NodeB.m_uv.m_u,nB);
                         }
                     }
                 else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
                     {
-                    aVInLow.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nB));
-                    aVOutHigh.push_back(std::pair<double,size_t>(NodeA.m_uv.m_u,nA));
+                    aVInLow.emplace_back(NodeA.m_uv.m_u,nB);
+                    aVOutHigh.emplace_back(NodeA.m_uv.m_u,nA);
                     }
                 else
                     {
@@ -1731,8 +1731,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aVInLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
-                    aVOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
+                    aVInLow.emplace_back(NodeB.m_uv.m_u,nB);
+                    aVOutHigh.emplace_back(NodeB.m_uv.m_u,nC);
                     }
                 }
             else if(SGM::NearEqual(NodeB.m_uv.m_v,Domain.m_dMax,SGM_MIN_TOL,false))
@@ -1741,17 +1741,17 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     {
                     if(NodeB.m_uv.m_u<FullDomain.m_VDomain.MidPoint())
                         {
-                        aVOutHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        aVOutHigh.emplace_back(NodeB.m_uv.m_u,nB);
                         }
                     else
                         {
-                        aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
+                        aVInHigh.emplace_back(NodeB.m_uv.m_u,nB);
                         }
                     }
                 else if(SGM::NearEqual(NodeA.m_uv.m_v,Domain.m_dMin,SGM_MIN_TOL,false))
                     {
-                    aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
-                    aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nA));
+                    aVInHigh.emplace_back(NodeB.m_uv.m_u,nB);
+                    aVOutLow.emplace_back(NodeB.m_uv.m_u,nA);
                     }
                 else
                     {
@@ -1763,8 +1763,8 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
                     aNodes.push_back(NodeC);
                     aNodes[nB].m_nPrevious=nC;
                     aNodes[nA].m_nNext=nC;
-                    aVInHigh.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nB));
-                    aVOutLow.push_back(std::pair<double,size_t>(NodeB.m_uv.m_u,nC));
+                    aVInHigh.emplace_back(NodeB.m_uv.m_u,nB);
+                    aVOutLow.emplace_back(NodeB.m_uv.m_u,nC);
                     }
                 }
             }
@@ -2728,9 +2728,9 @@ double ScaledUVs(face                      const *pFace,
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        SGM::Point2D uv=aPoints2D[Index1];
-        uv.m_v*=dScale;
-        aScaled.push_back(uv);
+        SGM::Point2D uvToScale=aPoints2D[Index1];
+        uvToScale.m_v*=dScale;
+        aScaled.push_back(uvToScale);
         }
     return dScale;
     }

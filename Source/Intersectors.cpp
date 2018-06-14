@@ -422,7 +422,7 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
                 if(nRoots==1)
                     {
                     SGM::Vector3D D1;
-                    pParabola->Evaluate(t,NULL,&D1);
+                    pParabola->Evaluate(t,nullptr,&D1);
                     SGM::UnitVector3D UD1=D1;
                     if(SGM::NearEqual(fabs(UD1%Axis),1.0,dTolerance,false))
                         {
@@ -521,7 +521,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
                 if(nRoots==1)
                     {
                     SGM::Vector3D D1;
-                    pHyperbola->Evaluate(t,NULL,&D1);
+                    pHyperbola->Evaluate(t,nullptr,&D1);
                     SGM::UnitVector3D UD1=D1;
                     if(SGM::NearEqual(fabs(UD1%Axis),1.0,dTolerance,false))
                         {
@@ -714,12 +714,12 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
             double t=(Pos-Origin)%Axis;
             if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
                 {
-                aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                aRefinedPoints.emplace_back(t,Pos);
                 break;
                 }
             if(nCount==nCountLimit-1 && dDist<dTolerance)
                 {
-                aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                aRefinedPoints.emplace_back(t,Pos);
                 break;
                 }
             dOldDist=dDist;
@@ -740,7 +740,7 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
                 {
                 double t=aRefinedPoints[Index1].first;
                 SGM::Vector3D DPos;
-                pNUBCurve->Evaluate(t,NULL,&DPos);
+                pNUBCurve->Evaluate(t,nullptr,&DPos);
                 aPoints.push_back(Pos);
                 SGM::UnitVector3D Test(DPos);
                 if(fabs(1.0-fabs(Test%Axis))<SGM_MIN_TOL)
@@ -992,7 +992,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             SGM::Point3D const &PlaneOrigin=aSeedPoints[nU+Index2];
             SGM::Point2D const uv=aSeedParams[nU+Index2];
             SGM::UnitVector3D Norm;
-            pNUBSurface->Evaluate(uv,NULL,NULL,NULL,&Norm);
+            pNUBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
             std::vector<SGM::Point3D> aHits;
             std::vector<SGM::IntersectionType> aHitTypes;
             size_t nHits=IntersectLineAndPlane(Origin,Axis,Domain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
@@ -1038,12 +1038,12 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
                 double t=(Pos-Origin)%Axis;
                 if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
                     {
-                    aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                    aRefinedPoints.emplace_back(t,Pos);
                     break;
                     }
                 if(nCount==nCountLimit-1 && dDist<dTolerance)
                     {
-                    aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                    aRefinedPoints.emplace_back(t,Pos);
                     break;
                     }
                 dOldDist=dDist;
@@ -1111,7 +1111,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             SGM::Point3D const &PlaneOrigin=aSeedPoints[nU+Index2];
             SGM::Point2D const uv=aSeedParams[nU+Index2];
             SGM::UnitVector3D Norm;
-            pNURBSurface->Evaluate(uv,NULL,NULL,NULL,&Norm);
+            pNURBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
             std::vector<SGM::Point3D> aHits;
             std::vector<SGM::IntersectionType> aHitTypes;
             size_t nHits=IntersectLineAndPlane(Origin,Axis,Domain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
@@ -1157,12 +1157,12 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
                 double t=(Pos-Origin)%Axis;
                 if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
                     {
-                    aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                    aRefinedPoints.emplace_back(t,Pos);
                     break;
                     }
                 if(nCount==nCountLimit-1 && dDist<dTolerance)
                     {
-                    aRefinedPoints.push_back(std::pair<double,SGM::Point3D>(t,Pos));
+                    aRefinedPoints.emplace_back(t,Pos);
                     break;
                     }
                 dOldDist=dDist;
@@ -1228,7 +1228,7 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
         IntersectCurveAndPlane(rResult, pRevolve->m_pCurve, PosAxis,pRevolve->m_ZAxis, aCurvePlanePoints, aCurvePlaneTypes, dTolerance);
 
         // if plane does not intersect we're done
-        if (aCurvePlanePoints.size() == 0)
+        if (aCurvePlanePoints.empty())
             return 0;
 
         // intersect the line with the circle defined by each curve and plane intersection point
@@ -2379,7 +2379,7 @@ hermite *WalkFromTo(SGM::Result        &rResult,
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        lNodes.push_back(HermiteNode(aParams[Index1],aPoints[Index1],aTangents[Index1]));
+        lNodes.emplace_back(aParams[Index1],aPoints[Index1],aTangents[Index1]);
         }
     double dLength=aParams.back();
     std::list<HermiteNode>::iterator iter=lNodes.begin();
