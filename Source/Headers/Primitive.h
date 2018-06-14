@@ -58,9 +58,14 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
                                        SGM::Vector3D             const &EndVec,
                                        std::vector<double>       const *pParams);
 
-body *CreateSheetBody(SGM::Result                       &rResult,
-                      surface                           *pSurface,
-                      std::vector<edge *> &aEdges,
-                      std::vector<SGM::EdgeSideType>    &aTypes);
+body *CreateSheetBody(SGM::Result                    &rResult,
+                      surface                        *pSurface,
+                      std::vector<edge *>            &aEdges,
+                      std::vector<SGM::EdgeSideType> &aTypes);
+
+body *CreateDisk(SGM::Result             &rResult,
+                 SGM::Point3D      const &Center,
+                 SGM::UnitVector3D const &Normal,
+                 double                   dRadius);
     }
 #endif // PRIMITIVE_H

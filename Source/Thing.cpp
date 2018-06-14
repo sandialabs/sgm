@@ -18,14 +18,14 @@ size_t entity::GetID() const
 thing::~thing()
     {
     for (std::pair<size_t,entity* > pair : m_mAllEntities)
-    {
-      SeverOwners(pair.second);
-    }
+        {
+        SeverOwners(pair.second);
+        }
     while (!m_mAllEntities.empty())
-    {
-      auto pEntity = m_mAllEntities.begin()->second;
-      DeleteEntity(pEntity);
-    }
+        {
+        auto pEntity = m_mAllEntities.begin()->second;
+        DeleteEntity(pEntity);
+        }
     }
 
 void thing::AddToMap(size_t nID,entity *pEntity)
@@ -126,34 +126,63 @@ void thing::DeleteEntity(entity *pEntity)
 
 void thing::SeverOwners(entity *pEntity)
     {
-    switch (pEntity->GetType())
+    switch(pEntity->GetType()) 
         {
-        case SGM::SurfaceType:
+        case SGM::EdgeType:
             {
-            surface *pSurface = reinterpret_cast<surface *>(pEntity);
-            switch (pSurface->GetSurfaceType())
+            edge *pEdge=(edge *)pEntity;
+            std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+            std::set<face *,EntityCompare>::const_iterator iter=sFaces.begin();
+            while(iter!=sFaces.end())
+                {
+                face *pFace=*iter;
+                pFace->RemoveEdge(pEdge);
+                ++iter;
+                }
+            if(pEdge->GetVolume())
+                {
+                throw;
+                }
+            break;
+            }
+        case SGM::FaceType:
+            {
+            face *pFace=(face *)pEntity;
+            if(volume *pVolume=pFace->GetVolume())
+                {
+                pVolume->RemoveFace(pFace);
+                }
+            break;
+            }
+        case SGM::SurfaceType: 
+            {
+            surface* pSurface = reinterpret_cast<surface*>(pEntity);
+            switch (pSurface->GetSurfaceType()) 
                 {
                 case SGM::RevolveType:
                     {
-                    revolve *pRevolve = reinterpret_cast<revolve *>(pEntity);
+                    revolve *pRevolve = reinterpret_cast<revolve*>(pEntity);
                     pRevolve->m_pCurve->RemoveOwner(this);
                     pRevolve->m_pCurve = nullptr;
                     break;
                     }
                 case SGM::ExtrudeType:
                     {
-                    extrude *pExtrude = reinterpret_cast<extrude *>(pEntity);
+                    extrude *pExtrude = reinterpret_cast<extrude*>(pEntity);
                     pExtrude->m_pCurve->RemoveOwner(this);
                     pExtrude->m_pCurve = nullptr;
                     break;
                     }
                 default:
+                    {
                     break;
+                    }
                 }
-            break;
             }
         default:
+            {
             break;
+            }
         }
     }
 

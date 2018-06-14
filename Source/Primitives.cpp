@@ -26,7 +26,7 @@ edge *CreateEdge(SGM::Result           &rResult,
         Domain=pCurve->GetDomain();
         }
     
-    pEdge->SetDomain(Domain);
+    pEdge->SetDomain(rResult,Domain);
     if( pCurve->GetClosed()==false ||
         SGM::NearEqual(pCurve->GetDomain().Length(),Domain.Length(),SGM_MIN_TOL,false)==false)
         {
@@ -95,6 +95,8 @@ body *CreateCylinder(SGM::Result        &rResult,
                      SGM::Point3D const &TopCenter,
                      double              dRadius)
     {
+    bool bSheetBody=false;
+
     SGM::UnitVector3D ZAxis=TopCenter-BottomCenter;
     SGM::UnitVector3D XAxis=ZAxis.Orthogonal();
     SGM::UnitVector3D YAxis=ZAxis*XAxis;
@@ -102,22 +104,27 @@ body *CreateCylinder(SGM::Result        &rResult,
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
 
-    face *pBottom=new face(rResult);
     face *pSide=new face(rResult);
-    face *pTop=new face(rResult);
+    face *pBottom=nullptr;
+    face *pTop=nullptr;
+    if(bSheetBody==false)
+        {
+        pBottom=new face(rResult);
+        pTop=new face(rResult);
+        }
 
     if(rResult.GetLog())
         {
         rResult.AddLog(SGM::Entity(pSide->GetID()),SGM::LogType::LogMain);
-        rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
-        rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
+        if(bSheetBody==false)
+            {
+            rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
+            rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
+            }
         }
 
     edge *pEdgeBottom=new edge(rResult);
     edge *pEdgeTop=new edge(rResult);
-
-    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
-    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
 
     cylinder *pCylinder=new cylinder(rResult,BottomCenter,TopCenter,dRadius,&XAxis);
 
@@ -127,25 +134,32 @@ body *CreateCylinder(SGM::Result        &rResult,
     // Connect everything.
 
     pBody->AddVolume(pVolume);
-
-    pVolume->AddFace(pBottom);
     pVolume->AddFace(pSide);
-    pVolume->AddFace(pTop);
+    
+    if(bSheetBody==false)
+        {
+        pVolume->AddFace(pBottom);
+        pVolume->AddFace(pTop);
 
-    pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
+        plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
+        plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
+
+        pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
+        pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
+
+        pBottom->SetSurface(pPlaneBottom);
+        pTop->SetSurface(pPlaneTop);
+        }
+
     pSide->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
     pSide->AddEdge(pEdgeTop,SGM::FaceOnRightType);
-    pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
-
-    pBottom->SetSurface(pPlaneBottom);
     pSide->SetSurface(pCylinder);
-    pTop->SetSurface(pPlaneTop);
 
     pEdgeBottom->SetCurve(pCircleBottom);
     pEdgeTop->SetCurve(pCircleTop);
 
-    pEdgeBottom->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
-    pEdgeTop->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeTop->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
 
     return pBody;
     }
@@ -201,8 +215,8 @@ body *CreateCone(SGM::Result        &rResult,
     pEdgeBottom->SetCurve(pCircleBottom);
     pEdgeTop->SetCurve(pCircleTop);
 
-    pEdgeBottom->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
-    pEdgeTop->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeTop->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
 
     return pBody;
     }
@@ -275,10 +289,10 @@ body *CreateBlock(SGM::Result        &rResult,
         pEdge23->SetEnd(pVertex3);
         pEdge30->SetEnd(pVertex0);
 
-        pEdge01->SetDomain(SGM::Interval1D(0,Pos0.Distance(Pos1)));
-        pEdge12->SetDomain(SGM::Interval1D(0,Pos1.Distance(Pos2)));
-        pEdge23->SetDomain(SGM::Interval1D(0,Pos2.Distance(Pos3)));
-        pEdge30->SetDomain(SGM::Interval1D(0,Pos3.Distance(Pos0)));
+        pEdge01->SetDomain(rResult,SGM::Interval1D(0,Pos0.Distance(Pos1)));
+        pEdge12->SetDomain(rResult,SGM::Interval1D(0,Pos1.Distance(Pos2)));
+        pEdge23->SetDomain(rResult,SGM::Interval1D(0,Pos2.Distance(Pos3)));
+        pEdge30->SetDomain(rResult,SGM::Interval1D(0,Pos3.Distance(Pos0)));
 
         pFace0123->SetSurface(pPlane0123);
         pFace0123->SetSides(2);
@@ -413,18 +427,18 @@ body *CreateBlock(SGM::Result        &rResult,
         pEdge67->SetEnd(pVertex7);
         pEdge47->SetEnd(pVertex7);
 
-        pEdge01->SetDomain(SGM::Interval1D(0,Pos0.Distance(Pos1)));
-        pEdge12->SetDomain(SGM::Interval1D(0,Pos1.Distance(Pos2)));
-        pEdge23->SetDomain(SGM::Interval1D(0,Pos2.Distance(Pos3)));
-        pEdge03->SetDomain(SGM::Interval1D(0,Pos0.Distance(Pos3)));
-        pEdge04->SetDomain(SGM::Interval1D(0,Pos0.Distance(Pos4)));
-        pEdge15->SetDomain(SGM::Interval1D(0,Pos1.Distance(Pos5)));
-        pEdge26->SetDomain(SGM::Interval1D(0,Pos2.Distance(Pos6)));
-        pEdge37->SetDomain(SGM::Interval1D(0,Pos3.Distance(Pos7)));
-        pEdge45->SetDomain(SGM::Interval1D(0,Pos4.Distance(Pos5)));
-        pEdge56->SetDomain(SGM::Interval1D(0,Pos5.Distance(Pos6)));
-        pEdge67->SetDomain(SGM::Interval1D(0,Pos6.Distance(Pos7)));
-        pEdge47->SetDomain(SGM::Interval1D(0,Pos4.Distance(Pos7)));
+        pEdge01->SetDomain(rResult,SGM::Interval1D(0,Pos0.Distance(Pos1)));
+        pEdge12->SetDomain(rResult,SGM::Interval1D(0,Pos1.Distance(Pos2)));
+        pEdge23->SetDomain(rResult,SGM::Interval1D(0,Pos2.Distance(Pos3)));
+        pEdge03->SetDomain(rResult,SGM::Interval1D(0,Pos0.Distance(Pos3)));
+        pEdge04->SetDomain(rResult,SGM::Interval1D(0,Pos0.Distance(Pos4)));
+        pEdge15->SetDomain(rResult,SGM::Interval1D(0,Pos1.Distance(Pos5)));
+        pEdge26->SetDomain(rResult,SGM::Interval1D(0,Pos2.Distance(Pos6)));
+        pEdge37->SetDomain(rResult,SGM::Interval1D(0,Pos3.Distance(Pos7)));
+        pEdge45->SetDomain(rResult,SGM::Interval1D(0,Pos4.Distance(Pos5)));
+        pEdge56->SetDomain(rResult,SGM::Interval1D(0,Pos5.Distance(Pos6)));
+        pEdge67->SetDomain(rResult,SGM::Interval1D(0,Pos6.Distance(Pos7)));
+        pEdge47->SetDomain(rResult,SGM::Interval1D(0,Pos4.Distance(Pos7)));
 
         pFace0321->SetSurface(pPlane0321);
         pFace0154->SetSurface(pPlane0154);
@@ -698,6 +712,26 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     return new NUBcurve(rResult,aControlPoints,aKnots);
     }
 
+body *CreateDisk(SGM::Result             &rResult,
+                 SGM::Point3D      const &Center,
+                 SGM::UnitVector3D const &Normal,
+                 double                   dRadius)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    face *pFace=new face(rResult);
+    pVolume->AddFace(pFace);
+    SGM::UnitVector3D XAxis=Normal.Orthogonal();
+    SGM::UnitVector3D YAxis=Normal*XAxis;
+    surface *pSurface=new plane(rResult,Center,XAxis,YAxis,Normal,1.0);
+    pFace->SetSurface(pSurface);
+    curve *pCurve=new circle(rResult,Center,Normal,dRadius,&XAxis);
+    edge *pEdge=SGMInternal::CreateEdge(rResult,pCurve,nullptr);
+    pFace->AddEdge(pEdge,SGM::FaceOnLeftType);
+    return pBody;
+    }
+
 body *CreateSheetBody(SGM::Result                       &rResult,
                       surface                           *pSurface,
                       std::vector<edge *> &aEdges,
@@ -778,8 +812,8 @@ body *CreateRevolve(SGM::Result             &rResult,
     pEdgeStart->SetCurve(pCircleStart);
     pEdgeEnd->SetCurve(pCircleEnd);
 
-    pEdgeStart->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
-    pEdgeEnd->SetDomain(SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeStart->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+    pEdgeEnd->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
 
     return pBody;
     }

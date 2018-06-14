@@ -138,7 +138,7 @@ namespace SGM {
             RemoveLeaf()
                     :m_bContinue(true) { }
 
-            bool operator()(Leaf const * leaf) const
+            bool operator()(Leaf const * /*leaf*/) const
             {
                 return true;
             }
@@ -202,7 +202,7 @@ namespace SGM {
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
             static std::unique_ptr<MemoryPool<Leaf>> m_MemoryPool;  //TODO: remove #define
-            void* operator new(size_t size) { return m_MemoryPool->Alloc(); }
+            void* operator new(size_t /*size*/) { return m_MemoryPool->Alloc(); }
             void operator delete(void* p) { m_MemoryPool->Free(p); }
 #endif
         };
@@ -216,7 +216,7 @@ namespace SGM {
 
 #if defined(BOX_TREE_USE_MEMORY_POOL)
             static std::unique_ptr<MemoryPool<Node>> m_MemoryPool;
-            void* operator new(size_t size) { return m_MemoryPool->Alloc(); }
+            void* operator new(size_t /*size*/) { return m_MemoryPool->Alloc(); }
             void operator delete(void* p) { m_MemoryPool->Free(p); }
 #endif
         };

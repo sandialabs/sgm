@@ -265,6 +265,7 @@ namespace SGM {
     void BoxTree::Reinsert(Node* node)
     {
         // Perform opportunistic reinsertion
+
         const size_t n_items = node->m_aItems.size();
         const size_t p = REINSERT_CHILDREN;
 

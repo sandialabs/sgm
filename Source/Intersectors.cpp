@@ -13,9 +13,57 @@
 #include "Intersectors.h"
 #include "EntityClasses.h"
 #include "FacetToBRep.h"
+#include "Topology.h"
 
 namespace SGMInternal
 {
+
+size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
+                                SGM::UnitVector3D            const &Axis,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes)
+    {
+    size_t nAnswer=0;
+    size_t Index1;
+    if(size_t nAllHits=aPoints.size())
+        {
+        std::vector<std::pair<double,size_t> > aParams;
+        aParams.reserve(nAllHits);
+        for(Index1=0;Index1<nAllHits;++Index1)
+            {
+            if(-dTolerance<(aPoints[Index1]-Origin)%Axis)
+                {
+                double dDist=Origin.Distance(aPoints[Index1]);
+                aParams.push_back(std::pair<double,size_t>(dDist,Index1));
+                }
+            }
+        std::sort(aParams.begin(),aParams.end());
+
+        // Remove duplicates.
+
+        size_t nGoodHits=aParams.size();
+        std::vector<SGM::Point3D> aTempPoints;
+        std::vector<SGM::IntersectionType> aTempTypes;
+        aTempPoints.push_back(aPoints[aParams[0].second]);
+        aTempTypes.push_back(aTypes[aParams[0].second]);
+        double dLastParam=aParams[0].first;
+        ++nAnswer;
+        for(Index1=1;Index1<nGoodHits;++Index1)
+            {
+            if(dTolerance<aParams[Index1].first-dLastParam)
+                {
+                dLastParam=aParams[Index1].first;
+                aTempPoints.push_back(aPoints[aParams[Index1].second]);
+                aTempTypes.push_back(aTypes[aParams[Index1].second]);
+                ++nAnswer;
+                }
+            }
+        aPoints=aTempPoints;
+        aTypes=aTempTypes;
+        }
+    return nAnswer;
+    }
 
 size_t RayFireFace(SGM::Result                        &rResult,
                    SGM::Point3D                 const &Origin,
@@ -25,6 +73,8 @@ size_t RayFireFace(SGM::Result                        &rResult,
                    std::vector<SGM::IntersectionType> &aTypes,
                    double                              dTolerance)
     {
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
     SGM::Interval1D Domain(-dTolerance,SGM_MAX);
     surface const *pSurface=pFace->GetSurface();
     std::vector<SGM::Point3D> aTempPoints;
@@ -37,11 +87,15 @@ size_t RayFireFace(SGM::Result                        &rResult,
         SGM::Point2D uv=pSurface->Inverse(Pos);
         if(pFace->PointInFace(rResult,uv))
             {
-            aPoints.push_back(Pos);
-            aTypes.push_back(aTempTypes[Index1]);
+            aAllPoints.push_back(Pos);
+            aAllTypes.push_back(aTempTypes[Index1]);
             }
         }
-    return aPoints.size();
+    
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
     }
 
 size_t RayFireVolume(SGM::Result                        &rResult,
@@ -52,14 +106,31 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      std::vector<SGM::IntersectionType> &aTypes,
                      double                              dTolerance)
     {
-    rResult;
-    Origin;
-    Axis;
-    pVolume;
-    aPoints;
-    aTypes;
-    dTolerance;
-    return 0;
+    // Find all ray hits for all faces.
+
+    std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
+    std::set<face *,EntityCompare>::const_iterator iter=sFaces.begin();
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
+    size_t Index1;
+    while(iter!=sFaces.end())
+        {
+        face *pFace=*iter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++iter;
+        }
+
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
     }
 
 size_t RayFireBody(SGM::Result                        &rResult,
@@ -70,14 +141,101 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    std::vector<SGM::IntersectionType> &aTypes,
                    double                              dTolerance)
     {
-    rResult;
-    Origin;
-    Axis;
-    pBody;
-    aPoints;
-    aTypes;
-    dTolerance;
-    return 0;
+    // Find all ray hits for all volumes.
+
+    std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
+    std::set<volume *,EntityCompare>::const_iterator iter=sVolumes.begin();
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
+    size_t Index1;
+    while(iter!=sVolumes.end())
+        {
+        volume *pVolume=*iter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++iter;
+        }
+
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
+    }
+
+size_t RayFireThing(SGM::Result                        &rResult,
+                    SGM::Point3D                 const &Origin,
+                    SGM::UnitVector3D            const &Axis,
+                    thing                        const *pThing,
+                    std::vector<SGM::Point3D>          &aPoints,
+                    std::vector<SGM::IntersectionType> &aTypes,
+                    double                              dTolerance)
+    {
+    // Find all top level bodies, volumes, and faces.
+
+    std::set<body *,EntityCompare> sBodies;
+    FindBodies(rResult,pThing,sBodies,true);
+    std::set<body *,EntityCompare>::const_iterator BodyIter=sBodies.begin();
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
+    size_t Index1;
+    while(BodyIter!=sBodies.end())
+        {
+        body *pBody=*BodyIter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++BodyIter;
+        }
+    
+    std::set<volume *,EntityCompare> sVolumes;
+    FindVolumes(rResult,pThing,sVolumes,true);
+    std::set<volume *,EntityCompare>::const_iterator VolumeIter=sVolumes.begin();
+    while(VolumeIter!=sVolumes.end())
+        {
+        volume *pVolume=*VolumeIter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++VolumeIter;
+        }
+    
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pThing,sFaces,true);
+    std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
+    while(FaceIter!=sFaces.end())
+        {
+        face *pFace=*FaceIter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++FaceIter;
+        }
+
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
     }
 
 size_t RayFire(SGM::Result                        &rResult,
@@ -90,6 +248,10 @@ size_t RayFire(SGM::Result                        &rResult,
     {
     switch(pEntity->GetType())
         {
+        case SGM::ThingType:
+            {
+            return RayFireThing(rResult,Origin,Axis,(thing const *)pEntity,aPoints,aTypes,dTolerance);
+            }
         case SGM::BodyType:
             {
             return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,dTolerance);
@@ -188,7 +350,7 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
                 }
             else if(dDist<dRadius)
                 {
-                SGM::Point3D ClosePos=Origin+(dCloseT*dScale)*Axis;
+                SGM::Point3D ClosePos=LineOrigin+(dCloseT*dScale)*Axis;
                 double t=sqrt(dRadius*dRadius-dDist*dDist);
                 aPoints.push_back(ClosePos+(t*dScale)*Axis);
                 aTypes.push_back(SGM::IntersectionType::PointType);
@@ -1386,6 +1548,11 @@ size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
     {
     switch(pSurface->GetSurfaceType())
         {
+        case SGM::EntityType::PlaneType:
+            {
+            plane const *pPlane=(plane const *)pSurface;
+            IntersectCircleAndPlane(Center,Normal,dRadius,pPlane->m_Origin,pPlane->m_ZAxis,dTolerance,aPoints,aTypes);
+            }
         case SGM::EntityType::CylinderType:
             {
             cylinder const *pCylinder=(cylinder const *)pSurface;
@@ -1907,7 +2074,7 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
             {
             // Circle.
             SGM::Point3D CircleCenter=Center+(pCylinder->m_ZAxis)*((Origin-Center)%pCylinder->m_ZAxis);
-            aCurves.push_back(new circle(rResult,CircleCenter,pCylinder->m_ZAxis,1.0,&(pCylinder->m_XAxis)));
+            aCurves.push_back(new circle(rResult,CircleCenter,pCylinder->m_ZAxis,dRadius,&(pCylinder->m_XAxis)));
             }
         else
             {
@@ -2416,6 +2583,24 @@ hermite *WalkFromTo(SGM::Result        &rResult,
     return new hermite(rResult,aPoints,aTangents,aParams);
     }
 
+void IntersectThreeSurfaces(SGM::Result               &rResult,
+                            surface             const *pSurface1,
+                            surface             const *pSurface2,
+                            surface             const *pSurface3,
+                            std::vector<SGM::Point3D> &aPoints)
+    {
+    std::vector<curve *> aCurves;
+    size_t nCurves=IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,nullptr,nullptr,SGM_MIN_TOL);
+    size_t Index1;
+    for(Index1=0;Index1<nCurves;++Index1)
+        {
+        curve *pCurve=aCurves[Index1];
+        std::vector<SGM::IntersectionType> aTypes;
+        IntersectCurveAndSurface(rResult,pCurve,pSurface3,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+        rResult.GetThing()->DeleteEntity(pCurve);
+        }
+    }
+
 size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
                               curve                        const *pCurve,
                               plane                        const *pPlane,
@@ -2527,5 +2712,5 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
 
     return aPoints.size();    
 }
-    
+
 } // End of SGMInternal namespace

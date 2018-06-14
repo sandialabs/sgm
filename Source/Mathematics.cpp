@@ -4,8 +4,10 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 #include "SGMVector.h"
+#include "SGMMathematics.h"
 #include "SGMSegment.h"
 #include "Faceter.h"
 
@@ -517,7 +519,7 @@ namespace SGM {
             Vector3D Vec = aPoints3D[Index1] - Origin;
             double dx = Vec % XVec;
             double dy = Vec % YVec;
-            aPoints2D.emplace_back(dx, dy);
+            aPoints2D.push_back(Point2D(dx, dy));
             double dz = fabs(Vec % ZVec);
             if (dAnswer < dz)
                 {
@@ -528,33 +530,33 @@ namespace SGM {
     }
 
 
-    bool ArePointsCoplanar(std::vector<Point3D> const &aPoints,
-                           double dTolerance,
-                           Point3D *Origin,
-                           UnitVector3D *Normal)
+bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
+                            double                           dTolerance,
+                            SGM::Point3D                    *Origin,
+                            SGM::UnitVector3D               *Normal)
+{
+    bool bCoplanar = false;
+    SGM::Point3D PlaneOrigin;
+    SGM::UnitVector3D XVec;
+    SGM::UnitVector3D YVec;
+    SGM::UnitVector3D ZVec;
+    if (SGM::FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
     {
-        bool bCoplanar = false;
-        Point3D PlaneOrigin;
-        UnitVector3D XVec;
-        UnitVector3D YVec;
-        UnitVector3D ZVec;
-        if (FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
-            {
-            std::vector<Point2D> aPoints2D;
-            double dMaxDist = ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
-            if (dMaxDist < dTolerance)
-                bCoplanar = true;
-            }
-
-        if (bCoplanar)
-            {
-            if (nullptr != Origin)
-                *Origin = PlaneOrigin;
-            if (nullptr != Normal)
-                *Normal = ZVec;
-            }
-        return bCoplanar;
+        std::vector<SGM::Point2D> aPoints2D;
+        double dMaxDist = SGM::ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
+        if (dMaxDist < dTolerance)
+            bCoplanar = true;
     }
+
+    if (bCoplanar)
+    {
+        if (nullptr != Origin)
+            *Origin = PlaneOrigin;
+        if (nullptr != Normal)
+            *Normal = ZVec;
+    }
+    return bCoplanar;
+}
 
     void FindLengths3D(std::vector<Point3D> const &aPoints,
                             std::vector<double> &aLengths,
@@ -890,6 +892,10 @@ void TriangulatePolygonSub(SGM::Result                             &,//rResult,
         // Then cut off the nPolygon-3 ears.
 
         size_t nPolygon = aPolygon.size();
+        if(nPolygon<3)
+            {
+            return;
+            }
         std::vector<bool> aCutOff;
         aCutOff.assign(nPolygon, false);
         aTriangles.reserve(3 * (nPolygon - 2));
@@ -1157,93 +1163,84 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
     }
 
     double Determinate3D(double const aMatrix[3][3])
-    {
-        double dA = aMatrix[0][0];
-        double dB = aMatrix[0][1];
-        double dC = aMatrix[0][2];
+        {
+        double dA=aMatrix[0][0];
+        double dB=aMatrix[0][1];
+        double dC=aMatrix[0][2];
 
-        double dD = aMatrix[1][0];
-        double dE = aMatrix[1][1];
-        double dF = aMatrix[1][2];
+        double dD=aMatrix[1][0];
+        double dE=aMatrix[1][1];
+        double dF=aMatrix[1][2];
 
-        double dG = aMatrix[2][0];
-        double dH = aMatrix[2][1];
-        double dI = aMatrix[2][2];
+        double dG=aMatrix[2][0];
+        double dH=aMatrix[2][1];
+        double dI=aMatrix[2][2];
 
-        return dA * (dE * dI - dF * dH) + dB * (dF * dG - dD * dI) + dC * (dD * dH - dE * dG);
-    }
+        return dA*(dE*dI-dF*dH)+dB*(dF*dG-dD*dI)+dC*(dD*dH-dE*dG);
+        }
 
     double Trace2D(double const aMatrix[2][2])
-    {
+        {
         return aMatrix[0][0] + aMatrix[1][1];
-    }
+        }
 
     void CharacteristicPolynomial2D(double const aaMatrix[2][2],
-                                         double &a, double &b, double &c)
-    {
+                                    double &a, double &b, double &c)
+        {
         a = 1.0;
         b = -Trace2D(aaMatrix);
         c = Determinate2D(aaMatrix);
-    }
+        }
 
     double Trace3D(double const aMatrix[3][3])
-    {
+        {
         return aMatrix[0][0] + aMatrix[1][1] + aMatrix[2][2];
-    }
+        }
 
     void CharacteristicPolynomial3D(double const aaMatrix[3][3],
-                                         double &a, double &b, double &c, double &d)
-    {
+                                    double &a, double &b, double &c, double &d)
+        {
         a = 1.0;
         b = -Trace3D(aaMatrix);
         c = aaMatrix[0][0] * aaMatrix[1][1] + aaMatrix[0][0] * aaMatrix[2][2] + aaMatrix[1][1] * aaMatrix[2][2] -
             aaMatrix[1][2] * aaMatrix[2][1] - aaMatrix[0][1] * aaMatrix[1][0] - aaMatrix[0][2] * aaMatrix[2][0];
         d = -Determinate3D(aaMatrix);
-    }
+        }
 
     void FindProduct2D(double const aMatrix1[2][2],
-                            double const aMatrix2[2][2],
-                            double aAnswer[2][2])
-    {
-        aAnswer[0][0] = aMatrix1[0][0] * aMatrix2[0][0] + aMatrix1[0][1] * aMatrix2[1][0];
-        aAnswer[0][1] = aMatrix1[0][0] * aMatrix2[0][1] + aMatrix1[0][1] * aMatrix2[1][1];
-        aAnswer[1][0] = aMatrix1[1][0] * aMatrix2[0][0] + aMatrix1[1][1] * aMatrix2[1][0];
-        aAnswer[1][1] = aMatrix1[1][0] * aMatrix2[0][1] + aMatrix1[1][1] * aMatrix2[1][1];
-    }
+                       double const aMatrix2[2][2],
+                       double       aAnswer[2][2])
+        {
+        aAnswer[0][0]=aMatrix1[0][0]*aMatrix2[0][0]+aMatrix1[0][1]*aMatrix2[1][0];
+        aAnswer[0][1]=aMatrix1[0][0]*aMatrix2[0][1]+aMatrix1[0][1]*aMatrix2[1][1];
+        aAnswer[1][0]=aMatrix1[1][0]*aMatrix2[0][0]+aMatrix1[1][1]*aMatrix2[1][0];
+        aAnswer[1][1]=aMatrix1[1][0]*aMatrix2[0][1]+aMatrix1[1][1]*aMatrix2[1][1];
+        }
 
     void FindProduct3D(double const aMatrix1[3][3],
-                            double const aMatrix2[3][3],
-                            double aAnswer[3][3])
-    {
-        aAnswer[0][0] =
-                aMatrix1[0][0] * aMatrix2[0][0] + aMatrix1[0][1] * aMatrix2[1][0] + aMatrix1[0][2] * aMatrix2[2][0];
-        aAnswer[0][1] =
-                aMatrix1[0][0] * aMatrix2[0][1] + aMatrix1[0][1] * aMatrix2[1][1] + aMatrix1[0][2] * aMatrix2[2][1];
-        aAnswer[0][2] =
-                aMatrix1[0][0] * aMatrix2[0][2] + aMatrix1[0][1] * aMatrix2[1][2] + aMatrix1[0][2] * aMatrix2[2][2];
-        aAnswer[1][0] =
-                aMatrix1[1][0] * aMatrix2[0][0] + aMatrix1[1][1] * aMatrix2[1][0] + aMatrix1[1][2] * aMatrix2[2][0];
-        aAnswer[1][1] =
-                aMatrix1[1][0] * aMatrix2[0][1] + aMatrix1[1][1] * aMatrix2[1][1] + aMatrix1[1][2] * aMatrix2[2][1];
-        aAnswer[1][2] =
-                aMatrix1[1][0] * aMatrix2[0][2] + aMatrix1[1][1] * aMatrix2[1][2] + aMatrix1[1][2] * aMatrix2[2][2];
-        aAnswer[2][0] =
-                aMatrix1[2][0] * aMatrix2[0][0] + aMatrix1[2][1] * aMatrix2[1][0] + aMatrix1[2][2] * aMatrix2[2][0];
-        aAnswer[2][1] =
-                aMatrix1[2][0] * aMatrix2[0][1] + aMatrix1[2][1] * aMatrix2[1][1] + aMatrix1[2][2] * aMatrix2[2][1];
-        aAnswer[2][2] =
-                aMatrix1[2][0] * aMatrix2[0][2] + aMatrix1[2][1] * aMatrix2[1][2] + aMatrix1[2][2] * aMatrix2[2][2];
-    }
+                       double const aMatrix2[3][3],
+                       double       aAnswer[3][3])
+        {
+        aAnswer[0][0]=aMatrix1[0][0]*aMatrix2[0][0]+aMatrix1[0][1]*aMatrix2[1][0]+aMatrix1[0][2]*aMatrix2[2][0];
+        aAnswer[0][1]=aMatrix1[0][0]*aMatrix2[0][1]+aMatrix1[0][1]*aMatrix2[1][1]+aMatrix1[0][2]*aMatrix2[2][1];
+        aAnswer[0][2]=aMatrix1[0][0]*aMatrix2[0][2]+aMatrix1[0][1]*aMatrix2[1][2]+aMatrix1[0][2]*aMatrix2[2][2];
+        aAnswer[1][0]=aMatrix1[1][0]*aMatrix2[0][0]+aMatrix1[1][1]*aMatrix2[1][0]+aMatrix1[1][2]*aMatrix2[2][0];
+        aAnswer[1][1]=aMatrix1[1][0]*aMatrix2[0][1]+aMatrix1[1][1]*aMatrix2[1][1]+aMatrix1[1][2]*aMatrix2[2][1];
+        aAnswer[1][2]=aMatrix1[1][0]*aMatrix2[0][2]+aMatrix1[1][1]*aMatrix2[1][2]+aMatrix1[1][2]*aMatrix2[2][2];
+        aAnswer[2][0]=aMatrix1[2][0]*aMatrix2[0][0]+aMatrix1[2][1]*aMatrix2[1][0]+aMatrix1[2][2]*aMatrix2[2][0];
+        aAnswer[2][1]=aMatrix1[2][0]*aMatrix2[0][1]+aMatrix1[2][1]*aMatrix2[1][1]+aMatrix1[2][2]*aMatrix2[2][1];
+        aAnswer[2][2]=aMatrix1[2][0]*aMatrix2[0][2]+aMatrix1[2][1]*aMatrix2[1][2]+aMatrix1[2][2]*aMatrix2[2][2];
+        }
 
     bool IsDiagonal2D(double const aaMatrix[2][2])
-    {
+        {
         return fabs(aaMatrix[0][1]) < SGM_ZERO && fabs(aaMatrix[1][0]) < SGM_ZERO;
-    }
+        }
 
     size_t FindEigenVectors2D(double const aaMatrix[2][2],
                                    std::vector<double> &aValues,
                                    std::vector<UnitVector2D> &aVectors)
-    {
+        {
         if (IsDiagonal2D(aaMatrix))
             {
             aValues.push_back(aaMatrix[0][0]);
@@ -1296,19 +1293,19 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
                 }
             }
         return nAnswer;
-    }
+        }
 
     bool IsDiagonal3D(double const aaMatrix[3][3])
-    {
+        {
         return fabs(aaMatrix[0][1]) < SGM_ZERO && fabs(aaMatrix[0][2]) < SGM_ZERO &&
                fabs(aaMatrix[1][0]) < SGM_ZERO && fabs(aaMatrix[1][2]) < SGM_ZERO &&
                fabs(aaMatrix[2][0]) < SGM_ZERO && fabs(aaMatrix[2][1]) < SGM_ZERO;
-    }
+        }
 
     size_t FindEigenVectors3D(double const aaMatrix[3][3],
                                    std::vector<double> &aValues,
                                    std::vector<UnitVector3D> &aVectors)
-    {
+        {
         double dMaxValue = 0.0;
         size_t Index1, Index2;
         for (Index1 = 0; Index1 < 3; ++Index1)
@@ -1386,10 +1383,10 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
                 }
             }
         return nAnswer;
-    }
+        }
 
     bool BandedSolve(std::vector<std::vector<double> > &aaMatrix)
-    {
+        {
         size_t nBandWidth = (aaMatrix[0].size() - 2) / 2;
         size_t nEndColumn = nBandWidth + nBandWidth + 1;
 
@@ -1446,11 +1443,11 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             aaMatrix[Index1][nEndColumn] /= dn;
             }
         return true;
-    }
+        }
 
     size_t Linear(double a, double b,
                        std::vector<double> aRoots)
-    {
+        {
         // a*x+b=0 -> ax=-b -> x=-b/a
         if (fabs(a) < SGM_ZERO)
             {
@@ -1463,11 +1460,11 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             }
         aRoots.push_back(-b / a);
         return 1;
-    }
+        }
 
     size_t Quadratic(double a, double b, double c,
                           std::vector<double> &aRoots)
-    {
+        {
         if (fabs(a) < SGM_ZERO)
             {
             return Linear(b, c, aRoots);
@@ -1489,10 +1486,10 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             }
         std::sort(aRoots.begin(), aRoots.end());
         return aRoots.size();
-    }
+        }
 
     double SAFEacos(double x)
-    {
+        {
         if (1.0 < x)
             {
             return 0;
@@ -1505,10 +1502,10 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             {
             return acos(x);
             }
-    }
+        }
 
     double SAFEasin(double x)
-    {
+        {
         if (1.0 < x)
             {
             return SGM_HALF_PI;
@@ -1521,22 +1518,22 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             {
             return asin(x);
             }
-    }
+        }
 
     double SAFEatan2(double y, double x)
-    {
+        {
         if (y == 0 && x == 0)
             {
             return 0.0;
             }
         return atan2(y, x);
-    }
+        }
 
     double Integrate1D(double f(double x, void const *pData),
                             Interval1D const &Domain,
                             void const *pData,
                             double dTolerance)
-    {
+        {
         std::vector<std::vector<double> > aaData;
         double dAnswer = 0;
         double dh = Domain.Length();
@@ -1570,13 +1567,13 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             dError = fabs(aaData[Index1 - 1].back() - dAnswer);
             }
         return dAnswer;
-    }
+        }
 
     double Integrate2D(double f(Point2D const &uv, void const *pData),
                             Interval2D const &Domain,
                             void const *pData,
                             double dTolerance)
-    {
+        {
         //     _b  _d                _b
         //    /   /                 /  
         //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),c,d)(y) = Integrate1D(Integrate1D(f(x),c,d)(y),a,b)
@@ -1588,7 +1585,7 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
         XYData.m_dTolerance = dTolerance;
         XYData.m_f = f;
         return Integrate1D(SGMInternal::Integrate2DFy, Domain.m_VDomain, &XYData, dTolerance);
-    }
+        }
 
     double IntegrateTriangle(double f(Point2D const &uv, void const *pData),
                                   Point2D const &PosA,
@@ -1596,7 +1593,7 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
                                   Point2D const &PosC,
                                   void const *pData,
                                   double dTolerance)
-    {
+        {
         //  With A being the highest left point and C being the lowest right point 
         //  there are four case as follows;
         //
@@ -1709,7 +1706,7 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             }
 
         return dAnswer;
-    }
+        }
 
     size_t Cubic(double c3, double c2, double c1, double c0,
                       std::vector<double> &aRoots)

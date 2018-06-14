@@ -156,7 +156,6 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
   for(size_t i=0; i<points.size(); i++)
       {
       SGM::UnitVector3D Norm=norms[i];
-      //Norm.Negate();
       normalsArray->SetTypedTuple(i, &Norm.m_x);
       SGM::Point3D point = points[i];
       face->points->SetPoint(i, point.m_x, point.m_y, point.m_z);

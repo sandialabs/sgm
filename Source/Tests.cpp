@@ -2672,8 +2672,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pEdgeBottom->SetCurve(pCircleStart);
         pEdgeTop->SetCurve(pCircleEnd);
 
-        pEdgeBottom->SetDomain(SGM::Interval1D(0, SGM_PI*2));
-        pEdgeTop->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+        pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0, SGM_PI*2));
+        pEdgeTop->SetDomain(rResult,SGM::Interval1D(0, SGM_PI*2));
 
         SGM::TranslatorOptions TranslatorOpts;
         SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
@@ -2756,8 +2756,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pEdgeBottom->SetCurve(pCircleStart);
         pEdgeTop->SetCurve(pCircleEnd);
 
-        pEdgeBottom->SetDomain(SGM::Interval1D(0, SGM_PI*2));
-        pEdgeTop->SetDomain(SGM::Interval1D(0, SGM_PI*2));
+        pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0, SGM_PI*2));
+        pEdgeTop->SetDomain(rResult,SGM::Interval1D(0, SGM_PI*2));
 
         pEdgeBottom->SetStart(pBottom);
         pEdgeBottom->SetEnd(pBottom);
@@ -2870,10 +2870,10 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pEdgeLeft->SetCurve((SGMInternal::curve *)rResult.GetThing()->FindEntity(LeftCurveID.m_ID));
         pEdgeRight->SetCurve((SGMInternal::curve *)rResult.GetThing()->FindEntity(RightCurveID.m_ID));
 
-        pEdgeBottom->SetDomain(SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
-        pEdgeTop->SetDomain(SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
-        pEdgeLeft->SetDomain(SGM::Interval1D(0,1));
-        pEdgeRight->SetDomain(SGM::Interval1D(0,1));
+        pEdgeBottom->SetDomain(rResult,SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
+        pEdgeTop->SetDomain(rResult,SGM::Interval1D(SGM_PI/2.0, 3*SGM_PI/2.0));
+        pEdgeLeft->SetDomain(rResult,SGM::Interval1D(0,1));
+        pEdgeRight->SetDomain(rResult,SGM::Interval1D(0,1));
 
         SGM::TranslatorOptions TranslatorOpts;
         SGM::SaveSTEP(rResult, "revolve_sheet.stp", rResult.GetThing()->GetID(),TranslatorOpts);
@@ -2957,7 +2957,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
     if(nTestNumber==41)
         {
-        // Test of NURB Curves.
+        // Test of NURB Surface.
 
         std::vector<std::vector<SGM::Point4D> > aaControlPoints;
         std::vector<SGM::Point4D> aControlPoints;
@@ -3026,6 +3026,98 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
         if(SGM::NearEqual(dDist2,1.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==42)
+        {
+        // Test RayFire
+
+        bool bAnswer=true;
+
+        SGM::Point3D Bottom(0,0,0),Top(0,0,2);
+        double dRadius=1.0;
+        SGM::Body BodyID=SGM::CreateCylinder(rResult,Bottom,Top,dRadius);
+        SGM::Point3D Origin(-2,0,1);
+        SGM::UnitVector3D Axis(1,0,0);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGM::RayFire(rResult,Origin,Axis,BodyID,aPoints,aTypes,SGM_MIN_TOL);
+
+        if(aPoints.size()==2)
+            {
+            if(SGM::NearEqual(aPoints[0],SGM::Point3D(-1,0,1),SGM_ZERO)==false)
+                {
+                bAnswer=false;
+                }
+            if(SGM::NearEqual(aPoints[1],SGM::Point3D(1,0,1),SGM_ZERO)==false)
+                {
+                bAnswer=false;
+                }
+            if(aTypes[0]!=SGM::IntersectionType::PointType)
+                {
+                bAnswer=false;
+                }
+            if(aTypes[1]!=SGM::IntersectionType::PointType)
+                {
+                bAnswer=false;
+                }
+            }
+        else
+            {
+            bAnswer=false;
+            }
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==43)
+        {
+        // Test Point in Body
+
+        bool bAnswer=true;
+
+        SGM::Point3D Bottom(0,0,0),Top(0,0,2);
+        double dRadius=1.0;
+        SGM::Body BodyID=SGM::CreateCylinder(rResult,Bottom,Top,dRadius);
+        SGM::Point3D Pos1(-2,0,1);
+        bool bInBody1=SGM::PointInEntity(rResult,Pos1,BodyID);
+        SGM::Point3D Pos2(0,0,1);
+        bool bInBody2=SGM::PointInEntity(rResult,Pos2,BodyID);
+
+        if(bInBody1==false)
+            {
+            bAnswer=false;
+            }
+        if(bInBody2==true)
+            {
+            bAnswer=false;
+            }
+        return bAnswer;
+        }
+    
+    if(nTestNumber==44)
+        {
+        // Test Point in Body
+
+        bool bAnswer=true;
+
+        SGM::Point3D Pos0(0,0,0),Pos1(10,10,10);
+        SGM::Body BodyID1=SGM::CreateBlock(rResult,Pos0,Pos1);
+        double dVolume1=SGM::FindVolume(rResult,BodyID1,true);
+        if(SGM::NearEqual(dVolume1,1000,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+        
+        SGM::Point3D Pos3(0,0,0),Pos4(0,0,1);
+        SGM::Body BodyID2=SGM::CreateCylinder(rResult,Pos3,Pos4,1.0);
+        double dVolume2=SGM::FindVolume(rResult,BodyID2,true);
+        if(SGM::NearEqual(dVolume2,3.1415926535897932384626433832795,SGM_MIN_TOL,true)==false)
             {
             bAnswer=false;
             }
@@ -3206,6 +3298,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bAnswer = ((found1 == 2) && (found2 == 2));
         return bAnswer;
         }
+
     return false;
     }
 

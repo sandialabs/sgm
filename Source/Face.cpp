@@ -188,6 +188,24 @@ double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
     return dArea*0.5;
     }
 
+void face::ClearFacets(SGM::Result &rResult)
+    {
+    if(m_aPoints2D.empty()==false)
+        {
+        m_aPoints3D.clear();
+        m_aPoints2D.clear();
+        m_aEntities.clear();
+        m_aTriangles.clear();
+        m_aNormals.clear();
+        m_Box.Reset();
+        m_mSeamType.clear();
+        if(m_pVolume)
+            {
+            m_pVolume->ClearBox(rResult);
+            }
+        }
+    }
+
 double face::FindArea(SGM::Result &rResult) const
     {
     // Method one. 
@@ -241,6 +259,38 @@ double face::FindArea(SGM::Result &rResult) const
         }
 
     return std::max(dMethod1,dArea2);
+    }
+
+double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
+                       std::vector<size_t>       const &aTriangles)
+    {
+    double dAnswer=0;
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        SGM::Point3D const &A=aPoints[aTriangles[Index1]];
+        SGM::Point3D const &B=aPoints[aTriangles[Index1+1]];
+        SGM::Point3D const &C=aPoints[aTriangles[Index1+2]];
+        dAnswer+=A.m_x*(B.m_y*C.m_z-B.m_z*C.m_y)+A.m_y*(B.m_z*C.m_x-B.m_x*C.m_z)+A.m_z*(B.m_x*C.m_y-B.m_y*C.m_x);
+        }
+    return dAnswer;
+    }
+
+double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
+    {
+    std::vector<SGM::Point2D> aPoints2D=GetPoints2D(rResult);
+    std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
+    std::vector<entity *> aEntities=m_aEntities;
+    std::vector<size_t> aTriangles=m_aTriangles;
+    double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
+    if(bApproximate)
+        {
+        return dAnswer0;
+        }
+    SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+    double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
+    return (4*dAnswer1-dAnswer0)/3;;
     }
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
@@ -301,6 +351,12 @@ void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
     m_sEdges.insert(pEdge);
     pEdge->AddFace(this);
     m_mSideType[pEdge]=nEdgeType;
+    }
+
+void face::RemoveEdge(edge *pEdge)
+    {
+    m_sEdges.erase(pEdge);
+    m_mSideType.erase(pEdge);
     }
 
 void face::SetSurface(surface *pSurface)

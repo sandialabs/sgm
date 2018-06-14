@@ -17,11 +17,31 @@ bool PointInVolume(SGM::Result        &rResult,
                    volume       const *pVolume,
                    double              dTolerance)
     {
-    dTolerance;
+    size_t nHits=0;
+    bool bFound=true;
+    size_t nCount=1;
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::UnitVector3D Axis(0,0,1);
-    size_t nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,dTolerance);
+    while(bFound)
+        {
+        bFound=false;
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,dTolerance);
+        size_t Index1;
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            if(aTypes[Index1]!=SGM::IntersectionType::PointType)
+                {
+                Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
+                bFound=true;
+                break;
+                }
+            }
+        ++nCount;
+        }
+
     return nHits%2==1;
     }
 

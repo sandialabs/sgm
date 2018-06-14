@@ -3,6 +3,7 @@
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
+#include "Intersectors.h"
 
 #include <limits>
 #include <algorithm>
@@ -593,11 +594,11 @@ edge *FindNextEdge(SGM::Result  &rResult,
     return nullptr;
     }
 
-void OrderLoopEdges(SGM::Result                    &rResult,
-                    face                     const *pFace,
-                    std::set<edge *,EntityCompare>         const &sEdges,
-                    std::vector<edge *>            &aEdges,
-                    std::vector<SGM::EdgeSideType> &aFlips)
+void OrderLoopEdges(SGM::Result                          &rResult,
+                    face                           const *pFace,
+                    std::set<edge *,EntityCompare> const &sEdges,
+                    std::vector<edge *>                  &aEdges,
+                    std::vector<SGM::EdgeSideType>       &aFlips)
     {
     size_t nSize=sEdges.size();
     if(nSize==0)
@@ -784,29 +785,29 @@ void FindCurves(SGM::Result       &rResult,
     }
 
 void ImprintVerticesOnClosedEdges(SGM::Result &rResult)
-{
+    {
     std::set<edge *,EntityCompare> sEdges;
     FindEdges(rResult, rResult.GetThing(), sEdges, false);
 
     for(SGMInternal::edge *pEdge : sEdges)
-    {
-        if (nullptr == pEdge->GetStart())
         {
+        if (nullptr == pEdge->GetStart())
+            {
             SGM::Point3D VertexPos;
             curve const *pCurve = pEdge->GetCurve();
             pCurve->Evaluate(pCurve->GetDomain().m_dMin,&VertexPos);
             vertex *pVertex=new vertex(rResult,VertexPos);
             pEdge->SetStart(pVertex);
             pEdge->SetEnd(pVertex);
+            }
         }
     }
-}
 
-size_t FindCommonEdges(SGM::Result         &rResult,
-                       vertex        const *pVertex1, // Input
-                       vertex        const *pVertex2, // Input
-                       std::vector<edge *> &aEdges,   // Ouput
-                       face          const *pFace)    // Optional input
+size_t FindCommonEdgesFromVertices(SGM::Result         &rResult,
+                                   vertex        const *pVertex1, // Input
+                                   vertex        const *pVertex2, // Input
+                                   std::vector<edge *> &aEdges,   // Ouput
+                                   face          const *pFace)    // Optional input
     {
     std::set<edge *,EntityCompare> sEdges,sBadEdges;
     if(pFace)
@@ -852,6 +853,167 @@ size_t FindCommonEdges(SGM::Result         &rResult,
         ++EdgeIter;
         }
     return aEdges.size();
+    }
+
+size_t FindAdjacentFaces(SGM::Result                    &rResult,
+                         face                     const *pFace,
+                         std::set<face *,EntityCompare> &sFaces)
+    {
+    std::set<vertex *,EntityCompare> sVertives;
+    FindVertices(rResult,pFace,sVertives,false);
+    std::set<vertex *,EntityCompare>::iterator iter=sVertives.begin();
+    while(iter!=sVertives.end())
+        {
+        vertex *pVertex=*iter;
+        FindFaces(rResult,pVertex,sFaces,false);
+        ++iter;
+        }
+    return sFaces.size();
+    }
+
+size_t FindCommonEdgesFromFaces(SGM::Result         &rResult,
+                                face          const *pFace1,   
+                                face          const *pFace2,   
+                                std::vector<edge *> &aEdges)
+    {
+    std::set<edge *,EntityCompare> sEdges1,sEdges2;
+    FindEdges(rResult,pFace1,sEdges1,false);
+    FindEdges(rResult,pFace2,sEdges2,false);
+    std::set<edge *,EntityCompare>::iterator iter=sEdges1.begin();
+    size_t nCount=0;
+    while(iter!=sEdges1.end())
+        {
+        edge *pEdge=*iter;
+        if(sEdges2.find(pEdge)!=sEdges2.end())
+            {
+            aEdges.push_back(pEdge);
+            ++nCount;
+            }
+        ++iter;
+        }
+    return nCount;
+    }
+
+void RemoveFace(SGM::Result &rResult,
+                face        *pFace)
+    {
+    std::set<edge *,EntityCompare> sEdges;
+    FindEdges(rResult,pFace,sEdges,false);
+    if(sEdges.size()==2)
+        {
+        std::set<face *,EntityCompare> sFaces;
+        if(3==FindAdjacentFaces(rResult,pFace,sFaces))
+            {
+            // Three adjacent faces case.
+
+            std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
+            face *pFace0=*iter;
+            ++iter;
+            face *pFace1=*iter;
+            ++iter;
+            face *pFace2=*iter;
+
+            // Find the edges to extend.
+
+            std::set<vertex *,EntityCompare> sVertices;
+            FindVertices(rResult,pFace,sVertices,false);
+            std::set<edge *,EntityCompare> sAllEdges;
+            std::set<vertex *,EntityCompare>::iterator VertexIter=sVertices.begin();
+            while(VertexIter!=sVertices.end())
+                {
+                FindEdges(rResult,*VertexIter,sAllEdges,false);
+                ++VertexIter;
+                }
+            std::set<edge *,EntityCompare>::iterator EdgeIter=sAllEdges.begin();
+            std::vector<edge *> aCommonEdges;
+            while(EdgeIter!=sAllEdges.end())
+                {
+                edge *pEdge=*EdgeIter;
+                if(sEdges.find(pEdge)==sEdges.end())
+                    {
+                    aCommonEdges.push_back(pEdge);
+                    }
+                ++EdgeIter;
+                }
+
+            // Extend the edges.
+
+            size_t Index1,Index2;
+            std::vector<SGM::Point3D> aPoints;
+            IntersectThreeSurfaces(rResult,pFace0->GetSurface(),pFace1->GetSurface(),pFace2->GetSurface(),aPoints);
+            size_t nCommonEdges=aCommonEdges.size();
+            if(aPoints.size()>1)
+                {
+                SGM::Point3D BestPos=aPoints[0];
+                double dBest=std::numeric_limits<double>::max();
+                size_t nPoints=aPoints.size();
+                for(Index1=0;Index1<nPoints;++Index1)
+                    {
+                    SGM::Point3D Pos=aPoints[Index1];
+                    double dDist=0;
+                    for(Index2=0;Index2<nCommonEdges;++Index2)
+                        {
+                        SGM::Point3D CPos;
+                        edge *pEdge=aCommonEdges[Index2];
+                        pEdge->GetCurve()->Inverse(Pos,&CPos);
+                        dDist+=Pos.Distance(CPos);
+                        }
+                    if(dDist<dBest)
+                        {
+                        dBest=dDist;
+                        BestPos=Pos;
+                        }
+                    }
+                aPoints.clear();
+                aPoints.push_back(BestPos);
+                }
+            if(aPoints.size()==1)
+                {
+                SGM::Point3D const &Pos=aPoints[0];
+                vertex *pVertex=new vertex(rResult,Pos);
+                for(Index1=0;Index1<nCommonEdges;++Index1)
+                    {
+                    edge *pEdge=aCommonEdges[Index1];
+                    if(sVertices.find(pEdge->GetStart())!=sVertices.end())
+                        {
+                        double t=pEdge->GetCurve()->Inverse(Pos);
+                        SGM::Interval1D Domain=pEdge->GetDomain();
+                        Domain.m_dMin=t;
+                        pEdge->SetDomain(rResult,Domain);
+                        pEdge->SetStart(pVertex);
+                        }                        
+                    else 
+                        {
+                        double t=pEdge->GetCurve()->Inverse(Pos);
+                        SGM::Interval1D Domain=pEdge->GetDomain();
+                        Domain.m_dMax=t;
+                        pEdge->SetDomain(rResult,Domain);
+                        pEdge->SetEnd(pVertex);
+                        }
+                    }
+
+                // Remove the faces and edges.
+
+                std::set<entity *,EntityCompare> sChildren;
+                pFace->FindAllChildren(sChildren);
+                sChildren.insert(pFace);
+                std::set<entity *,EntityCompare>::iterator ChildrenIter=sChildren.begin();
+                while(ChildrenIter!=sChildren.end())
+                    {
+                    entity *pEntity=*ChildrenIter;
+                    rResult.GetThing()->SeverOwners(pEntity);
+                    ++ChildrenIter;
+                    }
+                ChildrenIter=sChildren.begin();
+                while(ChildrenIter!=sChildren.end())
+                    {
+                    entity *pEntity=*ChildrenIter;
+                    rResult.GetThing()->DeleteEntity(pEntity);
+                    ++ChildrenIter;
+                    }
+                }
+            }
+        }
     }
 
 } // end namespace SGMInternal

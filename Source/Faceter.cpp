@@ -26,6 +26,28 @@ edge *FindEdge(SGM::Result &rResult,
         {
         return nullptr;
         }
+    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::EdgeType && pEntA!=pEntB)
+        {
+        return nullptr;
+        }
+    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::VertexType)
+        {
+        edge *pEdge=(edge *)pEntA;
+        vertex *pVertex=(vertex *)pEntB;
+        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
+            {
+            return nullptr;
+            }
+        }
+    if(pEntB->GetType()==SGM::EdgeType && pEntA->GetType()==SGM::VertexType)
+        {
+        edge *pEdge=(edge *)pEntB;
+        vertex *pVertex=(vertex *)pEntA;
+        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
+            {
+            return nullptr;
+            }
+        }
     if(pEntA->GetType()==SGM::EdgeType)
         {
         return (edge *)pEntA;
@@ -37,7 +59,7 @@ edge *FindEdge(SGM::Result &rResult,
     vertex *pVertex1=(vertex *)pEntA;
     vertex *pVertex2=(vertex *)pEntB;
     std::vector<edge *> aEdges;
-    size_t nEdges=FindCommonEdges(rResult,pVertex1,pVertex2,aEdges,pFace);
+    size_t nEdges=FindCommonEdgesFromVertices(rResult,pVertex1,pVertex2,aEdges,pFace);
     if(nEdges)
         {
         return aEdges[0];
@@ -53,6 +75,8 @@ void SubdivideFacets(SGM::Result               &rResult,
                      std::vector<entity *>     &aEntities)
     {
     size_t nTriangles=aTriangles.size();
+    std::vector<size_t> aAdjacencies;
+    SGM::FindAdjacences2D(aTriangles,aAdjacencies);
     surface const *pSurface=pFace->GetSurface();
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
@@ -63,9 +87,9 @@ void SubdivideFacets(SGM::Result               &rResult,
         entity *pEntA=aEntities[a];
         entity *pEntB=aEntities[b];
         entity *pEntC=aEntities[c];
-        edge *pEdge0=FindEdge(rResult,pFace,pEntA,pEntB);
-        edge *pEdge1=FindEdge(rResult,pFace,pEntB,pEntC);
-        edge *pEdge2=FindEdge(rResult,pFace,pEntC,pEntA);
+        edge *pEdge0=aAdjacencies[Index1]  ==SIZE_MAX ? FindEdge(rResult,pFace,pEntA,pEntB) : nullptr;
+        edge *pEdge1=aAdjacencies[Index1+1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntB,pEntC) : nullptr;
+        edge *pEdge2=aAdjacencies[Index1+2]==SIZE_MAX ? FindEdge(rResult,pFace,pEntC,pEntA) : nullptr;
         SGM::Point3D const &A=aPoints3D[a];
         SGM::Point3D const &B=aPoints3D[b];
         SGM::Point3D const &C=aPoints3D[c];
@@ -2734,6 +2758,36 @@ double ScaledUVs(face                      const *pFace,
         }
     return dScale;
     }
+
+void AddVertices(std::vector<SGM::Point3D> const &aPoints3D,
+                 std::vector<entity *>           &aEntities)
+    {
+    size_t nEntities=aEntities.size();
+    size_t Index1;
+    for(Index1=0;Index1<nEntities;++Index1)
+        {
+        entity *pEnt=aEntities[Index1];
+        SGM::Point3D const &Pos=aPoints3D[Index1];
+        if(pEnt->GetType()==SGM::EdgeType)
+            {
+            edge *pEdge=(edge *)pEnt;
+            if(vertex *pStart=pEdge->GetStart())
+                {
+                if(Pos.DistanceSquared(pStart->GetPoint())<SGM_ZERO_SQUARED)
+                    {
+                    aEntities[Index1]=pStart;
+                    }
+                }
+            if(vertex *pEnd=pEdge->GetEnd())
+                {
+                if(Pos.DistanceSquared(pEnd->GetPoint())<SGM_ZERO_SQUARED)
+                    {
+                    aEntities[Index1]=pEnd;
+                    }
+                }
+            }
+        }
+    }
     
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
@@ -2761,6 +2815,7 @@ void FacetFace(SGM::Result                    &rResult,
             {
             aEntities.push_back((entity *)pFace);
             }
+        AddVertices(aPoints3D,aEntities);
         DelaunayFlips(aScaled,aTriangles,aAdjacencies);
         }
     }
