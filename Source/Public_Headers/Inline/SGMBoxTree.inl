@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 
 namespace SGM {
 
@@ -10,17 +11,38 @@ namespace SGM {
 
     inline BoxTree::~BoxTree()
     {
-        Remove(IsAny(), RemoveLeaf());
-        // at this point there should only be an empty root node, get rid of it
-        delete m_root;
+        Clear();
     }
 
-    inline void BoxTree::RemoveBoundedArea(const Interval3D& bound)
+    inline bool BoxTree::IsEmpty() const
+    {
+        return m_treeRoot == nullptr;
+    }
+
+    inline void BoxTree::Clear()
+    {
+        Remove(IsAny(), RemoveLeaf());
+        delete m_treeRoot;
+        m_treeSize = 0;
+    }
+
+    inline size_t BoxTree::Size() const
+    {
+        return m_treeSize;
+    }
+
+    inline void BoxTree::Swap(BoxTree &other)
+    {
+        std::swap(m_treeRoot, other.m_treeRoot);
+        std::swap(m_treeSize, other.m_treeSize);
+    }
+
+    inline void BoxTree::EraseEnclosed(const Interval3D &bound)
     {
         Remove(IsEnclosing(bound), RemoveLeaf());
     }
 
-    inline void BoxTree::RemoveItem(const void*& item, bool removeDuplicates)
+    inline void BoxTree::Erase(const void *&item, bool removeDuplicates)
     {
         Remove(IsAny(), RemoveSpecificLeaf(item, removeDuplicates));
     }
@@ -45,6 +67,41 @@ namespace SGM {
         return m_bound.EnclosesBox(leaf->m_Bound);
     }
 
+    inline bool BoxTree::IsIntersectingHalfSpace::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsHalfSpace(m_point, m_unitVector, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingLine::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsLine(m_ray, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingPlane::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsPlane(m_point, m_unitVector, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingPoint::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.InInterval(m_point, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingRay::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsRay(m_ray, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingSegment::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsSegment(m_point1, m_point2, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingSphere::operator()(const Bounded *node) const
+    {
+        return node->m_Bound.IntersectsSphere(m_center, m_radius, m_tolerance);
+    }
+
     inline bool BoxTree::RemoveSpecificLeaf::operator()(const BoxTree::Leaf *leaf) const
     {
         if (m_bContinue && m_pLeafObject == leaf->m_pObject)
@@ -57,25 +114,24 @@ namespace SGM {
     }
 
     template<typename Filter, typename Visitor>
-    inline void BoxTree::VisitFunctor<Filter, Visitor>::operator()(Bounded *item)
+    inline void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
-        auto leaf = static_cast<Leaf *>(item);
+        auto leaf = static_cast<Leaf const*>(item);
         if (m_filter(leaf))
             m_visitor(leaf);
     }
 
     template<typename Filter, typename Visitor>
-    inline void BoxTree::QueryFunctor<Filter, Visitor>::operator()(Bounded *item)
+    inline void BoxTree::QueryNodeFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
-        auto node = static_cast<Node *>(item);
-
-        if (m_visitor.ContinueVisiting && m_filter(node))
+        auto node = static_cast<Node const*>(item);
+        if (m_visitor.bContinueVisiting && m_filter(node))
             {
             if (node->m_bHasLeaves)
-                for_each(node->m_aItems.begin(), node->m_aItems.end(),
-                         VisitFunctor<Filter, Visitor>(m_filter, m_visitor));
+                std::for_each(node->m_aItems.begin(), node->m_aItems.end(),
+                         QueryLeafFunctor<Filter, Visitor>(m_filter, m_visitor));
             else
-                for_each(node->m_aItems.begin(), node->m_aItems.end(), *this);
+                std::for_each(node->m_aItems.begin(), node->m_aItems.end(), *this);
             }
     }
 
@@ -93,31 +149,89 @@ namespace SGM {
         return false;
     }
 
-    template<typename Filter, typename Visitor>
-    inline Visitor BoxTree::Query(Filter const &accept, Visitor visitor)
+    template<typename Filter, typename Operation>
+    inline Operation BoxTree::Query(Filter const &filter, Operation operation) const
     {
-        if (m_root)
+        if (m_treeRoot)
             {
-            QueryFunctor <Filter, Visitor> query(accept, visitor);
-            query(m_root);
+            QueryNodeFunctor<Filter, Operation> query(filter, operation);
+            query(m_treeRoot);
             }
-        return visitor;
+        return operation;
     }
 
     template<typename Filter, typename LeafRemover>
     inline void BoxTree::Remove(Filter const &accept, LeafRemover leafRemover)
     {
-        if (!m_root)
+        if (!m_treeRoot)
             return;
         LeafContainerType m_aLeafsToReinsert;
-        RemoveFunctor <Filter, LeafRemover> remove(accept, leafRemover, &m_aLeafsToReinsert, &m_size);
-        remove(m_root, true);
+        RemoveFunctor <Filter, LeafRemover> remove(accept, leafRemover, &m_aLeafsToReinsert, &m_treeSize);
+        remove(m_treeRoot, true);
         // reinsert anything that needs to be reinserted
         if (!m_aLeafsToReinsert.empty())
             {
             for (auto &item : m_aLeafsToReinsert)
-                InsertInternal(item, m_root);
+                InsertInternal(item, m_treeRoot);
             }
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindAll() const
+    {
+        return Query(IsAny(), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindEnclosed(Interval3D const &bound) const
+    {
+        return Query(IsEnclosing(bound), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsBox(const SGM::Interval3D &bound) const
+    {
+        return Query(IsOverlapping(bound), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsHalfSpace(Point3D const &point,
+                                                                                  UnitVector3D const &unitVector,
+                                                                                  double tolerance) const
+    {
+        return Query(IsIntersectingHalfSpace(point, unitVector, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsLine(Ray3D const &ray,
+                                                                             double tolerance) const
+    {
+        return Query(IsIntersectingLine(ray, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsPlane(Point3D const &point,
+                                                                              UnitVector3D const &unitVector,
+                                                                              double tolerance) const
+    {
+        return Query(IsIntersectingPlane(point, unitVector, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsPoint(Point3D const &point,
+                                                                              double tolerance) const
+    {
+        return Query(IsIntersectingPoint(point, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsRay(Ray3D const &ray, double tolerance) const
+    {
+        return Query(IsIntersectingRay(ray, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSegment(Point3D const &p1, Point3D const &p2,
+                                                                                double tolerance) const
+    {
+        return Query(IsIntersectingSegment(p1, p2, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSphere(Point3D const &center, double radius,
+                                                                        double tolerance) const
+    {
+        return Query(IsIntersectingSphere(center, radius, tolerance), PushLeaf()).m_aContainer;
     }
 
     template<typename Filter, typename LeafRemover>
