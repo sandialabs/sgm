@@ -28,9 +28,9 @@ int main(int /*argc*/, char ** /*argv*/)
 
 struct LeafCounter {
 	int count;
-	bool ContinueVisiting;
+	bool bContinueVisiting;
 	
-	LeafCounter() : count(0), ContinueVisiting(true) {};
+	LeafCounter() : count(0), bContinueVisiting(true) {};
 	
 	void operator()(SGM::BoxTree::Leaf const *)
 	{
@@ -98,25 +98,25 @@ int main(int /*argc*/, char ** /*argv*/)
     std::cout << "Visit all nodes: " << std::flush;
     start = std::chrono::steady_clock::now();
     leafCounter = tree.Query(SGM::BoxTree::IsAny(), LeafCounter());
-    std::cout << "IsAny: " << leafCounter.count << " nodes visited (" << tree.GetSize() << " nodes in tree) ";
+    std::cout << "IsAny: " << leafCounter.count << " nodes visited (" << tree.Size() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
     std::cout << "Search in a box: " << std::flush;
     start = std::chrono::steady_clock::now();
     leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
-    std::cout << "IsEnclosing " << leafCounter.count << " nodes (" << tree.GetSize() << " nodes in tree) ";
+    std::cout << "IsEnclosing " << leafCounter.count << " nodes (" << tree.Size() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
     std::cout << "Remove enclosed in box: " << std::flush;
     start = std::chrono::steady_clock::now();
-    tree.RemoveBoundedArea(bound);
-    std::cout << "RemoveBoundedArea " << ToString(bound) << " ";
+    tree.EraseEnclosed(bound);
+    std::cout << "EraseEnclosed " << ToString(bound) << " ";
     sum += print_elapsed_time(start);
 
     std::cout << "Search in a box: " << std::flush;
     start = std::chrono::steady_clock::now();
     leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
-    std::cout << "IsEnclosing " << leafCounter.count << " nodes. (" << tree.GetSize() << " nodes in tree) ";
+    std::cout << "IsEnclosing " << leafCounter.count << " nodes. (" << tree.Size() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
     std::cout << "Total time: " << std::chrono::duration<double, std::milli>(sum).count() << " ms" << std::endl;

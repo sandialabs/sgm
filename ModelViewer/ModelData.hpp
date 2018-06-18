@@ -64,7 +64,7 @@ public:
 
   void create_revolve(SGM::Point3D      const &Origin,
                       SGM::UnitVector3D const &Axis,
-                      SGM::Curve        const &IDCurve);
+                      SGM::Curve              &IDCurve);
 
   void create_line(SGM::Point3D      const &Origin,
                    SGM::UnitVector3D const &Axis,

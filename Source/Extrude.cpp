@@ -11,8 +11,8 @@ namespace SGMInternal
 
 extrude::extrude(SGM::Result             &rResult,
                  SGM::UnitVector3D const &vAxis,
-                 curve             const *pCurve)
-                 : surface(rResult, SGM::ExtrudeType)
+                 curve                   *pCurve): 
+    surface(rResult, SGM::ExtrudeType)
     {
     m_vAxis  = vAxis;
     m_Domain.m_VDomain=SGM::Interval1D(-SGM_MAX,SGM_MAX);
@@ -29,7 +29,7 @@ extrude::~extrude()
         m_pCurve->RemoveOwner(this);
     }
 
-void extrude::SetCurve(curve const *pCurve)
+void extrude::SetCurve(curve *pCurve)
     {
     pCurve->AddOwner(this);
     m_pCurve = pCurve;

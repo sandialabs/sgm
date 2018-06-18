@@ -25,7 +25,7 @@ namespace SGM {
         // Returns true, and the point of intersection, if this
         // segment and the given segment intersect.
 
-        bool Intersect(Segment2D const &other,
+        bool Intersect(Segment2D const &Seg,
                        Point2D &Pos) const;
 
         // Returns true, and the point of intersection, if this

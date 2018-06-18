@@ -1,7 +1,6 @@
 #include "SGMPrimitives.h"
 #include "SGMMathematics.h"
 #include "SGMInterval.h"
-#include "SGMTree.h"
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Surface.h"
@@ -763,7 +762,7 @@ body *CreateSheetBody(SGM::Result                       &rResult,
 body *CreateRevolve(SGM::Result             &rResult,
                     SGM::Point3D      const &Origin,
                     SGM::UnitVector3D const &Axis,
-                    curve             const *pCurve)
+                    curve                   *pCurve)
     {
     SGM::Point3D pCurveStart;
     SGM::Point3D pCurveEnd;
@@ -819,9 +818,9 @@ body *CreateRevolve(SGM::Result             &rResult,
     }
 
 surface *CreateRevolveSurface(SGM::Result             &rResult,
-                             SGM::Point3D      const &Origin,
-                             SGM::UnitVector3D const &Axis,
-                             curve             const *pCurve)
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Axis,
+                              curve                   *pCurve)
     {
     surface *pRevolve=new revolve(rResult,Origin,Axis,pCurve);
 

@@ -10,12 +10,12 @@ namespace SGM {
     ///////////////////////////////////////////////////////////////////////////
 
 
-    inline void Bounded::Stretch::operator()(const Bounded *const item)
+    inline void Bounded::Stretch::operator()(const Bounded *item)
     {
         m_bound->Stretch(item->m_Bound);
     }
 
-    inline bool Bounded::FirstEdgeLess::operator()(const Bounded *const bi1, const Bounded *const bi2) const
+    inline bool Bounded::FirstEdgeLess::operator()(Bounded const* bi1, Bounded const* bi2) const
     {
         if (m_axis == 0)
             return bi1->m_Bound.m_XDomain.m_dMin < bi2->m_Bound.m_XDomain.m_dMin;
@@ -25,7 +25,7 @@ namespace SGM {
     }
 
 
-    inline bool Bounded::SecondEdgeLess::operator()(const Bounded *const bi1, const Bounded *const bi2) const
+    inline bool Bounded::SecondEdgeLess::operator()(Bounded const* bi1, Bounded const* bi2) const
     {
         if (m_axis == 0)
             return bi1->m_Bound.m_XDomain.m_dMax < bi2->m_Bound.m_XDomain.m_dMax;
@@ -34,18 +34,18 @@ namespace SGM {
         return bi1->m_Bound.m_ZDomain.m_dMax < bi2->m_Bound.m_ZDomain.m_dMax;
     }
 
-    inline bool Bounded::CenterDistanceLess::operator()(const Bounded *const bi1, const Bounded *const bi2) const
+    inline bool Bounded::CenterDistanceLess::operator()(Bounded const* bi1, Bounded const* bi2) const
     {
         return bi1->m_Bound.SquaredDistanceFromCenters(*m_center) < bi2->m_Bound.SquaredDistanceFromCenters(
                 *m_center);
     }
 
-    inline bool Bounded::VolumeLess::operator()(const Bounded *const bi1, const Bounded *const bi2) const
+    inline bool Bounded::VolumeLess::operator()(Bounded const* bi1, Bounded const* bi2) const
     {
         return volume - bi1->m_Bound.Volume() < volume - bi2->m_Bound.Volume();
     }
 
-    inline bool Bounded::OverlapLess::operator()(const Bounded *const bi1, const Bounded *const bi2) const
+    inline bool Bounded::OverlapLess::operator()(Bounded const* bi1, Bounded const* bi2) const
     {
         return bi1->m_Bound.IntersectingVolume(*m_bound) < bi2->m_Bound.IntersectingVolume(*m_bound);
     }

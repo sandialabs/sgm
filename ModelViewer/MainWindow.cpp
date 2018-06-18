@@ -368,11 +368,11 @@ void MainWindow::primitive_hyperbola()
 void MainWindow::primitive_NUBcurve()
     {
     std::vector<SGM::Point3D> aPoints;
-    aPoints.push_back(SGM::Point3D(-2,0,0));
-    aPoints.push_back(SGM::Point3D(-1,0.5,0));
-    aPoints.push_back(SGM::Point3D(0,-0.5,0));
-    aPoints.push_back(SGM::Point3D(1,0.5,0));
-    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.emplace_back(-2,0,0);
+    aPoints.emplace_back(-1,0.5,0);
+    aPoints.emplace_back(0,-0.5,0);
+    aPoints.emplace_back(1,0.5,0);
+    aPoints.emplace_back(2,0,0);
     mModel->create_NUBcurve(aPoints);
     }
 
@@ -388,11 +388,11 @@ void MainWindow::primitive_torus_knot()
 void MainWindow::primitive_revolve()
     {
     std::vector<SGM::Point3D> aPoints;
-    aPoints.push_back(SGM::Point3D(-2,.5,0));
-    aPoints.push_back(SGM::Point3D(-1,.5,0));
-    aPoints.push_back(SGM::Point3D(0,.5,0));
-    aPoints.push_back(SGM::Point3D(1,.5,0));
-    aPoints.push_back(SGM::Point3D(2,.5,0));
+    aPoints.emplace_back(-2,.5,0);
+    aPoints.emplace_back(-1,.5,0);
+    aPoints.emplace_back(0,.5,0);
+    aPoints.emplace_back(1,.5,0);
+    aPoints.emplace_back(2,.5,0);
     //aPoints.push_back(SGM::Point3D(-2,.5,0));
     //aPoints.push_back(SGM::Point3D(-1,1.5,0));
     //aPoints.push_back(SGM::Point3D(0,1,0));

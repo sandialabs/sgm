@@ -8,7 +8,6 @@
 #include "SGMVector.h"
 #include "SGMGeometry.h"
 #include "SGMInterrogate.h"
-#include "SGMTree.h"
 #include "SGMIntersector.h"
 #include "SGMTransform.h"
 #include "SGMTopology.h"

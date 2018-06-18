@@ -7,6 +7,8 @@
 #include "SGMMathematics.h"
 #include "SGMInterval.h"
 #include "SGMEnums.h"
+#include "SGMBoxTree.h"
+
 #include <vector>
 #include <set>
 #include <map>
@@ -46,9 +48,9 @@ class entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        void AddOwner(entity *pEntity) const {m_Owners.insert(pEntity);}
+        void AddOwner(entity *pEntity) {m_Owners.insert(pEntity);}
 
-        void RemoveOwner(entity *pEntity) const {m_Owners.erase(pEntity);}
+        void RemoveOwner(entity *pEntity) {m_Owners.erase(pEntity);}
 
         std::set<entity *,EntityCompare> const &GetOwners() const {return m_Owners;}
 
@@ -56,7 +58,9 @@ class entity
 
         void TransformBox(SGM::Transform3D const &Trans);
 
-        void FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const;
+        void SeverOwners();
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
 
     protected:
 
@@ -96,7 +100,7 @@ class thing : public entity
 
         size_t GetNextID() {return m_nNextID++;}
 
-        size_t GetMaxID() {return m_nNextID;}
+        size_t GetMaxID() const {return m_nNextID;}
 
         size_t GetTopLevelEntities(std::vector<entity *> &aEntities) const;
         
@@ -124,13 +128,14 @@ class thing : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        void ClearBox() {m_Box.Reset();}
+        void ClearBox() const {m_Box.Reset();}
         
     private:
 
         std::map<size_t,entity* > m_mAllEntities;
-        mutable SGM::Interval3D   m_Box;
         size_t                    m_nNextID;
+        
+        mutable SGM::Interval3D   m_Box;
     };
 
 class topology : public entity
@@ -184,7 +189,7 @@ class body : public topology
 
         bool IsTopLevel() const {return m_Owners.empty();}
 
-        void ClearBox(SGM::Result &rResult);
+        void ClearBox(SGM::Result &rResult) const;
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
@@ -264,7 +269,9 @@ class volume : public topology
 
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
-        bool IsTopLevel() const {return m_pBody==NULL && m_Owners.empty();}
+        SGM::BoxTree const &GetFaceTree(SGM::Result &rResult) const;
+
+        bool IsTopLevel() const {return m_pBody==nullptr && m_Owners.empty();}
 
         // Other methods
 
@@ -278,13 +285,15 @@ class volume : public topology
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
-        void ClearBox(SGM::Result &rResult);
+        void ClearBox(SGM::Result &rResult) const;
 
     private:
     
         std::set<face *,EntityCompare> m_sFaces;
         std::set<edge *,EntityCompare> m_sEdges;
         body                          *m_pBody;
+
+        mutable SGM::BoxTree           m_FaceTree;
     };
 
 class face : public topology
@@ -344,7 +353,7 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const {return m_pVolume==NULL && m_Owners.empty();}
+        bool IsTopLevel() const {return m_pVolume==nullptr && m_Owners.empty();}
         
         // Find methods
 
@@ -370,7 +379,7 @@ class face : public topology
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
-        void ClearFacets(SGM::Result &rResult);
+        void ClearFacets(SGM::Result &rResult) const;
 
         void TransformFacets(SGM::Transform3D const &Trans);
                         

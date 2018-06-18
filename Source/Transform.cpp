@@ -105,7 +105,7 @@ namespace SGM {
         W.m_z = XAxis0.m_z * WAxis1.m_x + YAxis0.m_z * WAxis1.m_y + ZAxis0.m_z * WAxis1.m_z + WAxis0.m_z * WAxis1.m_w;
         W.m_w = XAxis0.m_w * WAxis1.m_x + YAxis0.m_w * WAxis1.m_y + ZAxis0.m_w * WAxis1.m_z + WAxis0.m_w * WAxis1.m_w;
 
-        return Transform3D(X, Y, Z, W);
+        return {X, Y, Z, W};
     }
 
     Point3D operator*(Transform3D const &Trans, Point3D const &Pos)
@@ -117,7 +117,7 @@ namespace SGM {
         double x = Pos.m_x * XAxis.m_x + Pos.m_y * XAxis.m_y + Pos.m_z * XAxis.m_z + XAxis.m_w;
         double y = Pos.m_x * YAxis.m_x + Pos.m_y * YAxis.m_y + Pos.m_z * YAxis.m_z + YAxis.m_w;
         double z = Pos.m_x * ZAxis.m_x + Pos.m_y * ZAxis.m_y + Pos.m_z * ZAxis.m_z + ZAxis.m_w;
-        return Point3D(x, y, z);
+        return {x, y, z};
     }
 
     Vector3D operator*(Transform3D const &Trans, Vector3D const &Vec)
@@ -129,7 +129,7 @@ namespace SGM {
         double x = Vec.m_x * XAxis.m_x + Vec.m_y * XAxis.m_y + Vec.m_z * XAxis.m_z;
         double y = Vec.m_x * YAxis.m_x + Vec.m_y * YAxis.m_y + Vec.m_z * YAxis.m_z;
         double z = Vec.m_x * ZAxis.m_x + Vec.m_y * ZAxis.m_y + Vec.m_z * ZAxis.m_z;
-        return Vector3D(x, y, z);
+        return {x, y, z};
     }
 
     UnitVector3D operator*(Transform3D const &Trans, UnitVector3D const &UVec)
@@ -141,7 +141,7 @@ namespace SGM {
         double x = UVec.m_x * XAxis.m_x + UVec.m_y * XAxis.m_y + UVec.m_z * XAxis.m_z;
         double y = UVec.m_x * YAxis.m_x + UVec.m_y * YAxis.m_y + UVec.m_z * YAxis.m_z;
         double z = UVec.m_x * ZAxis.m_x + UVec.m_y * ZAxis.m_y + UVec.m_z * ZAxis.m_z;
-        return UnitVector3D(x, y, z);
+        return {x, y, z};
     }
 
 } // namespace SGM

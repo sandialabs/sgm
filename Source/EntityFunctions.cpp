@@ -11,16 +11,12 @@ namespace SGMInternal
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity)
     {
-    std::set<entity *,EntityCompare> sChildern;
-    pEntity->FindAllChildern(sChildern);
-    std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
-    while(iter!=sChildern.end())
-        {
-        entity *pEntity=*iter;
-        rResult.GetThing()->DeleteEntity(pEntity);
-        ++iter;
-        }
-    rResult.GetThing()->DeleteEntity(pEntity);
+    auto pThing = rResult.GetThing();
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+    for (auto pChild : sChildren) // access by value, the type of pChild is entity*
+        pThing->DeleteEntity(pChild);
+    pThing->DeleteEntity(pEntity);
     }
 
 entity *CopyEntity(SGM::Result &,//rResult,
@@ -34,7 +30,7 @@ void TransformEntity(SGM::Result            &,//rResult,
                      entity                 *pEntity)
     {
     std::set<entity *,EntityCompare> sChildern;
-    pEntity->FindAllChildern(sChildern);
+    pEntity->FindAllChildren(sChildern);
     sChildern.insert(pEntity);
     std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
     while(iter!=sChildern.end())

@@ -9,7 +9,7 @@ void body::AddVolume(volume *pVolume)
     pVolume->SetBody(this);
     }
 
-void body::ClearBox(SGM::Result &rResult)
+void body::ClearBox(SGM::Result &rResult) const
     {
     m_Box.Reset();
     rResult.GetThing()->ClearBox();

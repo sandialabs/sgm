@@ -37,12 +37,12 @@ body *CreateTorus(SGM::Result             &rResult,
 body *CreateRevolve(SGM::Result             &rResult,
                     SGM::Point3D      const &Origin,
                     SGM::UnitVector3D const &Axis,
-                    curve             const *pCurve);
+                    curve                   *pCurve);
 
 surface *CreateRevolveSurface(SGM::Result             &rResult,
                               SGM::Point3D      const &Origin,
                               SGM::UnitVector3D const &Axis,
-                              curve             const *pCurve);
+                              curve                   *pCurve);
 
 edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,

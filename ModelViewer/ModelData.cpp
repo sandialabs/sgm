@@ -227,7 +227,7 @@ SGM::Curve ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
 
 void ModelData::create_revolve(SGM::Point3D      const &Origin,
                                SGM::UnitVector3D const &Axis,
-                               SGM::Curve        const &IDCurve)
+                               SGM::Curve              &IDCurve)
 {
   SGM::CreateRevolve(dPtr->mResult, Origin, Axis, IDCurve);
 
@@ -366,13 +366,52 @@ void ModelData::rebuild_tree()
           QTreeWidgetItem* surface_item = new QTreeWidgetItem(face_item);
           surface_item->setText(0, "Surface");
           surface_item->setText(1, QString::number(surf.m_ID));
+          SGM::EntityType nType=SGM::GetSurfaceType(dPtr->mResult,surf);
+          switch(nType)
+              {
+              case SGM::PlaneType:
+                  surface_item->setText(0, "Plane");
+                  break;
+              case SGM::CylinderType:
+                  surface_item->setText(0, "Cylinder");
+                  break;
+              case SGM::ConeType:
+                  surface_item->setText(0, "Cone");
+                  break;
+              case SGM::SphereType:
+                  surface_item->setText(0, "Sphere");
+                  break;
+              case SGM::TorusType:
+                  surface_item->setText(0, "Torus");
+                  break;
+              case SGM::NUBSurfaceType:
+                  surface_item->setText(0, "NUB Surface");
+                  break;
+              case SGM::NURBSurfaceType:
+                  surface_item->setText(0, "NURB Surface");
+                  break;
+              case SGM::RevolveType:
+                  surface_item->setText(0, "Revolve");
+                  break;
+              case SGM::ExtrudeType:
+                  surface_item->setText(0, "Extrude");
+                  break;
+              case SGM::OffsetType:
+                  surface_item->setText(0, "Offset Surface");
+                  break;
+              default:
+                  break;
+              }
         }
 
+        QTreeWidgetItem* edge_list_item = new QTreeWidgetItem(face_item);
+        edge_list_item->setText(0, "Edge List");
+          
         std::set<SGM::Edge> edge_list;
         SGM::FindEdges(dPtr->mResult, face, edge_list);
         for(const SGM::Edge &edge : edge_list)
         {
-          QTreeWidgetItem* edge_item = new QTreeWidgetItem(face_item);
+          QTreeWidgetItem* edge_item = new QTreeWidgetItem(edge_list_item);
           edge_item->setText(0, "Edge");
           edge_item->setText(1, QString::number(edge.m_ID));
 

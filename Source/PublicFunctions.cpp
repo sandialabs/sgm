@@ -513,9 +513,9 @@ SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
 SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
                              SGM::Point3D      const &Origin,
                              SGM::UnitVector3D const &Axis,
-                             SGM::Curve        const &IDCurve)
+                             SGM::Curve              &IDCurve)
     {
-    SGMInternal::curve const *pCurve = (SGMInternal::curve const *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
+    SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
     SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
 
     return SGM::Body(pBody->GetID());
@@ -533,9 +533,9 @@ SGM::Body SGM::CreateDisk(SGM::Result             &rResult,
 SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
                                        SGM::Point3D      const &Origin,
                                        SGM::UnitVector3D const &Axis,
-                                       SGM::Curve        const &IDCurve)
+                                       SGM::Curve              &IDCurve)
     {
-    SGMInternal::curve const *pCurve = (SGMInternal::curve const *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
+    SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
     SGMInternal::surface *pSurface=SGMInternal::CreateRevolveSurface(rResult, Origin, Axis, pCurve);
 
     return SGM::Surface(pSurface->GetID());
@@ -762,6 +762,20 @@ SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
     {
     SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
     return SGM::Surface(pPlane->GetID());
+    }
+
+SGM::EntityType SGM::GetCurveType(SGM::Result      &rResult,
+                                  SGM::Curve const &CurveID)
+    {
+    SGMInternal::curve const *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
+    return pCurve->GetCurveType();
+    }
+
+SGM::EntityType SGM::GetSurfaceType(SGM::Result        &rResult,
+                                    SGM::Surface const &SurfaceID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->GetSurfaceType();
     }
 
 bool SGM::GetLineData(SGM::Result       &rResult,

@@ -10,7 +10,7 @@ namespace SGMInternal
     revolve::revolve(SGM::Result             &rResult,
                      SGM::Point3D      const &pAxisOrigin,
                      SGM::UnitVector3D const &uAxisVector,
-                     curve             const *pCurve)
+                     curve                   *pCurve)
                      : surface(rResult, SGM::RevolveType)
     {
     m_ZAxis = uAxisVector;
@@ -31,7 +31,7 @@ revolve::~revolve()
         m_pCurve->RemoveOwner(this);
     }
 
-void revolve::SetCurve(curve const *pCurve)
+void revolve::SetCurve(curve *pCurve)
     {
     pCurve->AddOwner(this);
     m_pCurve = pCurve;

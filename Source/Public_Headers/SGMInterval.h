@@ -277,13 +277,13 @@ namespace SGM {
 
         bool InInterval(Point3D const &point, double tolerance) const;
 
+        bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_INTERVAL_TOLERANCE) const;
+
         bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
         // If a sphere overlaps any part of this bounding box, tolerance acts as increase in sphere radius.
 
         bool IntersectsSphere(Point3D const &center, double radius, double tolerance) const;
-
-        bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
         // Unites this interval with the given interval.
 

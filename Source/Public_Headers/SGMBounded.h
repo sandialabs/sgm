@@ -26,7 +26,7 @@ namespace SGM {
             explicit Stretch(Interval3D* bound)
                     :m_bound(bound) { }
 
-            void operator()(const Bounded* const item);
+            void operator()(const Bounded *item);
         };
 
         /**
@@ -40,7 +40,7 @@ namespace SGM {
             explicit FirstEdgeLess(const size_t axis)
                     :m_axis(axis) { }
 
-            bool operator()(const Bounded* const bi1, const Bounded* const bi2) const;
+            bool operator()(Bounded const* bi1, Bounded const* bi2) const;
         };
 
         /**
@@ -54,7 +54,7 @@ namespace SGM {
             explicit SecondEdgeLess(const size_t axis)
                     :m_axis(axis) { }
 
-            bool operator()(const Bounded* const bi1, const Bounded* const bi2) const;
+            bool operator()(Bounded const* bi1, Bounded const* bi2) const;
         };
 
         /**
@@ -67,7 +67,7 @@ namespace SGM {
             explicit CenterDistanceLess(Interval3D const *center)
                     :m_center(center) { }
 
-            bool operator()(const Bounded* const bi1, const Bounded* const bi2) const;
+            bool operator()(Bounded const* bi1, Bounded const* bi2) const;
         };
 
         /**
@@ -85,7 +85,7 @@ namespace SGM {
             explicit VolumeLess(const Interval3D* center)
                     :volume(center->Volume()) { }
 
-            bool operator()(const Bounded* const bi1, const Bounded* const bi2) const;
+            bool operator()(Bounded const* bi1, Bounded const* bi2) const;
         };
 
         struct OverlapLess
@@ -95,7 +95,7 @@ namespace SGM {
             explicit OverlapLess(Interval3D const* bbox)
                     :m_bound(bbox) { }
 
-            bool operator()(const Bounded* const bi1, const Bounded* const bi2) const;
+            bool operator()(Bounded const* bi1, Bounded const* bi2) const;
         };
 
     };

@@ -95,9 +95,9 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<double>                     const *pVParams=nullptr);
 
 SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
-                                      SGM::Point3D      const &Origin,
-                                      SGM::UnitVector3D const &Axis,
-                                      SGM::Curve        const &CurveID);
+                                             SGM::Point3D      const &Origin,
+                                             SGM::UnitVector3D const &Axis,
+                                             SGM::Curve              &CurveID);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -143,6 +143,9 @@ SGM_EXPORT SGM::Point2D SurfaceInverse(SGM::Result        &rResult,
 //  Get Curve Data
 //
 //////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT SGM::EntityType GetCurveType(SGM::Result      &rResult,
+                                        SGM::Curve const &CurveID);
 
 SGM_EXPORT bool GetLineData(SGM::Result       &rResult,
                             SGM::Curve  const &CurveID,
@@ -203,6 +206,9 @@ SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
 //  Get Surface Data
 //
 //////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT SGM::EntityType GetSurfaceType(SGM::Result        &rResult,
+                                          SGM::Surface const &SurfaceID);
              
 SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Surface const &SurfaceID,

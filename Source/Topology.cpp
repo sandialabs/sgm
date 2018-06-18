@@ -1003,22 +1003,22 @@ void RemoveFace(SGM::Result &rResult,
 
                 // Remove the faces and edges.
 
-                std::set<entity *,EntityCompare> sChildern;
-                pFace->FindAllChildern(sChildern);
-                sChildern.insert(pFace);
-                std::set<entity *,EntityCompare>::iterator ChildernIter=sChildern.begin();
-                while(ChildernIter!=sChildern.end())
+                std::set<entity *,EntityCompare> sChildren;
+                pFace->FindAllChildren(sChildren);
+                sChildren.insert(pFace);
+                std::set<entity *,EntityCompare>::iterator ChildrenIter=sChildren.begin();
+                while(ChildrenIter!=sChildren.end())
                     {
-                    entity *pEntity=*ChildernIter;
+                    entity *pEntity=*ChildrenIter;
                     rResult.GetThing()->SeverOwners(pEntity);
-                    ++ChildernIter;
+                    ++ChildrenIter;
                     }
-                ChildernIter=sChildern.begin();
-                while(ChildernIter!=sChildern.end())
+                ChildrenIter=sChildren.begin();
+                while(ChildrenIter!=sChildren.end())
                     {
-                    entity *pEntity=*ChildernIter;
+                    entity *pEntity=*ChildrenIter;
                     rResult.GetThing()->DeleteEntity(pEntity);
-                    ++ChildernIter;
+                    ++ChildrenIter;
                     }
                 }
             }

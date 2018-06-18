@@ -23,7 +23,7 @@ namespace SGM {
 #endif // BOX_TREE_USE_MEMORY_POOL
 
     BoxTree::BoxTree()
-            : m_root(nullptr), m_size(0)
+            : m_treeRoot(nullptr), m_treeSize(0)
     {
         // perform checks on preconditions of our tuning parameters
         static_assert(MIN_CHILDREN <= MAX_CHILDREN / 2, "MAX_CHILDREN should be 2*MIN_CHILDREN");
@@ -41,18 +41,18 @@ namespace SGM {
         newLeaf->m_pObject = object;
 
         // create a new root node if necessary
-        if (!m_root) {
-            m_root = new Node();
-            m_root->m_bHasLeaves = true;
+        if (!m_treeRoot) {
+            m_treeRoot = new Node();
+            m_treeRoot->m_bHasLeaves = true;
 
             // reserve memory
-            m_root->m_aItems.reserve(RESERVE_CHILDREN);
-            m_root->m_aItems.push_back(newLeaf);
-            m_root->m_Bound = bound;
+            m_treeRoot->m_aItems.reserve(RESERVE_CHILDREN);
+            m_treeRoot->m_aItems.push_back(newLeaf);
+            m_treeRoot->m_Bound = bound;
             }
         else
-            InsertInternal(newLeaf, m_root);
-        m_size += 1;
+            InsertInternal(newLeaf, m_treeRoot);
+        m_treeSize += 1;
     }
 
     BoxTree::Node* BoxTree::ChooseSubtree(BoxTree::Node* node, const Interval3D* bound)
@@ -128,7 +128,7 @@ namespace SGM {
     {
         // If the level is not the root level AND this is the first call of OverflowTreatment in the given level during the
         // insertion of one data box, then Reinsert
-        if (level!=m_root && firstInsert) {
+        if (level!=m_treeRoot && firstInsert) {
             Reinsert(level);
             return nullptr;
             }
@@ -136,20 +136,20 @@ namespace SGM {
         Node* splitItem = Split(level);
 
         // If OverflowTreatment caused a split of the root, create a new root
-        if (level == m_root) {
+        if (level == m_treeRoot) {
             auto newRoot = new Node();
             newRoot->m_bHasLeaves = false;
 
             // reserve memory
             newRoot->m_aItems.reserve(RESERVE_CHILDREN);
-            newRoot->m_aItems.push_back(m_root);
+            newRoot->m_aItems.push_back(m_treeRoot);
             newRoot->m_aItems.push_back(splitItem);
 
             // Handle the new root item
             newRoot->m_Bound.Reset();
             for_each(newRoot->m_aItems.begin(), newRoot->m_aItems.end(), Bounded::Stretch(&newRoot->m_Bound));
 
-            m_root = newRoot;
+            m_treeRoot = newRoot;
             return nullptr;  // we are done at this level
             }
         return splitItem; // propagate up a level
@@ -289,7 +289,8 @@ namespace SGM {
         // From the sort, above, starting with the minimum distance (= close reinsert), invoke Insert
         // to reinsert the items starting at the root node
         for (auto& removed_item : removed_items)
-            InsertInternal(static_cast<Leaf*>(removed_item), m_root, false);
+            InsertInternal(static_cast<Leaf*>(removed_item), m_treeRoot, false);
     }
+
 
 } // namespace SGM

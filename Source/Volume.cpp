@@ -45,13 +45,30 @@ double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return dAnswer/6;
     }
 
-void volume::ClearBox(SGM::Result &rResult)
+void volume::ClearBox(SGM::Result &rResult) const
     {
     m_Box.Reset();
+    m_FaceTree.Clear();
     if(m_pBody)
         {
         m_pBody->ClearBox(rResult);
         }
+    }
+
+SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const
+    {
+    if(m_FaceTree.IsEmpty())
+        {
+        std::set<face *,EntityCompare>::const_iterator iter=m_sFaces.begin();
+        while(iter!=m_sFaces.end())
+            {
+            face *pFace=*iter;
+            SGM::Interval3D const &Box=pFace->GetBox(rResult);
+            m_FaceTree.Insert(pFace,Box);
+            ++iter;
+            }
+        }
+    return m_FaceTree;
     }
 
 size_t volume::FindShells(SGM::Result                    &rResult,

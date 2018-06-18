@@ -188,7 +188,7 @@ double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
     return dArea*0.5;
     }
 
-void face::ClearFacets(SGM::Result &rResult)
+void face::ClearFacets(SGM::Result &rResult) const
     {
     if(m_aPoints2D.empty()==false)
         {
@@ -342,7 +342,7 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     aOrder.reserve(nLoops);
     for(Index1=0;Index1<nLoops;++Index1)
         {
-        aOrder.push_back(std::pair<size_t,size_t>(aaTempLoops[Index1][0]->GetID(),Index1));
+        aOrder.emplace_back(std::pair<size_t,size_t>(aaTempLoops[Index1][0]->GetID(),Index1));
         }
     std::sort(aOrder.begin(),aOrder.end());
     for(Index1=0;Index1<nLoops;++Index1)

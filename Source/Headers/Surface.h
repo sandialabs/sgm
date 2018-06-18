@@ -361,19 +361,19 @@ class revolve : public surface
         revolve(SGM::Result             &rResult,
                 SGM::Point3D      const &pAxisOrigin,
                 SGM::UnitVector3D const &uAxisVector,
-                curve             const *pCurve);
+                curve                   *pCurve);
 
         ~revolve();
 
-        void SetCurve(curve const *pCurve);
+        void SetCurve(curve *pCurve);
 
     public:
 
-        curve             const *m_pCurve;
-        SGM::Point3D             m_Origin;
-        SGM::UnitVector3D        m_XAxis;
-        SGM::UnitVector3D        m_YAxis;
-        SGM::UnitVector3D        m_ZAxis;
+        curve             *m_pCurve;
+        SGM::Point3D       m_Origin;
+        SGM::UnitVector3D  m_XAxis;
+        SGM::UnitVector3D  m_YAxis;
+        SGM::UnitVector3D  m_ZAxis;
     };
 
 class extrude : public surface
@@ -382,17 +382,17 @@ class extrude : public surface
 
         extrude(SGM::Result             &rResult,
                 SGM::UnitVector3D const &vAxis,
-                curve             const *pCurve);
+                curve                   *pCurve);
 
         ~extrude();
 
-        void SetCurve(curve const *pCurve);
+        void SetCurve(curve *pCurve);
 
     public:
 
-        curve             const *m_pCurve;
-        SGM::Point3D             m_Origin;
-        SGM::UnitVector3D        m_vAxis;
+        curve             *m_pCurve;
+        SGM::Point3D       m_Origin;
+        SGM::UnitVector3D  m_vAxis;
     };
 
 bool TestSurface(SGMInternal::surface const *pSurface,

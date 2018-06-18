@@ -133,7 +133,7 @@ bool body::Check(SGM::Result              &rResult,
     if(bChildern)
         {
         std::set<entity *,EntityCompare> sChildern;
-        FindAllChildern(sChildern);
+        FindAllChildren(sChildern);
         std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
         while(iter!=sChildern.end())
             {
@@ -243,7 +243,7 @@ bool volume::Check(SGM::Result              &rResult,
     if(bChildern)
         {
         std::set<entity *,EntityCompare> sChildern;
-        FindAllChildern(sChildern);
+        FindAllChildren(sChildern);
         std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
         while(iter!=sChildern.end())
             {
@@ -441,7 +441,7 @@ bool face::Check(SGM::Result              &rResult,
     if(bChildern)
         {
         std::set<entity *,EntityCompare> sChildern;
-        FindAllChildern(sChildern);
+        FindAllChildren(sChildern);
         std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
         while(iter!=sChildern.end())
             {
@@ -587,7 +587,7 @@ bool edge::Check(SGM::Result              &rResult,
     if(bChildern)
         {
         std::set<entity *,EntityCompare> sChildern;
-        FindAllChildern(sChildern);
+        FindAllChildren(sChildern);
         std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
         while(iter!=sChildern.end())
             {

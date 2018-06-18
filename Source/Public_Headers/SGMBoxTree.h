@@ -16,32 +16,17 @@ const std::size_t DIMENSION = 3;
 namespace SGM {
 
     /**
-     * An index of objects and their associated bounding box
-     * (pairs of (void*, Interval3D)
-     * based on the R* Tree algorithm.
-     *
-     * Offers visitor interfaces (following the Visitor pattern) that enable
-     * walking the R* tree in a conditional way using a Filter.
-     *
-     * A Filter is a struct functor that provides two operators, one for Node
-     * and one for Leaf, returning true or false.
-     *
-     * A Visitor is a struct functor that provides either or both operators,
-     * one for Node and Leaf,
-     * that performs some operation or query on the nodes.
+     * An index of items and their associated bounding box
+     * (pairs of <void*, Interval3D>) based on the R* Tree algorithm.
      *
      * The void* to the object on leaves of the tree may be changed, but the
-     * bounding box of the object must remain
-     * identical to avoid violating the tree.
+     * bounding box of the object must remain identical to avoid violating the tree.
      */
     class SGM_EXPORT BoxTree
     {
     public:
 
-        enum { DIMENSION = 3};
-
-        struct Leaf;
-        struct Node;
+        typedef std::pair<void const*,Interval3D> BoundedItemType;
 
         /**
          * Construct an empty tree.
@@ -54,7 +39,27 @@ namespace SGM {
         ~BoxTree();
 
         /**
-         * Insert a single item into the tree.
+         * Checks whether the tree contains any items
+         */
+        bool IsEmpty() const;
+
+        /**
+         * The number of items in the tree.
+         *
+         * @return count of items/boxes in the container
+         */
+        size_t Size() const;
+
+        /**
+         *  Clears the contents of the container.
+         *
+         *  Removes all elements from the container. Invalidates any references, pointers, or iterators referring to
+         *  Bounded elements. Any past-the-end iterator remains valid.
+         */
+         void Clear();
+
+        /**
+         * Insert a single item/box into the container.
          *
          * @param object the item
          * @param bound the bounding box containing the item
@@ -62,11 +67,11 @@ namespace SGM {
         void Insert(void const* object, Interval3D const & bound);
 
         /**
-         * Remove any entries contained in the given bounding box.
+         * Remove any entries (item/box) contained in the given bounding box.
          *
          * @param bound a bounding box
          */
-        void RemoveBoundedArea(Interval3D const & bound);
+        void EraseEnclosed(Interval3D const &bound);
 
         /**
          * Remove a specific entry.
@@ -74,14 +79,71 @@ namespace SGM {
          * @param item the item to remove
          * @param removeDuplicates if false, only the first item found will be removed.
          */
-        void RemoveItem(const void*& item, bool removeDuplicates = true);
+        void Erase(const void *&item, bool removeDuplicates = true);
 
         /**
-         * The number of items in the tree.
+         * Exchanges the contents of the index with those of other.
          *
-         * @return count of items
+         * Does not invoke any move, copy, or swap operations on individual elements.
          */
-        size_t GetSize() const { return m_size; }
+        void Swap( BoxTree& other );
+
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Query Member Functions
+        //
+        ///////////////////////////////////////////////////////////////////////
+
+        std::vector<BoundedItemType> FindAll() const;
+
+        std::vector<BoundedItemType> FindEnclosed(Interval3D const &bound) const;
+
+        std::vector<BoundedItemType> FindIntersectsBox(Interval3D const &bound) const;
+
+        std::vector<BoundedItemType> FindIntersectsHalfSpace(Point3D const &point,
+                                                             UnitVector3D const &unitVector,
+                                                             double tolerance) const;
+
+        std::vector<BoundedItemType> FindIntersectsLine(Ray3D const &ray,
+                                                        double tolerance = SGM_INTERVAL_TOLERANCE) const;
+
+        std::vector<BoundedItemType> FindIntersectsPlane(Point3D const &point,
+                                                         UnitVector3D const &unitVector,
+                                                         double tolerance) const;
+
+        std::vector<BoundedItemType> FindIntersectsPoint(Point3D const &point,
+                                                         double tolerance) const;
+
+        std::vector<BoundedItemType> FindIntersectsRay(Ray3D const &ray,
+                                                       double tolerance = SGM_INTERVAL_TOLERANCE) const;
+
+        std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, Point3D const &p2,
+                                                           double tolerance = SGM_INTERVAL_TOLERANCE) const;
+
+        std::vector<BoundedItemType> FindIntersectsSphere(Point3D const &center,
+                                                          double radius,
+                                                          double tolerance) const;
+
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Utility functors
+        //
+        // Offers visitor interfaces (following the Visitor pattern) that enable
+        // walking the R* tree in a conditional way using a Filter.
+        //
+        // A Filter is a struct functor that provides two operators, one for Node
+        // and one for Leaf, returning true or false.
+        //
+        // A Visitor is a struct functor that provides either or both operators,
+        // one for Node and Leaf, that performs some operation or query on
+        // the nodes.
+        //
+        ///////////////////////////////////////////////////////////////////////
+
+        enum { DIMENSION = 3};
+
+        struct Leaf;
+        struct Node;
 
         /**
          * A convenience Filter that matches any node and leaf of the tree.
@@ -128,6 +190,103 @@ namespace SGM {
             bool operator()(Leaf const * leaf) const;
         };
 
+        struct IsIntersectingHalfSpace {
+            Point3D m_point;
+            UnitVector3D m_unitVector;
+            double m_tolerance;
+            IsIntersectingHalfSpace() = delete;
+
+            IsIntersectingHalfSpace(Point3D const &point, UnitVector3D const &unitVector, double tolerance)
+                    : m_point(point), m_unitVector(unitVector), m_tolerance(tolerance) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+        
+        struct IsIntersectingLine {
+            Ray3D m_ray;
+            double m_tolerance;
+
+            IsIntersectingLine() = delete;
+
+            explicit IsIntersectingLine(Ray3D const & ray, double tolerance = SGM_INTERVAL_TOLERANCE)
+            : m_ray(ray), m_tolerance(tolerance) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+
+        struct IsIntersectingPlane {
+            Point3D m_point;
+            UnitVector3D m_unitVector;
+            double m_tolerance;
+            
+            IsIntersectingPlane() = delete;
+            
+            IsIntersectingPlane(Point3D const & point, UnitVector3D const & unitVector, double tolerance)
+                    : m_point(point), m_unitVector(unitVector), m_tolerance(tolerance) { }
+            
+            bool operator()(Bounded const * node) const;
+        };
+        
+        /**
+         * A Filter that matches node or leaf when the given point intersects.
+         */
+        struct IsIntersectingPoint {
+
+            double m_tolerance;
+            Point3D m_point;
+
+            IsIntersectingPoint() = delete;
+
+            explicit IsIntersectingPoint(Point3D const & point, double tolerance)
+                    : m_tolerance(tolerance), m_point(point) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+
+        /**
+         * A Filter that matches node or leaf when the given ray intersects.
+         */
+        struct IsIntersectingRay {
+
+            Ray3D m_ray;
+            double m_tolerance;
+            
+            IsIntersectingRay() = delete;
+
+            explicit IsIntersectingRay(Ray3D const & ray, double tolerance = SGM_INTERVAL_TOLERANCE)
+                    : m_ray(ray), m_tolerance(tolerance) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+        
+        struct IsIntersectingSegment 
+        {
+            Point3D m_point1;
+            Point3D m_point2;
+            double m_tolerance;
+            
+            IsIntersectingSegment() = delete;
+            
+            explicit IsIntersectingSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_INTERVAL_TOLERANCE)
+                    : m_point1(p1), m_point2(p2), m_tolerance(tolerance) { }
+            
+            bool operator()(Bounded const * node) const;
+        };
+
+        struct IsIntersectingSphere
+        {
+            Point3D m_center;
+            double m_radius;
+            double m_tolerance;
+
+            IsIntersectingSphere() = delete;
+
+            explicit IsIntersectingSphere(Point3D const &center, double radius, double tolerance)
+                    : m_center(center), m_radius(radius), m_tolerance(tolerance) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+
         /**
          * Visitor operation for removing objects (leaf nodes) from the tree.
          */
@@ -138,10 +297,7 @@ namespace SGM {
             RemoveLeaf()
                     :m_bContinue(true) { }
 
-            bool operator()(Leaf const * /*leaf*/) const
-            {
-                return true;
-            }
+            bool operator()(Leaf const * /*leaf*/) const { return true; }
         };
 
         /**
@@ -164,16 +320,35 @@ namespace SGM {
         };
 
         /**
-         * Traverse the tree and perform an operation on nodes that pass a filter.
+         * A visitor that pushes a Leaf into a container when it passes a given Filter.
          *
-         * @tparam Filter An acceptor functor that returns true if this branch or leaf of the tree should be visited.
-         * @tparam Operation A functor that performs an operation.
-         * @param accept the acceptor instance object
-         * @param visitor the visitor instance object
-         * @return the visitor instance object, allowing retrieval of data inside it (for example, count of items visited)
+         * @tparam Filter filter returning true or false given a Leaf
+         */
+        struct PushLeaf {
+            std::vector<BoundedItemType> m_aContainer;
+            bool bContinueVisiting;
+
+            PushLeaf() : m_aContainer(), bContinueVisiting(true) {};
+
+            void operator()(Leaf const *leaf)
+            {
+                m_aContainer.emplace_back(leaf->m_pObject,leaf->m_Bound);
+            }
+        };
+
+        /**
+         * Traverse the tree; for each Node that passes the Filter and has Leaf children, perform the given
+         * Operation on each Leaf; also break if Visitor.ContinueVisiting is false.
+         *
+         * @tparam Filter An functor that returns true if this branch Node of the tree should be visited.
+         * @tparam Operation An functor that performs an operation on a leaf
+         * @param filter the filter instance object
+         * @param operation the operator instance object
+         * @return the operation instance object at the end of traversal, allowing retrieval of data inside it
+         *         (for example, count of items visited)
          */
         template<typename Filter, typename Operation>
-        Operation Query(Filter const& accept, Operation visitor);
+        Operation Query(Filter const& filter, Operation operation) const;
 
         /**
          * Traverse the tree and remove leaf nodes on branches that pass a filter.
@@ -234,35 +409,47 @@ namespace SGM {
         void Reinsert(Node* node);
 
         template<typename Filter, typename Visitor>
-        struct VisitFunctor {
+        struct QueryLeafFunctor
+        {
             Filter m_filter;
-            Visitor m_visitor;
+            Visitor &m_visitor;
 
-            explicit VisitFunctor(Filter const & a, Visitor& v)
-                    :m_filter(a), m_visitor(v) { }
+            explicit QueryLeafFunctor(Filter const &filter, Visitor &visitor)
+                    : m_filter(filter), m_visitor(visitor)
+            {}
 
-            void operator()(Bounded* item);
+            QueryLeafFunctor(const QueryLeafFunctor&) = default;
+            QueryLeafFunctor& operator=(const QueryLeafFunctor &) = delete;
+
+            void operator()(Bounded const *item);
         };
 
         template<typename Filter, typename Visitor>
-        struct QueryFunctor {
+        struct QueryNodeFunctor {
             Filter m_filter;
-            Visitor m_visitor;
+            Visitor& m_visitor;
 
-            explicit QueryFunctor(Filter const & a, Visitor& v)
-                    :m_filter(a), m_visitor(v) { }
+            explicit QueryNodeFunctor(Filter const & filter, Visitor& visitor)
+                    :m_filter(filter), m_visitor(visitor) { }
 
-            void operator()(Bounded* item);
+            // non-copyable
+            QueryNodeFunctor(const QueryNodeFunctor&) = default;
+            QueryNodeFunctor& operator=(const QueryNodeFunctor &) = delete;
+
+            void operator()(Bounded const* item);
         };
 
         template<typename Filter, typename LeafRemover>
         struct RemoveLeafFunctor {
             Filter m_filter;
-            LeafRemover m_leafRemover;
+            LeafRemover& m_leafRemover;
             size_t* size;
 
             explicit RemoveLeafFunctor(Filter const & a, LeafRemover& r, size_t* s)
                     :m_filter(a), m_leafRemover(r), size(s) { }
+
+            RemoveLeafFunctor(const RemoveLeafFunctor&) = default;
+            RemoveLeafFunctor& operator=(const RemoveLeafFunctor &) = delete;
 
             bool operator()(Bounded* item) const;
         };
@@ -270,7 +457,7 @@ namespace SGM {
         template<typename Filter, typename LeafRemover>
         struct RemoveFunctor {
             Filter accept;
-            LeafRemover remove;
+            LeafRemover& remove;
 
             // parameters that are passed in
             LeafContainerType* itemsToReinsert;
@@ -280,6 +467,9 @@ namespace SGM {
             explicit RemoveFunctor(Filter const & na, LeafRemover& lr, LeafContainerType* ir, size_t* size)
                     :accept(na), remove(lr), itemsToReinsert(ir), m_size(size) { }
 
+            RemoveFunctor(const RemoveFunctor& rf) = default;
+            RemoveFunctor& operator=(const RemoveFunctor &) = delete;
+
             bool operator()(Bounded* item, bool isRoot = false);
 
             // traverse and finds any leaves, and adds them to a
@@ -288,9 +478,9 @@ namespace SGM {
         };
 
     private:
-        Node* m_root;
+        Node* m_treeRoot;
 
-        size_t m_size;
+        size_t m_treeSize;
 
         static const size_t REINSERT_CHILDREN;  // in [1 <= m <= MIN_CHILDREN]
         static const size_t MIN_CHILDREN;       // in [1 <= m < M)
