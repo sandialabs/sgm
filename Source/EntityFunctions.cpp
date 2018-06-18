@@ -30,16 +30,66 @@ entity *CopyEntity(SGM::Result &,//rResult,
     }
 
 void TransformEntity(SGM::Result            &,//rResult,
-                     SGM::Transform3D const &,//Trans,
-                     entity                 *)//pEntity)
+                     SGM::Transform3D const &Trans,
+                     entity                 *pEntity)
     {
-    
+    std::set<entity *,EntityCompare> sChildern;
+    pEntity->FindAllChildern(sChildern);
+    sChildern.insert(pEntity);
+    std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
+    while(iter!=sChildern.end())
+        {
+        entity *pEntity=*iter;
+        pEntity->TransformBox(Trans);
+        switch(pEntity->GetType())
+            {
+            case SGM::FaceType:
+                {
+                face *pFace=(face *)pEntity;
+                pFace->TransformFacets(Trans);
+                break;
+                }
+            case SGM::EdgeType:
+                {
+                edge *pEdge=(edge *)pEntity;
+                pEdge->TransformFacets(Trans);
+                break;
+                }
+            case SGM::VertexType:
+                {
+                vertex *pVertex=(vertex *)pEntity;
+                pVertex->TransformData(Trans);
+                break;
+                }
+            case SGM::SurfaceType:
+                {
+                surface *pSurface=(surface *)pEntity;
+                pSurface->Transform(Trans);
+                break;
+                }
+            case SGM::CurveType:
+                {
+                curve *pCurve=(curve *)pEntity;
+                pCurve->Transform(Trans);
+                break;
+                }
+            case SGM::ComplexType:
+                {
+                complex *pComplex=(complex *)pEntity;
+                pComplex->Transform(Trans);
+                break;
+                }
+            default:
+                break;
+            }
+        ++iter;
+        }
     }
 
-SGM::Interval3D const &GetBoundingBox(SGM::Result  &,//rResult,
+SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
                                       entity const *pEntity)
     {
-    return pEntity->GetBox();
+    return pEntity->GetBox(rResult);
     }
 
 void Heal(SGM::Result           &rResult,

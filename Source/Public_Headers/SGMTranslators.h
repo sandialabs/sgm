@@ -23,7 +23,8 @@ namespace SGM
                 m_bScan(false),
                 m_b2D(false),
                 m_bSingleVolume(false),
-                m_bVerbose(false) {}
+                m_bVerbose(false),
+                m_bRemoveSeams(true) {}
 
             explicit TranslatorOptions(std::string const &sOptions);
 
@@ -52,6 +53,10 @@ namespace SGM
             bool m_bVerbose;       // Output all data.
                                    // Default is false.
                                    // Used in SGM write.
+
+            bool m_bRemoveSeams;   // Merge seams out when reading.
+                                   // Default is true,
+                                   // Used in STEP read.
         };
 
     SGM_EXPORT size_t ReadFile(SGM::Result                  &rResult,

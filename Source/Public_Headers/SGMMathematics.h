@@ -120,6 +120,11 @@ namespace SGM
     SGM_EXPORT size_t FindAdjacences2D(std::vector<size_t> const &aTriangles,
                                        std::vector<size_t>       &aAdjacences);
 
+    // Returns the length of the longest edges of the given triangles.  d.
+
+    SGM_EXPORT double FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
+                                        std::vector<size_t>       const &aTriangles);
+
     ///////////////////////////////////////////////////////////////////////////
     //
     //  Circle functions

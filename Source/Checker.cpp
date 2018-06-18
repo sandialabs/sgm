@@ -35,7 +35,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::BodyType:
                 {
                 body const *pBody=(body *)pEntity;
-                if(false==pBody->Check(rResult,Options,aCheckStrings))
+                if(false==pBody->Check(rResult,Options,aCheckStrings,false))
                     {
                     bAnswer=false;
                     }
@@ -44,7 +44,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::VolumeType:
                 {
                 volume const *pVolume=(volume *)pEntity;
-                if(false==pVolume->Check(rResult,Options,aCheckStrings))
+                if(false==pVolume->Check(rResult,Options,aCheckStrings,false))
                     {
                     bAnswer=false;
                     }
@@ -53,7 +53,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::FaceType:
                 {
                 face const *pFace=(face *)pEntity;
-                if(false==pFace->Check(rResult,Options,aCheckStrings))
+                if(false==pFace->Check(rResult,Options,aCheckStrings,false))
                     {
                     bAnswer=false;
                     }
@@ -62,7 +62,7 @@ bool thing::Check(SGM::Result              &rResult,
             case SGM::EdgeType:
                 {
                 edge const *pEdge=(edge *)pEntity;
-                if(false==pEdge->Check(rResult,Options,aCheckStrings))
+                if(false==pEdge->Check(rResult,Options,aCheckStrings,false))
                     {
                     bAnswer=false;
                     }
@@ -105,9 +105,10 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool body::Check(SGM::Result              &,//rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+bool body::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -127,6 +128,81 @@ bool body::Check(SGM::Result              &,//rResult,
         ++VolumeIter;
         }
 
+    // Check all childern.
+
+    if(bChildern)
+        {
+        std::set<entity *,EntityCompare> sChildern;
+        FindAllChildern(sChildern);
+        std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
+        while(iter!=sChildern.end())
+            {
+            entity *pEntity=*iter;
+            switch(pEntity->GetType())
+                {
+                case SGM::VolumeType:
+                    {
+                    volume const *pVolume=(volume *)pEntity;
+                    if(false==pVolume->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::FaceType:
+                    {
+                    face const *pFace=(face *)pEntity;
+                    if(false==pFace->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::EdgeType:
+                    {
+                    edge const *pEdge=(edge *)pEntity;
+                    if(false==pEdge->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::VertexType:
+                    {
+                    vertex const *pVertex=(vertex *)pEntity;
+                    if(false==pVertex->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::CurveType:
+                    {
+                    curve const *pCurve=(curve *)pEntity;
+                    if(false==pCurve->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::SurfaceType:
+                    {
+                    surface const *pSurface=(surface *)pEntity;
+                    if(false==pSurface->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                default:
+                    {
+                    throw;
+                    }
+                }
+            ++iter;
+            }
+        }
+
     return bAnswer;
     }
 
@@ -139,9 +215,10 @@ bool complex::Check(SGM::Result              &,//rResult,
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &,//rResult,
-                   SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &aCheckStrings) const
+bool volume::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -161,12 +238,79 @@ bool volume::Check(SGM::Result              &,//rResult,
         ++FaceIter;
         }
 
+    // Check all childern.
+
+    if(bChildern)
+        {
+        std::set<entity *,EntityCompare> sChildern;
+        FindAllChildern(sChildern);
+        std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
+        while(iter!=sChildern.end())
+            {
+            entity *pEntity=*iter;
+            switch(pEntity->GetType())
+                {
+                case SGM::FaceType:
+                    {
+                    face const *pFace=(face *)pEntity;
+                    if(false==pFace->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::EdgeType:
+                    {
+                    edge const *pEdge=(edge *)pEntity;
+                    if(false==pEdge->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::VertexType:
+                    {
+                    vertex const *pVertex=(vertex *)pEntity;
+                    if(false==pVertex->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::CurveType:
+                    {
+                    curve const *pCurve=(curve *)pEntity;
+                    if(false==pCurve->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::SurfaceType:
+                    {
+                    surface const *pSurface=(surface *)pEntity;
+                    if(false==pSurface->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                default:
+                    {
+                    throw;
+                    }
+                }
+            ++iter;
+            }
+        }
+
     return bAnswer;
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -292,12 +436,70 @@ bool face::Check(SGM::Result              &rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
+    // Check all childern.
+
+    if(bChildern)
+        {
+        std::set<entity *,EntityCompare> sChildern;
+        FindAllChildern(sChildern);
+        std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
+        while(iter!=sChildern.end())
+            {
+            entity *pEntity=*iter;
+            switch(pEntity->GetType())
+                {
+                case SGM::EdgeType:
+                    {
+                    edge const *pEdge=(edge *)pEntity;
+                    if(false==pEdge->Check(rResult,Options,aCheckStrings,false))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::VertexType:
+                    {
+                    vertex const *pVertex=(vertex *)pEntity;
+                    if(false==pVertex->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::CurveType:
+                    {
+                    curve const *pCurve=(curve *)pEntity;
+                    if(false==pCurve->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::SurfaceType:
+                    {
+                    surface const *pSurface=(surface *)pEntity;
+                    if(false==pSurface->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                default:
+                    {
+                    throw;
+                    }
+                }
+            ++iter;
+            }
+        }
+
     return bAnswer;
     }
 
-bool edge::Check(SGM::Result              &,//rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+bool edge::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -380,6 +582,45 @@ bool edge::Check(SGM::Result              &,//rResult,
             }
         }
 
+    // Check all childern.
+
+    if(bChildern)
+        {
+        std::set<entity *,EntityCompare> sChildern;
+        FindAllChildern(sChildern);
+        std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
+        while(iter!=sChildern.end())
+            {
+            entity *pEntity=*iter;
+            switch(pEntity->GetType())
+                {
+                case SGM::VertexType:
+                    {
+                    vertex const *pVertex=(vertex *)pEntity;
+                    if(false==pVertex->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                case SGM::CurveType:
+                    {
+                    curve const *pCurve=(curve *)pEntity;
+                    if(false==pCurve->Check(rResult,Options,aCheckStrings))
+                        {
+                        bAnswer=false;
+                        }
+                    break;
+                    }
+                default:
+                    {
+                    throw;
+                    }
+                }
+            ++iter;
+            }
+        }
+
     return bAnswer;
     }
 
@@ -402,20 +643,32 @@ bool vertex::Check(SGM::Result              &,//rResult,
 
 bool curve::Check(SGM::Result              &,//rResult,
                   SGM::CheckOptions  const &,//Options,
-                  std::vector<std::string> &) const //aCheckStrings) const
+                  std::vector<std::string> &aCheckStrings) const
     {
-    bool bAnswer=true;
+    bool bAnswer=TestCurve(this,m_Domain.MidPoint());
+
+    if(bAnswer==false)
+        {
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Curve %ld does not pass derivative and inverse checks.\n",GetID());
+        aCheckStrings.emplace_back(Buffer);
+        }
 
     return bAnswer;
     }
 
 bool surface::Check(SGM::Result              &,//rResult,
                     SGM::CheckOptions  const &,//Options,
-                    std::vector<std::string> &) const//aCheckStrings) const
+                    std::vector<std::string> &aCheckStrings) const
     {
-    bool bAnswer=true;
+    bool bAnswer=TestSurface(this,m_Domain.MidPoint());
 
-//    SGMInternal::TestSurface()
+    if(bAnswer==false)
+        {
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Surface %ld not does pass derivative and inverse checks.\n",GetID());
+        aCheckStrings.emplace_back(Buffer);
+        }
 
     return bAnswer;
     }
@@ -439,22 +692,22 @@ bool entity::Check(SGM::Result              &rResult,
             }
         case SGM::BodyType:
             {
-            bAnswer=((body const *)this)->Check(rResult,Options,aCheckStrings);
+            bAnswer=((body const *)this)->Check(rResult,Options,aCheckStrings,true);
             break;
             }
         case SGM::VolumeType:
             {
-            bAnswer=((volume const *)this)->Check(rResult,Options,aCheckStrings);
+            bAnswer=((volume const *)this)->Check(rResult,Options,aCheckStrings,true);
             break;
             };
         case SGM::FaceType:
             {
-            bAnswer=((face const *)this)->Check(rResult,Options,aCheckStrings);
+            bAnswer=((face const *)this)->Check(rResult,Options,aCheckStrings,true);
             break;
             };
         case SGM::EdgeType:
             {
-            bAnswer=((edge const *)this)->Check(rResult,Options,aCheckStrings);
+            bAnswer=((edge const *)this)->Check(rResult,Options,aCheckStrings,true);
             break;
             }
         case SGM::VertexType:

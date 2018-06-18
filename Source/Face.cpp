@@ -288,9 +288,17 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         {
         return dAnswer0;
         }
-    SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
-    double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
-    return (4*dAnswer1-dAnswer0)/3;;
+
+    double dVolume=dAnswer0;
+    size_t Index1;
+    for(Index1=0;Index1<2;++Index1)
+        {
+        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
+        dVolume=(4*dAnswer1-dAnswer0)/3;
+        dAnswer0=dAnswer1;
+        }
+    return dVolume;
     }
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
@@ -353,10 +361,14 @@ void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
     m_mSideType[pEdge]=nEdgeType;
     }
 
-void face::RemoveEdge(edge *pEdge)
+void face::RemoveEdge(SGM::Result &rResult,
+                      edge        *pEdge)
     {
     m_sEdges.erase(pEdge);
     m_mSideType.erase(pEdge);
+    m_mSeamType.erase(pEdge);
+    pEdge->RemoveFace((face *)this);
+    ClearFacets(rResult);
     }
 
 void face::SetSurface(surface *pSurface)
@@ -373,6 +385,17 @@ SGM::EdgeSideType face::GetSideType(edge const *pEdge) const
     {
     std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mSideType.find((edge *)pEdge);
     return iter->second;
+    }
+
+void face::TransformFacets(SGM::Transform3D const &Trans)
+    {
+    size_t nPoints=m_aPoints3D.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        m_aPoints3D[Index1]*=Trans;
+        m_aNormals[Index1]*=Trans;
+        }
     }
 
 bool face::GetFlipped() const

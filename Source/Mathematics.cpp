@@ -1074,6 +1074,39 @@ bool TriangulatePolygon(Result                                  &rResult,
     return true;
     }
 
+double SGM::FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
+                              std::vector<size_t>       const &aTriangles)
+    {
+    double dAnswer=0;
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+        SGM::Point3D const &A=aPoints[a];
+        SGM::Point3D const &B=aPoints[b];
+        SGM::Point3D const &C=aPoints[c];
+        double dLengthAB=A.DistanceSquared(B);
+        if(dAnswer<dLengthAB)
+            {
+            dAnswer=dLengthAB;
+            }
+        double dLengthBC=C.DistanceSquared(B);
+        if(dAnswer<dLengthBC)
+            {
+            dAnswer=dLengthBC;
+            }
+        double dLengthCA=A.DistanceSquared(C);
+        if(dAnswer<dLengthCA)
+            {
+            dAnswer=dLengthCA;
+            }
+        }
+    return sqrt(dAnswer);
+    }
+
 bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
     {
         // Remove the lower left triangle.

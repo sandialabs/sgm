@@ -4,10 +4,6 @@
 
 namespace SGMInternal
 {
-size_t entity::GetID() const
-    {
-    return m_ID;
-    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -131,18 +127,21 @@ void thing::SeverOwners(entity *pEntity)
         case SGM::EdgeType:
             {
             edge *pEdge=(edge *)pEntity;
-            std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+            std::set<face *,EntityCompare> sFaces=pEdge->GetFaces();
             std::set<face *,EntityCompare>::const_iterator iter=sFaces.begin();
             while(iter!=sFaces.end())
                 {
                 face *pFace=*iter;
-                pFace->RemoveEdge(pEdge);
+                SGM::Result rResult((thing *)this);
+                pFace->RemoveEdge(rResult,pEdge);
                 ++iter;
                 }
             if(pEdge->GetVolume())
                 {
                 throw;
                 }
+            pEdge->SetStart(nullptr);
+            pEdge->SetEnd(nullptr);
             break;
             }
         case SGM::FaceType:
@@ -196,6 +195,69 @@ entity *thing::FindEntity(size_t ID) const
         pAnswer=iter->second;
         }
     return pAnswer;
+    }
+
+size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
+    {
+    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
+    while(iter!=m_mAllEntities.end())
+        {
+        entity *pEntity=iter->second;
+        switch(pEntity->GetType())
+            {
+            case SGM::BodyType:
+                {
+                body *pBody=(body *)pEntity;
+                if(pBody->IsTopLevel())
+                    {
+                    aEntities.push_back(pBody);
+                    }
+                break;
+                }
+            case SGM::VolumeType:
+                {
+                volume *pVolume=(volume *)pEntity;
+                if(pVolume->IsTopLevel())
+                    {
+                    aEntities.push_back(pVolume);
+                    }
+                break;
+                }
+            case SGM::FaceType:
+                {
+                face *pFace=(face *)pEntity;
+                if(pFace->IsTopLevel())
+                    {
+                    aEntities.push_back(pFace);
+                    }
+                break;
+                }
+            case SGM::EdgeType:
+                {
+                edge *pEdge=(edge *)pEntity;
+                if(pEdge->IsTopLevel())
+                    {
+                    aEntities.push_back(pEdge);
+                    }
+                break;
+                }
+            case SGM::VertexType:
+                {
+                vertex *pVertex=(vertex *)pEntity;
+                if(pVertex->IsTopLevel())
+                    {
+                    aEntities.push_back(pVertex);
+                    }
+                break;
+                }
+            default:
+                {
+                throw;
+                }
+            }
+        ++iter;
+        }
+    return aEntities.size();
     }
 
 size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const

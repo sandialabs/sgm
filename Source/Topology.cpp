@@ -721,10 +721,10 @@ void OrderLoopEdges(SGM::Result                          &rResult,
         }
     }
 
-void FindComplexes(SGM::Result         &,//rResult,
-                   entity        const *pEntity,
+void FindComplexes(SGM::Result                       &,//rResult,
+                   entity                      const *pEntity,
                    std::set<complex *,EntityCompare> &sComplexes,
-                   bool                 bTopLevel)
+                   bool                               bTopLevel)
     {
     SGM::EntityType nType=pEntity->GetType();
     switch(nType)
@@ -744,10 +744,10 @@ void FindComplexes(SGM::Result         &,//rResult,
         }
     }
 
-void FindSurfaces(SGM::Result         &rResult,
-                  entity        const *pEntity,
+void FindSurfaces(SGM::Result                       &rResult,
+                  entity                      const *pEntity,
                   std::set<surface *,EntityCompare> &sSurfaces,
-                  bool                 bTopLevel)
+                  bool                               bTopLevel)
     {
     if(pEntity->GetType()==SGM::EntityType::ThingType)
         {
@@ -764,10 +764,10 @@ void FindSurfaces(SGM::Result         &rResult,
         }
     }
 
-void FindCurves(SGM::Result       &rResult,
-                entity      const *pEntity,
+void FindCurves(SGM::Result                     &rResult,
+                entity                    const *pEntity,
                 std::set<curve *,EntityCompare> &sCurves,
-                bool               bTopLevel)
+                bool                             bTopLevel)
     {
     if(pEntity->GetType()==SGM::EntityType::ThingType)
         {
@@ -861,12 +861,21 @@ size_t FindAdjacentFaces(SGM::Result                    &rResult,
     {
     std::set<vertex *,EntityCompare> sVertives;
     FindVertices(rResult,pFace,sVertives,false);
-    std::set<vertex *,EntityCompare>::iterator iter=sVertives.begin();
-    while(iter!=sVertives.end())
+    std::set<vertex *,EntityCompare>::iterator VertexIter=sVertives.begin();
+    while(VertexIter!=sVertives.end())
         {
-        vertex *pVertex=*iter;
+        vertex *pVertex=*VertexIter;
         FindFaces(rResult,pVertex,sFaces,false);
-        ++iter;
+        ++VertexIter;
+        }
+    std::set<edge *,EntityCompare> sEdges;
+    FindEdges(rResult,pFace,sEdges,false);
+    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
+    while(EdgeIter!=sEdges.end())
+        {
+        edge *pEdge=*EdgeIter;
+        FindFaces(rResult,pEdge,sFaces,false);
+        ++EdgeIter;
         }
     return sFaces.size();
     }
@@ -1013,6 +1022,91 @@ void RemoveFace(SGM::Result &rResult,
                     }
                 }
             }
+        }
+    }
+
+void MergeFaces(SGM::Result &rResult,
+                face        *pFace1,
+                face        *pFace2)
+    {
+    // Keep the face with lower ID.  Make it pFace1.
+
+    if(pFace2->GetID()<pFace1->GetID())
+        {
+        std::swap(pFace1,pFace2);
+        }
+
+    // Move all the edges from pFace2 to pFace1
+
+    std::set<edge *,EntityCompare> sEdges=pFace2->GetEdges();
+    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
+    while(EdgeIter!=sEdges.end())
+        {
+        edge *pEdge=*EdgeIter;
+        SGM::EdgeSideType nType=pFace2->GetSideType(pEdge);
+        pFace2->RemoveEdge(rResult,pEdge);
+        pFace1->AddEdge(pEdge,nType);
+        ++EdgeIter;
+        }
+
+    // Delete pFace2 and its surface if it is not used elsewhere.
+
+    surface *pSurface=(surface *)(pFace2->GetSurface());
+    if(pSurface->GetFaces().size()==1 && pSurface->GetOwners().empty())
+        {
+        pSurface->RemoveFace(pFace2);
+        rResult.GetThing()->DeleteEntity(pSurface);
+        }
+    pFace2->GetVolume()->RemoveFace(pFace2);
+    rResult.GetThing()->DeleteEntity(pFace2);
+    }
+
+void MergeOutSeams(SGM::Result &rResult,
+                   entity      *pEntity)
+    {
+    // Find the mergable edges.
+
+    std::set<edge *,EntityCompare> sEdges,sMergable;
+    FindEdges(rResult,pEntity,sEdges,false);
+    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
+    while(EdgeIter!=sEdges.end())
+        {
+        edge *pEdge=*EdgeIter;
+        std::set<face *,EntityCompare> sFaces;
+        FindFaces(rResult,pEdge,sFaces,false);
+        if(sFaces.size()==2)
+            {
+            std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
+            face *pFace1=*iter;
+            ++iter;
+            face *pFace2=*iter;
+            if(pFace1->GetSurface()->IsSame(pFace2->GetSurface(),SGM_MIN_TOL))
+                {
+                sMergable.insert(pEdge);
+                }
+            }
+        ++EdgeIter;
+        }
+
+    // Merge out the edges.
+
+    EdgeIter=sMergable.begin();
+    while(EdgeIter!=sMergable.end())
+        {
+        edge *pEdge=*EdgeIter;
+        std::set<face *,EntityCompare> sFaces;
+        FindFaces(rResult,pEdge,sFaces,false);
+        rResult.GetThing()->SeverOwners(pEdge);
+        rResult.GetThing()->DeleteEntity(pEdge);
+        if(sFaces.size()==2)
+            {
+            std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
+            face *pFace1=*iter;
+            ++iter;
+            face *pFace2=*iter;
+            MergeFaces(rResult,pFace1,pFace2);
+            }
+        ++EdgeIter;
         }
     }
 

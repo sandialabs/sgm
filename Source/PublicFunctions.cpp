@@ -206,7 +206,7 @@ SGM::Interval3D const &SGM::GetBoundingBox(SGM::Result       &rResult,
                                            SGM::Entity const &EntityID)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    return pEntity->GetBox();
+    return pEntity->GetBox(rResult);
     }
 
 void SGM::DeleteEntity(SGM::Result &rResult,
@@ -647,7 +647,7 @@ void SGM::TransformEntity(SGM::Result            &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    pEntity->Transform(rResult,Trans);
+    SGMInternal::TransformEntity(rResult,Trans,pEntity);
     }
 
 bool SGM::CheckEntity(SGM::Result              &rResult,

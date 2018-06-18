@@ -38,13 +38,13 @@ class entity
         
         size_t GetID() const;
 
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
+
         SGM::EntityType GetType() const {return m_Type;}
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
-
-        SGM::Interval3D const &GetBox() const {return m_Box;}
 
         void AddOwner(entity *pEntity) const {m_Owners.insert(pEntity);}
 
@@ -54,18 +54,17 @@ class entity
 
         entity *Copy(SGM::Result &rResult) const;
 
-        void Transform(SGM::Result            &rResult,
-                       SGM::Transform3D const &Trans);
+        void TransformBox(SGM::Transform3D const &Trans);
 
         void FindAllChildern(std::set<entity *,EntityCompare> &sChildern) const;
 
     protected:
 
-        size_t                  m_ID;
-        SGM::EntityType         m_Type;
+        size_t          m_ID;
+        SGM::EntityType m_Type;
 
         mutable std::set<entity *,EntityCompare> m_Owners;
-        mutable SGM::Interval3D    m_Box;
+        mutable SGM::Interval3D                  m_Box;
 
         // Only to be called from the thing constructor.
 
@@ -99,7 +98,7 @@ class thing : public entity
 
         size_t GetMaxID() {return m_nNextID;}
 
-        SGM::Interval3D const &GetBox() const;
+        size_t GetTopLevelEntities(std::vector<entity *> &aEntities) const;
         
         size_t GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const;
 
@@ -142,6 +141,22 @@ class topology : public entity
                  SGM::EntityType  Type):entity(rResult,Type) {}
     };
 
+class assembly : public topology
+    {
+    public:
+
+        explicit assembly(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+
+    };
+
+class reference : public topology
+    {
+    public:
+
+        explicit reference(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+
+    };
+
 class body : public topology
     {
     public:
@@ -152,15 +167,20 @@ class body : public topology
 
         void AddVolume(volume *pVolume);
 
+        void SetPoints(std::vector<SGM::Point3D> const &aPoints);
+
         // Get methods
 
         SGM::Interval3D const &GetBox() const;
         
         std::set<volume *,EntityCompare> const &GetVolumes() const {return m_sVolumes;}
+
+        std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
         
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const;
 
         bool IsTopLevel() const {return m_Owners.empty();}
 
@@ -171,10 +191,10 @@ class body : public topology
     private:
 
         std::set<volume *,EntityCompare> m_sVolumes;
-        mutable SGM::Interval3D          m_Box;
+        std::vector<SGM::Point3D>        m_aPoints;
     };
 
-class complex : public entity
+class complex : public topology
     {
     public:
 
@@ -197,8 +217,6 @@ class complex : public entity
 
         SGM::Interval3D const &GetBox() const;
 
-        thing *GetThing() const {return m_pThing;}
-
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
         std::vector<size_t>       const &GetSegments() const {return m_aSegments;}
@@ -217,14 +235,13 @@ class complex : public entity
 
         double FindVolume(SGM::Result &rResult) const;
 
+        void Transform(SGM::Transform3D const &Trans);
+
     private:
 
-        std::vector<SGM::Point3D>  m_aPoints;
-        std::vector<size_t>        m_aSegments;
-        std::vector<size_t>        m_aTriangles;
-        thing                     *m_pThing;
-
-        mutable SGM::Interval3D    m_Box;
+        std::vector<SGM::Point3D> m_aPoints;
+        std::vector<size_t>       m_aSegments;
+        std::vector<size_t>       m_aTriangles;
     };
 
 class volume : public topology
@@ -247,15 +264,14 @@ class volume : public topology
 
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
-        SGM::Interval3D const &GetBox() const;
-
         bool IsTopLevel() const {return m_pBody==NULL && m_Owners.empty();}
 
         // Other methods
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const;
 
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
@@ -266,10 +282,9 @@ class volume : public topology
 
     private:
     
-        std::set<face *,EntityCompare>  m_sFaces;
-        std::set<edge *,EntityCompare>  m_sEdges;
-        body                           *m_pBody;
-        mutable SGM::Interval3D         m_Box;
+        std::set<face *,EntityCompare> m_sFaces;
+        std::set<edge *,EntityCompare> m_sEdges;
+        body                          *m_pBody;
     };
 
 class face : public topology
@@ -282,7 +297,8 @@ class face : public topology
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
 
-        void RemoveEdge(edge *pEdge);
+        void RemoveEdge(SGM::Result &rResult,
+                        edge        *pEdge);
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
@@ -326,8 +342,6 @@ class face : public topology
 
         bool GetFlipped() const;
 
-        SGM::Interval3D const &GetBox() const;
-
         int GetSides() const {return m_nSides;}
 
         bool IsTopLevel() const {return m_pVolume==NULL && m_Owners.empty();}
@@ -340,7 +354,8 @@ class face : public topology
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const;
 
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,
@@ -356,6 +371,8 @@ class face : public topology
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
         void ClearFacets(SGM::Result &rResult);
+
+        void TransformFacets(SGM::Transform3D const &Trans);
                         
     private:
 
@@ -371,7 +388,6 @@ class face : public topology
         mutable std::vector<entity *>              m_aEntities;
         mutable std::vector<size_t>                m_aTriangles;
         mutable std::vector<SGM::UnitVector3D>     m_aNormals;
-        mutable SGM::Interval3D                    m_Box;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
 
@@ -412,8 +428,6 @@ class edge : public topology
 
         volume *GetVolume() const {return m_pVolume;}
 
-        SGM::Interval3D const &GetBox() const;
-
         std::vector<SGM::Point3D> const &GetFacets(SGM::Result &rResult) const;
 
         std::vector<double> const &GetParams(SGM::Result &rResult) const;
@@ -432,7 +446,8 @@ class edge : public topology
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const;
 
         double FindLength(double dTolerance) const;
 
@@ -440,6 +455,8 @@ class edge : public topology
         // domain that is in the domain of this edge.
 
         void SnapToDomain(double &t,double dTol) const;
+
+        void TransformFacets(SGM::Transform3D const &Trans);
 
     private:
 
@@ -452,7 +469,6 @@ class edge : public topology
         mutable std::vector<SGM::Point3D> m_aPoints3D;
         mutable std::vector<double>       m_aParams;
         mutable SGM::Interval1D           m_Domain;
-        mutable SGM::Interval3D           m_Box;
         mutable double                    m_dTolerance;
     };
 
@@ -479,10 +495,79 @@ class vertex : public topology
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
+        void TransformData(SGM::Transform3D const &Trans);
+
     private:
 
-        SGM::Point3D     m_Pos;
+        SGM::Point3D                   m_Pos;
         std::set<edge *,EntityCompare> m_sEdges;
+    };
+
+class attribute : public entity
+    {
+    public:
+
+        attribute(SGM::Result     &rResult,
+                  SGM::EntityType  Type):entity(rResult,Type) {}
+
+        std::string const &GetName() {return m_Name;}
+
+    private:
+
+        std::string m_Name;
+    };
+
+class StringAttribute : public attribute
+    {
+    public:
+
+        explicit StringAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+
+        std::string const &GetData() {return m_Data;}
+
+    private:
+
+        std::string m_Data;
+    };
+
+
+class IntegerAttribute : public attribute
+    {
+    public:
+
+        explicit IntegerAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+
+        std::vector<size_t> const &GetData() {return m_Data;}
+
+    private:
+
+        std::vector<size_t> m_Data;
+    };
+
+class DoubleAttribute : public attribute
+    {
+    public:
+
+        explicit DoubleAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+
+        std::vector<double> const &GetData() {return m_Data;}
+
+    private:
+
+        std::vector<double> m_Data;
+    };
+
+class CharAttribute : public attribute
+    {
+    public:
+
+        explicit CharAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+
+        std::vector<char> const &GetData() {return m_Data;}
+
+    private:
+
+        std::vector<char> m_Data;
     };
 }
 

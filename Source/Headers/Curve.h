@@ -371,8 +371,8 @@ class hermite: public curve
         mutable std::vector<double>       m_aSeedParams;
     };
 
-bool TestCurve(SGMInternal::curve *pCurve,
-               double              t1);
+bool TestCurve(SGMInternal::curve const *pCurve,
+               double                    t1);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

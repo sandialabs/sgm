@@ -7,7 +7,12 @@
 
 namespace SGMInternal
 {
-// Find Functions
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Find Functions
+//
+//////////////////////////////////////////////////////////////////////////////
 
 void FindBodies(SGM::Result                    &rResult,
                 entity                   const *pEntity,
@@ -69,11 +74,18 @@ size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
                                face          const *pFace,
                                std::vector<edge *> &aEdges);
 
+// Returns all faces including the given one that share a vertex or
+// edge with the given face.
+
 size_t FindAdjacentFaces(SGM::Result                    &rResult,
                          face                     const *pFace,
                          std::set<face *,EntityCompare> &sFaces);
 
-// Ordering Functions
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Ordering Functions
+//
+//////////////////////////////////////////////////////////////////////////////
 
 void OrderLoopEdges(SGM::Result                          &rResult,
                     face                           const *pFace,
@@ -86,12 +98,19 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
                                    face          const *pFace,
                                    std::vector<edge *> &aEdges);
 
-// Modify Functions
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Modify Functions
+//
+//////////////////////////////////////////////////////////////////////////////
 
 void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
 
 void RemoveFace(SGM::Result &rResult,
                 face        *pFace);
+
+void MergeOutSeams(SGM::Result &rResult,
+                   entity      *pEntity);
 
 }
 #endif // TOPOLOGY_H

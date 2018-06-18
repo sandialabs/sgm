@@ -519,8 +519,8 @@ bool TestSurface(SGMInternal::surface const *pSurface,
     return bAnswer;
     }
 
-bool TestCurve(SGMInternal::curve *pCurve,
-               double              t1)
+bool TestCurve(SGMInternal::curve const *pCurve,
+               double                    t1)
     {
     SGM::Point3D Pos;
     SGM::Vector3D Vec1,Vec2;
@@ -2681,10 +2681,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::CheckOptions Options;
         std::vector<std::string> CheckStrings;
 
-        bAnswer = pRevolveFace->Check(rResult, Options, CheckStrings);
-        if (!bAnswer) return bAnswer;
-
-        bAnswer = pBody->Check(rResult, Options, CheckStrings);
+        bAnswer = pBody->Check(rResult, Options, CheckStrings,true);
         if (!bAnswer) return bAnswer;
 
         return true;
@@ -2770,10 +2767,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::CheckOptions Options;
         std::vector<std::string> CheckStrings;
 
-        bAnswer = pRevolveFace->Check(rResult, Options, CheckStrings);
-        if (!bAnswer) return bAnswer;
-
-        bAnswer = pBody->Check(rResult, Options, CheckStrings);
+        bAnswer = pBody->Check(rResult, Options, CheckStrings,true);
         if (!bAnswer) return bAnswer;
 
         return true;
@@ -3116,7 +3110,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         
         SGM::Point3D Pos3(0,0,0),Pos4(0,0,1);
         SGM::Body BodyID2=SGM::CreateCylinder(rResult,Pos3,Pos4,1.0);
-        double dVolume2=SGM::FindVolume(rResult,BodyID2,true);
+        double dVolume2=SGM::FindVolume(rResult,BodyID2,false);
         if(SGM::NearEqual(dVolume2,3.1415926535897932384626433832795,SGM_MIN_TOL,true)==false)
             {
             bAnswer=false;
@@ -3296,6 +3290,21 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
 
         bAnswer = ((found1 == 2) && (found2 == 2));
+        return bAnswer;
+        }
+
+    if(nTestNumber==51)
+        {
+        // Test transform of a block.
+
+        bool bAnswer=true;
+
+        SGM::Point3D Pos0(0,0,0),Pos1(10,10,10);
+        SGM::CreateBlock(rResult,Pos0,Pos1);
+        SGM::Body BodyID2=SGM::CreateBlock(rResult,Pos0,Pos1);
+        SGM::Transform3D Trans(SGM::Vector3D(20,0,0));
+        SGM::TransformEntity(rResult,Trans,BodyID2);
+
         return bAnswer;
         }
 

@@ -302,6 +302,20 @@ namespace SGM {
             }
     }
 
+    inline Interval3D::Interval3D(std::vector<SGM::Interval3D> const &aIntervals) :
+            m_XDomain(), m_YDomain(), m_ZDomain()
+    {
+       for (auto &&box : aIntervals)
+            {
+            m_XDomain.m_dMin = m_XDomain.m_dMin < box.m_XDomain.m_dMin ? m_XDomain.m_dMin : box.m_XDomain.m_dMin;
+            m_XDomain.m_dMax = m_XDomain.m_dMax > box.m_XDomain.m_dMax ? m_XDomain.m_dMax : box.m_XDomain.m_dMax;
+            m_YDomain.m_dMin = m_YDomain.m_dMin < box.m_YDomain.m_dMin ? m_YDomain.m_dMin : box.m_YDomain.m_dMin;
+            m_YDomain.m_dMax = m_YDomain.m_dMax > box.m_YDomain.m_dMax ? m_YDomain.m_dMax : box.m_YDomain.m_dMax;
+            m_ZDomain.m_dMin = m_ZDomain.m_dMin < box.m_ZDomain.m_dMin ? m_ZDomain.m_dMin : box.m_ZDomain.m_dMin;
+            m_ZDomain.m_dMax = m_ZDomain.m_dMax > box.m_ZDomain.m_dMax ? m_ZDomain.m_dMax : box.m_ZDomain.m_dMax;
+            }
+    }
+
     inline bool Interval3D::operator==(const Interval3D& bb) const {
         return (m_XDomain == bb.m_XDomain && m_YDomain == bb.m_YDomain && m_ZDomain == bb.m_ZDomain);
     }
@@ -672,6 +686,21 @@ namespace SGM {
             m_YDomain &= domain.m_YDomain;
             m_ZDomain &= domain.m_ZDomain;
             }
+        return *this;
+    }
+
+    inline Interval3D Interval3D::operator*=(Transform3D const &Trans)
+    {
+        SGM::Point3D Pos0(m_XDomain.m_dMin,m_YDomain.m_dMin,m_ZDomain.m_dMin);
+        SGM::Point3D Pos1(m_XDomain.m_dMax,m_YDomain.m_dMax,m_ZDomain.m_dMax);
+        Pos0*=Trans;
+        Pos1*=Trans;
+        m_XDomain.m_dMin=Pos0.m_x;
+        m_XDomain.m_dMax=Pos1.m_x;
+        m_YDomain.m_dMin=Pos0.m_y;
+        m_YDomain.m_dMax=Pos1.m_y;
+        m_ZDomain.m_dMin=Pos0.m_z;
+        m_ZDomain.m_dMax=Pos1.m_z;
         return *this;
     }
 

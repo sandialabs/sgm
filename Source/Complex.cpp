@@ -7,54 +7,47 @@
 namespace SGMInternal
 {
 
-    complex::complex(SGM::Result &rResult) :
-            entity(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(),
-            m_aSegments(),
-            m_aTriangles(),
-            m_pThing(rResult.GetThing()),
-            m_Box()
+complex::complex(SGM::Result &rResult) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(),
+        m_aSegments(),
+        m_aTriangles()
     {}
 
-    complex::complex(SGM::Result &rResult,
-                     std::vector<SGM::Point3D> const &aPoints) :
-            entity(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(),
-            m_aTriangles(),
-            m_pThing(rResult.GetThing()),
-            m_Box(m_aPoints)
+complex::complex(SGM::Result &rResult,
+                    std::vector<SGM::Point3D> const &aPoints) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(),
+        m_aTriangles()
     {}
 
-    complex::complex(SGM::Result &rResult,
-                     std::vector<size_t> const &aSegments,
-                     std::vector<SGM::Point3D> const &aPoints) :
-            entity(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(aSegments),
-            m_aTriangles(),
-            m_pThing(rResult.GetThing()),
-            m_Box(m_aPoints)
+complex::complex(SGM::Result &rResult,
+                    std::vector<size_t> const &aSegments,
+                    std::vector<SGM::Point3D> const &aPoints) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(aSegments),
+        m_aTriangles()
     {}
 
-    complex::complex(SGM::Result &rResult,
-                     std::vector<SGM::Point3D> const &aPoints,
-                     std::vector<size_t> const &aTriangles) :
-            entity(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(),
-            m_aTriangles(aTriangles),
-            m_pThing(rResult.GetThing()),
-            m_Box(m_aPoints)
+complex::complex(SGM::Result &rResult,
+                    std::vector<SGM::Point3D> const &aPoints,
+                    std::vector<size_t> const &aTriangles) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(),
+        m_aTriangles(aTriangles)
     {}
 
-SGM::Interval3D const &complex::GetBox() const
+void complex::Transform(SGM::Transform3D const &Trans)
     {
-    if(m_Box.IsEmpty())
+    size_t nPoints=m_aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
         {
-        m_Box = SGM::Interval3D(m_aPoints);
+        m_aPoints[Index1]*=Trans;
         }
-    return m_Box;
     }
 
 double complex::Area() const

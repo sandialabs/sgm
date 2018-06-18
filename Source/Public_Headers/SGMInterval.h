@@ -24,6 +24,7 @@ namespace SGM {
     class Point2D;
     class Point3D;
     class Ray3D;
+    class Transform3D;
 
     class SGM_EXPORT Interval1D
     {
@@ -210,7 +211,9 @@ namespace SGM {
 
         // find bounding box around collection of points
 
-        explicit Interval3D(const std::vector<Point3D> &points);
+        explicit Interval3D(const std::vector<Point3D> &aPoints);
+
+        explicit Interval3D(const std::vector<Interval3D> &aIntervals);
 
         Interval3D(Interval1D const& x_domain, Interval1D const& y_domain, Interval1D const& z_domain);
 
@@ -293,6 +296,8 @@ namespace SGM {
         // Returns true if the two intervals have a non-empty intersection.
 
         bool operator&&(Interval3D const &) const;
+
+        Interval3D operator*=(Transform3D const &Trans);
 
     public:
 

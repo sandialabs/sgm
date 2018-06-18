@@ -94,6 +94,8 @@ class surface : public entity
 
         bool IsTopLevel() const {return m_sFaces.empty() && m_Owners.empty();}
 
+        bool IsSame(surface const *pOther,double dTolerance) const;
+
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
         curve *UParamLine(SGM::Result &rResult,double dU) const;

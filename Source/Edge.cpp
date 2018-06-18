@@ -12,6 +12,16 @@ edge::edge(SGM::Result &rResult):
     m_dTolerance=SGM_MIN_TOL;
     }
 
+void edge::TransformFacets(SGM::Transform3D const &Trans)
+    {
+    size_t nPoints=m_aPoints3D.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        m_aPoints3D[Index1]*=Trans;
+        }
+    }
+
 void edge::SetStart(vertex *pStart) 
     {
     if(m_pStart)

@@ -1407,6 +1407,93 @@ bool surface::IsSingularity(SGM::Point2D const &uv) const
     return false;
     }
 
+bool surface::IsSame(surface const *pOther,double dTolerance) const
+    {
+    if(pOther->m_SurfaceType!=m_SurfaceType)
+        {
+        return false;
+        }
+    switch(m_SurfaceType)
+        {
+        case SGM::EntityType::CylinderType:
+            {
+            bool bAnswer=true;
+            cylinder const *pCylinder1=(cylinder const *)this;
+            cylinder const *pCylinder2=(cylinder const *)this;
+            if(SGM::NearEqual(pCylinder1->m_dRadius,pCylinder2->m_dRadius,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(fabs(pCylinder1->m_ZAxis%pCylinder2->m_ZAxis),1.0,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else 
+                {
+                SGM::Point3D const &Pos1=pCylinder1->m_Origin;
+                SGM::Point3D const &Pos2=pCylinder2->m_Origin;
+                SGM::UnitVector3D const &Axis1=pCylinder1->m_ZAxis;
+                if(SGM::NearEqual(Pos2.Distance(Pos1+Axis1*((Pos2-Pos1)%Axis1)),0.0,dTolerance,false)==false)
+                    {
+                    bAnswer=false;
+                    }
+                }
+            return bAnswer;
+            }
+        case SGM::EntityType::ConeType:
+            {
+            bool bAnswer=true;
+            cone const *pCone1=(cone const *)this;
+            cone const *pCone2=(cone const *)this;
+            if(SGM::NearEqual(pCone1->m_dCosHalfAngle,pCone2->m_dCosHalfAngle,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(pCone1->m_ZAxis%pCone2->m_ZAxis,1.0,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else 
+                {
+                SGM::Point3D const &Pos1=pCone1->FindApex();
+                SGM::Point3D const &Pos2=pCone2->FindApex();
+                if(SGM::NearEqual(Pos1.Distance(Pos2),0.0,dTolerance,false)==false)
+                    {
+                    bAnswer=false;
+                    }
+                }
+            return bAnswer;
+            }
+        case SGM::EntityType::TorusType:
+            {
+            bool bAnswer=true;
+            torus const *pTorus1=(torus const *)this;
+            torus const *pTorus2=(torus const *)this;
+            if(SGM::NearEqual(pTorus1->m_dMajorRadius,pTorus2->m_dMajorRadius,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(pTorus1->m_dMinorRadius,pTorus2->m_dMinorRadius,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(fabs(pTorus1->m_ZAxis%pTorus2->m_ZAxis),1.0,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(pTorus1->m_Center,pTorus2->m_Center,dTolerance)==false)
+                {
+                bAnswer=false;
+                }
+            return bAnswer;
+            }
+        default:
+            {
+            return false;
+            }
+        }
+    }
+
 void surface::PrincipleCurvature(SGM::Point2D const &uv,
                                  SGM::UnitVector3D  &Vec1,
                                  SGM::UnitVector3D  &Vec2,

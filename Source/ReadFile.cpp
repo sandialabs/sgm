@@ -1873,6 +1873,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     Heal(rResult,aEntities);
 
+    if(Options.m_bRemoveSeams)
+        {
+        size_t nEntities=aEntities.size();
+        size_t Index1;
+        for(Index1=0;Index1<nEntities;++Index1)
+            {
+            MergeOutSeams(rResult,aEntities[Index1]);
+            }
+        }
+
     return aEntities.size();
     }
 

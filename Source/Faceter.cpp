@@ -74,11 +74,18 @@ void SubdivideFacets(SGM::Result               &rResult,
                      std::vector<size_t>       &aTriangles,
                      std::vector<entity *>     &aEntities)
     {
+    // First find all the edge mid points.
+
     size_t nTriangles=aTriangles.size();
     std::vector<size_t> aAdjacencies;
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
     surface const *pSurface=pFace->GetSurface();
+    std::map<std::pair<size_t,size_t>,size_t> mMidPoints;
+    std::vector<SGM::Point3D> aNewPoints3D;
+    std::vector<SGM::Point2D> aNewPoints2D;
+    std::vector<entity *> aNewEntities;
     size_t Index1;
+    size_t nCount=aPoints2D.size();
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
         size_t a=aTriangles[Index1];
@@ -87,9 +94,6 @@ void SubdivideFacets(SGM::Result               &rResult,
         entity *pEntA=aEntities[a];
         entity *pEntB=aEntities[b];
         entity *pEntC=aEntities[c];
-        edge *pEdge0=aAdjacencies[Index1]  ==SIZE_MAX ? FindEdge(rResult,pFace,pEntA,pEntB) : nullptr;
-        edge *pEdge1=aAdjacencies[Index1+1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntB,pEntC) : nullptr;
-        edge *pEdge2=aAdjacencies[Index1+2]==SIZE_MAX ? FindEdge(rResult,pFace,pEntC,pEntA) : nullptr;
         SGM::Point3D const &A=aPoints3D[a];
         SGM::Point3D const &B=aPoints3D[b];
         SGM::Point3D const &C=aPoints3D[c];
@@ -97,59 +101,103 @@ void SubdivideFacets(SGM::Result               &rResult,
         SGM::Point2D const &Buv=aPoints2D[b];
         SGM::Point2D const &Cuv=aPoints2D[c];
 
-        SGM::Point2D ABuv,BCuv,CAuv;
-        SGM::Point3D AB,BC,CA;
-        if(pEdge0)
+        if(aAdjacencies[Index1]==SIZE_MAX || a<b)
             {
-            curve const *pCurve=pEdge0->GetCurve();
-            SGM::Point3D MidPos=SGM::MidPoint(A,B);
-            pCurve->Inverse(MidPos,&AB);
-            ABuv=pSurface->Inverse(AB);
-            }
-        else
-            {
-            ABuv=SGM::MidPoint(Auv,Buv);
-            pSurface->Evaluate(ABuv,&AB);
+            SGM::Point3D AB;
+            SGM::Point2D ABuv;
+            edge *pEdge0=aAdjacencies[Index1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntA,pEntB) : nullptr;
+            if(pEdge0)
+                {
+                curve const *pCurve=pEdge0->GetCurve();
+                SGM::Point3D MidPos=SGM::MidPoint(A,B);
+                pCurve->Inverse(MidPos,&AB);
+                ABuv=pSurface->Inverse(AB);
+                }
+            else
+                {
+                ABuv=SGM::MidPoint(Auv,Buv);
+                pSurface->Evaluate(ABuv,&AB);
+                }
+
+            mMidPoints[std::pair<size_t,size_t>(a<b ? a : b,a<b ? b : a)]=nCount;
+            ++nCount;
+            aNewPoints2D.push_back(ABuv);
+            aNewPoints3D.push_back(AB);
+            aNewEntities.push_back(pEdge0 ? pEdge0 : (entity *)pFace);
             }
 
-        if(pEdge1)
+        if(aAdjacencies[Index1+1]==SIZE_MAX || b<c)
             {
-            curve const *pCurve=pEdge1->GetCurve();
-            SGM::Point3D MidPos=SGM::MidPoint(B,C);
-            pCurve->Inverse(MidPos,&BC);
-            BCuv=pSurface->Inverse(BC);
-            }
-        else
-            {
-            BCuv=SGM::MidPoint(Buv,Cuv);
-            pSurface->Evaluate(BCuv,&BC);
+            SGM::Point3D BC;
+            SGM::Point2D BCuv;
+            edge *pEdge1=aAdjacencies[Index1+1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntB,pEntC) : nullptr;
+            if(pEdge1)
+                {
+                curve const *pCurve=pEdge1->GetCurve();
+                SGM::Point3D MidPos=SGM::MidPoint(B,C);
+                pCurve->Inverse(MidPos,&BC);
+                BCuv=pSurface->Inverse(BC);
+                }
+            else
+                {
+                BCuv=SGM::MidPoint(Buv,Cuv);
+                pSurface->Evaluate(BCuv,&BC);
+                }
+
+            mMidPoints[std::pair<size_t,size_t>(b<c ? b : c,b<c ? c : b)]=nCount;
+            ++nCount;
+            aNewPoints2D.push_back(BCuv);
+            aNewPoints3D.push_back(BC);
+            aNewEntities.push_back(pEdge1 ? pEdge1 : (entity *)pFace);
             }
 
-        if(pEdge2)
+        if(aAdjacencies[Index1+2]==SIZE_MAX || c<a)
             {
-            curve const *pCurve=pEdge2->GetCurve();
-            SGM::Point3D MidPos=SGM::MidPoint(C,A);
-            pCurve->Inverse(MidPos,&CA);
-            CAuv=pSurface->Inverse(CA);
-            }
-        else
-            {
-            CAuv=SGM::MidPoint(Cuv,Auv);
-            pSurface->Evaluate(CAuv,&CA);
-            }
+            SGM::Point3D CA;
+            SGM::Point2D CAuv;
+            edge *pEdge2=aAdjacencies[Index1+2]==SIZE_MAX ? FindEdge(rResult,pFace,pEntC,pEntA) : nullptr;
+            if(pEdge2)
+                {
+                curve const *pCurve=pEdge2->GetCurve();
+                SGM::Point3D MidPos=SGM::MidPoint(C,A);
+                pCurve->Inverse(MidPos,&CA);
+                CAuv=pSurface->Inverse(CA);
+                }
+            else
+                {
+                CAuv=SGM::MidPoint(Cuv,Auv);
+                pSurface->Evaluate(CAuv,&CA);
+                }
 
-        size_t ab=aPoints2D.size();
-        size_t bc=ab+1;
-        size_t ca=bc+1;
-        aPoints2D.push_back(ABuv);
-        aPoints2D.push_back(BCuv);
-        aPoints2D.push_back(CAuv);
-        aPoints3D.push_back(AB);
-        aPoints3D.push_back(BC);
-        aPoints3D.push_back(CA);
-        aEntities.push_back(pEdge0 ? pEdge0 : (entity *)pFace);
-        aEntities.push_back(pEdge1 ? pEdge1 : (entity *)pFace);
-        aEntities.push_back(pEdge2 ? pEdge2 : (entity *)pFace);
+            mMidPoints[std::pair<size_t,size_t>(c<a ? c : a,c<a ? a : c)]=nCount;
+            ++nCount;
+            aNewPoints2D.push_back(CAuv);
+            aNewPoints3D.push_back(CA);
+            aNewEntities.push_back(pEdge2 ? pEdge2 : (entity *)pFace);
+            }
+        }
+
+    // Add the new points to the output.
+
+    size_t nNewPoints2D=aNewPoints2D.size();
+    for(Index1=0;Index1<nNewPoints2D;++Index1)
+        {
+        aPoints2D.push_back(aNewPoints2D[Index1]);
+        aPoints3D.push_back(aNewPoints3D[Index1]);
+        aEntities.push_back(aNewEntities[Index1]);
+        }
+
+    // Split the triangles.
+
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        size_t a=aTriangles[Index1];
+        size_t b=aTriangles[Index1+1];
+        size_t c=aTriangles[Index1+2];
+
+        size_t ab=mMidPoints[a<b ? std::pair<size_t,size_t>(a,b) : std::pair<size_t,size_t>(b,a)];
+        size_t bc=mMidPoints[b<c ? std::pair<size_t,size_t>(b,c) : std::pair<size_t,size_t>(c,b)];
+        size_t ca=mMidPoints[c<a ? std::pair<size_t,size_t>(c,a) : std::pair<size_t,size_t>(a,c)];
 
         aTriangles[Index1]=a;
         aTriangles[Index1+1]=ab;

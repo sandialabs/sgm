@@ -7,6 +7,8 @@ namespace SGM
         {
         ThingType=0,
 
+        // Topology
+
         AssemblyType,
         ReferenceType,
         ComplexType,
@@ -41,7 +43,14 @@ namespace SGM
         NURBSurfaceType, 
         RevolveType,    
         ExtrudeType,
-        OffsetType
+        OffsetType,
+
+        // Attributes
+        
+        StringAttributeType,
+        IntegerAttributeType,
+        DoubleAttributeType,
+        CharAttributeType
         };
 
     enum TorusKindType

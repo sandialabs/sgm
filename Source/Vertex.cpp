@@ -19,4 +19,9 @@ void vertex::RemoveEdge(edge *pEdge)
     {
     m_sEdges.erase(pEdge);
     }
+
+void vertex::TransformData(SGM::Transform3D const &Trans)
+    {
+    m_Pos*=Trans;
+    }
 }
