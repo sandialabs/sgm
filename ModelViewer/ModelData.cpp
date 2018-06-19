@@ -444,8 +444,6 @@ void ModelData::rebuild_graphics()
   if(!dPtr->mGraphics)
     return;
 
-  dPtr->mGraphics->clear();
-
   if(muvspace_mode || mfacet_mode)
   {
     std::set<SGM::Face> face_list;
@@ -529,10 +527,12 @@ void ModelData::rebuild_graphics()
 
         dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
       }
+
+      dPtr->mGraphics->set_render_faces(true);
     }
     else
     {
-      dPtr->mGraphics->remove_faces();   
+      dPtr->mGraphics->set_render_faces(false);
     }
 
     std::set<SGM::Edge> edge_list;
@@ -546,5 +546,6 @@ void ModelData::rebuild_graphics()
     }
   }
 
+  dPtr->mGraphics->flush();
   dPtr->mGraphics->reset_view();
 }
