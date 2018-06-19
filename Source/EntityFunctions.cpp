@@ -5,6 +5,8 @@
 #include "Surface.h"
 #include "Topology.h"
 
+#include <set>
+
 namespace SGMInternal
 {
 

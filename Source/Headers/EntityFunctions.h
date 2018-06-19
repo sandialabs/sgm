@@ -3,12 +3,12 @@
 
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
+#include "SGMBoxTree.h"
 #include "SGMResult.h"
 
 #include "EntityClasses.h"
 
 #include <vector>
-#include <set>
 
 namespace SGMInternal
 {
@@ -28,6 +28,13 @@ SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
 
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities);
+
+template< class InputIt >
+inline void BoxTreeInsert(SGM::Result &rResult, SGM::BoxTree& rTree, InputIt first, InputIt last)
+    {
+        for (InputIt iter = first; iter != last; ++iter)
+            rTree.Insert(*iter,(*iter)->GetBox(rResult));
+    }
 
 }  // End of SGMInternal namespace
 

@@ -292,5 +292,4 @@ namespace SGM {
             InsertInternal(static_cast<Leaf*>(removed_item), m_treeRoot, false);
     }
 
-
 } // namespace SGM

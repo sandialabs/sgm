@@ -9,8 +9,6 @@
 #include <list>
 #include <vector>
 
-const std::size_t DIMENSION = 3;
-
 #define BOX_TREE_USE_MEMORY_POOL
 
 namespace SGM {
@@ -94,49 +92,59 @@ namespace SGM {
         //
         ///////////////////////////////////////////////////////////////////////
 
+        /// Return all the items in the tree
         std::vector<BoundedItemType> FindAll() const;
 
+        /// Return items whose bounds are enclosed in the given bound
         std::vector<BoundedItemType> FindEnclosed(Interval3D const &bound) const;
 
+        /// Return items whose bounds intersect a given bound
         std::vector<BoundedItemType> FindIntersectsBox(Interval3D const &bound) const;
 
+        /// Return items whose bounds intersect the half space
         std::vector<BoundedItemType> FindIntersectsHalfSpace(Point3D const &point,
                                                              UnitVector3D const &unitVector,
                                                              double tolerance) const;
 
+        /// Return items whose bounds intersect the line
         std::vector<BoundedItemType> FindIntersectsLine(Ray3D const &ray,
                                                         double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
+        /// Return items whose bounds intersect the plane
         std::vector<BoundedItemType> FindIntersectsPlane(Point3D const &point,
                                                          UnitVector3D const &unitVector,
                                                          double tolerance) const;
 
+        /// Return items whose bounds intersect the point
         std::vector<BoundedItemType> FindIntersectsPoint(Point3D const &point,
                                                          double tolerance) const;
 
+        /// Return items whose bounds intersect the ray
         std::vector<BoundedItemType> FindIntersectsRay(Ray3D const &ray,
                                                        double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
+        /// Return items whose bounds intersect the segment
         std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, Point3D const &p2,
                                                            double tolerance = SGM_INTERVAL_TOLERANCE) const;
 
+        /// Return items whose bounds intersect the sphere
         std::vector<BoundedItemType> FindIntersectsSphere(Point3D const &center,
                                                           double radius,
                                                           double tolerance) const;
 
         ///////////////////////////////////////////////////////////////////////
         //
-        // Utility functors
+        // Utility functors, for advanced users and the implementation
         //
-        // Offers visitor interfaces (following the Visitor pattern) that enable
+        // Visitor interfaces (following the Visitor pattern) that enable
         // walking the R* tree in a conditional way using a Filter.
         //
         // A Filter is a struct functor that provides two operators, one for Node
         // and one for Leaf, returning true or false.
         //
         // A Visitor is a struct functor that provides either or both operators,
-        // one for Node and Leaf, that performs some operation or query on
-        // the nodes.
+        // one for Node and Leaf, that performs some operation or query or
+        // operation on the nodes.
         //
         ///////////////////////////////////////////////////////////////////////
 
@@ -145,20 +153,14 @@ namespace SGM {
         struct Leaf;
         struct Node;
 
-        /**
-         * A convenience Filter that matches any node and leaf of the tree.
-         *
-         * Other Filters must match the signature of this interface.
-         */
+        /// A convenience Filter that matches any node and leaf of the tree.
         struct IsAny {
             bool operator()(Node const* node) const { return node!=nullptr; }
 
             bool operator()(Leaf const* leaf) const { return leaf!=nullptr; }
         };
 
-        /**
-         * A Filter that matches node or leaf when when the given bounding box intersects.
-         */
+        /// A Filter that matches node or leaf when when the given bounding box intersects.
         struct IsOverlapping {
 
             Interval3D m_bound;
@@ -173,9 +175,7 @@ namespace SGM {
             bool operator()(Leaf const * leaf) const;
         };
 
-        /**
-         * A Filter that matches node or leaf if their bounding box completely covers the given bounding box.
-         */
+        /// A Filter that matches node or leaf if their bounding box completely covers the given bounding box.
         struct IsEnclosing {
 
             Interval3D m_bound;
@@ -190,6 +190,7 @@ namespace SGM {
             bool operator()(Leaf const * leaf) const;
         };
 
+        /// A Filter that matches node or leaf when the given half-space intersects.
         struct IsIntersectingHalfSpace {
             Point3D m_point;
             UnitVector3D m_unitVector;
@@ -201,7 +202,8 @@ namespace SGM {
 
             bool operator()(Bounded const * node) const;
         };
-        
+
+        /// A Filter that matches node or leaf when the given line intersects.
         struct IsIntersectingLine {
             Ray3D m_ray;
             double m_tolerance;
@@ -214,6 +216,7 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
+        /// A Filter that matches node or leaf when the given plane intersects.
         struct IsIntersectingPlane {
             Point3D m_point;
             UnitVector3D m_unitVector;
@@ -226,10 +229,8 @@ namespace SGM {
             
             bool operator()(Bounded const * node) const;
         };
-        
-        /**
-         * A Filter that matches node or leaf when the given point intersects.
-         */
+
+        /// A Filter that matches node or leaf when the given point intersects.
         struct IsIntersectingPoint {
 
             double m_tolerance;
@@ -243,9 +244,7 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
-        /**
-         * A Filter that matches node or leaf when the given ray intersects.
-         */
+        /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRay {
 
             Ray3D m_ray;
@@ -258,8 +257,9 @@ namespace SGM {
 
             bool operator()(Bounded const * node) const;
         };
-        
-        struct IsIntersectingSegment 
+
+        /// A Filter that matches node or leaf when the given segment intersects
+        struct IsIntersectingSegment
         {
             Point3D m_point1;
             Point3D m_point2;
@@ -273,6 +273,7 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
+        /// A Filter that matches node or leaf when the given sphere intersects
         struct IsIntersectingSphere
         {
             Point3D m_center;
@@ -287,9 +288,7 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
-        /**
-         * Visitor operation for removing objects (leaf nodes) from the tree.
-         */
+        /// Visitor operation for removing objects (leaf nodes) from the tree.
         struct RemoveLeaf {
 
             bool m_bContinue; // if false, visitor stops as soon as possible
@@ -320,7 +319,7 @@ namespace SGM {
         };
 
         /**
-         * A visitor that pushes a Leaf into a container when it passes a given Filter.
+         * Visitor operation that pushes a Leaf into a container when it passes a given Filter.
          *
          * @tparam Filter filter returning true or false given a Leaf
          */
@@ -330,10 +329,7 @@ namespace SGM {
 
             PushLeaf() : m_aContainer(), bContinueVisiting(true) {};
 
-            void operator()(Leaf const *leaf)
-            {
-                m_aContainer.emplace_back(leaf->m_pObject,leaf->m_Bound);
-            }
+            void operator()(Leaf const *leaf);
         };
 
         /**
@@ -370,7 +366,7 @@ namespace SGM {
         typedef std::vector<Bounded*> NodeChildrenContainerType;
         typedef std::list<Leaf*> LeafContainerType;
 
-        // Leaf node class with no children holding void* to objects
+        /// Leaf node class with no children holding void* to objects
         struct Leaf : Bounded {
 
             void const* m_pObject{};
@@ -382,7 +378,7 @@ namespace SGM {
 #endif
         };
 
-        // Node class with child nodes and a minimal bounding box enclosing the children.
+        /// Node class with child nodes and a minimal bounding box enclosing the children.
         struct Node : Bounded {
 
             NodeChildrenContainerType m_aItems;
@@ -489,7 +485,6 @@ namespace SGM {
         static const size_t CHOOSE_SUBTREE;
         static const size_t MEMORY_POOL_BYTES;  // size of chunks in memory pool allocator
     };
-
 
 }
 
