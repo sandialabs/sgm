@@ -46,6 +46,8 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
 
+  void exec_context_menu(const QPoint &pos);
+
 private:
   pGraphicsData* dPtr;
 };

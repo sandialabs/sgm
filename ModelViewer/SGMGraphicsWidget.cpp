@@ -1,7 +1,9 @@
 #include "SGMGraphicsWidget.hpp"
 
 #include <limits>
+#include <QApplication>
 #include <QMatrix4x4>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QOpenGLFunctions_3_2_Core>
 #include <QWheelEvent>
@@ -398,18 +400,23 @@ struct pMouseData
     ROTATE
   };
 
+  QPoint press_pos;
   QPoint last_pos;
   MouseFunction function;
+  bool is_drag;
 
   pMouseData() :
+    press_pos(0, 0),
     last_pos(0, 0),
-    function(NONE)
+    function(NONE),
+    is_drag(false)
   {}
 
   void reset()
   {
-    last_pos = QPoint(0,0);
+    press_pos = last_pos = QPoint(0,0);
     function = NONE;
+    is_drag = false;
   }
 };
 
@@ -746,6 +753,7 @@ void SGMGraphicsWidget::resizeGL(int w, int h)
 
 void SGMGraphicsWidget::mousePressEvent(QMouseEvent *event)
 {
+  dPtr->mouse.press_pos = event->pos();
   dPtr->mouse.last_pos = event->pos();
   if(event->button() == Qt::LeftButton)
     dPtr->mouse.function = pMouseData::ROTATE;
@@ -759,24 +767,39 @@ void SGMGraphicsWidget::mousePressEvent(QMouseEvent *event)
 
 void SGMGraphicsWidget::mouseMoveEvent(QMouseEvent *event)
 {
-  if(dPtr->mouse.function == pMouseData::NONE)
-    return;
+  // Check if we have moved far enough to consider it a drag
+  if(!dPtr->mouse.is_drag)
+  {
+    int drag_distance = (event->pos() - dPtr->mouse.press_pos).manhattanLength();
+    if(drag_distance > QApplication::startDragDistance())
+      dPtr->mouse.is_drag = true;
+  }
+  else
+  {
+    QPoint diff = event->pos() - dPtr->mouse.last_pos;
+    dPtr->mouse.last_pos = event->pos();
 
-  QPoint diff = event->pos() - dPtr->mouse.last_pos;
-  dPtr->mouse.last_pos = event->pos();
+    if(dPtr->mouse.function == pMouseData::PAN)
+      dPtr->camera.set_translation(diff.x(), diff.y());
+    else if(dPtr->mouse.function == pMouseData::ROTATE)
+      dPtr->camera.set_rotation(diff.x(), diff.y());
+    else if(dPtr->mouse.function == pMouseData::ZOOM)
+      dPtr->camera.set_zoom(diff.y()*10);
+    else
+      return;
 
-  if(dPtr->mouse.function == pMouseData::PAN)
-    dPtr->camera.set_translation(diff.x(), diff.y());
-  else if(dPtr->mouse.function == pMouseData::ROTATE)
-    dPtr->camera.set_rotation(diff.x(), diff.y());
-  else if(dPtr->mouse.function == pMouseData::ZOOM)
-    dPtr->camera.set_zoom(diff.y()*10);
-
-  update();
+    update();
+  }
 }
 
-void SGMGraphicsWidget::mouseReleaseEvent(QMouseEvent*)
+void SGMGraphicsWidget::mouseReleaseEvent(QMouseEvent* event)
 {
+  if(!dPtr->mouse.is_drag)
+  {
+    if(event->button() == Qt::RightButton)
+      exec_context_menu(this->mapToGlobal(event->pos()));
+  }
+
   dPtr->mouse.reset();
 }
 
@@ -784,4 +807,13 @@ void SGMGraphicsWidget::wheelEvent(QWheelEvent *event)
 {
   dPtr->camera.set_zoom(event->angleDelta().y());
   this->update();
+}
+
+void SGMGraphicsWidget::exec_context_menu(const QPoint &pos)
+{
+  QMenu menu;
+  QAction* reset_camera = menu.addAction(tr("Reset camera"));
+  QAction* result = menu.exec(pos);
+  if(result == reset_camera)
+    reset_view();
 }
