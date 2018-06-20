@@ -55,7 +55,7 @@ add_subdirectory(Source)
 add_subdirectory(Apps)
 add_subdirectory(Tests)
 
-option(BUILD_MODEL_VIEWER "Build the Qt/VTK based model viewer application." OFF)
+option(BUILD_MODEL_VIEWER "Build the Qt based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
   add_subdirectory(ModelViewer)
 endif()

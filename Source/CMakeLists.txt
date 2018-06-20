@@ -2,6 +2,7 @@
 file(GLOB SGM_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 file(GLOB SGM_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} Headers/*.h)
 file(GLOB SGM_PUBLIC_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} Public_Headers/*.h)
+file(GLOB SGM_PUBLIC_HEADERS_INLINE RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} Public_Headers/Inline/*.inl)
 
 # create the SGM library with sources and headers
 add_sgm_library(SGM ${SGM_SOURCES} ${SGM_HEADERS} ${SGM_PUBLIC_HEADERS})
@@ -21,3 +22,6 @@ generate_export_header(SGM)
 # installation
 install(FILES ${SGM_PUBLIC_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/sgm_export.h
         DESTINATION include COMPONENT Development)
+install(FILES ${SGM_PUBLIC_HEADERS_INLINE}
+        DESTINATION include/Inline COMPONENT Development)
+        

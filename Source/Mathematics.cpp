@@ -1074,7 +1074,7 @@ bool TriangulatePolygon(Result                                  &rResult,
     return true;
     }
 
-double SGM::FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
+double FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
                               std::vector<size_t>       const &aTriangles)
     {
     double dAnswer=0;
