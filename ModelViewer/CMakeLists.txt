@@ -6,8 +6,6 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
 
-find_package(VTK)
-include(${VTK_USE_FILE})
 # When we drop VTK see if we can stop hiding this warning
 if(MSVC)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4996")
@@ -38,13 +36,6 @@ set(MODEL_VIEWER_SRC
     MainWindow.hpp
     ModelData.cpp
     ModelData.hpp
-    QVTKOpenGLWidget.cxx
-    QVTKOpenGLWidget.h
-    QVTKInteractor.cxx
-    QVTKInteractor.h
-    QVTKInteractorInternal.h
-    QVTKInteractorAdapter.cxx
-    QVTKInteractorAdapter.h
     SGMGraphicsWidget.cpp
     SGMGraphicsWidget.hpp
     SGMTreeWidget.cpp
@@ -57,13 +48,7 @@ add_executable(sgm_viewer ${MODEL_VIEWER_SRC})
 target_link_libraries(sgm_viewer PRIVATE
   SGM
   Qt5::Widgets Qt5::OpenGL
-  ${VTK_LIBRARIES}
-  vtkInteractionStyle
-  vtkRenderingOpenGL2)
-
-foreach(vtk_inc ${VTK_INCLUDE_DIRS})
-  target_include_directories(sgm_viewer PRIVATE $<BUILD_INTERFACE:${vtk_inc}>)
-endforeach()
+  )
 
 target_include_directories(sgm_viewer PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}

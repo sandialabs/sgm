@@ -414,6 +414,14 @@ void ProcessShell(SGM::Result       &,//rResult,
     FindIndices(line,STEPData.m_aIDs);
     }
 
+void ProcessOrientedShell(SGM::Result       &,//rResult,
+                          std::string const &line,
+                          STEPLineData      &STEPData)
+    {
+    FindIndices(line,STEPData.m_aIDs);
+    FindFlag(line,STEPData.m_bFlag);
+    }
+
 void ProcessCoedge(SGM::Result       &,//rResult,
                    std::string const &line,
                    STEPLineData      &STEPData)
@@ -830,6 +838,12 @@ void ProcessLine(SGM::Result                        &rResult,
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
+                    case SGMInternal::STEPTags::BREP_WITH_VOIDS:
+                        {
+                        ProcessVolume(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
                     case SGMInternal::STEPTags::CARTESIAN_POINT:
                         {
                         ProcessPoint(rResult,line,STEPData);
@@ -945,6 +959,12 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::OPEN_SHELL:
                         {
                         ProcessShell(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
+                    case SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL:
+                        {
+                        ProcessOrientedShell(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -1316,6 +1336,12 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
+            case SGMInternal::STEPTags::BREP_WITH_VOIDS:
+                {
+                mEntityMap[nID]=new volume(rResult);
+                aVolumes.push_back(nID);
+                break;
+                }
             case SGMInternal::STEPTags::CIRCLE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
@@ -1576,15 +1602,21 @@ void CreateEntities(SGM::Result                   &rResult,
 
         std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nBodyID);
         std::vector<size_t> const &aIDs=SLD->second.m_aIDs;
-        size_t nLastVolume=aIDs.size()-2;
+        size_t nID=aIDs.size();;
 
         // size_t nTrans=aIDs[nLastVolume];
         // Transform the body here.
 
-        for(Index2=0;Index2<nLastVolume;++Index2)
+        for(Index2=0;Index2<nID;++Index2)
             {
-            volume *pVolume=(volume *)mEntityMap[aIDs[Index2]];
-            pBody->AddVolume(pVolume);
+            if(mEntityMap.find(aIDs[Index2])!=mEntityMap.end())
+                {
+                volume *pVolume=(volume *)mEntityMap[aIDs[Index2]];
+                if(pVolume)
+                    {
+                    pBody->AddVolume(pVolume);
+                    }
+                }
             }
         }
 
@@ -1616,17 +1648,34 @@ void CreateEntities(SGM::Result                   &rResult,
                 }
             else
                 {
-                std::vector<size_t> const &aSubIDs=SLD->second.m_aIDs;
+                std::vector<size_t> aSubIDs=SLD->second.m_aIDs;
                 int nSides=1;
+                bool bFlip=false;
                 if(nType==SGMInternal::STEPTags::OPEN_SHELL)
                     {
                     nSides=2;
+                    }
+                else if(nType==SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL)
+                    {
+                    // #2094=ORIENTED_CLOSED_SHELL('',*,#2093,.F.);
+
+                    size_t nShellID=aSubIDs[1];
+                    std::map<size_t,STEPLineData>::iterator SLD2=mSTEPData.find(nShellID);
+                    aSubIDs=SLD2->second.m_aIDs;
+                    if(SLD2->second.m_bFlag==false)
+                        {
+                        bFlip=true;
+                        }
                     }
                 size_t nFaces=aSubIDs.size();
                 for(Index3=0;Index3<nFaces;++Index3)
                     {
                     face *pFace=(face *)mEntityMap[aSubIDs[Index3]];
                     pFace->SetSides(nSides);
+                    if(bFlip)
+                        {
+                        pFace->SetFlipped(true);
+                        }
                     pVolume->AddFace(pFace);
                     }
                 }
@@ -1842,10 +1891,9 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    /*
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
-    FindFaces(rResult,aEntities[0],sFaces);
+    FindFaces(rResult,pThing,sFaces);
     std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
     std::vector<std::pair<size_t,face *> > aFaces;
     while(iter!=sFaces.end())
@@ -1865,11 +1913,9 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        pFace->GetTriangles(rResult);
-        if(nID==508)
+        if(nID==207)
             pFace->GetTriangles(rResult);
         }
-    */
 
     Heal(rResult,aEntities);
 

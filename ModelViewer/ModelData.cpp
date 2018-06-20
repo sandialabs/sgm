@@ -40,7 +40,7 @@ ModelData::ModelData() :
   mwire_mode=false;
   mfacet_mode=false;
   muvspace_mode=false;
-  mperspective_mode=false;
+  mperspective_mode=true;
 }
 
 ModelData::~ModelData()
@@ -56,6 +56,8 @@ void ModelData::set_tree_widget(SGMTreeWidget *tree)
 void ModelData::set_graphics_widget(SGMGraphicsWidget *graphics)
 {
   dPtr->mGraphics = graphics;
+  dPtr->mGraphics->enable_perspective(mperspective_mode);
+  dPtr->mGraphics->set_render_faces(!mwire_mode);
 }
 
 bool ModelData::open_file(const QString &filename)
@@ -92,7 +94,7 @@ void ModelData::zoom()
 void ModelData::wire_mode()
 {
   mwire_mode = !mwire_mode;
-  rebuild_graphics();
+  dPtr->mGraphics->set_render_faces(!mwire_mode);
 }
 
 void ModelData::facet_mode()
@@ -109,8 +111,8 @@ void ModelData::uvspace_mode()
 
 void ModelData::perspective_mode()
 {
-  muvspace_mode = !muvspace_mode;
-  rebuild_graphics();
+  mperspective_mode = !mperspective_mode;
+  dPtr->mGraphics->enable_perspective(mperspective_mode);
 }
 
 bool ModelData::RunCPPTest(size_t nTest)
@@ -444,8 +446,6 @@ void ModelData::rebuild_graphics()
   if(!dPtr->mGraphics)
     return;
 
-  dPtr->mGraphics->clear();
-
   if(muvspace_mode || mfacet_mode)
   {
     std::set<SGM::Face> face_list;
@@ -529,10 +529,12 @@ void ModelData::rebuild_graphics()
 
         dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
       }
+
+      dPtr->mGraphics->set_render_faces(true);
     }
     else
     {
-      dPtr->mGraphics->remove_faces();   
+      dPtr->mGraphics->set_render_faces(false);
     }
 
     std::set<SGM::Edge> edge_list;
@@ -546,5 +548,6 @@ void ModelData::rebuild_graphics()
     }
   }
 
+  dPtr->mGraphics->flush();
   dPtr->mGraphics->reset_view();
 }
