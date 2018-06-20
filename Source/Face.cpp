@@ -158,17 +158,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             *pPos=VertexPos;
             }
-        if(SGM::NearEqual(VertexPos,Pos,SGM_ZERO))
-            {
-            return true;
-            }
-        else
-            {
-            // Have to find inside out side from one of the edges 
-            // or the angle of the edges.
-            return false;
-            }
-        return false;
+        return SGM::NearEqual(VertexPos, Pos, SGM_ZERO);
         }
     }
 
@@ -367,7 +357,7 @@ void face::RemoveEdge(SGM::Result &rResult,
     m_sEdges.erase(pEdge);
     m_mSideType.erase(pEdge);
     m_mSeamType.erase(pEdge);
-    pEdge->RemoveFace((face *)this);
+    pEdge->RemoveFace(this);
     ClearFacets(rResult);
     }
 

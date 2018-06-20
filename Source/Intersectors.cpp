@@ -35,7 +35,7 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
             if(-dTolerance<(aPoints[Index1]-Origin)%Axis)
                 {
                 double dDist=Origin.Distance(aPoints[Index1]);
-                aParams.push_back(std::pair<double,size_t>(dDist,Index1));
+                aParams.emplace_back(dDist,Index1);
                 }
             }
         std::sort(aParams.begin(),aParams.end());
@@ -2244,7 +2244,7 @@ size_t IntersectSphereAndCylinder(SGM::Result                &rResult,
         IntersectLineAndCircle(LineOrigin,Axis,pCylinder->GetDomain().m_VDomain,
                                Center,Normal,dSphereRadius,dTolerance,aPoints,aTypes);
 
-            if(SGM::NearEqual(dDist+dCylinderRadius,dSphereRadius,dTolerance,false))
+        if(SGM::NearEqual(dDist+dCylinderRadius,dSphereRadius,dTolerance,false))
             {
             // Larger radius sphere is tangent and spanning cylinder,
             // forming a bent figure eight intersection.
@@ -2411,7 +2411,7 @@ class HermiteNode
     {
     public:
 
-        HermiteNode() {};
+        HermiteNode() = default;
 
         HermiteNode(double               dParam,
                     SGM::Point3D  const &Pos,
@@ -2501,10 +2501,10 @@ hermite *WalkFromTo(SGM::Result        &rResult,
         // Find the walking direction.
 
         CurrentPos=ZoomInFrom(Pos,pSurface1,pSurface2);
-        SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
-        SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
-        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
-        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+        SGM::Point2D uv1_walk=pSurface1->Inverse(CurrentPos);
+        SGM::Point2D uv2_walk=pSurface2->Inverse(CurrentPos);
+        pSurface1->Evaluate(uv1_walk,nullptr,nullptr,nullptr,&Norm1);
+        pSurface2->Evaluate(uv2_walk,nullptr,nullptr,nullptr,&Norm2);
         WalkDir=Norm1*Norm2;
 
         // Check to see if we are at the EndPos.
@@ -2520,18 +2520,18 @@ hermite *WalkFromTo(SGM::Result        &rResult,
                 }
             else
                 {
-                uv1=pSurface1->Inverse(EndPos);
-                uv2=pSurface2->Inverse(EndPos);
-                pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
-                pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+                uv1_walk=pSurface1->Inverse(EndPos);
+                uv2_walk=pSurface2->Inverse(EndPos);
+                pSurface1->Evaluate(uv1_walk,nullptr,nullptr,nullptr,&Norm1);
+                pSurface2->Evaluate(uv2_walk,nullptr,nullptr,nullptr,&Norm2);
                 SGM::Vector3D Vec=Norm1*Norm2;
                 if(Vec.Magnitude()<SGM_MIN_TOL)
                     {
                     SGM::Point3D StepBack=SGM::MidPoint(aPoints[aPoints.size()-2],EndPos,0.99);
-                    uv1=pSurface1->Inverse(StepBack);
-                    uv2=pSurface2->Inverse(StepBack);
-                    pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
-                    pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+                    uv1_walk=pSurface1->Inverse(StepBack);
+                    uv2_walk=pSurface2->Inverse(StepBack);
+                    pSurface1->Evaluate(uv1_walk,nullptr,nullptr,nullptr,&Norm1);
+                    pSurface2->Evaluate(uv2_walk,nullptr,nullptr,nullptr,&Norm2);
                     Vec=Norm1*Norm2;
                     }
                 Vec=SGM::UnitVector3D(Vec);

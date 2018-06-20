@@ -201,6 +201,11 @@ class PolyData
         size_t nWhichPoly;
         size_t nWhichPoint;
 
+        PolyData() = default;
+
+        PolyData(double extremeU, size_t whichPoly, size_t whichPoint) :
+                dExtreamU(extremeU), nWhichPoly(whichPoly), nWhichPoint(whichPoint) {}
+
         bool operator<(PolyData const &PD) const
             {
             return PD.dExtreamU<dExtreamU;
@@ -296,8 +301,6 @@ class Integrate2DData
     {
     public:
 
-        Integrate2DData() {};
-
         SGMIntegrand     m_f;
         double           m_y;
         double           m_dTolerance;
@@ -322,8 +325,6 @@ double Integrate2DFy(double y,void const *pData)
 class IntegrateTetraData
     {
     public:
-
-        IntegrateTetraData() {};
 
         SGMIntegrand  m_f;
         double        m_y;
@@ -421,7 +422,7 @@ namespace SGM {
             y += Pos.m_y;
             z += Pos.m_z;
             }
-        return Point3D(x / nPoints, y / nPoints, z / nPoints);
+        return {x / nPoints, y / nPoints, z / nPoints};
     }
 
     Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints)
@@ -435,7 +436,7 @@ namespace SGM {
             u += Pos.m_u;
             v += Pos.m_v;
             }
-        return Point2D(u / nPoints, v / nPoints);
+        return {u / nPoints, v / nPoints};
     }
 
     bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
@@ -519,7 +520,7 @@ namespace SGM {
             Vector3D Vec = aPoints3D[Index1] - Origin;
             double dx = Vec % XVec;
             double dy = Vec % YVec;
-            aPoints2D.push_back(Point2D(dx, dy));
+            aPoints2D.emplace_back(dx, dy);
             double dz = fabs(Vec % ZVec);
             if (dAnswer < dz)
                 {
@@ -870,11 +871,7 @@ void TriangulatePolygonSub(SGM::Result                             &,//rResult,
                         nWhere = Index2;
                         }
                     }
-                SGMInternal::PolyData PD{};
-                PD.dExtreamU = dUValue;
-                PD.nWhichPoint = nWhere;
-                PD.nWhichPoly = Index1;
-                aUValues.push_back(PD);
+                aUValues.emplace_back(dUValue,nWhere,Index1);
                 }
             std::sort(aUValues.begin(), aUValues.end());
 

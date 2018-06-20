@@ -552,14 +552,14 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
             SGM::Point3D Pos=pEdge->FindMidPoint(0.001);
             SGM::Vector3D Vec=Pos-Origin;
             double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
-            aEdgePair.push_back(std::pair<double,edge *>(dAngle,pEdge));
+            aEdgePair.emplace_back(dAngle,pEdge);
             }
         if(pEdge->GetEnd()==pVertex)
             {
             SGM::Point3D Pos=pEdge->FindMidPoint(0.999);
             SGM::Vector3D Vec=Pos-Origin;
             double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
-            aEdgePair.push_back(std::pair<double,edge *>(-dAngle,pEdge));
+            aEdgePair.emplace_back(-dAngle,pEdge);
             }
         }
     std::sort(aEdgePair.begin(),aEdgePair.end());

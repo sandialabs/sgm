@@ -9,6 +9,12 @@
 
 #include "SGMBoxTree.h"
 
+#define NOW std::chrono::steady_clock::now()
+
+typedef std::chrono::steady_clock::time_point time_point;
+typedef std::chrono::steady_clock::time_point::duration duration;
+
+
 #if 0
 int main(int /*argc*/, char ** /*argv*/)
     {
@@ -49,8 +55,6 @@ std::string ToString(SGM::Interval3D const& box)
 	return ss.str();
 }
 
-typedef std::chrono::steady_clock::time_point time_point;
-typedef std::chrono::steady_clock::time_point::duration duration;
 
 duration print_elapsed_time(const time_point &start) {
     duration diff = std::chrono::steady_clock::now() - start;
@@ -58,30 +62,33 @@ duration print_elapsed_time(const time_point &start) {
     return diff;
 }
 
-int main(int /*argc*/, char ** /*argv*/)
+void print_total_time(duration const & sum)
 {
-	SGM::BoxTree tree;
-	LeafCounter leafCounter;
+    std::cout << "Total time: " << std::chrono::duration<double, std::milli>(sum).count() << " ms" << std::endl;
+}
 
-	// setup C++ random
-	//std::random_device rd;  // random seed
-	//std::mt19937 mt(rd());
+void boxtree_timing()
+{
+    std::cout << std::endl << "*** Timing BoxTree Methods *** " << std::endl << std::flush;
+    SGM::BoxTree tree;
+    LeafCounter leafCounter;
 
-    std::mt19937 mt;
+    //std::random_device rd;  // using random seed
+    //std::mt19937 mt(rd());
+
+    std::mt19937 mt; // using default identical seed every runtime
     auto dist_origin = std::bind(std::uniform_real_distribution<double>(0.,900.), mt);
     auto dist_length = std::bind(std::uniform_real_distribution<double>(1.,100.), mt);
 
     time_point start;
     duration sum;
 
-	const size_t nodes = 100000;
+    sum = std::chrono::milliseconds(0);
 
-	const void * ptr = nullptr;
-
-	sum = std::chrono::milliseconds(0);
-
-	std::cout << "Insert: " << nodes << " nodes " << std::flush;
-    start = std::chrono::steady_clock::now();
+    const size_t nodes = 100000;
+    const void * ptr = nullptr;
+    std::cout << "Insert: " << nodes << " nodes " << std::flush;
+    start = NOW;
     for (int i = 0; i<nodes; i++) {
         double xmin = dist_origin();
         double ymin = dist_origin();
@@ -93,7 +100,7 @@ int main(int /*argc*/, char ** /*argv*/)
         }
     sum += print_elapsed_time(start);
 
-	SGM::Interval3D bound(100.0, 300.0, 100.0, 400.0, 100.0, 500.0);
+    SGM::Interval3D bound(100.0, 300.0, 100.0, 400.0, 100.0, 500.0);
 
     std::cout << "Visit all nodes: " << std::flush;
     start = std::chrono::steady_clock::now();
@@ -102,25 +109,96 @@ int main(int /*argc*/, char ** /*argv*/)
     sum += print_elapsed_time(start);
 
     std::cout << "Search in a box: " << std::flush;
-    start = std::chrono::steady_clock::now();
+    start = NOW;
     leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
     std::cout << "IsEnclosing " << leafCounter.count << " nodes (" << tree.Size() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
     std::cout << "Remove enclosed in box: " << std::flush;
-    start = std::chrono::steady_clock::now();
+    start = NOW;
     tree.EraseEnclosed(bound);
     std::cout << "EraseEnclosed " << ToString(bound) << " ";
     sum += print_elapsed_time(start);
 
     std::cout << "Search in a box: " << std::flush;
-    start = std::chrono::steady_clock::now();
+    start = NOW;
     leafCounter = tree.Query(SGM::BoxTree::IsEnclosing(bound), LeafCounter());
     std::cout << "IsEnclosing " << leafCounter.count << " nodes. (" << tree.Size() << " nodes in tree) ";
     sum += print_elapsed_time(start);
 
-    std::cout << "Total time: " << std::chrono::duration<double, std::milli>(sum).count() << " ms" << std::endl;
+    print_total_time(sum);
+}
 
+class ObjectConstructorDefault
+{
+public:
+    double x;
+    double y;
+    double z;
+
+    ObjectConstructorDefault() = default;
+
+    double Product()
+    {
+        return x * y * z;
+    }
+};
+
+class ObjectConstructorEmpty
+{
+public:
+    double x;
+    double y;
+    double z;
+
+    ObjectConstructorEmpty() {}
+
+    double Product()
+    {
+        return x * y * z;
+    }
+};
+
+
+void constructor_timing()
+{
+    std::cout << std::endl <<"*** Timing Constructors of Trivial Objects *** " << std::endl << std::flush;
+    time_point start;
+    duration sum;
+
+    sum = std::chrono::milliseconds(0);
+
+    const size_t count = 10000000;
+    double total_product = 0.0;
+
+    start = NOW;
+    for (size_t i = 0; i < count; ++i)
+        {
+        ObjectConstructorEmpty t;
+        double product = t.Product();
+        total_product += product;
+        }
+    std::cout << "ObjectConstructorEmpty total_product = " << total_product << std::endl << std::flush;
+    sum += print_elapsed_time(start);
+
+    start = NOW;
+    for (size_t i = 0; i < count; ++i)
+        {
+        ObjectConstructorDefault t;
+        double product = t.Product();
+        total_product += product;
+        }
+    std::cout << "ObjectConstructorDefault total_product = " << total_product << std::endl << std::flush;
+    sum += print_elapsed_time(start);
+
+
+    print_total_time(sum);
+}
+
+int main(int /*argc*/, char ** /*argv*/)
+{
+    boxtree_timing();
+    constructor_timing();
 	return 0;
 }
 

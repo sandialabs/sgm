@@ -455,8 +455,6 @@ class FacetNode
     {
     public:
 
-    FacetNode() {}
-
     FacetNode(double              dParam,
               SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
 
@@ -468,8 +466,6 @@ class FacetNode
 class FacetNodeNormal
     {
     public:
-
-    FacetNodeNormal() {}
 
     FacetNodeNormal(double              dParam,
                     SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
@@ -933,23 +929,19 @@ class SplitData
     {
     public:
 
-        SplitData() {}
-
         SplitData(double dParam,size_t nPolygon,size_t nSpan):
             m_dParam(dParam),m_nPolygon(nPolygon),m_nSpan(nSpan) {}
 
         bool operator<(SplitData const &Other) const {return m_dParam<Other.m_dParam;}
 
-        double m_dParam{};
-        size_t m_nPolygon{};
-        size_t m_nSpan{};
+        double m_dParam;
+        size_t m_nPolygon;
+        size_t m_nSpan;
     };
 
 class MergeData
     {
     public:
-
-        MergeData() {}
 
         SplitData m_Split1;
         SplitData m_Split2;

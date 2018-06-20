@@ -465,7 +465,7 @@ body *CreateBlock(SGM::Result        &rResult,
 
 void FindDegree3Knots(std::vector<double> const &aLengths,
                       std::vector<double>       &aKnots,
-                      int                       &nDegree)
+                      size_t                    &nDegree)
     {
     size_t nLengths=aLengths.size();
     if(nLengths==2)
@@ -547,7 +547,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         {
         SGM::FindLengths3D(aPoints,aLengths,true);
         }
-    int nDegree;
+    size_t nDegree;
     FindDegree3Knots(aLengths,aKnots,nDegree);
     SGM::Interval1D Domain(0,1);
 
@@ -654,10 +654,9 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     SGM::Interval1D Domain(0.0,1.0);
     
     // From "The NURBs Book" Algorithm A9.2, page 373.
-
-    int nPoints=(int)aPoints.size()-1;
-    std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.assign(nPoints+3,SGM::Point3D(0,0,0));
+    assert(aPoints.size() > 0);
+    size_t nPoints=aPoints.size()-1;
+    std::vector<SGM::Point3D> aControlPoints(nPoints+3,SGM::Point3D(0,0,0));
     aControlPoints[0]=aPoints[0];
     aControlPoints[1]=aPoints[0]+(aKnots[4]/3.0)*StartVec;
     aControlPoints[nPoints+1]=aPoints[nPoints]-((1-aKnots[nPoints+2])/3.0)*EndVec;
@@ -682,9 +681,8 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
         aControlPoints[2].m_y=(aPoints[1].m_y-dData[0]*aControlPoints[1].m_y)/den;
         aControlPoints[2].m_z=(aPoints[1].m_z-dData[0]*aControlPoints[1].m_z)/den;
 
-        std::vector<double> dd;
-        dd.assign(nPoints+1,0.0);
-        int Index1;
+        std::vector<double> dd(nPoints+1,0.0);
+        size_t Index1;
         for(Index1=3;Index1<nPoints;++Index1)
             {
             dd[Index1]=dData[2]/den;

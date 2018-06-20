@@ -364,7 +364,6 @@ namespace SGM {
         //
 
         typedef std::vector<Bounded*> NodeChildrenContainerType;
-        typedef std::list<Leaf*> LeafContainerType;
 
         /// Leaf node class with no children holding void* to objects
         struct Leaf : Bounded {
@@ -450,17 +449,19 @@ namespace SGM {
             bool operator()(Bounded* item) const;
         };
 
+        typedef std::list<Leaf*> ReinsertLeafContainerType;
+
         template<typename Filter, typename LeafRemover>
         struct RemoveFunctor {
             Filter accept;
             LeafRemover& remove;
 
             // parameters that are passed in
-            LeafContainerType* itemsToReinsert;
+            ReinsertLeafContainerType* itemsToReinsert;
             size_t* m_size;
 
             // the third parameter is a list holding the items that need to be reinserted
-            explicit RemoveFunctor(Filter const & na, LeafRemover& lr, LeafContainerType* ir, size_t* size)
+            explicit RemoveFunctor(Filter const & na, LeafRemover& lr, ReinsertLeafContainerType* ir, size_t* size)
                     :accept(na), remove(lr), itemsToReinsert(ir), m_size(size) { }
 
             RemoveFunctor(const RemoveFunctor& rf) = default;

@@ -203,7 +203,7 @@ void surface::Transform(SGM::Transform3D const &Trans)
             SGM::UnitVector3D &XAxis=pRevolve->m_XAxis;
             SGM::UnitVector3D &YAxis=pRevolve->m_YAxis;
             SGM::UnitVector3D &ZAxis=pRevolve->m_ZAxis;
-            curve *pCurve=(curve *)pRevolve->m_pCurve;
+            curve *pCurve=pRevolve->m_pCurve;
 
             Origin=Trans*Origin;
             XAxis=Trans*XAxis;
@@ -228,7 +228,7 @@ void surface::Transform(SGM::Transform3D const &Trans)
             extrude *pExtrude=(extrude *)this;
             SGM::UnitVector3D &vAxis=pExtrude->m_vAxis;
             vAxis=Trans*vAxis;
-            curve *pCurve=(curve *)pExtrude->m_pCurve;
+            curve *pCurve=pExtrude->m_pCurve;
 
             if(pCurve->GetEdges().empty() && pCurve->GetOwners().size()==1)
                 {
@@ -236,7 +236,7 @@ void surface::Transform(SGM::Transform3D const &Trans)
                 }
             else
                 {
-                // Make a copy and tranform the copy.
+                // Make a copy and transform the copy.
                 throw;
                 }
 

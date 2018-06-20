@@ -1,3 +1,4 @@
+#include <EntityFunctions.h>
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
@@ -34,45 +35,17 @@ SGM::Interval3D const &entity::GetBox(SGM::Result &rResult) const
             case SGM::EntityType::BodyType:
                 {
                 body *pBody=(body *)this;
-
-                std::vector<SGM::Interval3D> aBoxes;
                 std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
-                std::set<volume *,EntityCompare>::const_iterator iter=sVolumes.begin();
-                while(iter!=sVolumes.end())
-                    {
-                    volume *pVolume=*iter;
-                    aBoxes.push_back(pVolume->GetBox(rResult));
-                    ++iter;
-                    }
-                m_Box=SGM::Interval3D(aBoxes);
+                StretchBox(rResult,m_Box,sVolumes.begin(),sVolumes.end());
                 break;
                 }
             case SGM::EntityType::VolumeType:
                 {
                 volume *pVolume=(volume *)this;
-
-                std::vector<SGM::Interval3D> aBoxes;
                 std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
                 std::set<edge *,EntityCompare> const &sEdges=pVolume->GetEdges();
-                aBoxes.reserve(sEdges.size()+sFaces.size());
-
-                std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
-                while(EdgeIter!=sEdges.end())
-                    {
-                    edge *pEdge=*EdgeIter;
-                    aBoxes.push_back(pEdge->GetBox(rResult));
-                    ++EdgeIter;
-                    }
-
-                std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
-                while(FaceIter!=sFaces.end())
-                    {
-                    face *pFace=*FaceIter;
-                    aBoxes.push_back(pFace->GetBox(rResult));
-                    ++FaceIter;
-                    }
-
-                m_Box=SGM::Interval3D(aBoxes);
+                StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
+                StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
                 break;
                 }
             case SGM::EntityType::FaceType:
@@ -85,27 +58,16 @@ SGM::Interval3D const &entity::GetBox(SGM::Result &rResult) const
                     case SGM::EntityType::PlaneType:
                         {
                         // Only use the edge boxes.
-
-                        std::vector<SGM::Interval3D> aBoxes;
                         std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
-                        aBoxes.reserve(sEdges.size());
-                        std::set<edge *,EntityCompare>::const_iterator iter=sEdges.begin();
-                        while(iter!=sEdges.end())
-                            {
-                            edge *pEdge=*iter;
-                            aBoxes.push_back(pEdge->GetBox(rResult));
-                            ++iter;
-                            }
-                        m_Box=SGM::Interval3D(aBoxes);
+                        StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
                         break;
                         }
                     default:
                         {
                         // Use all the points.
-
                         std::vector<SGM::Point3D> const &aPoints=pFace->GetPoints3D(rResult);
-                        std::vector<size_t> const &aTraingles=pFace->GetTriangles(rResult);
-                        double dMaxLength=SGM::FindMaxEdgeLength(aPoints,aTraingles);
+                        std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
+                        double dMaxLength=SGM::FindMaxEdgeLength(aPoints,aTriangles);
                         m_Box=SGM::Interval3D(aPoints);
                         m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
                         }
@@ -181,7 +143,7 @@ void entity::SeverOwners()
     {
     for (entity *pOwner : m_Owners)
         {
-        pOwner->RemoveOwner((entity*)this);
+        pOwner->RemoveOwner(this);
         }
     }
 
@@ -270,8 +232,8 @@ void entity::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
                 {
                 case SGM::RevolveType:
                     {
-                    revolve const *pRevole=(revolve const *)this;
-                    sChildren.insert((entity *)(pRevole->m_pCurve));
+                    revolve const *pRevolve=(revolve const *)this;
+                    sChildren.insert((entity *)(pRevolve->m_pCurve));
                     break;
                     }
                 default:

@@ -59,14 +59,16 @@ namespace SGM {
     {
         // Pick a subtree at the level of the given node N that needs least Overlap to include the given bound.
 
+        Node* firstChild = reinterpret_cast<Node*>(node->m_aItems[0]);
+
         // If the children of the given node N have Leaf objects
-        if (static_cast<Node*>(node->m_aItems[0])->m_bHasLeaves)
+        if (firstChild->m_bHasLeaves)
             {
             size_t num_considered = node->m_aItems.size();
 
             // If number of leaves is greater than a threshold P
-            if (MAX_CHILDREN > (CHOOSE_SUBTREE*2)/3 && num_considered > CHOOSE_SUBTREE) {
-
+            if (MAX_CHILDREN > (CHOOSE_SUBTREE*2)/3 && num_considered > CHOOSE_SUBTREE)
+                {
                 // Reduce the number to consider to be the set of the first P (where P=CHOOSE_SUBTREE)
                 num_considered = CHOOSE_SUBTREE;
 
@@ -74,16 +76,16 @@ namespace SGM {
                 std::partial_sort(node->m_aItems.begin(), node->m_aItems.begin()+num_considered, node->m_aItems.end(),
                                   Bounded::VolumeLess(bound));
                 }
-
             // Choose the one whose box needs the least overlap enlargement with the given box.
-            return static_cast<Node*>(*std::min_element(node->m_aItems.begin(), node->m_aItems.begin()+num_considered,
-                                                        Bounded::OverlapLess(bound)));
+            return reinterpret_cast<Node*>(*std::min_element(node->m_aItems.begin(),
+                                                             node->m_aItems.begin()+num_considered,
+                                                             Bounded::OverlapLess(bound)));
             }
-
         // The children of N do not have Leaf objects.
         // Choose child with the least difference in volume with the given box.
-        return static_cast<Node*>(*std::min_element(node->m_aItems.begin(), node->m_aItems.end(),
-                                                    Bounded::VolumeLess(bound)));
+        return reinterpret_cast<Node*>(*std::min_element(node->m_aItems.begin(),
+                                                         node->m_aItems.end(),
+                                                         Bounded::VolumeLess(bound)));
     }
 
     BoxTree::Node* BoxTree::InsertInternal(BoxTree::Leaf* leaf, BoxTree::Node* node, bool firstInsert)
@@ -94,7 +96,7 @@ namespace SGM {
 
         // Enlarge all covering boxes in the insertion path such that they are minimum bounding boxes
         // enclosing the children boxes
-        node->m_Bound.Stretch(leaf->m_Bound);
+        node->m_Bound.operator+=(leaf->m_Bound);
 
         // If we're at a leaf, then use that level
         if (node->m_bHasLeaves) {
@@ -266,11 +268,10 @@ namespace SGM {
     {
         // Perform opportunistic reinsertion
 
-        const size_t n_items = node->m_aItems.size();
         const size_t p = REINSERT_CHILDREN;
 
         // We have M+1 items on the node N, compute the distance
-        assert(n_items==MAX_CHILDREN+1);
+        assert(node->m_aItems.size()==MAX_CHILDREN+1);
 
         // Sort the the first (1 - P)(M + 1) children in increasing order of their distance from the center of
         // their box and the center of the bounding box of N
@@ -289,7 +290,7 @@ namespace SGM {
         // From the sort, above, starting with the minimum distance (= close reinsert), invoke Insert
         // to reinsert the items starting at the root node
         for (auto& removed_item : removed_items)
-            InsertInternal(static_cast<Leaf*>(removed_item), m_treeRoot, false);
+            InsertInternal(reinterpret_cast<Leaf*>(removed_item), m_treeRoot, false);
     }
 
 } // namespace SGM

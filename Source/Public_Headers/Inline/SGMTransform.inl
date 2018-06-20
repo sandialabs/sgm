@@ -103,31 +103,6 @@ namespace SGM {
         return 0.0;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Transform operators for Point, Vector, UnitVector
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    inline Point3D Point3D::operator*=(Transform3D const &Trans)
-    {
-        *this = Trans*(*this);
-        return *this;
-    }
-
-    inline Vector3D Vector3D::operator*=(Transform3D const &Trans)
-    {
-        *this = Trans*(*this);
-        return *this;
-    }
-
-    inline UnitVector3D UnitVector3D::operator*=(Transform3D const &Trans)
-    {
-        *this = Trans*(*this);
-        return *this;
-    }
-
 } // namespace SGM
 
 #endif //SGM_TRANSFORM_INL

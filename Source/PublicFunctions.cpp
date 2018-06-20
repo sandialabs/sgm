@@ -52,7 +52,7 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
     if(aPoints.empty() || aTriangles.empty())
         {
         rResult.SetResult(SGM::ResultTypeInsufficientData);
-        return SGM::Complex(0);
+        return {0};
         }
     SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints,aTriangles);
     return SGM::Complex(pComplex->GetID());
@@ -148,7 +148,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
         pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
         }
 
-    return Complex(pComplex->GetID());
+    return {pComplex->GetID()};
     }
 
 SGM::Complex SGM::CreateSlice(SGM::Result   &,//rResult,
@@ -157,14 +157,14 @@ SGM::Complex SGM::CreateSlice(SGM::Result   &,//rResult,
                     SGM::UnitVector3D const &,//Normal,
                     bool                     )//bLocal)
     {
-    return Complex(0);
+    return {0};
     }
 
 SGM::Complex SGM::CreatePolygon(SGM::Result                &,//rResult,
                                 std::vector<Point3D> const &,//aPoints,
                                 bool                        )//bFilled)
     {
-    return Complex(0);
+    return {0};
     }
 
 std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
@@ -291,7 +291,7 @@ size_t SGM::IntersectSurfaces(SGM::Result               &rResult,
     size_t Index1;
     for(Index1=0;Index1<nAnswer;++Index1)
         {
-        aCurves.push_back(SGM::Curve(acurves[Index1]->GetID()));
+        aCurves.emplace_back(acurves[Index1]->GetID());
         }
     return nAnswer;
     }
@@ -308,7 +308,7 @@ SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aPoints)
     {
     SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints);
-    return SGM::Complex(pComplex->GetID());
+    return {pComplex->GetID()};
     }
 
 SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
@@ -316,7 +316,7 @@ SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
                                  std::vector<size_t>       const &aSegments)
     {
     SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
-    return SGM::Complex(pComplex->GetID());
+    return {pComplex->GetID()};
     }
 
 void SGM::FindBodies(SGM::Result         &rResult,
@@ -451,7 +451,7 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
                                    SGM::Face const &FaceID)
     {
     SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    return SGM::Surface(pFace->GetSurface()->GetID());
+    return {pFace->GetSurface()->GetID()};
     }
 
 SGMInternal::thing *SGM::CreateThing()
@@ -469,7 +469,7 @@ SGM::Body SGM::CreateBlock(SGM::Result        &rResult,
                            SGM::Point3D const &Point2)
     {
     SGMInternal::body *pBody=SGMInternal::CreateBlock(rResult,Point1,Point2);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateSphere(SGM::Result        &rResult,
@@ -477,7 +477,7 @@ SGM::Body SGM::CreateSphere(SGM::Result        &rResult,
                             double              dRadius)
     {
     SGMInternal::body *pBody=SGMInternal::CreateSphere(rResult,Center,dRadius);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateCylinder(SGM::Result        &rResult,
@@ -486,7 +486,7 @@ SGM::Body SGM::CreateCylinder(SGM::Result        &rResult,
                               double              dRadius)
     {
     SGMInternal::body *pBody=SGMInternal::CreateCylinder(rResult,BottomCenter,TopCenter,dRadius);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateCone(SGM::Result        &rResult,
@@ -496,7 +496,7 @@ SGM::Body SGM::CreateCone(SGM::Result        &rResult,
                           double              dTopRadius)
     {
     SGMInternal::body *pBody=SGMInternal::CreateCone(rResult,BottomCenter,TopCenter,dBottomRadius,dTopRadius);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
@@ -507,7 +507,7 @@ SGM::Body SGM::CreateTorus(SGM::Result             &rResult,
                            bool                     bApple)
     {
     SGMInternal::body *pBody=SGMInternal::CreateTorus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
@@ -518,7 +518,7 @@ SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
     SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
     SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
 
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Body SGM::CreateDisk(SGM::Result             &rResult,
@@ -527,7 +527,7 @@ SGM::Body SGM::CreateDisk(SGM::Result             &rResult,
                           double                   dRadius)
     {
     SGMInternal::body *pBody=SGMInternal::CreateDisk(rResult,Center,Normal,dRadius);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
@@ -538,7 +538,7 @@ SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
     SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(IDCurve.m_ID);
     SGMInternal::surface *pSurface=SGMInternal::CreateRevolveSurface(rResult, Origin, Axis, pCurve);
 
-    return SGM::Surface(pSurface->GetID());
+    return {pSurface->GetID()};
     }
 
 SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
@@ -558,7 +558,7 @@ SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
         aedges.push_back(pEdge);
         }
     SGMInternal::body *pBody=SGMInternal::CreateSheetBody(rResult,pSurface,aedges,aTypes);
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 SGM::Curve SGM::CreateLine(SGM::Result             &rResult,
@@ -566,7 +566,7 @@ SGM::Curve SGM::CreateLine(SGM::Result             &rResult,
                            SGM::UnitVector3D const &Axis)
     {
     SGMInternal::curve *pCurve=new SGMInternal::line(rResult,Origin,Axis,1.0);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateCircle(SGM::Result             &rResult,
@@ -575,7 +575,7 @@ SGM::Curve SGM::CreateCircle(SGM::Result             &rResult,
                              double                   dRadius)
     {
     SGMInternal::curve *pCurve=new SGMInternal::circle(rResult,Center,Normal,dRadius);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateEllipse(SGM::Result             &rResult,
@@ -586,7 +586,7 @@ SGM::Curve SGM::CreateEllipse(SGM::Result             &rResult,
                               double                   dYRadius)
     {
     SGMInternal::curve *pCurve=new SGMInternal::ellipse(rResult,Center,XAxis,YAxis,dXRadius,dYRadius);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateParabola(SGM::Result             &rResult,
@@ -596,7 +596,7 @@ SGM::Curve SGM::CreateParabola(SGM::Result             &rResult,
                                double                   dA)
     {
     SGMInternal::curve *pCurve=new SGMInternal::parabola(rResult,Center,XAxis,YAxis,dA);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateHyperbola(SGM::Result             &rResult,
@@ -607,7 +607,7 @@ SGM::Curve SGM::CreateHyperbola(SGM::Result             &rResult,
                                 double                   dB)
     {
     SGMInternal::curve *pCurve=new SGMInternal::hyperbola(rResult,Center,XAxis,YAxis,dA,dB);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateTorusKnot(SGM::Result             &rResult,
@@ -620,7 +620,7 @@ SGM::Curve SGM::CreateTorusKnot(SGM::Result             &rResult,
                                 size_t                   nB)
     {
     SGMInternal::curve *pCurve=new SGMInternal::TorusKnot(rResult,Center,XAxis,YAxis,dMinorRadius,dMajorRadius,nA,nB);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
@@ -630,7 +630,7 @@ SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::curve *pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
     SGMInternal::edge *pEdge=CreateEdge(rResult,pCurve,pDomain);
-    return SGM::Edge(pEdge->GetID());
+    return {pEdge->GetID()};
     }
 
 SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
@@ -638,7 +638,7 @@ SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return SGM::Entity(pEntity->Copy(rResult)->GetID());
+    return {pEntity->Copy(rResult)->GetID()};
     }
 
 void SGM::TransformEntity(SGM::Result            &rResult,
@@ -723,7 +723,7 @@ SGM::Curve SGM::CreateNUBCurve(SGM::Result                     &rResult,
                                std::vector<double>       const *pParams)
     {
     SGMInternal::curve *pCurve=SGMInternal::CreateNUBCurve(rResult,aInterpolate,pParams);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
@@ -733,7 +733,7 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
                                              std::vector<double>       const *pParams)
     {
     SGMInternal::curve *pCurve=SGMInternal::CreateNUBCurveWithEndVectors(rResult,aInterpolate,StartVec,EndVec,pParams);
-    return SGM::Curve(pCurve->GetID());
+    return {pCurve->GetID()};
     }
 
 SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
@@ -744,7 +744,7 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      bool                     bApple)
     {
     SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
-    return SGM::Surface(pSurface->GetID());
+    return {pSurface->GetID()};
     }
 
 SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
@@ -752,7 +752,7 @@ SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
                                       double              dRadius)
     {
     SGMInternal::surface *pSurface=new SGMInternal::sphere(rResult,Center,dRadius);
-    return SGM::Surface(pSurface->GetID());
+    return {pSurface->GetID()};
     }
 
 SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
@@ -761,7 +761,7 @@ SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
                          SGM::Point3D const &YPos)
     {
     SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
-    return SGM::Surface(pPlane->GetID());
+    return {pPlane->GetID()};
     }
 
 SGM::EntityType SGM::GetCurveType(SGM::Result      &rResult,
@@ -1173,7 +1173,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
 
     // Create the plane.
 
-    return SGM::Body(pBody->GetID());
+    return {pBody->GetID()};
     }
 
 
@@ -1219,7 +1219,7 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
         SGMInternal::FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aEdges.push_back(SGM::Edge(pEdge->GetID()));
+            aEdges.emplace_back(pEdge->GetID());
             }
         ++iter;
         }
@@ -1256,7 +1256,7 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
         SGMInternal::FindClosestPointOnFace(rResult,Point,pFace,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
-            aFaces.push_back(SGM::Face(pFace->GetID()));
+            aFaces.emplace_back(pFace->GetID());
             }
         ++iter;
         }

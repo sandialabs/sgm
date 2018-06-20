@@ -18,12 +18,9 @@ void body::ClearBox(SGM::Result &rResult) const
 double body::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
     double dAnswer=0;
-    std::set<volume *,EntityCompare>::const_iterator iter=m_sVolumes.begin();
-    while(iter!=m_sVolumes.end())
+    for (auto &&pVolume : m_sVolumes)
         {
-        volume *pVolume=*iter;
         dAnswer+=pVolume->FindVolume(rResult,bApproximate);
-        ++iter;
         }
     return dAnswer;
     }

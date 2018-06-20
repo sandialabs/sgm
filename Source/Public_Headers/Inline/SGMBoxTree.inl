@@ -170,7 +170,7 @@ namespace SGM {
     {
         if (!m_treeRoot)
             return;
-        LeafContainerType m_aLeafsToReinsert;
+        ReinsertLeafContainerType m_aLeafsToReinsert;
         RemoveFunctor <Filter, LeafRemover> remove(accept, leafRemover, &m_aLeafsToReinsert, &m_treeSize);
         remove(m_treeRoot, true);
         // reinsert anything that needs to be reinserted

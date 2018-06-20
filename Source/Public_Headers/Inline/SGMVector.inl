@@ -232,24 +232,24 @@ namespace SGM {
 
     inline UnitVector2D::UnitVector2D(Vector2D const &Vec)
     {
-        double dMagSquared=Vec.m_u*Vec.m_u+Vec.m_v*Vec.m_v;
-        if( 0.999999999999<dMagSquared &&
-            dMagSquared<1.000000000001)
+        double dMagSquared = Vec.m_u * Vec.m_u + Vec.m_v * Vec.m_v;
+        if (0.999999999999 < dMagSquared &&
+            dMagSquared < 1.000000000001)
             {
-            m_u=Vec.m_u;
-            m_v=Vec.m_v;
+            m_u = Vec.m_u;
+            m_v = Vec.m_v;
             }
-        else if(1E-24<dMagSquared)
+        else if (1E-24 < dMagSquared)
             {
-            double dMag=sqrt(dMagSquared);
-            double dScale=1.0/dMag;
-            m_u=Vec.m_u*dScale;
-            m_v=Vec.m_v*dScale;
+            double dMag = sqrt(dMagSquared);
+            double dScale = 1.0 / dMag;
+            m_u = Vec.m_u * dScale;
+            m_v = Vec.m_v * dScale;
             }
         else
             {
-            m_u=0.0;
-            m_v=1.0;
+            m_u = 0.0;
+            m_v = 1.0;
             }
     }
 

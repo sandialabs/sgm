@@ -31,49 +31,49 @@ void TransformEntity(SGM::Result            &,//rResult,
                      SGM::Transform3D const &Trans,
                      entity                 *pEntity)
     {
-    std::set<entity *,EntityCompare> sChildern;
-    pEntity->FindAllChildren(sChildern);
-    sChildern.insert(pEntity);
-    std::set<entity *,EntityCompare>::iterator iter=sChildern.begin();
-    while(iter!=sChildern.end())
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+    sChildren.insert(pEntity);
+    std::set<entity *,EntityCompare>::iterator iter=sChildren.begin();
+    while(iter!=sChildren.end())
         {
-        entity *pEntity=*iter;
-        pEntity->TransformBox(Trans);
-        switch(pEntity->GetType())
+        entity *pChildEntity=*iter;
+        pChildEntity->TransformBox(Trans);
+        switch(pChildEntity->GetType())
             {
             case SGM::FaceType:
                 {
-                face *pFace=(face *)pEntity;
+                face *pFace=(face *)pChildEntity;
                 pFace->TransformFacets(Trans);
                 break;
                 }
             case SGM::EdgeType:
                 {
-                edge *pEdge=(edge *)pEntity;
+                edge *pEdge=(edge *)pChildEntity;
                 pEdge->TransformFacets(Trans);
                 break;
                 }
             case SGM::VertexType:
                 {
-                vertex *pVertex=(vertex *)pEntity;
+                vertex *pVertex=(vertex *)pChildEntity;
                 pVertex->TransformData(Trans);
                 break;
                 }
             case SGM::SurfaceType:
                 {
-                surface *pSurface=(surface *)pEntity;
+                surface *pSurface=(surface *)pChildEntity;
                 pSurface->Transform(Trans);
                 break;
                 }
             case SGM::CurveType:
                 {
-                curve *pCurve=(curve *)pEntity;
+                curve *pCurve=(curve *)pChildEntity;
                 pCurve->Transform(Trans);
                 break;
                 }
             case SGM::ComplexType:
                 {
-                complex *pComplex=(complex *)pEntity;
+                complex *pComplex=(complex *)pChildEntity;
                 pComplex->Transform(Trans);
                 break;
                 }
