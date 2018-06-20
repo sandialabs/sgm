@@ -266,11 +266,10 @@ namespace SGM {
     {
         // Perform opportunistic reinsertion
 
-        const size_t n_items = node->m_aItems.size();
         const size_t p = REINSERT_CHILDREN;
 
         // We have M+1 items on the node N, compute the distance
-        assert(n_items==MAX_CHILDREN+1);
+        assert(node->m_aItems.size()==MAX_CHILDREN+1);
 
         // Sort the the first (1 - P)(M + 1) children in increasing order of their distance from the center of
         // their box and the center of the bounding box of N

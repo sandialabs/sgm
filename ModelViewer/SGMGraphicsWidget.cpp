@@ -271,7 +271,7 @@ public:
     if(mVerticalFieldOfView > 180.0)
       mVerticalFieldOfView = 180.0;
     else if(mVerticalFieldOfView < 0.1)
-      mVerticalFieldOfView = 0.1;
+      mVerticalFieldOfView = (float)0.1;
 
     mUpdateProjectionTransform = true;
   }
@@ -550,7 +550,7 @@ public:
                          GL_STATIC_DRAW);
 
     // Empty the temp buffers
-    mNumElements = mTempIndexBuffer.size();
+    mNumElements = (GLsizei)mTempIndexBuffer.size();
     mTempDataBuffer.clear();
     mTempIndexBuffer.clear();
   }
@@ -603,7 +603,7 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
   // Setup indices for the triangles
   size_t offset = data_buffer.size() / 6;
   for(size_t index : triangles)
-    index_buffer.push_back(offset+index);
+    index_buffer.push_back((unsigned int)(offset+index));
 
   // I am assuming that norms and points will always be the same size.
   for(size_t i = 0; i < points.size(); i++)
@@ -638,8 +638,8 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   for(size_t i = 0; i < num_points - 1; i++)
   {
     size_t index = offset+i;
-    index_buffer.push_back(index);
-    index_buffer.push_back(index+1);
+    index_buffer.push_back((unsigned int)(index));
+    index_buffer.push_back((unsigned int)(index+1));
   }
 
   // Add the point data
@@ -707,7 +707,12 @@ void SGMGraphicsWidget::initializeGL()
   opengl->glEnable(GL_BLEND);
   opengl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   opengl->glLineWidth(1.0);
+  opengl->glHint (GL_LINE_SMOOTH_HINT, GL_NICEST);
   opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
+
+  opengl->glEnable(GL_POLYGON_OFFSET_FILL);
+  opengl->glPolygonOffset(2,1);
+  //opengl->glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
   dPtr->shaders.init_shaders(opengl);
   dPtr->shaders.set_light_direction(opengl, 0.0f, 0.1f, 1.0f);
