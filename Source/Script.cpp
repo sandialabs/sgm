@@ -42,7 +42,7 @@ class Argument
         SGM::Curve          m_Curve;
         std::string         m_String;
 
-        std::vector<size_t>             m_aSize;
+        std::vector<unsigned int>       m_aSize;
         std::vector<double>             m_aDouble;
         std::vector<SGM::Point2D>       m_aPoint2D;
         std::vector<SGM::Point3D>       m_aPoint3D;
@@ -57,8 +57,8 @@ class Argument
         std::vector<SGM::Vertex>        m_aVertex;
         std::vector<std::string>        m_aString;   
 
-        std::vector<std::vector<size_t> > m_aaSize;
-        std::vector<std::vector<double> > m_aaDouble;
+        std::vector<std::vector<unsigned int> > m_aaSize;
+        std::vector<std::vector<double> >       m_aaDouble;
     };
 
 typedef bool (*SGMFunction)(SGM::Result                    &rResult,
@@ -296,13 +296,13 @@ void FindArguments(std::string               const &sLineString,
             case aSizeType:
                 {
                 size_t nSpace=aArgs[Index1].find(' ');
-                size_t Data;
-                while(nSpace!=std::numeric_limits<size_t>::max())
+                unsigned int Data;
+                while(nSpace!=std::numeric_limits<unsigned int>::max())
                     {
                     std::stringstream(aArgs[Index1]) >> Data;
                     ArgData.m_aSize.push_back(Data);
                     nSpace=aArgs[Index1].find(' ',nSpace+1);
-                    if(nSpace!=std::numeric_limits<size_t>::max())
+                    if(nSpace!=std::numeric_limits<unsigned int>::max())
                         {
                         aArgs[Index1]=aArgs[Index1].substr(nSpace+1,aArgs[Index1].size());
                         }
@@ -1110,7 +1110,7 @@ bool ReadGetFaceTriangles(SGM::Result                    &rResult,
     std::vector<Argument> aArguments;
     FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
 
-    std::vector<size_t> const &aFaceTriangles=SGM::GetFaceTriangles(rResult,aArguments[1].m_Face);
+    std::vector<unsigned int> const &aFaceTriangles=SGM::GetFaceTriangles(rResult,aArguments[1].m_Face);
 
     Argument Arg;
     Arg.m_aSize=aFaceTriangles;

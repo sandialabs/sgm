@@ -88,11 +88,11 @@ namespace SGM
     // If the clockwise polygons are not contained inside a counter clockwise
     // polygon then false is returned with an error of 
 
-    SGM_EXPORT bool TriangulatePolygon(SGM::Result                             &rResult,
-                                       std::vector<SGM::Point2D>         const &aPoints,
-                                       std::vector<std::vector<size_t> > const &aaPolygons,
-                                       std::vector<size_t>                     &aTriangles,
-                                       std::vector<size_t>                     &aAdjacencies);
+    SGM_EXPORT bool TriangulatePolygon(SGM::Result                                   &rResult,
+                                       std::vector<SGM::Point2D>               const &aPoints,
+                                       std::vector<std::vector<unsigned int> > const &aaPolygons,
+                                       std::vector<unsigned int>                     &aTriangles,
+                                       std::vector<unsigned int>                     &aAdjacencies);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -114,16 +114,16 @@ namespace SGM
     // If more than one triangle is adjacent to the first triangle along the same
     // edge for example T0, T1, T2. Then T0 will point to T1, T1 will point to T2
     // and T2 will point to T0.  If an edge does not have a triangle that is
-    // adjacent to it then the vector aAdjacency will have the value SIZE_MAX
-    // for that edges.
+    // adjacent to it then the vector aAdjacency will have the value 
+    // std::numeric_limits<unsigned int>::max() for that edges.
 
-    SGM_EXPORT size_t FindAdjacences2D(std::vector<size_t> const &aTriangles,
-                                       std::vector<size_t>       &aAdjacences);
+    SGM_EXPORT size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
+                                       std::vector<unsigned int>       &aAdjacences);
 
     // Returns the length of the longest edges of the given triangles.  d.
 
     SGM_EXPORT double FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
-                                        std::vector<size_t>       const &aTriangles);
+                                        std::vector<unsigned int> const &aTriangles);
 
     ///////////////////////////////////////////////////////////////////////////
     //

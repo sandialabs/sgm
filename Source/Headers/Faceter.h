@@ -45,29 +45,29 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<SGM::Point2D>      &aPoints2D,
                std::vector<SGM::Point3D>      &aPoints3D,
                std::vector<SGM::UnitVector3D> &aNormals,
-               std::vector<size_t>            &aTriangles,
+               std::vector<unsigned int>      &aTriangles,
                std::vector<entity *>          &aEntities);
 
-size_t FacetFaceLoops(SGM::Result                       &rResult, 
-                      face                        const *pFace,
-                      FacetOptions                const &Options,
-                      std::vector<SGM::Point2D>         &aPoints2D,
-                      std::vector<SGM::Point3D>         &aPoints3D,
-                      std::vector<std::vector<size_t> > &aaPolygons);
+size_t FacetFaceLoops(SGM::Result                             &rResult, 
+                      face                              const *pFace,
+                      FacetOptions                      const &Options,
+                      std::vector<SGM::Point2D>               &aPoints2D,
+                      std::vector<SGM::Point3D>               &aPoints3D,
+                      std::vector<std::vector<unsigned int> > &aaPolygons);
 
 bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies,
-                   size_t                           nTri,
-                   size_t                           nEdge);
+                   std::vector<unsigned int>       &aTriangles,
+                   std::vector<unsigned int>       &aAdjacencies,
+                   unsigned int                     nTri,
+                   unsigned int                     nEdge);
 
-void FixBackPointers(size_t                     nTri,
-                     std::vector<size_t> const &aTriangles,
-                     std::vector<size_t>       &aAdjacencies);
+void FixBackPointers(unsigned int                     nTri,
+                     std::vector<unsigned int> const &aTriangles,
+                     std::vector<unsigned int>       &aAdjacencies);
 
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies);
+                   std::vector<unsigned int>       &aTriangles,
+                   std::vector<unsigned int>       &aAdjacencies);
 
 
 //  Devides all triangles into four triangles in the following way;
@@ -82,7 +82,7 @@ void SubdivideFacets(SGM::Result               &rResult,
                      face                const *pFace,
                      std::vector<SGM::Point3D> &aPoints3D,
                      std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<size_t>       &aTriangles,
+                     std::vector<unsigned int> &aTriangles,
                      std::vector<entity *>     &aEntities);
 
 }

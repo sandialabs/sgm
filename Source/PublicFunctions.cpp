@@ -47,7 +47,7 @@ size_t SGM::RayFire(SGM::Result                        &rResult,
 
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
-                                  std::vector<size_t>       const &aTriangles)
+                                  std::vector<unsigned int> const &aTriangles)
     {
     if(aPoints.empty() || aTriangles.empty())
         {
@@ -123,7 +123,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
     SGMInternal::complex *pComplex;
     if(bFilled)
         {
-        std::vector<size_t> aTriangles;
+        std::vector<unsigned int> aTriangles;
         aTriangles.reserve(6);
         aTriangles.push_back(0);
         aTriangles.push_back(1);
@@ -135,7 +135,7 @@ SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
         }
     else
         {
-        std::vector<size_t> aSegments;
+        std::vector<unsigned int> aSegments;
         aSegments.reserve(8);
         aSegments.push_back(0);
         aSegments.push_back(1);
@@ -167,8 +167,8 @@ SGM::Complex SGM::CreatePolygon(SGM::Result                &,//rResult,
     return {0};
     }
 
-std::vector<size_t> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
-                                                 SGM::Face const &FaceID)
+std::vector<unsigned int> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
+                                                       SGM::Face const &FaceID)
     {
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
     return pFace->GetTriangles(rResult);    
@@ -313,7 +313,7 @@ SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
 
 SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
                                  std::vector<SGM::Point3D> const &aPoints,
-                                 std::vector<size_t>       const &aSegments)
+                                 std::vector<unsigned int> const &aSegments)
     {
     SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
     return {pComplex->GetID()};

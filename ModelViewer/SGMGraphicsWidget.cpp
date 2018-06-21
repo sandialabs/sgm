@@ -320,13 +320,13 @@ public:
     // If we did our model scaling correctly, things should be bounded between -1 and 1
     // for all axes. This means our left and right bounds will also be -1 and 1. To allow
     // users to zoom out a little beyond that, we will put view bounds between -2 and 2.
-    float max_half_height = 2.0;
-    float min_half_eight = 0.001;
+    float max_half_height = 2.0f;
+    float min_half_eight = 0.001f;
 
     if(mPerspective)
     {
       // Calculate max angle. Camera is 5 from the origin (see view_transform)
-      const float r_to_d = 57.2958;
+      const float r_to_d = 57.2958f;
       float max_half_angle = atan(max_half_height/5.0)*r_to_d;
       float min_half_angle = atan(min_half_eight/5.0)*r_to_d;
       float vertical_field_of_view = min_half_angle +
@@ -641,7 +641,7 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
 }
 
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
-                                 const std::vector<size_t>            &triangles,
+                                 const std::vector<unsigned int>      &triangles,
                                  const std::vector<SGM::UnitVector3D> &norms)
 {
   std::vector<float> &data_buffer = dPtr->face_data.temp_data_buffer();
@@ -770,6 +770,7 @@ void SGMGraphicsWidget::initializeGL()
 
   opengl->glEnable(GL_POLYGON_OFFSET_FILL);
   opengl->glPolygonOffset(2,1);
+
   //opengl->glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
   dPtr->shaders.init_shaders(opengl);
@@ -874,7 +875,7 @@ void SGMGraphicsWidget::mouseReleaseEvent(QMouseEvent* event)
 
 void SGMGraphicsWidget::wheelEvent(QWheelEvent *event)
 {
-  float increment = 0.02;
+  float increment = 0.02f;
   if(event->angleDelta().y() < 0)
     dPtr->camera.increment_zoom(-increment);
   else

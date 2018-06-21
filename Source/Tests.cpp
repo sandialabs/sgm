@@ -551,7 +551,7 @@ bool TestCurve(SGMInternal::curve const *pCurve,
         {
         bAnswer=false;
         }
-    if(SGM::NearEqual(Vec2,VecN2,SGM_MIN_TOL)==false)
+    if(SGM::NearEqual(Vec2,VecN2,SGM_FIT)==false)
         {
         bAnswer=false;
         }
@@ -2391,8 +2391,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGMInternal::revolve *pRevolve1 = new SGMInternal::revolve(rResult, Origin1, Axis1, pNUB1);
 
         SGM::Point3D Pos;
-        SGM::Vector3D Du, Dv, Duu, Duv, Dvv;
-        SGM::UnitVector3D Norm;
+        SGM::Vector3D Du, Dv;
         pRevolve1->Evaluate(SGM::Point2D(SGM_PI/2.0, 0.5), &Pos, &Du, &Dv);
 
         bool bAnswer1 = true;

@@ -71,16 +71,16 @@ void SubdivideFacets(SGM::Result               &rResult,
                      face                const *pFace,
                      std::vector<SGM::Point3D> &aPoints3D,
                      std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<size_t>       &aTriangles,
+                     std::vector<unsigned int> &aTriangles,
                      std::vector<entity *>     &aEntities)
     {
     // First find all the edge mid points.
 
     size_t nTriangles=aTriangles.size();
-    std::vector<size_t> aAdjacencies;
+    std::vector<unsigned int> aAdjacencies;
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
     surface const *pSurface=pFace->GetSurface();
-    std::map<std::pair<size_t,size_t>,size_t> mMidPoints;
+    std::map<std::pair<unsigned int,unsigned int>,unsigned int> mMidPoints;
     std::vector<SGM::Point3D> aNewPoints3D;
     std::vector<SGM::Point2D> aNewPoints2D;
     std::vector<entity *> aNewEntities;
@@ -88,9 +88,9 @@ void SubdivideFacets(SGM::Result               &rResult,
     size_t nCount=aPoints2D.size();
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        size_t a=aTriangles[Index1];
-        size_t b=aTriangles[Index1+1];
-        size_t c=aTriangles[Index1+2];
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
         entity *pEntA=aEntities[a];
         entity *pEntB=aEntities[b];
         entity *pEntC=aEntities[c];
@@ -101,11 +101,11 @@ void SubdivideFacets(SGM::Result               &rResult,
         SGM::Point2D const &Buv=aPoints2D[b];
         SGM::Point2D const &Cuv=aPoints2D[c];
 
-        if(aAdjacencies[Index1]==SIZE_MAX || a<b)
+        if(aAdjacencies[Index1]==std::numeric_limits<unsigned int>::max() || a<b)
             {
             SGM::Point3D AB;
             SGM::Point2D ABuv;
-            edge *pEdge0=aAdjacencies[Index1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntA,pEntB) : nullptr;
+            edge *pEdge0=aAdjacencies[Index1]==std::numeric_limits<unsigned int>::max() ? FindEdge(rResult,pFace,pEntA,pEntB) : nullptr;
             if(pEdge0)
                 {
                 curve const *pCurve=pEdge0->GetCurve();
@@ -119,18 +119,18 @@ void SubdivideFacets(SGM::Result               &rResult,
                 pSurface->Evaluate(ABuv,&AB);
                 }
 
-            mMidPoints[std::pair<size_t,size_t>(a<b ? a : b,a<b ? b : a)]=nCount;
+            mMidPoints[std::pair<unsigned int,unsigned int>(a<b ? a : b,a<b ? b : a)]=(unsigned int)nCount;
             ++nCount;
             aNewPoints2D.push_back(ABuv);
             aNewPoints3D.push_back(AB);
             aNewEntities.push_back(pEdge0 ? pEdge0 : (entity *)pFace);
             }
 
-        if(aAdjacencies[Index1+1]==SIZE_MAX || b<c)
+        if(aAdjacencies[Index1+1]==std::numeric_limits<unsigned int>::max() || b<c)
             {
             SGM::Point3D BC;
             SGM::Point2D BCuv;
-            edge *pEdge1=aAdjacencies[Index1+1]==SIZE_MAX ? FindEdge(rResult,pFace,pEntB,pEntC) : nullptr;
+            edge *pEdge1=aAdjacencies[Index1+1]==std::numeric_limits<unsigned int>::max() ? FindEdge(rResult,pFace,pEntB,pEntC) : nullptr;
             if(pEdge1)
                 {
                 curve const *pCurve=pEdge1->GetCurve();
@@ -144,18 +144,18 @@ void SubdivideFacets(SGM::Result               &rResult,
                 pSurface->Evaluate(BCuv,&BC);
                 }
 
-            mMidPoints[std::pair<size_t,size_t>(b<c ? b : c,b<c ? c : b)]=nCount;
+            mMidPoints[std::pair<unsigned int,unsigned int>(b<c ? b : c,b<c ? c : b)]=(unsigned int)nCount;
             ++nCount;
             aNewPoints2D.push_back(BCuv);
             aNewPoints3D.push_back(BC);
             aNewEntities.push_back(pEdge1 ? pEdge1 : (entity *)pFace);
             }
 
-        if(aAdjacencies[Index1+2]==SIZE_MAX || c<a)
+        if(aAdjacencies[Index1+2]==std::numeric_limits<unsigned int>::max() || c<a)
             {
             SGM::Point3D CA;
             SGM::Point2D CAuv;
-            edge *pEdge2=aAdjacencies[Index1+2]==SIZE_MAX ? FindEdge(rResult,pFace,pEntC,pEntA) : nullptr;
+            edge *pEdge2=aAdjacencies[Index1+2]==std::numeric_limits<unsigned int>::max() ? FindEdge(rResult,pFace,pEntC,pEntA) : nullptr;
             if(pEdge2)
                 {
                 curve const *pCurve=pEdge2->GetCurve();
@@ -169,7 +169,7 @@ void SubdivideFacets(SGM::Result               &rResult,
                 pSurface->Evaluate(CAuv,&CA);
                 }
 
-            mMidPoints[std::pair<size_t,size_t>(c<a ? c : a,c<a ? a : c)]=nCount;
+            mMidPoints[std::pair<unsigned int,unsigned int>(c<a ? c : a,c<a ? a : c)]=(unsigned int)nCount;
             ++nCount;
             aNewPoints2D.push_back(CAuv);
             aNewPoints3D.push_back(CA);
@@ -191,13 +191,13 @@ void SubdivideFacets(SGM::Result               &rResult,
 
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        size_t a=aTriangles[Index1];
-        size_t b=aTriangles[Index1+1];
-        size_t c=aTriangles[Index1+2];
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
 
-        size_t ab=mMidPoints[a<b ? std::pair<size_t,size_t>(a,b) : std::pair<size_t,size_t>(b,a)];
-        size_t bc=mMidPoints[b<c ? std::pair<size_t,size_t>(b,c) : std::pair<size_t,size_t>(c,b)];
-        size_t ca=mMidPoints[c<a ? std::pair<size_t,size_t>(c,a) : std::pair<size_t,size_t>(a,c)];
+        unsigned int ab=mMidPoints[a<b ? std::pair<unsigned int,unsigned int>(a,b) : std::pair<unsigned int,unsigned int>(b,a)];
+        unsigned int bc=mMidPoints[b<c ? std::pair<unsigned int,unsigned int>(b,c) : std::pair<unsigned int,unsigned int>(c,b)];
+        unsigned int ca=mMidPoints[c<a ? std::pair<unsigned int,unsigned int>(c,a) : std::pair<unsigned int,unsigned int>(a,c)];
 
         aTriangles[Index1]=a;
         aTriangles[Index1+1]=ab;
@@ -232,21 +232,21 @@ class Node
         bool                 m_bMark;
     };
 
-void FixBackPointers(size_t                     nTri,
-                     std::vector<size_t> const &aTriangles,
-                     std::vector<size_t>       &aAdjacencies)
+void FixBackPointers(unsigned int                     nTri,
+                     std::vector<unsigned int> const &aTriangles,
+                     std::vector<unsigned int>       &aAdjacencies)
     {
-    size_t nT0=aAdjacencies[nTri];
-    size_t nT1=aAdjacencies[nTri+1];
-    size_t nT2=aAdjacencies[nTri+2];
-    size_t a=aTriangles[nTri];
-    size_t b=aTriangles[nTri+1];
-    size_t c=aTriangles[nTri+2];
+    unsigned int nT0=aAdjacencies[nTri];
+    unsigned int nT1=aAdjacencies[nTri+1];
+    unsigned int nT2=aAdjacencies[nTri+2];
+    unsigned int a=aTriangles[nTri];
+    unsigned int b=aTriangles[nTri+1];
+    unsigned int c=aTriangles[nTri+2];
     
-    if(nT0!=SIZE_MAX)
+    if(nT0!=std::numeric_limits<unsigned int>::max())
         {
-        size_t a0=aTriangles[nT0];
-        size_t b0=aTriangles[nT0+1];
+        unsigned int a0=aTriangles[nT0];
+        unsigned int b0=aTriangles[nT0+1];
         if(a0!=a && a0!=b)
             {
             aAdjacencies[nT0+1]=nTri;
@@ -261,10 +261,10 @@ void FixBackPointers(size_t                     nTri,
             }
         }
 
-    if(nT1!=SIZE_MAX)
+    if(nT1!=std::numeric_limits<unsigned int>::max())
         {
-        size_t a1=aTriangles[nT1];
-        size_t b1=aTriangles[nT1+1];
+        unsigned int a1=aTriangles[nT1];
+        unsigned int b1=aTriangles[nT1+1];
         if(a1!=c && a1!=b)
             {
             aAdjacencies[nT1+1]=nTri;
@@ -279,10 +279,10 @@ void FixBackPointers(size_t                     nTri,
             }
         }
 
-    if(nT2!=SIZE_MAX)
+    if(nT2!=std::numeric_limits<unsigned int>::max())
         {
-        size_t a2=aTriangles[nT2];
-        size_t b2=aTriangles[nT2+1];
+        unsigned int a2=aTriangles[nT2];
+        unsigned int b2=aTriangles[nT2+1];
         if(a2!=a && a2!=c)
             {
             aAdjacencies[nT2+1]=nTri;
@@ -299,23 +299,23 @@ void FixBackPointers(size_t                     nTri,
     }
 
 bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies,
-                   size_t                           nTri,
-                   size_t                           nEdge)
+                   std::vector<unsigned int>       &aTriangles,
+                   std::vector<unsigned int>       &aAdjacencies,
+                   unsigned int                     nTri,
+                   unsigned int                     nEdge)
     {
-    size_t a=aTriangles[nTri];
-    size_t b=aTriangles[nTri+1];
-    size_t c=aTriangles[nTri+2];
-    size_t nT=aAdjacencies[nTri+nEdge];
-    if(nT==SIZE_MAX)
+    unsigned int a=aTriangles[nTri];
+    unsigned int b=aTriangles[nTri+1];
+    unsigned int c=aTriangles[nTri+2];
+    unsigned int nT=aAdjacencies[nTri+nEdge];
+    if(nT==std::numeric_limits<unsigned int>::max())
         {
         return false;
         }
-    size_t d=aTriangles[nT];
-    size_t e=aTriangles[nT+1];
-    size_t f=aTriangles[nT+2];
-    size_t g,nTA,nTB;
+    unsigned int d=aTriangles[nT];
+    unsigned int e=aTriangles[nT+1];
+    unsigned int f=aTriangles[nT+2];
+    unsigned int g,nTA,nTB;
     if(d!=a && d!=b && d!=c)
         {
         g=d;
@@ -340,9 +340,9 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &G=aPoints[g];
     if(SGM::InCircumcircle(A,B,C,G))
         {
-        size_t nT0=aAdjacencies[nTri];
-        size_t nT1=aAdjacencies[nTri+1];
-        size_t nT2=aAdjacencies[nTri+2];
+        unsigned int nT0=aAdjacencies[nTri];
+        unsigned int nT1=aAdjacencies[nTri+1];
+        unsigned int nT2=aAdjacencies[nTri+2];
         if(nEdge==0)
             {
             aTriangles[nTri]=g;
@@ -424,16 +424,16 @@ void FindScales(surface                   const *pSurface,
     }
 
 void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<size_t>             &aTriangles,
-                   std::vector<size_t>             &aAdjacencies)
+                   std::vector<unsigned int>       &aTriangles,
+                   std::vector<unsigned int>       &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
-    size_t Index1;
+    unsigned int Index1;
     while(bFlipped)
         {
         bFlipped=false;
-        for(Index1=0;Index1<nTriangles;Index1+=3)
+        for(Index1=0;Index1<(unsigned int)nTriangles;Index1+=3)
             {
             if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,0))
                 {
@@ -678,8 +678,8 @@ bool SplitAtSeams(SGM::Result                     &rResult,
         aCrosses.push_back(aParams.front());
         aCrosses.push_back(aParams.back());
         std::vector<Node> aNodes;
-        size_t nParams=aParams.size();
-        size_t Index1;
+        unsigned int nParams=(unsigned int)aParams.size();
+        unsigned int Index1;
         for(Index1=0;Index1<nParams;++Index1)
             {
             Node PosNode;
@@ -760,7 +760,6 @@ void SplitFacet(curve                          const *pCurve,
     SGM::Point3D Pos;
     pCurve->Evaluate(dParamC,&Pos);
     SGM::Point2D uv=pSurface->Inverse(Pos);
-    SGM::UnitVector3D Norm;
     FacetNodeNormal NodeC(dParamC,Pos);
     pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&NodeC.m_Norm);
     lNodes.insert(NodeB,NodeC);
@@ -928,6 +927,8 @@ size_t FindUCrosses(SGM::Interval1D           const &UDomain,
 class SplitData
     {
     public:
+
+        SplitData() {}
 
         SplitData(double dParam,size_t nPolygon,size_t nSpan):
             m_dParam(dParam),m_nPolygon(nPolygon),m_nSpan(nSpan) {}
@@ -2030,29 +2031,29 @@ void FindSeamCrossings(SGM::Result        &,//rResult,
         }
     }
 
-void FindPolygon(std::vector<Node>   &aNodes,
-                 size_t               nStart,
-                 std::vector<size_t> &aPolygon)
+void FindPolygon(std::vector<Node>         &aNodes,
+                 unsigned int               nStart,
+                 std::vector<unsigned int> &aPolygon)
     {
     aPolygon.push_back(nStart);
     size_t nWhere=aNodes[nStart].m_nNext;
     aNodes[nStart].m_bMark=true;
     while(nWhere!=nStart)
         {
-        aPolygon.push_back(nWhere);
+        aPolygon.push_back((unsigned int)nWhere);
         aNodes[nWhere].m_bMark=true;
         nWhere=aNodes[nWhere].m_nNext;
         }
     }
 
-void FindPolygons(std::vector<Node>                 &aNodes,
-                  std::vector<SGM::Point2D>         &aPoints2D,
-                  std::vector<SGM::Point3D>         &aPoints3D,
-                  std::vector<entity *>             &aEntities,
-                  std::vector<std::vector<size_t> > &aaPolygons)
+void FindPolygons(std::vector<Node>                       &aNodes,
+                  std::vector<SGM::Point2D>               &aPoints2D,
+                  std::vector<SGM::Point3D>               &aPoints3D,
+                  std::vector<entity *>                   &aEntities,
+                  std::vector<std::vector<unsigned int> > &aaPolygons)
     {
-    size_t nNodes=aNodes.size();
-    size_t Index1;
+    unsigned int nNodes=(unsigned int)aNodes.size();
+    unsigned int Index1;
     aPoints2D.reserve(nNodes);
     aPoints3D.reserve(nNodes);
     aEntities.reserve(nNodes);
@@ -2066,7 +2067,7 @@ void FindPolygons(std::vector<Node>                 &aNodes,
         {
         if(aNodes[Index1].m_bMark==false)
             {
-            std::vector<size_t> aPolygon;
+            std::vector<unsigned int> aPolygon;
             FindPolygon(aNodes,Index1,aPolygon);
             aaPolygons.push_back(aPolygon);
             if(Index1==1)
@@ -2250,13 +2251,13 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         }
     }
 
-size_t FacetFaceLoops(SGM::Result                       &rResult,
-                      face                        const *pFace,
-                      FacetOptions                const &Options,
-                      std::vector<SGM::Point2D>         &aPoints2D,
-                      std::vector<SGM::Point3D>         &aPoints3D,
-                      std::vector<entity *>             &aEntities,
-                      std::vector<std::vector<size_t> > &aaPolygons)
+size_t FacetFaceLoops(SGM::Result                             &rResult,
+                      face                              const *pFace,
+                      FacetOptions                      const &Options,
+                      std::vector<SGM::Point2D>               &aPoints2D,
+                      std::vector<SGM::Point3D>               &aPoints3D,
+                      std::vector<entity *>                   &aEntities,
+                      std::vector<std::vector<unsigned int> > &aaPolygons)
     {
     // Find all the needed face information.
 
@@ -2341,7 +2342,7 @@ class EdgeValue
     {
     public:
 
-        EdgeValue(double dValue,size_t nTriangle,size_t nEdge):
+        EdgeValue(double dValue,unsigned int nTriangle,unsigned int nEdge):
             m_dDot(dValue),m_nTriangle(nTriangle),m_nEdge(nEdge) {}
 
         bool operator<(EdgeValue const &Other) const 
@@ -2367,18 +2368,18 @@ class EdgeValue
             return false;
             }
 
-        double m_dDot;
-        size_t m_nTriangle;
-        size_t m_nEdge;
+        double       m_dDot;
+        unsigned int m_nTriangle;
+        unsigned int m_nEdge;
     };
 
-void FixBackPointer(size_t               nA,
-                    size_t               nStart,
-                    size_t               nT,
-                    std::vector<size_t> &aTriangles,
-                    std::vector<size_t> &aAdjacencies)
+void FixBackPointer(unsigned int               nA,
+                    unsigned int               nStart,
+                    unsigned int               nT,
+                    std::vector<unsigned int> &aTriangles,
+                    std::vector<unsigned int> &aAdjacencies)
     {
-    if(nA!=SIZE_MAX)
+    if(nA!=std::numeric_limits<unsigned int>::max())
         {
         if(nStart==aTriangles[nA])
             {
@@ -2419,86 +2420,86 @@ double FindNormalDiff(bool                                  bFirst,
     return Norm0%Norm1;
     }
 
-void FixEdgeData(surface                             const *pSurface,
-                 std::vector<SGM::Point2D>           const &aPoints2D,
-                 size_t                                     nTri1,
-                 size_t                                     nTri2,
-                 std::vector<SGM::UnitVector3D>      const &aNormals,
-                 std::vector<size_t>                 const &aTriangles,
-                 std::vector<size_t>                 const &aAdjacencies,
-                 std::set<EdgeValue>                       &sEdgeData,
-                 std::map<std::pair<size_t,size_t>,double> &mEdgeData)
+void FixEdgeData(surface                                         const *pSurface,
+                 std::vector<SGM::Point2D>                       const &aPoints2D,
+                 unsigned int                                           nTri1,
+                 unsigned int                                           nTri2,
+                 std::vector<SGM::UnitVector3D>                  const &aNormals,
+                 std::vector<unsigned int>                       const &aTriangles,
+                 std::vector<unsigned int>                       const &aAdjacencies,
+                 std::set<EdgeValue>                                   &sEdgeData,
+                 std::map<std::pair<unsigned int,unsigned int>,double> &mEdgeData)
     {
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri1,0)],nTri1,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri1,1)],nTri1,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri1,2)],nTri1,2));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri2,0)],nTri2,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri2,1)],nTri2,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nTri2,2)],nTri2,2));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,0)],nTri1,0));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,1)],nTri1,1));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,2)],nTri1,2));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,0)],nTri2,0));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,1)],nTri2,1));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,2)],nTri2,2));
 
-    size_t A2=aTriangles[nTri1];
-    size_t B2=aTriangles[nTri1+1];
-    size_t C2=aTriangles[nTri1+2];
-    size_t D2=aTriangles[nTri2];
-    size_t E2=aTriangles[nTri2+1];
-    size_t F2=aTriangles[nTri2+2];
+    unsigned int A2=aTriangles[nTri1];
+    unsigned int B2=aTriangles[nTri1+1];
+    unsigned int C2=aTriangles[nTri1+2];
+    unsigned int D2=aTriangles[nTri2];
+    unsigned int E2=aTriangles[nTri2+1];
+    unsigned int F2=aTriangles[nTri2+2];
 
-    if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=SIZE_MAX)
+    if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,A2,B2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,0));
-        mEdgeData[std::pair<size_t,size_t>(nTri1,0)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,0)]=dVal;
         }
-    if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=SIZE_MAX)
+    if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,B2,C2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,1));
-        mEdgeData[std::pair<size_t,size_t>(nTri1,1)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,1)]=dVal;
         }
-    if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=SIZE_MAX)
+    if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,C2,A2);
         sEdgeData.insert(EdgeValue(dVal,nTri1,2));
-        mEdgeData[std::pair<size_t,size_t>(nTri1,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,2)]=dVal;
         }
-    if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=SIZE_MAX)
+    if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,D2,E2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,0));
-        mEdgeData[std::pair<size_t,size_t>(nTri2,0)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,0)]=dVal;
         }
-    if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=SIZE_MAX)
+    if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,E2,F2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,1));
-        mEdgeData[std::pair<size_t,size_t>(nTri2,1)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,1)]=dVal;
         }
-    if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=SIZE_MAX)
+    if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,F2,D2);
         sEdgeData.insert(EdgeValue(dVal,nTri2,2));
-        mEdgeData[std::pair<size_t,size_t>(nTri2,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,2)]=dVal;
         }
     }
 
-void IncrementalDelaunay(surface                             const *pSurface,
-                         std::set<size_t>                          &sSearchTris,
-                         std::vector<SGM::Point2D>           const &aPoints2D,
-                         std::vector<SGM::Point2D>           const &aScaled2D,
-                         std::vector<SGM::UnitVector3D>      const &aNormals,
-                         std::vector<size_t>                       &aTriangles,
-                         std::vector<size_t>                       &aAdjacencies,
-                         std::set<EdgeValue>                       &sEdgeData,
-                         std::map<std::pair<size_t,size_t>,double> &mEdgeData)
+void IncrementalDelaunay(surface                                         const *pSurface,
+                         std::set<unsigned int>                                &sSearchTris,
+                         std::vector<SGM::Point2D>                       const &aPoints2D,
+                         std::vector<SGM::Point2D>                       const &aScaled2D,
+                         std::vector<SGM::UnitVector3D>                  const &aNormals,
+                         std::vector<unsigned int>                             &aTriangles,
+                         std::vector<unsigned int>                             &aAdjacencies,
+                         std::set<EdgeValue>                                   &sEdgeData,
+                         std::map<std::pair<unsigned int,unsigned int>,double> &mEdgeData)
     {
     while(sSearchTris.empty()==false)
         {
-        size_t nT=*(sSearchTris.begin());
-        size_t nT0=aAdjacencies[nT];
-        size_t nT1=aAdjacencies[nT+1];
-        size_t nT2=aAdjacencies[nT+2];
+        unsigned int nT=*(sSearchTris.begin());
+        unsigned int nT0=aAdjacencies[nT];
+        unsigned int nT1=aAdjacencies[nT+1];
+        unsigned int nT2=aAdjacencies[nT+2];
         sSearchTris.erase(nT);
-        if(nT0!=SIZE_MAX)
+        if(nT0!=std::numeric_limits<unsigned int>::max())
             {
             if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,0))
                 {
@@ -2509,7 +2510,7 @@ void IncrementalDelaunay(surface                             const *pSurface,
                 FixEdgeData(pSurface,aPoints2D,nT,nT0,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
-        if(nT1!=SIZE_MAX)
+        if(nT1!=std::numeric_limits<unsigned int>::max())
             {
             if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,1))
                 {
@@ -2519,7 +2520,7 @@ void IncrementalDelaunay(surface                             const *pSurface,
                 FixEdgeData(pSurface,aPoints2D,nT,nT1,aNormals,aTriangles,aAdjacencies,sEdgeData,mEdgeData);
                 }
             }
-        if(nT2!=SIZE_MAX)
+        if(nT2!=std::numeric_limits<unsigned int>::max())
             {
             if(FlipTriangles(aScaled2D,aTriangles,aAdjacencies,nT,2))
                 {
@@ -2531,33 +2532,33 @@ void IncrementalDelaunay(surface                             const *pSurface,
         }
     } 
 
-void SplitEdge(EdgeValue                           const &EV,
-               face                                const *pFace,
-               std::vector<SGM::Point2D>                 &aPoints2D,
-               std::vector<SGM::Point2D>                 &aScaled2D,
-               double                                     dScale,
-               std::vector<SGM::Point3D>                 &aPoints3D,
-               std::vector<SGM::UnitVector3D>            &aNormals,
-               std::vector<size_t>                       &aTriangles,
-               std::vector<size_t>                       &aAdjacencies,
-               std::set<EdgeValue>                       &sEdgeData,
-               std::map<std::pair<size_t,size_t>,double> &mEdgeData)
+void SplitEdge(EdgeValue                                       const &EV,
+               face                                            const *pFace,
+               std::vector<SGM::Point2D>                             &aPoints2D,
+               std::vector<SGM::Point2D>                             &aScaled2D,
+               double                                                 dScale,
+               std::vector<SGM::Point3D>                             &aPoints3D,
+               std::vector<SGM::UnitVector3D>                        &aNormals,
+               std::vector<unsigned int>                             &aTriangles,
+               std::vector<unsigned int>                             &aAdjacencies,
+               std::set<EdgeValue>                                   &sEdgeData,
+               std::map<std::pair<unsigned int,unsigned int>,double> &mEdgeData)
     {
     // Add the new point
 
     surface const *pSurface=pFace->GetSurface();
-    size_t nT0=EV.m_nTriangle;
-    size_t nEdge=EV.m_nEdge;
-    size_t a=aTriangles[nT0+nEdge];
-    size_t b=aTriangles[nT0+(nEdge+1)%3];
-    size_t c=aTriangles[nT0+(nEdge+2)%3];
+    unsigned int nT0=EV.m_nTriangle;
+    unsigned int nEdge=EV.m_nEdge;
+    unsigned int a=aTriangles[nT0+nEdge];
+    unsigned int b=aTriangles[nT0+(nEdge+1)%3];
+    unsigned int c=aTriangles[nT0+(nEdge+2)%3];
     SGM::Point2D const &uv0=aPoints2D[a];
     SGM::Point2D const &uv1=aPoints2D[b];
     SGM::Point2D Miduv=SGM::MidPoint(uv0,uv1);
     SGM::Point3D Pos;
     SGM::UnitVector3D Norm;
     pSurface->Evaluate(Miduv,&Pos,nullptr,nullptr,&Norm);
-    size_t m=aPoints2D.size();
+    unsigned int m=(unsigned int)aPoints2D.size();
     aPoints2D.push_back(Miduv);
     SGM::Point2D ScaledMidUV(Miduv.m_u,Miduv.m_v*dScale);
     aScaled2D.push_back(ScaledMidUV);
@@ -2566,11 +2567,11 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Find the adjacent triangle information
     
-    size_t nT1=aAdjacencies[nT0+nEdge];
-    size_t n0=aTriangles[nT1];
-    size_t n1=aTriangles[nT1+1];
-    size_t n2=aTriangles[nT1+2];
-    size_t d,nA2,nA3;
+    unsigned int nT1=aAdjacencies[nT0+nEdge];
+    unsigned int n0=aTriangles[nT1];
+    unsigned int n1=aTriangles[nT1+1];
+    unsigned int n2=aTriangles[nT1+2];
+    unsigned int d,nA2,nA3;
     if(n0!=a && n0!=b)
         {
         d=n0;
@@ -2600,20 +2601,20 @@ void SplitEdge(EdgeValue                           const &EV,
     aTriangles[nT1+1]=b;
     aTriangles[nT1+2]=c;
 
-    size_t nT2=aTriangles.size();
+    unsigned int nT2=(unsigned int)aTriangles.size();
     aTriangles.push_back(m);
     aTriangles.push_back(a);
     aTriangles.push_back(d);
 
-    size_t nT3=aTriangles.size();
+    unsigned int nT3=(unsigned int)aTriangles.size();
     aTriangles.push_back(b);
     aTriangles.push_back(m);
     aTriangles.push_back(d);
 
     // Fix adjacencies
 
-    size_t nA0=aAdjacencies[nT0+(nEdge+1)%3];
-    size_t nA1=aAdjacencies[nT0+(nEdge+2)%3];
+    unsigned int nA0=aAdjacencies[nT0+(nEdge+1)%3];
+    unsigned int nA1=aAdjacencies[nT0+(nEdge+2)%3];
 
     aAdjacencies[nT0]=nT2;
     aAdjacencies[nT0+1]=nT1;
@@ -2638,64 +2639,64 @@ void SplitEdge(EdgeValue                           const &EV,
 
     // Fix edge data.
 
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,nEdge)],nT0,nEdge));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT0,(nEdge+2)%3)],nT0,(nEdge+2)%3));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT1,0)],nT1,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT1,1)],nT1,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<size_t,size_t>(nT1,2)],nT1,2));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,nEdge)],nT0,nEdge));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,(nEdge+2)%3)],nT0,(nEdge+2)%3));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,0)],nT1,0));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,1)],nT1,1));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,2)],nT1,2));
 
-    if(aAdjacencies[nT0+0]!=SIZE_MAX)
+    if(aAdjacencies[nT0+0]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,m);
         sEdgeData.insert(EdgeValue(dVal,nT0,0));
-        mEdgeData[std::pair<size_t,size_t>(nT0,0)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT0,0)]=dVal;
         }
-    if(aAdjacencies[nT3+0]!=SIZE_MAX)
+    if(aAdjacencies[nT3+0]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,m);
         sEdgeData.insert(EdgeValue(dVal,nT3,0));
-        mEdgeData[std::pair<size_t,size_t>(nT3,0)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT3,0)]=dVal;
         }
-    if(aAdjacencies[nT1+2]!=SIZE_MAX)
+    if(aAdjacencies[nT1+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,c,m);
         sEdgeData.insert(EdgeValue(dVal,nT1,2));
-        mEdgeData[std::pair<size_t,size_t>(nT1,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT1,2)]=dVal;
         }
-    if(aAdjacencies[nT2+2]!=SIZE_MAX)
+    if(aAdjacencies[nT2+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,m);
         sEdgeData.insert(EdgeValue(dVal,nT2,2));
-        mEdgeData[std::pair<size_t,size_t>(nT2,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT2,2)]=dVal;
         }
 
-    if(c<a && aAdjacencies[nT0+2]!=SIZE_MAX)
+    if(c<a && aAdjacencies[nT0+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,c);
         sEdgeData.insert(EdgeValue(dVal,nT0,2));
-        mEdgeData[std::pair<size_t,size_t>(nT0,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT0,2)]=dVal;
         }
-    if(b<c && aAdjacencies[nT1+1]!=SIZE_MAX)
+    if(b<c && aAdjacencies[nT1+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,c);
         sEdgeData.insert(EdgeValue(dVal,nT1,1));
-        mEdgeData[std::pair<size_t,size_t>(nT1,1)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT1,1)]=dVal;
         }
-    if(a<d  && aAdjacencies[nT2+1]!=SIZE_MAX)
+    if(a<d  && aAdjacencies[nT2+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,d);
         sEdgeData.insert(EdgeValue(dVal,nT2,1));
-        mEdgeData[std::pair<size_t,size_t>(nT2,1)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT2,1)]=dVal;
         }
-    if(d<b && aAdjacencies[nT3+2]!=SIZE_MAX)
+    if(d<b && aAdjacencies[nT3+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,b);;
         sEdgeData.insert(EdgeValue(dVal,nT3,2));
-        mEdgeData[std::pair<size_t,size_t>(nT3,2)]=dVal;
+        mEdgeData[std::pair<unsigned int,unsigned int>(nT3,2)]=dVal;
         }
 
-    std::set<size_t> sSearchTris;
+    std::set<unsigned int> sSearchTris;
     sSearchTris.insert(nT0);
     sSearchTris.insert(nT1);
     sSearchTris.insert(nT2);
@@ -2710,36 +2711,36 @@ void RefineTriangles(double                          dScale,
                      std::vector<SGM::Point2D>      &aScaled,
                      std::vector<SGM::Point3D>      &aPoints3D,
                      std::vector<SGM::UnitVector3D> &aNormals,
-                     std::vector<size_t>            &aTriangles,
-                     std::vector<size_t>            &aAdjacencies)
+                     std::vector<unsigned int>      &aTriangles,
+                     std::vector<unsigned int>      &aAdjacencies)
     {
     std::set<EdgeValue> sEdgeData;
-    std::map<std::pair<size_t,size_t>,double> mEdgeData;
+    std::map<std::pair<unsigned int,unsigned int>,double> mEdgeData;
     size_t nTriangles=aTriangles.size();
     surface const *pSurface=pFace->GetSurface();
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        size_t a=aTriangles[Index1];
-        size_t b=aTriangles[Index1+1];
-        size_t c=aTriangles[Index1+2];
-        if(a<b && aAdjacencies[Index1]!=SIZE_MAX)
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
+        if(a<b && aAdjacencies[Index1]!=std::numeric_limits<unsigned int>::max())
             {
             double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,a,b);
-            sEdgeData.insert(EdgeValue(dVal,Index1,0));
-            mEdgeData[std::pair<size_t,size_t>(Index1,0)]=dVal;
+            sEdgeData.insert(EdgeValue(dVal,(unsigned int)Index1,0));
+            mEdgeData[std::pair<unsigned int,unsigned int>((unsigned int)Index1,0)]=dVal;
             }
-        if(b<c && aAdjacencies[Index1+1]!=SIZE_MAX)
+        if(b<c && aAdjacencies[Index1+1]!=std::numeric_limits<unsigned int>::max())
             {
             double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,c,b);
-            sEdgeData.insert(EdgeValue(dVal,Index1,1));
-            mEdgeData[std::pair<size_t,size_t>(Index1,1)]=dVal;
+            sEdgeData.insert(EdgeValue(dVal,(unsigned int)Index1,1));
+            mEdgeData[std::pair<unsigned int,unsigned int>((unsigned int)Index1,1)]=dVal;
             }
-        if(c<a && aAdjacencies[Index1+2]!=SIZE_MAX)
+        if(c<a && aAdjacencies[Index1+2]!=std::numeric_limits<unsigned int>::max())
             {
             double dVal=FindNormalDiff(true,pSurface,aNormals,aPoints2D,a,c);
-            sEdgeData.insert(EdgeValue(dVal,Index1,2));
-            mEdgeData[std::pair<size_t,size_t>(Index1,2)]=dVal;
+            sEdgeData.insert(EdgeValue(dVal,(unsigned int)Index1,2));
+            mEdgeData[std::pair<unsigned int,unsigned int>((unsigned int)Index1,2)]=dVal;
             }
         }
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
@@ -2835,11 +2836,11 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<SGM::Point2D>      &aPoints2D,
                std::vector<SGM::Point3D>      &aPoints3D,
                std::vector<SGM::UnitVector3D> &aNormals,
-               std::vector<size_t>            &aTriangles,
+               std::vector<unsigned int>      &aTriangles,
                std::vector<entity *>          &aEntities)
     {
-    std::vector<std::vector<size_t> > aaPolygons;
-    std::vector<size_t> aAdjacencies;
+    std::vector<std::vector<unsigned int> > aaPolygons;
+    std::vector<unsigned int> aAdjacencies;
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     if(Options.m_bParametric==false)

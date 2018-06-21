@@ -18,7 +18,7 @@ public:
   // Add triangles for a face to the internal buffer. The face will be rendered after
   // flush() has been called.
   void add_face(const std::vector<SGM::Point3D> &points,
-                const std::vector<size_t> &triangles,
+                const std::vector<unsigned int> &triangles,
                 const std::vector<SGM::UnitVector3D> &normals);
 
   // Add points for an edge to the internal buffer. The edge will be rendered after

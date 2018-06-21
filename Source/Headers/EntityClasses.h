@@ -211,12 +211,12 @@ class complex : public topology
                 std::vector<SGM::Point3D> const &aPoints);
 
         complex(SGM::Result                     &rResult,
-                std::vector<size_t>       const &aSegments,
+                std::vector<unsigned int> const &aSegments,
                 std::vector<SGM::Point3D> const &aPoints);
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
-                std::vector<size_t>       const &aTriangles);
+                std::vector<unsigned int> const &aTriangles);
 
         // Get methods
 
@@ -224,9 +224,9 @@ class complex : public topology
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
-        std::vector<size_t>       const &GetSegments() const {return m_aSegments;}
+        std::vector<unsigned int> const &GetSegments() const {return m_aSegments;}
 
-        std::vector<size_t>       const &GetTriangles() const {return m_aTriangles;}
+        std::vector<unsigned int> const &GetTriangles() const {return m_aTriangles;}
 
         bool IsTopLevel() const {return m_Owners.empty();}
 
@@ -245,8 +245,8 @@ class complex : public topology
     private:
 
         std::vector<SGM::Point3D> m_aPoints;
-        std::vector<size_t>       m_aSegments;
-        std::vector<size_t>       m_aTriangles;
+        std::vector<unsigned int> m_aSegments;
+        std::vector<unsigned int> m_aTriangles;
     };
 
 class volume : public topology
@@ -327,7 +327,7 @@ class face : public topology
 
         std::vector<SGM::Point3D> const &GetPoints3D(SGM::Result &rResult) const;
 
-        std::vector<size_t> const &GetTriangles(SGM::Result &rResult) const;
+        std::vector<unsigned int> const &GetTriangles(SGM::Result &rResult) const;
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
@@ -395,7 +395,7 @@ class face : public topology
         mutable std::vector<SGM::Point3D>          m_aPoints3D;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::vector<entity *>              m_aEntities;
-        mutable std::vector<size_t>                m_aTriangles;
+        mutable std::vector<unsigned int>          m_aTriangles;
         mutable std::vector<SGM::UnitVector3D>     m_aNormals;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };

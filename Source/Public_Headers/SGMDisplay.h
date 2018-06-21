@@ -21,8 +21,8 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::Point2D> const &GetFacePoints2D(SGM::Result     &rResult,
                                                                 SGM::Face const &FaceID);
 
-    SGM_EXPORT std::vector<size_t> const &GetFaceTriangles(SGM::Result     &rResult,
-                                                           SGM::Face const &FaceID);
+    SGM_EXPORT std::vector<unsigned int> const &GetFaceTriangles(SGM::Result     &rResult,
+                                                                 SGM::Face const &FaceID);
 
     SGM_EXPORT std::vector<SGM::UnitVector3D> const &GetFaceNormals(SGM::Result     &rResult,
                                                                     SGM::Face const &FaceID);
