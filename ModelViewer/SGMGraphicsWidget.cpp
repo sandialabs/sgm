@@ -712,6 +712,7 @@ void SGMGraphicsWidget::initializeGL()
 
   opengl->glEnable(GL_POLYGON_OFFSET_FILL);
   opengl->glPolygonOffset(2,1);
+
   //opengl->glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
   dPtr->shaders.init_shaders(opengl);
