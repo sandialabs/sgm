@@ -15,25 +15,25 @@ complex::complex(SGM::Result &rResult) :
     {}
 
 complex::complex(SGM::Result &rResult,
-                    std::vector<SGM::Point3D> const &aPoints) :
+                 std::vector<SGM::Point3D> const &aPoints) :
         topology(rResult, SGM::EntityType::ComplexType),
         m_aPoints(aPoints),
         m_aSegments(),
         m_aTriangles()
     {}
 
-complex::complex(SGM::Result &rResult,
-                    std::vector<size_t> const &aSegments,
-                    std::vector<SGM::Point3D> const &aPoints) :
+complex::complex(SGM::Result                     &rResult,
+                 std::vector<unsigned int> const &aSegments,
+                 std::vector<SGM::Point3D> const &aPoints) :
         topology(rResult, SGM::EntityType::ComplexType),
         m_aPoints(aPoints),
         m_aSegments(aSegments),
         m_aTriangles()
     {}
 
-complex::complex(SGM::Result &rResult,
-                    std::vector<SGM::Point3D> const &aPoints,
-                    std::vector<size_t> const &aTriangles) :
+complex::complex(SGM::Result                     &rResult,
+                 std::vector<SGM::Point3D> const &aPoints,
+                 std::vector<unsigned int> const &aTriangles) :
         topology(rResult, SGM::EntityType::ComplexType),
         m_aPoints(aPoints),
         m_aSegments(),

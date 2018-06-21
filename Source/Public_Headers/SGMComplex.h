@@ -16,11 +16,11 @@ namespace SGM
 
     SGM_EXPORT SGM::Complex CreateSegments(SGM::Result                    &rResult,
                                            std::vector<SGM::Point3D> const &aPoints,
-                                           std::vector<size_t>       const &aSegments);
+                                           std::vector<unsigned int> const &aSegments);
 
     SGM_EXPORT SGM::Complex CreateTriangles(SGM::Result                    &rResult,
                                             std::vector<SGM::Point3D> const &aPoints,
-                                            std::vector<size_t>       const &aTriangles);
+                                            std::vector<unsigned int> const &aTriangles);
 
     SGM_EXPORT SGM::Complex CreateSlice(SGM::Result             &rResult,
                                         SGM::Complex      const &ComplexID,

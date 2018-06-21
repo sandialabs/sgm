@@ -49,7 +49,7 @@ std::vector<SGM::Point3D> const &face::GetPoints3D(SGM::Result &rResult) const
     return m_aPoints3D;
     }
 
-std::vector<size_t> const &face::GetTriangles(SGM::Result &rResult) const
+std::vector<unsigned int> const &face::GetTriangles(SGM::Result &rResult) const
     {
     if(m_aPoints2D.empty())
         {
@@ -163,7 +163,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     }
 
 double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
-                    std::vector<size_t>       const &aTriangles)
+                    std::vector<unsigned int> const &aTriangles)
     {
     double dArea=0.0;
     size_t nTriangles=aTriangles.size();
@@ -205,7 +205,7 @@ double face::FindArea(SGM::Result &rResult) const
     Options.m_bParametric=true;
     std::vector<SGM::Point2D> aPoints2D;
     std::vector<SGM::Point3D> aPoints3D;
-    std::vector<size_t> aTriangles;
+    std::vector<unsigned int> aTriangles;
     std::vector<SGM::UnitVector3D> aNormals;
     std::vector<entity *> aEntities;
     SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
@@ -252,7 +252,7 @@ double face::FindArea(SGM::Result &rResult) const
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
-                       std::vector<size_t>       const &aTriangles)
+                       std::vector<unsigned int> const &aTriangles)
     {
     double dAnswer=0;
     size_t nTriangles=aTriangles.size();
@@ -272,7 +272,7 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     std::vector<SGM::Point2D> aPoints2D=GetPoints2D(rResult);
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
     std::vector<entity *> aEntities=m_aEntities;
-    std::vector<size_t> aTriangles=m_aTriangles;
+    std::vector<unsigned int> aTriangles=m_aTriangles;
     double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
     if(bApproximate)
         {

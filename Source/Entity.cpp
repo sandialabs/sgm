@@ -66,7 +66,7 @@ SGM::Interval3D const &entity::GetBox(SGM::Result &rResult) const
                         {
                         // Use all the points.
                         std::vector<SGM::Point3D> const &aPoints=pFace->GetPoints3D(rResult);
-                        std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
+                        std::vector<unsigned int> const &aTriangles=pFace->GetTriangles(rResult);
                         double dMaxLength=SGM::FindMaxEdgeLength(aPoints,aTriangles);
                         m_Box=SGM::Interval3D(aPoints);
                         m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)

@@ -248,8 +248,8 @@ void OutputComplex(SGM::Result                  &,//rResult,
                    SGM::TranslatorOptions const &)//Options)
     {
     std::vector<SGM::Point3D> const &aPoints=pComplex->GetPoints();
-    std::vector<size_t> const &aSegments=pComplex->GetSegments();
-    std::vector<size_t> const &aTriangles=pComplex->GetTriangles();
+    std::vector<unsigned int> const &aSegments=pComplex->GetSegments();
+    std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
     size_t nPoints=aPoints.size();
     size_t nSegments=aSegments.size();
     size_t nTriangles=aTriangles.size();

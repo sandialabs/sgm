@@ -59,14 +59,14 @@ void SaveSTL(SGM::Result                  &rResult,
         complex *pComplex=*ComplexIter;
         fprintf(pFile,"solid Complex %ld\n",pComplex->GetID());
         std::vector<SGM::Point3D> const &aPoints=pComplex->GetPoints();
-        std::vector<size_t> const &aTriangles=pComplex->GetTriangles();
+        std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
         size_t Index1;
         size_t nTriangles=aTriangles.size();
         for(Index1=0;Index1<nTriangles;Index1+=3)
             {
-            size_t a=aTriangles[Index1];
-            size_t b=aTriangles[Index1+1];
-            size_t c=aTriangles[Index1+2];
+            unsigned int a=aTriangles[Index1];
+            unsigned int b=aTriangles[Index1+1];
+            unsigned int c=aTriangles[Index1+2];
             SGM::Point3D const &A=aPoints[a];
             SGM::Point3D const &B=aPoints[b];
             SGM::Point3D const &C=aPoints[c];
@@ -96,14 +96,14 @@ void SaveSTL(SGM::Result                  &rResult,
             //pFace=(face *)rResult.GetThing()->FindEntity(57);
             fprintf(pFile,"solid Face %ld\n",pFace->GetID());
             std::vector<SGM::Point3D> const &aPoints=pFace->GetPoints3D(rResult);
-            std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
+            std::vector<unsigned int> const &aTriangles=pFace->GetTriangles(rResult);
             size_t Index1;
             size_t nTriangles=aTriangles.size();
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
-                size_t a=aTriangles[Index1];
-                size_t b=aTriangles[Index1+1];
-                size_t c=aTriangles[Index1+2];
+                unsigned int a=aTriangles[Index1];
+                unsigned int b=aTriangles[Index1+1];
+                unsigned int c=aTriangles[Index1+2];
                 SGM::Point3D const &A=aPoints[a];
                 SGM::Point3D const &B=aPoints[b];
                 SGM::Point3D const &C=aPoints[c];
@@ -125,14 +125,14 @@ void SaveSTL(SGM::Result                  &rResult,
             //pFace=(face *)rResult.GetThing()->FindEntity(57);
             fprintf(pFile,"solid Face %ld\n",pFace->GetID());
             std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
-            std::vector<size_t> const &aTriangles=pFace->GetTriangles(rResult);
+            std::vector<unsigned int> const &aTriangles=pFace->GetTriangles(rResult);
             size_t Index1;
             size_t nTriangles=aTriangles.size();
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
-                size_t a=aTriangles[Index1];
-                size_t b=aTriangles[Index1+1];
-                size_t c=aTriangles[Index1+2];
+                unsigned int a=aTriangles[Index1];
+                unsigned int b=aTriangles[Index1+1];
+                unsigned int c=aTriangles[Index1+2];
                 SGM::Point2D const &A=aPoints[a];
                 SGM::Point2D const &B=aPoints[b];
                 SGM::Point2D const &C=aPoints[c];

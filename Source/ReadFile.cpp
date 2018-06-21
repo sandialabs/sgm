@@ -1891,7 +1891,18 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    /*
+    Heal(rResult,aEntities);
+
+    if(Options.m_bRemoveSeams)
+        {
+        size_t nEntities=aEntities.size();
+        size_t Index1;
+        for(Index1=0;Index1<nEntities;++Index1)
+            {
+            MergeOutSeams(rResult,aEntities[Index1]);
+            }
+        }
+
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
@@ -1914,20 +1925,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        if(nID==16)
-            pFace->GetTriangles(rResult);
-        }
-    */
-    Heal(rResult,aEntities);
-
-    if(Options.m_bRemoveSeams)
-        {
-        size_t nEntities=aEntities.size();
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
-            {
-            MergeOutSeams(rResult,aEntities[Index1]);
-            }
+        pFace->GetTriangles(rResult);
         }
 
     return aEntities.size();
@@ -1954,7 +1952,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
     while(ReadToString(pFile,"solid"))
         {
         std::vector<SGM::Point3D> aPoints;
-        std::vector<size_t> aTriangles;
+        std::vector<unsigned int> aTriangles;
         size_t nCount=0,nSolidCount=0,nVertexCount=0;;
         char solid[6]="solid";
         char vertex[7]="vertex";
@@ -1982,7 +1980,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                     double x,y,z;
                     fscanf(pFile,"%lf %lf %lf",&x,&y,&z);
                     aPoints.emplace_back(x,y,z);
-                    aTriangles.push_back(nCount++);
+                    aTriangles.push_back((unsigned int)nCount++);
                     }
                 }
             else

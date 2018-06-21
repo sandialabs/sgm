@@ -647,7 +647,7 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
 }
 
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
-                                 const std::vector<size_t>            &triangles,
+                                 const std::vector<unsigned int>      &triangles,
                                  const std::vector<SGM::UnitVector3D> &norms)
 {
   std::vector<float> &data_buffer = dPtr->face_data.temp_data_buffer();

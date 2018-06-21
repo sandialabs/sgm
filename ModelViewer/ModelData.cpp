@@ -456,7 +456,7 @@ void ModelData::rebuild_graphics()
           SGM::GetFacePoints2D(dPtr->mResult, face);
       const std::vector<SGM::Point3D> &face_points3D =
           SGM::GetFacePoints3D(dPtr->mResult, face);
-      const std::vector<size_t> &face_tris =
+      const std::vector<unsigned int> &face_tris =
           SGM::GetFaceTriangles(dPtr->mResult, face);
 
       size_t Index1;
@@ -464,9 +464,9 @@ void ModelData::rebuild_graphics()
       for(Index1=0;Index1<nTriangles;Index1+=3)
           {
           std::vector<SGM::Point3D> side;
-          size_t a=face_tris[Index1];
-          size_t b=face_tris[Index1+1];
-          size_t c=face_tris[Index1+2];
+          unsigned int a=face_tris[Index1];
+          unsigned int b=face_tris[Index1+1];
+          unsigned int c=face_tris[Index1+2];
           if(mfacet_mode)
               {
               SGM::Point3D const &PosA=face_points3D[a];
@@ -522,7 +522,7 @@ void ModelData::rebuild_graphics()
       //    }
         const std::vector<SGM::Point3D> &face_points =
             SGM::GetFacePoints3D(dPtr->mResult, face);
-        const std::vector<size_t> &face_tris =
+        const std::vector<unsigned int> &face_tris =
             SGM::GetFaceTriangles(dPtr->mResult, face);
         const std::vector<SGM::UnitVector3D> &face_normals =
             SGM::GetFaceNormals(dPtr->mResult, face);
