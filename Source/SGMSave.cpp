@@ -265,11 +265,11 @@ void OutputComplex(SGM::Result                  &,//rResult,
         }
     for(Index1=0;Index1<nSegments;Index1+=2)
         {
-        fprintf(pFile,"  %ld,%ld;\n",aSegments[Index1],aSegments[Index1+1]);
+        fprintf(pFile,"  %u,%u;\n",aSegments[Index1],aSegments[Index1+1]);
         }
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        fprintf(pFile,"  %ld,%ld,%ld;\n",aTriangles[Index1],aTriangles[Index1+1],aTriangles[Index1+2]);
+        fprintf(pFile,"  %u,%u,%u;\n",aTriangles[Index1],aTriangles[Index1+1],aTriangles[Index1+2]);
         }
     }
 
