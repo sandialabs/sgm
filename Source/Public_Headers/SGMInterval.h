@@ -44,11 +44,7 @@ namespace SGM {
 
         Interval1D(const Interval1D &interval) = default;
 
-        //Interval1D(Interval1D &&interval) = default;
-
         Interval1D &operator=(const Interval1D &interval) = default;
-
-        //Interval1D &operator=(Interval1D &&interval)      = default;
 
         ~Interval1D() = default;
 
@@ -128,7 +124,7 @@ namespace SGM {
 
         // find bounding box around collection of points
 
-        explicit Interval2D(const std::vector<Point2D> &points);
+        explicit Interval2D(const std::vector<Point2D> &aPoints);
 
         ~Interval2D() = default;
 

@@ -132,7 +132,7 @@ void thing::SeverOwners(entity *pEntity)
             while(iter!=sFaces.end())
                 {
                 face *pFace=*iter;
-                SGM::Result rResult((thing *)this);
+                SGM::Result rResult(this);
                 pFace->RemoveEdge(rResult,pEdge);
                 ++iter;
                 }

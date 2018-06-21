@@ -102,6 +102,11 @@ namespace SGM {
         return node->m_Bound.IntersectsSphere(m_center, m_radius, m_tolerance);
     }
 
+    inline void BoxTree::PushLeaf::operator()(const BoxTree::Leaf *leaf)
+    {
+        m_aContainer.emplace_back(leaf->m_pObject,leaf->m_Bound);
+    }
+
     inline bool BoxTree::RemoveSpecificLeaf::operator()(const BoxTree::Leaf *leaf) const
     {
         if (m_bContinue && m_pLeafObject == leaf->m_pObject)
@@ -165,7 +170,7 @@ namespace SGM {
     {
         if (!m_treeRoot)
             return;
-        LeafContainerType m_aLeafsToReinsert;
+        ReinsertLeafContainerType m_aLeafsToReinsert;
         RemoveFunctor <Filter, LeafRemover> remove(accept, leafRemover, &m_aLeafsToReinsert, &m_treeSize);
         remove(m_treeRoot, true);
         // reinsert anything that needs to be reinserted

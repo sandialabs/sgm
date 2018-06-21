@@ -12,7 +12,7 @@ namespace SGM {
 
     inline void Bounded::Stretch::operator()(const Bounded *item)
     {
-        m_bound->Stretch(item->m_Bound);
+        m_bound->operator+=(item->m_Bound);
     }
 
     inline bool Bounded::FirstEdgeLess::operator()(Bounded const* bi1, Bounded const* bi2) const

@@ -32,6 +32,7 @@ public:
   void reset_view();
 
   void set_render_faces(bool render);
+  void enable_perspective(bool enable);
 
   // Get the default format that the QApplication needs for rendering
   static QSurfaceFormat default_format();

@@ -34,7 +34,7 @@ namespace SGM
     {
     public:
 
-        Point2D() {}
+        Point2D() = default;
 
         Point2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -59,7 +59,7 @@ namespace SGM
 
         enum { N = 3 };
 
-        Point3D() {}
+        Point3D() = default;
 
         Point3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -87,7 +87,7 @@ namespace SGM
     {
     public:
 
-        Point4D() {}
+        Point4D() = default;
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
@@ -109,7 +109,7 @@ namespace SGM
     {
     public:
 
-        Vector2D() {}
+        Vector2D() = default;
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -125,7 +125,7 @@ namespace SGM
 
         enum { N = 3 };
 
-        Vector3D() {}
+        Vector3D() = default;
 
         Vector3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -161,7 +161,7 @@ namespace SGM
     {
     public:
 
-        Vector4D() {}
+        Vector4D() = default;
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
@@ -187,7 +187,7 @@ namespace SGM
     {
     public:
 
-        UnitVector2D() {}
+        UnitVector2D() = default;
 
         UnitVector2D(double u,double v);
 
@@ -200,7 +200,7 @@ namespace SGM
     {
     public:
 
-        UnitVector3D() {}
+        UnitVector3D() = default;
 
         UnitVector3D(double x,double y,double z);
 
@@ -225,7 +225,7 @@ namespace SGM
     {
     public:
 
-        UnitVector4D() {}
+        UnitVector4D() = default;
 
         UnitVector4D(Vector4D const &Vec);
     };

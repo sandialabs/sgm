@@ -19,8 +19,6 @@ class Argument
     {
     public:
     
-        Argument() {};
-
         bool                m_bool;
         size_t              m_Size;
         double              m_Double;

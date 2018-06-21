@@ -1,5 +1,6 @@
 #include "SGMGraphicsWidget.hpp"
 
+#include <cmath>
 #include <limits>
 #include <QApplication>
 #include <QMatrix4x4>
@@ -8,6 +9,8 @@
 #include <QOpenGLFunctions_3_2_Core>
 #include <QWheelEvent>
 #include <vector>
+
+#include <QDebug>
 
 // We are using the OpenGL 3.2 api
 using QtOpenGL = QOpenGLFunctions_3_2_Core;
@@ -171,8 +174,9 @@ private:
   bool mUpdateViewTransform;
   bool mUpdateModelTransform;
   float xmin, xmax, ymin, ymax, zmin, zmax;
-  float mVerticalFieldOfView;
+  float mZoomLevel;
   float mAspectRatio;
+  bool mPerspective;
   QQuaternion mOrientation;
   QVector3D mTranslation;
 
@@ -198,7 +202,8 @@ public:
   pCamera() :
     mUpdateProjectionTransform(true),
     mUpdateViewTransform(true),
-    mUpdateModelTransform(true)
+    mUpdateModelTransform(true),
+    mPerspective(true)
   {
     reset_model_transform();
     reset_view();
@@ -220,9 +225,15 @@ public:
                                               QVector3D(0.0, 1.0, 0.0));
 
     mTranslation = QVector3D(0.0, 0.0, 0.0);
-    mVerticalFieldOfView = 60.0;
+    mZoomLevel = 0.5;
 
     mUpdateViewTransform = true;
+    mUpdateProjectionTransform = true;
+  }
+
+  void enable_perspective(bool enable)
+  {
+    mPerspective = enable;
     mUpdateProjectionTransform = true;
   }
 
@@ -260,18 +271,30 @@ public:
     mUpdateViewTransform = true;
   }
 
-  // A negative factor indicates zoom out. Positive indicates zoom in.
-  void set_zoom(int factor)
+  // Set the absolute zoom factor. A zoom factor of 0 indicates the camera
+  // is zoomed out as far as it can go. A zoom factor of 100 indicates the
+  // camera is at its maximum zoom.
+  void set_zoom(uint factor)
   {
-    // Set the vertical field of view in the projection transform. This
-    // effectively zooms in on the area of interest
-    mVerticalFieldOfView += (float) factor / 25.0;
+    mZoomLevel = (float) factor / 100.0;
 
-    // Clamp the field of view
-    if(mVerticalFieldOfView > 180.0)
-      mVerticalFieldOfView = 180.0;
-    else if(mVerticalFieldOfView < 0.1)
-      mVerticalFieldOfView = (float)0.1;
+    // Clamp the zoom level
+    if(mZoomLevel > 1.0)
+      mZoomLevel = 1.0;
+
+    mUpdateProjectionTransform = true;
+  }
+
+  // A negative factor indicates zoom out. Positive indicates zoom in.
+  void increment_zoom(float increment)
+  {
+    mZoomLevel += increment;
+
+    // Clamp the zoom level;
+    if(mZoomLevel > 1.0)
+      mZoomLevel = 1.0;
+    else if(mZoomLevel < 0.0)
+      mZoomLevel = 0.0;
 
     mUpdateProjectionTransform = true;
   }
@@ -299,10 +322,40 @@ public:
   QMatrix4x4 projection_transform()
   {
     QMatrix4x4 projection;
-    projection.perspective(mVerticalFieldOfView,
-                           mAspectRatio,
-                           0.1f,    // near plane
-                           100.0f); // far plane
+
+    // If we did our model scaling correctly, things should be bounded between -1 and 1
+    // for all axes. This means our left and right bounds will also be -1 and 1. To allow
+    // users to zoom out a little beyond that, we will put view bounds between -2 and 2.
+    float max_half_height = 2.0;
+    float min_half_eight = 0.001;
+
+    if(mPerspective)
+    {
+      // Calculate max angle. Camera is 5 from the origin (see view_transform)
+      const float r_to_d = 57.2958;
+      float max_half_angle = atan(max_half_height/5.0)*r_to_d;
+      float min_half_angle = atan(min_half_eight/5.0)*r_to_d;
+      float vertical_field_of_view = min_half_angle +
+          (max_half_angle - min_half_angle)*(1.0 - mZoomLevel);
+
+      projection.perspective(2.0*vertical_field_of_view,
+                             mAspectRatio,
+                             0.1f,    // near plane
+                             100.0f); // far plane
+    }
+    else
+    {
+      float half_height = min_half_eight +
+          (max_half_height - min_half_eight) * mZoomLevel;
+      float half_width = half_height*mAspectRatio;
+
+      projection.ortho(-half_width,  //left
+                       half_width,   //right
+                       -half_height, // bottom
+                       half_height,  //top
+                       0.1f,         // near plane
+                       100.0f);      // far plane
+    }
 
     return projection;
   }
@@ -673,6 +726,13 @@ void SGMGraphicsWidget::reset_view()
 void SGMGraphicsWidget::set_render_faces(bool render)
 {
   dPtr->render_faces = render;
+  update();
+}
+
+void SGMGraphicsWidget::enable_perspective(bool enable)
+{
+  dPtr->camera.enable_perspective(enable);
+  update();
 }
 
 QSurfaceFormat SGMGraphicsWidget::default_format()
@@ -740,8 +800,10 @@ void SGMGraphicsWidget::paintGL()
   if(!opengl)
     return;
 
+  qreal scale(devicePixelRatio());
+
   opengl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  opengl->glViewport(0, 0, this->width(), this->height());
+  opengl->glViewport(0, 0, this->width()*scale, this->height()*scale);
 
   // Apply transforms from the camera
   dPtr->camera.update_transforms(opengl, &dPtr->shaders);
@@ -754,7 +816,11 @@ void SGMGraphicsWidget::paintGL()
 
 void SGMGraphicsWidget::resizeGL(int w, int h)
 {
-  dPtr->camera.set_viewport_size(w, h);
+  // take care of HDPI screen, e.g. Retina display on Mac
+  qreal scale(devicePixelRatio());
+
+  // Set OpenGL viewport to cover whole widget
+  dPtr->camera.set_viewport_size(w*scale, h*scale);
 }
 
 void SGMGraphicsWidget::mousePressEvent(QMouseEvent *event)
@@ -790,7 +856,7 @@ void SGMGraphicsWidget::mouseMoveEvent(QMouseEvent *event)
     else if(dPtr->mouse.function == pMouseData::ROTATE)
       dPtr->camera.set_rotation(diff.x(), diff.y());
     else if(dPtr->mouse.function == pMouseData::ZOOM)
-      dPtr->camera.set_zoom(diff.y()*10);
+      dPtr->camera.increment_zoom(diff.y()*10);
     else
       return;
 
@@ -811,7 +877,13 @@ void SGMGraphicsWidget::mouseReleaseEvent(QMouseEvent* event)
 
 void SGMGraphicsWidget::wheelEvent(QWheelEvent *event)
 {
-  dPtr->camera.set_zoom(event->angleDelta().y());
+  float increment = 0.02;
+  if(event->angleDelta().y() < 0)
+    dPtr->camera.increment_zoom(-increment);
+  else
+    dPtr->camera.increment_zoom(increment);
+
+
   this->update();
 }
 

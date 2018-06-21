@@ -1,3 +1,4 @@
+#include <EntityFunctions.h>
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Graph.h"
@@ -58,16 +59,7 @@ void volume::ClearBox(SGM::Result &rResult) const
 SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const
     {
     if(m_FaceTree.IsEmpty())
-        {
-        std::set<face *,EntityCompare>::const_iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
-            {
-            face *pFace=*iter;
-            SGM::Interval3D const &Box=pFace->GetBox(rResult);
-            m_FaceTree.Insert(pFace,Box);
-            ++iter;
-            }
-        }
+        BoxTreeInsert(rResult, m_FaceTree, m_sFaces.begin(), m_sFaces.end());
     return m_FaceTree;
     }
 

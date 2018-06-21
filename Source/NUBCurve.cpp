@@ -182,7 +182,8 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
     size_t nSpanIndex;
     if(Domain.m_dMax<=t)
         {
-        nSpanIndex=(int)(aKnots.size()-nDegree-2);
+        assert(aKnots.size() >= (nDegree+2));
+        nSpanIndex=aKnots.size()-nDegree-2;
         }
     else if(t<Domain.m_dMin)
         {

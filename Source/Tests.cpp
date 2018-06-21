@@ -1971,11 +1971,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // y=ax^2 parabola
         // a=2 
         
-        aPoints.push_back(SGM::Point3D(0.0,0.0,0.0));
-        aPoints.push_back(SGM::Point3D(1.0,2.0,0.0));
-        aPoints.push_back(SGM::Point3D(-1.0,2.0,0.0));
-        aPoints.push_back(SGM::Point3D(2.0,8.0,0.0));
-        aPoints.push_back(SGM::Point3D(-3.0,18.0,0.0));
+        aPoints.emplace_back(0.0,0.0,0.0);
+        aPoints.emplace_back(1.0,2.0,0.0);
+        aPoints.emplace_back(-1.0,2.0,0.0);
+        aPoints.emplace_back(2.0,8.0,0.0);
+        aPoints.emplace_back(-3.0,18.0,0.0);
 
         SGMInternal::curve *pConic0=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         if(pConic0)
@@ -1988,11 +1988,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // a=2 b=3
         
         aPoints.clear();
-        aPoints.push_back(SGM::Point3D(2.0,0.0,0.0));
-        aPoints.push_back(SGM::Point3D(-2.0,0.0,0.0));
-        aPoints.push_back(SGM::Point3D(6.0,8.4852813742385702928101323452582,0.0));
-        aPoints.push_back(SGM::Point3D(6.0,-8.4852813742385702928101323452582,0.0));
-        aPoints.push_back(SGM::Point3D(-6.0,8.4852813742385702928101323452582,0.0));
+        aPoints.emplace_back(2.0,0.0,0.0);
+        aPoints.emplace_back(-2.0,0.0,0.0);
+        aPoints.emplace_back(6.0,8.4852813742385702928101323452582,0.0);
+        aPoints.emplace_back(6.0,-8.4852813742385702928101323452582,0.0);
+        aPoints.emplace_back(-6.0,8.4852813742385702928101323452582,0.0);
 
         SGMInternal::curve *pConic1=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         rResult.GetThing()->DeleteEntity(pConic1);
@@ -2001,11 +2001,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // a=2 b=3
 
         aPoints.clear();
-        aPoints.push_back(SGM::Point3D(0.0,3.0,0.0));
-        aPoints.push_back(SGM::Point3D(2.0,0.0,0.0));
-        aPoints.push_back(SGM::Point3D(-2.0,0.0,0.0));
-        aPoints.push_back(SGM::Point3D(0.0,-3.0,0.0));
-        aPoints.push_back(SGM::Point3D(1.0,2.5980762113533159402911695122588,0.0));
+        aPoints.emplace_back(0.0,3.0,0.0);
+        aPoints.emplace_back(2.0,0.0,0.0);
+        aPoints.emplace_back(-2.0,0.0,0.0);
+        aPoints.emplace_back(0.0,-3.0,0.0);
+        aPoints.emplace_back(1.0,2.5980762113533159402911695122588,0.0);
         
         SGMInternal::curve *pConic2=SGMInternal::FindConic(rResult,aPoints,dTolerance);
         rResult.GetThing()->DeleteEntity(pConic2);
@@ -2060,7 +2060,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         double d=0.2;
         for(Index1=0;Index1<100;++Index1)
             {
-            aPoints.push_back(SGM::Point3D(cos(Index1*d),sin(Index1*d),Index1*d*0.1));
+            aPoints.emplace_back(cos(Index1*d),sin(Index1*d),Index1*d*0.1);
             }
         SGMInternal::NUBcurve *pNUB=SGMInternal::CreateNUBCurve(rResult,aPoints);
         SGM::Point3D Pos0(1,0,0),Pos1(1,0,10);
@@ -2539,11 +2539,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
     if(nTestNumber==34)
         {
         std::vector<SGM::Point3D> aPoints;
-        aPoints.push_back(SGM::Point3D(-2,.5,0));
-        aPoints.push_back(SGM::Point3D(-1,1.5,0));
-        aPoints.push_back(SGM::Point3D(0,1,0));
-        aPoints.push_back(SGM::Point3D(1,1.5,0));
-        aPoints.push_back(SGM::Point3D(2,2,0));
+        aPoints.emplace_back(-2,.5,0);
+        aPoints.emplace_back(-1,1.5,0);
+        aPoints.emplace_back(0,1,0);
+        aPoints.emplace_back(1,1.5,0);
+        aPoints.emplace_back(2,2,0);
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
         CreateEdge(rResult,CurveID);
         //SGM::Point3D Origin(-1,0,0);
@@ -2613,11 +2613,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         std::vector<SGM::Point3D> aPoints1;
-        aPoints1.push_back(SGM::Point3D(-2,.5,0));
-        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(0,1,0));
-        aPoints1.push_back(SGM::Point3D(1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(2,2,0));
+        aPoints1.emplace_back(-2,.5,0);
+        aPoints1.emplace_back(-1,1.5,0);
+        aPoints1.emplace_back(0,1,0);
+        aPoints1.emplace_back(1,1.5,0);
+        aPoints1.emplace_back(2,2,0);
 
         // simple case
         //aPoints1.push_back(SGM::Point3D(-2,.5,0));
@@ -2641,7 +2641,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        SGM::UnitVector3D XAxis = pCurveStart - StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
@@ -2691,11 +2691,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         std::vector<SGM::Point3D> aPoints1;
-        aPoints1.push_back(SGM::Point3D(-2,.5,0));
-        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(0,1,0));
-        aPoints1.push_back(SGM::Point3D(1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(2,2,0));
+        aPoints1.emplace_back(-2,.5,0);
+        aPoints1.emplace_back(-1,1.5,0);
+        aPoints1.emplace_back(0,1,0);
+        aPoints1.emplace_back(1,1.5,0);
+        aPoints1.emplace_back(2,2,0);
 
         // simple case
         //aPoints1.push_back(SGM::Point3D(-2,.5,0));
@@ -2719,7 +2719,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        SGM::UnitVector3D XAxis = pCurveStart - StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
@@ -2777,27 +2777,27 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         std::vector<SGM::Point3D> aPoints1;
-        aPoints1.push_back(SGM::Point3D(-2,.5,0));
-        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(0,1,0));
-        aPoints1.push_back(SGM::Point3D(1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(2,2,0));
+        aPoints1.emplace_back(-2,.5,0);
+        aPoints1.emplace_back(-1,1.5,0);
+        aPoints1.emplace_back(0,1,0);
+        aPoints1.emplace_back(1,1.5,0);
+        aPoints1.emplace_back(2,2,0);
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
         std::vector<SGM::Point3D> aPoints2;
-        aPoints2.push_back(SGM::Point3D(-2,0,.5));
-        aPoints2.push_back(SGM::Point3D(-1,0,1.5));
-        aPoints2.push_back(SGM::Point3D(0,0,1));
-        aPoints2.push_back(SGM::Point3D(1,0,1.5));
-        aPoints2.push_back(SGM::Point3D(2,0,2));
+        aPoints2.emplace_back(-2,0,.5);
+        aPoints2.emplace_back(-1,0,1.5);
+        aPoints2.emplace_back(0,0,1);
+        aPoints2.emplace_back(1,0,1.5);
+        aPoints2.emplace_back(2,0,2);
         SGM::Curve LeftCurveID = SGM::CreateNUBCurve(rResult, aPoints2);
 
         std::vector<SGM::Point3D> aPoints3;
-        aPoints3.push_back(SGM::Point3D(-2,0,-.5));
-        aPoints3.push_back(SGM::Point3D(-1,0,-1.5));
-        aPoints3.push_back(SGM::Point3D(0,0,-1));
-        aPoints3.push_back(SGM::Point3D(1,0,-1.5));
-        aPoints3.push_back(SGM::Point3D(2,0,-2));
+        aPoints3.emplace_back(-2,0,-.5);
+        aPoints3.emplace_back(-1,0,-1.5);
+        aPoints3.emplace_back(0,0,-1);
+        aPoints3.emplace_back(1,0,-1.5);
+        aPoints3.emplace_back(2,0,-2);
         SGM::Curve RightCurveID = SGM::CreateNUBCurve(rResult, aPoints3);
 
         SGM::Point3D Origin(-1,0,0);
@@ -2813,7 +2813,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         SGM::Point3D StartCenter = Origin + ((pCurveStart - Origin) % Axis) * Axis;
         SGM::Point3D EndCenter = Origin + ((pCurveEnd - Origin) % Axis) * Axis;
-        SGM::UnitVector3D XAxis = (SGM::Vector3D)pCurveStart - (SGM::Vector3D)StartCenter;
+        SGM::UnitVector3D XAxis = pCurveStart - StartCenter;
         double dRadiusStart = pCurveStart.Distance(StartCenter);
         double dRadiusEnd = pCurveEnd.Distance(EndCenter);
 
@@ -2891,15 +2891,15 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         // Test of NURB Curves.
 
         std::vector<SGM::Point4D> aControlPoints;
-        aControlPoints.push_back(SGM::Point4D(1,0,0,1));
-        aControlPoints.push_back(SGM::Point4D(1,1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,1,0,1));
-        aControlPoints.push_back(SGM::Point4D(-1,1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(-1,0,0,1));
-        aControlPoints.push_back(SGM::Point4D(-1,-1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,-1,0,1));
-        aControlPoints.push_back(SGM::Point4D(1,-1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(1,0,0,1));
+        aControlPoints.emplace_back(1,0,0,1);
+        aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(0,1,0,1);
+        aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(-1,0,0,1);
+        aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(0,-1,0,1);
+        aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(1,0,0,1);
         
         std::vector<double> aKnots;
         aKnots.push_back(0);
@@ -2954,26 +2954,26 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
 
         std::vector<std::vector<SGM::Point4D> > aaControlPoints;
         std::vector<SGM::Point4D> aControlPoints;
-        aControlPoints.push_back(SGM::Point4D(1,0,0,1));
-        aControlPoints.push_back(SGM::Point4D(1,1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,1,0,1));
-        aControlPoints.push_back(SGM::Point4D(-1,1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(-1,0,0,1));
-        aControlPoints.push_back(SGM::Point4D(-1,-1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,-1,0,1));
-        aControlPoints.push_back(SGM::Point4D(1,-1,0,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(1,0,0,1));
+        aControlPoints.emplace_back(1,0,0,1);
+        aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(0,1,0,1);
+        aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(-1,0,0,1);
+        aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(0,-1,0,1);
+        aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
+        aControlPoints.emplace_back(1,0,0,1);
         aaControlPoints.push_back(aControlPoints);
         aControlPoints.clear();
-        aControlPoints.push_back(SGM::Point4D(1,0,1,1));
-        aControlPoints.push_back(SGM::Point4D(1,1,1,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,1,1,1));
-        aControlPoints.push_back(SGM::Point4D(-1,1,1,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(-1,0,1,1));
-        aControlPoints.push_back(SGM::Point4D(-1,-1,1,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(0,-1,1,1));
-        aControlPoints.push_back(SGM::Point4D(1,-1,1,sqrt(2)/2));
-        aControlPoints.push_back(SGM::Point4D(1,0,1,1));
+        aControlPoints.emplace_back(1,0,1,1);
+        aControlPoints.emplace_back(1,1,1,sqrt(2)/2);
+        aControlPoints.emplace_back(0,1,1,1);
+        aControlPoints.emplace_back(-1,1,1,sqrt(2)/2);
+        aControlPoints.emplace_back(-1,0,1,1);
+        aControlPoints.emplace_back(-1,-1,1,sqrt(2)/2);
+        aControlPoints.emplace_back(0,-1,1,1);
+        aControlPoints.emplace_back(1,-1,1,sqrt(2)/2);
+        aControlPoints.emplace_back(1,0,1,1);
         aaControlPoints.push_back(aControlPoints);
         
         std::vector<double> aUKnots;
@@ -3179,18 +3179,18 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         std::vector<SGM::Point3D> aPoints1;
-        aPoints1.push_back(SGM::Point3D(-2,.5,0));
-        aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(0,1,0));
-        aPoints1.push_back(SGM::Point3D(1,1.5,0));
-        aPoints1.push_back(SGM::Point3D(2,2,0));
+        aPoints1.emplace_back(-2,.5,0);
+        aPoints1.emplace_back(-1,1.5,0);
+        aPoints1.emplace_back(0,1,0);
+        aPoints1.emplace_back(1,1.5,0);
+        aPoints1.emplace_back(2,2,0);
 
         // simple case
-        //aPoints1.push_back(SGM::Point3D(-2,.5,0));
-        //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-        //aPoints1.push_back(SGM::Point3D(0,.5,0));
-        //aPoints1.push_back(SGM::Point3D(1,.5,0));
-        //aPoints1.push_back(SGM::Point3D(2,.5,0));
+        //aPoints1.emplace_back(-2,.5,0);
+        //aPoints1.emplace_back(-1,1.5,0);
+        //aPoints1.emplace_back(0,.5,0);
+        //aPoints1.emplace_back(1,.5,0);
+        //aPoints1.emplace_back(2,.5,0);
 
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
@@ -3221,11 +3221,11 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         bool bAnswer=true;
 
         std::vector<SGM::Point3D> aNUBPoints;
-        aNUBPoints.push_back(SGM::Point3D(-2,.5,0));
-        aNUBPoints.push_back(SGM::Point3D(-1,1.5,0));
-        aNUBPoints.push_back(SGM::Point3D(0,1,0));
-        aNUBPoints.push_back(SGM::Point3D(1,1.5,0));
-        aNUBPoints.push_back(SGM::Point3D(2,2,0));
+        aNUBPoints.emplace_back(-2,.5,0);
+        aNUBPoints.emplace_back(-1,1.5,0);
+        aNUBPoints.emplace_back(0,1,0);
+        aNUBPoints.emplace_back(1,1.5,0);
+        aNUBPoints.emplace_back(2,2,0);
         SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aNUBPoints);
 
         SGM::Point3D AxisOrigin(-1,0,0);
