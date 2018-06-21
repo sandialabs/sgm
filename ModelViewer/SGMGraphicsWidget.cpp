@@ -799,8 +799,10 @@ void SGMGraphicsWidget::paintGL()
   if(!opengl)
     return;
 
+  qreal scale(devicePixelRatio());
+
   opengl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  opengl->glViewport(0, 0, this->width(), this->height());
+  opengl->glViewport(0, 0, this->width()*scale, this->height()*scale);
 
   // Apply transforms from the camera
   dPtr->camera.update_transforms(opengl, &dPtr->shaders);
@@ -813,7 +815,11 @@ void SGMGraphicsWidget::paintGL()
 
 void SGMGraphicsWidget::resizeGL(int w, int h)
 {
-  dPtr->camera.set_viewport_size(w, h);
+  // take care of HDPI screen, e.g. Retina display on Mac
+  qreal scale(devicePixelRatio());
+
+  // Set OpenGL viewport to cover whole widget
+  dPtr->camera.set_viewport_size(w*scale, h*scale);
 }
 
 void SGMGraphicsWidget::mousePressEvent(QMouseEvent *event)
