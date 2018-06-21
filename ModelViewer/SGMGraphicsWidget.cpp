@@ -299,26 +299,20 @@ public:
     mUpdateProjectionTransform = true;
   }
 
-  void update_point_bounds(float x, float y, float z)
+  inline void update_point_bounds(float x, float y, float z)
   {
-    if(x > xmax)
-      xmax = x;
-    if(x < xmin)
-      xmin = x;
+    xmax = std::max(x,xmax);
+    xmin = std::min(x,xmin);
 
-    if(y > ymax)
-      ymax = y;
-    if(y < ymin)
-      ymin = y;
+    ymax = std::max(y,ymax);
+    ymin = std::min(y,ymin);
 
-    if(z > zmax)
-      zmax = z;
-    if(z < zmin)
-      zmin = z;
+    zmax = std::max(z,zmax);
+    zmin = std::min(z,zmin);
 
     mUpdateModelTransform = true;
   }
-
+    
   QMatrix4x4 projection_transform()
   {
     QMatrix4x4 projection;
@@ -655,19 +649,22 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
 
   // Setup indices for the triangles
   size_t offset = data_buffer.size() / 6;
-  for(size_t index : triangles)
-    index_buffer.push_back((unsigned int)(offset+index));
+  size_t last = triangles.size() + offset;
+  index_buffer.reserve(index_buffer.size() + triangles.size());
+  for(size_t index = offset; index < last; ++index)
+    index_buffer.push_back((unsigned int)index);
 
-  // I am assuming that norms and points will always be the same size.
+  // assuming that norms and points will always be the same size.
+  data_buffer.reserve(data_buffer.size() + 6 * points.size());
   for(size_t i = 0; i < points.size(); i++)
   {
-    // Add data to the buffer
-    SGM::Point3D point = points[i];
+    // Add data to the buffer, converting double to float
+    SGM::Point3D const & point = points[i];
     data_buffer.push_back(point.m_x);
     data_buffer.push_back(point.m_y);
     data_buffer.push_back(point.m_z);
 
-    SGM::UnitVector3D normal = norms[i];
+    SGM::UnitVector3D const & normal = norms[i];
     data_buffer.push_back(normal.m_x);
     data_buffer.push_back(normal.m_y);
     data_buffer.push_back(normal.m_z);
@@ -688,14 +685,16 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   // Setup indices for the line segments
   size_t offset = data_buffer.size() / 3;
   size_t num_points = points.size();
-  for(size_t i = 0; i < num_points - 1; i++)
+  index_buffer.reserve(index_buffer.size() + 2 * (num_points - 1));
+  for(size_t i = 0; i < num_points - 1; ++i)
   {
     size_t index = offset+i;
-    index_buffer.push_back((unsigned int)(index));
-    index_buffer.push_back((unsigned int)(index+1));
+    index_buffer.push_back((unsigned int)index);
+    index_buffer.push_back((unsigned int)index+1);
   }
 
-  // Add the point data
+  // Add the point data, converting double to float
+  data_buffer.reserve(data_buffer.size() + 3 * num_points);
   for(const SGM::Point3D &point : points)
   {
     data_buffer.push_back(point.m_x);
