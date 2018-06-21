@@ -649,10 +649,9 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
 
   // Setup indices for the triangles
   size_t offset = data_buffer.size() / 6;
-  size_t last = triangles.size() + offset;
   index_buffer.reserve(index_buffer.size() + triangles.size());
-  for(size_t index = offset; index < last; ++index)
-    index_buffer.push_back((unsigned int)index);
+  for(size_t index : triangles)
+    index_buffer.push_back((unsigned int)offset+index);
 
   // assuming that norms and points will always be the same size.
   data_buffer.reserve(data_buffer.size() + 6 * points.size());
