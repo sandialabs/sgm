@@ -197,10 +197,6 @@ class PolyData
     {
     public:
 
-        double dExtreamU;
-        size_t nWhichPoly;
-        size_t nWhichPoint;
-
         PolyData() = default;
 
         PolyData(double extremeU, size_t whichPoly, size_t whichPoint) :
@@ -210,6 +206,10 @@ class PolyData
             {
             return PD.dExtreamU<dExtreamU;
             }
+
+        double dExtreamU;
+        size_t nWhichPoly;
+        size_t nWhichPoint;
     };
 
 double FindAngle(std::vector<SGM::Point2D> const &aPoints,
@@ -871,7 +871,7 @@ void TriangulatePolygonSub(SGM::Result                             &,//rResult,
                         nWhere = Index2;
                         }
                     }
-                aUValues.emplace_back(dUValue,nWhere,Index1);
+                aUValues.emplace_back(dUValue,Index1,nWhere);
                 }
             std::sort(aUValues.begin(), aUValues.end());
 

@@ -1891,6 +1891,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
+    /*
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
@@ -1913,10 +1914,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         size_t nID=pFace->GetID();
         nID;
         nType;
-        if(nID==207)
+        if(nID==16)
             pFace->GetTriangles(rResult);
         }
-
+    */
     Heal(rResult,aEntities);
 
     if(Options.m_bRemoveSeams)

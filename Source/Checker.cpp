@@ -657,11 +657,18 @@ bool curve::Check(SGM::Result              &,//rResult,
     return bAnswer;
     }
 
-bool surface::Check(SGM::Result              &,//rResult,
+bool surface::Check(SGM::Result              &rResult,
                     SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &aCheckStrings) const
     {
-    bool bAnswer=TestSurface(this,m_Domain.MidPoint());
+    SGM::Point2D uv=m_Domain.MidPoint();
+    if(m_sFaces.empty()==false)
+        {
+        face *pFace=*(m_sFaces.begin());
+        std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
+        uv=SGM::FindCenterOfMass2D(aPoints);
+        }
+    bool bAnswer=TestSurface(this,uv);
 
     if(bAnswer==false)
         {

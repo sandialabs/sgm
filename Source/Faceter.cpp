@@ -760,7 +760,6 @@ void SplitFacet(curve                          const *pCurve,
     SGM::Point3D Pos;
     pCurve->Evaluate(dParamC,&Pos);
     SGM::Point2D uv=pSurface->Inverse(Pos);
-    SGM::UnitVector3D Norm;
     FacetNodeNormal NodeC(dParamC,Pos);
     pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&NodeC.m_Norm);
     lNodes.insert(NodeB,NodeC);
@@ -928,6 +927,8 @@ size_t FindUCrosses(SGM::Interval1D           const &UDomain,
 class SplitData
     {
     public:
+
+        SplitData() {}
 
         SplitData(double dParam,size_t nPolygon,size_t nSpan):
             m_dParam(dParam),m_nPolygon(nPolygon),m_nSpan(nSpan) {}
