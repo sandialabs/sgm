@@ -447,63 +447,21 @@ void ModelData::rebuild_graphics()
     return;
 
   if(muvspace_mode || mfacet_mode)
-  {
+    {
     std::set<SGM::Face> face_list;
     SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
     for(const SGM::Face &face : face_list)
     {
-      const std::vector<SGM::Point2D> &face_points2D =
-          SGM::GetFacePoints2D(dPtr->mResult, face);
-      const std::vector<SGM::Point3D> &face_points3D =
-          SGM::GetFacePoints3D(dPtr->mResult, face);
-      const std::vector<unsigned int> &face_tris =
-          SGM::GetFaceTriangles(dPtr->mResult, face);
-
-      size_t Index1;
-      size_t nTriangles=face_tris.size();
-      for(Index1=0;Index1<nTriangles;Index1+=3)
+      const std::vector<unsigned int> &face_tris = SGM::GetFaceTriangles(dPtr->mResult, face);
+      if (mfacet_mode)
           {
-          std::vector<SGM::Point3D> side;
-          unsigned int a=face_tris[Index1];
-          unsigned int b=face_tris[Index1+1];
-          unsigned int c=face_tris[Index1+2];
-          if(mfacet_mode)
-              {
-              SGM::Point3D const &PosA=face_points3D[a];
-              SGM::Point3D const &PosB=face_points3D[b];
-              SGM::Point3D const &PosC=face_points3D[c];
-              side.push_back(PosA);
-              side.push_back(PosB);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosB);
-              side.push_back(PosC);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosC);
-              side.push_back(PosA);
-              dPtr->mGraphics->add_edge(side);
-              }
-          else
-              {
-              SGM::Point2D const &Auv=face_points2D[a];
-              SGM::Point2D const &Buv=face_points2D[b];
-              SGM::Point2D const &Cuv=face_points2D[c];
-              SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);
-              SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
-              SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
-              side.push_back(PosA);
-              side.push_back(PosB);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosB);
-              side.push_back(PosC);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosC);
-              side.push_back(PosA);
-              dPtr->mGraphics->add_edge(side);
-              }
+          const std::vector<SGM::Point3D> &face_points3D = SGM::GetFacePoints3D(dPtr->mResult, face);
+        dPtr->mGraphics->add_triangle_lines(face_points3D, face_tris);
+          }
+      else
+          {
+          const std::vector<SGM::Point2D> &face_points2D = SGM::GetFacePoints2D(dPtr->mResult, face);
+        dPtr->mGraphics->add_triangle_lines_uv(face_points2D, face_tris);
           }
     }
   }
@@ -520,13 +478,9 @@ void ModelData::rebuild_graphics()
       //    {
       //    continue;
       //    }
-        const std::vector<SGM::Point3D> &face_points =
-            SGM::GetFacePoints3D(dPtr->mResult, face);
-        const std::vector<unsigned int> &face_tris =
-            SGM::GetFaceTriangles(dPtr->mResult, face);
-        const std::vector<SGM::UnitVector3D> &face_normals =
-            SGM::GetFaceNormals(dPtr->mResult, face);
-
+        const std::vector<SGM::Point3D> &face_points = SGM::GetFacePoints3D(dPtr->mResult, face);
+        const std::vector<unsigned int> &face_tris = SGM::GetFaceTriangles(dPtr->mResult, face);
+        const std::vector<SGM::UnitVector3D> &face_normals = SGM::GetFaceNormals(dPtr->mResult, face);
         dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
       }
 

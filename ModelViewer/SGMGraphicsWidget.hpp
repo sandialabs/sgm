@@ -21,11 +21,17 @@ public:
                 const std::vector<unsigned int> &triangles,
                 const std::vector<SGM::UnitVector3D> &normals);
 
-  // Add points for an edge to the internal buffer. The edge will be rendered after
-  // flush() has been called.
+  // Add triangle lines for a face to the internal buffer.
+  // Face lines will be rendered after flush() has been called.
+  void add_triangle_lines(const std::vector<SGM::Point3D> &points, const std::vector<unsigned int> &triangles);
+
+  // 2D version of triangle lines in UV space of a face
+  void add_triangle_lines_uv(const std::vector<SGM::Point2D> &points, const std::vector<unsigned int> &triangles);
+
+  // Add edges to internal buffer, the edges will be rendered after flush() has been called.
   void add_edge(const std::vector<SGM::Point3D> &points);
 
-  // Flush the internal graphics buffer to push the data to the GPU and actually render.
+    // Flush the internal graphics buffer to push the data to the GPU and actually render.
   void flush();
 
   // Reset the camera perspective
@@ -50,6 +56,7 @@ protected:
   void exec_context_menu(const QPoint &pos);
 
 private:
+
   pGraphicsData* dPtr;
 };
 
