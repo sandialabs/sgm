@@ -112,8 +112,8 @@ private:
   bool muvspace_mode;
   bool mperspective_mode;
 
-  void on_entity_added(const SGM::Entity &ent);
-  void on_entity_removed(const SGM::Entity &ent);
+  void on_entity_added(const SGM::Entity &ent);    //TODO: implement
+  void on_entity_removed(const SGM::Entity &ent);  //TODO: implement
 
   void rebuild_tree();
   void rebuild_graphics();

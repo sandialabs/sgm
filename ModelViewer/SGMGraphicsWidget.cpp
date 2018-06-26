@@ -12,6 +12,8 @@
 #include <vector>
 
 #include <QDebug>
+#include <QGL>
+#include <QOpenGLContext>
 
 // We are using the OpenGL 3.2 api
 using QtOpenGL = QOpenGLFunctions_3_2_Core;
@@ -57,7 +59,7 @@ private:
         )glsl";
 
     mVertexShader = opengl->glCreateShader(GL_VERTEX_SHADER);
-    opengl->glShaderSource(mVertexShader, 1, &source, NULL);
+    opengl->glShaderSource(mVertexShader, 1, &source, nullptr);
     opengl->glCompileShader(mVertexShader);
   }
 
@@ -88,13 +90,14 @@ private:
         )glsl";
 
     mFragmentShader = opengl->glCreateShader(GL_FRAGMENT_SHADER);
-    opengl->glShaderSource(mFragmentShader, 1, &source, NULL);
+    opengl->glShaderSource(mFragmentShader, 1, &source, nullptr);
     opengl->glCompileShader(mFragmentShader);
   }
 
 public:
-  pShaders() {}
-  ~pShaders() {}
+  pShaders() = default;
+
+  ~pShaders() = default;
 
   void cleanup(QtOpenGL* opengl)
   {
@@ -174,9 +177,9 @@ private:
   bool mUpdateProjectionTransform;
   bool mUpdateViewTransform;
   bool mUpdateModelTransform;
-  float xmin, xmax, ymin, ymax, zmin, zmax;
-  float mZoomLevel;
-  float mAspectRatio;
+  float xmin{}, xmax{}, ymin{}, ymax{}, zmin{}, zmax{};
+  float mZoomLevel{};
+  float mAspectRatio{};
   bool mPerspective;
   QQuaternion mOrientation;
   QVector3D mTranslation;
@@ -300,16 +303,30 @@ public:
     mUpdateProjectionTransform = true;
   }
 
-  inline void update_point_bounds(float x, float y, float z)
+//  inline void update_point_bounds(float x, float y, float z)
+//  {
+//    xmax = std::max(x,xmax);
+//    xmin = std::min(x,xmin);
+//
+//    ymax = std::max(y,ymax);
+//    ymin = std::min(y,ymin);
+//
+//    zmax = std::max(z,zmax);
+//    zmin = std::min(z,zmin);
+//
+//    mUpdateModelTransform = true;
+//  }
+
+  inline void update_box_bounds(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max)
   {
-    xmax = std::max(x,xmax);
-    xmin = std::min(x,xmin);
+    xmin = std::min(x_min,xmin);
+    xmax = std::max(x_max,xmax);
 
-    ymax = std::max(y,ymax);
-    ymin = std::min(y,ymin);
+    ymin = std::min(y_min,ymin);
+    ymax = std::max(y_max,ymax);
 
-    zmax = std::max(z,zmax);
-    zmin = std::min(z,zmin);
+    zmin = std::min(z_min,zmin);
+    zmax = std::max(z_max,zmax);
 
     mUpdateModelTransform = true;
   }
@@ -643,39 +660,22 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Helper functions
+// Inline Helper functions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 // copy 3D point into data buffer at position and update iterator to next position
-inline void copy_point(buffer<GLfloat>::iterator &iter_data,
-                       const SGM::Point3D &point)
+inline void add_point(buffer<GLfloat>::iterator &iter_data,
+                      const SGM::Point3D &point)
 {
-  GLfloat x = (GLfloat)point.m_x;
-  GLfloat y = (GLfloat)point.m_y;
-  GLfloat z = (GLfloat)point.m_z;
-  *iter_data++ = x;
-  *iter_data++ = y;
-  *iter_data++ = z;
-}
-
-// copy 3D point into data buffer at position and update iterator to next position, and update camera
-inline void copy_point_and_camera(buffer<GLfloat>::iterator &iter_data,
-                                  pCamera &camera,
-                                  const SGM::Point3D &point)
-{
-  GLfloat x = (GLfloat)point.m_x;
-  GLfloat y = (GLfloat)point.m_y;
-  GLfloat z = (GLfloat)point.m_z;
-  *iter_data++ = x;
-  *iter_data++ = y;
-  *iter_data++ = z;
-  camera.update_point_bounds(x, y, z);
+  *iter_data++ = (GLfloat)point.m_x;
+  *iter_data++ = (GLfloat)point.m_y;
+  *iter_data++ = (GLfloat)point.m_z;
 }
 
 // copy 3D normal vector into data buffer at position and update iterator to next position
-inline void copy_normal(buffer<GLfloat>::iterator &iter_data,
-                       const SGM::UnitVector3D    &normal)
+inline void add_normal(buffer<GLfloat>::iterator &iter_data,
+                       const SGM::UnitVector3D &normal)
 {
   *iter_data++ = (GLfloat)normal.m_x;
   *iter_data++ = (GLfloat)normal.m_y;
@@ -684,13 +684,12 @@ inline void copy_normal(buffer<GLfloat>::iterator &iter_data,
 
 
 // given positions in data buffer, copy in a line segment given by two 3D points, update iterator
-inline void copy_triangle_segment(buffer<GLfloat>::iterator &iter_data,
-                                  pCamera &camera,
-                                  const SGM::Point3D &p1,
-                                  const SGM::Point3D &p2)
+inline void add_segment(buffer<GLfloat>::iterator &iter_data,
+                        const SGM::Point3D &p1,
+                        const SGM::Point3D &p2)
 {
-  copy_point_and_camera(iter_data, camera, p1);
-  copy_point(iter_data, p2);  // no need to update camera for second point
+  add_point(iter_data, p1);
+  add_point(iter_data, p2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -728,8 +727,8 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
   auto iter_norms = norms.begin();
   while (iter_data != data_buffer.end())
     {
-    copy_point_and_camera(iter_data, dPtr->camera, *iter_points++);
-    copy_normal(iter_data, *iter_norms++);
+    add_point(iter_data, *iter_points++);
+    add_normal(iter_data, *iter_norms++);
     }
 }
 
@@ -763,9 +762,9 @@ void SGMGraphicsWidget::add_triangle_lines_uv(const std::vector<SGM::Point2D> &f
     SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);  // z-coordinates are zero
     SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
     SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
-    copy_triangle_segment(iter_data, dPtr->camera, PosA, PosB);
-    copy_triangle_segment(iter_data, dPtr->camera, PosB, PosC);
-    copy_triangle_segment(iter_data, dPtr->camera, PosC, PosA);
+    add_segment(iter_data, PosA, PosB);
+    add_segment(iter_data, PosB, PosC);
+    add_segment(iter_data, PosC, PosA);
     }
 }
 
@@ -796,9 +795,9 @@ void SGMGraphicsWidget::add_triangle_lines(const std::vector<SGM::Point3D> &face
     SGM::Point3D const &PosA = face_points3D[a];
     SGM::Point3D const &PosB = face_points3D[b];
     SGM::Point3D const &PosC = face_points3D[c];
-    copy_triangle_segment(iter_data, dPtr->camera, PosA, PosB);
-    copy_triangle_segment(iter_data, dPtr->camera, PosB, PosC);
-    copy_triangle_segment(iter_data, dPtr->camera, PosC, PosA);
+    add_segment(iter_data, PosA, PosB);
+    add_segment(iter_data, PosB, PosC);
+    add_segment(iter_data, PosC, PosA);
     }
 }
 
@@ -812,7 +811,7 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   buffer<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
 
   // Setup indices for the line segments
-  GLuint num_points = points.size();
+  size_t num_points = points.size();
   GLuint offset = (GLuint)data_buffer.size() / 3;
 
   auto iter_index = index_buffer.insert_uninitialized(index_buffer.end(), 2 * (num_points - 1));
@@ -825,7 +824,14 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   // Add the point data
   auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 3 * num_points);
   for(const SGM::Point3D &point : points)
-    copy_point_and_camera(iter_data, dPtr->camera, point);
+    add_point(iter_data, point);
+}
+
+void SGMGraphicsWidget::update_bounds(const SGM::Interval3D& box)
+{
+  dPtr->camera.update_box_bounds((float)box.m_XDomain.m_dMin, (float)box.m_XDomain.m_dMax,
+                                 (float)box.m_YDomain.m_dMin, (float)box.m_YDomain.m_dMax,
+                                 (float)box.m_ZDomain.m_dMin, (float)box.m_ZDomain.m_dMax);
 }
 
 void SGMGraphicsWidget::flush()

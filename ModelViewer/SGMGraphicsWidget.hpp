@@ -7,6 +7,10 @@
 class GView;
 struct pGraphicsData;
 
+namespace SGM
+{
+    class Interval3D;
+}
 
 class SGMGraphicsWidget : public QOpenGLWidget
 {
@@ -14,6 +18,9 @@ class SGMGraphicsWidget : public QOpenGLWidget
 public:
   SGMGraphicsWidget(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
   ~SGMGraphicsWidget();
+
+  // Add edges to internal buffer, the edges will be rendered after flush() has been called.
+  void add_edge(const std::vector<SGM::Point3D> &points);
 
   // Add triangles for a face to the internal buffer. The face will be rendered after
   // flush() has been called.
@@ -23,15 +30,17 @@ public:
 
   // Add triangle lines for a face to the internal buffer.
   // Face lines will be rendered after flush() has been called.
-  void add_triangle_lines(const std::vector<SGM::Point3D> &points, const std::vector<unsigned int> &triangles);
+  void add_triangle_lines(const std::vector<SGM::Point3D> &points,
+                          const std::vector<unsigned int> &triangles);
 
   // 2D version of triangle lines in UV space of a face
-  void add_triangle_lines_uv(const std::vector<SGM::Point2D> &points, const std::vector<unsigned int> &triangles);
+  void add_triangle_lines_uv(const std::vector<SGM::Point2D> &points,
+                             const std::vector<unsigned int> &triangles);
 
-  // Add edges to internal buffer, the edges will be rendered after flush() has been called.
-  void add_edge(const std::vector<SGM::Point3D> &points);
+  // update bounds given axis-aligned bounding box
+  void update_bounds(const SGM::Interval3D& box);
 
-    // Flush the internal graphics buffer to push the data to the GPU and actually render.
+  // Flush the internal graphics buffer to push the data to the GPU and actually render.
   void flush();
 
   // Reset the camera perspective

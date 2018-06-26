@@ -1,6 +1,6 @@
+#include <EntityClasses.h>
 #include "ModelData.hpp"
 
-#include "SGMVector.h"
 #include "SGMDisplay.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
@@ -8,7 +8,6 @@
 #include "SGMTransform.h"
 #include "SGMTranslators.h"
 #include "SGMChecker.h"
-#include "SGMResult.h"
 #include "SGMEntityFunctions.h"
 
 #include "SGMGraphicsWidget.hpp"
@@ -441,67 +440,90 @@ void ModelData::rebuild_tree()
   }
 }
 
+inline void update_bounds_edge(SGM::Result &rResult, const SGM::Edge &edge_id, SGMGraphicsWidget* mGraphics)
+{
+  SGM::Interval3D const &box = SGM::GetBoundingBox(rResult, edge_id);
+  mGraphics->update_bounds(box);
+}
+
+inline void update_bounds_face(SGM::Result &rResult, const SGM::Face &face_id, SGMGraphicsWidget* mGraphics)
+{
+  SGM::Interval3D const &box = SGM::GetBoundingBox(rResult, face_id);
+  mGraphics->update_bounds(box);
+}
+
+inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGMGraphicsWidget* mGraphics)
+{
+  double min_x = std::numeric_limits<double>::max();
+  double max_x = std::numeric_limits<double>::lowest();
+  double min_y = std::numeric_limits<double>::max();
+  double max_y = std::numeric_limits<double>::lowest();
+  for (auto const &point : points)
+    {
+      min_x = std::min(min_x, point.m_u);
+      max_x = std::max(max_x, point.m_u);
+      min_y = std::min(min_y, point.m_v);
+      max_y = std::max(max_y, point.m_v);
+    }
+  SGM::Interval3D box(min_x, max_x, min_y, max_y, 0.0, 0.0);
+  mGraphics->update_bounds(box);
+}
+
 void ModelData::rebuild_graphics()
 {
-  if(!dPtr->mGraphics)
+  if (!dPtr->mGraphics)
     return;
 
-  if(muvspace_mode || mfacet_mode)
+  if (muvspace_mode || mfacet_mode)
     {
     std::set<SGM::Face> face_list;
     SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
-    for(const SGM::Face &face : face_list)
-    {
+    for (const SGM::Face &face : face_list)
+      {
       const std::vector<unsigned int> &face_tris = SGM::GetFaceTriangles(dPtr->mResult, face);
       if (mfacet_mode)
-          {
-          const std::vector<SGM::Point3D> &face_points3D = SGM::GetFacePoints3D(dPtr->mResult, face);
+        {
+        const std::vector<SGM::Point3D> &face_points3D = SGM::GetFacePoints3D(dPtr->mResult, face);
         dPtr->mGraphics->add_triangle_lines(face_points3D, face_tris);
-          }
+        update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
+        }
       else
-          {
-          const std::vector<SGM::Point2D> &face_points2D = SGM::GetFacePoints2D(dPtr->mResult, face);
+        {
+        const std::vector<SGM::Point2D> &face_points2D = SGM::GetFacePoints2D(dPtr->mResult, face);
         dPtr->mGraphics->add_triangle_lines_uv(face_points2D, face_tris);
-          }
+        update_bounds_points_uv(face_points2D, dPtr->mGraphics);
+        }
+      }
     }
-  }
   else
-  {
-    if(mwire_mode==false)
     {
+    if (mwire_mode == false)
+      {
       std::set<SGM::Face> face_list;
       SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
-      for(const SGM::Face &face : face_list)
-      {
-      //size_t nID=face.m_ID;
-      //if(nID==397)
-      //    {
-      //    continue;
-      //    }
+      for (const SGM::Face &face : face_list)
+        {
         const std::vector<SGM::Point3D> &face_points = SGM::GetFacePoints3D(dPtr->mResult, face);
         const std::vector<unsigned int> &face_tris = SGM::GetFaceTriangles(dPtr->mResult, face);
         const std::vector<SGM::UnitVector3D> &face_normals = SGM::GetFaceNormals(dPtr->mResult, face);
         dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
-      }
-
+        update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
+        }
       dPtr->mGraphics->set_render_faces(true);
-    }
+      }
     else
-    {
+      {
       dPtr->mGraphics->set_render_faces(false);
-    }
-
+      }
     std::set<SGM::Edge> edge_list;
     SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
-    for(const SGM::Edge &edge : edge_list)
-    {
-      const std::vector<SGM::Point3D> &edge_points =
-          SGM::GetEdgePoints(dPtr->mResult, edge);
-
+    for (const SGM::Edge &edge : edge_list)
+      {
+      const std::vector<SGM::Point3D> &edge_points = SGM::GetEdgePoints(dPtr->mResult, edge);
       dPtr->mGraphics->add_edge(edge_points);
+      update_bounds_edge(dPtr->mResult, edge, dPtr->mGraphics);
+      }
     }
-  }
-
   dPtr->mGraphics->flush();
   dPtr->mGraphics->reset_view();
 }

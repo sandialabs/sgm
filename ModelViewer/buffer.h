@@ -573,7 +573,7 @@ public:
             memmove(const_cast<iterator>(position) + initlist.size(), position, (_end - position) * sizeof(T));
             _end += initlist.size();
             }
-        iterator destIter = const_cast<iterator>(position);
+        auto destIter = const_cast<iterator>(position);
         for (typename std::initializer_list<T>::const_iterator i = initlist.begin(); i != initlist.end(); ++i)
             {
             *destIter = *i;
@@ -897,12 +897,10 @@ private:
             memmove(const_cast<iterator>(position) + n, position, (_end - position) * sizeof(T));
             _end += n;
             }
-        T *destIter = const_cast<iterator>(position);
+        auto destIter = const_cast<iterator>(position);
         while (first != last)
             {
-            *destIter = *first;
-            ++destIter;
-            ++first;
+            *destIter++ = *first++;
             }
         return const_cast<iterator>(position);
     }
