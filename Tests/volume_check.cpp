@@ -24,7 +24,7 @@ TEST(volume_check, volume_of_block)
 
 // this is a preliminary experimental version of test with async timeout
 //
-//#include "testing_queue.h"
+//#include "timeout.h"
 //
 //TEST(volume_check, volume_of_block_timeout)
 //{

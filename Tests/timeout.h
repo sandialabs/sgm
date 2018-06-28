@@ -1,16 +1,25 @@
-#ifndef SGM_TESTING_QUEUE_H
-#define SGM_TESTING_QUEUE_H
+#ifndef SGM_TIMEOUT_H
+#define SGM_TIMEOUT_H
+
+#include <chrono>
+#include <future>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Preliminary experimental support for testing with timeout.
 //
-// GOAL: Have a queue of std::async tasks running as part of unit testing.
-//       The tasks are longer running chunks of testing code.
+// Macros and functions for gtest testing
 //
-// * If any one of a task's EXPECT() conditions fail, the test fail.
-// * If a task times out, this is also an EXPECT_TRUE(!timeout) failure.
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
 //
-// Here is a first attempt to check for timeout failure.
+// TIMEOUT
+//
+// Support for a gtest with a timeout.
+//
+// If what is inside the block times out you will see an EXPECT_TRUE(!timeout)
+// type of gtest failure.
+//
+// Usage:
 //
 // GTEST_TIMEOUT_BEGIN
 //    ...
@@ -23,7 +32,6 @@
 // and if it does not, the test fails... and running of tests continues.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <future>
 
 #define EXPECT_TIMEOUT_BEGIN auto asyncFuture = std::async(std::launch::async, [this]()->void {
 
@@ -31,5 +39,4 @@
 bool timed_out = (asyncFuture.wait_for(std::chrono::milliseconds(X)) == std::future_status::timeout); \
 EXPECT_TRUE(!timed_out);
 
-
-#endif //SGM_TESTING_QUEUE_H
+#endif //SGM_TIMEOUT_H
