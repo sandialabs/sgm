@@ -82,17 +82,17 @@ macro(sgm_project_setup)
     set(CMAKE_C_FLAGS "-fvisibility=hidden ${CMAKE_C_FLAGS}")
   endif()
 
-  # default to a debug build if nothing was specified, the first time
-  # but still allow someone to go in the cache file and set the build type
-  # to nothing if they wanted to
-  IF(UNIX)
-    IF(NOT SET_FIRST_BUILD_TYPE)
-      SET(SET_FIRST_BUILD_TYPE ON CACHE INTERNAL "internal var to help set debug the first time")
-      IF(NOT CMAKE_BUILD_TYPE)
-        SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
-      ENDIF(NOT CMAKE_BUILD_TYPE)
-    ENDIF(NOT SET_FIRST_BUILD_TYPE)
-  ENDIF(UNIX)
+#   default to a debug build if nothing was specified, the first time
+#   but still allow someone to go in the cache file and set the build type
+#   to nothing if they wanted to
+#  IF(UNIX)
+#    IF(NOT SET_FIRST_BUILD_TYPE)
+#      SET(SET_FIRST_BUILD_TYPE ON CACHE INTERNAL "internal var to help set debug the first time")
+#      IF(NOT CMAKE_BUILD_TYPE)
+#        SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
+#      ENDIF(NOT CMAKE_BUILD_TYPE)
+#    ENDIF(NOT SET_FIRST_BUILD_TYPE)
+#  ENDIF(UNIX)
 
 
   # warn about VLAs which don't compile under MSVC
