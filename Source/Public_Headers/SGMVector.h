@@ -192,8 +192,6 @@ namespace SGM
         UnitVector2D(double u,double v);
 
         UnitVector2D(Vector2D const &Vec);
-
-        UnitVector2D operator*(double dScale) const;
     };
 
     class SGM_EXPORT UnitVector3D : public Vector3D

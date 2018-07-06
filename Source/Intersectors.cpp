@@ -765,7 +765,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         double rbb=1.0/(dB*dB);
         double c0=d*d*raa+f*f*rbb;
         double c1=2.0*c*d*raa+2*e*f*rbb;
-        double c2=c*c*raa+e*rbb-1.0;
+        double c2=c*c*raa+e*e*rbb-1.0;
 
         // (c+d*t)^2/a^2+(e+f*t)^2/b^2-1=0
         // (c^2/a^2 + e^2/b^2 - 1) + t ((2 c d)/a^2 + (2 e f)/b^2) + t^2 (d^2/a^2 + f^2/b^2) 
@@ -775,8 +775,9 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         size_t Index1;
         for(Index1=0;Index1<nRoots;++Index1)
             {
-            SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
-            aPoints.push_back(Origin+Pos.m_u*XVec+Pos.m_v*YVec);
+            //SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
+            //aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
+            aPoints.push_back(Origin+aRoots[Index1]*Axis);
             if(nRoots==1)
                 {
                 aTypes.push_back(SGM::IntersectionType::TangentType);
@@ -2626,22 +2627,22 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
         {
         case SGM::LineType:
             {
-            //line const *pLine = (line const *)pCurve;
-            //IntersectLineAndPlane(pLine->m_Origin, pLine->m_Axis, SGM::Interval1D(-SGM_MAX, SGM_MAX),
-            //                      PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
+            line const *pLine = (line const *)pCurve;
+            IntersectLineAndPlane(pLine->m_Origin, pLine->m_Axis, SGM::Interval1D(-SGM_MAX, SGM_MAX),
+                                  PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::CircleType:
             {
-            //circle const *pCircle=(circle const *)pCurve;
-            //SGM::Point3D const &Center=pCircle->m_Center;
-            //SGM::UnitVector3D const &Normal=pCircle->m_Normal;
-            //double dRadius=pCircle->m_dRadius;
-            //IntersectCircleAndPlane(Center, Normal, dRadius, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
+            circle const *pCircle=(circle const *)pCurve;
+            IntersectCircleAndPlane(pCircle->m_Center, pCircle->m_Normal, pCircle->m_dRadius, 
+                                    PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::EllipseType:
             {
+            ellipse const *pEllipse=(ellipse const *)pCurve;
+            IntersectEllipseAndPlane(pEllipse, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::ParabolaType:
@@ -2714,6 +2715,37 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
     }
 
     return aPoints.size();    
+}
+
+size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
+                                SGM::Point3D                 const &PlaneOrigin,
+                                SGM::UnitVector3D            const &PlaneNormal,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes)
+{
+    if(SGM::NearEqual(fabs(pEllipse->m_Normal%PlaneNormal),1.0,SGM_MIN_TOL,false))
+        {
+        if(fabs((pEllipse->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
+            {
+            SGM::UnitVector3D XAxis=pEllipse->m_Normal.Orthogonal();
+
+            SGM::Point3D EllipsePos;
+            pEllipse->Evaluate(0.0, &EllipsePos);
+            aPoints.push_back(EllipsePos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            aPoints.push_back(EllipsePos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            }
+        }
+    else
+        {
+        SGM::Point3D LineOrigin;
+        SGM::UnitVector3D LineDirection;
+        IntersectNonParallelPlanes(pEllipse->m_Center,pEllipse->m_Normal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
+        IntersectLineAndEllipse(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),pEllipse,dTolerance,aPoints,aTypes);
+        }
+    return aPoints.size();
 }
 
 } // End of SGMInternal namespace
