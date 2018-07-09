@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 #include <stdexcept>
+#include <type_traits>
 
 #if !defined( _MSC_VER ) || _MSC_VER >= 1900
 #define NOEXCEPT noexcept
@@ -31,7 +32,7 @@
 template<typename T, typename Alloc = std::allocator<T> >
 class buffer : private Alloc
 {
-    static_assert(std::is_standard_layout<T>(), "buffer elements require standard layout");
+//    static_assert(std::is_standard_layout<T>(), "buffer elements require standard layout");
 private:
 #if __cplusplus > 201402L
     typedef std::allocator_traits<allocator_type>::is_always_equal allocator_is_always_equal;

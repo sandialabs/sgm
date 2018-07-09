@@ -22,6 +22,6 @@ add_executable(boxtree_timing
 target_link_libraries(boxtree_timing SGM)
 
 # threadpool_tests
-add_executable(threadpool_tests
-        threadpool_check.cpp)
-target_link_libraries(threadpool_tests gtest_main gtest)
+#add_executable(threadpool_tests
+#        threadpool_check.cpp)
+#target_link_libraries(threadpool_tests gtest_main gtest)
