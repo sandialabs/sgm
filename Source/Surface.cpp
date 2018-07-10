@@ -24,6 +24,78 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighV=false;
     }
 
+surface *surface::MakeCopy(SGM::Result &rResult) const
+    {
+    surface *pAnswer=NULL;
+    switch(m_SurfaceType)
+        {
+        case SGM::PlaneType:
+            {
+            pAnswer = new plane(rResult,(plane const *)this);
+            break;
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    pAnswer->m_sFaces=m_sFaces;
+    pAnswer->m_sOwners=m_sOwners;
+    pAnswer->m_sAttributes=m_sAttributes;
+    pAnswer->m_Box=m_Box;
+    return pAnswer;
+    }
+
+void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    
+    // Run though all the pointers and change them if they are in the map.
+    
+    std::set<face *,EntityCompare> m_sFixedFaces;
+    for(auto pFace : m_sFaces)
+        {
+        auto MapValue=mEntityMap.find(pFace);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedFaces.insert((face *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedFaces.insert(pFace);
+            }
+        }
+    m_sFaces=m_sFixedFaces;
+
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;}
+
 void surface::AddFace(face *pFace) 
     {
     void* other = (void*)this;

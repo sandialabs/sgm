@@ -3,6 +3,7 @@
 #include "SGMEntityClasses.h"
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -30,6 +31,6 @@ cylinder::cylinder(SGM::Result             &rResult,
         {
         m_XAxis=m_ZAxis.Orthogonal();
         }
-    m_YAxis=m_ZAxis*m_XAxis;
+    m_YAxis=Snap(m_ZAxis*m_XAxis);
     }
 }

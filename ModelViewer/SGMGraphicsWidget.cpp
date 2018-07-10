@@ -21,7 +21,6 @@ static QtOpenGL* get_opengl()
   return QOpenGLContext::currentContext()->versionFunctions<QtOpenGL>();
 }
 
-
 class pShaders
 {
 private:
@@ -38,8 +37,10 @@ private:
 
         in vec3 position;
         in vec3 normal;
+        in vec3 color;
 
         out vec3 vertex_normal;
+        out vec3 vertex_color;
 
         uniform mat4 model;
         uniform mat4 view;
@@ -51,6 +52,7 @@ private:
 
           // Adjust the vertex normal based on the camera rotation
           vertex_normal = vec3(view*vec4(normal, 0.0));
+          vertex_color = color;
         }
 
         )glsl";
@@ -68,6 +70,7 @@ private:
         #version 150 core
 
         in vec3 vertex_normal;
+        in vec3 vertex_color;
 
         out vec4 outColor;
 
@@ -81,7 +84,7 @@ private:
           vec3 norm = normalize(vertex_normal);
           float diffuse_strength = 0.4*max(dot(norm, light_dir_norm), 0.0);
 
-          outColor = vec4((ambient_strength + diffuse_strength)*gColor, 1.0);
+          outColor = vec4((ambient_strength + diffuse_strength)*vertex_color, 1.0);
         }
 
         )glsl";
@@ -132,6 +135,11 @@ public:
   GLuint normal_attribute(QtOpenGL* opengl)
   {
     return attribute(opengl, "normal");
+  }
+
+  GLuint color_attribute(QtOpenGL* opengl)
+  {
+    return attribute(opengl, "color");
   }
 
   void set_color(QtOpenGL* opengl, float r, float g, float b)
@@ -219,6 +227,14 @@ public:
     mUpdateModelTransform = true;
   }
 
+  void reset_bounds()
+  {
+    xmin = ymin = zmin = std::numeric_limits<float>::max();
+    xmax = ymax = zmax = std::numeric_limits<float>::lowest();
+
+    mUpdateModelTransform = true;
+  }
+
   void reset_view()
   {
     mOrientation = QQuaternion::fromDirection(QVector3D(0.0, 0.0, 1.0),
@@ -299,7 +315,7 @@ public:
     mUpdateProjectionTransform = true;
   }
 
-  void update_point_bounds(float x, float y, float z)
+void update_point_bounds(float x, float y, float z)
   {
     if(x > xmax)
       xmax = x;
@@ -477,16 +493,16 @@ struct pMouseData
 class pOpenGLFloatData
 {
 private:
-  GLuint mArray;   // Variable to store shader settings
-  GLuint mVertexBuffer;  // Variable to store vertex buffer object (points, normals, etc.)
-  GLuint mElementBuffer; // Variable to store element array object (e.g., triangle indices)
-  GLsizei mNumElements;   // Number of indices to render in the element buffer
-  GLenum mRenderMode;    // How to render the data (e.g., GL_TRIANGLES)
+  GLuint  mArray;          // Variable to store shader settings
+  GLuint  mVertexBuffer;   // Variable to store vertex buffer object (points, normals, etc.)
+  GLuint  mElementBuffer;  // Variable to store element array object (e.g., triangle indices)
+  GLsizei mNumElements;    // Number of indices to render in the element buffer
+  GLenum  mRenderMode;     // How to render the data (e.g., GL_TRIANGLES)
 
   GLfloat mRGB[3];  // Color indices
 
   std::vector<GLfloat> mTempDataBuffer;
-  std::vector<GLuint> mTempIndexBuffer;
+  std::vector<GLuint>  mTempIndexBuffer;
 
 public:
   pOpenGLFloatData() {}
@@ -583,8 +599,9 @@ public:
 
   void flush(QtOpenGL* opengl)
   {
-    if(mTempDataBuffer.empty() || mTempIndexBuffer.empty())
-      return;
+    // This code can cause edges to stay around after they have been deleted.
+    //if(mTempDataBuffer.empty() || mTempIndexBuffer.empty())
+    //  return;
 
     // Make our buffers active
     opengl->glBindVertexArray(mArray);
@@ -610,21 +627,21 @@ public:
 
 };
 
-
-
 struct pGraphicsData
 {
   pShaders shaders;
   pCamera camera;
   pMouseData mouse;
 
+  pOpenGLFloatData vertex_data;
   pOpenGLFloatData edge_data;
   pOpenGLFloatData face_data;
 
   bool render_faces;
+  bool render_edges;
+  bool render_vertices;
+  bool render_facets;
 };
-
-
 
 SGMGraphicsWidget::SGMGraphicsWidget(QWidget *parent, Qt::WindowFlags f) :
   QOpenGLWidget(parent, f),
@@ -639,6 +656,7 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
   if(opengl)
   {
     dPtr->shaders.cleanup(opengl);
+    dPtr->vertex_data.cleanup(opengl);
     dPtr->edge_data.cleanup(opengl);
     dPtr->face_data.cleanup(opengl);
   }
@@ -646,15 +664,21 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
   delete dPtr;
 }
 
+void SGMGraphicsWidget::reset_bounds()
+    {
+    dPtr->camera.reset_bounds();
+    }
+
 void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
                                  const std::vector<unsigned int>      &triangles,
-                                 const std::vector<SGM::UnitVector3D> &norms)
+                                 const std::vector<SGM::UnitVector3D> &norms,
+                                 const std::vector<SGM::Vector3D>     &colors)
 {
   std::vector<float> &data_buffer = dPtr->face_data.temp_data_buffer();
   std::vector<GLuint> &index_buffer = dPtr->face_data.temp_index_buffer();
 
   // Setup indices for the triangles
-  size_t offset = data_buffer.size() / 6;
+  size_t offset = data_buffer.size() / 9;
   for(size_t index : triangles)
     index_buffer.push_back((unsigned int)(offset+index));
 
@@ -672,12 +696,18 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
     data_buffer.push_back(normal.m_y);
     data_buffer.push_back(normal.m_z);
 
+    SGM::Vector3D color = colors[i];
+    data_buffer.push_back(color.m_x);
+    data_buffer.push_back(color.m_y);
+    data_buffer.push_back(color.m_z);
+
     // Update the camera
     dPtr->camera.update_point_bounds(point.m_x, point.m_y, point.m_z);
   }
 }
 
-void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
+void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D>  &points,
+                                 const std::vector<SGM::Vector3D> &colors)
 {
   if(points.empty())
     return;
@@ -686,7 +716,7 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   std::vector<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
 
   // Setup indices for the line segments
-  size_t offset = data_buffer.size() / 3;
+  size_t offset = data_buffer.size() / 6;
   size_t num_points = points.size();
   for(size_t i = 0; i < num_points - 1; i++)
   {
@@ -696,15 +726,52 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points)
   }
 
   // Add the point data
-  for(const SGM::Point3D &point : points)
+  size_t Index1;
+  for(Index1=0;Index1<num_points;++Index1)
   {
-    data_buffer.push_back(point.m_x);
-    data_buffer.push_back(point.m_y);
-    data_buffer.push_back(point.m_z);
+    SGM::Point3D const &Pos=points[Index1];
+    data_buffer.push_back(Pos.m_x);
+    data_buffer.push_back(Pos.m_y);
+    data_buffer.push_back(Pos.m_z);
 
-    dPtr->camera.update_point_bounds(point.m_x, point.m_y, point.m_z);
+    SGM::Vector3D const &color = colors[Index1];
+    data_buffer.push_back(color.m_x);
+    data_buffer.push_back(color.m_y);
+    data_buffer.push_back(color.m_z);
+
+    dPtr->camera.update_point_bounds(Pos.m_x, Pos.m_y, Pos.m_z);
   }
 }
+
+void SGMGraphicsWidget::add_vertex(SGM::Point3D  const &Pos,
+                                   SGM::Vector3D const &ColorVec)
+    {
+    std::vector<GLfloat> &data_buffer = dPtr->vertex_data.temp_data_buffer();
+    std::vector<GLuint> &index_buffer = dPtr->vertex_data.temp_index_buffer();
+
+    // Setup indices for the point
+    size_t offset = data_buffer.size() / 6;
+    index_buffer.push_back((unsigned int)(offset));
+
+    // Add the point data
+    data_buffer.push_back(Pos.m_x);
+    data_buffer.push_back(Pos.m_y);
+    data_buffer.push_back(Pos.m_z);
+        
+    data_buffer.push_back(ColorVec.m_x);
+    data_buffer.push_back(ColorVec.m_y);
+    data_buffer.push_back(ColorVec.m_z);
+
+    data_buffer.push_back(Pos.m_x);
+    data_buffer.push_back(Pos.m_y);
+    data_buffer.push_back(Pos.m_z+1);
+        
+    data_buffer.push_back(ColorVec.m_x);
+    data_buffer.push_back(ColorVec.m_y);
+    data_buffer.push_back(ColorVec.m_z);
+        
+    dPtr->camera.update_point_bounds(Pos.m_x, Pos.m_y, Pos.m_z);
+    }
 
 void SGMGraphicsWidget::flush()
 {
@@ -714,6 +781,7 @@ void SGMGraphicsWidget::flush()
 
   dPtr->face_data.flush(opengl);
   dPtr->edge_data.flush(opengl);
+  dPtr->vertex_data.flush(opengl);
   update();
 }
 
@@ -726,6 +794,24 @@ void SGMGraphicsWidget::reset_view()
 void SGMGraphicsWidget::set_render_faces(bool render)
 {
   dPtr->render_faces = render;
+  update();
+}
+
+void SGMGraphicsWidget::set_render_edges(bool render)
+{
+  dPtr->render_edges = render;
+  update();
+}
+
+void SGMGraphicsWidget::set_render_facets(bool render)
+{
+  dPtr->render_facets = render;
+  update();
+}
+
+void SGMGraphicsWidget::set_render_vertices(bool render)
+{
+  dPtr->render_vertices = render;
   update();
 }
 
@@ -773,25 +859,45 @@ void SGMGraphicsWidget::initializeGL()
   opengl->glEnable(GL_POLYGON_OFFSET_FILL);
   opengl->glPolygonOffset(2,1);
 
-  //opengl->glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  opengl->glEnable(GL_PROGRAM_POINT_SIZE);
+  opengl->glPointSize(7);
+
+  // Did not make round points.
+  //opengl->glEnable(GL_POINT_SMOOTH);
+
+  //GLfloat lineWidthRange[2] = {0.0f, 0.0f};
+  //opengl->glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
+  // Returned 0 to 7 for my laptop.  PRS
+  //opengl->glLineWidth(5);
 
   dPtr->shaders.init_shaders(opengl);
   dPtr->shaders.set_light_direction(opengl, 0.0f, 0.1f, 1.0f);
+
   GLuint position_attribute = dPtr->shaders.position_attribute(opengl);
   GLuint normal_attribute = dPtr->shaders.normal_attribute(opengl);
+  GLuint color_attribute = dPtr->shaders.color_attribute(opengl);
+
+  // Setup vertex data
+  dPtr->vertex_data.set_color(1.0, 0.0, 0.0);
+  dPtr->vertex_data.set_render_mode(GL_POINTS);
+  dPtr->vertex_data.init(opengl);
+  dPtr->vertex_data.set_float_attribute(opengl, position_attribute, 3, 6, 0);
+  dPtr->vertex_data.set_float_attribute(opengl, color_attribute, 3, 6, 3);
 
   // Setup edge data
   dPtr->edge_data.set_color(0.0, 0.0, 0.0);
   dPtr->edge_data.set_render_mode(GL_LINES);
   dPtr->edge_data.init(opengl);
-  dPtr->edge_data.set_float_attribute(opengl, position_attribute, 3, 3, 0);
+  dPtr->edge_data.set_float_attribute(opengl, position_attribute, 3, 6, 0);
+  dPtr->face_data.set_float_attribute(opengl, color_attribute, 3, 6, 3);
 
   // Setup face data
   dPtr->face_data.set_color(0.5, 0.5, 1.0);
   dPtr->face_data.set_render_mode(GL_TRIANGLES);
   dPtr->face_data.init(opengl);
-  dPtr->face_data.set_float_attribute(opengl, position_attribute, 3, 6, 0);
-  dPtr->face_data.set_float_attribute(opengl, normal_attribute, 3, 6, 3);
+  dPtr->face_data.set_float_attribute(opengl, position_attribute, 3, 9, 0);
+  dPtr->face_data.set_float_attribute(opengl, normal_attribute, 3, 9, 3);
+  dPtr->face_data.set_float_attribute(opengl, color_attribute, 3, 9, 6);
 }
 
 void SGMGraphicsWidget::paintGL()
@@ -811,7 +917,11 @@ void SGMGraphicsWidget::paintGL()
   if(dPtr->render_faces)
     dPtr->face_data.render(opengl, &dPtr->shaders);
 
-  dPtr->edge_data.render(opengl, &dPtr->shaders);
+  if(dPtr->render_vertices)
+    dPtr->vertex_data.render(opengl, &dPtr->shaders);
+
+  if(dPtr->render_edges || dPtr->render_facets)
+    dPtr->edge_data.render(opengl, &dPtr->shaders);
 }
 
 void SGMGraphicsWidget::resizeGL(int w, int h)
@@ -890,8 +1000,10 @@ void SGMGraphicsWidget::wheelEvent(QWheelEvent *event)
 void SGMGraphicsWidget::exec_context_menu(const QPoint &pos)
 {
   QMenu menu;
-  QAction* reset_camera = menu.addAction(tr("Reset camera"));
+  QAction* reset_camera = menu.addAction(tr("Reset Camera"));
   QAction* result = menu.exec(pos);
   if(result == reset_camera)
-    reset_view();
+      {
+      reset_view();
+      }
 }

@@ -60,12 +60,24 @@ namespace SGM
 
 //////////////////////////////////////////////////////////////////////////////
 //
-//  Specific Topology Traversal Functions.
+//  General Topology Data Functions.
 //
 //////////////////////////////////////////////////////////////////////////////
 
+    SGM_EXPORT bool IsSheetBody(SGM::Result     &rResult,
+                                SGM::Body const &BodyID);
+
+    SGM_EXPORT bool IsWireBody(SGM::Result     &rResult,
+                               SGM::Body const &BodyID);
+
     SGM_EXPORT SGM::Surface GetSurfaceOfFace(SGM::Result     &rResult,
                                              SGM::Face const &FaceID);
+
+    SGM_EXPORT SGM::Interval1D const &GetDomainOfEdge(SGM::Result     &rResult,
+                                                      SGM::Edge const &EdgeID);
+
+    SGM_EXPORT SGM::Point3D const &GetPointOfVertex(SGM::Result       &rResult,
+                                                    SGM::Vertex const &VertexID);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -74,6 +86,9 @@ namespace SGM
 //////////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
+
+    SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,
+                                     std::vector<SGM::Face> &aFaces);
 
     } // End of SGM namespace
 

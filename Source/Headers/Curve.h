@@ -59,6 +59,7 @@ class curve : public entity
         void Remove(SGM::Result &rResult);
 
         curve *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
 
         void AddEdge(edge *pEdge);
 
@@ -74,7 +75,7 @@ class curve : public entity
 
         bool GetClosed() const {return m_bClosed;}
 
-        bool IsTopLevel() const {return m_sEdges.empty() && m_Owners.empty();}
+        bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
 
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
@@ -96,6 +97,11 @@ class curve : public entity
         void Negate();
 
         double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
+
+        // Returns the largest integer that the curve is Cn for.  If the curve
+        // is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int Continuity() const;
 
     protected:
         
@@ -188,6 +194,11 @@ class NUBcurve: public curve
 
         std::vector<double> const &GetSeedParams() const;
 
+        // Returns the largest integer that the curve is Cn for.  If the curve
+        // is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int Continuity() const;
+
     public:
 
         std::vector<SGM::Point3D> m_aControlPoints;
@@ -217,6 +228,11 @@ class NURBcurve: public curve
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
         std::vector<double> const &GetSeedParams() const;
+
+        // Returns the largest integer that the curve is Cn for.  If the curve
+        // is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int Continuity() const;
 
     public:
 

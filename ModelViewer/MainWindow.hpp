@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <QTreeWidgetItem>
 
 #include "ModelData.hpp"
 
@@ -32,8 +33,9 @@ private slots:
   void file_stl();
   void file_exit();
 
-  void view_zoom();
-  void view_wire();
+  void view_faces();
+  void view_edges();
+  void view_vertices();
   void view_facet();
   void view_uvspace();
   void view_perspective();
@@ -58,11 +60,8 @@ private slots:
   void primitive_torus_knot();
   void primitive_revolve();
 
-  //void on_actionCreateBlock_triggered();
-
-  //void on_actionCreateSphere_triggered();
-
 private:
+
   Ui::MainWindow *ui;
   FileMenu       *mFileMenu;
   ViewMenu       *mViewMenu;

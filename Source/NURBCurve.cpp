@@ -71,4 +71,36 @@ std::vector<double> const &NURBcurve::GetSeedParams() const
         }
     return m_aSeedParams;
     }
+
+int NURBcurve::Continuity() const
+    {
+    int nDegree=(int)GetDegree();
+    size_t Index1;
+    size_t nKnots=m_aKnots.size();
+    int nCount=0;
+    int nMaxCount=0;
+    double dLookFor=m_aKnots.front();
+    for(Index1=1;Index1<nKnots;++Index1)
+        {
+        if(SGM::NearEqual(m_aKnots[Index1],m_aKnots.front(),SGM_MIN_TOL,false)==false && 
+           SGM::NearEqual(m_aKnots[Index1],m_aKnots.back(),SGM_MIN_TOL,false)==false)
+            {
+            ++nCount;
+            dLookFor=m_aKnots[Index1];
+            }
+        else if(SGM::NearEqual(m_aKnots[Index1],dLookFor,SGM_MIN_TOL,false))
+            {
+            ++nCount;
+            if(nMaxCount<nCount)
+                {
+                nMaxCount=nCount;
+                }
+            }
+        else
+            {
+            nCount=0;
+            }
+        }
+    return std::max(0,nDegree-nMaxCount);
+    }
 }

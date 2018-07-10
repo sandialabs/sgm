@@ -24,6 +24,144 @@ face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
     {
     }
 
+face *face::MakeCopy(SGM::Result &rResult) const
+    {
+    face *pAnswer=new face(rResult);
+
+    pAnswer->m_sEdges=m_sEdges;
+    pAnswer->m_mSideType=m_mSideType;
+    pAnswer->m_pVolume=m_pVolume;
+    pAnswer->m_pSurface=m_pSurface;
+    pAnswer->m_bFlipped=m_bFlipped;
+    pAnswer->m_nSides=m_nSides;
+
+    pAnswer->m_aPoints3D=m_aPoints3D;
+    pAnswer->m_aPoints2D=m_aPoints2D;
+    pAnswer->m_aEntities=m_aEntities;
+    pAnswer->m_aTriangles=m_aTriangles;
+    pAnswer->m_aNormals=m_aNormals;
+    pAnswer->m_mSeamType=m_mSeamType;
+
+    pAnswer->m_Box=m_Box;
+    pAnswer->m_sAttributes=m_sAttributes;
+    pAnswer->m_sOwners=m_sOwners;
+    return pAnswer;
+    }
+
+void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    // Run though all the pointers and change them if they are in the map.
+
+    std::vector<entity *> m_aFixedEntities;
+    m_aFixedEntities.reserve(m_aEntities.size());
+    for(auto pEntity : m_aFixedEntities)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_aFixedEntities.push_back(MapValue->second);
+            }
+        else
+            {
+            m_aFixedEntities.push_back(pEntity);
+            }
+        }
+    m_aEntities=m_aFixedEntities;
+
+    std::map<edge *,SGM::EdgeSeamType> m_sFixedSeamType;
+    for(auto SeamType : m_mSeamType)
+        {
+        auto MapValue=mEntityMap.find(SeamType.first);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedSeamType[(edge *)MapValue->second]=SeamType.second;
+            }
+        else
+            {
+            m_sFixedSeamType[SeamType.first]=SeamType.second;
+            }
+        }
+    m_mSeamType=m_sFixedSeamType;
+
+    std::map<edge *,SGM::EdgeSideType> m_sFixedSideType;
+    for(auto SideType : m_mSideType)
+        {
+        auto MapValue=mEntityMap.find(SideType.first);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedSideType[(edge *)MapValue->second]=SideType.second;
+            }
+        else
+            {
+            m_sFixedSideType[SideType.first]=SideType.second;
+            }
+        }
+    m_mSideType=m_sFixedSideType;
+
+    if(m_pVolume)
+        {
+        auto MapValue=mEntityMap.find(m_pVolume);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pVolume=(volume *)MapValue->second;
+            }
+        }
+
+    if(m_pSurface)
+        {
+        auto MapValue=mEntityMap.find(m_pSurface);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pSurface=(surface *)MapValue->second;
+            }
+        }
+
+    std::set<edge *,EntityCompare> m_sFixedEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        auto MapValue=mEntityMap.find(pEdge);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedEdges.insert((edge *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedEdges.insert(pEdge);
+            }
+        }
+    m_sEdges=m_sFixedEdges;
+
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;
+    }
+
 volume *face::GetVolume() const 
     {
     return m_pVolume;

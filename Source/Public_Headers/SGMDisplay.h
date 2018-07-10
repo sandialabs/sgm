@@ -12,6 +12,12 @@
 
 namespace SGM
     {
+    //////////////////////////////////////////////////////////////////////////
+    //
+    //  Get Functions
+    //
+    //////////////////////////////////////////////////////////////////////////
+
     SGM_EXPORT std::vector<SGM::Point3D> const &GetEdgePoints(SGM::Result     &rResult,
                                                               SGM::Edge const &EdgeID);
 
@@ -27,9 +33,6 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::UnitVector3D> const &GetFaceNormals(SGM::Result     &rResult,
                                                                     SGM::Face const &FaceID);
 
-    SGM_EXPORT SGM::Point3D const &GetPointOfVertex(SGM::Result       &rResult,
-                                                    SGM::Vertex const &VertexID);
-
     SGM_EXPORT std::vector<SGM::Point3D> const &GetComplexPoints(SGM::Result        &rResult,
                                                                  SGM::Complex const &ComplexID);
 
@@ -38,6 +41,29 @@ namespace SGM
 
     SGM_EXPORT std::vector<size_t> const &GetComplexTriangles(SGM::Result        &rResult,
                                                               SGM::Complex const &ComplexID);
+
+    // Returns false if the entity does not have a color.
+
+    SGM_EXPORT bool GetColor(SGM::Result       &rResult,
+                             SGM::Entity const &EntityID,
+                             int               &nRed,
+                             int               &nGreen,
+                             int               &nBlue);
+
+    //////////////////////////////////////////////////////////////////////////
+    //
+    //  Change Functions
+    //
+    //////////////////////////////////////////////////////////////////////////
+
+    SGM_EXPORT void ChangeColor(SGM::Result       &rResult,
+                                SGM::Entity const &EntityID,
+                                int                nRed,
+                                int                nGreen,
+                                int                nBlue);
+
+    SGM_EXPORT void RemoveColor(SGM::Result       &rResult,
+                                SGM::Entity const &EntityID);
 
     } // End of SGM namespace
 

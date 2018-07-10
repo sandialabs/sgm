@@ -33,7 +33,7 @@ void thing::DeleteEntity(entity *pEntity)
     {
     m_mAllEntities.erase(pEntity->GetID());
     switch(pEntity->GetType()) {
-      case SGM::BodyType:
+          case SGM::BodyType:
             delete reinterpret_cast<body*>(pEntity);
             break;
           case SGM::ComplexType:
@@ -50,6 +50,9 @@ void thing::DeleteEntity(entity *pEntity)
             break;
           case SGM::VertexType:
             delete reinterpret_cast<vertex*>(pEntity);
+            break;
+          case SGM::AttributeType:
+            delete reinterpret_cast<attribute*>(pEntity);
             break;
           case SGM::SurfaceType: {
             surface* pSurface = reinterpret_cast<surface*>(pEntity);
@@ -414,6 +417,32 @@ size_t thing::GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTop
         ++iter;
         }
     return sSurfaces.size();
+    }
+
+size_t thing::GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const
+    {
+    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
+    while(iter!=m_mAllEntities.end())
+        {
+        entity *pEntity=iter->second;
+        if(pEntity->GetType()==SGM::EntityType::AttributeType)
+            {
+            attribute *pAttribute=(attribute *)pEntity;
+            if(bTopLevel)
+                {
+                if(pAttribute->IsTopLevel())
+                    {
+                    sAttribute.insert(pAttribute);
+                    }
+                }
+            else
+                {
+                sAttribute.insert(pAttribute);
+                }
+            }
+        ++iter;
+        }
+    return sAttribute.size();
     }
 
 size_t thing::GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const

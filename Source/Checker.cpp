@@ -394,7 +394,13 @@ bool face::Check(SGM::Result              &rResult,
         SGM::Point3D const &A=aPoints[a];
         SGM::Point3D const &B=aPoints[b];
         SGM::Point3D const &C=aPoints[c];
-        SGM::UnitVector3D Norm=(B-A)*(C-A);
+        SGM::Vector3D TestNorm=(B-A)*(C-A);
+        double dMagnitude=TestNorm.Magnitude();
+        if(dMagnitude<SGM_FIT)
+            {
+            continue;
+            }
+        SGM::UnitVector3D Norm=TestNorm;
         SGM::UnitVector3D const &NormalA=aNormals[a];
         SGM::UnitVector3D const &NormalB=aNormals[b];
         SGM::UnitVector3D const &NormalC=aNormals[c];

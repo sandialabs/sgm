@@ -2,6 +2,7 @@
 #include "SGMMathematics.h"
 #include "SGMInterval.h"
 #include "SGMResult.h"
+#include "SGMEnums.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -781,7 +782,30 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
         SGM::Point3D const &Pos=aPoints3D[Index1];
         SGM::Point2D uv=pSurface->Inverse(Pos);
         SGM::UnitVector3D Norm;
-        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+        if(Index1==0 && pSurface->IsSingularity(uv))
+            {
+            double dParamA=aParams[0];
+            double dParamB=aParams[1];
+            double dParam=dParamA*(1.0-SGM_FIT)+dParamB*SGM_FIT;
+            SGM::Point3D ClosePos;
+            pCurve->Evaluate(dParam,&ClosePos);
+            SGM::Point2D CloseUV=pSurface->Inverse(ClosePos);
+            pSurface->Evaluate(CloseUV,nullptr,nullptr,nullptr,&Norm);
+            }
+        else if(Index1==nPoints-1 && pSurface->IsSingularity(uv))
+            {
+            double dParamA=aParams[nPoints-1];
+            double dParamB=aParams[nPoints-2];
+            double dParam=dParamA*(1.0-SGM_FIT)+dParamB*SGM_FIT;
+            SGM::Point3D ClosePos;
+            pCurve->Evaluate(dParam,&ClosePos);
+            SGM::Point2D CloseUV=pSurface->Inverse(ClosePos);
+            pSurface->Evaluate(CloseUV,nullptr,nullptr,nullptr,&Norm);
+            }
+        else
+            {
+            pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+            }
         FacetNodeNormal Node(aParams[Index1],Pos);
         Node.m_Norm=Norm;
         lNodes.push_back(Node);
@@ -2119,18 +2143,68 @@ void FindOuterLoop(SGM::Result        &,//rResult,
     }
 
 bool PointOnNodes(SGM::Point3D      const &Pos,
-                  std::vector<Node> const &aNodes)
+                  std::vector<Node> const &aNodes,
+                  size_t                  &nNode)
     {
+    nNode=0;
     size_t nNodes=aNodes.size();
     size_t Index1;
     for(Index1=0;Index1<nNodes;++Index1)
         {
         if(aNodes[Index1].m_Pos.DistanceSquared(Pos)<SGM_ZERO)
             {
+            nNode=Index1;
             return true;
             }
         }
     return false;
+    }
+
+void FindSingularitiesValues(SGM::Result               &rResult,
+                             SGM::Point3D        const &Pos,
+                             face                const *pFace,
+                             bool                       bUValues,
+                             std::map<entity *,double> &mValues)
+    {
+    std::vector<std::vector<edge *> > aaLoops;
+    std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
+    size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+    size_t Index1,Index2;
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        std::vector<edge *> const &aLoop=aaLoops[Index1];
+        std::vector<SGM::EdgeSideType> const &aSides=aaEdgeSideTypes[Index1];
+        size_t nLoop=aLoop.size();
+        for(Index2=0;Index2<nLoop;++Index2)
+            {
+            edge *pEdge=aLoop[Index2];
+            SGM::EdgeSideType nSide=aSides[Index2];
+            SGM::Interval1D const &Domain=pEdge->GetDomain();
+            double dParam=std::numeric_limits<double>::max();
+            if(SGM::NearEqual(pEdge->GetStart()->GetPoint(),Pos,SGM_MIN_TOL))
+                {
+                dParam=Domain.MidPoint(SGM_FIT);
+                }
+            else if(SGM::NearEqual(pEdge->GetEnd()->GetPoint(),Pos,SGM_MIN_TOL))
+                {
+                dParam=Domain.MidPoint(1.0-SGM_FIT);
+                }
+            if(dParam<std::numeric_limits<double>::max())
+                {
+                SGM::Point3D CPos;
+                pEdge->GetCurve()->Evaluate(dParam,&CPos);
+                SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,CPos);
+                if(bUValues)
+                    {
+                    mValues[pEdge]=uv.m_v;
+                    }
+                else
+                    {
+                    mValues[pEdge]=uv.m_u;
+                    }
+                }
+            }
+        }
     }
 
 void AddNodesAtSingularites(SGM::Result        &rResult,
@@ -2141,13 +2215,15 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
     surface const *pSurface=pFace->GetSurface();
     SGM::Interval2D const &Domain=pSurface->GetDomain();
     double dCosRefine=cos(Options.m_dEdgeAngleTol);
+    size_t nNode;
     if(pSurface->SingularHighU())
         {
         SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
         SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
         SGM::Point3D Pos;
         pSurface->Evaluate(uvA,&Pos);
-        if( PointOnNodes(Pos,aNodes)==false &&
+        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+        if( bPointOnNodes==false &&
             pFace->PointInFace(rResult,uvA)==true)
             {
             Node NodeA,NodeB;
@@ -2166,6 +2242,11 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
             aNodes.push_back(NodeA);
             aNodes.push_back(NodeB);
             Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        else if(bPointOnNodes)
+            {
+            int a=0;
+            a*=1;
             }
         }
     if(pSurface->SingularHighV())
@@ -2174,7 +2255,8 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
         SGM::Point3D Pos;
         pSurface->Evaluate(uvA,&Pos);
-        if( PointOnNodes(Pos,aNodes)==false &&
+        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+        if( bPointOnNodes==false &&
             pFace->PointInFace(rResult,uvA)==true)
             {
             Node NodeA,NodeB;
@@ -2193,6 +2275,26 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
             aNodes.push_back(NodeA);
             aNodes.push_back(NodeB);
             Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        else if(bPointOnNodes)
+            {
+            std::map<entity *,double> mValues;
+            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
+
+            size_t nNodeB=aNodes.size();
+            Node NodeB;
+            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
+            NodeB.m_nNext=aNodes[nNode].m_nNext;
+            NodeB.m_nPrevious=nNode;
+            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
+            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
+            NodeB.m_Pos=Pos;
+            aNodes.push_back(NodeB);
+
+            aNodes[nNode].m_nNext=nNodeB;
+            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
+
+            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
             }
         }
     if(pSurface->SingularLowU())
@@ -2201,7 +2303,8 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
         SGM::Point3D Pos;
         pSurface->Evaluate(uvA,&Pos);
-        if( PointOnNodes(Pos,aNodes)==false &&
+        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+        if( bPointOnNodes==false &&
             pFace->PointInFace(rResult,uvA)==true)
             {
             Node NodeA,NodeB;
@@ -2221,6 +2324,11 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
             aNodes.push_back(NodeB);
             Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
             }
+        else if(bPointOnNodes)
+            {
+            int a=0;
+            a*=1;
+            }
         }
     if(pSurface->SingularLowV())
         {
@@ -2228,7 +2336,8 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
         SGM::Point3D Pos;
         pSurface->Evaluate(uvA,&Pos);
-        if( PointOnNodes(Pos,aNodes)==false &&
+        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+        if( bPointOnNodes==false &&
             pFace->PointInFace(rResult,uvA)==true)
             {
             Node NodeA,NodeB;
@@ -2247,6 +2356,11 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
             aNodes.push_back(NodeA);
             aNodes.push_back(NodeB);
             Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+            }
+        else if(bPointOnNodes)
+            {
+            int a=0;
+            a*=1;
             }
         }
     }

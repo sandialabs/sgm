@@ -189,10 +189,40 @@ void FindVolumes(SGM::Result        &,//rResult,
         }
     }
 
-void FindFaces(SGM::Result      &,//rResult,
-               entity     const *pEntity,
+void FindAttributes(SGM::Result                         &,//rResult,
+                    entity                        const *pEntity,
+                    std::set<attribute *,EntityCompare> &sAttributes,
+                    bool                                 bTopLevel)
+    {
+    if(pEntity==nullptr)
+        {
+        return;
+        }
+    SGM::EntityType Type=pEntity->GetType();
+    if(Type==SGM::EntityType::ThingType)
+        {
+        ((thing *)pEntity)->GetAttributes(sAttributes,bTopLevel);
+        }
+    else
+        {
+        std::set<entity *,EntityCompare> const &sOwners=pEntity->GetOwners();
+        auto iter=sOwners.begin();
+        while(iter!=sOwners.end())
+            {
+            entity *pOwner=*iter;
+            if(pOwner->GetType()==SGM::AttributeType)
+                {
+                sAttributes.insert((attribute *)pOwner);
+                }
+            ++iter;
+            }
+        }
+    }
+
+void FindFaces(SGM::Result                    &,//rResult,
+               entity                   const *pEntity,
                std::set<face *,EntityCompare> &sFaces,
-               bool              bTopLevel)
+               bool                            bTopLevel)
     {
     if(pEntity==nullptr)
         {
@@ -232,9 +262,8 @@ void FindFaces(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::VertexType)
         {
         std::set<edge *,EntityCompare> const &sEdges=((vertex *)(pEntity))->GetEdges();
-        if(!sEdges.empty())
+        for(auto pEdge : sEdges)
             {
-            edge *pEdge=*(sEdges.begin());
             std::set<face *,EntityCompare> const &sVertexFaces=pEdge->GetFaces();
             sFaces.insert(sVertexFaces.begin(),sVertexFaces.end());
             }
@@ -247,13 +276,19 @@ void FindFaces(SGM::Result      &,//rResult,
     else if(Type==SGM::EntityType::CurveType)
         {
         std::set<edge *,EntityCompare> const &sEdges=((curve *)(pEntity))->GetEdges();
-        if(!sEdges.empty())
+        for(auto pEdge : sEdges)
             {
-            edge *pEdge=*(sEdges.begin());
             std::set<face *,EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
             sFaces.insert(sEdgeFaces.begin(),sEdgeFaces.end());
             }
         }
+    }
+
+void FindWireEdges(SGM::Result                    &,//rResult,
+                   entity                   const *,//pEntity,
+                   std::set<edge *,EntityCompare> &)//sEdges)
+    {
+    
     }
 
 void FindEdges(SGM::Result      &,//rResult,
@@ -880,6 +915,13 @@ size_t FindAdjacentFaces(SGM::Result                    &rResult,
     return sFaces.size();
     }
 
+void FindFacesOfCell(SGM::Result                    &rResult,
+                     face                           *pFace,
+                     std::set<face *,EntityCompare> &sFaces)
+    {
+    FindFaces(rResult,pFace->GetVolume(),sFaces,false);
+    }
+
 size_t FindCommonEdgesFromFaces(SGM::Result         &rResult,
                                 face          const *pFace1,   
                                 face          const *pFace2,   
@@ -1096,7 +1138,7 @@ void MergeOutSeams(SGM::Result &rResult,
         edge *pEdge=*EdgeIter;
         std::set<face *,EntityCompare> sFaces;
         FindFaces(rResult,pEdge,sFaces,false);
-        rResult.GetThing()->SeverOwners(pEdge);
+        pEdge->SeverRelations(rResult);
         rResult.GetThing()->DeleteEntity(pEdge);
         if(sFaces.size()==2)
             {
@@ -1108,6 +1150,145 @@ void MergeOutSeams(SGM::Result &rResult,
             }
         ++EdgeIter;
         }
+    }
+
+body *UnhookFaces(SGM::Result         &rResult,
+                  std::vector<face *> &aFaces)
+    {
+    // Find all the surfaces, curves, edges and vertices on the given faces.
+
+    std::set<surface *,EntityCompare> sSurfaces;
+    std::set<curve *,EntityCompare> sCurves;
+    std::set<edge *,EntityCompare> sEdges;
+    std::set<vertex *,EntityCompare> sVertices;
+    std::set<face *,EntityCompare> sFaces;
+    size_t nFaces=aFaces.size();
+    size_t Index1;
+    for(Index1=0;Index1<nFaces;++Index1)
+        {
+        face *pFace=aFaces[Index1];
+        sSurfaces.insert((surface *)pFace->GetSurface());
+        FindCurves(rResult,pFace,sCurves,false);
+        FindEdges(rResult,pFace,sEdges,false);
+        FindVertices(rResult,pFace,sVertices,false);
+        sFaces.insert(pFace);
+        }
+
+    // Find which surfaces, curves, edges and vertices are on other faces.
+
+    std::set<entity *> sCopyEnts;
+    for(auto pSurf : sSurfaces)
+        {
+        for(auto pFace : pSurf->GetFaces())
+            {
+            if(sFaces.find(pFace)==sFaces.end())
+                {
+                sCopyEnts.insert(pSurf);
+                break;
+                }
+            }
+        }
+    for(auto pCurve : sCurves)
+        {
+        std::set<face *,EntityCompare> sCurveFaces;
+        FindFaces(rResult,pCurve,sCurveFaces,false);
+        for(auto pFace : sCurveFaces)
+            {
+            if(sFaces.find(pFace)==sFaces.end())
+                {
+                sCopyEnts.insert(pCurve);
+                break;
+                }
+            }
+        }
+    for(auto pEdge : sEdges)
+        {
+        std::set<face *,EntityCompare> sEdgeFaces;
+        FindFaces(rResult,pEdge,sEdgeFaces,false);
+        for(auto pFace : sEdgeFaces)
+            {
+            if(sFaces.find(pFace)==sFaces.end())
+                {
+                sCopyEnts.insert(pEdge);
+                break;
+                }
+            }
+        }
+    for(auto pVertex : sVertices)
+        {
+        std::set<face *,EntityCompare> sVertexFaces;
+        FindFaces(rResult,pVertex,sVertexFaces,false);
+        for(auto pFace : sVertexFaces)
+            {
+            if(sFaces.find(pFace)==sFaces.end())
+                {
+                sCopyEnts.insert(pVertex);
+                break;
+                }
+            }
+        }
+
+    // Make a copy of all shaired entities.
+
+    body *pAnswer=new body(rResult);
+    volume *pAnswerVolume=new volume(rResult);
+    pAnswer->AddVolume(pAnswerVolume);
+    std::map<entity *,entity *> mCopyMap;
+    for(entity *pEnt : sCopyEnts)
+        {
+        mCopyMap[pEnt]=pEnt->Copy(rResult);
+        }
+
+    // Replace the shaired entities with the copies in the unhooked faces.
+
+    for(entity *pEnt : sCopyEnts)
+        {
+        switch(pEnt->GetType())
+            {
+            case SGM::EdgeType:
+                {
+                edge *pEdge=(edge *)pEnt;
+                pEdge->ReplacePointers(mCopyMap);
+                break;
+                }
+            case SGM::VertexType:
+                {
+                vertex *pVertex=(vertex *)pEnt;
+                pVertex->ReplacePointers(mCopyMap);
+                break;
+                }
+            case SGM::CurveType:
+                {
+                curve *pCurve=(curve *)pEnt;
+                pCurve->ReplacePointers(mCopyMap);
+                break;
+                }
+            case SGM::SurfaceType:
+                {
+                surface *pSurface=(surface *)pEnt;
+                pSurface->ReplacePointers(mCopyMap);
+                break;
+                }
+            case SGM::VolumeType:
+                {
+                volume *pVolume=(volume *)pEnt;
+                pVolume->ReplacePointers(mCopyMap);
+                break;
+                }
+            case SGM::BodyType:
+                {
+                body *pBody=(body *)pEnt;
+                pBody->ReplacePointers(mCopyMap);
+                break;
+                }
+            default:
+                {
+                throw;
+                }
+            }
+        }
+
+    return pAnswer;
     }
 
 } // end namespace SGMInternal

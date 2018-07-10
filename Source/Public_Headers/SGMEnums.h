@@ -47,6 +47,7 @@ namespace SGM
 
         // Attributes
         
+        AttributeType,
         StringAttributeType,
         IntegerAttributeType,
         DoubleAttributeType,

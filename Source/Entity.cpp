@@ -21,6 +21,189 @@ size_t entity::GetID() const
     return m_ID;
     }
 
+entity *entity::MakeCopy(SGM::Result &rResult) const
+    {
+    switch(m_Type)
+        {
+        case SGM::VertexType:
+            {
+            vertex const *pVertex=(vertex const *)this;
+            return pVertex->MakeCopy(rResult);
+            }
+        case SGM::CurveType:
+            {
+            curve const *pCurve=(curve const *)this;
+            return pCurve->MakeCopy(rResult);
+            }
+        case SGM::SurfaceType:
+            {
+            surface const *pSurface=(surface const *)this;
+            return pSurface->MakeCopy(rResult);
+            }
+        case SGM::EdgeType:
+            {
+            edge const *pEdge=(edge const *)this;
+            return pEdge->MakeCopy(rResult);
+            }
+        case SGM::FaceType:
+            {
+            face const *pFace=(face const *)this;
+            return pFace->MakeCopy(rResult);
+            }
+        case SGM::VolumeType:
+            {
+            volume const *pVolume=(volume const *)this;
+            return pVolume->MakeCopy(rResult);
+            }
+        case SGM::BodyType:
+            {
+            body const *pBody=(body const *)this;
+            return pBody->MakeCopy(rResult);
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
+void entity::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    switch(m_Type)
+        {
+        case SGM::VertexType:
+            {
+            vertex *pVertex=(vertex *)this;
+            pVertex->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::CurveType:
+            {
+            curve *pCurve=(curve *)this;
+            pCurve->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::SurfaceType:
+            {
+            surface *pSurface=(surface *)this;
+            pSurface->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::EdgeType:
+            {
+            edge *pEdge=(edge *)this;
+            pEdge->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::FaceType:
+            {
+            face *pFace=(face *)this;
+            pFace->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::VolumeType:
+            {
+            volume *pVolume=(volume *)this;
+            pVolume->ReplacePointers(mEntityMap);
+            break;
+            }
+        case SGM::BodyType:
+            {
+            body *pBody=(body *)this;
+            pBody->ReplacePointers(mEntityMap);
+            break;
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
+void entity::ChangeColor(SGM::Result &rResult,
+                         int nRed,int nGreen,int nBlue)
+    {
+    RemoveColor(rResult);
+    std::vector<int> aData;
+    aData.reserve(3);
+    aData.push_back(nRed);
+    aData.push_back(nGreen);
+    aData.push_back(nBlue);
+    IntegerAttribute *pColor=new IntegerAttribute(rResult,"SGM Color",aData);
+    AddAttribute(pColor);
+    pColor->AddOwner(this);
+    }
+
+void entity::RemoveColor(SGM::Result &rResult)
+    {
+    std::set<attribute *,EntityCompare>::const_iterator iter=m_sAttributes.begin();
+    while(iter!=m_sAttributes.end())
+        {
+        attribute *pAttribute=*iter;
+        if(pAttribute->GetName()=="SGM Color")
+            {
+            RemoveAttribute(pAttribute);
+            pAttribute->RemoveOwner(this);
+            if(pAttribute->GetOwners().empty())
+                {
+                rResult.GetThing()->DeleteEntity(pAttribute);
+                }
+            break;
+            }
+        ++iter;
+        }
+    }
+
+bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
+    {
+    std::set<attribute *,EntityCompare>::const_iterator iter=m_sAttributes.begin();
+    while(iter!=m_sAttributes.end())
+        {
+        attribute *pAttribute=*iter;
+        if(pAttribute->GetName()=="SGM Color")
+            {
+            IntegerAttribute *pIntegerAttribute=(IntegerAttribute *)pAttribute;
+            std::vector<int> const &aData=pIntegerAttribute->GetData();
+            nRed=aData[0];
+            nGreen=aData[1];
+            nBlue=aData[2];
+            return true;
+            }
+        ++iter;
+        }
+
+    // If the object does not have a color then it may get the color
+    // from the volume or body.
+
+    switch(m_Type)
+        {
+        case SGM::VolumeType:
+            {
+            volume const *pVolume=(volume const *)this;
+            if(pVolume->GetBody())
+                {
+                return pVolume->GetBody()->GetColor(nRed,nGreen,nBlue);
+                }
+            break;
+            }
+        case SGM::FaceType:
+            {
+            face const *pFace=(face const *)this;
+            if(pFace->GetVolume())
+                {
+                return pFace->GetVolume()->GetColor(nRed,nGreen,nBlue);
+                }
+            break;
+            }
+        default:
+            {
+            break;
+            }
+        }
+    
+    return false;
+    }
+
 SGM::Interval3D const &entity::GetBox(SGM::Result &rResult) const
     {
     if(m_Box.IsEmpty())
@@ -132,6 +315,31 @@ entity *entity::Copy(SGM::Result &rResult) const
             curve const *pCurve=(curve const *)this;
             return pCurve->MakeCopy(rResult);
             }
+        case SGM::SurfaceType:
+            {
+            surface const *pSurface=(surface const *)this;
+            return pSurface->MakeCopy(rResult);
+            }
+        case SGM::EdgeType:
+            {
+            edge const *pEdge=(edge const *)this;
+            return pEdge->MakeCopy(rResult);
+            }
+        case SGM::VertexType:
+            {
+            vertex const *pVertex=(vertex const *)this;
+            return pVertex->MakeCopy(rResult);
+            }
+        case SGM::VolumeType:
+            {
+            volume const *pVolume=(volume const *)this;
+            return pVolume->MakeCopy(rResult);
+            }
+        case SGM::BodyType:
+            {
+            body const *pBody=(body const *)this;
+            return pBody->MakeCopy(rResult);
+            }
         default:
             {
             throw;
@@ -139,9 +347,94 @@ entity *entity::Copy(SGM::Result &rResult) const
         }
     }
 
-void entity::SeverOwners()
+void entity::SeverRelations(SGM::Result &rResult)
     {
-    for (entity *pOwner : m_Owners)
+    switch(GetType())
+        {
+        case SGM::BodyType:
+            {
+            body *pBody=(body *)this;
+            std::set<volume *,EntityCompare> sVolumes=pBody->GetVolumes();
+            for(volume *pVolume : sVolumes)
+                {
+                pBody->RemoveVolume(pVolume);
+                }
+            break;
+            }
+        case SGM::VolumeType:
+            {
+            volume *pVolume=(volume *)this;
+            if(pVolume->GetBody())
+                {
+                pVolume->GetBody()->RemoveVolume(pVolume);
+                }
+            std::set<edge *,EntityCompare> sEdges=pVolume->GetEdges();
+            for(edge *pEdge : sEdges)
+                {
+                pVolume->RemoveEdge(pEdge);
+                }
+            std::set<face *,EntityCompare> sFaces=pVolume->GetFaces();
+            for(face *pFace : sFaces)
+                {
+                pVolume->RemoveFace(pFace);
+                }
+            break;
+            }
+        case SGM::FaceType:
+            {
+            face *pFace=(face *)this;
+            if(pFace->GetVolume())
+                {
+                pFace->GetVolume()->RemoveFace(pFace);
+                }
+            std::set<edge *,EntityCompare> sEdges=pFace->GetEdges();
+            for(edge *pEdge : sEdges)
+                {
+                pEdge->RemoveFace(pFace);
+                }
+            break;
+            }
+        case SGM::EdgeType:
+            {
+            edge *pEdge=(edge *)this;
+            std::set<face *,EntityCompare> sFaces=pEdge->GetFaces();
+            for(auto pFace : sFaces)
+                {
+                pFace->RemoveEdge(rResult,pEdge);
+                }
+            if(pEdge->GetStart())
+                {
+                pEdge->GetStart()->RemoveEdge(pEdge);
+                }
+            if(pEdge->GetEnd())
+                {
+                pEdge->GetEnd()->RemoveEdge(pEdge);
+                }
+            break;
+            }
+        case SGM::VertexType:
+            {
+            vertex *pVertex=(vertex *)this;
+            std::set<edge *,EntityCompare> sEdges=pVertex->GetEdges();
+            for(auto pEdge : sEdges)
+                {
+                if(pEdge->GetStart()==pVertex)
+                    {
+                    pEdge->SetStart(nullptr);
+                    }
+                if(pEdge->GetEnd()==pVertex)
+                    {
+                    pEdge->SetEnd(nullptr);
+                    }
+                }
+            break;
+            }
+        default:
+            {
+            break;
+            }
+        }
+    for (entity *pOwner : m_sOwners)
         {
         pOwner->RemoveOwner(this);
         }

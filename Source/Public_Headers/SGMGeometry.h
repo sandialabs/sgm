@@ -147,6 +147,9 @@ SGM_EXPORT SGM::Point2D SurfaceInverse(SGM::Result        &rResult,
 SGM_EXPORT SGM::EntityType GetCurveType(SGM::Result      &rResult,
                                         SGM::Curve const &CurveID);
 
+SGM_EXPORT SGM::Interval1D const &GetDomainOfCurve(SGM::Result      &rResult,
+                                                   SGM::Curve const &CurveID);
+
 SGM_EXPORT bool GetLineData(SGM::Result       &rResult,
                             SGM::Curve  const &CurveID,
                             SGM::Point3D      &Origin,
@@ -209,6 +212,9 @@ SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
 
 SGM_EXPORT SGM::EntityType GetSurfaceType(SGM::Result        &rResult,
                                           SGM::Surface const &SurfaceID);
+
+SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
+                                                     SGM::Surface const &SurfaceID);
              
 SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Surface const &SurfaceID,

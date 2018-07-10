@@ -1,13 +1,16 @@
 #include "SGMVector.h"
 #include "SGMInterval.h"
 #include "SGMMathematics.h"
+
 #include "EntityClasses.h"
 #include "Curve.h"
+
 #include "Faceter.h"
 #include <limits>
 #include <vector>
 #include <algorithm>
 #include <cfloat>
+
 namespace SGMInternal
 {
 NUBcurve::NUBcurve(SGM::Result                     &rResult,
@@ -79,6 +82,38 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
+    }
+
+int NUBcurve::Continuity() const
+    {
+    int nDegree=(int)GetDegree();
+    size_t Index1;
+    size_t nKnots=m_aKnots.size();
+    int nCount=0;
+    int nMaxCount=0;
+    double dLookFor=m_aKnots.front();
+    for(Index1=1;Index1<nKnots;++Index1)
+        {
+        if(SGM::NearEqual(m_aKnots[Index1],m_aKnots.front(),SGM_MIN_TOL,false)==false && 
+           SGM::NearEqual(m_aKnots[Index1],m_aKnots.back(),SGM_MIN_TOL,false)==false)
+            {
+            ++nCount;
+            dLookFor=m_aKnots[Index1];
+            }
+        else if(SGM::NearEqual(m_aKnots[Index1],dLookFor,SGM_MIN_TOL,false))
+            {
+            ++nCount;
+            if(nMaxCount<nCount)
+                {
+                nMaxCount=nCount;
+                }
+            }
+        else
+            {
+            nCount=0;
+            }
+        }
+    return std::max(0,nDegree-nMaxCount);
     }
 
 // From "The NURBS Book", page 72, Algorithm A2.3.

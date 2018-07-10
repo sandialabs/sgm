@@ -11,8 +11,10 @@ public:
   ~ViewMenu();
 
 signals:
-  void zoom();
-  void wire();
+
+  void faces();
+  void edges();
+  void vertices();
   void facet();
   void uvspace();
   void perspective();

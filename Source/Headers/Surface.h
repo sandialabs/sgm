@@ -40,6 +40,9 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
+        surface *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+
         void AddFace(face *pFace);
 
         void RemoveFace(face *pFace);
@@ -92,7 +95,7 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv) const;
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_Owners.empty();}
+        bool IsTopLevel() const {return m_sFaces.empty() && m_sOwners.empty();}
 
         bool IsSame(surface const *pOther,double dTolerance) const;
 
@@ -137,6 +140,9 @@ class plane : public surface
               SGM::UnitVector3D const &YAxis,
               SGM::UnitVector3D const &ZAxis,
               double                   dScale);
+
+        plane(SGM::Result  &rResult,
+              plane  const *pPlane);
         
         curve *UParamLine(double dU) const;
 

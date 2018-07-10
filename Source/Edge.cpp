@@ -3,6 +3,7 @@
 #include "Faceter.h"
 #include "Curve.h"
 #include <utility>
+
 namespace SGMInternal
 {
 edge::edge(SGM::Result &rResult):
@@ -10,6 +11,110 @@ edge::edge(SGM::Result &rResult):
     m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
     {
     m_dTolerance=SGM_MIN_TOL;
+    }
+
+edge *edge::MakeCopy(SGM::Result &rResult) const
+    {
+    edge *pAnswer=new edge(rResult);
+    pAnswer->m_pStart=m_pStart;
+    pAnswer->m_pEnd=m_pEnd;
+    pAnswer->m_sFaces=m_sFaces;
+    pAnswer->m_pVolume=m_pVolume;
+    pAnswer->m_pCurve=m_pCurve;
+    pAnswer->m_aPoints3D=m_aPoints3D;
+    pAnswer->m_aParams=m_aParams;
+    pAnswer->m_Domain=m_Domain;
+    pAnswer->m_dTolerance=m_dTolerance;
+    pAnswer->m_Box=m_Box;
+    pAnswer->m_sAttributes=m_sAttributes;
+    pAnswer->m_sOwners=m_sOwners;
+    return pAnswer;
+    }
+
+void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    // Run though all the pointers and change them if they are in the map.
+
+    std::set<face *,EntityCompare> m_sFixedFaces;
+    for(auto pFace : m_sFaces)
+        {
+        auto MapValue=mEntityMap.find(pFace);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedFaces.insert((face *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedFaces.insert(pFace);
+            }
+        }
+    m_sFaces=m_sFixedFaces;
+
+    if(m_pCurve)
+        {
+        auto MapValue=mEntityMap.find(m_pCurve);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pCurve=(curve *)MapValue->second;
+            }
+        }
+
+    if(m_pVolume)
+        {
+        auto MapValue=mEntityMap.find(m_pVolume);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pVolume=(volume *)MapValue->second;
+            }
+        }
+
+    if(m_pEnd)
+        {
+        auto MapValue=mEntityMap.find(m_pEnd);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pEnd=(vertex *)MapValue->second;
+            }
+        }
+
+    if(m_pStart)
+        {
+        auto MapValue=mEntityMap.find(m_pStart);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_pStart=(vertex *)MapValue->second;
+            }
+        }
+   
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;
     }
 
 void edge::TransformFacets(SGM::Transform3D const &Trans)

@@ -139,6 +139,15 @@ namespace SGM
             Surface();
         };
 
+    class SGM_EXPORT Attribute : public SGM::Entity
+        {
+        public:
+
+            Attribute(size_t nID):Entity(nID) {}
+
+            Attribute();
+        };
+
     } // End of SGM namespace
 
 #endif // SGM_ENTITY_CLASSES_H

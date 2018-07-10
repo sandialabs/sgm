@@ -10,6 +10,7 @@
 #include "SGMComplex.h"
 #include "SGMPrimitives.h"
 #include "SGMDisplay.h"
+#include "SGMTopology.h"
 #include "SGMGeometry.h"
 #include "SGMSegment.h"
 

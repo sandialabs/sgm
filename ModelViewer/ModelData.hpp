@@ -6,8 +6,11 @@
 #include "SGMEntityClasses.h"
 #include "SGMVector.h"
 
+#include "qtreewidget.h"
+
 #include <vector>
 #include <string>
+#include <map>
 
 class SGMGraphicsWidget;
 class SGMTreeWidget;
@@ -28,9 +31,11 @@ public:
 
   void stl(QString const &SaveName);
 
-  void zoom();
+  void edge_mode();
 
-  void wire_mode();
+  void face_mode();
+
+  void vertex_mode();
 
   void facet_mode();
 
@@ -103,20 +108,61 @@ public:
                          size_t                  nA,
                          size_t                  nB);
 
+  std::map<QTreeWidgetItem *,SGM::Entity> const &GetMap() const;
+
+  size_t GetSelection(std::vector<SGM::Entity> &aEnts) const;
+
+  void ClearSelection();
+
+  void ChangeColor(SGM::Entity EntityID,int nRed,int nGreen,int nBlue);
+
+  void RemoveColor(SGM::Entity EntityID);
+
+  void Copy(SGM::Entity EntityID);
+
+  void Unhook(std::vector<SGM::Entity> &aEnts);
+
+  void DeleteEntity(SGM::Entity EntityID);
+
+  void ChangeDefaultFaceColor(int nRed,int nGreen,int nBlue) {dDefaultFaceRed=nRed/255.0;dDefaultFaceGreen=nGreen/255.0;dDefaultFaceBlue=nBlue/255.0;}
+
+  void ChangeDefaultEdgeColor(int nRed,int nGreen,int nBlue) {dDefaultEdgeRed=nRed/255.0;dDefaultEdgeGreen=nGreen/255.0;dDefaultEdgeBlue=nBlue/255.0;}
+  
+  void rebuild_tree();
+  
+  void rebuild_graphics(bool bReset=false);
+
 private:
-  pModelData* dPtr;
+
+  pModelData    *dPtr;
   SGMTreeWidget *mTree;
 
-  bool mwire_mode;
+  bool mvertex_mode;
+  bool medge_mode;
+  bool mface_mode;
   bool mfacet_mode;
   bool muvspace_mode;
   bool mperspective_mode;
 
-  void on_entity_added(const SGM::Entity &ent);
-  void on_entity_removed(const SGM::Entity &ent);
+  void add_body_to_tree(QTreeWidgetItem *parent,SGM::Body BodyID);
+  void add_volume_to_tree(QTreeWidgetItem *parent,SGM::Volume VolumeID);
+  void add_face_to_tree(QTreeWidgetItem *parent,SGM::Face FaceID);
+  void add_edge_to_tree(QTreeWidgetItem *parent,SGM::Edge EdgeID);
+  void add_vertex_to_tree(QTreeWidgetItem *parent,SGM::Vertex VertexID);
+  void add_surface_to_tree(QTreeWidgetItem *parent,SGM::Surface SurfaceID);
+  void add_curve_to_tree(QTreeWidgetItem *parent,SGM::Curve CurveID);
+  void add_attribute_to_tree(QTreeWidgetItem *parent,SGM::Attribute AttributeID);
+  void add_attributes_to_tree(QTreeWidgetItem *parent,SGM::Entity EntityID);
 
-  void rebuild_tree();
-  void rebuild_graphics();
+  double dDefaultFaceRed;
+  double dDefaultFaceGreen;
+  double dDefaultFaceBlue;
+
+  double dDefaultEdgeRed;
+  double dDefaultEdgeGreen;
+  double dDefaultEdgeBlue;
+
+  SGM::Entity CurrentEnt;
 };
 
 #endif // MODELDATA_HPP

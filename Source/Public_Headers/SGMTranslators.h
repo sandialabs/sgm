@@ -24,7 +24,11 @@ namespace SGM
                 m_b2D(false),
                 m_bSingleVolume(false),
                 m_bVerbose(false),
-                m_bRemoveSeams(true) {}
+                //m_bRemoveSeams(true),
+                //m_bHeal(true)
+                m_bRemoveSeams(false),
+                m_bHeal(false)
+                {}
 
             explicit TranslatorOptions(std::string const &sOptions);
 
@@ -55,6 +59,10 @@ namespace SGM
                                    // Used in SGM write.
 
             bool m_bRemoveSeams;   // Merge seams out when reading.
+                                   // Default is true,
+                                   // Used in STEP read.
+
+            bool m_bHeal;          // Runs the healer on the part.
                                    // Default is true,
                                    // Used in STEP read.
         };

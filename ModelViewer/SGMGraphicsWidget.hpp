@@ -17,13 +17,20 @@ public:
 
   // Add triangles for a face to the internal buffer. The face will be rendered after
   // flush() has been called.
-  void add_face(const std::vector<SGM::Point3D> &points,
-                const std::vector<unsigned int> &triangles,
-                const std::vector<SGM::UnitVector3D> &normals);
+  void add_face(const std::vector<SGM::Point3D>      &points,
+                const std::vector<unsigned int>      &triangles,
+                const std::vector<SGM::UnitVector3D> &normals,
+                const std::vector<SGM::Vector3D>     &colors);
 
   // Add points for an edge to the internal buffer. The edge will be rendered after
   // flush() has been called.
-  void add_edge(const std::vector<SGM::Point3D> &points);
+  void add_edge(std::vector<SGM::Point3D>  const &points,
+                std::vector<SGM::Vector3D> const &colors);
+
+  // Add the point for a vertex to the internal buffer. The vertex will be rendered after
+  // flush() has been called.
+  void add_vertex(SGM::Point3D  const &Pos,
+                  SGM::Vector3D const &ColorVec);
 
   // Flush the internal graphics buffer to push the data to the GPU and actually render.
   void flush();
@@ -31,7 +38,13 @@ public:
   // Reset the camera perspective
   void reset_view();
 
+  // Reset the bounding box.
+  void reset_bounds();
+
+  void set_render_vertices(bool render);
   void set_render_faces(bool render);
+  void set_render_facets(bool render);
+  void set_render_edges(bool render);
   void enable_perspective(bool enable);
 
   // Get the default format that the QApplication needs for rendering

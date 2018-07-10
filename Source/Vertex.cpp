@@ -15,6 +15,66 @@ vertex::vertex(SGM::Result  &rResult,
     {
     }
 
+vertex *vertex::MakeCopy(SGM::Result &rResult) const
+    {
+    vertex *pAnswer=new vertex(rResult,m_Pos);
+    pAnswer->m_sEdges=m_sEdges;
+    pAnswer->m_Box=m_Box;
+    pAnswer->m_sAttributes=m_sAttributes;
+    pAnswer->m_sOwners=m_sOwners;
+    return pAnswer;
+    }
+
+void vertex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    // Run though all the pointers and change them if they are in the map.
+    
+    std::set<edge *,EntityCompare> m_sFixedEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        auto MapValue=mEntityMap.find(pEdge);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedEdges.insert((edge *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedEdges.insert(pEdge);
+            }
+        }
+    m_sEdges=m_sFixedEdges;
+
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;
+    }
+
 void vertex::RemoveEdge(edge *pEdge)
     {
     m_sEdges.erase(pEdge);

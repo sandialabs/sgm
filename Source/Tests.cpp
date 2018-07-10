@@ -537,7 +537,7 @@ bool TestCurve(SGMInternal::curve const *pCurve,
         bAnswer=false;
         }
 
-    double h=SGM_FIT;
+    double h=SGM_MIN_TOL;
     SGM::Point3D Pos0,Pos1,Pos2,Pos3;
     pCurve->Evaluate(t1-2*h,&Pos0);
     pCurve->Evaluate(t1-h,&Pos1);
@@ -547,11 +547,13 @@ bool TestCurve(SGMInternal::curve const *pCurve,
     SGM::Vector3D VecN1=SGM::FirstDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos2,Pos3,h);
     SGM::Vector3D VecN2=SGM::SecondDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos,Pos2,Pos3,h);
 
-    if(SGM::NearEqual(Vec1,VecN1,SGM_MIN_TOL)==false)
+    if(SGM::NearEqual(Vec1,VecN1,SGM_FIT)==false)
         {
         bAnswer=false;
         }
-    if(SGM::NearEqual(Vec2,VecN2,SGM_FIT)==false)
+
+    double dDist=std::max(1.0,sqrt(Pos0.m_x*Pos0.m_x+Pos0.m_y*Pos0.m_y+Pos0.m_z*Pos0.m_z));
+    if(1<pCurve->Continuity() && SGM::NearEqual(Vec2,VecN2,SGM_FIT*dDist)==false)
         {
         bAnswer=false;
         }

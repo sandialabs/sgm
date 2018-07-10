@@ -578,12 +578,12 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
         for(Index1=0;Index1<nRoots;++Index1)
             {
             SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
-            SGM::Point3D Pos3D=Origin+Pos.m_u*XVec+Pos.m_v*YVec;
+            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             double t=pParabola->Inverse(Pos3D,&CPos);
             if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
                 {
-                aPoints.push_back(Origin+Pos.m_u*XVec+Pos.m_v*YVec);
+                aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
                 if(nRoots==1)
                     {
                     SGM::Vector3D D1;
@@ -607,7 +607,7 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
         if(nRoots==0)
             {
             SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
-            SGM::Point3D Pos3D=Origin+Pos.m_u*XVec+Pos.m_v*YVec;
+            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pParabola->Inverse(Pos3D,&CPos);
             if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
@@ -666,7 +666,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         double rbb=1.0/(dB*dB);
         double c0=d*d*raa-f*f*rbb;
         double c1=2.0*c*d*raa-2*e*f*rbb;
-        double c2=c*c*raa-e*rbb-1.0;
+        double c2=c*c*raa-e*e*rbb-1.0;
 
         // (c+d*t)^2/a^2-(e+f*t)^2/b^2-1=0
         // (c^2/a^2 - e^2/b^2 - 1) + t ((2 c d)/a^2 - (2 e f)/b^2) + t^2 (d^2/a^2 - f^2/b^2) 
@@ -677,12 +677,12 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         for(Index1=0;Index1<nRoots;++Index1)
             {
             SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
-            SGM::Point3D Pos3D=Origin+Pos.m_u*XVec+Pos.m_v*YVec;
+            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             double t=pHyperbola->Inverse(Pos3D,&CPos);
             if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
                 {
-                aPoints.push_back(Origin+Pos.m_u*XVec+Pos.m_v*YVec);
+                aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
                 if(nRoots==1)
                     {
                     SGM::Vector3D D1;
@@ -706,7 +706,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         if(nRoots==0)
             {
             SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
-            SGM::Point3D Pos3D=Origin+Pos.m_u*XVec+Pos.m_v*YVec;
+            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pHyperbola->Inverse(Pos3D,&CPos);
             if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
@@ -765,7 +765,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         double rbb=1.0/(dB*dB);
         double c0=d*d*raa+f*f*rbb;
         double c1=2.0*c*d*raa+2*e*f*rbb;
-        double c2=c*c*raa+e*rbb-1.0;
+        double c2=c*c*raa+e*e*rbb-1.0;
 
         // (c+d*t)^2/a^2+(e+f*t)^2/b^2-1=0
         // (c^2/a^2 + e^2/b^2 - 1) + t ((2 c d)/a^2 + (2 e f)/b^2) + t^2 (d^2/a^2 + f^2/b^2) 
@@ -776,7 +776,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         for(Index1=0;Index1<nRoots;++Index1)
             {
             SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
-            aPoints.push_back(Origin+Pos.m_u*XVec+Pos.m_v*YVec);
+            aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
             if(nRoots==1)
                 {
                 aTypes.push_back(SGM::IntersectionType::TangentType);
@@ -789,7 +789,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         if(nRoots==0)
             {
             SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
-            SGM::Point3D Pos3D=Origin+Pos.m_u*XVec+Pos.m_v*YVec;
+            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pEllipse->Inverse(Pos3D,&CPos);
             if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)

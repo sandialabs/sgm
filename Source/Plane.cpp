@@ -37,4 +37,12 @@ plane::plane(SGM::Result        &rResult,
     m_bClosedU=false;
     m_bClosedV=false;
     }
+
+plane::plane(SGM::Result &rResult,
+             plane const *pPlane):
+    surface(rResult,SGM::PlaneType),m_Origin(pPlane->m_Origin),
+    m_XAxis(pPlane->m_XAxis),m_YAxis(pPlane->m_YAxis),m_ZAxis(pPlane->m_ZAxis),m_dScale(pPlane->m_dScale)
+    {
+    m_Domain=pPlane->m_Domain;
+    }
 }

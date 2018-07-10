@@ -1,4 +1,5 @@
 #include "MainWindow.hpp"
+#include "MainWindow.moc"
 #include "ui_MainWindow.h"
 
 #include <QApplication>
@@ -8,6 +9,8 @@
 
 #include "qinputdialog.h"
 #include "qmessagebox.h"
+#include "qsizepolicy.h"
+
 #include "FileMenu.hpp"
 #include "ViewMenu.hpp"
 #include "TestMenu.hpp"
@@ -18,6 +21,9 @@
 #include "SGMPrimitives.h"
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
+#include "SGMDisplay.h"
+
+#include <map>
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -44,10 +50,12 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(file_exit()));
 
   ui->menubar->addMenu(mViewMenu);
-  connect(mViewMenu, SIGNAL(zoom()),
-          this, SLOT(view_zoom()));
-  connect(mViewMenu, SIGNAL(wire()),
-          this, SLOT(view_wire()));
+  connect(mViewMenu, SIGNAL(faces()),
+          this, SLOT(view_faces()));
+  connect(mViewMenu, SIGNAL(edges()),
+          this, SLOT(view_edges()));
+  connect(mViewMenu, SIGNAL(vertices()),
+          this, SLOT(view_vertices()));
   connect(mViewMenu, SIGNAL(facet()),
           this, SLOT(view_facet()));
   connect(mViewMenu, SIGNAL(uvspace()),
@@ -97,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
   mModel->set_tree_widget(ui->twTree);
   mModel->set_graphics_widget(ui->mGraphics);
-
+  
   read_settings();
 }
 
@@ -178,14 +186,28 @@ void MainWindow::read_settings()
     restoreState(settings.value("MainWindow/state").toByteArray());
 }
 
+/*
 void MainWindow::view_zoom()
     {
-    
+    QDialog ViewOptions;
+    ViewOptions.setWindowTitle("View Options");
+    ViewOptions.exec();
+    }
+*/
+
+void MainWindow::view_faces()
+    {
+    mModel->face_mode();
     }
 
-void MainWindow::view_wire()
+void MainWindow::view_edges()
     {
-    mModel->wire_mode();
+    mModel->edge_mode();
+    }
+
+void MainWindow::view_vertices()
+    {
+    mModel->vertex_mode();
     }
 
 void MainWindow::view_facet()
@@ -278,6 +300,7 @@ void MainWindow::test_check()
       QMessageBox Msgbox;
         Msgbox.setText(Message.c_str());
         Msgbox.exec();
+        Msgbox.setSizeGripEnabled(true);
       }
 }
 

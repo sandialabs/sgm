@@ -32,29 +32,89 @@ void curve::RemoveEdge(edge *pEdge)
 
 curve *curve::MakeCopy(SGM::Result &rResult) const
     {
+    curve *pAnswer=NULL;
     switch(m_CurveType)
         {
         case SGM::LineType:
             {
-            return new line(rResult,(line const *)this);
+            pAnswer = new line(rResult,(line const *)this);
+            break;
             }
         case SGM::CircleType:
             {
-            return new circle(rResult,(circle const *)this);
+            pAnswer = new circle(rResult,(circle const *)this);
+            break;
             }
         case SGM::TorusKnotCurveType:
             {
-            return new TorusKnot(rResult,(TorusKnot const *)this);
+            pAnswer = new TorusKnot(rResult,(TorusKnot const *)this);
+            break;
             }
         case SGM::NUBCurveType:
             {
-            return new NUBcurve(rResult,(NUBcurve const *)this);
+            pAnswer = new NUBcurve(rResult,(NUBcurve const *)this);
+            break;
             }
         default:
             {
             throw;
             }
         }
+    pAnswer->m_sEdges=m_sEdges;
+    pAnswer->m_sOwners=m_sOwners;
+    pAnswer->m_sAttributes=m_sAttributes;
+    pAnswer->m_Box=m_Box;
+    return pAnswer;
+    }
+
+void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    // Run though all the pointers and change them if they are in the map.
+    
+    std::set<edge *,EntityCompare> m_sFixedEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        auto MapValue=mEntityMap.find(pEdge);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedEdges.insert((edge *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedEdges.insert(pEdge);
+            }
+        }
+    m_sEdges=m_sFixedEdges;
+
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;
     }
 
 double NewtonsMethod(curve        const *pCurve,
@@ -479,6 +539,31 @@ double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
             {
             return SGM::Integrate1D(DerivativeMagnitude,Domain,this,dTolerance);
             break;
+            }
+        }
+    }
+
+int curve::Continuity() const
+    {
+    switch(m_CurveType)
+        {
+        case SGM::HermiteCurveType:
+            {
+            return 1;
+            }
+        case SGM::NUBCurveType:
+            {
+            NUBcurve const *pNUB=(NUBcurve const*)this;
+            return pNUB->Continuity();
+            }
+        case SGM::NURBCurveType:
+            {
+            NURBcurve const *pNURB=(NURBcurve const*)this;
+            return pNURB->Continuity();
+            }
+        default:
+            {
+            return std::numeric_limits<int>::max();
             }
         }
     }

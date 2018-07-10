@@ -34,6 +34,10 @@ void FindEdges(SGM::Result                    &rResult,
                std::set<edge *,EntityCompare> &sEdges,
                bool                            bTopLevel=false);
 
+void FindWireEdges(SGM::Result                    &rResult,
+                   entity                   const *pEntity,
+                   std::set<edge *,EntityCompare> &sEdges);
+
 void FindVertices(SGM::Result                      &rResult,
                   entity                     const *pEntity,
                   std::set<vertex *,EntityCompare> &sVertices,
@@ -81,6 +85,12 @@ size_t FindAdjacentFaces(SGM::Result                    &rResult,
                          face                     const *pFace,
                          std::set<face *,EntityCompare> &sFaces);
 
+// Returns all the faces in the same cell as the one sided face pFace.
+
+void FindFacesOfCell(SGM::Result                    &rResult,
+                     face                           *pFace,
+                     std::set<face *,EntityCompare> &sFaces);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Ordering Functions
@@ -111,6 +121,20 @@ void RemoveFace(SGM::Result &rResult,
 
 void MergeOutSeams(SGM::Result &rResult,
                    entity      *pEntity);
+
+body *UnhookFaces(SGM::Result         &rResult,
+                  std::vector<face *> &aFaces);
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Other functions put here for now.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+void FindAttributes(SGM::Result                         &rResult,
+                    entity                        const *pEntity,
+                    std::set<attribute *,EntityCompare> &sAttributes,
+                    bool                                 bTopLevel=false);
 
 }
 #endif // TOPOLOGY_H

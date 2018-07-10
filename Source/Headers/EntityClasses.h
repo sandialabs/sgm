@@ -26,6 +26,7 @@ class vertex;
 class surface;
 class curve;
 class entity;
+class attribute;
 
 struct EntityCompare {
     bool operator()(entity* const& ent1, entity* const& ent2) const;
@@ -37,6 +38,9 @@ class entity
 
         entity(SGM::Result     &rResult,
                SGM::EntityType  Type);
+
+        entity *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
         
         size_t GetID() const;
 
@@ -44,31 +48,45 @@ class entity
 
         SGM::EntityType GetType() const {return m_Type;}
 
+        // If the entity does not have a color, then false is returned.
+
+        bool GetColor(int &nRed,int &nGreen,int &nBlue) const;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        void AddOwner(entity *pEntity) {m_Owners.insert(pEntity);}
+        void AddOwner(entity *pEntity) {m_sOwners.insert(pEntity);}
+        void RemoveOwner(entity *pEntity) {m_sOwners.erase(pEntity);}
 
-        void RemoveOwner(entity *pEntity) {m_Owners.erase(pEntity);}
+        void SeverRelations(SGM::Result &rResult);
 
-        std::set<entity *,EntityCompare> const &GetOwners() const {return m_Owners;}
+        std::set<entity *,EntityCompare> const &GetOwners() const {return m_sOwners;}
 
+        void AddAttribute(attribute *pEntity) {m_sAttributes.insert(pEntity);}
+        void RemoveAttribute(attribute *pEntity) {m_sAttributes.erase(pEntity);}
+        std::set<attribute *,EntityCompare> const &GetAttributes() const {return m_sAttributes;}
+        
         entity *Copy(SGM::Result &rResult) const;
 
         void TransformBox(SGM::Transform3D const &Trans);
 
-        void SeverOwners();
-
+        
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
+
+        void ChangeColor(SGM::Result &rResult,
+                         int nRed,int nGreen,int nBlue);
+
+        void RemoveColor(SGM::Result &rResult);
 
     protected:
 
         size_t          m_ID;
         SGM::EntityType m_Type;
 
-        mutable std::set<entity *,EntityCompare> m_Owners;
-        mutable SGM::Interval3D                  m_Box;
+        mutable std::set<entity *,EntityCompare>    m_sOwners;
+        mutable std::set<attribute *,EntityCompare> m_sAttributes;
+        mutable SGM::Interval3D                     m_Box;
 
         // Only to be called from the thing constructor.
 
@@ -119,6 +137,8 @@ class thing : public entity
         size_t GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const;
 
         size_t GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const;
+
+        size_t GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const;
         
         // Find methods
         
@@ -168,9 +188,14 @@ class body : public topology
 
         // Construction methods
 
-        explicit body(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+        explicit body(SGM::Result &rResult);
+
+        body *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
 
         void AddVolume(volume *pVolume);
+
+        void RemoveVolume(volume *pVolume);
 
         void SetPoints(std::vector<SGM::Point3D> const &aPoints);
 
@@ -187,7 +212,11 @@ class body : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildern) const;
 
-        bool IsTopLevel() const {return m_Owners.empty();}
+        bool IsTopLevel() const {return m_sOwners.empty();}
+
+        bool IsSheetBody(SGM::Result &rResult) const;
+
+        bool IsWireBody(SGM::Result &rResult) const;
 
         void ClearBox(SGM::Result &rResult) const;
 
@@ -206,6 +235,9 @@ class complex : public topology
         // Construction methods
 
         explicit complex(SGM::Result &rResult);
+
+        complex *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints);
@@ -228,7 +260,7 @@ class complex : public topology
 
         std::vector<unsigned int> const &GetTriangles() const {return m_aTriangles;}
 
-        bool IsTopLevel() const {return m_Owners.empty();}
+        bool IsTopLevel() const {return m_sOwners.empty();}
 
         // Other methods
 
@@ -255,11 +287,16 @@ class volume : public topology
 
         explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
 
+        volume *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+
         void AddFace(face *pFace);
 
         void RemoveFace(face *pFace);
 
         void AddEdge(edge *pEdge);
+
+        void RemoveEdge(edge *pEdge);
 
         void SetBody(body *pBody) {m_pBody=pBody;}
         
@@ -271,7 +308,7 @@ class volume : public topology
 
         SGM::BoxTree const &GetFaceTree(SGM::Result &rResult) const;
 
-        bool IsTopLevel() const {return m_pBody==nullptr && m_Owners.empty();}
+        bool IsTopLevel() const {return m_pBody==nullptr && m_sOwners.empty();}
 
         // Other methods
 
@@ -303,6 +340,9 @@ class face : public topology
         // Construction methods
 
         explicit face(SGM::Result &rResult);
+
+        face *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
 
@@ -353,8 +393,8 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const {return m_pVolume==nullptr && m_Owners.empty();}
-        
+        bool IsTopLevel() const {return m_pVolume==nullptr && m_sOwners.empty();}
+
         // Find methods
 
         size_t FindLoops(SGM::Result                                  &rResult,
@@ -406,6 +446,9 @@ class edge : public topology
 
         explicit edge(SGM::Result &rResult);
 
+        edge *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+
         // Set and Remove Methods
 
         void SetStart(vertex *pStart);
@@ -443,7 +486,7 @@ class edge : public topology
 
         double GetTolerance() const {return m_dTolerance;}
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr && m_Owners.empty();}
+        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr && m_sOwners.empty();}
 
         // Other Methods
 
@@ -490,6 +533,9 @@ class vertex : public topology
         vertex(SGM::Result  &rResult,
                vertex const *pVertex);
 
+        vertex *MakeCopy(SGM::Result &rResult) const;
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+
         void AddEdge(edge *pEdge) {m_sEdges.insert(pEdge);}
 
         void RemoveEdge(edge *pEdge);
@@ -498,7 +544,7 @@ class vertex : public topology
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
-        bool IsTopLevel() const {return m_sEdges.empty() && m_Owners.empty();}
+        bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -516,23 +562,37 @@ class attribute : public entity
     {
     public:
 
-        attribute(SGM::Result     &rResult,
-                  SGM::EntityType  Type):entity(rResult,Type) {}
+        attribute(SGM::Result       &rResult,
+                  std::string const &Name):
+            entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(SGM::AttributeType) {}
 
-        std::string const &GetName() {return m_Name;}
+        attribute(SGM::Result       &rResult,
+                  SGM::EntityType    Type,
+                  std::string const &Name):
+            entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(Type) {}
+
+        std::string const &GetName() const {return m_Name;}
+
+        SGM::EntityType GetAttributeType() const {return m_AttributeType;}
+
+        bool IsTopLevel() const {return m_sOwners.empty();}
 
     private:
 
-        std::string m_Name;
+        std::string     m_Name;
+        SGM::EntityType m_AttributeType;
     };
 
 class StringAttribute : public attribute
     {
     public:
 
-        explicit StringAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+        StringAttribute(SGM::Result       &rResult,
+                        std::string const &Name,
+                        std::string const &Data):
+            attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(Data) {}
 
-        std::string const &GetData() {return m_Data;}
+        std::string const &GetData() const {return m_Data;}
 
     private:
 
@@ -544,39 +604,48 @@ class IntegerAttribute : public attribute
     {
     public:
 
-        explicit IntegerAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+        IntegerAttribute(SGM::Result            &rResult,
+                         std::string      const &Name,
+                         std::vector<int> const &aData):
+            attribute(rResult,SGM::EntityType::IntegerAttributeType,Name),m_aData(aData) {}
 
-        std::vector<size_t> const &GetData() {return m_Data;}
+        std::vector<int> const &GetData() const {return m_aData;}
 
     private:
 
-        std::vector<size_t> m_Data;
+        std::vector<int> m_aData;
     };
 
 class DoubleAttribute : public attribute
     {
     public:
 
-        explicit DoubleAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+        DoubleAttribute(SGM::Result               &rResult,
+                        std::string         const &Name,
+                        std::vector<double> const &aData):
+        attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
 
-        std::vector<double> const &GetData() {return m_Data;}
+        std::vector<double> const &GetData() const {return m_aData;}
 
     private:
 
-        std::vector<double> m_Data;
+        std::vector<double> m_aData;
     };
 
 class CharAttribute : public attribute
     {
     public:
 
-        explicit CharAttribute(SGM::Result &rResult):attribute(rResult,SGM::EntityType::BodyType) {}
+        CharAttribute(SGM::Result             &rResult,
+                      std::string       const &Name,
+                      std::vector<char> const &aData):
+        attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
 
-        std::vector<char> const &GetData() {return m_Data;}
+        std::vector<char> const &GetData() const {return m_aData;}
 
     private:
 
-        std::vector<char> m_Data;
+        std::vector<char> m_aData;
     };
 }
 

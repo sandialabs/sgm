@@ -10,9 +10,18 @@
 #include "SGMChecker.h"
 #include "SGMResult.h"
 #include "SGMEntityFunctions.h"
+#include "SGMAttribute.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
+
+#include "qabstractitemview.h"
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#else
+#define snprintf snprintf
+#endif
 
 struct pModelData
 {
@@ -37,10 +46,21 @@ struct pModelData
 ModelData::ModelData() :
   dPtr(new pModelData)
 {
-  mwire_mode=false;
+  mface_mode=true;
+  medge_mode=true;
+
+  mvertex_mode=false;
   mfacet_mode=false;
   muvspace_mode=false;
-  mperspective_mode=true;
+  mperspective_mode=false;
+
+  dDefaultFaceRed=0.5;
+  dDefaultFaceGreen=0.5;
+  dDefaultFaceBlue=1.0;
+
+  dDefaultEdgeRed=0.0;
+  dDefaultEdgeGreen=0.0;
+  dDefaultEdgeBlue=0.0;
 }
 
 ModelData::~ModelData()
@@ -48,16 +68,47 @@ ModelData::~ModelData()
   delete dPtr;
 }
 
+std::map<QTreeWidgetItem *,SGM::Entity> const &ModelData::GetMap() const 
+    {
+    return dPtr->mTree->mTreeMap;
+    }
+
+size_t ModelData::GetSelection(std::vector<SGM::Entity> &aEnts) const
+    {
+    QList<QTreeWidgetItem *> QItems=dPtr->mTree->selectedItems();
+    auto iter=QItems.begin();
+    while(iter!=QItems.end())
+        {
+        auto FindIter=dPtr->mTree->mTreeMap.find(*iter);
+        if(FindIter!=dPtr->mTree->mTreeMap.end())
+            {
+            aEnts.push_back(FindIter->second);
+            }
+        ++iter;
+        }
+    return aEnts.size();
+    }
+
+void ModelData::ClearSelection()
+    {
+    static_cast<QTreeView*>(dPtr->mTree)->selectionModel()->clearSelection();
+    }
+
 void ModelData::set_tree_widget(SGMTreeWidget *tree)
 {
   dPtr->mTree = tree;
+  dPtr->mTree->setSelectionMode(QAbstractItemView::SelectionMode::MultiSelection);
+  tree->mModel = this;
 }
 
 void ModelData::set_graphics_widget(SGMGraphicsWidget *graphics)
 {
   dPtr->mGraphics = graphics;
   dPtr->mGraphics->enable_perspective(mperspective_mode);
-  dPtr->mGraphics->set_render_faces(!mwire_mode);
+  dPtr->mGraphics->set_render_edges(medge_mode);
+  dPtr->mGraphics->set_render_facets(mfacet_mode);
+  dPtr->mGraphics->set_render_faces(mface_mode);
+  dPtr->mGraphics->set_render_vertices(mvertex_mode);
 }
 
 bool ModelData::open_file(const QString &filename)
@@ -86,20 +137,31 @@ void ModelData::stl(QString const &SaveName)
   SGM::SaveSTL(dPtr->mResult,SaveName.toUtf8().data(),SGM::Thing(),Options);
 }
 
-void ModelData::zoom()
+void ModelData::face_mode()
 {
+  mface_mode = !mface_mode;
+  dPtr->mGraphics->set_render_faces(mface_mode);
   rebuild_graphics();
 }
 
-void ModelData::wire_mode()
+void ModelData::edge_mode()
 {
-  mwire_mode = !mwire_mode;
-  dPtr->mGraphics->set_render_faces(!mwire_mode);
+  medge_mode = !medge_mode;
+  dPtr->mGraphics->set_render_edges(medge_mode);
+  rebuild_graphics();
+}
+
+void ModelData::vertex_mode()
+{
+  mvertex_mode = !mvertex_mode;
+  dPtr->mGraphics->set_render_vertices(mvertex_mode);
+  rebuild_graphics();
 }
 
 void ModelData::facet_mode()
 {
   mfacet_mode = !mfacet_mode;
+  dPtr->mGraphics->set_render_facets(mfacet_mode);
   rebuild_graphics();
 }
 
@@ -237,6 +299,44 @@ void ModelData::create_revolve(SGM::Point3D      const &Origin,
   rebuild_graphics();
 }
 
+void ModelData::ChangeColor(SGM::Entity EntityID,int nRed,int nGreen,int nBlue)
+    {
+    SGM::ChangeColor(dPtr->mResult,EntityID,nRed,nGreen,nBlue);
+    rebuild_graphics(false);
+    }
+
+void ModelData::RemoveColor(SGM::Entity EntityID)
+    {
+    SGM::RemoveColor(dPtr->mResult,EntityID);
+    rebuild_graphics(false);
+    }
+
+void ModelData::Copy(SGM::Entity EntityID)
+    {
+    SGM::CopyEntity(dPtr->mResult,EntityID);
+    rebuild_graphics(false);
+    }
+
+void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
+    {
+    std::vector<SGM::Face> aFaces;
+    for(auto EntityID : aEnts)
+        {
+        if(SGM::GetType(dPtr->mResult,EntityID)==SGM::FaceType)
+            {
+            aFaces.push_back(SGM::Face(EntityID.m_ID));
+            }
+        }
+    SGM::UnhookFaces(dPtr->mResult,aFaces);
+    rebuild_graphics(false);
+    }
+
+void ModelData::DeleteEntity(SGM::Entity EntityID)
+    {
+    SGM::DeleteEntity(dPtr->mResult,EntityID);
+    rebuild_graphics(false);
+    }
+
 void ModelData::create_torus_knot(SGM::Point3D      const &Center,
                                   SGM::UnitVector3D const &XAxis,
                                   SGM::UnitVector3D const &YAxis,
@@ -248,7 +348,6 @@ void ModelData::create_torus_knot(SGM::Point3D      const &Center,
   SGM::Curve IDCurve=SGM::CreateTorusKnot(dPtr->mResult,Center,XAxis,YAxis,dr,dR,nA,nB);
   SGM::Edge Edge1=SGM::CreateEdge(dPtr->mResult,IDCurve);
 
-#if 1
   SGM::Curve IDCurve2=SGM::Curve(SGM::CopyEntity(dPtr->mResult,IDCurve).m_ID);
   SGM::Transform3D Trans;
   SGM::Point3D Origin(0,0,0);
@@ -267,7 +366,6 @@ void ModelData::create_torus_knot(SGM::Point3D      const &Center,
   aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
   aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
   SGM::Body BodyID=SGM::CreateSheetBody(dPtr->mResult,SurfaceID,aEdges,aTypes);
-#endif
 
   rebuild_tree();
   rebuild_graphics();
@@ -300,254 +398,830 @@ void ModelData::create_hyperbola(SGM::Point3D      const &Center,
   rebuild_graphics();
 }
 
-void ModelData::rebuild_tree()
-{
-  if(!dPtr->mTree)
-    return;
-
-  dPtr->mTree->clear();
-
-  std::set<SGM::Edge> top_level_edges;
-  SGM::FindEdges(dPtr->mResult, SGM::Thing(), top_level_edges, true);
-  for(const SGM::Edge &top_edge : top_level_edges)
-  {
-    QTreeWidgetItem* edge_item = new QTreeWidgetItem(dPtr->mTree);
-    edge_item->setText(0, "Edge");
-    edge_item->setText(1, QString::number(top_edge.m_ID));
-
-    // Show the curves associated with the edge
-    std::set<SGM::Curve> curve_list;
-    SGM::FindCurves(dPtr->mResult, top_edge, curve_list);
-    for(const SGM::Curve &curv : curve_list)
+void ModelData::add_body_to_tree(QTreeWidgetItem *parent,SGM::Body BodyID)
     {
-      QTreeWidgetItem* curve_item = new QTreeWidgetItem(edge_item);
-      curve_item->setText(0, "Curve");
-      curve_item->setText(1, QString::number(curv.m_ID));
-    }
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *body_item = new QTreeWidgetItem(parent);
+    mMap[body_item]=BodyID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Body %ld",BodyID.m_ID);
+    body_item->setText(0,Data0);
 
-    std::set<SGM::Vertex> vertex_list;
-    SGM::FindVertices(dPtr->mResult, top_edge, vertex_list);
-    for(const SGM::Vertex &vert : vertex_list)
-    {
-      QTreeWidgetItem* vertex_item = new QTreeWidgetItem(edge_item);
-      vertex_item->setText(0, "Vertex");
-      vertex_item->setText(1, QString::number(vert.m_ID));
-    }
-  }
+    add_attributes_to_tree(body_item,BodyID);
+    
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(dPtr->mResult, BodyID, sVolumes);
 
-  std::set<SGM::Body> bodies;
-  SGM::FindBodies(dPtr->mResult, SGM::Thing(), bodies);
-
-  for(const SGM::Body &body : bodies)
-  {
-    QTreeWidgetItem *body_item = new QTreeWidgetItem(dPtr->mTree);
-    body_item->setText(0, "Body");
-    body_item->setText(1, QString::number(body.m_ID));
-
-    std::set<SGM::Volume> volume_list;
-    SGM::FindVolumes(dPtr->mResult, body, volume_list);
-    for(const SGM::Volume &vol : volume_list)
-    {
-      QTreeWidgetItem *volume_item = new QTreeWidgetItem(body_item);
-      volume_item->setText(0, "Volume");
-      volume_item->setText(1, QString::number(vol.m_ID));
-
-      std::set<SGM::Face> face_list;
-      SGM::FindFaces(dPtr->mResult, vol, face_list);
-      for(const SGM::Face &face : face_list)
-      {
-        QTreeWidgetItem* face_item = new QTreeWidgetItem(volume_item);
-        face_item->setText(0, "Face");
-        face_item->setText(1, QString::number(face.m_ID));
-
-        // Show the surfaces associated with the face
-        std::set<SGM::Surface> surface_list;
-        SGM::FindSurfaces(dPtr->mResult, face, surface_list);
-        for(const SGM::Surface &surf : surface_list)
+    size_t nVolumes=sVolumes.size();
+    if(nVolumes>1)
         {
-          QTreeWidgetItem* surface_item = new QTreeWidgetItem(face_item);
-          surface_item->setText(0, "Surface");
-          surface_item->setText(1, QString::number(surf.m_ID));
-          SGM::EntityType nType=SGM::GetSurfaceType(dPtr->mResult,surf);
-          switch(nType)
-              {
-              case SGM::PlaneType:
-                  surface_item->setText(0, "Plane");
-                  break;
-              case SGM::CylinderType:
-                  surface_item->setText(0, "Cylinder");
-                  break;
-              case SGM::ConeType:
-                  surface_item->setText(0, "Cone");
-                  break;
-              case SGM::SphereType:
-                  surface_item->setText(0, "Sphere");
-                  break;
-              case SGM::TorusType:
-                  surface_item->setText(0, "Torus");
-                  break;
-              case SGM::NUBSurfaceType:
-                  surface_item->setText(0, "NUB Surface");
-                  break;
-              case SGM::NURBSurfaceType:
-                  surface_item->setText(0, "NURB Surface");
-                  break;
-              case SGM::RevolveType:
-                  surface_item->setText(0, "Revolve");
-                  break;
-              case SGM::ExtrudeType:
-                  surface_item->setText(0, "Extrude");
-                  break;
-              case SGM::OffsetType:
-                  surface_item->setText(0, "Offset Surface");
-                  break;
-              default:
-                  break;
-              }
+        char Data[100];
+        snprintf(Data,sizeof(Data),"%ld Volumes",nVolumes);
+        body_item->setText(1,Data);
         }
-
-        QTreeWidgetItem* edge_list_item = new QTreeWidgetItem(face_item);
-        edge_list_item->setText(0, "Edge List");
-          
-        std::set<SGM::Edge> edge_list;
-        SGM::FindEdges(dPtr->mResult, face, edge_list);
-        for(const SGM::Edge &edge : edge_list)
-        {
-          QTreeWidgetItem* edge_item = new QTreeWidgetItem(edge_list_item);
-          edge_item->setText(0, "Edge");
-          edge_item->setText(1, QString::number(edge.m_ID));
-
-          // Show the curves associated with the edge
-          std::set<SGM::Curve> curve_list;
-          SGM::FindCurves(dPtr->mResult, edge, curve_list);
-          for(const SGM::Curve &curv : curve_list)
-          {
-            QTreeWidgetItem* curve_item = new QTreeWidgetItem(edge_item);
-            curve_item->setText(0, "Curve");
-            curve_item->setText(1, QString::number(curv.m_ID));
-          }
-
-          std::set<SGM::Vertex> vertex_list;
-          SGM::FindVertices(dPtr->mResult, edge, vertex_list);
-          for(const SGM::Vertex &vert : vertex_list)
-          {
-            QTreeWidgetItem* vertex_item = new QTreeWidgetItem(edge_item);
-            vertex_item->setText(0, "Vertex");
-            vertex_item->setText(1, QString::number(vert.m_ID));
-          }
-        }
-      }
-    }
-  }
-}
-
-void ModelData::rebuild_graphics()
-{
-  if(!dPtr->mGraphics)
-    return;
-
-  if(muvspace_mode || mfacet_mode)
-  {
-    std::set<SGM::Face> face_list;
-    SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
-    for(const SGM::Face &face : face_list)
-    {
-      const std::vector<SGM::Point2D> &face_points2D =
-          SGM::GetFacePoints2D(dPtr->mResult, face);
-      const std::vector<SGM::Point3D> &face_points3D =
-          SGM::GetFacePoints3D(dPtr->mResult, face);
-      const std::vector<unsigned int> &face_tris =
-          SGM::GetFaceTriangles(dPtr->mResult, face);
-
-      size_t Index1;
-      size_t nTriangles=face_tris.size();
-      for(Index1=0;Index1<nTriangles;Index1+=3)
-          {
-          std::vector<SGM::Point3D> side;
-          unsigned int a=face_tris[Index1];
-          unsigned int b=face_tris[Index1+1];
-          unsigned int c=face_tris[Index1+2];
-          if(mfacet_mode)
-              {
-              SGM::Point3D const &PosA=face_points3D[a];
-              SGM::Point3D const &PosB=face_points3D[b];
-              SGM::Point3D const &PosC=face_points3D[c];
-              side.push_back(PosA);
-              side.push_back(PosB);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosB);
-              side.push_back(PosC);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosC);
-              side.push_back(PosA);
-              dPtr->mGraphics->add_edge(side);
-              }
-          else
-              {
-              SGM::Point2D const &Auv=face_points2D[a];
-              SGM::Point2D const &Buv=face_points2D[b];
-              SGM::Point2D const &Cuv=face_points2D[c];
-              SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);
-              SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
-              SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
-              side.push_back(PosA);
-              side.push_back(PosB);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosB);
-              side.push_back(PosC);
-              dPtr->mGraphics->add_edge(side);
-              side.clear();
-              side.push_back(PosC);
-              side.push_back(PosA);
-              dPtr->mGraphics->add_edge(side);
-              }
-          }
-    }
-  }
-  else
-  {
-    if(mwire_mode==false)
-    {
-      std::set<SGM::Face> face_list;
-      SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
-      for(const SGM::Face &face : face_list)
-      {
-      //size_t nID=face.m_ID;
-      //if(nID==397)
-      //    {
-      //    continue;
-      //    }
-        const std::vector<SGM::Point3D> &face_points =
-            SGM::GetFacePoints3D(dPtr->mResult, face);
-        const std::vector<unsigned int> &face_tris =
-            SGM::GetFaceTriangles(dPtr->mResult, face);
-        const std::vector<SGM::UnitVector3D> &face_normals =
-            SGM::GetFaceNormals(dPtr->mResult, face);
-
-        dPtr->mGraphics->add_face(face_points, face_tris, face_normals);
-      }
-
-      dPtr->mGraphics->set_render_faces(true);
-    }
     else
-    {
-      dPtr->mGraphics->set_render_faces(false);
+        {
+        body_item->setText(1,"1 Volume");
+        }
+
+    for(const SGM::Volume &vol : sVolumes)
+        {
+        add_volume_to_tree(body_item,vol);
+        }
     }
 
-    std::set<SGM::Edge> edge_list;
-    SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
-    for(const SGM::Edge &edge : edge_list)
+void ModelData::add_volume_to_tree(QTreeWidgetItem *parent,SGM::Volume VolumeID)
     {
-      const std::vector<SGM::Point3D> &edge_points =
-          SGM::GetEdgePoints(dPtr->mResult, edge);
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *volume_item = new QTreeWidgetItem(parent);
+    mMap[volume_item]=VolumeID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Volume %ld",VolumeID.m_ID);
+    volume_item->setText(0,Data0);
 
-      dPtr->mGraphics->add_edge(edge_points);
+    add_attributes_to_tree(volume_item,VolumeID);
+    
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(dPtr->mResult, VolumeID, sFaces);
+
+    size_t nFaces=sFaces.size();
+    if(nFaces>1)
+        {
+        char Data[100];
+        snprintf(Data,sizeof(Data),"%ld Faces",nFaces);
+        volume_item->setText(1,Data);
+        }
+    else
+        {
+        volume_item->setText(1,"1 Face");
+        }
+
+    for(const SGM::Face &FaceID : sFaces)
+        {
+        add_face_to_tree(volume_item,FaceID);
+        }
     }
-  }
 
-  dPtr->mGraphics->flush();
-  dPtr->mGraphics->reset_view();
-}
+void ModelData::add_face_to_tree(QTreeWidgetItem *parent,SGM::Face FaceID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *face_item = new QTreeWidgetItem(parent);
+    mMap[face_item]=FaceID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Face %ld",FaceID.m_ID);
+    face_item->setText(0,Data0);
+
+    add_attributes_to_tree(face_item,FaceID);
+    
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(dPtr->mResult, FaceID, sEdges);
+
+    size_t nEdges=sEdges.size();
+    if(nEdges>1)
+        {
+        char Data[100];
+        snprintf(Data,sizeof(Data),"%ld Edges",nEdges);
+        face_item->setText(1,Data);
+        }
+    else
+        {
+        face_item->setText(1,"1 Edge");
+        }
+
+    std::set<SGM::Surface> sSurfaces;
+    SGM::FindSurfaces(dPtr->mResult, FaceID, sSurfaces);
+    add_surface_to_tree(face_item,*(sSurfaces.begin()));
+
+    for(const SGM::Edge &EdgeID : sEdges)
+        {
+        add_edge_to_tree(face_item,EdgeID);
+        }
+    }
+
+void ModelData::add_edge_to_tree(QTreeWidgetItem *parent,SGM::Edge EdgeID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *edge_item = new QTreeWidgetItem(parent);
+    mMap[edge_item]=EdgeID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Edge %ld",EdgeID.m_ID);
+    edge_item->setText(0,Data0);
+
+    add_attributes_to_tree(edge_item,EdgeID);
+    
+    std::set<SGM::Vertex> sVertices;
+    SGM::FindVertices(dPtr->mResult, EdgeID, sVertices);
+
+    if(sVertices.size()==1)
+        {
+        edge_item->setText(1,"1 Vertex");
+        }
+    else
+        {
+        char Data[100];
+        snprintf(Data,sizeof(Data),"%ld Vertices",sVertices.size());
+        edge_item->setText(1,Data);
+        }
+
+    std::set<SGM::Curve> sCurve;
+    SGM::FindCurves(dPtr->mResult, EdgeID, sCurve);
+    add_curve_to_tree(edge_item,*(sCurve.begin()));
+
+    for(const SGM::Vertex &VertexID : sVertices)
+        {
+        add_vertex_to_tree(edge_item,VertexID);
+        }
+    }
+
+void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent,SGM::Vertex VertexID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *vertex_item = new QTreeWidgetItem(parent);
+    mMap[vertex_item]=VertexID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Vertex %ld",VertexID.m_ID);
+    vertex_item->setText(0,Data0);
+
+    add_attributes_to_tree(vertex_item,VertexID);
+
+    SGM::Point3D const &Pos=SGM::GetPointOfVertex(dPtr->mResult,VertexID);
+    QTreeWidgetItem* data_item = new QTreeWidgetItem(vertex_item);
+    char Data[100];
+    snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Pos.m_x,Pos.m_y,Pos.m_z);
+    data_item->setText(0,"Position");
+    data_item->setText(1,Data);
+    }
+
+void ModelData::add_surface_to_tree(QTreeWidgetItem *parent,SGM::Surface SurfaceID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *surface_item = new QTreeWidgetItem(parent);
+    mMap[surface_item]=SurfaceID;
+
+    add_attributes_to_tree(surface_item,SurfaceID);
+
+    SGM::EntityType nType=SGM::GetSurfaceType(dPtr->mResult,SurfaceID);
+    switch(nType)
+        {
+        case SGM::PlaneType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Plane %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+
+            char Data[100];
+            SGM::Point3D Origin;
+            SGM::UnitVector3D XAxis,YAxis,ZAxis;
+            double dScale;
+            SGM::GetPlaneData(dPtr->mResult,SurfaceID,Origin,XAxis,YAxis,ZAxis,dScale);
+
+            QTreeWidgetItem* data_item1 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Origin.m_x,Origin.m_y,Origin.m_z);
+            data_item1->setText(0,"Origin");
+            data_item1->setText(1,Data);
+
+            QTreeWidgetItem* data_item2 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",XAxis.m_x,XAxis.m_y,XAxis.m_z);
+            data_item2->setText(0,"XAxis");
+            data_item2->setText(1,Data);
+
+            QTreeWidgetItem* data_item3 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",YAxis.m_x,YAxis.m_y,YAxis.m_z);
+            data_item3->setText(0,"YAxis");
+            data_item3->setText(1,Data);
+
+            QTreeWidgetItem* data_item4 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",ZAxis.m_x,ZAxis.m_y,ZAxis.m_z);
+            data_item4->setText(0,"ZAxis");
+            data_item4->setText(1,Data);
+
+            QTreeWidgetItem* data_item5 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"%.15G",dScale);
+            data_item5->setText(0,"Scale");
+            data_item5->setText(1,Data);
+
+            break;
+            }
+        case SGM::CylinderType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Cylinder %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+
+            char Data[100];
+            SGM::Point3D Origin;
+            SGM::UnitVector3D XAxis,YAxis,ZAxis;
+            double dRadius;
+            SGM::GetCylinderData(dPtr->mResult,SurfaceID,Origin,XAxis,YAxis,ZAxis,dRadius);
+                  
+            QTreeWidgetItem* data_item1 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Origin.m_x,Origin.m_y,Origin.m_z);
+            data_item1->setText(0,"Origin");
+            data_item1->setText(1,Data);
+
+            QTreeWidgetItem* data_item2 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",XAxis.m_x,XAxis.m_y,XAxis.m_z);
+            data_item2->setText(0,"XAxis");
+            data_item2->setText(1,Data);
+
+            QTreeWidgetItem* data_item3 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",YAxis.m_x,YAxis.m_y,YAxis.m_z);
+            data_item3->setText(0,"YAxis");
+            data_item3->setText(1,Data);
+
+            QTreeWidgetItem* data_item4 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",ZAxis.m_x,ZAxis.m_y,ZAxis.m_z);
+            data_item4->setText(0,"ZAxis");
+            data_item4->setText(1,Data);
+
+            QTreeWidgetItem* data_item5 = new QTreeWidgetItem(surface_item);
+            snprintf(Data,sizeof(Data),"%.15G",dRadius);
+            data_item5->setText(0,"Radius");
+            data_item5->setText(1,Data);
+                     
+            break;
+            }
+        case SGM::ConeType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Cone %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::SphereType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Sphere %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::TorusType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Torus %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::NUBSurfaceType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"NUB Surface %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::NURBSurfaceType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"NURB Surface %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::RevolveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Revolve %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::ExtrudeType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Extrude %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        case SGM::OffsetType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Offset Surface %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            break;
+            }
+        default:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Surface %ld",SurfaceID.m_ID);
+            surface_item->setText(0,Data0);
+            }
+        }
+    }
+
+void ModelData::add_curve_to_tree(QTreeWidgetItem *parent,SGM::Curve CurveID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *curve_item = new QTreeWidgetItem(parent);
+    mMap[curve_item]=CurveID;
+
+    add_attributes_to_tree(curve_item,CurveID);
+
+    SGM::EntityType nType=SGM::GetCurveType(dPtr->mResult,CurveID);
+    switch(nType)
+        {
+        case SGM::LineType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Line %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+                     
+            char Data[100];
+            SGM::Point3D Origin;
+            SGM::UnitVector3D Axis;
+            double dScale;
+            SGM::GetLineData(dPtr->mResult,CurveID,Origin,Axis,dScale);
+                     
+            QTreeWidgetItem* data_item1 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Origin.m_x,Origin.m_y,Origin.m_z);
+            data_item1->setText(0,"Origin");
+            data_item1->setText(1,Data);
+
+            QTreeWidgetItem* data_item2 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Axis.m_x,Axis.m_y,Axis.m_z);
+            data_item2->setText(0,"Axis");
+            data_item2->setText(1,Data);
+
+            QTreeWidgetItem* data_item3 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"%.15G",dScale);
+            data_item3->setText(0,"Scale");
+            data_item3->setText(1,Data);
+
+            break;
+            }
+        case SGM::CircleType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Circle %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+                     
+            char Data[100];
+            SGM::Point3D Center;
+            SGM::UnitVector3D Normal,XAxis,YAxis;
+            double dRadius;
+            SGM::GetCircleData(dPtr->mResult,CurveID,Center,Normal,XAxis,YAxis,dRadius);
+                     
+            QTreeWidgetItem* data_item1 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Center.m_x,Center.m_y,Center.m_z);
+            data_item1->setText(0,"Center");
+            data_item1->setText(1,Data);
+                     
+            QTreeWidgetItem* data_item2 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",XAxis.m_x,XAxis.m_y,XAxis.m_z);
+            data_item2->setText(0,"X Axis");
+            data_item2->setText(1,Data);
+
+            QTreeWidgetItem* data_item3 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",YAxis.m_x,YAxis.m_y,YAxis.m_z);
+            data_item3->setText(0,"Y Axis");
+            data_item3->setText(1,Data);
+
+            QTreeWidgetItem* data_item4 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"(%.15G, %.15G, %.15G)",Normal.m_x,Normal.m_y,Normal.m_z);
+            data_item4->setText(0,"Z Axis");
+            data_item4->setText(1,Data);
+
+            QTreeWidgetItem* data_item5 = new QTreeWidgetItem(curve_item);
+            snprintf(Data,sizeof(Data),"%.15G",dRadius);
+            data_item5->setText(0,"Radius");
+            data_item5->setText(1,Data);
+
+            break;
+            }
+        case SGM::EllipseType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Ellipse %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::ParabolaType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Parabola %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::HyperbolaType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Hyperbola %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::NUBCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"NUB Curve %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::NURBCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"NURB Curve %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::PointCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Point Curve %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::HelixCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Helix %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::HermiteCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Hermite Curve %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        case SGM::TorusKnotCurveType:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Torus Knot %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        default:
+            {
+            char Data0[100];
+            snprintf(Data0,sizeof(Data0),"Curve %ld",CurveID.m_ID);
+            curve_item->setText(0,Data0);
+            break;
+            }
+        }
+    }
+
+void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent,SGM::Attribute AttributeID)
+    {
+    std::map<QTreeWidgetItem *,SGM::Entity> &mMap=dPtr->mTree->mTreeMap;
+    QTreeWidgetItem *attribute_item = new QTreeWidgetItem(parent);
+    mMap[attribute_item]=AttributeID;
+    char Data0[100];
+    snprintf(Data0,sizeof(Data0),"Attribute %ld",AttributeID.m_ID);
+    attribute_item->setText(0,Data0);
+    std::string const &Name=SGM::GetAttributeName(dPtr->mResult,AttributeID);
+    attribute_item->setText(1,Name.c_str());
+    
+    add_attributes_to_tree(attribute_item,AttributeID);
+
+    switch(SGM::GetAttributeType(dPtr->mResult,AttributeID))
+        {
+        case SGM::StringAttributeType:
+            {
+            break;
+            }
+        case SGM::IntegerAttributeType:
+            {
+            if(Name=="SGM Color")
+                {
+                QTreeWidgetItem* data_item1 = new QTreeWidgetItem(attribute_item);
+                std::vector<int> const &Data=SGM::GetIntegerAttributeData(dPtr->mResult,AttributeID);
+                char Data1[100];
+                snprintf(Data1,sizeof(Data1),"(%ld, %ld, %ld)",Data[0],Data[1],Data[2]);
+                data_item1->setText(0,"RGB");
+                data_item1->setText(1,Data1);
+                }
+            }
+        case SGM::DoubleAttributeType:
+            {
+            break;
+            }
+        case SGM::CharAttributeType:
+            {
+            break;
+            }
+        default:
+            {
+            break;
+            }
+        }
+    }
+
+void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent,SGM::Entity EntityID)
+    {
+    std::set<SGM::Attribute> sAttributes;
+    if(SGM::GetAttributes(dPtr->mResult,EntityID,sAttributes))
+        {
+        size_t nAttributes=sAttributes.size();
+        if(nAttributes)
+            {
+            QTreeWidgetItem *owner_item = new QTreeWidgetItem(parent);
+            owner_item->setText(0,"Attributes");
+            if(nAttributes==1)
+                {
+                owner_item->setText(1,"1 Attribute");
+                }
+            else
+                {
+                char Data1[100];
+                snprintf(Data1,sizeof(Data1),"%d Attributes",nAttributes);
+                owner_item->setText(1,Data1);
+                }
+            auto iter=sAttributes.begin();
+            while(iter!=sAttributes.end())
+                {
+                add_attribute_to_tree(owner_item,*iter);
+                ++iter;
+                }
+            }
+        }
+    }
+
+void ModelData::rebuild_tree()
+    {
+    if(!dPtr->mTree)
+        {
+        return;
+        }
+    dPtr->mTree->clear();
+
+    SGM::Thing ThingID;
+    QTreeWidgetItem *ThingItem=new QTreeWidgetItem(dPtr->mTree);
+    ThingItem->setText(0, "Thing");
+
+    add_attributes_to_tree(ThingItem,ThingID);
+
+    std::set<SGM::Attribute> top_level_attributes;
+    SGM::FindAttributes(dPtr->mResult, SGM::Thing(), top_level_attributes, true);
+    for(const SGM::Attribute &top_attribute : top_level_attributes)
+        {
+        add_attribute_to_tree(ThingItem,top_attribute);
+        }
+
+    std::set<SGM::Curve> top_level_curves;
+    SGM::FindCurves(dPtr->mResult, SGM::Thing(), top_level_curves, true);
+    for(const SGM::Curve &top_curve : top_level_curves)
+        {
+        add_curve_to_tree(ThingItem,top_curve);
+        }
+
+    std::set<SGM::Surface> top_level_surfaces;
+    SGM::FindSurfaces(dPtr->mResult, SGM::Thing(), top_level_surfaces, true);
+    for(const SGM::Surface &top_surface : top_level_surfaces)
+        {
+        add_surface_to_tree(ThingItem,top_surface);
+        }
+
+    std::set<SGM::Vertex> top_level_vertices;
+    SGM::FindVertices(dPtr->mResult, SGM::Thing(), top_level_vertices, true);
+    for(const SGM::Vertex &top_vertex : top_level_vertices)
+        {
+        add_vertex_to_tree(ThingItem,top_vertex);
+        }
+
+    std::set<SGM::Edge> top_level_edges;
+    SGM::FindEdges(dPtr->mResult, SGM::Thing(), top_level_edges, true);
+    for(const SGM::Edge &top_edge : top_level_edges)
+        {
+        add_edge_to_tree(ThingItem,top_edge);
+        }
+
+    std::set<SGM::Face> top_level_faces;
+    SGM::FindFaces(dPtr->mResult, SGM::Thing(), top_level_faces, true);
+    for(const SGM::Face &top_face : top_level_faces)
+        {
+        add_face_to_tree(ThingItem,top_face);
+        }
+
+    std::set<SGM::Volume> top_level_volumes;
+    SGM::FindVolumes(dPtr->mResult, SGM::Thing(), top_level_volumes, true);
+    for(const SGM::Volume &top_volume : top_level_volumes)
+        {
+        add_volume_to_tree(ThingItem,top_volume);
+        }
+
+    std::set<SGM::Body> top_level_bodies;
+    std::vector<SGM::Body> aBodies,aSheetBodies,aWireBodies;
+    SGM::FindBodies(dPtr->mResult, SGM::Thing(), top_level_bodies, true);
+    for(const SGM::Body &top_body : top_level_bodies)
+        {
+        if(SGM::IsSheetBody(dPtr->mResult,top_body))
+            {
+            aSheetBodies.push_back(top_body);
+            }
+        else if(IsWireBody(dPtr->mResult,top_body))
+            {
+            aWireBodies.push_back(top_body);
+            }
+        else
+            {
+            aBodies.push_back(top_body);
+            }
+        }
+
+    if(aSheetBodies.size())
+        {
+        QTreeWidgetItem *SheetBody_Item=new QTreeWidgetItem(ThingItem);
+        SheetBody_Item->setText(0, "Sheet Bodies");
+        size_t nSheetBodies=aSheetBodies.size();
+        size_t Index1;
+        for(Index1=0;Index1<nSheetBodies;++Index1)
+            {
+            add_body_to_tree(SheetBody_Item,aSheetBodies[Index1]);
+            }
+        }
+
+    if(aWireBodies.size())
+        {
+        QTreeWidgetItem *WireBody_Item=new QTreeWidgetItem(ThingItem);
+        WireBody_Item->setText(0, "Wire Bodies");
+        size_t nWireBodies=aWireBodies.size();
+        size_t Index1;
+        for(Index1=0;Index1<nWireBodies;++Index1)
+            {
+            add_body_to_tree(WireBody_Item,aWireBodies[Index1]);
+            }
+        }
+
+    if(aBodies.size())
+        {
+        QTreeWidgetItem *Body_Item=new QTreeWidgetItem(ThingItem);
+        Body_Item->setText(0, "Bodies");
+        size_t nWireBodies=aBodies.size();
+        size_t Index1;
+        for(Index1=0;Index1<nWireBodies;++Index1)
+            {
+            add_body_to_tree(Body_Item,aBodies[Index1]);
+            }
+        }
+    }
+
+void ModelData::rebuild_graphics(bool bReset)
+    {
+    if(!dPtr->mGraphics)
+        return;
+
+    dPtr->mGraphics->reset_bounds();
+
+    if(muvspace_mode || mfacet_mode)
+        {
+        std::set<SGM::Face> face_list;
+        SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
+        for(const SGM::Face &face : face_list)
+            {
+            const std::vector<SGM::Point2D> &face_points2D =
+                SGM::GetFacePoints2D(dPtr->mResult, face);
+            const std::vector<SGM::Point3D> &face_points3D =
+                SGM::GetFacePoints3D(dPtr->mResult, face);
+            const std::vector<unsigned int> &face_tris =
+                SGM::GetFaceTriangles(dPtr->mResult, face);
+
+            size_t Index1;
+            size_t nTriangles=face_tris.size();
+            for(Index1=0;Index1<nTriangles;Index1+=3)
+                {
+                std::vector<SGM::Point3D> side;
+                std::vector<SGM::Vector3D> aColor;
+                aColor.push_back(SGM::Vector3D(0.0,0.0,0.0));
+                aColor.push_back(SGM::Vector3D(0.0,0.0,0.0));
+                unsigned int a=face_tris[Index1];
+                unsigned int b=face_tris[Index1+1];
+                unsigned int c=face_tris[Index1+2];
+                if(mfacet_mode)
+                    {
+                    SGM::Point3D const &PosA=face_points3D[a];
+                    SGM::Point3D const &PosB=face_points3D[b];
+                    SGM::Point3D const &PosC=face_points3D[c];
+                    side.push_back(PosA);
+                    side.push_back(PosB);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    side.clear();
+                    side.push_back(PosB);
+                    side.push_back(PosC);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    side.clear();
+                    side.push_back(PosC);
+                    side.push_back(PosA);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    }
+                else
+                    {
+                    SGM::Point2D const &Auv=face_points2D[a];
+                    SGM::Point2D const &Buv=face_points2D[b];
+                    SGM::Point2D const &Cuv=face_points2D[c];
+                    SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);
+                    SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
+                    SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
+                    side.push_back(PosA);
+                    side.push_back(PosB);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    side.clear();
+                    side.push_back(PosB);
+                    side.push_back(PosC);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    side.clear();
+                    side.push_back(PosC);
+                    side.push_back(PosA);
+                    dPtr->mGraphics->add_edge(side,aColor);
+                    }
+                }
+            }
+        }
+    
+    if(mface_mode)
+        {
+        std::set<SGM::Face> face_list;
+        SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
+        for(const SGM::Face &face : face_list)
+            {
+            const std::vector<SGM::Point3D> &face_points =
+                SGM::GetFacePoints3D(dPtr->mResult, face);
+            const std::vector<unsigned int> &face_tris =
+                SGM::GetFaceTriangles(dPtr->mResult, face);
+            const std::vector<SGM::UnitVector3D> &face_normals =
+                SGM::GetFaceNormals(dPtr->mResult, face);
+
+            std::vector<SGM::Vector3D> face_colors;
+            size_t nPoints=face_points.size();
+            face_colors.reserve(nPoints);
+            int nRed,nGreen,nBlue;
+            SGM::Vector3D ColorVec;
+            if(SGM::GetColor(dPtr->mResult,face,nRed,nGreen,nBlue))
+                {
+                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
+                }
+            else
+                {
+                ColorVec=SGM::Vector3D(dDefaultFaceRed,dDefaultFaceGreen,dDefaultFaceBlue);
+                }
+            size_t Index1;
+            for(Index1=0;Index1<nPoints;++Index1)
+                {
+                face_colors.push_back(ColorVec);
+                }
+
+            dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
+            }
+        dPtr->mGraphics->set_render_faces(true);
+        }
+    else
+        {
+        dPtr->mGraphics->set_render_faces(false);
+        }
+
+    if(medge_mode)
+        {
+        std::set<SGM::Edge> edge_list;
+        SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
+        for(const SGM::Edge &edge : edge_list)
+            {
+            std::vector<SGM::Point3D> const &edge_points=SGM::GetEdgePoints(dPtr->mResult, edge);
+
+            std::vector<SGM::Vector3D> aColors;
+            size_t nPoints=edge_points.size();
+            aColors.reserve(nPoints);
+            int nRed,nGreen,nBlue;
+            SGM::Vector3D ColorVec;
+            if(SGM::GetColor(dPtr->mResult,edge,nRed,nGreen,nBlue))
+                {
+                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
+                }
+            else
+                {
+                ColorVec=SGM::Vector3D(dDefaultEdgeRed,dDefaultEdgeGreen,dDefaultEdgeBlue);
+                }
+            size_t Index1;
+            for(Index1=0;Index1<nPoints;++Index1)
+                {
+                aColors.push_back(ColorVec);
+                }
+
+            dPtr->mGraphics->add_edge(edge_points,aColors);
+            }
+        }
+
+    if(mvertex_mode)
+        {
+        std::set<SGM::Vertex> vertex_list;
+        SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
+         for(const SGM::Vertex &vertex : vertex_list)
+             {
+             SGM::Point3D const &Pos=SGM::GetPointOfVertex(dPtr->mResult,vertex);
+      
+             int nRed,nGreen,nBlue;
+             SGM::Vector3D ColorVec;
+             if(SGM::GetColor(dPtr->mResult,vertex,nRed,nGreen,nBlue))
+                {
+                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
+                }
+             else
+                {
+                ColorVec=SGM::Vector3D(dDefaultEdgeRed,dDefaultEdgeGreen,dDefaultEdgeBlue);
+                }
+             dPtr->mGraphics->add_vertex(Pos,ColorVec);
+             }
+         }
+
+    dPtr->mGraphics->flush();
+    if(bReset)
+          {
+          dPtr->mGraphics->reset_view();
+          }
+    }

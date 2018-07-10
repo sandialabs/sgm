@@ -16,15 +16,117 @@ void DeleteEntity(SGM::Result &rResult,
     auto pThing = rResult.GetThing();
     std::set<entity *,EntityCompare> sChildren;
     pEntity->FindAllChildren(sChildren);
-    for (auto pChild : sChildren) // access by value, the type of pChild is entity*
-        pThing->DeleteEntity(pChild);
-    pThing->DeleteEntity(pEntity);
+    std::vector<entity *> aDelete;
+    aDelete.push_back(pEntity);
+
+    // Remove pEntity from its parent and remove all non-shaired childern.
+    switch(pEntity->GetType())
+        {
+        case SGM::FaceType:
+            {
+            face *pFace=(face *)pEntity;
+            for (auto pChild : sChildren) 
+                {
+                switch(pChild->GetType())
+                    {
+                    case SGM::EdgeType:
+                        {
+                        edge *pEdge=(edge *)pChild;
+                        if(pEdge->GetFaces().size()==1)
+                            {
+                            aDelete.push_back(pChild);
+                            }
+                        break;
+                        }
+                    case SGM::VertexType:
+                        {
+                        vertex *pVertex=(vertex *)pChild;
+                        std::set<face *,EntityCompare> sFaces;
+                        FindFaces(rResult,pVertex,sFaces);
+                        if(sFaces.size()==1)
+                            {
+                            aDelete.push_back(pChild);
+                            }
+                        break;
+                        }
+                    case SGM::CurveType:
+                        {
+                        curve *pCurve=(curve *)pChild;
+                        std::set<face *,EntityCompare> sFaces;
+                        FindFaces(rResult,pCurve,sFaces);
+                        if(sFaces.size()==1)
+                            {
+                            aDelete.push_back(pChild);
+                            }
+                        break;
+                        }
+                    case SGM::SurfaceType:
+                        {
+                        surface *pSurface=(surface *)pChild;
+                        std::set<face *,EntityCompare> sFaces;
+                        FindFaces(rResult,pSurface,sFaces);
+                        if(sFaces.size()==1)
+                            {
+                            aDelete.push_back(pChild);
+                            }
+                        break;
+                        }
+                    default:
+                        {
+                        aDelete.push_back(pChild);
+                        }
+                    }
+                }
+
+            // Check to see if the faces sides need to be changed.
+
+            if(pFace->GetSides()==1)
+                {
+                std::set<face *,EntityCompare> sFaces;
+                FindFacesOfCell(rResult,pFace,sFaces);
+                for(auto pCellFace : sFaces)
+                    {
+                    pCellFace->SetSides(pCellFace->GetSides()+1);
+                    }
+                }
+            break;
+            }
+        default:
+            {
+            for (auto pChild : sChildren) 
+                {
+                pChild->SeverRelations(rResult);
+                aDelete.push_back(pChild);
+                }
+            break;
+            }
+        }
+
+    for(auto pDelete : aDelete)
+        {
+        pDelete->SeverRelations(rResult);
+        pThing->DeleteEntity(pDelete);
+        }
     }
 
-entity *CopyEntity(SGM::Result &,//rResult,
-                   entity      *)//pEntity)
+entity *CopyEntity(SGM::Result &rResult,
+                   entity      *pEntity)
     {
-    return nullptr;
+    std::set<entity *,EntityCompare> aChildern;
+    pEntity->FindAllChildren(aChildern);
+    entity *pAnswer=pEntity->MakeCopy(rResult);
+    std::map<entity *,entity *> mCopyMap;
+    mCopyMap[pEntity]=pAnswer;
+    for(auto pChild : aChildern)
+        {
+        mCopyMap[pChild]=pChild->MakeCopy(rResult);
+        }
+    aChildern.insert(pEntity);
+    for(auto pChild : aChildern)
+        {
+        mCopyMap[pChild]->ReplacePointers(mCopyMap);
+        }
+    return pAnswer;
     }
 
 void TransformEntity(SGM::Result            &,//rResult,

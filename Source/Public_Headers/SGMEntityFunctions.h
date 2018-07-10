@@ -9,6 +9,17 @@
 
 namespace SGM
     {
+
+    SGM_EXPORT SGM::EntityType GetType(SGM::Result       &rResult,
+                                       SGM::Entity const &EntityID);
+
+    SGM_EXPORT size_t GetOwners(SGM::Result       &rResult,
+                                SGM::Entity const &EntityID,
+                                std::set<Entity>  &sOwners);
+
+    SGM_EXPORT size_t GetAttributes(SGM::Result         &rResult,
+                                    SGM::Entity   const &EntityID,
+                                    std::set<Attribute> &sAttributes);
     
     SGM_EXPORT void DeleteEntity(SGM::Result &rResult,
                                  SGM::Entity &EntityID);

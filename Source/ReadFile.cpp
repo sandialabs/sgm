@@ -1183,6 +1183,7 @@ void CreateEntities(SGM::Result                   &rResult,
                     std::vector<entity *>         &aEntities)
     {
     std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
+    std::vector<body *> aSheetBodies;
     std::map<size_t,STEPLineData>::iterator DataIter=mSTEPData.begin();
     while(DataIter!=mSTEPData.end())
         {
@@ -1478,7 +1479,9 @@ void CreateEntities(SGM::Result                   &rResult,
                 }
             case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                 {
-                mEntityMap[nID]=new body(rResult);
+                body *pBody=new body(rResult);
+                aSheetBodies.push_back(pBody);
+                mEntityMap[nID]=pBody;
                 aBodies.push_back(nID);
                 break;
                 }
@@ -1846,6 +1849,23 @@ void CreateEntities(SGM::Result                   &rResult,
             pEdge->SetCurve(pCurve);
             }
         }
+
+    // Make sheet bodies double sided.
+
+    size_t nSheetBodies=aSheetBodies.size();
+    for(Index1=0;Index1<nSheetBodies;++Index1)
+        {
+        body *pBody=aSheetBodies[Index1];
+        std::set<face *,EntityCompare> sFaces;
+        FindFaces(rResult,pBody,sFaces);
+        auto iter=sFaces.begin();
+        while(iter!=sFaces.end())
+            {
+            face *pFace=*iter;
+            pFace->SetSides(2);
+            ++iter;
+            }
+        }
     }
 
 size_t ReadStepFile(SGM::Result                  &rResult,
@@ -1891,18 +1911,6 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    Heal(rResult,aEntities);
-
-    if(Options.m_bRemoveSeams)
-        {
-        size_t nEntities=aEntities.size();
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
-            {
-            MergeOutSeams(rResult,aEntities[Index1]);
-            }
-        }
-
     // Code for testing to be removed.
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
@@ -1926,6 +1934,21 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         nID;
         nType;
         pFace->GetTriangles(rResult);
+        }
+
+    if(Options.m_bHeal)
+        {
+        Heal(rResult,aEntities);
+        }
+
+    if(Options.m_bRemoveSeams)
+        {
+        size_t nEntities=aEntities.size();
+        size_t Index1;
+        for(Index1=0;Index1<nEntities;++Index1)
+            {
+            MergeOutSeams(rResult,aEntities[Index1]);
+            }
         }
 
     return aEntities.size();
