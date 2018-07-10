@@ -19,6 +19,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# path to test data model files for use in C++
+# to run the model tests you need to have the sgm-models repo cloned as alongside the sgm repo
+set(SGM_MODELS_DIRECTORY "${CMAKE_SOURCE_DIR}/../sgm-models")
+add_definitions(-DSGM_MODELS_DIRECTORY=\"${SGM_MODELS_DIRECTORY}\")
 
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)

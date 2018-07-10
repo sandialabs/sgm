@@ -88,3 +88,24 @@ TEST(threadpool_check, future_timeout_function)
         }
     std::cout << std::endl;
 }
+
+TEST(threadpool_check,child_process_timeout)
+{
+    int num_children;
+    pid_t child_pid, wpid;
+    int status = 0;
+
+    // parent code (before child processes start)
+    for (int id=0; id<num_children; id++) {
+        if ((child_pid = fork()) == 0) {
+            //child code
+            exit(0);
+            }
+        }
+
+    while ((wpid = wait(&status)) > 0); // the parent waits for all the child processes
+
+// continue parent process code
+
+
+}

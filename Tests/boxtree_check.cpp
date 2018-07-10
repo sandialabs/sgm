@@ -21,3 +21,72 @@ TEST(boxtree_check, intersect_single_item_tree)
     EXPECT_EQ(container.size(), 1);
     EXPECT_EQ(container[0].first, &point0);
 }
+
+TEST(boxtree_check, copy_construct)
+{
+    BoxTree boxTree;
+    // build a tree with a handful of (object,bbox) items
+    std::vector<Point3D> points;
+    for (int i = 0; i < 43; ++i)
+        {
+                points.emplace_back((double)i*17, (double)i*19, (double)i*23);
+                Point3D &point = points.back();
+                boxTree.Insert(&point, Interval3D(point));
+        }
+    // make a copy of tree
+    BoxTree boxTreeCopy(boxTree);
+    // get items in each tree and compare
+    auto contents = boxTree.FindAll();
+    auto contentsCopy = boxTreeCopy.FindAll();
+    EXPECT_EQ(contents, contentsCopy);
+}
+
+TEST(boxtree_check, assignment)
+{
+    BoxTree boxTree;
+    // build a tree with a handful of (object,bbox) items
+    std::vector<Point3D> points;
+    for (int i = 0; i < 43; ++i)
+        {
+        points.emplace_back((double)i*17, (double)i*19, (double)i*23);
+        Point3D &point = points.back();
+        boxTree.Insert(&point, Interval3D(point));
+        }
+    // make a copy of tree
+    BoxTree boxTreeCopy;
+    boxTreeCopy = boxTree;
+    // get items in each tree and compare
+    auto contents = boxTree.FindAll();
+    auto contentsCopy = boxTreeCopy.FindAll();
+    EXPECT_EQ(contents, contentsCopy);
+}
+
+TEST(boxtree_check, replace)
+{
+    BoxTree box_tree;
+    BoxTree box_tree_other;
+    std::vector<Point3D> points;
+    std::vector<Point3D> other_points;
+    std::map<const void*, const void*> point_map;
+    // make two different vectors of identical points,
+    // with a map from one to the other's entries
+    // create a tree from the first vector
+    // and a tree from the second vector
+    for (int i = 0; i < 23; ++i)
+        {
+        points.emplace_back((double)i*17, (double)i*19, (double)i*23);
+        other_points.emplace_back((double)i*17, (double)i*19, (double)i*23);
+        Point3D &point = points.back();
+        Point3D &other_point = other_points.back();
+        point_map[&point] = &other_point;
+        box_tree.Insert(&point, Interval3D(point));
+        box_tree_other.Insert(&other_point, Interval3D(other_point));
+        }
+    // replace the items (pointers to points) in the first tree with those from the second vector
+    box_tree.Replace(point_map);
+
+    // get items in each tree and compare
+    auto contents = box_tree.FindAll();
+    auto contentsCopy = box_tree_other.FindAll();
+    EXPECT_EQ(contents, contentsCopy);
+}
