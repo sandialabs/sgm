@@ -12,12 +12,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/SGMFunctions.cmake)
 sgm_project_setup()
 
 # build settings for all projects
-set(BUILD_SHARED_LIBS ON)
+OPTION(BUILD_SHARED_LIBS "Build with shared libraries" OFF)
+OPTION(CMAKE_BUILD_TYPE "Build type" Release)
 
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # path to test data model files for use in C++
 # to run the model tests you need to have the sgm-models repo cloned as alongside the sgm repo
@@ -49,8 +50,8 @@ function(add_sgm_library NAME)
   # installation of library
   install(TARGETS ${NAME} EXPORT SGM
         RUNTIME DESTINATION bin COMPONENT Runtime
-        LIBRARY DESTINATION bin COMPONENT Runtime
-        ARCHIVE DESTINATION bin COMPONENT Development)
+        LIBRARY DESTINATION lib COMPONENT Runtime
+        ARCHIVE DESTINATION lib COMPONENT Development)
 
 endfunction()
 

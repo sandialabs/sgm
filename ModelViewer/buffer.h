@@ -32,7 +32,8 @@
 template<typename T, typename Alloc = std::allocator<T> >
 class buffer : private Alloc
 {
-    static_assert(std::is_standard_layout<T>::value, "buffer elements require standard layout");
+    // TODO: uncomment if this works on MSVS C++
+    // static_assert(std::is_standard_layout<T>::value, "buffer elements require standard layout");
 
 private:
 #if __cplusplus > 201402L

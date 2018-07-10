@@ -233,13 +233,13 @@ namespace SGM {
     inline UnitVector2D::UnitVector2D(Vector2D const &Vec)
     {
         double dMagSquared = Vec.m_u * Vec.m_u + Vec.m_v * Vec.m_v;
-        if (0.999999999999 < dMagSquared &&
-            dMagSquared < 1.000000000001)
+        if (1-SGM_ZERO < dMagSquared &&
+            dMagSquared < 1+SGM_ZERO)
             {
             m_u = Vec.m_u;
             m_v = Vec.m_v;
             }
-        else if (1E-24 < dMagSquared)
+        else if (SGM_ZERO_SQUARED < dMagSquared)
             {
             double dMag = sqrt(dMagSquared);
             double dScale = 1.0 / dMag;
@@ -256,13 +256,13 @@ namespace SGM {
     inline UnitVector2D::UnitVector2D(double u,double v)
     {
         double dMagSquared=u*u+v*v;
-        if( 0.999999999999<dMagSquared &&
-            dMagSquared<1.000000000001)
+        if( 1-SGM_ZERO<dMagSquared &&
+            dMagSquared<1+SGM_ZERO)
             {
             m_u=u;
             m_v=v;
             }
-        else if(1E-24<dMagSquared)
+        else if(SGM_ZERO_SQUARED<dMagSquared)
             {
             double dMag=sqrt(dMagSquared);
             double dScale=1.0/dMag;
@@ -276,11 +276,6 @@ namespace SGM {
             }
     }
 
-    inline UnitVector2D UnitVector2D::operator*(double dScale) const
-    {
-        return UnitVector2D(m_u*dScale,m_v*dScale);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     //
     //  UnitVector3D methods
@@ -290,14 +285,14 @@ namespace SGM {
     inline UnitVector3D::UnitVector3D(Vector3D const &Vec)
     {
         double dMagSquared=Vec.m_x*Vec.m_x+Vec.m_y*Vec.m_y+Vec.m_z*Vec.m_z;
-        if( 0.999999999999<dMagSquared &&
-            dMagSquared<1.000000000001)
+        if( 1-SGM_ZERO<dMagSquared &&
+            dMagSquared<1+SGM_ZERO)
             {
             m_x=Vec.m_x;
             m_y=Vec.m_y;
             m_z=Vec.m_z;
             }
-        else if(1E-24<dMagSquared)
+        else if(SGM_ZERO_SQUARED<dMagSquared)
             {
             double dMag=sqrt(dMagSquared);
             double dScale=1.0/dMag;
@@ -316,14 +311,14 @@ namespace SGM {
     inline UnitVector3D::UnitVector3D(double x,double y,double z)
     {
         double dMagSquared=x*x+y*y+z*z;
-        if( 0.999999999999<dMagSquared &&
-            dMagSquared<1.000000000001)
+        if( 1-SGM_ZERO<dMagSquared &&
+            dMagSquared<1+SGM_ZERO)
             {
             m_x=x;
             m_y=y;
             m_z=z;
             }
-        else if(1E-24<dMagSquared)
+        else if(SGM_ZERO_SQUARED<dMagSquared)
             {
             double dMag=sqrt(dMagSquared);
             double dScale=1.0/dMag;
@@ -348,15 +343,15 @@ namespace SGM {
     inline UnitVector4D::UnitVector4D(Vector4D const &Vec)
     {
         double dMagSquared=Vec.m_x*Vec.m_x+Vec.m_y*Vec.m_y+Vec.m_z*Vec.m_z+Vec.m_w*Vec.m_w;
-        if( 0.999999999999<dMagSquared &&
-            dMagSquared<1.000000000001)
+        if( 1-SGM_ZERO<dMagSquared &&
+            dMagSquared<1+SGM_ZERO)
             {
             m_x=Vec.m_x;
             m_y=Vec.m_y;
             m_z=Vec.m_z;
             m_w=Vec.m_w;
             }
-        else if(1E-24<dMagSquared)
+        else if(SGM_ZERO_SQUARED<dMagSquared)
             {
             double dMag=sqrt(dMagSquared);
             double dScale=1.0/dMag;

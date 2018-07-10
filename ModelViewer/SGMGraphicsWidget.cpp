@@ -706,7 +706,6 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
   buffer<GLuint> &index_buffer = dPtr->face_data.temp_index_buffer();
 
   // Setup indices for the triangles
-
   GLuint offset = (GLuint)data_buffer.size() / 6;
   if (offset == 0)
     {

@@ -63,6 +63,14 @@ namespace SGM
                                                   std::vector<SGM::Point3D> &aPoints,
                                                   std::vector<SGM::Entity> &aEntity);
 
+    SGM_EXPORT size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
+                                             SGM::Curve                   const &CurveID,
+                                             SGM::Point3D                 const &PlaneOrigin,
+                                             SGM::UnitVector3D            const &PlaneNorm,
+                                             std::vector<SGM::Point3D>          &aPoints,
+                                             std::vector<SGM::IntersectionType> &aTypes,
+                                             double                              dTolerance = SGM_ZERO);
+
 } // End of SGM namespace
 
 #endif // SGM_INTERSECTOR_H

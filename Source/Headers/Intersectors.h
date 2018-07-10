@@ -426,6 +426,19 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &rResult,
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//  Specific Ellipse Surface Intersectors.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
+                                SGM::Point3D                 const &PlaneOrigin,
+                                SGM::UnitVector3D            const &PlaneNormal,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //  Other Supporting Intersection Functions
 //
 ///////////////////////////////////////////////////////////////////////////////
