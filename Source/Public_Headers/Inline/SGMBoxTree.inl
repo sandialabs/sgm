@@ -9,6 +9,21 @@ namespace SGM {
     //
     ///////////////////////////////////////////////////////////////////////////
 
+    inline BoxTree::BoxTree(BoxTree const & other)
+    : m_treeRoot(CreateDeepCopy(*other.m_treeRoot)), m_treeSize(other.m_treeSize)
+    { }
+
+    inline BoxTree& BoxTree::operator=( const BoxTree& rhs )
+    {
+        if( this != &rhs )
+            {
+            Clear();
+            m_treeRoot = CreateDeepCopy(*rhs.m_treeRoot);
+            m_treeSize = rhs.m_treeSize;
+            }
+        return *this;
+    }
+
     inline BoxTree::~BoxTree()
     {
         Clear();
@@ -45,6 +60,11 @@ namespace SGM {
     inline void BoxTree::Erase(const void *&item, bool removeDuplicates)
     {
         Remove(IsAny(), RemoveSpecificLeaf(item, removeDuplicates));
+    }
+
+    inline void BoxTree::Replace(std::map<const void *, const void *> const &itemMap)
+    {
+        Modify(IsAny(), ReplaceLeafItem(itemMap));
     }
 
     inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Node *node) const
@@ -118,6 +138,13 @@ namespace SGM {
         return false;
     }
 
+    inline void BoxTree::ReplaceLeafItem::operator()(BoxTree::Leaf *leaf)
+    {
+        auto search = m_ItemMap.find(leaf->m_pObject);
+        if (search != m_ItemMap.end())
+            leaf->m_pObject = search->second;
+    }
+
     template<typename Filter, typename Visitor>
     inline void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
@@ -140,6 +167,28 @@ namespace SGM {
             }
     }
 
+    template<typename Filter, typename Visitor>
+    inline void BoxTree::ModifyLeafFunctor<Filter, Visitor>::operator()(Bounded *item)
+    {
+        auto leaf = static_cast<Leaf *>(item);
+        if (m_filter(leaf))
+            m_visitor(leaf);
+    }
+
+    template<typename Filter, typename Visitor>
+    inline void BoxTree::ModifyNodeFunctor<Filter, Visitor>::operator()(Bounded *item)
+    {
+        auto node = static_cast<Node *>(item);
+        if (m_visitor.bContinueVisiting && m_filter(node))
+            {
+            if (node->m_bHasLeaves)
+                std::for_each(node->m_aItems.begin(), node->m_aItems.end(),
+                              ModifyLeafFunctor<Filter, Visitor>(m_filter, m_visitor));
+            else
+                std::for_each(node->m_aItems.begin(), node->m_aItems.end(), *this);
+            }
+    }
+    
     template<typename Filter, typename LeafRemover>
     inline bool BoxTree::RemoveLeafFunctor<Filter, LeafRemover>::operator()(Bounded *item) const
     {
@@ -165,6 +214,17 @@ namespace SGM {
         return operation;
     }
 
+    template<typename Filter, typename Operation>
+    inline Operation BoxTree::Modify(Filter const &filter, Operation operation)
+    {
+        if (m_treeRoot)
+            {
+            ModifyNodeFunctor<Filter, Operation> modify(filter, operation);
+            modify(m_treeRoot);
+            }
+        return operation;
+    }
+    
     template<typename Filter, typename LeafRemover>
     inline void BoxTree::Remove(Filter const &accept, LeafRemover leafRemover)
     {
@@ -295,6 +355,40 @@ namespace SGM {
                 }
             }
         return false; // anything else, don't remove it
+    }
+
+    inline BoxTree::Node* BoxTree::CreateDeepCopy(BoxTree::Node const& other)
+    {
+        Node* nodeCopy = new Node();
+        // copy the bounding box
+        nodeCopy->m_Bound = other.m_Bound;
+        // fill the children
+        if (other.m_bHasLeaves)
+            {
+            // make a copy of each Leaf bound and object
+            for ( Bounded* bounded: other.m_aItems)
+                {
+                auto leaf = static_cast<Leaf *>(bounded);
+                Leaf* leafCopy = new Leaf();
+                leafCopy->m_Bound = leaf->m_Bound;
+                leafCopy->m_pObject = leaf->m_pObject;
+                // add it as a child
+                nodeCopy->m_aItems.push_back(leafCopy);
+                }
+            }
+        else
+            {
+            // make a deep copy of each Node child
+            for ( Bounded* bounded: other.m_aItems)
+                {
+                auto childNode = static_cast<Node *>(bounded);
+                Node* childNodeCopy = CreateDeepCopy(*childNode);
+                // add it as a child
+                nodeCopy->m_aItems.push_back(childNodeCopy);
+                }
+            }
+        nodeCopy->m_bHasLeaves = other.m_bHasLeaves;
+        return nodeCopy;
     }
 
 } // namespace SGM

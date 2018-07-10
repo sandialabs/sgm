@@ -1530,3 +1530,17 @@ SGM::Body SGM::UnhookFaces(SGM::Result            &rResult,
         }
     return SGM::Body(SGMInternal::UnhookFaces(rResult,aFaces)->GetID());
     }
+
+size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
+                                   SGM::Curve                   const &CurveID,
+                                   SGM::Point3D                 const &PlaneOrigin,
+                                   SGM::UnitVector3D            const &PlaneNorm,
+                                   std::vector<SGM::Point3D>          &aPoints,
+                                   std::vector<SGM::IntersectionType> &aTypes,
+                                   double                              dTolerance)
+{
+    SGMInternal::entity *pEntity = rResult.GetThing()->FindEntity(CurveID.m_ID);
+    SGMInternal::curve *pCurve = (SGMInternal::curve *)pEntity;
+    return SGMInternal::IntersectCurveAndPlane(rResult, pCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+}
+

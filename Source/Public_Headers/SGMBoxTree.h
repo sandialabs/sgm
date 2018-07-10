@@ -8,6 +8,7 @@
 
 #include <list>
 #include <vector>
+#include <map>
 
 #define BOX_TREE_USE_MEMORY_POOL
 
@@ -30,6 +31,16 @@ namespace SGM {
          * Construct an empty tree.
          */
         BoxTree();
+
+        /**
+         * Construct a copy of another tree.
+         */
+        BoxTree(BoxTree const & other);
+
+        /**
+         * Assignment operator.
+         */
+        BoxTree& operator=( const BoxTree& other );
 
         /**
          * Destroy the tree and free all resources.
@@ -78,6 +89,12 @@ namespace SGM {
          * @param removeDuplicates if false, only the first item found will be removed.
          */
         void Erase(const void *&item, bool removeDuplicates = true);
+
+        /**
+         * Replace any item pointer in the tree that match Key with Value from the map while not
+         * changing the item's associated bounding box.
+         */
+        void Replace(std::map<const void *, const void *> const &itemMap);
 
         /**
          * Exchanges the contents of the index with those of other.
@@ -318,6 +335,25 @@ namespace SGM {
             bool operator()(Leaf const* leaf) const;
         };
 
+        typedef std::map<const void *, const void *> ItemMapType;
+
+        /// Visitor operation for replacing the item on leaves using a map from old item to new item.
+        struct ReplaceLeafItem {
+
+            ItemMapType & m_ItemMap; // implicitly const, it will not be changed
+            bool bContinueVisiting;
+
+            ReplaceLeafItem() = delete;
+
+            explicit ReplaceLeafItem(ItemMapType const &itemMap)
+                : m_ItemMap(const_cast<ItemMapType &>(itemMap)), bContinueVisiting(true) {}
+
+            ReplaceLeafItem(const ReplaceLeafItem&) = default;
+            ReplaceLeafItem& operator=(const ReplaceLeafItem &) = delete;
+
+            void operator()(Leaf * leaf); // this will modify the leaf if the leaf item is found in the map
+        };
+
         /**
          * Visitor operation that pushes a Leaf into a container when it passes a given Filter.
          *
@@ -346,6 +382,20 @@ namespace SGM {
         template<typename Filter, typename Operation>
         Operation Query(Filter const& filter, Operation operation) const;
 
+        /**
+         * Traverse the tree; for each Node that passes the Filter and has Leaf children, perform the given
+         * Operation on each Leaf the Leaf may be modified; also break if Visitor.ContinueVisiting is false.
+         *
+         * @tparam Filter An functor that returns true if this branch Node of the tree should be visited.
+         * @tparam Operation An functor that performs an operation that may modify a leaf
+         * @param filter the filter instance object
+         * @param operation the operator instance object
+         * @return the operation instance object at the end of traversal, allowing retrieval of data inside it
+         *         (for example, count of items visited)
+         */
+        template<typename Filter, typename Operation>
+        Operation Modify(Filter const& filter, Operation operation);
+        
         /**
          * Traverse the tree and remove leaf nodes on branches that pass a filter.
          *
@@ -393,6 +443,8 @@ namespace SGM {
 
     private:
 
+        Node* CreateDeepCopy(Node const &other);
+
         Node* ChooseSubtree(Node* node, Interval3D const* bound);
 
         Node* InsertInternal(Leaf* leaf, Node* node, bool firstInsert = true);
@@ -434,6 +486,37 @@ namespace SGM {
             void operator()(Bounded const* item);
         };
 
+        template<typename Filter, typename Visitor>
+        struct ModifyLeafFunctor
+        {
+            Filter m_filter;
+            Visitor &m_visitor;
+
+            explicit ModifyLeafFunctor(Filter const &filter, Visitor &visitor)
+                    : m_filter(filter), m_visitor(visitor)
+            {}
+
+            ModifyLeafFunctor(const ModifyLeafFunctor&) = default;
+            ModifyLeafFunctor& operator=(const ModifyLeafFunctor &) = delete;
+
+            void operator()(Bounded *item);
+        };
+
+        template<typename Filter, typename Visitor>
+        struct ModifyNodeFunctor {
+            Filter m_filter;
+            Visitor& m_visitor;
+
+            explicit ModifyNodeFunctor(Filter const & filter, Visitor& visitor)
+                    :m_filter(filter), m_visitor(visitor) { }
+
+            // non-copyable
+            ModifyNodeFunctor(const ModifyNodeFunctor&) = default;
+            ModifyNodeFunctor& operator=(const ModifyNodeFunctor &) = delete;
+
+            void operator()(Bounded * item);
+        };
+        
         template<typename Filter, typename LeafRemover>
         struct RemoveLeafFunctor {
             Filter m_filter;
