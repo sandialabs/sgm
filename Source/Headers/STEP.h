@@ -74,6 +74,7 @@ class entity;
         GROUP,
         ITEM_DEFINED_TRANSFORMATION,
         LENGTH_MEASURE_WITH_UNIT,
+        LENGTH_UNIT,
         LINE,
         LOCAL_TIME,
         MANIFOLD_SOLID_BREP,
