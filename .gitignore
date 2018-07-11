@@ -28,6 +28,13 @@ local.properties
 # Visual Studio
 .vscode/*
 
+# Microsoft Office temporary/backup files
+~$*.doc*
+~$*.xls*
+*.xlk
+~$*.ppt*
+*.~vsd*
+
 # Komodo IDE project files
 *.komodoproject
 
