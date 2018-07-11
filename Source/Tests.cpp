@@ -465,11 +465,11 @@ bool TestSurface(SGMInternal::surface const *pSurface,
     pSurface->Evaluate(uv1,&Pos,&dU,&dV,&Norm,&dUU,&dUV,&dVV);
 
     SGM::Point2D uv2=pSurface->Inverse(Pos,&CPos);
-    if(SGM::NearEqual(uv1,uv2,SGM_ZERO)==false)
+    if(SGM::NearEqual(uv1,uv2,SGM_MIN_TOL)==false)
         {
         bAnswer=false;
         }
-    if(SGM::NearEqual(Pos,CPos,SGM_ZERO)==false)
+    if(SGM::NearEqual(Pos,CPos,SGM_MIN_TOL)==false)
         {
         bAnswer=false;
         }
