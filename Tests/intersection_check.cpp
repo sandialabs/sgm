@@ -191,7 +191,7 @@ TEST(intersection_check, intersect_circle_and_plane)
     EXPECT_EQ(aPoints.size(), 2);
     EXPECT_EQ(aTypes.size(), 2);
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
-    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
     for (SGM::Point3D TestPos : aPoints)
     {
       EXPECT_NEAR(Center.Distance(TestPos), 5.5, dTolerance);
@@ -216,3 +216,145 @@ TEST(intersection_check, intersect_circle_and_plane)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(intersection_check, intersect_parabola_and_plane)
+{
+    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(-3,2,1);
+    SGM::UnitVector3D XAxis(1,0,2);
+    SGM::UnitVector3D YAxis(2,0,-1);
+    double dA = -0.3;
+    SGM::Curve ParabolaID = SGM::CreateParabola(rResult, Center, XAxis, YAxis, dA);
+
+    // coincident plane
+    SGM::Point3D PlaneOrigin(6.5,2,16.2);
+    SGM::UnitVector3D PlaneNorm(0,1,0);
+
+    double dTolerance = SGM_MIN_TOL;
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
+
+    // single clean intersection point
+    PlaneNorm = XAxis;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+
+    // single tangent intersection point
+    SGM::Point3D Pos;
+    SGM::Vector3D Tangent;
+    SGM::UnitVector3D Normal = (XAxis*YAxis);
+    SGM::EvaluateCurve(rResult, ParabolaID, 1.4, &Pos, &Tangent);
+
+    PlaneNorm = Normal*Tangent + 2*Normal;  // not perpendicular
+    PlaneOrigin = Pos + 20.6*Tangent;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_TRUE(SGM::NearEqual(aPoints[0], Pos, dTolerance));
+
+    // two intersection points
+    PlaneNorm = SGM::Vector3D(-1,0,3);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+
+    SGM::DeleteThing(pThing);
+}
+
+TEST(intersection_check, intersect_hyperbola_and_plane)
+{
+    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(0,0,0);//3,-4,-5);
+    SGM::UnitVector3D XAxis(1,0,0);//0,2,1);
+    SGM::UnitVector3D YAxis(0,1,0);//0,1,-2);
+    double dA = 2.0;//1.1;
+    double dB = 1.0;//0.7;
+    SGM::Curve HyperbolaID = SGM::CreateHyperbola(rResult, Center, XAxis, YAxis, dA, dB);
+
+    // coincident plane
+    SGM::Point3D PlaneOrigin(0,10,0);//3,16,15);
+    SGM::UnitVector3D PlaneNorm(0,0,1);//-1,0,0);
+
+    double dTolerance = SGM_MIN_TOL;
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
+    
+    PlaneNorm = SGM::UnitVector3D(0,1,0);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(4.898979, 10, 0), aPoints[0], dTolerance));
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(-4.898979, 10, 0), aPoints[1], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+
+    PlaneOrigin = SGM::Point3D(-10,0,0);
+    PlaneNorm = SGM::UnitVector3D(1,0,0);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(-10, 20.099751, 0), aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+
+    // in y-z plane, not aligned with axes
+    SGM::Point3D Center2(3,-4,-5);
+    SGM::UnitVector3D XAxis2(0,2,1);
+    SGM::UnitVector3D YAxis2(0,1,-2);
+    double dA2 = .7;
+    double dB2 = 1.1;
+    SGM::Curve HyperbolaID2 = SGM::CreateHyperbola(rResult, Center2, XAxis2, YAxis2, dA2, dB2);
+
+    PlaneOrigin = SGM::Point3D(0,0,-10);
+    PlaneNorm = SGM::UnitVector3D(0,.75,-2);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID2, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+
+    SGM::DeleteThing(pThing);
+}

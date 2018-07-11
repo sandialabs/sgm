@@ -654,7 +654,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         SGM::Point2D Pos2D(Vec2%XVec,Vec2%YVec);
         SGM::UnitVector2D Axis2D=Pos2D-Origin2D;
 
-        // Using x^2/a^2+y^3/b^2=0
+        // Using y^2/a^2-x^2/b^2=1
         // x=Origin2D.m_u+Axis2D.m_u*t=c+d*t
         // y=Origin2D.m_v+Axis2D.m_v*t=e+f*t
 
@@ -664,12 +664,12 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         double f=Axis2D.m_v;
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
-        double c0=d*d*raa-f*f*rbb;
-        double c1=2.0*c*d*raa-2*e*f*rbb;
-        double c2=c*c*raa-e*e*rbb-1.0;
+        double c0=f*f*raa-d*d*rbb;
+        double c1=2.0*e*f*raa-2*c*d*rbb;
+        double c2=e*e*raa-c*c*rbb-1.0;
 
-        // (c+d*t)^2/a^2-(e+f*t)^2/b^2-1=0
-        // (c^2/a^2 - e^2/b^2 - 1) + t ((2 c d)/a^2 - (2 e f)/b^2) + t^2 (d^2/a^2 - f^2/b^2) 
+        // (e+f*t)^2/a^2-(c+d*t)^2/b^2-1=0
+        // (e^2/a^2 - c^2/b^2 - 1) + t ((2 e f)/a^2 - (2 c d)/b^2) + t^2 (f^2/a^2 - d^2/b^2) 
 
         std::vector<double> aRoots;
         size_t nRoots=SGM::Quadratic(c0,c1,c2,aRoots);
@@ -753,7 +753,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         SGM::Point2D Pos2D(Vec2%XVec,Vec2%YVec);
         SGM::UnitVector2D Axis2D=Pos2D-Origin2D;
 
-        // Using x^2/a^2+y^3/b^2=0
+        // Using x^2/a^2+y^2/b^2=1
         // x=Origin2D.m_u+Axis2D.m_u*t=c+d*t
         // y=Origin2D.m_v+Axis2D.m_v*t=e+f*t
 
@@ -2646,10 +2646,14 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
             }
         case SGM::ParabolaType:
             {
+            parabola const *pParabola = (parabola const *)pCurve;
+            IntersectParabolaAndPlane(pParabola, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::HyperbolaType:
             {
+            hyperbola const *pHyperbola = (hyperbola const *)pCurve;
+            IntersectHyperbolaAndPlane(pHyperbola, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::NUBCurveType:
@@ -2743,6 +2747,70 @@ size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
         SGM::UnitVector3D LineDirection;
         IntersectNonParallelPlanes(pEllipse->m_Center,pEllipse->m_Normal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
         IntersectLineAndEllipse(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),pEllipse,dTolerance,aPoints,aTypes);
+        }
+    return aPoints.size();
+}
+
+size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNormal,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes)
+{
+    if(SGM::NearEqual(fabs(pParabola->m_Normal%PlaneNormal),1.0,SGM_MIN_TOL,false))
+        {
+        if(fabs((pParabola->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
+            {
+            SGM::UnitVector3D XAxis=pParabola->m_Normal.Orthogonal();
+
+            SGM::Point3D Pos;
+            pParabola->Evaluate(pParabola->GetDomain().m_dMin, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            pParabola->Evaluate(pParabola->GetDomain().m_dMax, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            }
+        }
+    else
+        {
+        SGM::Point3D LineOrigin;
+        SGM::UnitVector3D LineDirection;
+        IntersectNonParallelPlanes(pParabola->m_Center,pParabola->m_Normal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
+        IntersectLineAndParabola(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),pParabola,dTolerance,aPoints,aTypes);
+        }
+    return aPoints.size();
+}
+
+size_t IntersectHyperbolaAndPlane(hyperbola                     const *pHyperbola,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNormal,
+                                  double                               dTolerance,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes)
+{
+    if(SGM::NearEqual(fabs(pHyperbola->m_Normal%PlaneNormal),1.0,SGM_MIN_TOL,false))
+        {
+        if(fabs((pHyperbola->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
+            {
+            SGM::UnitVector3D XAxis=pHyperbola->m_Normal.Orthogonal();
+
+            SGM::Point3D Pos;
+            pHyperbola->Evaluate(pHyperbola->GetDomain().m_dMin, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            pHyperbola->Evaluate(pHyperbola->GetDomain().m_dMax, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            }
+        }
+    else
+        {
+        SGM::Point3D LineOrigin;
+        SGM::UnitVector3D LineDirection;
+        IntersectNonParallelPlanes(pHyperbola->m_Center,pHyperbola->m_Normal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
+        IntersectLineAndHyperbola(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),pHyperbola,dTolerance,aPoints,aTypes);
         }
     return aPoints.size();
 }
