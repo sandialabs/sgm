@@ -7,6 +7,8 @@
 #include <SGMPrimitives.h>
 #include <SGMTranslators.h>
 
+#include <future>
+
 //#include "SGMVector.h"
 //#include "SGMInterval.h"
 
@@ -23,8 +25,6 @@
 #include <Windows.h>
 #else
 #include <dirent.h>
-#include <future>
-
 #endif
 
 #define SGM_MODELS_PATH(filename) SGM_MODELS_DIRECTORY "/" filename
