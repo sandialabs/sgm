@@ -23,6 +23,8 @@
 #include <Windows.h>
 #else
 #include <dirent.h>
+#include <future>
+
 #endif
 
 #define SGM_MODELS_PATH(filename) SGM_MODELS_DIRECTORY "/" filename
@@ -74,47 +76,72 @@ std::vector<std::string> get_stp_names_in_path(const std::string& dir)
     return names;
 }
 
-int check_with_log(SGM::Result& result)
+enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
+
+static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
+
+int import_file(std::string const &file_path, SGM::Result& result)
+{
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+    SGM::ReadFile(result, file_path, entities, log, options);
+    if (result.GetResult() == SGM::ResultTypeOK)
+        return ModelsCheckResult::SUCCESS;
+    std::cerr << "Error: Unable to read from file: " << file_path << std::endl << std::flush;
+    return ModelsCheckResult::FAIL_READ;
+}
+
+// perform check entity, return zero or non-zero (success or failure)
+int check_with_log(std::string const &file_path, SGM::Result& result)
 {
     std::vector<std::string> aLog;
     SGM::CheckOptions Options;
     SGM::CheckEntity(result,SGM::Thing(),Options,aLog);
-    if(aLog.empty())
-        {
-        std::cerr << "Success" << std::endl;
-        return 0;
-        }
-    std::cerr << "Error: ";
+    if (aLog.empty())
+        return ModelsCheckResult::SUCCESS;
+    std::cerr << "Error: check failed on file: " << file_path << std::endl << std::flush;
     for (std::string &log_item: aLog)
-        {
         std::cerr << log_item << std::endl;
-        }
-    return 1;
+    std::cerr << std::flush;
+    return ModelsCheckResult::FAIL_CHECK;
 }
 
-void import_file_check_or_exit(std::string const &file_path)
+// import file and check entity, return zero or non-zero (success or failure)
+int import_check(std::string const &file_path)
 {
-    // we could do something like call check_file_is_readable(file_path); from Euclid here
-    std::cerr << "Checking " << file_path << std::endl;
-    std::vector<SGM::Entity> entities;
-    std::vector<std::string> log;
-    SGM::TranslatorOptions const options;
-    SGM::Result result(SGM::CreateThing());
-    SGM::ReadFile(result, file_path, entities, log, options);
-    if (result.GetResult() != SGM::ResultTypeOK)
+    // this lambda will be run in another thread
+    auto asyncFuture = std::async(std::launch::async, [&file_path]()->int {
+        int status = ModelsCheckResult::SUCCESS;
+        SGM::Result result(SGM::CreateThing());
+        if (status == ModelsCheckResult::SUCCESS)
+            status = import_file(file_path, result);
+        if (status == ModelsCheckResult::SUCCESS)
+            status = check_with_log(file_path, result);
+        return status;
+    });
+
+    // run the lambda in a thread buy interrupt if it goes over the specified wait time
+    if (asyncFuture.wait_for(std::chrono::milliseconds(MODELS_CHECK_TIMEOUT)) == std::future_status::timeout)
         {
-        std::cerr << "Error: Unable to read from file: " << file_path << std::endl;
-        exit(1);
+        std::cerr << "Error: timed out after " << MODELS_CHECK_TIMEOUT/1000 <<
+                  "s, on file: " << file_path << std::endl << std::flush;
+        // forcefully exit the whole process because there is not a clean way to
+        // kill the thread running the async task doing Reading and Checking
+        exit(ModelsCheckResult::FAIL_TIMEOUT);
         }
-    int failed = check_with_log(result);
-    if (failed != 0)
-        {
-        exit(1);
-        }
-    else
-        {
-        exit(0);
-        }
+    // the return value of the lambda
+    int status = asyncFuture.get();
+    return status;
+}
+
+void import_check_exit(std::string const &file_path)
+{
+    int status = import_check(file_path);
+    if (status == ModelsCheckResult::SUCCESS)
+        std::cerr << "Success" << std::endl;
+    // if there were other reasons for failure a message will have already been written to std::cerr
+    exit(status); // exit this process with the status code
 }
 
 double square_root(double num) {
@@ -132,21 +159,35 @@ TEST(DataDirectoriesCheck, test_data_exists) {
     ASSERT_TRUE(data_dir.DirectoryExists());
 }
 
-
 TEST(ModelDeathTest, exit_code)
 {
     EXPECT_EQ(0.0, square_root(0.0));
     EXPECT_EXIT(square_root(-22.0), ::testing::ExitedWithCode(255), "Error: Negative Input");
 }
 
+//TEST(ModelDeathTest, import_check_timeout)
+//{
+//    std::cout << std::endl << std::flush;
+//    std::string base_dir(SGM_MODELS_DIRECTORY);
+//    std::string path_name = base_dir + "/Allen keys.stp";
+//    int status = import_check(path_name);
+//    if (status == ModelsCheckResult::SUCCESS)
+//        std::cerr << "Success" << std::endl;
+//    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
+//}
+
 TEST(ModelDeathTest, sgm_models)
 {
+    std::cout << std::endl << std::flush;
     std::string base_dir(SGM_MODELS_DIRECTORY);
     std::vector<std::string> names = get_stp_names_in_path(base_dir);
     for (const std::string& name : names)
     {
         std::string path_name = base_dir + "/" + name;
-        EXPECT_EXIT(import_file_check_or_exit(path_name), ::testing::ExitedWithCode(0), "Success");
+        std::cout << "Checking " << path_name << std::endl << std::flush;
+        EXPECT_EXIT(import_check_exit(path_name),
+                    ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),
+                    "Success");
     }
 }
 

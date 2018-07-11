@@ -884,7 +884,7 @@ void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent,SGM::Attribute Att
                 QTreeWidgetItem* data_item1 = new QTreeWidgetItem(attribute_item);
                 std::vector<int> const &Data=SGM::GetIntegerAttributeData(dPtr->mResult,AttributeID);
                 char Data1[100];
-                snprintf(Data1,sizeof(Data1),"(%ld, %ld, %ld)",Data[0],Data[1],Data[2]);
+                snprintf(Data1,sizeof(Data1),"(%d, %d, %d)",Data[0],Data[1],Data[2]);
                 data_item1->setText(0,"RGB");
                 data_item1->setText(1,Data1);
                 }
@@ -921,7 +921,7 @@ void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent,SGM::Entity Entit
             else
                 {
                 char Data1[100];
-                snprintf(Data1,sizeof(Data1),"%d Attributes",nAttributes);
+                snprintf(Data1,sizeof(Data1),"%ld Attributes",nAttributes);
                 owner_item->setText(1,Data1);
                 }
             auto iter=sAttributes.begin();
