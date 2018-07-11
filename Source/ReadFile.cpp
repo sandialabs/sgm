@@ -1110,6 +1110,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     mSTEPTagMap[std::string("GROUP")]=SGMInternal::STEPTags::GROUP;
     mSTEPTagMap[std::string("ITEM_DEFINED_TRANSFORMATION")]=SGMInternal::STEPTags::ITEM_DEFINED_TRANSFORMATION;
     mSTEPTagMap[std::string("LENGTH_MEASURE_WITH_UNIT")]=SGMInternal::STEPTags::LENGTH_MEASURE_WITH_UNIT;
+    mSTEPTagMap[std::string("LENGTH_UNIT")]=SGMInternal::STEPTags::LENGTH_UNIT;
     mSTEPTagMap[std::string("LINE")]=SGMInternal::STEPTags::LINE;
     mSTEPTagMap[std::string("LOCAL_TIME")]=SGMInternal::STEPTags::LOCAL_TIME;
     mSTEPTagMap[std::string("MANIFOLD_SOLID_BREP")]=SGMInternal::STEPTags::MANIFOLD_SOLID_BREP;
