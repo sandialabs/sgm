@@ -78,7 +78,7 @@ std::vector<std::string> get_stp_names_in_path(const std::string& dir)
 
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 
-static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
+static const size_t MODELS_CHECK_TIMEOUT = 60000; // milliseconds
 
 int import_file(std::string const &file_path, SGM::Result& result)
 {
@@ -86,7 +86,8 @@ int import_file(std::string const &file_path, SGM::Result& result)
     std::vector<std::string> log;
     SGM::TranslatorOptions const options;
     SGM::ReadFile(result, file_path, entities, log, options);
-    if (result.GetResult() == SGM::ResultTypeOK)
+    auto resultType = result.GetResult();
+    if (resultType == SGM::ResultTypeOK)
         return ModelsCheckResult::SUCCESS;
     std::cerr << "Error: Unable to read from file: " << file_path << std::endl << std::flush;
     return ModelsCheckResult::FAIL_READ;
@@ -165,16 +166,16 @@ TEST(ModelDeathTest, exit_code)
     EXPECT_EXIT(square_root(-22.0), ::testing::ExitedWithCode(255), "Error: Negative Input");
 }
 
-//TEST(ModelDeathTest, import_check_timeout)
-//{
-//    std::cout << std::endl << std::flush;
-//    std::string base_dir(SGM_MODELS_DIRECTORY);
-//    std::string path_name = base_dir + "/Allen keys.stp";
-//    int status = import_check(path_name);
-//    if (status == ModelsCheckResult::SUCCESS)
-//        std::cerr << "Success" << std::endl;
-//    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
-//}
+TEST(ModelDeathTest, import_check_timeout)
+{
+    std::cout << std::endl << std::flush;
+    std::string base_dir(SGM_MODELS_DIRECTORY);
+    std::string path_name = base_dir + "/AR9 Ejector.stp";
+    int status = import_check(path_name);
+    if (status == ModelsCheckResult::SUCCESS)
+        std::cerr << "Success" << std::endl;
+    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
+}
 
 TEST(ModelDeathTest, sgm_models)
 {
