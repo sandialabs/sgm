@@ -1397,15 +1397,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dRadius=DataIter->second.m_aDoubles[0];
                 double dHalfAngle=DataIter->second.m_aDoubles[1];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(-SLDN.m_aDoubles[0],-SLDN.m_aDoubles[1],-SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new cone(rResult,Center,ZAxis,dRadius,dHalfAngle,&XAxis);
                 break;
                 }
@@ -1414,15 +1410,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
                 }
@@ -1433,15 +1425,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=DataIter->second.m_bFlag;
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
@@ -1457,16 +1445,12 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 STEPLineData const &SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData const &SLDP=mSTEPData[nID0];
-                STEPLineData const &SLDN=mSTEPData[nID1];
-                STEPLineData const &SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
+
                 mEntityMap[nID]=new ellipse(rResult,Center,XAxis,YAxis,dMajor,dMinor);
                 break;    
                 }
@@ -1520,15 +1504,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Origin;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Origin,ZAxis,XAxis);
+
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis,1.0);
                 break;
@@ -1544,15 +1524,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
                 break;    
@@ -1592,15 +1568,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=true;
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
