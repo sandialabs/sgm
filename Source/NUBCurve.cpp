@@ -220,7 +220,7 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
         assert(aKnots.size() >= (nDegree+2));
         nSpanIndex=aKnots.size()-nDegree-2;
         }
-    else if(t<Domain.m_dMin)
+    else if(t<=Domain.m_dMin)
         {
         nSpanIndex=nDegree;
         }
@@ -228,6 +228,10 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
         {
         nSpanIndex=(int)(std::upper_bound(aKnots.begin(),aKnots.end(),t)-aKnots.begin()-1);
         nSpanIndex=std::min(nSpanIndex,aKnots.size()-nDegree-2);
+        }
+    if(nSpanIndex<nDegree)
+        {
+        nSpanIndex=nDegree;
         }
     return nSpanIndex;
     }

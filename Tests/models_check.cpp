@@ -121,7 +121,11 @@ const std::string current_date_time()
     time_t     now = time(0);
     struct tm  tstruct;
     char       buf[80];
+#ifdef _MSC_VER
+    localtime_s(&tstruct,&now);
+#else
     tstruct = *localtime(&now);
+#endif
     strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
     return buf;
 }

@@ -1176,8 +1176,8 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
                 aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
                 }
             FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&aKnots[0],aaBasisFunctions);
-            SGM::Point4D PosFour;
-            SGM::Vector4D D1Four,D2Four;
+            SGM::Point4D PosFour(0,0,0,0);
+            SGM::Vector4D D1Four(0,0,0,0),D2Four(0,0,0,0);
             if(Pos || D1 || D2)
                 {
                 double *aBasis=aaBasisFunctions[0];
