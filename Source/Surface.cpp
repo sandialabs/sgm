@@ -1283,69 +1283,16 @@ void surface::Evaluate(SGM::Point2D const &uv,
             SGM::UnitVector3D const &XAxis  =pRevolve->m_XAxis;
             SGM::UnitVector3D const &YAxis  =pRevolve->m_YAxis;
             SGM::UnitVector3D const &ZAxis  =pRevolve->m_ZAxis;
-#if 0
+
             SGM::Point3D   CurvePos;
             SGM::Vector3D  DvCurve;
             SGM::Vector3D *pDvCurve = &DvCurve;
             SGM::Vector3D  DvvCurve;
             SGM::Vector3D *pDvvCurve = &DvvCurve;
-
-            if (nullptr == Dv && nullptr == Duv && nullptr == Dvv && nullptr == Norm)
-                pDvCurve = nullptr;
-            if (nullptr == Dvv)
-                pDvvCurve = nullptr;
-
-            // Evaluate curve, project the curve's point to the axis, and find radius.
-
-            pRevolve->m_pCurve->Evaluate(uv.m_v, &CurvePos, pDvCurve, pDvvCurve);
-            SGM::Point3D AxisPos = Origin + ((CurvePos - Origin) % ZAxis) * ZAxis;
-            SGM::Vector3D vRadius = CurvePos - AxisPos;
-            double dRadius = vRadius.Magnitude();
-            double dHight = (CurvePos-Origin)%ZAxis;
-            double dCos=cos(uv.m_u);
-            double dSin=sin(uv.m_u);
-
-            double dDRadius=0,dDDRadius=0;
-            if(pDvCurve)
-                {
-                dDRadius = 
-                }
-            if(pDvvCurve)
-                {
-                dDDRadius =
-                }
-
-            if (nullptr != Pos)
-                *Pos = Origin + dRadius*(dCos*XAxis + dSin*YAxis) + dHight*ZAxis;
-
-            if (nullptr != Du)
-                *Du = dRadius*(dSin*YAxis - dCos*XAxis);
-
-            if (nullptr != Dv)
-                *Dv = dDRadius*(dCos*XAxis + dSin*YAxis) + dDHight*ZAxis;
-
-            if (nullptr != Norm)
-                *Norm = 
-
-            if (nullptr != Duu)
-                *Duu = dRadius*(-dCos*YAxis - dSin*XAxis);
-
-            if (nullptr != Duv)
-                *Duv = dDRadius*(dSin*YAxis - dCos*XAxis);
-
-            if (nullptr != Dvv)
-                *Dvv = dDDRadius*(dCos*XAxis + dSin*YAxis) + dDDHight*ZAxis;
-
-#else
-            SGM::Point3D   CurvePos;
-            SGM::Vector3D  DvCurve;
-            SGM::Vector3D *pDvCurve = &DvCurve;
-            SGM::Vector3D  DvvCurve;
-            SGM::Vector3D *pDvvCurve = &DvvCurve;
-            SGM::Vector3D  dvAxisPos;
-            SGM::Vector3D  dvvAxisPos;
-            SGM::Vector3D  DuLocal;
-            SGM::Vector3D  DvLocal;
+            SGM::Vector3D  dvAxisPos(0,0,0);
+            SGM::Vector3D  dvvAxisPos(0,0,0);
+            SGM::Vector3D  DuLocal(0,0,0);
+            SGM::Vector3D  DvLocal(0,0,0);
             double A1_half = 0.0;
             double dvRadius = 0.0;
 
@@ -1408,7 +1355,7 @@ void surface::Evaluate(SGM::Point2D const &uv,
                 double dvvRadius = ((-1 * A1_half * A1_half) / (dRadius * dRadius * dRadius)) + ((A2_half) / (dRadius));
                 *Dvv = dvvAxisPos + (dvvRadius * dCos * XAxis) + (dvvRadius * dSin * YAxis);
             }
-#endif
+
             break;
             }
         case SGM::ExtrudeType:

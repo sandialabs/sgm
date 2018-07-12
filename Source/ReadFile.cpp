@@ -171,8 +171,11 @@ size_t FindArgumentsAfter(std::string        const &line,
                           std::vector<std::string> &aArgs,
                           std::string        const &after)
     {
-    size_t nFound=line.find(after);
-    char const *pString=line.c_str();
+    std::string LineCopy=line;
+    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+
+    size_t nFound=LineCopy.find(after);
+    char const *pString=LineCopy.c_str();
     size_t nStart=nFound+after.length();
     size_t nCount=nStart;
     while(pString[nCount])
@@ -202,8 +205,11 @@ size_t FindArgumentSetsAfter(std::string        const &line,
                              std::vector<std::string> &aArgs,
                              std::string        const &after)
     {
-    size_t nFound=line.find(after);
-    char const *pString=line.c_str();
+    std::string LineCopy=line;
+    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+
+    size_t nFound=LineCopy.find(after);
+    char const *pString=LineCopy.c_str();
     size_t nStart=nFound+after.length();
     size_t nCount=nStart;
     bool bFirst=true;
@@ -560,6 +566,107 @@ void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
         }                                               // UKnots.
     }
 
+void ProcessBoundedSurface(SGM::Result       &,//rResult,
+                           std::string const &spline,
+                           STEPLineData      &STEPData)
+    {
+    // #218 =( BOUNDED_SURFACE ( )  B_SPLINE_SURFACE ( 3, 3, ( 
+    //  ( #441, #427, #443, #679 ),
+    //  ( #862, #1034, #432, #1018 ),
+    //  ( #350, #174, #272, #845 ),
+    //  ( #165, #764, #1020, #939 ) ),
+    //  .UNSPECIFIED., .F., .F., .T. ) 
+    //  B_SPLINE_SURFACE_WITH_KNOTS ( ( 4, 4 ),
+    //  ( 4, 4 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  .UNSPECIFIED. ) 
+    //  GEOMETRIC_REPRESENTATION_ITEM ( )  RATIONAL_B_SPLINE_SURFACE ( (
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000) ) ) 
+    //  REPRESENTATION_ITEM ( '' )  SURFACE ( )  );
+    
+    // UDegree, VDegree,
+    // Control Points
+    // Uknot multiplicity, Vknot multiplicity
+    // Uknots, VKnots,
+    // Weights
+
+    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
+
+    std::vector<std::string> aArgs;
+    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE(");
+    int nUDegree,nVDegree;
+    sscanf(aArgs[0].c_str(),"%d",&nUDegree);        
+    sscanf(aArgs[1].c_str(),"%d",&nVDegree);
+    STEPData.m_aInts.push_back(nUDegree);
+    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
+
+    aArgs.clear();
+    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
+    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
+    FindListArguments(aArgs[0]+')',aArgs0);
+    FindListArguments(aArgs[1]+')',aArgs1);
+    FindListArguments(aArgs[2]+')',aArgs2);
+    FindListArguments(aArgs[3]+')',aArgs3);
+    size_t Index1,Index2;
+    size_t nSize=aArgs0.size();
+    STEPData.m_aInts.push_back((int)nSize);
+    size_t nUKnots=0;
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        int nMultiplicity;
+        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
+        STEPData.m_aInts.push_back(nMultiplicity);
+        nUKnots+=nMultiplicity;
+        }                                               // Uknot multiplicity
+
+    nSize=aArgs1.size();
+    STEPData.m_aInts.push_back((int)nSize);
+    size_t nVKnots=0;
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        int nMultiplicity;
+        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
+        STEPData.m_aInts.push_back(nMultiplicity);
+        nVKnots+=nMultiplicity;
+        }                                               // Vknot multiplicity
+
+    nSize=aArgs2.size();
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        double dKnot;
+        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
+        STEPData.m_aDoubles.push_back(dKnot);
+        }                                               // UKnots.
+
+    nSize=aArgs3.size();
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        double dKnot;
+        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
+        STEPData.m_aDoubles.push_back(dKnot);
+        }                                               // UKnots.
+
+    aArgs.clear();
+    FindArgumentSetsAfter(spline,aArgs,"RATIONAL_B_SPLINE_SURFACE((");
+    size_t nUControlPoints=nUKnots-nUDegree-1;
+    size_t nVControlPoints=nVKnots-nVDegree-1;
+    for(Index1=0;Index1<nUControlPoints;++Index1)
+        {
+        std::vector<std::string> aArgsSub;
+        FindListArguments(aArgs[Index1]+')',aArgsSub);
+        for(Index2=0;Index2<nVControlPoints;++Index2)
+            {
+            double dWeight;
+            sscanf(aArgsSub[Index2].c_str(),"%lf",&dWeight);  
+            STEPData.m_aDoubles.push_back(dWeight);
+            }
+        }                                               // The weights.
+    }
+
 void ProcessBSplineSurface(SGM::Result       &,//rResult,
                            std::string const &spline,
                            STEPLineData      &STEPData)
@@ -838,6 +945,12 @@ void ProcessLine(SGM::Result                        &rResult,
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
+                    case SGMInternal::STEPTags::BOUNDED_SURFACE:
+                        {
+                        ProcessBoundedSurface(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
                     case SGMInternal::STEPTags::BREP_WITH_VOIDS:
                         {
                         ProcessVolume(rResult,line,STEPData);
@@ -1062,6 +1175,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     mSTEPTagMap[std::string("B_SPLINE_SURFACE")]=SGMInternal::STEPTags::B_SPLINE_SURFACE;
     mSTEPTagMap[std::string("B_SPLINE_CURVE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS;
     mSTEPTagMap[std::string("B_SPLINE_SURFACE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS;
+    mSTEPTagMap[std::string("BOUNDED_SURFACE")]=SGMInternal::STEPTags::BOUNDED_SURFACE;
     mSTEPTagMap[std::string("BREP_WITH_VOIDS")]=SGMInternal::STEPTags::BREP_WITH_VOIDS;
     mSTEPTagMap[std::string("CALENDAR_DATE")]=SGMInternal::STEPTags::CALENDAR_DATE;
     mSTEPTagMap[std::string("CAMERA_MODEL_D3")]=SGMInternal::STEPTags::CAMERA_MODEL_D3;
@@ -1153,6 +1267,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     mSTEPTagMap[std::string("QUASI_UNIFORM_SURFACE")]=SGMInternal::STEPTags::QUASI_UNIFORM_SURFACE;
     mSTEPTagMap[std::string("REPRESENTATION")]=SGMInternal::STEPTags::REPRESENTATION;
     mSTEPTagMap[std::string("REPRESENTATION_MAP")]=SGMInternal::STEPTags::REPRESENTATION_MAP;
+    mSTEPTagMap[std::string("REPRESENTATION_RELATIONSHIP")]=SGMInternal::STEPTags::REPRESENTATION_RELATIONSHIP;
     mSTEPTagMap[std::string("SECURITY_CLASSIFICATION")]=SGMInternal::STEPTags::SECURITY_CLASSIFICATION;
     mSTEPTagMap[std::string("SECURITY_CLASSIFICATION_LEVEL")]=SGMInternal::STEPTags::SECURITY_CLASSIFICATION_LEVEL;
     mSTEPTagMap[std::string("SHAPE_DEFINITION_REPRESENTATION")]=SGMInternal::STEPTags::SHAPE_DEFINITION_REPRESENTATION;
@@ -1397,15 +1512,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dRadius=DataIter->second.m_aDoubles[0];
                 double dHalfAngle=DataIter->second.m_aDoubles[1];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(-SLDN.m_aDoubles[0],-SLDN.m_aDoubles[1],-SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+                
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new cone(rResult,Center,ZAxis,dRadius,dHalfAngle,&XAxis);
                 break;
                 }
@@ -1414,15 +1525,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
                 }
@@ -1433,15 +1540,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=DataIter->second.m_bFlag;
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
@@ -1457,16 +1560,12 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 STEPLineData const &SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData const &SLDP=mSTEPData[nID0];
-                STEPLineData const &SLDN=mSTEPData[nID1];
-                STEPLineData const &SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
+
                 mEntityMap[nID]=new ellipse(rResult,Center,XAxis,YAxis,dMajor,dMinor);
                 break;    
                 }
@@ -1520,15 +1619,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Origin;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Origin,ZAxis,XAxis);
+
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis,1.0);
                 break;
@@ -1544,15 +1639,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
                 mEntityMap[nID]=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
                 break;    
@@ -1592,15 +1683,11 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=true;
                 STEPLineData SLDA=mSTEPData[nAxis];
-                size_t nID0=SLDA.m_aIDs[0];
-                size_t nID1=SLDA.m_aIDs[1];
-                size_t nID2=SLDA.m_aIDs[2];
-                STEPLineData SLDP=mSTEPData[nID0];
-                STEPLineData SLDN=mSTEPData[nID1];
-                STEPLineData SLDX=mSTEPData[nID2];
-                SGM::Point3D Center(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
-                SGM::UnitVector3D ZAxis(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
-                SGM::UnitVector3D XAxis(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
+
+                SGM::Point3D Center;
+                SGM::UnitVector3D ZAxis,XAxis;
+                GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
