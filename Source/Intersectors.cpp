@@ -424,9 +424,11 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
 
     SGM::Point3D Pos0=Origin+Axis*Domain.m_dMin;
     SGM::Point3D Pos1=Origin+Axis*Domain.m_dMax;
+    SGM::Point3D PosMid=Origin+Axis*Domain.MidPoint();
     double dDist0=(Pos0-PlaneOrigin)%PlaneNorm;
     double dDist1=(Pos1-PlaneOrigin)%PlaneNorm;
-    if(fabs(dDist0)<dTolerance && fabs(dDist1)<dTolerance)
+    double dDistMid=(PosMid-PlaneOrigin)%PlaneNorm;
+    if(fabs(dDist0)<dTolerance && fabs(dDist1)<dTolerance && fabs(dDistMid)<dTolerance)
         {
         aPoints.push_back(Pos0);
         aPoints.push_back(Pos1);
@@ -434,6 +436,8 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
         aTypes.push_back(SGM::IntersectionType::CoincidentType);
         return 2;
         }
+    if (fabs(Axis%PlaneNorm)<dTolerance)
+      return 0;
     if(dDist0*dDist1<0)
         {
         double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.m_x+
@@ -568,12 +572,12 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
         // a*(c+d*t)^2-(e+f*t)=0
         // (a*c^2-e) + (2*a*c*d-f)*t + (a*d^2)*t^2
 
-        double c0=a*d*d;
-        double c1=2.0*a*c*d-f;
-        double c2=a*c*c-e;
+        double A=a*d*d;
+        double B=2.0*a*c*d-f;
+        double C=a*c*c-e;
 
         std::vector<double> aRoots;
-        size_t nRoots=SGM::Quadratic(c0,c1,c2,aRoots);
+        size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
         size_t Index1;
         for(Index1=0;Index1<nRoots;++Index1)
             {
@@ -606,7 +610,7 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
             }
         if(nRoots==0)
             {
-            SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
+            SGM::Point2D Pos=Origin2D-Axis2D*(B/(2.0*A));
             SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pParabola->Inverse(Pos3D,&CPos);
@@ -664,15 +668,15 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
         double f=Axis2D.m_v;
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
-        double c0=f*f*raa-d*d*rbb;
-        double c1=2.0*e*f*raa-2*c*d*rbb;
-        double c2=e*e*raa-c*c*rbb-1.0;
+        double A=f*f*raa-d*d*rbb;
+        double B=2.0*e*f*raa-2*c*d*rbb;
+        double C=e*e*raa-c*c*rbb-1.0;
 
         // (e+f*t)^2/a^2-(c+d*t)^2/b^2-1=0
         // (e^2/a^2 - c^2/b^2 - 1) + t ((2 e f)/a^2 - (2 c d)/b^2) + t^2 (f^2/a^2 - d^2/b^2) 
 
         std::vector<double> aRoots;
-        size_t nRoots=SGM::Quadratic(c0,c1,c2,aRoots);
+        size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
         size_t Index1;
         for(Index1=0;Index1<nRoots;++Index1)
             {
@@ -680,7 +684,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
             SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             double t=pHyperbola->Inverse(Pos3D,&CPos);
-            if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
+            if((Pos3D-Center)%YVec > SGM_ZERO)
                 {
                 aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
                 if(nRoots==1)
@@ -705,7 +709,7 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
             }
         if(nRoots==0)
             {
-            SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
+            SGM::Point2D Pos=Origin2D-Axis2D*(B/(2.0*A));
             SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pHyperbola->Inverse(Pos3D,&CPos);
@@ -763,15 +767,15 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
         double f=Axis2D.m_v;
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
-        double c0=d*d*raa+f*f*rbb;
-        double c1=2.0*c*d*raa+2*e*f*rbb;
-        double c2=c*c*raa+e*e*rbb-1.0;
+        double A=d*d*raa+f*f*rbb;
+        double B=2.0*c*d*raa+2*e*f*rbb;
+        double C=c*c*raa+e*e*rbb-1.0;
 
         // (c+d*t)^2/a^2+(e+f*t)^2/b^2-1=0
         // (c^2/a^2 + e^2/b^2 - 1) + t ((2 c d)/a^2 + (2 e f)/b^2) + t^2 (d^2/a^2 + f^2/b^2) 
 
         std::vector<double> aRoots;
-        size_t nRoots=SGM::Quadratic(c0,c1,c2,aRoots);
+        size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
         size_t Index1;
         for(Index1=0;Index1<nRoots;++Index1)
             {
@@ -788,7 +792,7 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
             }
         if(nRoots==0)
             {
-            SGM::Point2D Pos=Origin2D-Axis2D*(c1/(2.0*c1));
+            SGM::Point2D Pos=Origin2D-Axis2D*(B/(2.0*A));
             SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
             SGM::Point3D CPos;
             pEllipse->Inverse(Pos3D,&CPos);

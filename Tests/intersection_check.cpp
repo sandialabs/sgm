@@ -80,8 +80,8 @@ TEST(intersection_check, intersect_ellipse_and_plane)
     SGM::EvaluateCurve(rResult, EllipseCurve2, dUvalue, &PosOnEllipse, &Tangent);
 
     SGM::UnitVector3D EllipseNormal = XAxis*YAxis;
-    PlaneOrigin = PosOnEllipse + EllipseNormal*11.0;
     PlaneNormal = Tangent*EllipseNormal;
+    PlaneOrigin = PosOnEllipse + EllipseNormal*11.0;
 
     aPoints.clear();
     aTypes.clear();
@@ -93,25 +93,46 @@ TEST(intersection_check, intersect_ellipse_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // plane misses ellipse by slightly more than tolerance
-    PlaneOrigin = PlaneOrigin + (1.0e-5)*PlaneNormal;
+    PlaneOrigin = PlaneOrigin + (dTolerance*10.0)*PlaneNormal;
 
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurveAndPlane(rResult, EllipseCurve2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
 
     EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
 
-    //// plane misses ellipse by slightly less than tolerance
-    //PlaneOrigin = PosOnEllipse + (1.0e-11)*PlaneNormal;
+    // plane misses ellipse by slightly less than tolerance
+    PlaneOrigin = PosOnEllipse + (dTolerance*0.1)*PlaneNormal;
 
-    //aPoints.clear();
-    //aTypes.clear();
-    //SGM::IntersectCurveAndPlane(rResult, EllipseCurve2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, EllipseCurve2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
 
-    //EXPECT_EQ(aPoints.size(), 1);
-    //EXPECT_EQ(aTypes.size(), 1);
-    //EXPECT_TRUE(SGM::NearEqual(PosOnEllipse, aPoints[0], dTolerance));
-    //EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(PosOnEllipse, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
+    // simple case for easier debugging
+    SGM::Point3D Center3(0,0,0);
+    SGM::UnitVector3D XAxis3(1,1,0);
+    SGM::UnitVector3D YAxis3(-1,1,0);
+    double dXRadius3 = 2;
+    double dYRadius3 = 1;
+    SGM::Curve EllipseCurve3 = SGM::CreateEllipse(rResult, Center3, XAxis3, YAxis3, dXRadius3, dYRadius3);
+
+    // tangent plane that just misses 
+    SGM::UnitVector3D PlaneNormal3(1,1,0);
+    SGM::Point3D PlaneOrigin3(sqrt(2.0), sqrt(2.0), 0);
+    PlaneOrigin3 = PlaneOrigin3 + (dTolerance*10.0)*PlaneNormal3;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, EllipseCurve3, PlaneOrigin3, PlaneNormal3, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -140,13 +161,35 @@ TEST(intersection_check, intersect_line_and_plane)
     EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
-
-    PlaneOrigin = SGM::Point3D(-.5,3,-1.5);
+    // coincident intersection
+    PlaneOrigin = Pos + 0.5*SGM::Vector3D(1,2,3);
     PlaneNorm = Direction.Orthogonal();
 
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurveAndPlane(rResult, LineID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
+
+    // parallel plane offset by more than tolerance
+    SGM::Point3D PlaneOriginOffset = PlaneOrigin + (dTolerance*10.0)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, LineID, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
+
+    // parallel plane offset by less than tolerance
+    PlaneOriginOffset = PlaneOrigin + (dTolerance*0.1)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, LineID, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
 
     EXPECT_EQ(aPoints.size(), 2);
     EXPECT_EQ(aTypes.size(), 2);
@@ -213,12 +256,34 @@ TEST(intersection_check, intersect_circle_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
     EXPECT_TRUE(SGM::NearEqual(PosOnCircle, aPoints[0], dTolerance));
 
+    // plane misses by just more than tolerance
+    SGM::Point3D PlaneOriginOffset = PlaneOrigin + (dTolerance*10.0)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, CircleID, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
+
+    // plane misses by just less than tolerance
+    PlaneOriginOffset = PlaneOrigin + (dTolerance*0.1)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, CircleID, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_TRUE(SGM::NearEqual(PosOnCircle, aPoints[0], dTolerance));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
 TEST(intersection_check, intersect_parabola_and_plane)
 {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(-3,2,1);
@@ -282,24 +347,61 @@ TEST(intersection_check, intersect_parabola_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
     EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
 
-    SGM::DeleteThing(pThing);
+    // parallel to tangent plane, but just outside of tolerance
+    PlaneNorm = Normal*Tangent;
+    PlaneOrigin = Pos + 7.7*Normal + (dTolerance*10.0)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
+
+    // tangent just within tolerance
+    PlaneOrigin = Pos + 7.7*Normal + (dTolerance*0.1)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
+    // tangent just within tolerance - tilt the plane
+    SGM::UnitVector3D TiltedNormal = PlaneNorm + 0.4*Normal;
+    PlaneOrigin = Pos + 7.7*Tangent;
+    PlaneOrigin = PlaneOrigin + (dTolerance*0.1)*TiltedNormal;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
+    SGMTesting::ReleaseTestThing(pThing);
 }
 
 TEST(intersection_check, intersect_hyperbola_and_plane)
 {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::Point3D Center(0,0,0);//3,-4,-5);
-    SGM::UnitVector3D XAxis(1,0,0);//0,2,1);
-    SGM::UnitVector3D YAxis(0,1,0);//0,1,-2);
-    double dA = 2.0;//1.1;
-    double dB = 1.0;//0.7;
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(1,0,0);
+    SGM::UnitVector3D YAxis(0,1,0);
+    double dA = 2.0;
+    double dB = 1.0;
     SGM::Curve HyperbolaID = SGM::CreateHyperbola(rResult, Center, XAxis, YAxis, dA, dB);
 
     // coincident plane
-    SGM::Point3D PlaneOrigin(0,10,0);//3,16,15);
-    SGM::UnitVector3D PlaneNorm(0,0,1);//-1,0,0);
+    SGM::Point3D PlaneOrigin(0,10,0);
+    SGM::UnitVector3D PlaneNorm(0,0,1);
 
     double dTolerance = SGM_MIN_TOL;
     std::vector<SGM::Point3D> aPoints;
@@ -311,6 +413,7 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
     EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
     
+    // intersects two points
     PlaneNorm = SGM::UnitVector3D(0,1,0);
 
     aPoints.clear();
@@ -324,6 +427,7 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
     EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
 
+    // intersects one point
     PlaneOrigin = SGM::Point3D(-10,0,0);
     PlaneNorm = SGM::UnitVector3D(1,0,0);
 
@@ -336,7 +440,7 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
     EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(-10, 20.099751, 0), aPoints[0], dTolerance));
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
-    // in y-z plane, not aligned with axes
+    // hyperbola in y-z plane, not aligned with axes
     SGM::Point3D Center2(3,-4,-5);
     SGM::UnitVector3D XAxis2(0,2,1);
     SGM::UnitVector3D YAxis2(0,1,-2);
@@ -356,5 +460,44 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
     EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
 
-    SGM::DeleteThing(pThing);
+    // tangent plane
+    SGM::Point3D PosOnHyperbola;
+    SGM::Vector3D Tangent;
+    SGM::EvaluateCurve(rResult, HyperbolaID2, 1.5, &PosOnHyperbola, &Tangent);
+
+    PlaneOrigin = PosOnHyperbola + 3*Tangent;
+    PlaneNorm = Tangent * (XAxis2*YAxis2);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID2, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_TRUE(SGM::NearEqual(PosOnHyperbola, aPoints[0], dTolerance));
+
+    // tangent offset less than tolerance
+    SGM::Point3D PlaneOriginOffset = PlaneOrigin + (dTolerance*0.1)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID2, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_TRUE(SGM::NearEqual(PosOnHyperbola, aPoints[0], dTolerance));
+
+    // tangent offset more than tolerance
+    PlaneOriginOffset = PlaneOrigin + (dTolerance*10.0)*PlaneNorm;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, HyperbolaID2, PlaneOriginOffset, PlaneNorm, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
+
+    SGMTesting::ReleaseTestThing(pThing);
 }
