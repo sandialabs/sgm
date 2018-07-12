@@ -16,6 +16,14 @@ class ThreadPool
 public:
     ThreadPool(size_t);
 
+    /**
+     * Add a new work item to the pool.
+     * @tparam F
+     * @tparam Args
+     * @param f
+     * @param args
+     * @return
+     */
     template<class F, class... Args>
     auto enqueue(F &&f, Args &&... args)
     -> std::future<typename std::result_of<F(Args...)>::type>;
