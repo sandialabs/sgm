@@ -40,7 +40,7 @@ static const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 
 // limit
-static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
+static const size_t MODELS_CHECK_TIMEOUT = 1000; // milliseconds
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -410,14 +410,13 @@ TEST(ModelDeathTest, import_check_timeout)
 
 TEST(ModelDeathTest, sgm_models)
 {
-    std::cout << std::endl << std::flush;
     std::string base_dir(SGM_MODELS_DIRECTORY);
 
     std::vector<std::string> names = get_file_names_if(base_dir, has_model_extension);
 
     for (const std::string& name : names)
         {
-        std::string path_name = base_dir + "/" + name;
+        std::string path_name = std::string(SGM_MODELS_DIRECTORY) + "/" + name;
         std::cout << "Checking " << path_name << std::endl << std::flush;
         EXPECT_EXIT(import_check_log_process(path_name),
                     ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),
@@ -425,7 +424,4 @@ TEST(ModelDeathTest, sgm_models)
         }
 
     concatenate_log_files(base_dir);
-
 }
-
-
