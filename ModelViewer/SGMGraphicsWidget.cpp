@@ -763,14 +763,6 @@ void SGMGraphicsWidget::add_vertex(SGM::Point3D  const &Pos,
     data_buffer.push_back(ColorVec.m_x);
     data_buffer.push_back(ColorVec.m_y);
     data_buffer.push_back(ColorVec.m_z);
-
-    data_buffer.push_back(Pos.m_x);
-    data_buffer.push_back(Pos.m_y);
-    data_buffer.push_back(Pos.m_z+1);
-        
-    data_buffer.push_back(ColorVec.m_x);
-    data_buffer.push_back(ColorVec.m_y);
-    data_buffer.push_back(ColorVec.m_z);
         
     dPtr->camera.update_point_bounds(Pos.m_x, Pos.m_y, Pos.m_z);
     }
