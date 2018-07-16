@@ -1671,6 +1671,48 @@ double surface::DirectionalCurvature(SGM::Point2D      const &uv,
     return k1*dCos*dCos+k2*dSin*dSin;
     }
 
+int surface::UContinuity() const
+    {
+    switch(m_SurfaceType)
+        {
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface const *pNUB=(NUBsurface const*)this;
+            return pNUB->UContinuity();
+            }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURB=(NURBsurface const*)this;
+            return pNURB->UContinuity();
+            }
+        default:
+            {
+            return std::numeric_limits<int>::max();
+            }
+        }
+    }
+
+int surface::VContinuity() const
+    {
+    switch(m_SurfaceType)
+        {
+        case SGM::NUBSurfaceType:
+            {
+            NUBsurface const *pNUB=(NUBsurface const*)this;
+            return pNUB->VContinuity();
+            }
+        case SGM::NURBSurfaceType:
+            {
+            NURBsurface const *pNURB=(NURBsurface const*)this;
+            return pNURB->VContinuity();
+            }
+        default:
+            {
+            return std::numeric_limits<int>::max();
+            }
+        }
+    }
+
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                               SGM::Point3D       *ClosePos,
                               SGM::Point2D const *pGuess) const
@@ -1779,24 +1821,9 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
 
             double dx=x*XAxis.m_x+y*XAxis.m_y+z*XAxis.m_z;
             double dy=x*YAxis.m_x+y*YAxis.m_y+z*YAxis.m_z;
+            double dz=x*ZAxis.m_x+y*ZAxis.m_y+z*ZAxis.m_z;
             uv.m_u=SGM::SAFEatan2(dy,dx);
-
-            double dCosU=cos(uv.m_u);
-            double dSinU=sin(uv.m_u);
-            
-            double Sx=XAxis.m_x*dCosU+YAxis.m_x*dSinU;
-            double Sy=XAxis.m_y*dCosU+YAxis.m_y*dSinU;
-            double Sz=XAxis.m_z*dCosU+YAxis.m_z*dSinU;
-
-            double Lx=ZAxis.m_x*dCosHalfAngle-Sx*dSinHalfAngle;
-            double Ly=ZAxis.m_y*dCosHalfAngle-Sy*dSinHalfAngle;
-            double Lz=ZAxis.m_z*dCosHalfAngle-Sz*dSinHalfAngle;
-
-            double dSx=Pos.m_x-Center.m_x-Sx*dRadius;
-            double dSy=Pos.m_y-Center.m_y-Sy*dRadius;
-            double dSz=Pos.m_z-Center.m_z-Sz*dRadius;
-            
-            uv.m_v=(Lx*dSx+Ly*dSy+Lz*dSz)/dRadius;
+            uv.m_v=dz/(dCosHalfAngle*dRadius);
 
             double dMaxV=1.0/dSinHalfAngle;
             if(dMaxV<uv.m_v)
@@ -1836,6 +1863,8 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                 double dVScale=dRadius*(1.0-uv.m_v*dSinHalfAngle);
                 double dZScale=uv.m_v*dRadius*dCosHalfAngle;
                 
+                double dCosU=cos(uv.m_u);
+                double dSinU=sin(uv.m_u);
                 ClosePos->m_x=Center.m_x+(XAxis.m_x*dCosU+YAxis.m_x*dSinU)*dVScale+ZAxis.m_x*dZScale;
                 ClosePos->m_y=Center.m_y+(XAxis.m_y*dCosU+YAxis.m_y*dSinU)*dVScale+ZAxis.m_y*dZScale;
                 ClosePos->m_z=Center.m_z+(XAxis.m_z*dCosU+YAxis.m_z*dSinU)*dVScale+ZAxis.m_z*dZScale;

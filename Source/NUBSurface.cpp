@@ -57,4 +57,69 @@ std::vector<SGM::Point2D> const &NUBsurface::GetSeedParams() const
     {
     return m_aSeedParams;
     }
-}
+
+int NUBsurface::UContinuity() const
+    {
+    int nDegree=(int)GetUDegree();
+    size_t Index1;
+    size_t nKnots=m_aUKnots.size();
+    int nCount=0;
+    int nMaxCount=0;
+    double dLookFor=m_aUKnots.front();
+    for(Index1=1;Index1<nKnots;++Index1)
+        {
+        if(SGM::NearEqual(m_aUKnots[Index1],m_aUKnots.front(),SGM_MIN_TOL,false)==false && 
+           SGM::NearEqual(m_aUKnots[Index1],m_aUKnots.back(),SGM_MIN_TOL,false)==false)
+            {
+            ++nCount;
+            dLookFor=m_aUKnots[Index1];
+            }
+        else if(SGM::NearEqual(m_aUKnots[Index1],dLookFor,SGM_MIN_TOL,false))
+            {
+            ++nCount;
+            if(nMaxCount<nCount)
+                {
+                nMaxCount=nCount;
+                }
+            }
+        else
+            {
+            nCount=0;
+            }
+        }
+    return std::max(0,nDegree-nMaxCount);
+    }
+
+int NUBsurface::VContinuity() const
+    {
+    int nDegree=(int)GetVDegree();
+    size_t Index1;
+    size_t nKnots=m_aVKnots.size();
+    int nCount=0;
+    int nMaxCount=0;
+    double dLookFor=m_aVKnots.front();
+    for(Index1=1;Index1<nKnots;++Index1)
+        {
+        if(SGM::NearEqual(m_aVKnots[Index1],m_aVKnots.front(),SGM_MIN_TOL,false)==false && 
+           SGM::NearEqual(m_aVKnots[Index1],m_aVKnots.back(),SGM_MIN_TOL,false)==false)
+            {
+            ++nCount;
+            dLookFor=m_aVKnots[Index1];
+            }
+        else if(SGM::NearEqual(m_aVKnots[Index1],dLookFor,SGM_MIN_TOL,false))
+            {
+            ++nCount;
+            if(nMaxCount<nCount)
+                {
+                nMaxCount=nCount;
+                }
+            }
+        else
+            {
+            nCount=0;
+            }
+        }
+    return std::max(0,nDegree-nMaxCount);
+    }
+
+} // End of SGMInternal namespace

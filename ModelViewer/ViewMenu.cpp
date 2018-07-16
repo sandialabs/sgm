@@ -29,6 +29,7 @@ ViewMenu::ViewMenu(QWidget *parent) :
 
   QAction* urspace_action = addAction("&UV Space Mode", this, SIGNAL(uvspace()));
   urspace_action->setShortcut(tr("Ctrl+u"));
+  urspace_action->setCheckable(true);
 
   QAction* perspective_action = addAction("&Perspective Mode", this, SIGNAL(perspective()));
   perspective_action->setShortcut(tr("Ctrl+p"));

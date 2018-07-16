@@ -1436,6 +1436,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
+            case SGMInternal::STEPTags::BOUNDED_SURFACE:
             case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                 {
                 std::vector<std::vector<SGM::Point3D> > aaControlPoints;
@@ -1516,6 +1517,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
                 GetAxis(SLDA,mSTEPData,Center,ZAxis,XAxis);
+                ZAxis.Negate();
 
                 mEntityMap[nID]=new cone(rResult,Center,ZAxis,dRadius,dHalfAngle,&XAxis);
                 break;
@@ -2030,33 +2032,25 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     fclose(pFile);
 
     // Code for testing to be removed.
+    /*
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
     std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
-    std::vector<std::pair<size_t,face *> > aFaces;
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-        size_t nID=pFace->GetID();
-        aFaces.push_back(std::pair<size_t,face *>(nID,pFace));
+        if(pFace->GetID()==284)
+            {
+            pFace->GetTriangles(rResult);
+            }
         ++iter;
         }
-    std::sort(aFaces.begin(),aFaces.end());
-    size_t nFaces=aFaces.size();
-    size_t Index1;
-    for(Index1=0;Index1<nFaces;++Index1)
-        {
-        face *pFace=aFaces[Index1].second;
-        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
-        size_t nID=pFace->GetID();
-        nID;
-        nType;
-        pFace->GetTriangles(rResult);
-        }
+    */
 
     if(Options.m_bHeal)
         {
-        Heal(rResult,aEntities);
+        HealOptions Options;
+        Heal(rResult,aEntities,Options);
         }
 
     if(Options.m_bRemoveSeams)

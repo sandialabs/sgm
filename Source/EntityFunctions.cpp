@@ -1,6 +1,7 @@
 #include "SGMEntityFunctions.h"
 
 #include "EntityClasses.h"
+#include "EntityFunctions.h"
 #include "Curve.h"
 #include "Surface.h"
 #include "Topology.h"
@@ -193,24 +194,28 @@ SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
     }
 
 void Heal(SGM::Result           &rResult,
-          std::vector<entity *> &aEntities)
+          std::vector<entity *> &aEntities,
+          HealOptions     const &Options)
     {
-    size_t nEntities=aEntities.size();
-    size_t Index1;
-    for(Index1=0;Index1<nEntities;++Index1)
+    if(Options.m_bRemoveZeroFacetFaces)
         {
-        entity *pEntity=aEntities[Index1];
-        std::set<face *,EntityCompare> sFaces;
-        FindFaces(rResult,pEntity,sFaces);
-        std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
-        while(FaceIter!=sFaces.end())
+        size_t nEntities=aEntities.size();
+        size_t Index1;
+        for(Index1=0;Index1<nEntities;++Index1)
             {
-            face *pFace=*FaceIter;
-            if(pFace->GetTriangles(rResult).empty())
+            entity *pEntity=aEntities[Index1];
+            std::set<face *,EntityCompare> sFaces;
+            FindFaces(rResult,pEntity,sFaces);
+            std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
+            while(FaceIter!=sFaces.end())
                 {
-                RemoveFace(rResult,pFace);
+                face *pFace=*FaceIter;
+                if(pFace->GetTriangles(rResult).empty())
+                    {
+                    RemoveFace(rResult,pFace);
+                    }
+                ++FaceIter;
                 }
-            ++FaceIter;
             }
         }
     }

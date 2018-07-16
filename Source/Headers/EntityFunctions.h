@@ -13,6 +13,19 @@
 namespace SGMInternal
 {
 
+class HealOptions
+    {
+    public:
+
+    HealOptions():
+        m_bHealAddApex(true),
+        m_bRemoveZeroFacetFaces(true)
+    {}
+
+    bool m_bHealAddApex;
+    bool m_bRemoveZeroFacetFaces;
+    };
+
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity);
 
@@ -27,7 +40,8 @@ SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
                                       entity const *pEntity);
 
 void Heal(SGM::Result           &rResult,
-          std::vector<entity *> &aEntities);
+          std::vector<entity *> &aEntities,
+          HealOptions     const &Options);
 
 /// Return a box that contains all the entity objects in the range [first,last) using the entity->GetBox()
 template< class InputIt >

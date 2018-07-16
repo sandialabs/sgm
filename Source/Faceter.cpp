@@ -3,6 +3,7 @@
 #include "SGMInterval.h"
 #include "SGMResult.h"
 #include "SGMEnums.h"
+#include "SGMBoxTree.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -2901,6 +2902,11 @@ double ScaledUVs(face                      const *pFace,
     SGM::Vector3D DU,DV;
     SGM::Point2D uv=pSurface->GetDomain().MidPoint();
     pSurface->Evaluate(uv,nullptr,&DU,&DV);
+    
+    //double dUk=pSurface->DirectionalCurvature(uv,DU);
+    //double dVk=pSurface->DirectionalCurvature(uv,DV);
+    //double dScale=fabs(dUk/dVk)*0.25);
+
     double dScale=DV.Magnitude()/DU.Magnitude();
     size_t nPoints=aPoints2D.size();
     aScaled.reserve(nPoints);
@@ -2943,6 +2949,371 @@ void AddVertices(std::vector<SGM::Point3D> const &aPoints3D,
             }
         }
     }
+
+bool PointOnSegment(SGM::Point2D const &A,
+                    SGM::Point2D const &B,
+                    SGM::Point2D const &D,
+                    double              dTolerance)
+    {
+    SGM::UnitVector2D Axis=B-A;
+    SGM::Point2D ClosePos=A+Axis*((D-A)%Axis);
+    return ClosePos.DistanceSquared(D)<dTolerance*dTolerance;
+    }
+
+bool OnTwoEdges(SGM::Point2D                               const &A,
+                SGM::Point2D                               const &B,
+                SGM::Point2D                               const &C,
+                size_t                                            nStart,
+                std::vector<SGM::BoxTree::BoundedItemType> const &aHits,
+                std::vector<SGM::Point2D>                  const &aPoints,
+                std::vector<unsigned int>                  const &aTriangles,
+                SGM::Point2D                               const &D,
+                double                                            dTolerance,
+                size_t                                           &nOther,
+                size_t                                           &nEdge1,
+                size_t                                           &nEdge2)
+    {
+    if(PointOnSegment(A,B,D,dTolerance))
+        {
+        nEdge1=0;
+        }
+    else if(PointOnSegment(B,C,D,dTolerance))
+        {
+        nEdge1=1;
+        }
+    else if(PointOnSegment(C,A,D,dTolerance))
+        {
+        nEdge1=2;
+        }
+    else
+        {
+        return false;
+        }
+    size_t Index1;
+    size_t nHits=aHits.size();
+    nEdge2=3;
+    for(Index1=nStart+1;Index1<nHits;++Index1)
+        {
+        nOther=*((size_t *)aHits[Index1].first);
+        unsigned int a=aTriangles[Index1]; 
+        unsigned int b=aTriangles[Index1+1]; 
+        unsigned int c=aTriangles[Index1+2]; 
+        SGM::Point2D const &A=aPoints[a];
+        SGM::Point2D const &B=aPoints[b];
+        SGM::Point2D const &C=aPoints[c];
+        if(PointOnSegment(A,B,D,dTolerance))
+            {
+            nEdge2=0;
+            }
+        else if(PointOnSegment(B,C,D,dTolerance))
+            {
+            nEdge2=1;
+            }
+        else if(PointOnSegment(C,A,D,dTolerance))
+            {
+            nEdge2=2;
+            }
+        if(nEdge2!=3)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
+                            std::vector<unsigned int> &aTriangles,
+                            size_t                     nTri)
+    {
+    unsigned int a=aTriangles[nTri];
+    unsigned int b=aTriangles[nTri+1];
+    unsigned int c=aTriangles[nTri+2];
+    SGM::Point2D const &A=aPoints[a];
+    SGM::Point2D const &B=aPoints[b];
+    SGM::Point2D const &C=aPoints[c];
+    SGM::Point3D Pos0(A.m_u,A.m_v,0.0);
+    SGM::Point3D Pos1(B.m_u,B.m_v,0.0);
+    SGM::Point3D Pos2(C.m_u,C.m_v,0.0);
+    std::vector<SGM::Point3D> aVertices;
+    aVertices.reserve(3);
+    aVertices.push_back(Pos0);
+    aVertices.push_back(Pos1);
+    aVertices.push_back(Pos2);
+    return SGM::Interval3D(aVertices);
+    }
+
+void SplitEdgeUpdateTree(SGM::Point2D        const &D,
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         size_t                     nOther,
+                         size_t                     nEdge2,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree)
+    {
+    unsigned int a1=aTriangles[nHitTri];
+    unsigned int b1=aTriangles[nHitTri+1];
+    unsigned int c1=aTriangles[nHitTri+2];
+    unsigned int a2=aTriangles[nOther];
+    unsigned int b2=aTriangles[nOther+1];
+    unsigned int c2=aTriangles[nOther+2];
+
+    unsigned int d=(unsigned int)aPoints.size();
+    aPoints.push_back(D);
+
+    unsigned int A1,B1,C1,A2,B2,C2;
+    if(nEdge1==0)
+        {
+        A1=a1;
+        B1=b1;
+        C1=c1;
+        }
+    else if(nEdge1==1)
+        {
+        A1=b1;
+        B1=c1;
+        C1=a1;
+        }
+    else
+        {
+        A1=c1;
+        B1=a1;
+        C1=b1;
+        }
+    if(nEdge2==0)
+        {
+        A2=a2;
+        B2=b2;
+        C2=c2;
+        }
+    else if(nEdge2==1)
+        {
+        A2=b2;
+        B2=c2;
+        C2=a2;
+        }
+    else
+        {
+        A2=c2;
+        B2=a2;
+        C2=b2;
+        }
+
+    // Make triangles (A1,d,C1) (C1,d,B1) (C2,d,B2) (A2,d,C2)
+
+    aTriangles[nHitTri]=A1;
+    aTriangles[nHitTri+1]=d;
+    aTriangles[nHitTri+2]=C1;
+
+    aTriangles[nOther]=C1;
+    aTriangles[nOther+1]=d;
+    aTriangles[nOther+2]=B1;
+
+    size_t nNew1=aTriangles.size();
+
+    aTriangles.push_back(C2);
+    aTriangles.push_back(d);
+    aTriangles.push_back(B2);
+
+    size_t nNew2=aTriangles.size();
+
+    aTriangles.push_back(A2);
+    aTriangles.push_back(d);
+    aTriangles.push_back(C2);
+
+    SGM::Interval3D Tri1Box=TriangleBox(aPoints,aTriangles,nHitTri);
+    SGM::Interval3D Tri2Box=TriangleBox(aPoints,aTriangles,nOther);
+    SGM::Interval3D New1Box=TriangleBox(aPoints,aTriangles,nNew1);
+    SGM::Interval3D New2Box=TriangleBox(aPoints,aTriangles,nNew2);
+
+    // Update the tree.
+    // Take nHitTri and nOther out of the tree.
+    // Put nHitTree, nOther, nNew1, nNew2 into the tree.
+
+    void const *pTri1=&aTris[nHitTri/3];
+    void const *pTri2=&aTris[nOther/3];
+    void const *pNew1=&aTris[nNew1/3];
+    void const *pNew2=&aTris[nNew2/3];
+
+    Tree.Erase(pTri1);
+    Tree.Erase(pTri2);
+    Tree.Insert(pTri1,Tri1Box);
+    Tree.Insert(pTri2,Tri2Box);
+    Tree.Insert(pNew1,New1Box);
+    Tree.Insert(pNew2,New2Box);
+    }
+
+void SplitTriangleUpdateTree(SGM::Point2D        const &D,
+                             std::vector<SGM::Point2D> &aPoints,
+                             std::vector<unsigned int> &aTriangles,
+                             size_t                     nHitTri,
+                             std::vector<size_t> const &aTris,
+                             SGM::BoxTree              &Tree)
+    {
+    
+    unsigned int a=aTriangles[nHitTri];
+    unsigned int b=aTriangles[nHitTri+1];
+    unsigned int c=aTriangles[nHitTri+2];
+
+    unsigned int d=(unsigned int)aPoints.size();
+    aPoints.push_back(D);
+
+    // Make triangles (a,b,d), (b,c,d), (c,a,d)
+
+    aTriangles[nHitTri]=a;
+    aTriangles[nHitTri+1]=b;
+    aTriangles[nHitTri+2]=d;
+
+    size_t nNew1=aTriangles.size();
+
+    aTriangles.push_back(b);
+    aTriangles.push_back(c);
+    aTriangles.push_back(d);
+
+    size_t nNew2=aTriangles.size();
+
+    aTriangles.push_back(c);
+    aTriangles.push_back(a);
+    aTriangles.push_back(d);
+
+    SGM::Interval3D Tri1Box=TriangleBox(aPoints,aTriangles,nHitTri);
+    SGM::Interval3D New1Box=TriangleBox(aPoints,aTriangles,nNew1);
+    SGM::Interval3D New2Box=TriangleBox(aPoints,aTriangles,nNew2);
+
+    // Update the tree.
+    // Take nHitTri out of the tree.
+    // Put nHitTree, nNew1, nNew2 into the tree.
+
+    void const *pTri1=&aTris[nHitTri/3];
+    void const *pNew1=&aTris[nNew1/3];
+    void const *pNew2=&aTris[nNew2/3];
+
+    Tree.Erase(pTri1);
+    Tree.Insert(pTri1,Tri1Box);
+    Tree.Insert(pNew1,New1Box);
+    Tree.Insert(pNew2,New2Box);
+    }
+
+void InsertPoints(face                      const *pFace,
+                  std::vector<SGM::Point2D> const &aInsertPoints,
+                  std::vector<SGM::Point2D>       &aPoints2D,
+                  std::vector<SGM::Point3D>       &aPoints3D,
+                  std::vector<unsigned int>       &aTriangles)
+    {
+    // First create a tree of the facets.
+
+    size_t nInsertPoints=aInsertPoints.size();
+    std::vector<size_t> aTris;
+    size_t nTriangles=aTriangles.size();
+    size_t nMaxTris=nTriangles+nInsertPoints*6;
+    aTris.reserve(nMaxTris/3);
+    size_t Index1,Index2;
+    for(Index1=0;Index1<nMaxTris;Index1+=3)
+        {
+        aTris.push_back(Index1);
+        }
+    std::vector<SGM::Point3D> aVertices;
+    aVertices.reserve(3);
+    SGM::BoxTree Tree;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=aTriangles[Index1]; 
+        unsigned int b=aTriangles[Index1+1]; 
+        unsigned int c=aTriangles[Index1+2]; 
+        SGM::Point2D const &A=aPoints2D[a];
+        SGM::Point2D const &B=aPoints2D[b];
+        SGM::Point2D const &C=aPoints2D[c];
+        aVertices.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
+        aVertices.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
+        aVertices.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+        SGM::Interval3D Box(aVertices);
+        aVertices.clear();
+        Tree.Insert(&aTris[Index1/3],Box);
+        }
+
+    // For each point find the triangles with intersecting boxes.
+
+    surface const *pSurface=pFace->GetSurface();
+    for(Index1=0;Index1<nInsertPoints;++Index1)
+        {
+        SGM::Point2D const &D=aInsertPoints[Index1];
+        SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
+        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,SGM_MIN_TOL);
+        size_t nHits=aHits.size();
+        for(Index2=0;Index2<nHits;++Index2)
+            {
+            size_t nHitTri=*((size_t *)aHits[Index2].first);
+            unsigned int a=aTriangles[nHitTri]; 
+            unsigned int b=aTriangles[nHitTri+1]; 
+            unsigned int c=aTriangles[nHitTri+2]; 
+            SGM::Point2D const &A=aPoints2D[a];
+            SGM::Point2D const &B=aPoints2D[b];
+            SGM::Point2D const &C=aPoints2D[c];
+            if(SGM::InTriangle(A,B,C,D))
+                {
+                // There are three cases the point is a vertex, on an edge, or inside the triangle.
+
+                size_t nOther,nEdge1,nEdge2;
+
+                if(SGM::NearEqual(A,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT))
+                    {
+                    // Point already there.
+                    break;
+                    }
+                else if(OnTwoEdges(A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_FIT,nOther,nEdge1,nEdge2))
+                    {
+                    // Split nHitTri at nEdge1 and nOther at nEdge2.
+                    //SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
+                    //SGM::Point3D Pos;
+                    //pSurface->Evaluate(D,&Pos);
+                    //aPoints3D.push_back(Pos);
+                    break;
+                    }
+                else
+                    {
+                    // Split nHitTri.
+                    SplitTriangleUpdateTree(D,aPoints2D,aTriangles,nHitTri,aTris,Tree);
+                    SGM::Point3D Pos;
+                    pSurface->Evaluate(D,&Pos);
+                    aPoints3D.push_back(Pos);
+                    break;
+                    }
+                }
+            }
+        }
+    }
+
+bool AddGrid(face                     const *pFace,
+             FacetOptions             const &Options,
+             std::vector<SGM::Point2D>      &aPoints2D,
+             std::vector<SGM::Point3D>      &aPoints3D,
+             std::vector<unsigned int>      &aTriangles)
+    {
+    surface const *pSurface=pFace->GetSurface();
+    if(pSurface->GetSurfaceType()==SGM::TorusType)
+        {
+        SGM::Interval2D Box(aPoints2D);
+        size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
+        size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
+        std::vector<SGM::Point2D> aInsertPoints;
+        aInsertPoints.reserve(nU*nV);
+        size_t Index1,Index2;
+        for(Index1=0;Index1<nU;++Index1)
+            {
+            double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
+            for(Index2=0;Index2<nV;++Index2)
+                {
+                double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
+                SGM::Point2D uv(u,v);
+                aInsertPoints.push_back(uv);
+                }
+            }
+        InsertPoints(pFace,aInsertPoints,aPoints2D,aPoints3D,aTriangles);
+        return true;
+        }
+    return false;
+    }
     
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
@@ -2957,12 +3328,25 @@ void FacetFace(SGM::Result                    &rResult,
     std::vector<unsigned int> aAdjacencies;
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
-    if(Options.m_bParametric==false)
+    size_t nOldSize=aPoints2D.size();
+    if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles))
+        {
+        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+        FindNormals(rResult,pFace,aPoints2D,aNormals);
+        size_t nNewSize=aPoints2D.size();
+        size_t Index1;
+        for(Index1=nOldSize;Index1<nNewSize;++Index1)
+            {
+            aEntities.push_back((entity *)pFace);
+            }
+        AddVertices(aPoints3D,aEntities);
+        DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+        }
+    else if(Options.m_bParametric==false)
         {
         FindNormals(rResult,pFace,aPoints2D,aNormals);
         std::vector<SGM::Point2D> aScaled;
         double dScale=ScaledUVs(pFace,aPoints2D,aScaled);
-        size_t nOldSize=aPoints2D.size();
         RefineTriangles(dScale,pFace,Options,aPoints2D,aScaled,aPoints3D,aNormals,aTriangles,aAdjacencies);
         size_t nNewSize=aPoints2D.size();
         size_t Index1;

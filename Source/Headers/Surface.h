@@ -112,6 +112,16 @@ class surface : public entity
                                             SGM::Point2D const &PosB,
                                             SGM::Point2D const &PosC) const;
 
+        // Returns the largest integer that the surface is Cn with respect to U for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const;
+
     protected:
 
         std::set<face *,EntityCompare> m_sFaces;
@@ -303,6 +313,16 @@ class NUBsurface: public surface
 
         size_t GetVParams() const {return m_nVParams;}
 
+        // Returns the largest integer that the surface is Cn with respect to U for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const;
+
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
@@ -347,6 +367,16 @@ class NURBsurface: public surface
         size_t GetUParams() const {return m_nUParams;}
 
         size_t GetVParams() const {return m_nVParams;}
+
+        // Returns the largest integer that the surface is Cn with respect to U for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.  
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const;
 
     public:
 

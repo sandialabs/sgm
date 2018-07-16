@@ -119,35 +119,36 @@ namespace SGM {
         std::vector<BoundedItemType> FindIntersectsBox(Interval3D const &bound) const;
 
         /// Return items whose bounds intersect the half space
-        std::vector<BoundedItemType> FindIntersectsHalfSpace(Point3D const &point,
+        std::vector<BoundedItemType> FindIntersectsHalfSpace(Point3D      const &point,
                                                              UnitVector3D const &unitVector,
-                                                             double tolerance) const;
+                                                             double              tolerance) const;
 
         /// Return items whose bounds intersect the line
         std::vector<BoundedItemType> FindIntersectsLine(Ray3D const &ray,
-                                                        double tolerance = SGM_INTERVAL_TOLERANCE) const;
+                                                        double       tolerance = SGM_INTERVAL_TOLERANCE) const;
 
         /// Return items whose bounds intersect the plane
-        std::vector<BoundedItemType> FindIntersectsPlane(Point3D const &point,
+        std::vector<BoundedItemType> FindIntersectsPlane(Point3D      const &point,
                                                          UnitVector3D const &unitVector,
-                                                         double tolerance) const;
+                                                         double              tolerance) const;
 
         /// Return items whose bounds intersect the point
         std::vector<BoundedItemType> FindIntersectsPoint(Point3D const &point,
-                                                         double tolerance) const;
+                                                         double         tolerance) const;
 
         /// Return items whose bounds intersect the ray
         std::vector<BoundedItemType> FindIntersectsRay(Ray3D const &ray,
-                                                       double tolerance = SGM_INTERVAL_TOLERANCE) const;
+                                                       double       tolerance = SGM_INTERVAL_TOLERANCE) const;
 
         /// Return items whose bounds intersect the segment
-        std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, Point3D const &p2,
-                                                           double tolerance = SGM_INTERVAL_TOLERANCE) const;
+        std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, 
+                                                           Point3D const &p2,
+                                                           double         tolerance = SGM_INTERVAL_TOLERANCE) const;
 
         /// Return items whose bounds intersect the sphere
         std::vector<BoundedItemType> FindIntersectsSphere(Point3D const &center,
-                                                          double radius,
-                                                          double tolerance) const;
+                                                          double         radius,
+                                                          double         tolerance) const;
 
         ///////////////////////////////////////////////////////////////////////
         //

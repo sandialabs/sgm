@@ -679,7 +679,7 @@ bool surface::Check(SGM::Result              &rResult,
     if(bAnswer==false)
         {
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Surface %ld not does pass derivative and inverse checks.\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Surface %ld does not pass derivative and inverse checks.\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 

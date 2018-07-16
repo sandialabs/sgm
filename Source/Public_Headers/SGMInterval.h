@@ -124,13 +124,13 @@ namespace SGM {
 
         // find bounding box around collection of points
 
-        explicit Interval2D(const std::vector<Point2D> &aPoints);
+        explicit Interval2D(std::vector<Point2D> const &aPoints);
 
         ~Interval2D() = default;
 
         // True if two bounding boxes are identical
 
-        bool operator==(const Interval2D &other) const;
+        bool operator==(Interval2D const &other) const;
 
         // set edges of intervals to extreme opposite limits (on return IsEmpty() is true)
 

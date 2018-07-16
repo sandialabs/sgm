@@ -132,7 +132,7 @@ const std::string current_date_time()
 
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 
-static const size_t MODELS_CHECK_TIMEOUT = 60000; // milliseconds
+static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
 
 int import_file(std::string const &file_path, SGM::Result& result, std::ofstream & log_file)
 {
