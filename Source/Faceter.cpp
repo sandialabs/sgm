@@ -3195,13 +3195,46 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     Tree.Insert(pNew2,New2Box);
     }
 
+/*
+bool NearBoundary(unsigned int                                           a,
+                  unsigned int                                           b,
+                  unsigned int                                           c,
+                  SGM::Point2D                                    const &A,
+                  SGM::Point2D                                    const &B,
+                  SGM::Point2D                                    const &C,
+                  SGM::Point2D                                    const &D,
+                  std::set<std::pair<unsigned int,unsigned int> > const &sBoundaryEdges,
+                  double                                                 dBoundaryTolerance)
+    {
+    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(a,b))!=sBoundaryEdges.end())
+        {
+        if(SGM::Segment2D(A,B).D)
+        }
+    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(b,c))!=sBoundaryEdges.end())
+        {
+        
+        }
+    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(c,a))!=sBoundaryEdges.end())
+        {
+        
+        }
+    return false;
+    }
+*/
 void InsertPoints(face                      const *pFace,
                   std::vector<SGM::Point2D> const &aInsertPoints,
+                  double                           dBoundaryTolerance,
                   std::vector<SGM::Point2D>       &aPoints2D,
                   std::vector<SGM::Point3D>       &aPoints3D,
                   std::vector<unsigned int>       &aTriangles)
     {
-    // First create a tree of the facets.
+    // Find the boundary edges.
+
+    std::set<std::pair<unsigned int,unsigned int> > sBoundaryEdges;
+    SGM::FindBoundaryEdges(aTriangles,sBoundaryEdges);
+    dBoundaryTolerance*=1;
+
+    // Create a tree of the facets.
 
     size_t nInsertPoints=aInsertPoints.size();
     std::vector<size_t> aTris;
@@ -3250,7 +3283,7 @@ void InsertPoints(face                      const *pFace,
             SGM::Point2D const &A=aPoints2D[a];
             SGM::Point2D const &B=aPoints2D[b];
             SGM::Point2D const &C=aPoints2D[c];
-            if(SGM::InTriangle(A,B,C,D))
+            if(SGM::InTriangle(A,B,C,D))// && !NearBoundary(a,b,c,A,B,C,D,sBoundaryEdges,dBoundaryTolerance))
                 {
                 // There are three cases the point is a vertex, on an edge, or inside the triangle.
 
@@ -3288,7 +3321,8 @@ bool AddGrid(face                     const *pFace,
              FacetOptions             const &Options,
              std::vector<SGM::Point2D>      &aPoints2D,
              std::vector<SGM::Point3D>      &aPoints3D,
-             std::vector<unsigned int>      &aTriangles)
+             std::vector<unsigned int>      &aTriangles,
+             std::vector<unsigned int>      &aAdjacencies)
     {
     surface const *pSurface=pFace->GetSurface();
     if(pSurface->GetSurfaceType()==SGM::TorusType)
@@ -3296,6 +3330,7 @@ bool AddGrid(face                     const *pFace,
         SGM::Interval2D Box(aPoints2D);
         size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
         size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
+        double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
         std::vector<SGM::Point2D> aInsertPoints;
         aInsertPoints.reserve(nU*nV);
         size_t Index1,Index2;
@@ -3309,7 +3344,9 @@ bool AddGrid(face                     const *pFace,
                 aInsertPoints.push_back(uv);
                 }
             }
-        InsertPoints(pFace,aInsertPoints,aPoints2D,aPoints3D,aTriangles);
+        InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles);
+        aAdjacencies.clear();
+        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
         return true;
         }
     return false;
@@ -3329,9 +3366,8 @@ void FacetFace(SGM::Result                    &rResult,
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     size_t nOldSize=aPoints2D.size();
-    if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles))
+    if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
         {
-        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
         FindNormals(rResult,pFace,aPoints2D,aNormals);
         size_t nNewSize=aPoints2D.size();
         size_t Index1;

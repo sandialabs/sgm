@@ -3,6 +3,34 @@
 
 namespace SGM {
 
+    inline double Segment2D::LengthSquared() const
+        {
+        return m_Start.DistanceSquared(m_End);
+        }
+
+    inline double Segment2D::Length() const
+        {
+        return m_Start.Distance(m_End);
+        }
+
+    inline double Segment2D::Distance(Point2D const &Pos) const
+        {
+        SGM::UnitVector2D Axis=m_End-m_Start;
+        double dParam=Axis%(Pos-m_Start);
+        if(dParam<0)
+            {
+            return Pos.Distance(m_Start);
+            }
+        else if(dParam*dParam>LengthSquared())
+            {
+            return Pos.Distance(m_End);
+            }
+        else
+            {
+            return Pos.Distance(m_Start+Axis*dParam);
+            }
+        }
+
     inline bool Segment2D::Intersect(Segment2D const &Seg,
                                      Point2D         &Pos) const
     {

@@ -35,6 +35,19 @@ namespace SGM {
                        UnitVector3D const &RayDirection,
                        Point2D &Pos) const;
 
+        // Returns the length of this segment squared, which is
+        // faster than finding length.
+
+        double Segment2D::LengthSquared() const;
+
+        // Returns the length of this segment squared.
+
+        double Segment2D::Length() const;
+
+        // Returns the distance from Pos to this line segments.
+
+        double Distance(Point2D const &Pos) const;
+
         Point2D m_Start;
         Point2D m_End;
     };
