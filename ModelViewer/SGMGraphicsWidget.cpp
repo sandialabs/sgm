@@ -1,4 +1,5 @@
 #include "SGMGraphicsWidget.hpp"
+#include "buffer.h"
 
 #include <cmath>
 #include <limits>
@@ -58,7 +59,7 @@ private:
         )glsl";
 
     mVertexShader = opengl->glCreateShader(GL_VERTEX_SHADER);
-    opengl->glShaderSource(mVertexShader, 1, &source, NULL);
+    opengl->glShaderSource(mVertexShader, 1, &source, nullptr);
     opengl->glCompileShader(mVertexShader);
   }
 
@@ -90,13 +91,13 @@ private:
         )glsl";
 
     mFragmentShader = opengl->glCreateShader(GL_FRAGMENT_SHADER);
-    opengl->glShaderSource(mFragmentShader, 1, &source, NULL);
+    opengl->glShaderSource(mFragmentShader, 1, &source, nullptr);
     opengl->glCompileShader(mFragmentShader);
   }
 
 public:
-  pShaders() {}
-  ~pShaders() {}
+  pShaders() = default;
+  ~pShaders() = default;
 
   void cleanup(QtOpenGL* opengl)
   {
@@ -261,8 +262,8 @@ public:
 
   void set_translation(int x, int y)
   {
-    float deltax = (float) x / 100.0;
-    float deltay = (float) -y / 100.0;
+    float deltax = (float) x / 100.f;
+    float deltay = (float) -y / 100.f;
 
     QVector3D xaxis, yaxis;
     get_xy_axes(xaxis, yaxis);
@@ -273,8 +274,8 @@ public:
 
   void set_rotation(int x, int y)
   {
-    float xangle = (float) x / 2.5;
-    float yangle = (float) y / 2.5;
+    float xangle = (float) x / 2.5f;
+    float yangle = (float) y / 2.5f;
 
     QVector3D xaxis, yaxis;
     get_xy_axes(xaxis, yaxis);
@@ -292,7 +293,7 @@ public:
   // camera is at its maximum zoom.
   void set_zoom(uint factor)
   {
-    mZoomLevel = (float) factor / 100.0;
+    mZoomLevel = (float) factor / 100.f;
 
     // Clamp the zoom level
     if(mZoomLevel > 1.0)
@@ -315,7 +316,7 @@ public:
     mUpdateProjectionTransform = true;
   }
 
-void update_point_bounds(float x, float y, float z)
+  inline void update_point_bounds(float x, float y, float z)
   {
     if(x > xmax)
       xmax = x;
@@ -335,6 +336,20 @@ void update_point_bounds(float x, float y, float z)
     mUpdateModelTransform = true;
   }
 
+  inline void update_box_bounds(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max)
+  {
+    xmin = std::min(x_min,xmin);
+    xmax = std::max(x_max,xmax);
+
+    ymin = std::min(y_min,ymin);
+    ymax = std::max(y_max,ymax);
+
+    zmin = std::min(z_min,zmin);
+    zmax = std::max(z_max,zmax);
+
+    mUpdateModelTransform = true;
+  }
+
   QMatrix4x4 projection_transform()
   {
     QMatrix4x4 projection;
@@ -349,10 +364,10 @@ void update_point_bounds(float x, float y, float z)
     {
       // Calculate max angle. Camera is 5 from the origin (see view_transform)
       const float r_to_d = 57.2958f;
-      float max_half_angle = atan(max_half_height/5.0)*r_to_d;
-      float min_half_angle = atan(min_half_eight/5.0)*r_to_d;
+      float max_half_angle = atan(max_half_height/5.f)*r_to_d;
+      float min_half_angle = atan(min_half_eight/5.f)*r_to_d;
       float vertical_field_of_view = min_half_angle +
-          (max_half_angle - min_half_angle)*(1.0 - mZoomLevel);
+          (max_half_angle - min_half_angle)*(1.f - mZoomLevel);
 
       projection.perspective(2.0*vertical_field_of_view,
                              mAspectRatio,
@@ -381,7 +396,7 @@ void update_point_bounds(float x, float y, float z)
     QMatrix4x4 view;
 
     // Move the camera back from the center of the model so that we can actually see it
-    view.translate(0.0, 0.0, -5.0);
+    view.translate(0.f, 0.f, -5.f);
 
     // Apply camera rotations and translations
     view.rotate(mOrientation);
@@ -404,26 +419,26 @@ void update_point_bounds(float x, float y, float z)
     if(xdiff > ydiff)
     {
       if(xdiff > zdiff)
-        scale = 2.0/xdiff;
+        scale = 2.f/xdiff;
       else
-        scale = 2.0/zdiff;
+        scale = 2.f/zdiff;
     }
     else if(ydiff > zdiff)
     {
-      scale = 2.0/ydiff;
+      scale = 2.f/ydiff;
     }
     else
     {
-      scale = 2.0/zdiff;
+      scale = 2.f/zdiff;
     }
 
     if(scale < 0.0)
-      scale*= -1.0;
+      scale*= -1.f;
 
     // Calculate the translation necessary to center the model at 0, 0, 0
-    float xavg = (xmax + xmin)/(2.0);
-    float yavg = (ymax + ymin)/(2.0);
-    float zavg = (zmax + zmin)/(2.0);
+    float xavg = (xmax + xmin)/2.f;
+    float yavg = (ymax + ymin)/2.f;
+    float zavg = (zmax + zmin)/2.f;
 
     // Scale and center the model
     model.scale(scale);
@@ -501,8 +516,8 @@ private:
 
   GLfloat mRGB[3];  // Color indices
 
-  std::vector<GLfloat> mTempDataBuffer;
-  std::vector<GLuint>  mTempIndexBuffer;
+  buffer<GLfloat> mTempDataBuffer;
+  buffer<GLuint>  mTempIndexBuffer;
 
 public:
   pOpenGLFloatData() {}
@@ -587,12 +602,12 @@ public:
           );
   }
 
-  std::vector<GLfloat>& temp_data_buffer()
+  buffer<GLfloat>& temp_data_buffer()
   {
     return mTempDataBuffer;
   }
 
-  std::vector<GLuint>& temp_index_buffer()
+  buffer<GLuint>& temp_index_buffer()
   {
     return mTempIndexBuffer;
   }
@@ -666,6 +681,57 @@ SGMGraphicsWidget::~SGMGraphicsWidget()
   delete dPtr;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// Inline Helper functions
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// copy 3D point into data buffer at position and update iterator to next position
+inline void add_point(buffer<GLfloat>::iterator &iter_data,
+                      const SGM::Point3D &point)
+{
+  *iter_data++ = (GLfloat)point.m_x;
+  *iter_data++ = (GLfloat)point.m_y;
+  *iter_data++ = (GLfloat)point.m_z;
+}
+
+// copy 3D normal vector into data buffer at position and update iterator to next position
+inline void add_normal(buffer<GLfloat>::iterator &iter_data,
+                       const SGM::UnitVector3D &normal)
+{
+  *iter_data++ = (GLfloat)normal.m_x;
+  *iter_data++ = (GLfloat)normal.m_y;
+  *iter_data++ = (GLfloat)normal.m_z;
+}
+
+inline void add_color(buffer<GLfloat>::iterator &iter_data,
+                      const SGM::Vector3D &color)
+{
+  *iter_data++ = (GLfloat)color.m_x;
+  *iter_data++ = (GLfloat)color.m_y;
+  *iter_data++ = (GLfloat)color.m_z;
+}
+
+// given positions in data buffer, copy in a line segment given by two 3D points, and 2 colors
+inline void add_segment(buffer<GLfloat>::iterator &iter_data,
+                        const SGM::Point3D &p1,
+                        const SGM::Vector3D &color1,
+                        const SGM::Point3D &p2,
+                        const SGM::Vector3D &color2)
+{
+  add_point(iter_data, p1);
+  add_color(iter_data, color1);
+  add_point(iter_data, p2);
+  add_color(iter_data, color2);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// SGMGraphicsWidget member functions
+//
+///////////////////////////////////////////////////////////////////////////////
+
 void SGMGraphicsWidget::reset_bounds()
     {
     dPtr->camera.reset_bounds();
@@ -676,36 +742,110 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D>      &points,
                                  const std::vector<SGM::UnitVector3D> &norms,
                                  const std::vector<SGM::Vector3D>     &colors)
 {
-  std::vector<float> &data_buffer = dPtr->face_data.temp_data_buffer();
-  std::vector<GLuint> &index_buffer = dPtr->face_data.temp_index_buffer();
+  buffer<GLfloat> &data_buffer = dPtr->face_data.temp_data_buffer();
+  buffer<GLuint> &index_buffer = dPtr->face_data.temp_index_buffer();
 
   // Setup indices for the triangles
-  size_t offset = data_buffer.size() / 9;
-  for(size_t index : triangles)
-    index_buffer.push_back((unsigned int)(offset+index));
+  GLuint offset = (GLuint)data_buffer.size() / 9;
+  if (offset == 0)
+    {
+    // copy the triangle-to-point connectivity
+    index_buffer.insert(index_buffer.end(), triangles.begin(), triangles.end());
+    }
+  else
+    {
+    // add the offset to triangle-to-vertex connectivity
+    auto iter_index = index_buffer.insert_uninitialized(index_buffer.end(), triangles.size());
+    for (auto iter_tri = triangles.begin(); iter_tri != triangles.end(); iter_tri++, iter_index++)
+      *iter_index = *iter_tri + offset;
+    }
 
-  // I am assuming that norms and points will always be the same size.
-  for(size_t i = 0; i < points.size(); i++)
-  {
-    // Add data to the buffer
-    SGM::Point3D point = points[i];
-    data_buffer.push_back(point.m_x);
-    data_buffer.push_back(point.m_y);
-    data_buffer.push_back(point.m_z);
+  // interleave coordinate and normal and color for each vertex
+  auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 9 * points.size());
+  auto iter_points = points.begin();
+  auto iter_norms = norms.begin();
+  auto iter_colors = colors.begin();
+  while (iter_data != data_buffer.end())
+    {
+    add_point(iter_data, *iter_points++);
+    add_normal(iter_data, *iter_norms++);
+    add_color(iter_data, *iter_colors++);
+    }
+}
 
-    SGM::UnitVector3D normal = norms[i];
-    data_buffer.push_back(normal.m_x);
-    data_buffer.push_back(normal.m_y);
-    data_buffer.push_back(normal.m_z);
+void SGMGraphicsWidget::add_triangle_lines_uv(const std::vector<SGM::Point2D> &face_points2D,
+                                              const std::vector<unsigned int> &face_tris)
+{
+  buffer<GLfloat> &data_buffer = dPtr->edge_data.temp_data_buffer();
+  buffer<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
 
-    SGM::Vector3D color = colors[i];
-    data_buffer.push_back(color.m_x);
-    data_buffer.push_back(color.m_y);
-    data_buffer.push_back(color.m_z);
+  size_t nTriangles = face_tris.size() / 3;
+  GLuint offset = (GLuint)data_buffer.size() / 36;
 
-    // Update the camera
-    dPtr->camera.update_point_bounds(point.m_x, point.m_y, point.m_z);
-  }
+  auto iter_index = index_buffer.insert_uninitialized(index_buffer.end(), 6*nTriangles);
+  while(iter_index != index_buffer.end())
+    {
+    // two for each segment
+    *iter_index++ = offset++;
+    *iter_index++ = offset++;
+    }
+
+  auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 36*nTriangles);
+
+  SGM::Vector3D aColor(0.0,0.0,0.0); // black
+
+  for(size_t i=0; i < face_tris.size(); i += 3)
+    {
+    unsigned int a = face_tris[i];
+    unsigned int b = face_tris[i + 1];
+    unsigned int c = face_tris[i + 2];
+    SGM::Point2D const &Auv=face_points2D[a];
+    SGM::Point2D const &Buv=face_points2D[b];
+    SGM::Point2D const &Cuv=face_points2D[c];
+    SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);  // z-coordinates are zero
+    SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
+    SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
+    add_segment(iter_data, PosA, aColor, PosB, aColor);
+    add_segment(iter_data, PosB, aColor, PosC, aColor);
+    add_segment(iter_data, PosC, aColor, PosA, aColor);
+    }
+}
+
+void SGMGraphicsWidget::add_triangle_lines(const std::vector<SGM::Point3D> &face_points3D,
+                                           const std::vector<unsigned int> &face_tris)
+{
+  buffer<GLfloat> &data_buffer = dPtr->edge_data.temp_data_buffer();
+  buffer<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
+
+  size_t nTriangles = face_tris.size() / 3;
+  GLuint offset = (GLuint)data_buffer.size() / 36;
+
+  auto iter_index = index_buffer.insert_uninitialized(index_buffer.end(), 6*nTriangles);
+  while(iter_index != index_buffer.end())
+    {
+    // two for each segment
+    *iter_index++ = offset++;
+    *iter_index++ = offset++;
+    }
+
+  // 18 = (3 edges with two vertices each, or 3 * 2 * 3)
+  // 36 = 18 + 18 for colors
+  auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 36*nTriangles);
+
+  SGM::Vector3D aColor(0.0,0.0,0.0); // black
+
+  for(size_t i=0; i < face_tris.size(); i += 3)
+    {
+    unsigned int a = face_tris[i];
+    unsigned int b = face_tris[i + 1];
+    unsigned int c = face_tris[i + 2];
+    SGM::Point3D const &PosA = face_points3D[a];
+    SGM::Point3D const &PosB = face_points3D[b];
+    SGM::Point3D const &PosC = face_points3D[c];
+    add_segment(iter_data, PosA, aColor, PosB, aColor);
+    add_segment(iter_data, PosB, aColor, PosC, aColor);
+    add_segment(iter_data, PosC, aColor, PosA, aColor);
+    }
 }
 
 void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D>  &points,
@@ -714,58 +854,57 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D>  &points,
   if(points.empty())
     return;
 
-  std::vector<GLfloat> &data_buffer = dPtr->edge_data.temp_data_buffer();
-  std::vector<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
+  buffer<GLfloat> &data_buffer = dPtr->edge_data.temp_data_buffer();
+  buffer<GLuint> &index_buffer = dPtr->edge_data.temp_index_buffer();
 
   // Setup indices for the line segments
-  size_t offset = data_buffer.size() / 6;
+  GLuint offset = (GLuint)data_buffer.size() / 6;
   size_t num_points = points.size();
-  for(size_t i = 0; i < num_points - 1; i++)
-  {
-    size_t index = offset+i;
-    index_buffer.push_back((unsigned int)(index));
-    index_buffer.push_back((unsigned int)(index+1));
-  }
+  auto iter_index = index_buffer.insert_uninitialized(index_buffer.end(), 2 * (num_points - 1));
+  while(iter_index != index_buffer.end())
+    {
+    *iter_index++ = offset++;
+    *iter_index++ = offset;
+    }
 
   // Add the point data
-  size_t Index1;
-  for(Index1=0;Index1<num_points;++Index1)
-  {
-    SGM::Point3D const &Pos=points[Index1];
-    data_buffer.push_back(Pos.m_x);
-    data_buffer.push_back(Pos.m_y);
-    data_buffer.push_back(Pos.m_z);
-
-    SGM::Vector3D const &color = colors[Index1];
-    data_buffer.push_back(color.m_x);
-    data_buffer.push_back(color.m_y);
-    data_buffer.push_back(color.m_z);
-
-    dPtr->camera.update_point_bounds(Pos.m_x, Pos.m_y, Pos.m_z);
-  }
+  auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 6 * points.size());
+  auto iter_points = points.begin();
+  auto iter_colors = colors.begin();
+  while (iter_data != data_buffer.end())
+    {
+    add_point(iter_data, *iter_points++);
+    add_color(iter_data, *iter_colors++);
+    }
 }
 
 void SGMGraphicsWidget::add_vertex(SGM::Point3D  const &Pos,
                                    SGM::Vector3D const &ColorVec)
     {
-    std::vector<GLfloat> &data_buffer = dPtr->vertex_data.temp_data_buffer();
-    std::vector<GLuint> &index_buffer = dPtr->vertex_data.temp_index_buffer();
+    buffer<GLfloat> &data_buffer = dPtr->vertex_data.temp_data_buffer();
+    buffer<GLuint> &index_buffer = dPtr->vertex_data.temp_index_buffer();
 
     // Setup indices for the point
-    size_t offset = data_buffer.size() / 6;
-    index_buffer.push_back((unsigned int)(offset));
+    GLuint offset = data_buffer.size() / 6;
+    index_buffer.push_back(offset);
 
     // Add the point data
-    data_buffer.push_back(Pos.m_x);
-    data_buffer.push_back(Pos.m_y);
-    data_buffer.push_back(Pos.m_z);
-        
-    data_buffer.push_back(ColorVec.m_x);
-    data_buffer.push_back(ColorVec.m_y);
-    data_buffer.push_back(ColorVec.m_z);
-        
-    dPtr->camera.update_point_bounds(Pos.m_x, Pos.m_y, Pos.m_z);
+    auto iter_data = data_buffer.insert_uninitialized(data_buffer.end(), 6);
+    add_point(iter_data, Pos);
+    add_color(iter_data, ColorVec);
     }
+
+void SGMGraphicsWidget::update_box_bounds(const SGM::Interval3D &box)
+{
+  dPtr->camera.update_box_bounds((float)box.m_XDomain.m_dMin, (float)box.m_XDomain.m_dMax,
+                                 (float)box.m_YDomain.m_dMin, (float)box.m_YDomain.m_dMax,
+                                 (float)box.m_ZDomain.m_dMin, (float)box.m_ZDomain.m_dMax);
+}
+
+void SGMGraphicsWidget::update_point_bounds(const SGM::Point3D& point)
+{
+  dPtr->camera.update_point_bounds((float)point.m_x, (float)point.m_y, (float)point.m_z);
+}
 
 void SGMGraphicsWidget::flush()
 {
