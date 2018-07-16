@@ -127,7 +127,7 @@ public:
   void ChangeDefaultFaceColor(int nRed,int nGreen,int nBlue) {dDefaultFaceRed=nRed/255.0;dDefaultFaceGreen=nGreen/255.0;dDefaultFaceBlue=nBlue/255.0;}
 
   void ChangeDefaultEdgeColor(int nRed,int nGreen,int nBlue) {dDefaultEdgeRed=nRed/255.0;dDefaultEdgeGreen=nGreen/255.0;dDefaultEdgeBlue=nBlue/255.0;}
-  
+
   void rebuild_tree();
   
   void rebuild_graphics(bool bReset=false);
@@ -153,7 +153,11 @@ private:
   void add_curve_to_tree(QTreeWidgetItem *parent,SGM::Curve CurveID);
   void add_attribute_to_tree(QTreeWidgetItem *parent,SGM::Attribute AttributeID);
   void add_attributes_to_tree(QTreeWidgetItem *parent,SGM::Entity EntityID);
-
+  
+  void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> & edge_colors) const;
+  void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> & face_colors) const;
+  SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
+  
   double dDefaultFaceRed;
   double dDefaultFaceGreen;
   double dDefaultFaceBlue;

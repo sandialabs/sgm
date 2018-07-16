@@ -1053,6 +1053,84 @@ void ModelData::rebuild_tree()
         }
     }
 
+inline void update_bounds_edge(SGM::Result &rResult, const SGM::Edge &edge_id, SGMGraphicsWidget* mGraphics)
+{
+    SGM::Interval3D const &box = SGM::GetBoundingBox(rResult, edge_id);
+    mGraphics->update_box_bounds(box);
+}
+
+inline void update_bounds_face(SGM::Result &rResult, const SGM::Face &face_id, SGMGraphicsWidget* mGraphics)
+{
+    SGM::Interval3D const &box = SGM::GetBoundingBox(rResult, face_id);
+    mGraphics->update_box_bounds(box);
+}
+
+inline void update_bounds_vertex(SGM::Point3D const & vertex, SGMGraphicsWidget* mGraphics)
+{
+    mGraphics->update_point_bounds(vertex);
+}
+
+inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGMGraphicsWidget* mGraphics)
+{
+    double min_x = std::numeric_limits<double>::max();
+    double max_x = std::numeric_limits<double>::lowest();
+    double min_y = std::numeric_limits<double>::max();
+    double max_y = std::numeric_limits<double>::lowest();
+    for (auto const &point : points)
+        {
+        min_x = std::min(min_x, point.m_u);
+        max_x = std::max(max_x, point.m_u);
+        min_y = std::min(min_y, point.m_v);
+        max_y = std::max(max_y, point.m_v);
+        }
+    SGM::Interval3D box(min_x, max_x, min_y, max_y, 0.0, 0.0);
+    mGraphics->update_box_bounds(box);
+}
+
+void ModelData::get_edge_colors(const SGM::Edge &edge,
+                                std::vector<SGM::Vector3D> & edge_colors) const
+{
+    int nRed,nGreen,nBlue;
+    SGM::Vector3D ColorVec = {dDefaultEdgeRed,dDefaultEdgeGreen,dDefaultEdgeBlue};
+    
+    if (SGM::GetColor(dPtr->mResult,edge,nRed,nGreen,nBlue))
+        ColorVec = {nRed/255.0, nGreen/255.0, nBlue/255.0};
+
+    std::vector<SGM::Point3D> const &edge_points =
+            SGM::GetEdgePoints(dPtr->mResult, edge);
+
+    size_t nPoints=edge_points.size();
+    edge_colors.reserve(nPoints);
+    for(size_t Index1=0;Index1<nPoints;++Index1)
+        edge_colors.push_back(ColorVec);
+}
+
+void ModelData::get_face_colors(const SGM::Face &face,
+                                std::vector<SGM::Vector3D> & face_colors) const
+{
+    int nRed, nGreen, nBlue;
+    SGM::Vector3D ColorVec = {dDefaultFaceRed,dDefaultFaceGreen,dDefaultFaceBlue};
+
+    if (SGM::GetColor(dPtr->mResult,face,nRed,nGreen,nBlue))
+        ColorVec = {nRed/255.0,nGreen/255.0,nBlue/255.0};
+
+    const std::vector<SGM::Point3D> &face_points =
+            SGM::GetFacePoints3D(dPtr->mResult, face);
+
+    size_t nPoints=face_points.size();
+    face_colors.reserve(nPoints);
+    for(size_t Index1=0; Index1<nPoints; ++Index1)
+        face_colors.push_back(ColorVec);
+}
+
+SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex) const
+{
+    int nRed,nGreen,nBlue;
+    if (SGM::GetColor(dPtr->mResult,vertex,nRed,nGreen,nBlue))
+        return {nRed/255.0, nGreen/255.0, nBlue/255.0};
+    return {dDefaultEdgeRed, dDefaultEdgeGreen, dDefaultEdgeBlue}; 
+}
+
 void ModelData::rebuild_graphics(bool bReset)
     {
     if(!dPtr->mGraphics)
@@ -1066,61 +1144,18 @@ void ModelData::rebuild_graphics(bool bReset)
         SGM::FindFaces(dPtr->mResult, SGM::Thing(), face_list);
         for(const SGM::Face &face : face_list)
             {
-            const std::vector<SGM::Point2D> &face_points2D =
-                SGM::GetFacePoints2D(dPtr->mResult, face);
-            const std::vector<SGM::Point3D> &face_points3D =
-                SGM::GetFacePoints3D(dPtr->mResult, face);
-            const std::vector<unsigned int> &face_tris =
-                SGM::GetFaceTriangles(dPtr->mResult, face);
-
-            size_t Index1;
-            size_t nTriangles=face_tris.size();
-            for(Index1=0;Index1<nTriangles;Index1+=3)
+            const std::vector<unsigned int> &face_tris = SGM::GetFaceTriangles(dPtr->mResult, face);
+            if (mfacet_mode)
                 {
-                std::vector<SGM::Point3D> side;
-                std::vector<SGM::Vector3D> aColor;
-                aColor.push_back(SGM::Vector3D(0.0,0.0,0.0));
-                aColor.push_back(SGM::Vector3D(0.0,0.0,0.0));
-                unsigned int a=face_tris[Index1];
-                unsigned int b=face_tris[Index1+1];
-                unsigned int c=face_tris[Index1+2];
-                if(mfacet_mode)
-                    {
-                    SGM::Point3D const &PosA=face_points3D[a];
-                    SGM::Point3D const &PosB=face_points3D[b];
-                    SGM::Point3D const &PosC=face_points3D[c];
-                    side.push_back(PosA);
-                    side.push_back(PosB);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    side.clear();
-                    side.push_back(PosB);
-                    side.push_back(PosC);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    side.clear();
-                    side.push_back(PosC);
-                    side.push_back(PosA);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    }
-                else
-                    {
-                    SGM::Point2D const &Auv=face_points2D[a];
-                    SGM::Point2D const &Buv=face_points2D[b];
-                    SGM::Point2D const &Cuv=face_points2D[c];
-                    SGM::Point3D PosA(Auv.m_u,Auv.m_v,0.0);
-                    SGM::Point3D PosB(Buv.m_u,Buv.m_v,0.0);
-                    SGM::Point3D PosC(Cuv.m_u,Cuv.m_v,0.0);
-                    side.push_back(PosA);
-                    side.push_back(PosB);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    side.clear();
-                    side.push_back(PosB);
-                    side.push_back(PosC);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    side.clear();
-                    side.push_back(PosC);
-                    side.push_back(PosA);
-                    dPtr->mGraphics->add_edge(side,aColor);
-                    }
+                const std::vector<SGM::Point3D> &face_points3D = SGM::GetFacePoints3D(dPtr->mResult, face);
+                dPtr->mGraphics->add_triangle_lines(face_points3D, face_tris);
+                update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
+                }
+            else
+                {
+                const std::vector<SGM::Point2D> &face_points2D = SGM::GetFacePoints2D(dPtr->mResult, face);
+                dPtr->mGraphics->add_triangle_lines_uv(face_points2D, face_tris);
+                update_bounds_points_uv(face_points2D, dPtr->mGraphics);
                 }
             }
         }
@@ -1137,27 +1172,10 @@ void ModelData::rebuild_graphics(bool bReset)
                 SGM::GetFaceTriangles(dPtr->mResult, face);
             const std::vector<SGM::UnitVector3D> &face_normals =
                 SGM::GetFaceNormals(dPtr->mResult, face);
-
             std::vector<SGM::Vector3D> face_colors;
-            size_t nPoints=face_points.size();
-            face_colors.reserve(nPoints);
-            int nRed,nGreen,nBlue;
-            SGM::Vector3D ColorVec;
-            if(SGM::GetColor(dPtr->mResult,face,nRed,nGreen,nBlue))
-                {
-                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
-                }
-            else
-                {
-                ColorVec=SGM::Vector3D(dDefaultFaceRed,dDefaultFaceGreen,dDefaultFaceBlue);
-                }
-            size_t Index1;
-            for(Index1=0;Index1<nPoints;++Index1)
-                {
-                face_colors.push_back(ColorVec);
-                }
-
+            get_face_colors(face, face_colors);
             dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
+            update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
             }
         dPtr->mGraphics->set_render_faces(true);
         }
@@ -1172,28 +1190,12 @@ void ModelData::rebuild_graphics(bool bReset)
         SGM::FindEdges(dPtr->mResult, SGM::Thing(), edge_list);
         for(const SGM::Edge &edge : edge_list)
             {
-            std::vector<SGM::Point3D> const &edge_points=SGM::GetEdgePoints(dPtr->mResult, edge);
-
-            std::vector<SGM::Vector3D> aColors;
-            size_t nPoints=edge_points.size();
-            aColors.reserve(nPoints);
-            int nRed,nGreen,nBlue;
-            SGM::Vector3D ColorVec;
-            if(SGM::GetColor(dPtr->mResult,edge,nRed,nGreen,nBlue))
-                {
-                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
-                }
-            else
-                {
-                ColorVec=SGM::Vector3D(dDefaultEdgeRed,dDefaultEdgeGreen,dDefaultEdgeBlue);
-                }
-            size_t Index1;
-            for(Index1=0;Index1<nPoints;++Index1)
-                {
-                aColors.push_back(ColorVec);
-                }
-
-            dPtr->mGraphics->add_edge(edge_points,aColors);
+            std::vector<SGM::Point3D> const &edge_points =
+                    SGM::GetEdgePoints(dPtr->mResult, edge);
+            std::vector<SGM::Vector3D> edge_colors;
+            get_edge_colors(edge, edge_colors);
+            dPtr->mGraphics->add_edge(edge_points,edge_colors);
+            update_bounds_edge(dPtr->mResult, edge, dPtr->mGraphics);
             }
         }
 
@@ -1203,19 +1205,9 @@ void ModelData::rebuild_graphics(bool bReset)
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
          for(const SGM::Vertex &vertex : vertex_list)
              {
-             SGM::Point3D const &Pos=SGM::GetPointOfVertex(dPtr->mResult,vertex);
-      
-             int nRed,nGreen,nBlue;
-             SGM::Vector3D ColorVec;
-             if(SGM::GetColor(dPtr->mResult,vertex,nRed,nGreen,nBlue))
-                {
-                ColorVec=SGM::Vector3D(nRed/255.0,nGreen/255.0,nBlue/255.0);
-                }
-             else
-                {
-                ColorVec=SGM::Vector3D(dDefaultEdgeRed,dDefaultEdgeGreen,dDefaultEdgeBlue);
-                }
-             dPtr->mGraphics->add_vertex(Pos,ColorVec);
+             SGM::Point3D const & Pos = SGM::GetPointOfVertex(dPtr->mResult,vertex);
+             dPtr->mGraphics->add_vertex(Pos, get_vertex_color(vertex));
+             update_bounds_vertex(Pos, dPtr->mGraphics);
              }
          }
 

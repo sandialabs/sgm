@@ -7,6 +7,10 @@
 class GView;
 struct pGraphicsData;
 
+namespace SGM
+{
+    class Interval3D;
+}
 
 class SGMGraphicsWidget : public QOpenGLWidget
 {
@@ -27,10 +31,25 @@ public:
   void add_edge(std::vector<SGM::Point3D>  const &points,
                 std::vector<SGM::Vector3D> const &colors);
 
+  // Add triangle lines for a face to the internal buffer.
+  // Face lines will be rendered after flush() has been called.
+  void add_triangle_lines(const std::vector<SGM::Point3D> &points,
+                          const std::vector<unsigned int> &triangles);
+
+  // 2D version of triangle lines in UV space of a face
+  void add_triangle_lines_uv(const std::vector<SGM::Point2D> &points,
+                             const std::vector<unsigned int> &triangles);
+
   // Add the point for a vertex to the internal buffer. The vertex will be rendered after
   // flush() has been called.
   void add_vertex(SGM::Point3D  const &Pos,
                   SGM::Vector3D const &ColorVec);
+
+  // update bounds given axis-aligned bounding box
+  void update_box_bounds(const SGM::Interval3D &box);
+
+  // update bounds given point
+  void update_point_bounds(const SGM::Point3D &point);
 
   // Flush the internal graphics buffer to push the data to the GPU and actually render.
   void flush();
