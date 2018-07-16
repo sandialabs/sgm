@@ -765,7 +765,6 @@ body *CreateRevolve(SGM::Result             &rResult,
     SGM::Point3D pCurveStart;
     SGM::Point3D pCurveEnd;
 
-
     // TODO
     // check for valid curve input
     // check for planar curve

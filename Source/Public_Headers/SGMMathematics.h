@@ -120,10 +120,17 @@ namespace SGM
     SGM_EXPORT size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
                                        std::vector<unsigned int>       &aAdjacences);
 
-    // Returns the length of the longest edges of the given triangles.  d.
+    // Returns the length of the longest edges of the given triangles. 
 
     SGM_EXPORT double FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
                                         std::vector<unsigned int> const &aTriangles);
+
+    // Returns the boundary edges of the given triangles.  Boundary edges are
+    // edges that belong to only one triangle. The direction of the triangle's edge
+    // is returned in the set.
+
+    SGM_EXPORT void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
+                                      std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges);
 
     ///////////////////////////////////////////////////////////////////////////
     //

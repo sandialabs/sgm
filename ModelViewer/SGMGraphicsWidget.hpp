@@ -64,6 +64,7 @@ public:
   void set_render_faces(bool render);
   void set_render_facets(bool render);
   void set_render_edges(bool render);
+  void set_render_uvspace(bool render);
   void enable_perspective(bool enable);
 
   // Get the default format that the QApplication needs for rendering

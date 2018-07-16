@@ -656,6 +656,8 @@ struct pGraphicsData
   bool render_edges;
   bool render_vertices;
   bool render_facets;
+  bool render_uvspace;
+  bool render_uv;
 };
 
 SGMGraphicsWidget::SGMGraphicsWidget(QWidget *parent, Qt::WindowFlags f) :
@@ -940,6 +942,12 @@ void SGMGraphicsWidget::set_render_facets(bool render)
   update();
 }
 
+void SGMGraphicsWidget::set_render_uvspace(bool render)
+{
+  dPtr->render_uvspace = render;
+  update();
+}
+
 void SGMGraphicsWidget::set_render_vertices(bool render)
 {
   dPtr->render_vertices = render;
@@ -1051,7 +1059,7 @@ void SGMGraphicsWidget::paintGL()
   if(dPtr->render_vertices)
     dPtr->vertex_data.render(opengl, &dPtr->shaders);
 
-  if(dPtr->render_edges || dPtr->render_facets)
+  if(dPtr->render_edges || dPtr->render_facets || dPtr->render_uvspace)
     dPtr->edge_data.render(opengl, &dPtr->shaders);
 }
 

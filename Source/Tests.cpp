@@ -494,25 +494,48 @@ bool TestSurface(SGMInternal::surface const *pSurface,
         }
     SGM::PartialDerivatives<SGM::Point3D,SGM::Vector3D>(aMatrix,dx,dy,dNU,dNV,dNUU,dNUV,dNVV);
 
-    if(SGM::NearEqual(dU,dNU,SGM_MIN_TOL)==false)
+    int nContU=pSurface->UContinuity();
+    int nContV=pSurface->VContinuity();
+
+    if(0<nContU)
         {
-        bAnswer=false;
+        double dTol=std::max(1.0,dU.Magnitude())*SGM_FIT;
+        if(SGM::NearEqual(dU,dNU,dTol)==false)
+            {
+            bAnswer=false;
+            }
         }
-    if(SGM::NearEqual(dV,dNV,SGM_MIN_TOL)==false)
+    if(0<nContV)
         {
-        bAnswer=false;
+        double dTol=std::max(1.0,dV.Magnitude())*SGM_FIT;
+        if(SGM::NearEqual(dV,dNV,dTol)==false)
+            {
+            bAnswer=false;
+            }
         }
-    if(SGM::NearEqual(dUU,dNUU,SGM_MIN_TOL)==false)
+    if(1<nContU)
         {
-        bAnswer=false;
+        double dTol=std::max(1.0,dUU.Magnitude())*SGM_FIT;
+        if(SGM::NearEqual(dUU,dNUU,dTol)==false)
+            {
+            bAnswer=false;
+            }
         }
-    if(SGM::NearEqual(dUV,dNUV,SGM_MIN_TOL)==false)
+    if(0<nContU && 0<nContV)
         {
-        bAnswer=false;
+        double dTol=std::max(1.0,dUV.Magnitude())*SGM_FIT;
+        if(SGM::NearEqual(dUV,dNUV,dTol)==false)
+            {
+            bAnswer=false;
+            }
         }
-    if(SGM::NearEqual(dVV,dNVV,SGM_MIN_TOL)==false)
+    if(1<nContV)
         {
-        bAnswer=false;
+        double dTol=std::max(1.0,dVV.Magnitude())*SGM_FIT;
+        if(SGM::NearEqual(dVV,dNVV,dTol)==false)
+            {
+            bAnswer=false;
+            }
         }
 
     return bAnswer;
@@ -547,13 +570,14 @@ bool TestCurve(SGMInternal::curve const *pCurve,
     SGM::Vector3D VecN1=SGM::FirstDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos2,Pos3,h);
     SGM::Vector3D VecN2=SGM::SecondDerivative<SGM::Point3D,SGM::Vector3D>(Pos0,Pos1,Pos,Pos2,Pos3,h);
 
-    if(SGM::NearEqual(Vec1,VecN1,SGM_FIT)==false)
+    double dDist=std::max(1.0,sqrt(Pos0.m_x*Pos0.m_x+Pos0.m_y*Pos0.m_y+Pos0.m_z*Pos0.m_z));
+    double dTol=dDist*SGM_FIT;
+    if(SGM::NearEqual(Vec1,VecN1,dTol)==false)
         {
         bAnswer=false;
         }
 
-    double dDist=std::max(1.0,sqrt(Pos0.m_x*Pos0.m_x+Pos0.m_y*Pos0.m_y+Pos0.m_z*Pos0.m_z));
-    if(1<pCurve->Continuity() && SGM::NearEqual(Vec2,VecN2,SGM_FIT*dDist)==false)
+    if(1<pCurve->Continuity() && SGM::NearEqual(Vec2,VecN2,dTol)==false)
         {
         bAnswer=false;
         }

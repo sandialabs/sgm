@@ -14,6 +14,7 @@ class FacetOptions
         FacetOptions():
             m_dFaceAngleTol(0.17453292519943295769236907684886), // 10 degrees.
             m_dEdgeAngleTol(0.08726646259971647884618453842443), //  5 degrees.
+            //m_dEdgeAngleTol(0.17453292519943295769236907684886),
             m_dMaxLength(0),
             m_dCordHight(0),
             m_nMaxFacets(10000),
@@ -84,6 +85,10 @@ void SubdivideFacets(SGM::Result               &rResult,
                      std::vector<SGM::Point2D> &aPoints2D,
                      std::vector<unsigned int> &aTriangles,
                      std::vector<entity *>     &aEntities);
+
+void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
+                  std::vector<SGM::Point2D>       &aPoints,
+                  std::vector<unsigned int>       &aTriangles);
 
 }
 

@@ -109,6 +109,7 @@ void ModelData::set_graphics_widget(SGMGraphicsWidget *graphics)
   dPtr->mGraphics->set_render_facets(mfacet_mode);
   dPtr->mGraphics->set_render_faces(mface_mode);
   dPtr->mGraphics->set_render_vertices(mvertex_mode);
+  dPtr->mGraphics->set_render_uvspace(muvspace_mode);
 }
 
 bool ModelData::open_file(const QString &filename)
@@ -168,6 +169,7 @@ void ModelData::facet_mode()
 void ModelData::uvspace_mode()
 {
   muvspace_mode = !muvspace_mode;
+  dPtr->mGraphics->set_render_uvspace(muvspace_mode);
   rebuild_graphics();
 }
 

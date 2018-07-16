@@ -645,7 +645,7 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                 {
                 if (Pos1.m_v < v)
                     {
-                    double CrossU = Pos0.m_u + ((Pos0.m_v - v) / (v - Pos1.m_v)) * (Pos1.m_u - Pos0.m_u);
+                    double CrossU = Pos1.m_u + (Pos0.m_u-Pos1.m_u)*(v-Pos1.m_v)/(Pos0.m_v-Pos1.m_v);
                     if (u < CrossU)
                         {
                         ++nCrosses;
@@ -677,7 +677,7 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                 {
                 if (v < Pos1.m_v)
                     {
-                    double CrossU = Pos0.m_u + ((Pos0.m_v - v) / (v - Pos1.m_v)) * (Pos1.m_u - Pos0.m_u);
+                    double CrossU = Pos0.m_u + (Pos1.m_u-Pos0.m_u)*(v-Pos0.m_v)/(Pos1.m_v-Pos0.m_v);
                     if (u < CrossU)
                         {
                         ++nCrosses;
@@ -709,23 +709,22 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
         return nCrosses % 2 == 1;
     }
 
-    bool InTriangle(Point2D const &A,
-                         Point2D const &B,
-                         Point2D const &C,
-                         Point2D const &D)
+bool InTriangle(Point2D const &A,
+                Point2D const &B,
+                Point2D const &C,
+                Point2D const &D)
     {
-        bool b1 = SGMInternal::sign(D, A, B) < 0;
-        bool b2 = SGMInternal::sign(D, B, C) < 0;
-        bool b3 = SGMInternal::sign(D, C, A) < 0;
-        return ((b1 == b2) && (b2 == b3));
+    bool b1 = SGMInternal::sign(D, A, B) < 0;
+    bool b2 = SGMInternal::sign(D, B, C) < 0;
+    bool b3 = SGMInternal::sign(D, C, A) < 0;
+    return ((b1 == b2) && (b2 == b3));
     }
 
 bool InCircumcircle(SGM::Point2D const &A,
-                         SGM::Point2D const &B,
-                         SGM::Point2D const &C,
-                         SGM::Point2D const &D)
+                    SGM::Point2D const &B,
+                    SGM::Point2D const &C,
+                    SGM::Point2D const &D)
     {
-    
     const double a00 = A.m_u-D.m_u;
     const double a01 = A.m_v-D.m_v;
     const double a02 = a00*a00+a01*a01;
@@ -745,98 +744,122 @@ bool InCircumcircle(SGM::Point2D const &A,
     return SGM_MIN_TOL<dDet;
     }
 
-    bool FindCircle(Point3D const &Pos0,
-                         Point3D const &Pos1,
-                         Point3D const &Pos2,
-                         Point3D &Center,
-                         UnitVector3D &Normal,
-                         double &dRadius)
+bool FindCircle(Point3D const &Pos0,
+                Point3D const &Pos1,
+                Point3D const &Pos2,
+                Point3D &Center,
+                UnitVector3D &Normal,
+                double &dRadius)
     {
-        Vector3D Up = (Pos2 - Pos1) * (Pos0 - Pos1);
-        if (Up.Magnitude() < SGM_ZERO)
+    Vector3D Up = (Pos2 - Pos1) * (Pos0 - Pos1);
+    if (Up.Magnitude() < SGM_ZERO)
+        {
+        return false;
+        }
+    Normal = Up;
+    Point3D Mid01 = MidPoint(Pos0, Pos1);
+    Point3D Mid21 = MidPoint(Pos2, Pos1);
+    Vector3D Vec01 = Normal * (Pos0 - Pos1);
+    Vector3D Vec21 = Normal * (Pos2 - Pos1);
+    Segment3D Seg1(Mid01, Mid01 + Vec01);
+    Segment3D Seg2(Mid21, Mid21 + Vec21);
+    Seg1.Intersect(Seg2, Center, Center);
+    dRadius = Center.Distance(Pos0);
+    return true;
+    }
+
+void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
+                       std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges)
+    {
+    std::set<std::pair<unsigned int,unsigned int> > sAllEdges;
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
+        sAllEdges.insert(std::pair<unsigned int,unsigned int>(a,b));
+        sAllEdges.insert(std::pair<unsigned int,unsigned int>(b,c));
+        sAllEdges.insert(std::pair<unsigned int,unsigned int>(c,a));
+        }
+    for(auto abpair : sAllEdges)
+        {
+        if(sAllEdges.find(std::pair<unsigned int,unsigned int>(abpair.second,abpair.first))==sAllEdges.end())
             {
-            return false;
+            sBoundaryEdges.insert(abpair);
             }
-        Normal = Up;
-        Point3D Mid01 = MidPoint(Pos0, Pos1);
-        Point3D Mid21 = MidPoint(Pos2, Pos1);
-        Vector3D Vec01 = Normal * (Pos0 - Pos1);
-        Vector3D Vec21 = Normal * (Pos2 - Pos1);
-        Segment3D Seg1(Mid01, Mid01 + Vec01);
-        Segment3D Seg2(Mid21, Mid21 + Vec21);
-        Seg1.Intersect(Seg2, Center, Center);
-        dRadius = Center.Distance(Pos0);
-        return true;
+        }
     }
 
 size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
                         std::vector<unsigned int> &aAdjacency)
     {
-        std::vector<SGMInternal::EdgeData> aEdges;
-        size_t nTriangles = aTriangles.size();
-        aAdjacency.assign(nTriangles, std::numeric_limits<unsigned int>::max());
-        aEdges.reserve(nTriangles);
-        size_t Index1, Index2;
-        for (Index1 = 0; Index1 < nTriangles; Index1 += 3)
+    std::vector<SGMInternal::EdgeData> aEdges;
+    size_t nTriangles = aTriangles.size();
+    aAdjacency.assign(nTriangles, std::numeric_limits<unsigned int>::max());
+    aEdges.reserve(nTriangles);
+    size_t Index1, Index2;
+    for (Index1 = 0; Index1 < nTriangles; Index1 += 3)
+        {
+        unsigned int a = aTriangles[Index1];
+        unsigned int b = aTriangles[Index1 + 1];
+        unsigned int c = aTriangles[Index1 + 2];
+        aEdges.emplace_back(a, b, (unsigned int)Index1, 0);
+        aEdges.emplace_back(b, c, (unsigned int)Index1, 1);
+        aEdges.emplace_back(c, a, (unsigned int)Index1, 2);
+        }
+    std::sort(aEdges.begin(), aEdges.end());
+    size_t nEdges = aEdges.size();
+    Index1 = 0;
+    while (Index1 < nEdges)
+        {
+        size_t nStart = Index1;
+        size_t nPosA = aEdges[Index1].m_nPosA;
+        size_t nPosB = aEdges[Index1].m_nPosB;
+        ++Index1;
+        while (Index1 < nEdges &&
+               aEdges[Index1].m_nPosA == nPosA &&
+               aEdges[Index1].m_nPosB == nPosB)
             {
-            unsigned int a = aTriangles[Index1];
-            unsigned int b = aTriangles[Index1 + 1];
-            unsigned int c = aTriangles[Index1 + 2];
-            aEdges.emplace_back(a, b, (unsigned int)Index1, 0);
-            aEdges.emplace_back(b, c, (unsigned int)Index1, 1);
-            aEdges.emplace_back(c, a, (unsigned int)Index1, 2);
-            }
-        std::sort(aEdges.begin(), aEdges.end());
-        size_t nEdges = aEdges.size();
-        Index1 = 0;
-        while (Index1 < nEdges)
-            {
-            size_t nStart = Index1;
-            size_t nPosA = aEdges[Index1].m_nPosA;
-            size_t nPosB = aEdges[Index1].m_nPosB;
             ++Index1;
-            while (Index1 < nEdges &&
-                   aEdges[Index1].m_nPosA == nPosA &&
-                   aEdges[Index1].m_nPosB == nPosB)
-                {
-                ++Index1;
-                }
-            for (Index2 = nStart; Index2 < Index1; ++Index2)
-                {
-                SGMInternal::EdgeData const &ED1 = aEdges[Index2];
-                SGMInternal::EdgeData const &ED2 = aEdges[Index2 + 1 < Index1 ? Index2 + 1 : nStart];
-                if (ED1.m_nTriangle != ED2.m_nTriangle)
-                    {
-                    aAdjacency[ED1.m_nTriangle + ED1.m_nEdge] = ED2.m_nTriangle;
-                    }
-                }
             }
-        return nTriangles;
-    }
-
-    size_t GreatestCommonDivisor(size_t nA,
-                                 size_t nB)
-    {
-        size_t dR = 0;
-        if (nA && nB)
+        for (Index2 = nStart; Index2 < Index1; ++Index2)
             {
-            do
+            SGMInternal::EdgeData const &ED1 = aEdges[Index2];
+            SGMInternal::EdgeData const &ED2 = aEdges[Index2 + 1 < Index1 ? Index2 + 1 : nStart];
+            if (ED1.m_nTriangle != ED2.m_nTriangle)
                 {
-                dR = nA % nB;
-                if (dR == 0)
-                    break;
-                nA = nB;
-                nB = dR;
+                aAdjacency[ED1.m_nTriangle + ED1.m_nEdge] = ED2.m_nTriangle;
                 }
-            while (dR);
             }
-        return nB;
+        }
+    return nTriangles;
     }
 
-    bool RelativelyPrime(size_t nA,
-                         size_t nB)
+size_t GreatestCommonDivisor(size_t nA,
+                             size_t nB)
     {
-        return GreatestCommonDivisor(nA, nB) == 1;
+    size_t dR = 0;
+    if (nA && nB)
+        {
+        do
+            {
+            dR = nA % nB;
+            if (dR == 0)
+                break;
+            nA = nB;
+            nB = dR;
+            }
+        while (dR);
+        }
+    return nB;
+    }
+
+bool RelativelyPrime(size_t nA,
+                     size_t nB)
+    {
+    return GreatestCommonDivisor(nA, nB) == 1;
     }
 
 void TriangulatePolygonSub(SGM::Result                                   &,//rResult,

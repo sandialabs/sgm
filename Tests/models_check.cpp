@@ -40,7 +40,7 @@ static const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 
 // limit
-static const size_t MODELS_CHECK_TIMEOUT = 1000; // milliseconds
+static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,13 +134,14 @@ std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNa
         do {
             // read all (real) files in current dir
             // , delete '!' read other 2 default dir . and ..
-            if(! (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ) {
+            if(! (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ) 
+            {
+            if(fileNameKeep(fd.cFileName))
                 names.push_back(fd.cFileName);
             }
         } while(::FindNextFile(hFind, &fd));
         ::FindClose(hFind);
     }
-    erase_no_extension(names);
 #else
     DIR *dp;
     struct dirent *dirp;
@@ -242,7 +243,7 @@ int import_file(std::string const &file_path, SGM::Result& result, std::ofstream
  * @param log_file open text stream for writing
  * @return ModelsCheckResult::SUCCESS or ModelsCheckResult::FAIL_CHECK
  */
-int check_file(std::string const &file_path, SGM::Result &result, std::ofstream & log_file)
+int check_file(std::string const &/*file_path*/, SGM::Result &result, std::ofstream & log_file)
 {
     std::vector<std::string> aLog;
     SGM::CheckOptions Options;

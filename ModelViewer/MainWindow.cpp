@@ -411,20 +411,17 @@ void MainWindow::primitive_torus_knot()
 void MainWindow::primitive_revolve()
     {
     std::vector<SGM::Point3D> aPoints;
-    aPoints.emplace_back(-2,.5,0);
-    aPoints.emplace_back(-1,.5,0);
-    aPoints.emplace_back(0,.5,0);
-    aPoints.emplace_back(1,.5,0);
-    aPoints.emplace_back(2,.5,0);
-    //aPoints.push_back(SGM::Point3D(-2,.5,0));
-    //aPoints.push_back(SGM::Point3D(-1,1.5,0));
-    //aPoints.push_back(SGM::Point3D(0,1,0));
-    //aPoints.push_back(SGM::Point3D(1,1.5,0));
-    //aPoints.push_back(SGM::Point3D(2,2,0));
+
+    aPoints.push_back(SGM::Point3D(-2,.5,0));
+    aPoints.push_back(SGM::Point3D(-1,1.5,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,1.5,0));
+    aPoints.push_back(SGM::Point3D(2,2,0));
     SGM::Curve IDCurve = mModel->create_NUBcurve(aPoints);
     SGM::Point3D Origin(-1,0,0);
     SGM::UnitVector3D Axis(1,0,0);
     mModel->create_revolve(Origin, Axis, IDCurve);
+   
     }
 
 void MainWindow::save_settings()
