@@ -16,9 +16,9 @@ class SGMTreeWidget : public QTreeWidget
 
 public:
 
-    SGMTreeWidget(QWidget *parent=Q_NULLPTR);
+    explicit SGMTreeWidget(QWidget *parent=Q_NULLPTR);
 
-    ~SGMTreeWidget();
+    ~SGMTreeWidget() override = default;
 
     void add_entity(const SGM::Entity &ent,
                     const std::set<SGM::Entity> &parents,
@@ -28,7 +28,7 @@ public:
 
     std::map<QTreeWidgetItem *,SGM::Entity> mTreeMap;
 
-    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
     ModelData *mModel;
 

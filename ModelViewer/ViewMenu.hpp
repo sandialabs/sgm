@@ -5,19 +5,25 @@
 
 class ViewMenu : public QMenu
 {
-  Q_OBJECT
+Q_OBJECT
 public:
-  ViewMenu(QWidget *parent=Q_NULLPTR);
-  ~ViewMenu();
+    explicit ViewMenu(QWidget *parent = Q_NULLPTR);
+
+    ~ViewMenu() override = default;
 
 signals:
 
-  void faces();
-  void edges();
-  void vertices();
-  void facet();
-  void uvspace();
-  void perspective();
+    void faces();
+
+    void edges();
+
+    void vertices();
+
+    void facet();
+
+    void uvspace();
+
+    void perspective();
 };
 
 #endif // VIEWMENU_HPP

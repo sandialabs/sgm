@@ -6,11 +6,12 @@
 
 class SGMPropertiesWidget : public QTreeWidget
 {
-  Q_OBJECT
+Q_OBJECT
 
 public:
-  SGMPropertiesWidget(QWidget *parent=Q_NULLPTR);
-  ~SGMPropertiesWidget();
+    explicit SGMPropertiesWidget(QWidget *parent = Q_NULLPTR);
+
+    ~SGMPropertiesWidget() override = default;
 };
 
 #endif // SGMPROPERTIESWIDGET_HPP

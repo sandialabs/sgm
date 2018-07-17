@@ -5,27 +5,34 @@
 
 class FileMenu : public QMenu
 {
-  Q_OBJECT
+Q_OBJECT
 public:
-  FileMenu(QWidget *parent=Q_NULLPTR);
-  ~FileMenu();
+    explicit FileMenu(QWidget *parent = Q_NULLPTR);
 
-  void add_recent_file(const QString &filename);
+    ~FileMenu() override = default;
+
+    void add_recent_file(const QString &filename);
 
 signals:
-  void open();
-  void recent_file(const QString &filename);
-  void step();
-  void stl();
-  void exit();
+
+    void open();
+
+    void recent_file(const QString &filename);
+
+    void step();
+
+    void stl();
+
+    void exit();
 
 private slots:
-  void recent_file_triggered();
+
+    void recent_file_triggered();
 
 private:
-  QMenu* mRecentFiles;
+    QMenu *mRecentFiles;
 
-  void restore_recent_files();
+    void restore_recent_files();
 };
 
 #endif // FILEMENU_HPP
