@@ -13,160 +13,184 @@
 #include <map>
 
 class SGMGraphicsWidget;
+
 class SGMTreeWidget;
+
 struct pModelData;
 
 class ModelData
 {
 public:
-  ModelData();
-  ~ModelData();
+    ModelData();
 
-  void set_tree_widget(SGMTreeWidget *tree);
-  void set_graphics_widget(SGMGraphicsWidget *graphics);
+    ~ModelData();
 
-  bool open_file(const QString &filename);
+    void set_tree_widget(SGMTreeWidget *tree);
 
-  void step(QString const &SaveName);
+    void set_graphics_widget(SGMGraphicsWidget *graphics);
 
-  void stl(QString const &SaveName);
+    bool open_file(const QString &filename);
 
-  void edge_mode();
+    void step(QString const &SaveName);
 
-  void face_mode();
+    void stl(QString const &SaveName);
 
-  void vertex_mode();
+    void edge_mode();
 
-  void facet_mode();
+    void face_mode();
 
-  void uvspace_mode();
+    void vertex_mode();
 
-  void perspective_mode();
+    void facet_mode();
 
-  bool RunCPPTest(size_t nTest);
+    void uvspace_mode();
 
-  void check(std::vector<std::string> &aLog);
+    void perspective_mode();
 
-  void create_block(SGM::Point3D const &Pos0,
-                    SGM::Point3D const &Pos1);
+    bool RunCPPTest(size_t nTest);
 
-  void create_sphere(SGM::Point3D const &Pos0,
-                     double              dRadius);
+    void check(std::vector<std::string> &aLog);
 
-  void create_cylinder(SGM::Point3D const &Pos0,
-                       SGM::Point3D const &Pos1,
-                       double              dRadius);
+    void create_block(SGM::Point3D const &Pos0,
+                      SGM::Point3D const &Pos1);
 
-  void create_cone(SGM::Point3D const &Bottom,
-                   SGM::Point3D const &Top,
-                   double              dBottomRadius,
-                   double              dTopRadius);
+    void create_sphere(SGM::Point3D const &Pos0,
+                       double dRadius);
 
-  void create_torus(SGM::Point3D      const &Center,
-                    SGM::UnitVector3D const &Axis,
-                    double                   dMinorRadius,
-                    double                   dMajorRadius);
+    void create_cylinder(SGM::Point3D const &Pos0,
+                         SGM::Point3D const &Pos1,
+                         double dRadius);
 
-  void create_revolve(SGM::Point3D      const &Origin,
+    void create_cone(SGM::Point3D const &Bottom,
+                     SGM::Point3D const &Top,
+                     double dBottomRadius,
+                     double dTopRadius);
+
+    void create_torus(SGM::Point3D const &Center,
                       SGM::UnitVector3D const &Axis,
-                      SGM::Curve              &IDCurve);
+                      double dMinorRadius,
+                      double dMajorRadius);
 
-  void create_line(SGM::Point3D      const &Origin,
-                   SGM::UnitVector3D const &Axis,
-                   SGM::Interval1D   const &Domain);
+    void create_revolve(SGM::Point3D const &Origin,
+                        SGM::UnitVector3D const &Axis,
+                        SGM::Curve &IDCurve);
 
-  void create_circle(SGM::Point3D      const &Center,
-                     SGM::UnitVector3D const &Normal,
-                     double                   dRadius);
+    void create_line(SGM::Point3D const &Origin,
+                     SGM::UnitVector3D const &Axis,
+                     SGM::Interval1D const &Domain);
 
-  void create_ellipse(SGM::Point3D      const &Center,
-                      SGM::UnitVector3D const &XAxis,
-                      SGM::UnitVector3D const &YAxis,
-                      double                   dXRadius,
-                      double                   dYRadius);
+    void create_circle(SGM::Point3D const &Center,
+                       SGM::UnitVector3D const &Normal,
+                       double dRadius);
 
-  void create_parabola(SGM::Point3D      const &Center,
-                       SGM::UnitVector3D const &XAxis,
-                       SGM::UnitVector3D const &YAxis,
-                       double                   dA,
-                       SGM::Interval1D   const &Domain);
-
-  void create_hyperbola(SGM::Point3D      const &Center,
+    void create_ellipse(SGM::Point3D const &Center,
                         SGM::UnitVector3D const &XAxis,
                         SGM::UnitVector3D const &YAxis,
-                        double                   dA,
-                        double                   dB,
-                        SGM::Interval1D   const &Domain);
+                        double dXRadius,
+                        double dYRadius);
 
-  SGM::Curve create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
-
-  void create_torus_knot(SGM::Point3D      const &Center,
+    void create_parabola(SGM::Point3D const &Center,
                          SGM::UnitVector3D const &XAxis,
                          SGM::UnitVector3D const &YAxis,
-                         double                  dr,
-                         double                  dR,
-                         size_t                  nA,
-                         size_t                  nB);
+                         double dA,
+                         SGM::Interval1D const &Domain);
 
-  std::map<QTreeWidgetItem *,SGM::Entity> const &GetMap() const;
+    void create_hyperbola(SGM::Point3D const &Center,
+                          SGM::UnitVector3D const &XAxis,
+                          SGM::UnitVector3D const &YAxis,
+                          double dA,
+                          double dB,
+                          SGM::Interval1D const &Domain);
 
-  size_t GetSelection(std::vector<SGM::Entity> &aEnts) const;
+    SGM::Curve create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
 
-  void ClearSelection();
+    void create_torus_knot(SGM::Point3D const &Center,
+                           SGM::UnitVector3D const &XAxis,
+                           SGM::UnitVector3D const &YAxis,
+                           double dr,
+                           double dR,
+                           size_t nA,
+                           size_t nB);
 
-  void ChangeColor(SGM::Entity EntityID,int nRed,int nGreen,int nBlue);
+    std::map<QTreeWidgetItem *, SGM::Entity> const &GetMap() const;
 
-  void RemoveColor(SGM::Entity EntityID);
+    size_t GetSelection(std::vector<SGM::Entity> &aEnts) const;
 
-  void Copy(SGM::Entity EntityID);
+    void ClearSelection();
 
-  void Unhook(std::vector<SGM::Entity> &aEnts);
+    void ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue);
 
-  void DeleteEntity(SGM::Entity EntityID);
+    void RemoveColor(SGM::Entity EntityID);
 
-  void ChangeDefaultFaceColor(int nRed,int nGreen,int nBlue) {dDefaultFaceRed=nRed/255.0;dDefaultFaceGreen=nGreen/255.0;dDefaultFaceBlue=nBlue/255.0;}
+    void Copy(SGM::Entity EntityID);
 
-  void ChangeDefaultEdgeColor(int nRed,int nGreen,int nBlue) {dDefaultEdgeRed=nRed/255.0;dDefaultEdgeGreen=nGreen/255.0;dDefaultEdgeBlue=nBlue/255.0;}
+    void Unhook(std::vector<SGM::Entity> &aEnts);
 
-  void rebuild_tree();
-  
-  void rebuild_graphics(bool bReset=false);
+    void DeleteEntity(SGM::Entity EntityID);
+
+    void ChangeDefaultFaceColor(int nRed, int nGreen, int nBlue)
+    {
+        dDefaultFaceRed = nRed / 255.0;
+        dDefaultFaceGreen = nGreen / 255.0;
+        dDefaultFaceBlue = nBlue / 255.0;
+    }
+
+    void ChangeDefaultEdgeColor(int nRed, int nGreen, int nBlue)
+    {
+        dDefaultEdgeRed = nRed / 255.0;
+        dDefaultEdgeGreen = nGreen / 255.0;
+        dDefaultEdgeBlue = nBlue / 255.0;
+    }
+
+    void rebuild_tree();
+
+    void rebuild_graphics(bool bReset = false);
 
 private:
 
-  pModelData    *dPtr;
-  SGMTreeWidget *mTree;
+    pModelData *dPtr;
+    SGMTreeWidget *mTree;
 
-  bool mvertex_mode;
-  bool medge_mode;
-  bool mface_mode;
-  bool mfacet_mode;
-  bool muvspace_mode;
-  bool mperspective_mode;
+    bool mvertex_mode;
+    bool medge_mode;
+    bool mface_mode;
+    bool mfacet_mode;
+    bool muvspace_mode;
+    bool mperspective_mode;
 
-  void add_body_to_tree(QTreeWidgetItem *parent,SGM::Body BodyID);
-  void add_volume_to_tree(QTreeWidgetItem *parent,SGM::Volume VolumeID);
-  void add_face_to_tree(QTreeWidgetItem *parent,SGM::Face FaceID);
-  void add_edge_to_tree(QTreeWidgetItem *parent,SGM::Edge EdgeID);
-  void add_vertex_to_tree(QTreeWidgetItem *parent,SGM::Vertex VertexID);
-  void add_surface_to_tree(QTreeWidgetItem *parent,SGM::Surface SurfaceID);
-  void add_curve_to_tree(QTreeWidgetItem *parent,SGM::Curve CurveID);
-  void add_attribute_to_tree(QTreeWidgetItem *parent,SGM::Attribute AttributeID);
-  void add_attributes_to_tree(QTreeWidgetItem *parent,SGM::Entity EntityID);
-  
-  void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> & edge_colors) const;
-  void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> & face_colors) const;
-  SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
-  
-  double dDefaultFaceRed;
-  double dDefaultFaceGreen;
-  double dDefaultFaceBlue;
+    void add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID);
 
-  double dDefaultEdgeRed;
-  double dDefaultEdgeGreen;
-  double dDefaultEdgeBlue;
+    void add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID);
 
-  SGM::Entity CurrentEnt;
+    void add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID);
+
+    void add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID);
+
+    void add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID);
+
+    void add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface SurfaceID);
+
+    void add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID);
+
+    void add_attribute_to_tree(QTreeWidgetItem *parent, SGM::Attribute AttributeID);
+
+    void add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID);
+
+    void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> &edge_colors) const;
+
+    void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> &face_colors) const;
+
+    SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
+
+    double dDefaultFaceRed;
+    double dDefaultFaceGreen;
+    double dDefaultFaceBlue;
+
+    double dDefaultEdgeRed;
+    double dDefaultEdgeGreen;
+    double dDefaultEdgeBlue;
+
+    SGM::Entity CurrentEnt;
 };
 
 #endif // MODELDATA_HPP

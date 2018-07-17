@@ -5,26 +5,41 @@
 
 class PrimitiveMenu : public QMenu
 {
-  Q_OBJECT
+Q_OBJECT
 public:
-  PrimitiveMenu(QWidget *parent=Q_NULLPTR);
-  ~PrimitiveMenu();
+    explicit PrimitiveMenu(QWidget *parent = Q_NULLPTR);
+
+    ~PrimitiveMenu() override = default;
 
 signals:
-  void block();
-  void sphere();
-  void cylinder();
-  void cone();
-  void torus();
-  void NUBSurface();
-  void revolve();
-  void line();
-  void circle();
-  void ellipse();
-  void parabola();
-  void hyperbola();
-  void NUBcurve();
-  void TorusKnot();
+
+    void block();
+
+    void sphere();
+
+    void cylinder();
+
+    void cone();
+
+    void torus();
+
+    void NUBSurface();
+
+    void revolve();
+
+    void line();
+
+    void circle();
+
+    void ellipse();
+
+    void parabola();
+
+    void hyperbola();
+
+    void NUBcurve();
+
+    void TorusKnot();
 };
 
 #endif // PRIMITIVIEMENU_HPP

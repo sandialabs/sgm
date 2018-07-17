@@ -238,7 +238,7 @@ void MainWindow::test_all()
 
 void MainWindow::test_number()
 {
-  int nTest=QInputDialog::getInt(this, tr("Test Number"), tr("C++ Test"));
+  size_t nTest = (size_t)QInputDialog::getInt(this, tr("Test Number"), tr("C++ Test"));
   if(mModel->RunCPPTest(nTest))
       {
       QMessageBox Msgbox;

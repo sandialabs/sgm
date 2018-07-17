@@ -5,16 +5,21 @@
 
 class TestMenu : public QMenu
 {
-  Q_OBJECT
+Q_OBJECT
 public:
-  TestMenu(QWidget *parent=Q_NULLPTR);
-  ~TestMenu();
+    explicit TestMenu(QWidget *parent = Q_NULLPTR);
+
+    ~TestMenu() override = default;
 
 signals:
-  void all();
-  void number();
-  void script();
-  void check();
+
+    void all();
+
+    void number();
+
+    void script();
+
+    void check();
 };
 
 #endif // TESTMENU_HPP

@@ -11,9 +11,6 @@ SGMTreeWidget::SGMTreeWidget(QWidget *parent) :
     {
     }
 
-SGMTreeWidget::~SGMTreeWidget()
-    {
-    }
 
 void SGMTreeWidget::add_entity(const SGM::Entity &,//ent,
                                const std::set<SGM::Entity> &,//parents,
