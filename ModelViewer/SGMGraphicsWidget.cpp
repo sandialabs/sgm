@@ -885,7 +885,7 @@ void SGMGraphicsWidget::add_vertex(SGM::Point3D  const &Pos,
     buffer<GLuint> &index_buffer = dPtr->vertex_data.temp_index_buffer();
 
     // Setup indices for the point
-    GLuint offset = data_buffer.size() / 6;
+    GLuint offset = (GLuint)(data_buffer.size() / 6);
     index_buffer.push_back(offset);
 
     // Add the point data

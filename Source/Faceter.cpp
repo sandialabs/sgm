@@ -4,6 +4,7 @@
 #include "SGMResult.h"
 #include "SGMEnums.h"
 #include "SGMBoxTree.h"
+#include "SGMSegment.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -2960,7 +2961,10 @@ bool PointOnSegment(SGM::Point2D const &A,
     return ClosePos.DistanceSquared(D)<dTolerance*dTolerance;
     }
 
-bool OnTwoEdges(SGM::Point2D                               const &A,
+bool OnTwoEdges(unsigned int                                      a1,
+                unsigned int                                      b1,
+                unsigned int                                      c1,
+                SGM::Point2D                               const &A,
                 SGM::Point2D                               const &B,
                 SGM::Point2D                               const &C,
                 size_t                                            nStart,
@@ -2973,6 +2977,7 @@ bool OnTwoEdges(SGM::Point2D                               const &A,
                 size_t                                           &nEdge1,
                 size_t                                           &nEdge2)
     {
+    unsigned int a=a1,b=b1;
     if(PointOnSegment(A,B,D,dTolerance))
         {
         nEdge1=0;
@@ -2980,10 +2985,14 @@ bool OnTwoEdges(SGM::Point2D                               const &A,
     else if(PointOnSegment(B,C,D,dTolerance))
         {
         nEdge1=1;
+        a=b1;
+        b=c1;
         }
     else if(PointOnSegment(C,A,D,dTolerance))
         {
         nEdge1=2;
+        a=c1;
+        b=a1;
         }
     else
         {
@@ -2995,27 +3004,30 @@ bool OnTwoEdges(SGM::Point2D                               const &A,
     for(Index1=nStart+1;Index1<nHits;++Index1)
         {
         nOther=*((size_t *)aHits[Index1].first);
-        unsigned int a=aTriangles[Index1]; 
-        unsigned int b=aTriangles[Index1+1]; 
-        unsigned int c=aTriangles[Index1+2]; 
-        SGM::Point2D const &A=aPoints[a];
-        SGM::Point2D const &B=aPoints[b];
-        SGM::Point2D const &C=aPoints[c];
-        if(PointOnSegment(A,B,D,dTolerance))
+        unsigned int a2=aTriangles[Index1]; 
+        unsigned int b2=aTriangles[Index1+1]; 
+        unsigned int c2=aTriangles[Index1+2]; 
+        if((a2==b && b2==a) || (b2==b && c2==a) || (c2==b && a2==a))
             {
-            nEdge2=0;
-            }
-        else if(PointOnSegment(B,C,D,dTolerance))
-            {
-            nEdge2=1;
-            }
-        else if(PointOnSegment(C,A,D,dTolerance))
-            {
-            nEdge2=2;
-            }
-        if(nEdge2!=3)
-            {
-            return true;
+            SGM::Point2D const &A=aPoints[a2];
+            SGM::Point2D const &B=aPoints[b2];
+            SGM::Point2D const &C=aPoints[c2];
+            if(PointOnSegment(A,B,D,dTolerance))
+                {
+                nEdge2=0;
+                }
+            else if(PointOnSegment(B,C,D,dTolerance))
+                {
+                nEdge2=1;
+                }
+            else if(PointOnSegment(C,A,D,dTolerance))
+                {
+                nEdge2=2;
+                }
+            if(nEdge2!=3)
+                {
+                return true;
+                }
             }
         }
     return false;
@@ -3195,7 +3207,6 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     Tree.Insert(pNew2,New2Box);
     }
 
-/*
 bool NearBoundary(unsigned int                                           a,
                   unsigned int                                           b,
                   unsigned int                                           c,
@@ -3208,19 +3219,28 @@ bool NearBoundary(unsigned int                                           a,
     {
     if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(a,b))!=sBoundaryEdges.end())
         {
-        if(SGM::Segment2D(A,B).D)
+        if(SGM::Segment2D(A,B).Distance(D)<dBoundaryTolerance)
+            {
+            return true;
+            }
         }
     if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(b,c))!=sBoundaryEdges.end())
         {
-        
+        if(SGM::Segment2D(B,C).Distance(D)<dBoundaryTolerance)
+            {
+            return true;
+            }
         }
     if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(c,a))!=sBoundaryEdges.end())
         {
-        
+        if(SGM::Segment2D(C,A).Distance(D)<dBoundaryTolerance)
+            {
+            return true;
+            }
         }
     return false;
     }
-*/
+
 void InsertPoints(face                      const *pFace,
                   std::vector<SGM::Point2D> const &aInsertPoints,
                   double                           dBoundaryTolerance,
@@ -3283,7 +3303,7 @@ void InsertPoints(face                      const *pFace,
             SGM::Point2D const &A=aPoints2D[a];
             SGM::Point2D const &B=aPoints2D[b];
             SGM::Point2D const &C=aPoints2D[c];
-            if(SGM::InTriangle(A,B,C,D))// && !NearBoundary(a,b,c,A,B,C,D,sBoundaryEdges,dBoundaryTolerance))
+            if(SGM::InTriangle(A,B,C,D) && !NearBoundary(a,b,c,A,B,C,D,sBoundaryEdges,dBoundaryTolerance))
                 {
                 // There are three cases the point is a vertex, on an edge, or inside the triangle.
 
@@ -3294,13 +3314,13 @@ void InsertPoints(face                      const *pFace,
                     // Point already there.
                     break;
                     }
-                else if(OnTwoEdges(A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_FIT,nOther,nEdge1,nEdge2))
+                else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_FIT,nOther,nEdge1,nEdge2))
                     {
                     // Split nHitTri at nEdge1 and nOther at nEdge2.
-                    //SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
-                    //SGM::Point3D Pos;
-                    //pSurface->Evaluate(D,&Pos);
-                    //aPoints3D.push_back(Pos);
+                    SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
+                    SGM::Point3D Pos;
+                    pSurface->Evaluate(D,&Pos);
+                    aPoints3D.push_back(Pos);
                     break;
                     }
                 else

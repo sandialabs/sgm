@@ -506,7 +506,10 @@ void face::SetSurface(surface *pSurface)
         m_pSurface->RemoveFace(this);
         }
     m_pSurface=pSurface;
-    pSurface->AddFace(this);
+    if(pSurface)
+        {
+        pSurface->AddFace(this);
+        }
     }
 
 SGM::EdgeSideType face::GetSideType(edge const *pEdge) const 

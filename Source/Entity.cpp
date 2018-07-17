@@ -392,6 +392,10 @@ void entity::SeverRelations(SGM::Result &rResult)
                 {
                 pEdge->RemoveFace(pFace);
                 }
+            if(pFace->GetSurface())
+                {
+                pFace->SetSurface(nullptr);
+                }
             break;
             }
         case SGM::EdgeType:

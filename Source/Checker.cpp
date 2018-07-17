@@ -413,6 +413,10 @@ bool face::Check(SGM::Result              &rResult,
             double dAngleA=SGM::SAFEacos(dDotA)*180/SGM_PI;
             double dAngleB=SGM::SAFEacos(dDotB)*180/SGM_PI;
             double dAngleC=SGM::SAFEacos(dDotC)*180/SGM_PI;
+
+            //line *pLine1=new line(rResult,Pos0,Pos1);
+
+
             if(dMaxAngle<dAngleA)
                 {
                 dMaxAngle=dAngleA;
