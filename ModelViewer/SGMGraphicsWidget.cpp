@@ -970,21 +970,23 @@ QSurfaceFormat SGMGraphicsWidget::default_format()
 {
     QSurfaceFormat fmt;
     fmt.setRenderableType(QSurfaceFormat::OpenGL);
+
 #ifdef _MSC_VER
     fmt.setVersion(2, 1);  
 #else
     fmt.setVersion(3, 1);
 #endif
+
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     fmt.setRedBufferSize(1);
     fmt.setGreenBufferSize(1);
     fmt.setBlueBufferSize(1);
-    fmt.setDepthBufferSize(1);
+    fmt.setDepthBufferSize(24);
     fmt.setStencilBufferSize(0);
     fmt.setAlphaBufferSize(1);
     fmt.setStereo(false);
-    fmt.setSwapInterval(0);
+    fmt.setSwapInterval(1);
     fmt.setSamples(4);
     return fmt;
 }
@@ -1001,7 +1003,7 @@ void SGMGraphicsWidget::initializeGL()
     opengl->glEnable(GL_LINE_SMOOTH);
     opengl->glEnable(GL_BLEND);
     opengl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    opengl->glLineWidth(1.0);
+    opengl->glLineWidth(5.f);
     opengl->glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
 
@@ -1017,7 +1019,10 @@ void SGMGraphicsWidget::initializeGL()
     //GLfloat lineWidthRange[2] = {0.0f, 0.0f};
     //opengl->glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
     // Returned 0 to 7 for my laptop.  PRS
+
     opengl->glLineWidth(1);
+
+    //opengl->glLineWidth(5.f);
 
     dPtr->shaders.init_shaders(opengl);
     dPtr->shaders.set_light_direction(opengl, 0.0f, 0.1f, 1.0f);

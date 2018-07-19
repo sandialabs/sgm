@@ -2,7 +2,7 @@ project(sgm_test)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_subdirectory(lib/googletest-release-1.8.0)
+#add_subdirectory(lib/googletest-release-1.8.0) # defined in parent CMakeLists.txt
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 

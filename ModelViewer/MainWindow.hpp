@@ -62,6 +62,10 @@ private slots:
 
     void test_check();
 
+#ifdef VIEWER_WITH_GTEST
+    void test_gtest();
+#endif
+
     void primitive_block();
 
     void primitive_sphere();

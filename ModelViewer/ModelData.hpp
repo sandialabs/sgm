@@ -25,6 +25,9 @@ public:
 
     ~ModelData();
 
+    // get the location of the internal storage of the model that is viewed in the viewer
+    SGMInternal::thing* GetThing() const;
+
     void set_tree_widget(SGMTreeWidget *tree);
 
     void set_graphics_widget(SGMGraphicsWidget *graphics);

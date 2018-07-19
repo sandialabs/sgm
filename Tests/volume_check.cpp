@@ -1,16 +1,32 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
+#include <EntityClasses.h>
 
 #include "SGMVector.h"
 #include "SGMInterval.h"
 #include "SGMPrimitives.h"
 #include "SGMMeasure.h"
 
-
-TEST(volume_check, volume_of_block) 
+namespace SGMInternal
+{
+    namespace Testing
     {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+        // a global static pointer to the pointer to the environment shared by the ModelViewer and the gtests.
+        SGM_EXPORT thing *pThing;
+    }
+}
+
+TEST(volume_check, volume_of_block)
+    {
+        //SGM_TEST_ACQUIRE_STATE();
+
+    SGMInternal::thing *pThing = nullptr;
+
+    if (SGMInternal::Testing::pThing == nullptr)
+        pThing = SGM::CreateThing();
+    else
+        pThing = SGMInternal::Testing::pThing;
     SGM::Result rResult(pThing);
 
     SGM::Point3D Pos0(0,0,0),Pos1(10,10,10);
@@ -18,8 +34,10 @@ TEST(volume_check, volume_of_block)
     double dVolume1=SGM::FindVolume(rResult,BodyID1,true);
     
     EXPECT_NEAR(dVolume1, 1000, SGM_ZERO);
+    //EXPECT_TRUE(false);
 
-    SGM::DeleteThing(pThing);
+    if (SGMInternal::Testing::pThing == nullptr)
+        SGM::DeleteThing(pThing);
     }
 
 // this is a preliminary experimental version of test with async timeout
