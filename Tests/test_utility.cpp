@@ -17,15 +17,22 @@ namespace SGMTesting {
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing, const char* arg)
+    int PerformViewerTest(SGMInternal::thing *pThing, const char* arg)
     {
         // set the environment to use that given to us by the viewer
         assert(pThing != nullptr);
         viewer_thing = pThing;
-
+        FILE *file_out, *file_err;
+#ifdef _MSC_VER
+        freopen_s(&file_out, "~gtest_stdout.log", "w", stdout);
+        freopen_s(&file_err, "~gtest_stderr.log", "w", stderr);
+#else
         // start capturing stdout/stderr
-        freopen("~gtest_stdout.log", "w", stdout);
-        freopen("~gtest_stderr.log", "w", stderr);
+        file_out = freopen("~gtest_stdout.log", "w", stdout);
+        file_err = freopen("~gtest_stderr.log", "w", stderr);
+#endif
+        assert(file_out);
+        assert(file_err);
 
         int argc = 2;
         const char *argv[2];
@@ -36,8 +43,8 @@ namespace SGMTesting {
         int ret_value =  RUN_ALL_TESTS();
 
         // done capturing stdout/stderr
-        fclose(stdout);
-        fclose(stderr);
+        fclose(file_out);
+        fclose(file_err);
 
         return ret_value;
     }
