@@ -1,3 +1,6 @@
+# internal SGM testing logs
+~gtest*.log
+
 # IntelliJ project files
 *.iml
 *.iws

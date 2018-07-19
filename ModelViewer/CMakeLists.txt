@@ -23,7 +23,8 @@ set(MODEL_VIEWER_UIS
 if(BUILD_VIEWER_WITH_GTEST)
   get_filename_component(MODEL_VIEWER_TEST_DIR Tests ABSOLUTE BASE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
   set(MODEL_VIEWER_TEST_SRC
-          ${MODEL_VIEWER_TEST_DIR}/volume_check.cpp)
+          ${MODEL_VIEWER_TEST_DIR}/volume_check.cpp
+          ${MODEL_VIEWER_TEST_DIR}/test_utility.cpp)
 else()
   set(MODEL_VIEWER_TEST_SRC "")
 endif()

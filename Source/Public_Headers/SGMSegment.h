@@ -38,11 +38,11 @@ namespace SGM {
         // Returns the length of this segment squared, which is
         // faster than finding length.
 
-        double Segment2D::LengthSquared() const;
+        double LengthSquared() const;
 
         // Returns the length of this segment squared.
 
-        double Segment2D::Length() const;
+        double Length() const;
 
         // Returns the distance from Pos to this line segments.
 
