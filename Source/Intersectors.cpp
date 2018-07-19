@@ -829,7 +829,7 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
     SGM::Segment3D LineSeg(Origin,Origin+Axis);
     std::vector<SGM::Point3D> const &aSeedPoints=pNUBCurve->GetSeedPoints();
     size_t nSeedPoints=aSeedPoints.size();
-    double dTan15=0.26794919243112270647255365849413;
+    double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
     std::vector<SGM::Point3D> aStartPoints;
     size_t Index1;
     for(Index1=1;Index1<nSeedPoints;++Index1)
@@ -840,7 +840,7 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
         SGM::Point3D Pos2,Pos3;
         Seg.Intersect(LineSeg,Pos2,Pos3);
         double dLength=Pos0.Distance(Pos1);
-        double dTol=dTolerance+dLength*dTan15;
+        double dTol=dTolerance+dLength*dTanHalfAngle;
         if(Pos2.DistanceSquared(Pos3)<dTol*dTol)
             {
             aStartPoints.push_back(Pos2);
@@ -2704,21 +2704,160 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
 
     if (SGM::ArePointsCoplanar(pCurve->GetControlPoints(), dTolerance, &CurvePlaneOrigin, &CurvePlaneNormal))
     {
-        if(fabs(CurvePlaneNormal%PlaneNorm) < 1.0-dTolerance)
+        if(SGM::NearEqual(fabs(CurvePlaneNormal%PlaneNorm),1.0,SGM_MIN_TOL,false)) // planes are parallel
+        {
+            if(fabs((CurvePlaneOrigin-PlaneOrigin)%PlaneNorm)<dTolerance)
+            {
+                SGM::Point3D StartPos;
+                SGM::Point3D EndPos;
+                pCurve->Evaluate(pCurve->GetDomain().m_dMin, &StartPos);
+                pCurve->Evaluate(pCurve->GetDomain().m_dMax, &EndPos);
+                aPoints.push_back(StartPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                aPoints.push_back(EndPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            }
+        }
+        else
         {
             SGM::Point3D LineOrigin;
             SGM::UnitVector3D LineAxis;
             IntersectNonParallelPlanes(CurvePlaneOrigin, CurvePlaneNormal, PlaneOrigin, PlaneNorm, LineOrigin, LineAxis);
             IntersectLineAndNUBCurve(LineOrigin, LineAxis, SGM::Interval1D(-SGM_MAX, +SGM_MAX), pCurve, dTolerance, aPoints, aTypes);
         }
-        else
-        {
-            throw;
-        }
     }
     else
     {
-        throw;
+        // Find the starting points.
+
+        std::vector<SGM::Point3D> const &aSeedPoints=pCurve->GetSeedPoints();
+        size_t nSeedPoints=aSeedPoints.size();
+        double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
+        std::vector<SGM::Point3D> aStartPoints;
+        size_t Index1;
+        for(Index1=1;Index1<nSeedPoints;++Index1)
+        {
+            SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
+            SGM::Point3D const &Pos1=aSeedPoints[Index1];
+            double dDist0 = ((Pos0 - PlaneOrigin) % PlaneNorm);
+            double dDist1 = ((Pos1 - PlaneOrigin) % PlaneNorm);
+            if ((dDist0 * dDist1) < SGM_ZERO) // opposite sides of the plane
+            {
+                double dFraction = fabs(dDist0) / (fabs(dDist0) + fabs(dDist1));
+                SGM::Point3D Start = Pos0 + (dFraction * (Pos1 - Pos0)); 
+                aStartPoints.push_back(Start);
+            }
+            else
+            {
+                double dLength=Pos0.Distance(Pos1);
+                double dTol=dTolerance+dLength*dTanHalfAngle;
+                if (fabs(dDist0) < dTol)
+                {
+                    aStartPoints.push_back(Pos0);
+                }
+                if (fabs(dDist1) < dTol)
+                {
+                    aStartPoints.push_back(Pos1);
+                }
+            }
+        }
+
+
+        // Find the intersection points.
+
+        std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
+        size_t nStartPoints=aStartPoints.size();
+        size_t nCountLimit=100;
+
+        for(Index1=0;Index1<nStartPoints;++Index1)
+        {
+            SGM::Point3D Pos=aStartPoints[Index1];
+            size_t nCount=0;
+            double dOldDist=SGM_MAX;
+            while(nCount<nCountLimit)
+            {
+#if 0 // project back and forth
+                // project point to NUBCurve
+                double dNUBt=pCurve->Inverse(Pos);
+                SGM::Point3D CPos;
+                pCurve->Evaluate(dNUBt,&CPos);
+
+                // project point to plane
+                Pos = CPos + ((PlaneOrigin - CPos) % PlaneNorm) * PlaneNorm;
+
+                double dDist = Pos.Distance(CPos);
+
+                //if(dDist<dOldDist)
+                //{
+                //    Pos=Temp;
+                //}
+#endif
+#if 1 // newton
+                // project point to NUBCurve and get the tangent
+                double dNUBt=pCurve->Inverse(Pos);
+                SGM::Point3D CPos;
+                SGM::Vector3D LocalTan;
+                pCurve->Evaluate(dNUBt,&CPos,&LocalTan);
+
+                SGM::UnitVector3D uLocalTan(LocalTan);
+                double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
+                SGM::Point3D Temp = CPos + dT * uLocalTan;
+                double dDist=Temp.Distance(CPos);
+                if(dDist<dOldDist)
+                {
+                    Pos=Temp;
+                }
+                else
+                {
+                    // Newton led us astray.  Just project to plane.
+                    double Dist=(CPos-PlaneOrigin)%PlaneNorm;
+                    Pos=CPos - Dist*PlaneNorm;
+                    dDist=Pos.Distance(CPos);
+                }
+#endif
+                if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
+                {
+                    if (dDist<dTolerance)
+                        aRefinedPoints.emplace_back(dNUBt,Pos);
+                    break;
+                }
+                if(nCount==nCountLimit-1 && dDist<dTolerance)
+                {
+                    aRefinedPoints.emplace_back(dNUBt,Pos);
+                    break;
+                }
+                dOldDist=dDist;
+                ++nCount;
+                }
+            }
+
+        // Remove duplicates and find the types.
+
+        if(size_t nRefinedPoints=aRefinedPoints.size())
+        {
+            double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
+            std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
+            for(Index1=0;Index1<nRefinedPoints;++Index1)
+            {
+                SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
+                if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
+                {
+                    double t=aRefinedPoints[Index1].first;
+                    SGM::Vector3D DPos;
+                    pCurve->Evaluate(t,nullptr,&DPos);
+                    aPoints.push_back(Pos);
+                    SGM::UnitVector3D Test(DPos);
+                    if(fabs(Test%PlaneNorm)<SGM_MIN_TOL)
+                    {
+                        aTypes.push_back(SGM::IntersectionType::TangentType);
+                    }
+                    else
+                    {
+                        aTypes.push_back(SGM::IntersectionType::PointType);
+                    }
+                }
+            }
+        }
     }
 
     return aPoints.size();    
@@ -2735,8 +2874,6 @@ size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
         {
         if(fabs((pEllipse->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
             {
-            SGM::UnitVector3D XAxis=pEllipse->m_Normal.Orthogonal();
-
             SGM::Point3D EllipsePos;
             pEllipse->Evaluate(0.0, &EllipsePos);
             aPoints.push_back(EllipsePos);

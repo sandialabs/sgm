@@ -501,3 +501,223 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(intersection_check, intersect_planar_NUBcurve_and_plane)
+{
+    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aInterpolate;
+    aInterpolate.reserve(5);
+
+    aInterpolate.emplace_back(0,-2,0);
+    aInterpolate.emplace_back(0,-1,0.5);
+    aInterpolate.emplace_back(0,0.0,0.25);
+    aInterpolate.emplace_back(0,1,0.1);
+    aInterpolate.emplace_back(0,2,.5);
+    
+    SGM::Curve NUBcurveID = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    // plane with single intersection
+    SGM::Point3D PlaneOrigin(1,1,0);
+    SGM::UnitVector3D PlaneNormal(0,1,0);
+
+    double dTolerance = SGM_MIN_TOL;
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(0,1,0.1), aPoints[0], dTolerance));
+
+    // coincident plane
+    PlaneOrigin = SGM::Point3D(0,21,0);
+    PlaneNormal = SGM::UnitVector3D(1,0,0);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    SGM::Point3D NUBstart;
+    SGM::Point3D NUBend;
+    SGM::EvaluateCurve(rResult, NUBcurveID, SGM::GetCurveDomain(rResult, NUBcurveID).m_dMin,&NUBstart);
+    SGM::EvaluateCurve(rResult, NUBcurveID, SGM::GetCurveDomain(rResult, NUBcurveID).m_dMax,&NUBend);
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
+    EXPECT_TRUE(SGM::NearEqual(NUBstart, aPoints[0], dTolerance));
+    EXPECT_TRUE(SGM::NearEqual(NUBend, aPoints[1], dTolerance));
+
+    SGM::DeleteThing(pThing);
+}
+
+TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
+{
+    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aInterpolate;
+    aInterpolate.reserve(6);
+
+    aInterpolate.emplace_back(-2,3.5,0.5);
+    aInterpolate.emplace_back(-1,4,0);
+    aInterpolate.emplace_back(0,5,0);
+    aInterpolate.emplace_back(1,6,0);
+    aInterpolate.emplace_back(2,7,0);
+    aInterpolate.emplace_back(3,8,0);
+    
+    SGM::Curve NUBcurveID = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    SGM::Point3D PlaneOrigin(1,1,0);
+    SGM::UnitVector3D PlaneNormal(1,0,0);
+
+    double dTolerance = SGM_MIN_TOL;
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(1,6,0), aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+
+    // tangent intersection - touches without crossing plane
+    aInterpolate.clear();
+    aInterpolate.emplace_back(-2,-2,-3);
+    aInterpolate.emplace_back(-1,-2,-2);
+    aInterpolate.emplace_back(0,-1,-1);
+    aInterpolate.emplace_back(1,0,-2);
+    aInterpolate.emplace_back(2,0,-3);
+
+    SGM::Curve NUBcurveID2 = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    PlaneOrigin = SGM::Point3D(10,0,-1);
+    PlaneNormal = SGM::UnitVector3D(0,0,1);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(0,-1,-1), aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
+    // single intersection point
+    SGM::Point3D CurvePos;
+    SGM::EvaluateCurve(rResult, NUBcurveID2, 0.3, &CurvePos);
+    PlaneOrigin = SGM::Point3D(CurvePos.m_x,0,0);
+    PlaneNormal = SGM::UnitVector3D(-1,0,0);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+
+    // two intersection points
+    PlaneOrigin = SGM::Point3D(11,4,CurvePos.m_z);
+    PlaneNormal = SGM::UnitVector3D(0,0,-1);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID2, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
+    // expected 2nd intersection point
+    // x is symmetric about 0 so change sign
+    // y is symmetric about -1 so compute difference and add back twice
+    // z is equal
+    SGM::Point3D ExpectedPos(-CurvePos.m_x,CurvePos.m_y+2*(-1-CurvePos.m_y),CurvePos.m_z);
+    EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[1], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+
+    // 1 tangent intersection and one point intersection
+    aInterpolate.clear();
+    aInterpolate.emplace_back(-2,2,-2);
+    aInterpolate.emplace_back(-1.3,2.5,-2);
+    aInterpolate.emplace_back(-1.3,2,-2);
+    aInterpolate.emplace_back(-1.3,1.5,-2);
+    aInterpolate.emplace_back(-0.6,2,-1);
+    SGM::Curve NUBcurveID3 = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    SGM::Vector3D CurveD1, CurveD2;
+    SGM::EvaluateCurve(rResult, NUBcurveID3, 0.35, &CurvePos, &CurveD1, &CurveD2);
+    PlaneOrigin = CurvePos+.5*CurveD1;
+    PlaneNormal = (CurveD1*CurveD2)*CurveD1;
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID3, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+
+
+    // tangent intersection - crossing plane
+    aInterpolate.clear();
+    aInterpolate.emplace_back(-5 ,3,21.2);
+    aInterpolate.emplace_back(0  ,4,21);
+    aInterpolate.emplace_back(4.5,4,21);
+    aInterpolate.emplace_back(5.5,2,21);
+    aInterpolate.emplace_back(10 ,2,21);
+    aInterpolate.emplace_back(15 ,3,20.8);
+    SGM::Curve NUBcurveID4 = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    SGM::EvaluateCurve(rResult, NUBcurveID4, 0.5, &CurvePos, &CurveD1, &CurveD2);
+    PlaneOrigin = CurvePos + CurveD1;
+    PlaneNormal = CurveD1.Orthogonal();
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID4, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
+    // near miss - outside tolerance
+    aInterpolate.clear();
+    aInterpolate.emplace_back(-2,-2,-3);
+    aInterpolate.emplace_back(-1.8,-2,-2);
+    aInterpolate.emplace_back(-1.6,-1.9,-1);
+    aInterpolate.emplace_back(-1.4,-1.8,-2);
+    aInterpolate.emplace_back(-1.2,-1.8,-3);
+    SGM::Curve NUBcurveID5 = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    PlaneOrigin = SGM::Point3D(10,0,-1+(5*dTolerance));
+    PlaneNormal = SGM::UnitVector3D(0,0,1);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID5, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 0);
+    EXPECT_EQ(aTypes.size(), 0);
+
+    // near duplicate, but distinct
+    PlaneOrigin = SGM::Point3D(10,0,-1.0000005);
+    PlaneNormal = SGM::UnitVector3D(0,0,1);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, NUBcurveID5, PlaneOrigin, PlaneNormal, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 2);
+    EXPECT_EQ(aTypes.size(), 2);
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+    EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
+}

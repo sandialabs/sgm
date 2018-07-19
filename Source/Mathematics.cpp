@@ -501,6 +501,32 @@ namespace SGM {
             ZVec = XVec * YVec;
             return true;
             }
+        else if (nFound == 0)
+            {
+            if (fabs(SumXX) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(0,1,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(1,0,0);
+                return true;
+                }
+            else if (fabs(SumYY) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(0,-1,0);
+                return true;
+                }
+            else if (fabs(SumZZ) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,1,0);
+                ZVec = SGM::UnitVector3D(0,0,1);
+                return true;
+                }
+            else
+                return false;
+            }
         return false;
     }
 
