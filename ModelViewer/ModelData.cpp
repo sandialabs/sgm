@@ -658,6 +658,80 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             char Data0[100];
             snprintf(Data0, sizeof(Data0), "Torus %ld", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
+
+            char Data[100];
+            SGM::Point3D Origin{};
+            SGM::UnitVector3D XAxis, YAxis, ZAxis;
+            double dMinorRadius,dMajorRadius;
+            SGM::TorusKindType nKind;
+            SGM::GetTorusData(dPtr->mResult, SurfaceID, Origin, XAxis, YAxis, ZAxis, dMinorRadius, dMajorRadius, nKind);
+
+            auto *data_item1 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
+            data_item1->setText(0, "Origin");
+            data_item1->setText(1, Data);
+
+            auto *data_item2 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            data_item2->setText(0, "XAxis");
+            data_item2->setText(1, Data);
+
+            auto *data_item3 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            data_item3->setText(0, "YAxis");
+            data_item3->setText(1, Data);
+
+            auto *data_item4 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            data_item4->setText(0, "ZAxis");
+            data_item4->setText(1, Data);
+
+            auto *data_item5 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "%.15G", dMinorRadius);
+            data_item5->setText(0, "Minor Radius");
+            data_item5->setText(1, Data);
+
+            auto *data_item6 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "%.15G", dMajorRadius);
+            data_item6->setText(0, "Major Radius");
+            data_item6->setText(1, Data);
+
+            switch(nKind)
+                {
+                case SGM::AppleType:
+                    {
+                    auto *data_item7 = new QTreeWidgetItem(surface_item);
+                    data_item7->setText(0, "Torus Type");
+                    data_item7->setText(1, "Apple");
+                    break;
+                    }
+                case SGM::LemonType:
+                    {
+                    auto *data_item7 = new QTreeWidgetItem(surface_item);
+                    data_item7->setText(0, "Torus Type");
+                    data_item7->setText(1, "Lemon");
+                    break;
+                    }
+                case SGM::PinchedType:
+                    {
+                    auto *data_item7 = new QTreeWidgetItem(surface_item);
+                    data_item7->setText(0, "Torus Type");
+                    data_item7->setText(1, "Pinched");
+                    break;
+                    }
+                case SGM::DonutType:
+                    {
+                    auto *data_item7 = new QTreeWidgetItem(surface_item);
+                    data_item7->setText(0, "Torus Type");
+                    data_item7->setText(1, "Donut");
+                    break;
+                    }
+                default:
+                    {
+                    break;
+                    }
+                }
+
             break;
             }
         case SGM::NUBSurfaceType:

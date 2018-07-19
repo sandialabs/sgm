@@ -12,6 +12,7 @@
 #include "Graph.h"
 #include "Surface.h"
 #include "Curve.h"
+#include "Primitive.h"
 
 #include <list>
 #include <cmath>
@@ -301,6 +302,16 @@ void FixBackPointers(unsigned int                     nTri,
         }
     }
 
+bool TestTriangle(SGM::Point2D const &A,
+                  SGM::Point2D const &B,
+                  SGM::Point2D const &C)
+    {
+    SGM::Vector2D Vec1=B-A;
+    SGM::Vector2D Vec2=C-A;
+    double dTest=Vec1.m_u*Vec2.m_v-Vec1.m_v*Vec2.m_u;
+    return 0<dTest;
+    }
+
 bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<unsigned int>       &aTriangles,
                    std::vector<unsigned int>       &aAdjacencies,
@@ -341,7 +352,41 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &B=aPoints[b];
     SGM::Point2D const &C=aPoints[c];
     SGM::Point2D const &G=aPoints[g];
-    if(SGM::InCircumcircle(A,B,C,G))
+    double dDet;
+    SGM::InCircumcircle(A,B,C,G,dDet);
+    bool bFlip=false;
+    if(SGM_MIN_TOL<dDet)
+        {
+        bFlip=true;
+        }
+    else if(fabs(dDet)<=SGM_MIN_TOL)
+        {
+        if(nEdge==0)
+            {
+            // CG<AB
+            if(G.Distance(C)+SGM_MIN_TOL<A.Distance(B) && TestTriangle(G,C,A) && TestTriangle(G,B,C))
+                {
+                bFlip=true;
+                }
+            }
+        else if(nEdge==1)
+            {
+            // AG<BC
+            if(G.Distance(A)+SGM_MIN_TOL<C.Distance(B) && TestTriangle(G,A,B) && TestTriangle(G,C,A))
+                {
+                bFlip=true;
+                }
+            }
+        else
+            {
+            // BG<CA
+            if(G.Distance(B)+SGM_MIN_TOL<A.Distance(C) && TestTriangle(G,A,B) && TestTriangle(G,B,C))
+                {
+                bFlip=true;
+                }
+            }
+        }
+    if(bFlip)
         {
         unsigned int nT0=aAdjacencies[nTri];
         unsigned int nT1=aAdjacencies[nTri+1];
@@ -471,11 +516,12 @@ class FacetNodeNormal
     public:
 
     FacetNodeNormal(double              dParam,
-                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
+                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {m_bSingular=false;}
 
     double            m_dParam;
     SGM::Point3D      m_Pos;
     SGM::UnitVector3D m_Norm;
+    bool              m_bSingular;
     };
 
 void FacetCurve(curve               const *pCurve,
@@ -784,8 +830,10 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
         SGM::Point3D const &Pos=aPoints3D[Index1];
         SGM::Point2D uv=pSurface->Inverse(Pos);
         SGM::UnitVector3D Norm;
-        if(Index1==0 && pSurface->IsSingularity(uv))
+        bool bSingular=false;
+        if(Index1==0 && pSurface->IsSingularity(uv,SGM_MIN_TOL))
             {
+            bSingular=true;
             double dParamA=aParams[0];
             double dParamB=aParams[1];
             double dParam=dParamA*(1.0-SGM_FIT)+dParamB*SGM_FIT;
@@ -794,8 +842,9 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
             SGM::Point2D CloseUV=pSurface->Inverse(ClosePos);
             pSurface->Evaluate(CloseUV,nullptr,nullptr,nullptr,&Norm);
             }
-        else if(Index1==nPoints-1 && pSurface->IsSingularity(uv))
+        else if(Index1==nPoints-1 && pSurface->IsSingularity(uv,SGM_MIN_TOL))
             {
+            bSingular=true;
             double dParamA=aParams[nPoints-1];
             double dParamB=aParams[nPoints-2];
             double dParam=dParamA*(1.0-SGM_FIT)+dParamB*SGM_FIT;
@@ -809,6 +858,10 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
             pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
             }
         FacetNodeNormal Node(aParams[Index1],Pos);
+        if(bSingular)
+            {
+            Node.m_bSingular=true;
+            }
         Node.m_Norm=Norm;
         lNodes.push_back(Node);
         }
@@ -819,7 +872,7 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
     ++iter;
     while(iter!=lNodes.end())
         {
-        if(iter->m_Norm%LastIter->m_Norm<dDotTol)
+        if(iter->m_bSingular==false && LastIter->m_bSingular==false && iter->m_Norm%LastIter->m_Norm<dDotTol)
             {
             SplitFacet(pCurve,pSurface,LastIter,iter,lNodes);
             bSplit=true;
@@ -1488,7 +1541,7 @@ void Refine(face        const *pFace,
         Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeC);
         Refine(pFace,dCosRefine,aNodes,nNodeC,nNodeB);
         }
-    else if(pSurface->IsSingularity(uv))
+    else if(pSurface->IsSingularity(uv,SGM_MIN_TOL))
         {
         SGM::Interval2D const &Domain=pSurface->GetDomain();
         size_t nCuts=0;
@@ -3004,23 +3057,23 @@ bool OnTwoEdges(unsigned int                                      a1,
     for(Index1=nStart+1;Index1<nHits;++Index1)
         {
         nOther=*((size_t *)aHits[Index1].first);
-        unsigned int a2=aTriangles[Index1]; 
-        unsigned int b2=aTriangles[Index1+1]; 
-        unsigned int c2=aTriangles[Index1+2]; 
+        unsigned int a2=aTriangles[nOther]; 
+        unsigned int b2=aTriangles[nOther+1]; 
+        unsigned int c2=aTriangles[nOther+2]; 
         if((a2==b && b2==a) || (b2==b && c2==a) || (c2==b && a2==a))
             {
-            SGM::Point2D const &A=aPoints[a2];
-            SGM::Point2D const &B=aPoints[b2];
-            SGM::Point2D const &C=aPoints[c2];
-            if(PointOnSegment(A,B,D,dTolerance))
+            SGM::Point2D const &A2=aPoints[a2];
+            SGM::Point2D const &B2=aPoints[b2];
+            SGM::Point2D const &C2=aPoints[c2];
+            if(PointOnSegment(A2,B2,D,dTolerance))
                 {
                 nEdge2=0;
                 }
-            else if(PointOnSegment(B,C,D,dTolerance))
+            else if(PointOnSegment(B2,C2,D,dTolerance))
                 {
                 nEdge2=1;
                 }
-            else if(PointOnSegment(C,A,D,dTolerance))
+            else if(PointOnSegment(C2,A2,D,dTolerance))
                 {
                 nEdge2=2;
                 }
@@ -3241,18 +3294,21 @@ bool NearBoundary(unsigned int                                           a,
     return false;
     }
 
-void InsertPoints(face                      const *pFace,
-                  std::vector<SGM::Point2D> const &aInsertPoints,
+void InsertPoints(SGM::Result                     &,//rResult,
+                  face                      const *pFace,
+                  std::vector<SGM::Point2D>       &aInsertPoints,
                   double                           dBoundaryTolerance,
                   std::vector<SGM::Point2D>       &aPoints2D,
                   std::vector<SGM::Point3D>       &aPoints3D,
-                  std::vector<unsigned int>       &aTriangles)
+                  std::vector<unsigned int>       &aTriangles,
+                  bool                             bEdge)
     {
     // Find the boundary edges.
 
+    std::vector<SGM::Point2D> aEdgePoints;
     std::set<std::pair<unsigned int,unsigned int> > sBoundaryEdges;
     SGM::FindBoundaryEdges(aTriangles,sBoundaryEdges);
-    dBoundaryTolerance*=1;
+    dBoundaryTolerance*=0.5;
 
     // Create a tree of the facets.
 
@@ -3317,10 +3373,17 @@ void InsertPoints(face                      const *pFace,
                 else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_FIT,nOther,nEdge1,nEdge2))
                     {
                     // Split nHitTri at nEdge1 and nOther at nEdge2.
-                    SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
-                    SGM::Point3D Pos;
-                    pSurface->Evaluate(D,&Pos);
-                    aPoints3D.push_back(Pos);
+                    if(bEdge)
+                        {
+                        SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
+                        SGM::Point3D Pos;
+                        pSurface->Evaluate(D,&Pos);
+                        aPoints3D.push_back(Pos);
+                        }
+                    else
+                        {
+                        aEdgePoints.push_back(D);
+                        }
                     break;
                     }
                 else
@@ -3335,9 +3398,11 @@ void InsertPoints(face                      const *pFace,
                 }
             }
         }
+    aInsertPoints=aEdgePoints;
     }
 
-bool AddGrid(face                     const *pFace,
+bool AddGrid(SGM::Result                    &rResult,
+             face                     const *pFace,
              FacetOptions             const &Options,
              std::vector<SGM::Point2D>      &aPoints2D,
              std::vector<SGM::Point3D>      &aPoints3D,
@@ -3364,13 +3429,43 @@ bool AddGrid(face                     const *pFace,
                 aInsertPoints.push_back(uv);
                 }
             }
-        InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles);
+        InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
+        aAdjacencies.clear();
+        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+        DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+        InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
         aAdjacencies.clear();
         SGM::FindAdjacences2D(aTriangles,aAdjacencies);
         return true;
         }
     return false;
     }
+
+#if 0
+void CheckTriangles(std::vector<SGM::Point2D> &aPoints,
+                    std::vector<unsigned int> &aTriangles)
+    {
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
+        SGM::Point2D const &A=aPoints[a];
+        SGM::Point2D const &B=aPoints[b];
+        SGM::Point2D const &C=aPoints[c];
+        SGM::Vector2D Vec1=B-A;
+        SGM::Vector2D Vec2=C-A;
+        double dTest=Vec1.m_u*Vec2.m_v-Vec1.m_v*Vec2.m_u;
+        if(dTest<0)
+            {
+            int w=0;
+            w*=1;
+            }
+        }
+    }
+#endif
     
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
@@ -3386,7 +3481,7 @@ void FacetFace(SGM::Result                    &rResult,
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
     SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     size_t nOldSize=aPoints2D.size();
-    if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
+    if(AddGrid(rResult,pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
         {
         FindNormals(rResult,pFace,aPoints2D,aNormals);
         size_t nNewSize=aPoints2D.size();

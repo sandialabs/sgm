@@ -37,8 +37,9 @@ void FindClosestPointOnEdge(SGM::Result        &,//rResult,
                 }
             default:
                 {
-                // Look for local mins.
-                throw;
+                // Look for local mins
+                dEdge=DBL_MAX;
+                break;
                 }
             }
         }

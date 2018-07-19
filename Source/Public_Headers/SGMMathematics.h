@@ -150,12 +150,15 @@ namespace SGM
                                double             &dRadius);
     
     // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
-    // it is assumed that A, B, and C are in counter clockwise order.
+    // it is assumed that A, B, and C are in counter clockwise order. 
+    // The returned value of dDet can be used to tell if we are in a close
+    // call situation, in which case a value close to zero will be returned.
 
     SGM_EXPORT bool InCircumcircle(SGM::Point2D const &A,
                                    SGM::Point2D const &B,
                                    SGM::Point2D const &C,
-                                   SGM::Point2D const &D);
+                                   SGM::Point2D const &D,
+                                   double             &dDet);
 
     ///////////////////////////////////////////////////////////////////////////
     //

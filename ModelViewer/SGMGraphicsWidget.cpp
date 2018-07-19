@@ -503,13 +503,13 @@ struct pMouseData
 class OpenGLData
 {
 private:
-    GLuint mArray{};          // Variable to store shader settings
-    GLuint mVertexBuffer{};   // Variable to store vertex buffer object (points, normals, etc.)
-    GLuint mElementBuffer{};  // Variable to store element array object (e.g., triangle indices)
-    GLsizei mNumElements{};    // Number of indices to render in the element buffer
-    GLenum mRenderMode{};     // How to render the data (e.g., GL_TRIANGLES)
+    GLuint mArray;          // Variable to store shader settings
+    GLuint mVertexBuffer;   // Variable to store vertex buffer object (points, normals, etc.)
+    GLuint mElementBuffer;  // Variable to store element array object (e.g., triangle indices)
+    GLsizei mNumElements;   // Number of indices to render in the element buffer
+    GLenum mRenderMode;     // How to render the data (e.g., GL_TRIANGLES)
 
-    GLfloat mRGB[3]{};  // Color indices
+    GLfloat mRGB[3];        // Color indices
 
     buffer<GLfloat> mTempDataBuffer;
     buffer<GLuint> mTempIndexBuffer;
@@ -606,15 +606,15 @@ public:
 
     /// Next index available in an edge temporary index buffer.
     GLuint get_edge_index_offset()
-    { return mTempDataBuffer.size() / 6; }
+    { return (GLuint)(mTempDataBuffer.size() / 6); }
 
     /// Next index available in a face temporary index buffer.
     GLuint get_face_index_offset()
-    { return mTempDataBuffer.size() / 9; }
+    { return (GLuint)(mTempDataBuffer.size() / 9); }
 
     /// Next index available in a vertex temporary index buffer.
     GLuint get_vertex_index_offset()
-    { return mTempDataBuffer.size() / 6; }
+    { return (GLuint)(mTempDataBuffer.size() / 6); }
 
     void flush(QtOpenGL *opengl)
     {
@@ -892,10 +892,6 @@ void SGMGraphicsWidget::add_vertex(SGM::Point3D const &Pos,
     buffer<GLuint> &index_buffer = vertex_data.temp_index_buffer();
 
     // Setup indices for the point
-<<<<<<< HEAD
-    GLuint offset = (GLuint)(data_buffer.size() / 6);
-=======
->>>>>>> 7b6ae8590e1a3f6cc4b7535ea28692d73d02cb25
     index_buffer.push_back(offset);
 
     // Add the point data
@@ -974,7 +970,11 @@ QSurfaceFormat SGMGraphicsWidget::default_format()
 {
     QSurfaceFormat fmt;
     fmt.setRenderableType(QSurfaceFormat::OpenGL);
-    fmt.setVersion(3, 2);
+#ifdef _MSC_VER
+    fmt.setVersion(2, 1);  
+#else
+    fmt.setVersion(3, 1);
+#endif
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     fmt.setRedBufferSize(1);
@@ -985,7 +985,7 @@ QSurfaceFormat SGMGraphicsWidget::default_format()
     fmt.setAlphaBufferSize(1);
     fmt.setStereo(false);
     fmt.setSwapInterval(0);
-
+    fmt.setSamples(4);
     return fmt;
 }
 
@@ -1017,7 +1017,7 @@ void SGMGraphicsWidget::initializeGL()
     //GLfloat lineWidthRange[2] = {0.0f, 0.0f};
     //opengl->glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
     // Returned 0 to 7 for my laptop.  PRS
-    //opengl->glLineWidth(5);
+    opengl->glLineWidth(1);
 
     dPtr->shaders.init_shaders(opengl);
     dPtr->shaders.set_light_direction(opengl, 0.0f, 0.1f, 1.0f);

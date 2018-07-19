@@ -1446,32 +1446,32 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
     return Answer;
     }
 
-bool surface::IsSingularity(SGM::Point2D const &uv) const
+bool surface::IsSingularity(SGM::Point2D const &uv,double dTolerance) const
     {
     if(m_bSingularHighU)
         {
-        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,SGM_ZERO,false))
+        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMax,dTolerance,false))
             {
             return true;
             }
         }
     if(m_bSingularHighV)
         {
-        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMax,SGM_ZERO,false))
+        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMax,dTolerance,false))
             {
             return true;
             }
         }
     if(m_bSingularLowU)
         {
-        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,SGM_ZERO,false))
+        if(SGM::NearEqual(uv.m_u,m_Domain.m_UDomain.m_dMin,dTolerance,false))
             {
             return true;
             }
         }
     if(m_bSingularLowV)
         {
-        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,SGM_ZERO,false))
+        if(SGM::NearEqual(uv.m_v,m_Domain.m_VDomain.m_dMin,dTolerance,false))
             {
             return true;
             }

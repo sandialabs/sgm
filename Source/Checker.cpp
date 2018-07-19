@@ -1,7 +1,10 @@
 #include "SGMVector.h"
+
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
+#include "Primitive.h"
+
 #include <set>
 #include <vector>
 #include <map>
@@ -414,8 +417,17 @@ bool face::Check(SGM::Result              &rResult,
             double dAngleB=SGM::SAFEacos(dDotB)*180/SGM_PI;
             double dAngleC=SGM::SAFEacos(dDotC)*180/SGM_PI;
 
-            //line *pLine1=new line(rResult,Pos0,Pos1);
-
+            /*
+            line *pLine1=new line(rResult,A,B);
+            SGM::Interval1D Domain1(0.0,A.Distance(B));
+            line *pLine2=new line(rResult,B,C);
+            SGM::Interval1D Domain2(0.0,B.Distance(C));
+            line *pLine3=new line(rResult,C,A);
+            SGM::Interval1D Domain3(0.0,C.Distance(A));
+            CreateEdge(rResult,pLine1,&Domain1);
+            CreateEdge(rResult,pLine2,&Domain2);
+            CreateEdge(rResult,pLine3,&Domain3);
+            */
 
             if(dMaxAngle<dAngleA)
                 {

@@ -2032,20 +2032,20 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     fclose(pFile);
 
     // Code for testing to be removed.
-    /*
+#if 1
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
     std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-        if(pFace->GetID()==284)
+        if(pFace->GetID()==1000)
             {
             pFace->GetTriangles(rResult);
             }
         ++iter;
         }
-    */
+#endif
 
     if(Options.m_bHeal)
         {

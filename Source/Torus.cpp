@@ -38,12 +38,16 @@ torus::torus(SGM::Result             &rResult,
             {
             m_Domain.m_VDomain.m_dMin=dT-SGM_PI;
             m_Domain.m_VDomain.m_dMax=SGM_PI-dT;
+            m_bSingularLowV=true;
+            m_bSingularHighV=true;
             m_nKind=SGM::TorusKindType::AppleType;
             }
         else // Lemon Torus
             {
             m_Domain.m_VDomain.m_dMin=SGM_PI-dT;
             m_Domain.m_VDomain.m_dMax=SGM_PI+dT;
+            m_bSingularLowV=true;
+            m_bSingularHighV=true;
             m_nKind=SGM::TorusKindType::LemonType;
             }
         }

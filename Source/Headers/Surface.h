@@ -93,7 +93,7 @@ class surface : public entity
 
         bool SingularHighV() const {return m_bSingularHighV;}
 
-        bool IsSingularity(SGM::Point2D const &uv) const;
+        bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
         bool IsTopLevel() const {return m_sFaces.empty() && m_sOwners.empty();}
 
