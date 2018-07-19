@@ -1,12 +1,8 @@
-//#include <limits>
-//#include <string>
 #include <gtest/gtest.h>
 
 #include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMPrimitives.h"
-//#include "SGMGeometry.h"
-//#include "SGMIntersector.h"
 
 TEST(math_check, find_least_square_plane)
 {
