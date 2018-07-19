@@ -20,6 +20,10 @@ signals:
     void script();
 
     void check();
+
+#ifdef VIEWER_WITH_GTEST
+    void gtest();
+#endif
 };
 
 #endif // TESTMENU_HPP

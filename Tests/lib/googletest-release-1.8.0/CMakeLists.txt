@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.6.2)
 
+if (POLICY CMP0048)
+cmake_policy(SET CMP0048 OLD) # turn off warning about VERSION
+endif (POLICY CMP0048)
+
 project( googletest-distribution )
 
 enable_testing()

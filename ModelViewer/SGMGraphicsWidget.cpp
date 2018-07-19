@@ -606,15 +606,15 @@ public:
 
     /// Next index available in an edge temporary index buffer.
     GLuint get_edge_index_offset()
-    { return mTempDataBuffer.size() / 6; }
+    { return (GLuint)(mTempDataBuffer.size() / 6); }
 
     /// Next index available in a face temporary index buffer.
     GLuint get_face_index_offset()
-    { return mTempDataBuffer.size() / 9; }
+    { return (GLuint)(mTempDataBuffer.size() / 9); }
 
     /// Next index available in a vertex temporary index buffer.
     GLuint get_vertex_index_offset()
-    { return mTempDataBuffer.size() / 6; }
+    { return (GLuint)(mTempDataBuffer.size() / 6); }
 
     void flush(QtOpenGL *opengl)
     {
@@ -970,17 +970,18 @@ QSurfaceFormat SGMGraphicsWidget::default_format()
 {
     QSurfaceFormat fmt;
     fmt.setRenderableType(QSurfaceFormat::OpenGL);
-    fmt.setVersion(3, 2);
+    fmt.setVersion(4, 1);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     fmt.setRedBufferSize(1);
     fmt.setGreenBufferSize(1);
     fmt.setBlueBufferSize(1);
-    fmt.setDepthBufferSize(1);
+    fmt.setDepthBufferSize(24);
     fmt.setStencilBufferSize(0);
     fmt.setAlphaBufferSize(1);
     fmt.setStereo(false);
-    fmt.setSwapInterval(0);
+    fmt.setSwapInterval(1);
+    fmt.setSamples(4);
 
     return fmt;
 }
@@ -997,7 +998,7 @@ void SGMGraphicsWidget::initializeGL()
     opengl->glEnable(GL_LINE_SMOOTH);
     opengl->glEnable(GL_BLEND);
     opengl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    opengl->glLineWidth(1.0);
+    opengl->glLineWidth(5.f);
     opengl->glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
 
@@ -1013,7 +1014,7 @@ void SGMGraphicsWidget::initializeGL()
     //GLfloat lineWidthRange[2] = {0.0f, 0.0f};
     //opengl->glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
     // Returned 0 to 7 for my laptop.  PRS
-    //opengl->glLineWidth(5);
+    //opengl->glLineWidth(5.f);
 
     dPtr->shaders.init_shaders(opengl);
     dPtr->shaders.set_light_direction(opengl, 0.0f, 0.1f, 1.0f);

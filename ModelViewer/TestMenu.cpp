@@ -16,4 +16,12 @@ TestMenu::TestMenu(QWidget *parent) :
 
     QAction *check_action = addAction("&Check", this, SIGNAL(check()));
     check_action->setShortcut(tr("Ctrl+C"));
+
+#ifdef VIEWER_WITH_GTEST
+    addSeparator();
+
+    QAction *gtest_action = addAction("&Run gtest", this, SIGNAL(gtest()));
+    gtest_action->setShortcut(tr("Ctrl+G"));
+#endif
+
 }

@@ -59,13 +59,12 @@ endfunction()
 add_subdirectory(Source)
 add_subdirectory(Apps)
 add_subdirectory(Tests)
+add_subdirectory(Tests/lib/googletest-release-1.8.0)
 
 option(BUILD_MODEL_VIEWER "Build the Qt based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
   add_subdirectory(ModelViewer)
 endif()
-
-
 
 # installation for all projects
 install(EXPORT SGM FILE SGMConfig.cmake

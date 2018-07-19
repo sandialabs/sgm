@@ -64,6 +64,11 @@ ModelData::~ModelData()
     delete dPtr;
 }
 
+SGMInternal::thing* ModelData::GetThing() const
+{
+    return dPtr->mThing;
+}
+
 std::map<QTreeWidgetItem *, SGM::Entity> const &ModelData::GetMap() const
 {
     return dPtr->mTree->mTreeMap;

@@ -25,6 +25,22 @@
 
 #include <map>
 
+#ifdef VIEWER_WITH_GTEST
+#include <gtest/gtest.h>
+#include <QMessageBox>
+#include <EntityClasses.h>
+
+#endif
+
+namespace SGMInternal
+{
+    namespace Testing
+    {
+        // a global static pointer to the pointer to the environment shared by the ModelViewer and the gtests.
+        extern thing *pThing;
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
@@ -72,6 +88,10 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(test_script()));
   connect(mTestMenu, SIGNAL(check()),
           this, SLOT(test_check()));
+#ifdef VIEWER_WITH_GTEST
+  connect(mTestMenu, SIGNAL(gtest()),
+          this, SLOT(test_gtest()));
+#endif
 
   ui->menubar->addMenu(mPrimitiveMenu);
   connect(mPrimitiveMenu, SIGNAL(block()),
@@ -303,6 +323,71 @@ void MainWindow::test_check()
         Msgbox.setSizeGripEnabled(true);
       }
 }
+
+#ifdef VIEWER_WITH_GTEST
+void MainWindow::test_gtest()
+{
+    // assign the variable that tests use to operate on the environment
+    SGMInternal::Testing::pThing = mModel->GetThing();
+
+    // start capturing stdout/stderr
+    stdout = freopen("gtest_stdout.log", "w", stdout);
+    stderr = freopen("gtest_stderr.log", "w", stderr);
+
+    int argc = 2;
+    const char *argv[2];
+    argv[0] = "sgm_viewer";
+    argv[1] = "--filter=volume_check";
+
+    ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
+
+    int ret_value =  RUN_ALL_TESTS();
+
+    // done capturing stdout/stderr
+    fclose(stdout);
+    fclose(stderr);
+
+    // update the viewer
+    mModel->rebuild_tree();
+    mModel->rebuild_graphics();
+
+    QFile out_file("gtest_stdout.log");
+    out_file.open(QIODevice::ReadOnly);
+    QByteArray output = out_file.readAll();
+    QString out_string(output);
+    out_file.close();
+
+    QFile err_file("gtest_stderr.log");
+    err_file.open(QIODevice::ReadOnly);
+    QByteArray errors = err_file.readAll();
+    QString err_string(errors);
+    err_file.close();
+
+    QMessageBox msg_box;
+    QString title("gtest ");
+    QString info;
+    msg_box.setTextInteractionFlags(Qt::TextSelectableByMouse);
+    msg_box.setWindowTitle(title);
+    msg_box.setInformativeText(out_string);
+    if (0 == ret_value)
+        {
+        msg_box.setIcon(QMessageBox::Information);
+        info = "PASSED\n";
+        }
+    else{
+        msg_box.setIcon(QMessageBox::Warning);
+        info = "FAILED\n";
+        msg_box.setDetailedText(err_string);
+    }
+    for (int i = 1; i < argc; ++i)
+        info += QString(argv[i]);
+    msg_box.setText(info);
+    QSpacerItem* horizontalSpacer = new QSpacerItem(400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QGridLayout* layout = (QGridLayout*)msg_box.layout();
+    layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+    msg_box.exec();
+}
+#endif
 
 void MainWindow::primitive_block()
     {

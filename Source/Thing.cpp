@@ -5,6 +5,12 @@
 namespace SGMInternal
 {
 
+namespace Testing
+{
+    // a global static pointer to environment shared by the ModelViewer and the gtests.
+    SGMInternal::thing *pThing = nullptr;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  thing methods
