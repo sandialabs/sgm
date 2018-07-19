@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QSettings>
 
 #include "qinputdialog.h"
@@ -22,16 +23,13 @@
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
 #include "SGMDisplay.h"
-#include "../Tests/test_utility.h"
 
 #include <map>
 #include <cstdio>
 
 #ifdef VIEWER_WITH_GTEST
 #include <gtest/gtest.h>
-#include <QMessageBox>
-#include <EntityClasses.h>
-
+#include "../Tests/test_utility.h"
 #endif
 
 MainWindow::MainWindow(QWidget *parent) :

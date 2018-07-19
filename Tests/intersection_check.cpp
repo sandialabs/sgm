@@ -7,9 +7,11 @@
 #include "SGMGeometry.h"
 #include "SGMIntersector.h"
 
+#include "test_utility.h"
+
 TEST(intersection_check, intersect_ellipse_and_plane)
 {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(1,2,3);
@@ -111,12 +113,12 @@ TEST(intersection_check, intersect_ellipse_and_plane)
     //EXPECT_TRUE(SGM::NearEqual(PosOnEllipse, aPoints[0], dTolerance));
     //EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
-    SGM::DeleteThing(pThing);
+    SGMTesting::ReleaseTestThing(pThing);
 }
 
 TEST(intersection_check, intersect_line_and_plane)
 {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     SGM::Point3D Pos(-1,2,-3);
@@ -151,12 +153,12 @@ TEST(intersection_check, intersect_line_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
     EXPECT_EQ(aTypes[1], SGM::IntersectionType::CoincidentType);
 
-    SGM::DeleteThing(pThing);
+    SGMTesting::ReleaseTestThing(pThing);
 }
 
 TEST(intersection_check, intersect_circle_and_plane)
 {
-    SGMInternal::thing *pThing=SGM::CreateThing();
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(7,6,-5);
@@ -211,6 +213,6 @@ TEST(intersection_check, intersect_circle_and_plane)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
     EXPECT_TRUE(SGM::NearEqual(PosOnCircle, aPoints[0], dTolerance));
 
-    SGM::DeleteThing(pThing);
+    SGMTesting::ReleaseTestThing(pThing);
 }
 
