@@ -14,6 +14,8 @@ class ViewMenu;
 
 class PrimitiveMenu;
 
+class TestDialog;
+
 namespace Ui {
     class MainWindow;
 }
@@ -102,6 +104,7 @@ private:
     TestMenu *mTestMenu;
     PrimitiveMenu *mPrimitiveMenu;
     ModelData *mModel;
+    TestDialog *mTestDialog;
 
     void read_settings();
 

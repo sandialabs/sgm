@@ -8,6 +8,11 @@ namespace SGMInternal
    class thing;
 }
 
+namespace testing
+{
+    class EmptyTestEventListener;
+}
+
 namespace SGMTesting {
 
     /**
@@ -22,10 +27,13 @@ namespace SGMTesting {
      *
      * @param pThing environment that the ModelViewer is using to display
      * @param arg command line like argument to specify the test(s) to run
+     * @param listener callback class for responding to test run events
      *
      * @return 0 for success, 1 for one or more test failures
      */
-    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing, const char* arg);
+    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing,
+                                     const char* arg,
+                                     testing::EmptyTestEventListener *listener);
 
     // A test calls this to get the environment used by the ModelViewer to display a model.
     SGMInternal::thing* AcquireTestThing();

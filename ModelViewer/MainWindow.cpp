@@ -28,8 +28,7 @@
 #include <cstdio>
 
 #ifdef VIEWER_WITH_GTEST
-#include <gtest/gtest.h>
-#include "../Tests/test_utility.h"
+#include "TestDialog.hpp"
 #endif
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -39,7 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
   mFileMenu(new FileMenu),
   mViewMenu(new ViewMenu),
   mTestMenu(new TestMenu),
-  mPrimitiveMenu(new PrimitiveMenu)
+  mPrimitiveMenu(new PrimitiveMenu),
+  mTestDialog(nullptr)
 {
   ui->setupUi(this);
   ui->mGraphics->setFocusPolicy(Qt::ClickFocus);
@@ -356,17 +356,10 @@ void gtest_result_dialog_exec(int ret_value, const char* arg)
 
 void MainWindow::test_gtest()
 {
-    const char* arg = "--filter=volume_check";
+    if (mTestDialog == nullptr)
+        mTestDialog = new TestDialog(mModel);
 
-    // run the gtests specified by the given command-line-like arg
-    int ret_value = SGMTesting::PerformViewerTest(mModel->GetThing(), arg);
-
-    // update the viewer
-    mModel->rebuild_tree();
-    mModel->rebuild_graphics();
-
-    // show a message dialog of the result
-    gtest_result_dialog_exec(ret_value, arg);
+    mTestDialog->exec();
 }
 #endif
 

@@ -5,6 +5,11 @@
 #include "assert.h"
 #include "test_utility.h"
 
+using ::testing::EmptyTestEventListener;
+using ::testing::InitGoogleTest;
+using ::testing::TestEventListeners;
+using ::testing::UnitTest;
+
 namespace SGMTesting {
 
     // A static variable used to capture the environment used by the ModelViewer to display.
@@ -17,15 +22,17 @@ namespace SGMTesting {
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing, const char* arg)
+    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing,
+                                     const char* arg,
+                                     testing::EmptyTestEventListener *listener)
     {
         // set the environment to use that given to us by the viewer
         assert(pThing != nullptr);
         viewer_thing = pThing;
 
         // start capturing stdout/stderr
-        freopen("~gtest_stdout.log", "w", stdout);
-        freopen("~gtest_stderr.log", "w", stderr);
+        //freopen("~gtest_stdout.log", "w", stdout);
+        //freopen("~gtest_stderr.log", "w", stderr);
 
         int argc = 2;
         const char *argv[2];
@@ -33,11 +40,28 @@ namespace SGMTesting {
         argv[1] = arg;
 
         ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
+
+        UnitTest& unit_test = *UnitTest::GetInstance();
+
+        TestEventListeners& listeners = unit_test.listeners();
+
+        // Removes the default console output listener from the list so it will
+        // not receive events from Google Test and won't print any output. Since
+        // this operation transfers ownership of the listener to the caller we
+        // have to delete it as well.
+        delete listeners.Release(listeners.default_result_printer());
+
+        // Adds the custom output listener to the list. It will now receive
+        // events from Google Test and print the alternative output. We don't
+        // have to worry about deleting it since Google Test assumes ownership
+        // over it after adding it to the list.
+        listeners.Append(listener);
+
         int ret_value =  RUN_ALL_TESTS();
 
         // done capturing stdout/stderr
-        fclose(stdout);
-        fclose(stderr);
+        //fclose(stdout);
+        //fclose(stderr);
 
         return ret_value;
     }
