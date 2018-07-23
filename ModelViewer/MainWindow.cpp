@@ -359,7 +359,7 @@ void MainWindow::test_gtest()
     if (mTestDialog == nullptr)
         mTestDialog = new TestDialog(mModel);
 
-    mTestDialog->exec();
+    mTestDialog->show();
 }
 #endif
 
