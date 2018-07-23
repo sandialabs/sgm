@@ -173,10 +173,6 @@ SGM::Interval1D const &edge::GetDomain() const
                     m_Domain.m_dMin=CurveDomain.m_dMin;
                     }
                 }
-            if(m_Domain.IsEmpty())
-                {
-                throw;
-                }
             }
         if( m_Domain.Length()<SGM_ZERO && 
             m_pStart==m_pEnd && 
@@ -277,6 +273,17 @@ void edge::SnapToDomain(double &t,double dTol) const
                     {
                     t-=CurveDomain.Length();
                     }
+                }
+            }
+        else
+            {
+            while(t<m_Domain.m_dMin)
+                {
+                t+=CurveDomain.Length();
+                }
+            while(m_Domain.m_dMax<t)
+                {
+                t-=CurveDomain.Length();
                 }
             }
         }

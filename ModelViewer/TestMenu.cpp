@@ -12,11 +12,6 @@ TestMenu::TestMenu(QWidget *parent) :
     QAction *script_action = addAction("&Run Script", this, SIGNAL(script()));
     script_action->setShortcut(tr("Ctrl+S"));
 
-    addSeparator();
-
-    QAction *check_action = addAction("&Check", this, SIGNAL(check()));
-    check_action->setShortcut(tr("Ctrl+C"));
-
 #ifdef VIEWER_WITH_GTEST
     addSeparator();
 
@@ -24,4 +19,8 @@ TestMenu::TestMenu(QWidget *parent) :
     gtest_action->setShortcut(tr("Ctrl+G"));
 #endif
 
+    addSeparator();
+
+    QAction *check_action = addAction("&Check", this, SIGNAL(check()));
+    check_action->setShortcut(tr("Ctrl+C"));
 }

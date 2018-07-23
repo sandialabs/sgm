@@ -1441,6 +1441,7 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         DeltaV=(S%DV)/DV.MagnitudeSquared();
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
+        pSurface->SnapToDomain(Answer);
         ++nCount;
         }
     return Answer;
@@ -1709,6 +1710,54 @@ int surface::VContinuity() const
         default:
             {
             return std::numeric_limits<int>::max();
+            }
+        }
+    }
+
+void surface::SnapToDomain(SGM::Point2D &uv) const
+    {
+    if(m_bClosedU)
+        {
+        while(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            {
+            uv.m_u+=m_Domain.m_UDomain.Length();
+            }
+        while(m_Domain.m_UDomain.m_dMax<uv.m_u)
+            {
+            uv.m_u-=m_Domain.m_UDomain.Length();
+            }
+        }
+    else
+        {
+        if(uv.m_u<m_Domain.m_UDomain.m_dMin)
+            {
+            uv.m_u=m_Domain.m_UDomain.m_dMin;
+            }
+        if(m_Domain.m_UDomain.m_dMax<uv.m_u)
+            {
+            uv.m_u=m_Domain.m_UDomain.m_dMax;
+            }
+        }
+    if(m_bClosedV)
+        {
+        while(uv.m_v<m_Domain.m_VDomain.m_dMin)
+            {
+            uv.m_v+=m_Domain.m_VDomain.Length();
+            }
+        while(m_Domain.m_VDomain.m_dMax<uv.m_v)
+            {
+            uv.m_v-=m_Domain.m_VDomain.Length();
+            }
+        }
+    else
+        {
+        if(uv.m_v<m_Domain.m_VDomain.m_dMin)
+            {
+            uv.m_v=m_Domain.m_VDomain.m_dMin;
+            }
+        if(m_Domain.m_VDomain.m_dMax<uv.m_v)
+            {
+            uv.m_v=m_Domain.m_VDomain.m_dMax;
             }
         }
     }

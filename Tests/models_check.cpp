@@ -329,6 +329,14 @@ void import_check_log_process(std::string const &file_path)
         {
         std::cerr << "Success" << std::endl; // gtest will EXPECT this
         log_file << current_date_time() << ", Success " << time_in_milliseconds << "ms." << std::endl;
+
+        // Copy passed files to the passed directory.  PRS
+        const testing::internal::FilePath file_path_object(file_path);
+        auto file_name_only = file_path_object.RemoveFileName();
+        std::string BaseDir=file_name_only.string();
+        std::string file_name = erase_directory(file_path);
+        std::string PassedFileName=BaseDir+"Passed"+'/'+file_name;
+        rename(file_path.c_str(),PassedFileName.c_str());
         }
 
     log_file.close();
@@ -414,6 +422,10 @@ TEST(ModelDeathTest, sgm_models)
     std::string base_dir(SGM_MODELS_DIRECTORY);
 
     std::vector<std::string> names = get_file_names_if(base_dir, has_model_extension);
+
+    // Create a directory for the passed files.  PRS
+    std::string passed_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Passed";
+    CreateDirectory(passed_name.c_str(),nullptr);
 
     for (const std::string& name : names)
         {

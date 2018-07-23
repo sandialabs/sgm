@@ -71,7 +71,7 @@ class curve : public entity
 
         SGM::Interval1D const &GetDomain() const {return m_Domain;}
 
-        void SetDomain(SGM::Interval1D const &rDomain) {m_Domain=rDomain;}
+        void SetDomain(SGM::Interval1D const &rDomain);
 
         bool GetClosed() const {return m_bClosed;}
 

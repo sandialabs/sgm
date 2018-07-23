@@ -20,6 +20,11 @@ curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     m_bClosed=false;
     }
 
+void curve::SetDomain(SGM::Interval1D const &rDomain) 
+    {
+    m_Domain=rDomain;
+    }
+
 void curve::AddEdge(edge *pEdge) 
     {
     m_sEdges.insert(pEdge);

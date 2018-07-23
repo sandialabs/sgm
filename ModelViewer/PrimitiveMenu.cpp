@@ -15,8 +15,6 @@ PrimitiveMenu::PrimitiveMenu(QWidget *parent) :
     cone_action->setShortcut(tr("Ctrl+o"));
     QAction *torus_action = addAction("&Torus", this, SIGNAL(torus()));
     torus_action->setShortcut(tr("Ctrl+T"));
-    QAction *nub_surface_action = addAction("&NUB S&urface", this, SIGNAL(NUBSurface()));
-    nub_surface_action->setShortcut(tr("Ctrl+u"));
     QAction *revolve_action = addAction("Re&volve", this, SIGNAL(revolve()));
     revolve_action->setShortcut(tr("Ctrl+v"));
 
