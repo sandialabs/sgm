@@ -11,6 +11,9 @@
 #include <set>
 #include <map>
 
+#define SEED_POINT_EDGE_ANGLE_TOL 0.52359877559829887307710723054658 // 30 degrees.
+#define SEED_POINT_HALF_ANGLE_TANGENT 0.26794919243112270647255365849413  //tangent of half-angle = 15 degrees
+
 namespace SGMInternal
 {
 

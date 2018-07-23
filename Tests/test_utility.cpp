@@ -1,8 +1,6 @@
-#include <cstdio>
 #include <gtest/gtest.h>
 #include <SGMPrimitives.h>
 
-#include "assert.h"
 #include "test_utility.h"
 
 using ::testing::EmptyTestEventListener;
@@ -22,17 +20,13 @@ namespace SGMTesting {
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing,
+    int PerformViewerTest(SGMInternal::thing *pThing,
                                      const char* arg,
                                      testing::EmptyTestEventListener *listener)
     {
         // set the environment to use that given to us by the viewer
         assert(pThing != nullptr);
         viewer_thing = pThing;
-
-        // start capturing stdout/stderr
-        //freopen("~gtest_stdout.log", "w", stdout);
-        //freopen("~gtest_stderr.log", "w", stderr);
 
         int argc = 2;
         const char *argv[2];
@@ -58,10 +52,6 @@ namespace SGMTesting {
         listeners.Append(listener);
 
         int ret_value =  RUN_ALL_TESTS();
-
-        // done capturing stdout/stderr
-        //fclose(stdout);
-        //fclose(stderr);
 
         return ret_value;
     }

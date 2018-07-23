@@ -501,6 +501,32 @@ namespace SGM {
             ZVec = XVec * YVec;
             return true;
             }
+        else if (nFound == 0)
+            {
+            if (fabs(SumXX) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(0,1,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(1,0,0);
+                return true;
+                }
+            else if (fabs(SumYY) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(0,-1,0);
+                return true;
+                }
+            else if (fabs(SumZZ) < SGM_ZERO)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,1,0);
+                ZVec = SGM::UnitVector3D(0,0,1);
+                return true;
+                }
+            else
+                return false;
+            }
         return false;
     }
 
@@ -1500,7 +1526,7 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
         }
 
     size_t Linear(double a, double b,
-                       std::vector<double> aRoots)
+                       std::vector<double> &aRoots)
         {
         // a*x+b=0 -> ax=-b -> x=-b/a
         if (fabs(a) < SGM_ZERO)

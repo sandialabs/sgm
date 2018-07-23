@@ -31,9 +31,9 @@ namespace SGMTesting {
      *
      * @return 0 for success, 1 for one or more test failures
      */
-    SGM_EXPORT int PerformViewerTest(SGMInternal::thing *pThing,
-                                     const char* arg,
-                                     testing::EmptyTestEventListener *listener);
+    int PerformViewerTest(SGMInternal::thing *pThing,
+                          const char* arg,
+                          testing::EmptyTestEventListener *listener);
 
     // A test calls this to get the environment used by the ModelViewer to display a model.
     SGMInternal::thing* AcquireTestThing();

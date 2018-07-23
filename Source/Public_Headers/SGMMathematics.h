@@ -338,7 +338,7 @@ namespace SGM
     // returns the number of real roots.
 
     SGM_EXPORT size_t Linear(double a,double b,
-                             std::vector<double> aRoots);
+                             std::vector<double> &aRoots);
 
     SGM_EXPORT size_t Quadratic(double a,double b,double c,
                                 std::vector<double> &aRoots);
