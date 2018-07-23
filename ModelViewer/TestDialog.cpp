@@ -173,7 +173,7 @@ private:
 
 TestDialog::TestDialog(ModelData* pModel) : mModel(pModel), mTestPrinter(nullptr), mFontStyleSheet(nullptr)
 {
-    setMinimumWidth(800);
+    //setMinimumWidth(800);
 
     testNamesList = new QStringList;
     testComboBox = new QComboBox();
@@ -237,9 +237,13 @@ void TestDialog::createHorizontalGroupBox()
     runButton = new QPushButton(tr("&Run"));
     connect(runButton, SIGNAL(clicked()), this, SLOT(runTest()));
 
+    bindModelCheckbox = new QCheckBox("B&ind viewer model", this);
+    bindModelCheckbox->setChecked(true);
+
     layout->addWidget(new QLabel(tr("Test Name:")));
     layout->addWidget(testComboBox);
     layout->addWidget(runButton);
+    layout->addWidget(bindModelCheckbox);
     layout->addStretch();
 
     horizontalGroupBox->setLayout(layout);
@@ -250,47 +254,73 @@ void TestDialog::populateTests()
     testing::UnitTest& unit_test = *testing::UnitTest::GetInstance();
     int num_total_test_case = unit_test.total_test_case_count();
     std::vector<int> indices_to_insert_separators;
-    int num_total_items = 0;
+    int max_contents_length = 0;
+
+    // number of items that will be added to the combo box, including separators
+    int items_count = 0;
+
+    // make an item to select all the tests
+    testNamesList->push_back(QString("*.*"));
+    indices_to_insert_separators.push_back(++items_count);
+
+    // for each test case
     for (int i = 0; i < num_total_test_case; ++i)
         {
         auto test_case = unit_test.GetTestCase(i);
         auto test_case_name = test_case->name();
+
+        // make an item to select all the tests in this test case
         testNamesList->push_back(QString(test_case_name)+ QString(".*"));
-        num_total_items++;
+        items_count++;
+
+        // make an item for each single test in the test case
         int num_total_test = test_case->total_test_count();
         for (int j = 0; j < num_total_test; ++j)
             {
             auto test_info = test_case->GetTestInfo(j);
             auto test_name = test_info->name();
-            testNamesList->push_back(QString(test_case_name) + QString(".") + QString(test_name));
+            QString item = QString(test_case_name) + QString(".") + QString(test_name);
+            testNamesList->push_back(item);
+            max_contents_length = std::max(max_contents_length,item.length());
             }
-        num_total_items += num_total_test;
+        items_count += num_total_test;
+
+        // we want a separator after this test case
         if (i != (num_total_test_case - 1))
-            indices_to_insert_separators.push_back(num_total_items);
+            indices_to_insert_separators.push_back(++items_count);
         }
+    // add the items and the separators to the combo box
     testComboBox->addItems(*testNamesList);
     for (auto i: indices_to_insert_separators)
         testComboBox->insertSeparator(i);
+    testComboBox->setMinimumContentsLength(max_contents_length - 12);
+    testComboBox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLength);
 }
 
 void TestDialog::runTest()
 {
-    QString qstring_name = testComboBox->currentText(); // get the value of the test selected
+    SGMInternal::thing * pThing = nullptr;
+    if (bindModelCheckbox->isChecked())
+        pThing = mModel->GetThing();
+
+    QString qstring_name = testComboBox->currentText();
     std::string string_name(qstring_name.toLatin1().data());
     std::string string_arg("--gtest_filter=");
     string_arg += string_name;
 
     // run the gtests specified by the given command-line-like arg
-    int ret_value = SGMTesting::PerformViewerTest(mModel->GetThing(), string_arg.c_str(), mTestPrinter);
+    int ret_value = SGMTesting::PerformViewerTest(pThing, string_arg.c_str(), mTestPrinter);
 
-    // disable the run button, we're not sure how to make the Gtest run more than one session of tests
+    if (pThing != nullptr)
+        updateModelView();
+
+    // disable running (we're not sure how to make the Gtest run more than one session of tests)
     runButton->setEnabled(false);
     testComboBox->setEnabled(false);
-
-    updateOutput();
+    bindModelCheckbox->setEnabled(false);
 }
 
-void TestDialog::updateOutput()
+void TestDialog::updateModelView()
 {
     // update the model view
     mModel->rebuild_tree();

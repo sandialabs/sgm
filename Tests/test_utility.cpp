@@ -24,8 +24,8 @@ namespace SGMTesting {
                                      const char* arg,
                                      testing::EmptyTestEventListener *listener)
     {
-        // set the environment to use that given to us by the viewer
-        assert(pThing != nullptr);
+        // set the environment to use that given to us by the viewer (can be nullptr)
+        // tests must use AcquireTestThing() and ReleaseTestThing()
         viewer_thing = pThing;
 
         int argc = 2;

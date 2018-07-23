@@ -11,6 +11,7 @@
 #include "ModelData.hpp"
 
 class QAction;
+class QCheckBox;
 class QComboBox;
 class QDialogButtonBox;
 class QGroupBox;
@@ -34,13 +35,14 @@ private:
     void createHorizontalGroupBox();
     void createFontStyleSheet();
     void createPlainTextEdit();
-    void updateOutput();
+    void updateModelView();
 
     ModelData* mModel;
     TestPrinter* mTestPrinter;
     QString * mFontStyleSheet;
 
     QGroupBox *horizontalGroupBox;
+    QCheckBox *bindModelCheckbox;
     QComboBox *testComboBox;
     QPushButton * runButton;
     QPlainTextEdit *plainTextEdit;
