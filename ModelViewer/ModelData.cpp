@@ -454,7 +454,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
         snprintf(Data, sizeof(Data), "%ld Faces", nFaces);
         volume_item->setText(1, Data);
         }
-    else
+    else if(nFaces==1)
         {
         volume_item->setText(1, "1 Face");
         }
@@ -462,6 +462,25 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     for (const SGM::Face &FaceID : sFaces)
         {
         add_face_to_tree(volume_item, FaceID);
+        }
+
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(dPtr->mResult, VolumeID, sEdges);
+    size_t nEdges = sEdges.size();
+    if (nEdges > 1)
+        {
+        char Data[100];
+        snprintf(Data, sizeof(Data), "%ld Edges", nEdges);
+        volume_item->setText(1, Data);
+        }
+    else if(nEdges==1)
+        {
+        volume_item->setText(1, "1 Edge");
+        }
+
+    for (const SGM::Edge &EdgeID : sEdges)
+        {
+        add_edge_to_tree(volume_item, EdgeID);
         }
 }
 

@@ -284,13 +284,6 @@ void FindFaces(SGM::Result                    &,//rResult,
         }
     }
 
-void FindWireEdges(SGM::Result                    &,//rResult,
-                   entity                   const *,//pEntity,
-                   std::set<edge *,EntityCompare> &)//sEdges)
-    {
-    
-    }
-
 void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<edge *,EntityCompare> &sEdges,
@@ -380,6 +373,21 @@ void FindEdges(SGM::Result      &,//rResult,
         {
         std::set<edge *,EntityCompare> const &sCurveEdges=((curve *)(pEntity))->GetEdges();
         sEdges.insert(sCurveEdges.begin(),sCurveEdges.end());
+        }
+    }
+
+void FindWireEdges(SGM::Result                    &rResult,
+                   entity                   const *pEntity,
+                   std::set<edge *,EntityCompare> &sEdges)
+    {
+    std::set<edge *,EntityCompare> sAllEdges;
+    FindEdges(rResult,pEntity,sAllEdges,false);
+    for(auto pEdge : sAllEdges)
+        {
+        if(pEdge->GetFaces().empty())
+            {
+            sEdges.insert(pEdge);
+            }
         }
     }
 

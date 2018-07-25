@@ -10,6 +10,7 @@
 #include "Surface.h"
 #include "STEP.h"
 #include "Curve.h"
+#include "Primitive.h"
 
 #include <utility>
 #include <string>
@@ -1807,6 +1808,7 @@ void CreateEntities(SGM::Result                   &rResult,
         // ShellID(s) ...
 
         std::vector<size_t> const &aIDs=mSTEPData[nVolumeID].m_aIDs;
+        STEPTags nVolumeType=(STEPTags)(mSTEPData[nVolumeID].m_nType);
         size_t nShells=aIDs.size();
         for(Index2=0;Index2<nShells;++Index2)
             {
@@ -1814,7 +1816,37 @@ void CreateEntities(SGM::Result                   &rResult,
 
             std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(aIDs[Index2]);
             size_t nType=SLD->second.m_nType;
-            if(nType==SGMInternal::STEPTags::TRIMMED_CURVE)
+            if(nVolumeType==SGMInternal::STEPTags::GEOMETRIC_CURVE_SET)
+                {
+                curve *pCurve=(curve *)mEntityMap[aIDs[Index2]];
+                if(pCurve->GetCurveType()==SGM::NUBCurveType)
+                    {
+                    NUBcurve *pNUB=(NUBcurve *)pCurve;
+                    size_t nDegree=pNUB->GetDegree();
+                    if(nDegree==1)
+                        {
+                        // Deal with polylines.
+                        std::vector<SGM::Point3D> const &aControlPoints=pNUB->GetControlPoints();
+                        if(SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_ZERO))
+                            {
+                            size_t nPoints=aControlPoints.size();
+                            for(Index3=1;Index3<nPoints;++Index3)
+                                {
+                                SGM::Point3D const &Pos0=aControlPoints[Index3-1];
+                                SGM::Point3D const &Pos1=aControlPoints[Index3];
+                                edge *pEdge=CreateEdge(rResult,Pos0,Pos1);
+                                pVolume->AddEdge(pEdge);
+                                }
+                            rResult.GetThing()->DeleteEntity(pNUB);
+                            }
+                        else
+                            {
+                            throw;
+                            }
+                        }
+                    }
+                }
+            else if(nType==SGMInternal::STEPTags::TRIMMED_CURVE)
                 {
                 for(Index3=0;Index3<nShells;++Index3)
                     {

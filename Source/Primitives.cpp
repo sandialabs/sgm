@@ -40,6 +40,22 @@ edge *CreateEdge(SGM::Result           &rResult,
     return pEdge;
     }
 
+edge *CreateEdge(SGM::Result        &rResult,
+                 SGM::Point3D const &StartPos,
+                 SGM::Point3D const &EndPos)
+    {
+    edge *pEdge=new edge(rResult);
+    line *pLine=new line(rResult,StartPos,EndPos);
+    pEdge->SetCurve(pLine);
+    SGM::Interval1D Domain(0.0,StartPos.Distance(EndPos));
+    pEdge->SetDomain(rResult,Domain);
+    vertex *pStart=new vertex(rResult,StartPos);
+    vertex *pEnd=new vertex(rResult,EndPos);
+    pEdge->SetStart(pStart);
+    pEdge->SetEnd(pEnd);
+    return pEdge;
+    }
+
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,

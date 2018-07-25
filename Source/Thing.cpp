@@ -147,7 +147,8 @@ void thing::SeverOwners(entity *pEntity)
                 }
             if(pEdge->GetVolume())
                 {
-                throw;
+                SGM::Result rResult(this);
+                pEdge->GetVolume()->RemoveEdge(pEdge);
                 }
             pEdge->SetStart(nullptr);
             pEdge->SetEnd(nullptr);
