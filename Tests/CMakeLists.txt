@@ -12,6 +12,8 @@ add_executable(sgm_tests
         interval_check.cpp
         volume_check.cpp
         intersection_check.cpp
+        test_utility.cpp
+        math_check.cpp
         )
 target_link_libraries(sgm_tests gtest_main gtest)
 target_link_libraries(sgm_tests SGM)

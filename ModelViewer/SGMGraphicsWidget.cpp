@@ -974,7 +974,7 @@ QSurfaceFormat SGMGraphicsWidget::default_format()
 #ifdef _MSC_VER
     fmt.setVersion(2, 1);  
 #else
-    fmt.setVersion(3, 1);
+    fmt.setVersion(3, 2);
 #endif
 
     fmt.setProfile(QSurfaceFormat::CoreProfile);

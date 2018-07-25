@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QSettings>
 
 #include "qinputdialog.h"
@@ -27,20 +28,8 @@
 #include <cstdio>
 
 #ifdef VIEWER_WITH_GTEST
-#include <gtest/gtest.h>
-#include <QMessageBox>
-#include <EntityClasses.h>
-
+#include "TestDialog.hpp"
 #endif
-
-namespace SGMInternal
-{
-    namespace Testing
-    {
-        // a global static pointer to the pointer to the environment shared by the ModelViewer and the gtests.
-        SGM_EXPORT thing *pThing;
-    }
-}
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -49,7 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
   mFileMenu(new FileMenu),
   mViewMenu(new ViewMenu),
   mTestMenu(new TestMenu),
-  mPrimitiveMenu(new PrimitiveMenu)
+  mPrimitiveMenu(new PrimitiveMenu),
+  mTestDialog(nullptr)
 {
   ui->setupUi(this);
   ui->mGraphics->setFocusPolicy(Qt::ClickFocus);
@@ -324,39 +314,15 @@ void MainWindow::test_check()
 }
 
 #ifdef VIEWER_WITH_GTEST
-void MainWindow::test_gtest()
+void gtest_result_dialog_exec(int ret_value, const char* arg)
 {
-    // assign the variable that tests use to operate on the environment
-    SGMInternal::Testing::pThing = mModel->GetThing();
-
-    // start capturing stdout/stderr
-    freopen("gtest_stdout.log", "w", stdout);
-    freopen("gtest_stderr.log", "w", stderr);
-
-    int argc = 2;
-    const char *argv[2];
-    argv[0] = "sgm_viewer";
-    argv[1] = "--filter=volume_check";
-
-    ::testing::InitGoogleTest(&argc, const_cast<char**>(argv));
-
-    int ret_value =  RUN_ALL_TESTS();
-
-    // done capturing stdout/stderr
-    fclose(stdout);
-    fclose(stderr);
-
-    // update the viewer
-    mModel->rebuild_tree();
-    mModel->rebuild_graphics();
-
-    QFile out_file("gtest_stdout.log");
+    QFile out_file("~gtest_stdout.log");
     out_file.open(QIODevice::ReadOnly);
     QByteArray output = out_file.readAll();
     QString out_string(output);
     out_file.close();
 
-    QFile err_file("gtest_stderr.log");
+    QFile err_file("~gtest_stderr.log");
     err_file.open(QIODevice::ReadOnly);
     QByteArray errors = err_file.readAll();
     QString err_string(errors);
@@ -377,14 +343,21 @@ void MainWindow::test_gtest()
         msg_box.setIcon(QMessageBox::Warning);
         info = "FAILED\n";
         msg_box.setDetailedText(err_string);
-    }
-    for (int i = 1; i < argc; ++i)
-        info += QString(argv[i]);
+        }
+    info += QString(arg);
     msg_box.setText(info);
     QSpacerItem* horizontalSpacer = new QSpacerItem(400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
     QGridLayout* layout = (QGridLayout*)msg_box.layout();
     layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
     msg_box.exec();
+}
+
+void MainWindow::test_gtest()
+{
+    if (mTestDialog == nullptr)
+        mTestDialog = new TestDialog(mModel);
+
+    mTestDialog->show();
 }
 #endif
 

@@ -20,7 +20,7 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
-    Options.m_dEdgeAngleTol=0.52359877559829887307710723054658; // 30 degrees.
+    Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
     FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aUParams);

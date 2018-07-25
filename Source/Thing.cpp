@@ -5,12 +5,6 @@
 namespace SGMInternal
 {
 
-namespace Testing
-{
-    // a global static pointer to environment shared by the ModelViewer and the gtests.
-    SGM_EXPORT SGMInternal::thing *pThing = nullptr;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  thing methods
@@ -118,6 +112,12 @@ void thing::DeleteEntity(entity *pEntity)
                 break;
               case SGM::TorusKnotCurveType:
                 delete reinterpret_cast<TorusKnot*>(pEntity);
+                break;
+              case SGM::ParabolaType:
+                delete reinterpret_cast<parabola*>(pEntity);
+                break;
+              case SGM::HyperbolaType:
+                delete reinterpret_cast<hyperbola*>(pEntity);
                 break;
               default:
                 std::abort();

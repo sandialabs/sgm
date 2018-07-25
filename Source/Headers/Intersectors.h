@@ -439,6 +439,32 @@ size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//  Specific Parabola Surface Intersectors.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNormal,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes);
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Specific Hyperbola Surface Intersectors.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t IntersectHyperbolaAndPlane(hyperbola                     const *pHyperbola,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNormal,
+                                  double                               dTolerance,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes);
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //  Other Supporting Intersection Functions
 //
 ///////////////////////////////////////////////////////////////////////////////
