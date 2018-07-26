@@ -284,13 +284,6 @@ void FindFaces(SGM::Result                    &,//rResult,
         }
     }
 
-void FindWireEdges(SGM::Result                    &,//rResult,
-                   entity                   const *,//pEntity,
-                   std::set<edge *,EntityCompare> &)//sEdges)
-    {
-    
-    }
-
 void FindEdges(SGM::Result      &,//rResult,
                entity     const *pEntity,
                std::set<edge *,EntityCompare> &sEdges,
@@ -380,6 +373,21 @@ void FindEdges(SGM::Result      &,//rResult,
         {
         std::set<edge *,EntityCompare> const &sCurveEdges=((curve *)(pEntity))->GetEdges();
         sEdges.insert(sCurveEdges.begin(),sCurveEdges.end());
+        }
+    }
+
+void FindWireEdges(SGM::Result                    &rResult,
+                   entity                   const *pEntity,
+                   std::set<edge *,EntityCompare> &sEdges)
+    {
+    std::set<edge *,EntityCompare> sAllEdges;
+    FindEdges(rResult,pEntity,sAllEdges,false);
+    for(auto pEdge : sAllEdges)
+        {
+        if(pEdge->GetFaces().empty())
+            {
+            sEdges.insert(pEdge);
+            }
         }
     }
 
@@ -567,8 +575,8 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
     {
     SGM::UnitVector3D Norm;
     surface const *pSurface=pFace->GetSurface();
-    SGM::Point3D const &Origin=pVertex->GetPoint();
-    SGM::Point2D uv=pSurface->Inverse(Origin);
+    SGM::Point3D const &VertexPos=pVertex->GetPoint();
+    SGM::Point2D uv=pSurface->Inverse(VertexPos);
     pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
     if(pFace->GetFlipped())
         {
@@ -582,20 +590,18 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
     for(Index1=0;Index1<nEdges;++Index1)
         {
         edge *pEdge=aEdges[Index1];
+        SGM::Point3D Pos(0,0,0);
         if(pEdge->GetStart()==pVertex)
             {
             SGM::Point3D Pos=pEdge->FindMidPoint(0.001);
-            SGM::Vector3D Vec=Pos-Origin;
-            double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
-            aEdgePair.emplace_back(dAngle,pEdge);
             }
         if(pEdge->GetEnd()==pVertex)
             {
             SGM::Point3D Pos=pEdge->FindMidPoint(0.999);
-            SGM::Vector3D Vec=Pos-Origin;
-            double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
-            aEdgePair.emplace_back(-dAngle,pEdge);
             }
+        SGM::Vector3D Vec=Pos-VertexPos;
+        double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
+        aEdgePair.emplace_back(dAngle,pEdge);
         }
     std::sort(aEdgePair.begin(),aEdgePair.end());
     nEdges=aEdgePair.size();
@@ -607,26 +613,89 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
     return nEdges;
     }
 
+edge *NextOutEdgeFrom(face                const *pFace,
+                      vertex              const *pVertex,
+                      std::vector<edge *> const &aEdges,
+                      size_t                     nStart)
+    {
+    size_t nEdges=aEdges.size();
+    size_t Index1;
+    for(Index1=1;Index1<nEdges;++Index1)
+        {
+        edge *pEdge=aEdges[(Index1+nStart)%nEdges];
+        SGM::EdgeSideType nType=pFace->GetSideType(pEdge);
+        if(pFace->GetFlipped())
+            {
+            if(nType==SGM::FaceOnLeftType)
+                {
+                if(pEdge->GetEnd()==pVertex)
+                    {
+                    return pEdge;
+                    }
+                }
+            else if(nType==SGM::FaceOnRightType)
+                {
+                if(pEdge->GetStart()==pVertex)
+                    {
+                    return pEdge;
+                    }
+                }
+            else if(nType==SGM::FaceOnBothSidesType)
+                {
+                return pEdge;
+                }
+            }
+        else
+            {
+            if(nType==SGM::FaceOnLeftType)
+                {
+                if(pEdge->GetStart()==pVertex)
+                    {
+                    return pEdge;
+                    }
+                }
+            else if(nType==SGM::FaceOnRightType)
+                {
+                if(pEdge->GetEnd()==pVertex)
+                    {
+                    return pEdge;
+                    }
+                }
+            else if(nType==SGM::FaceOnBothSidesType)
+                {
+                return pEdge;
+                }
+            }
+        }
+    return NULL;
+    }
+
 edge *FindNextEdge(SGM::Result  &rResult,
                    face   const *pFace,
                    edge   const *pEdge,
                    vertex const *pVertex)
     {
-    if(pVertex==nullptr)
+    if(pVertex==nullptr || pVertex->GetEdges().size()==1)
         {
         return (edge *)pEdge;
         }
     std::vector<edge *> aEdges;
     size_t nEdges=OrderEdgesAboutVertexOnFace(rResult,pVertex,pFace,aEdges);
+    if(pFace->GetFlipped())
+        {
+        std::reverse(aEdges.begin(),aEdges.end());
+        }
+    edge *pAnswer=nullptr;
     size_t Index1;
     for(Index1=0;Index1<nEdges;++Index1)
         {
         if(aEdges[Index1]==pEdge)
             {
-            return aEdges[(Index1+1)%nEdges];
+            pAnswer=NextOutEdgeFrom(pFace,pVertex,aEdges,Index1);
+            break;
             }
         }
-    return nullptr;
+    return pAnswer;
     }
 
 void OrderLoopEdges(SGM::Result                          &rResult,
@@ -694,15 +763,16 @@ void OrderLoopEdges(SGM::Result                          &rResult,
         }
     while(pNextEdge!=pStartEdge || nNextType!=nStartSide)
         {
+        vertex *pLastVertex=pVertex;
         aTempEdges.push_back(pNextEdge);
         aTempFlips.push_back(nNextType);
-        if(bFlipped)
+        if(pNextEdge->GetStart()==pLastVertex)
             {
-            pVertex = nNextType==SGM::FaceOnRightType ? pNextEdge->GetEnd() : pNextEdge->GetStart();
+            pVertex=pNextEdge->GetEnd();
             }
         else
             {
-            pVertex = nNextType==SGM::FaceOnRightType ? pNextEdge->GetStart() : pNextEdge->GetEnd();
+            pVertex=pNextEdge->GetStart();
             }
         pNextEdge=FindNextEdge(rResult,pFace,pNextEdge,pVertex);
         nNextType=pFace->GetSideType(pNextEdge);

@@ -10,6 +10,7 @@
 #include "Surface.h"
 #include "STEP.h"
 #include "Curve.h"
+#include "Primitive.h"
 
 #include <utility>
 #include <string>
@@ -254,6 +255,7 @@ void FindLists(std::string        const &line,
         }
 
     // Find pairs of '(' and ')'.
+    size_t Index1;
     bool bFound=true;
     while(bFound)
         {
@@ -283,12 +285,22 @@ void FindLists(std::string        const &line,
             {
             bFound=true;
             std::string sList;
-            size_t Index1;
             for(Index1=nStart;Index1<nEnd;++Index1)
                 {
                 sList+=pString[Index1];
                 }
             aLists.push_back(sList);
+            }
+        }
+
+    // Remove extra up front '('s
+
+    size_t nLists=aLists.size();
+    for(Index1=0;Index1<nLists;++Index1)
+        {
+        if(aLists[Index1].c_str()[0]=='(')
+            {
+            aLists[Index1]=std::string(aLists[Index1].c_str()+1);
             }
         }
     }
@@ -447,11 +459,21 @@ void ProcessBSpline(SGM::Result       &,//rResult,
                     std::string const &bspline,
                     STEPLineData      &STEPData)
     {
+    // #157=(B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
+    // B_SPLINE_CURVE_WITH_KNOTS((4,4),(-6.28318530717959,-0.0),.UNSPECIFIED.)
+    // RATIONAL_B_SPLINE_CURVE((1.0,0.804737854124365,0.804737854124365,1.0))
+    // BOUNDED_CURVE()REPRESENTATION_ITEM('')GEOMETRIC_REPRESENTATION_ITEM()CURVE());
+
     FindIndices(bspline,STEPData.m_aIDs);
     std::vector<std::string> aLists;
     FindLists(bspline,aLists);
     FindIntVector(aLists[1],STEPData.m_aInts);
     FindDoubleVector(aLists[2],STEPData.m_aDoubles);
+    if(strstr(bspline.c_str(),"RATIONAL_B_SPLINE_CURVE"))
+        {
+        FindDoubleVector(aLists[3],STEPData.m_aDoubles);
+        STEPData.m_bFlag=false;
+        }
     }
 
 void ProcessCircle(SGM::Result       &,//rResult,
@@ -933,6 +955,12 @@ void ProcessLine(SGM::Result                        &rResult,
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
+                    case SGMInternal::STEPTags::B_SPLINE_CURVE:
+                        {
+                        ProcessBSpline(rResult,line,STEPData);
+                        mSTEPData[nLineNumber]=STEPData;
+                        break;
+                        }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                         {
                         ProcessBSpline(rResult,line,STEPData);
@@ -1173,6 +1201,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     mSTEPTagMap[std::string("AXIS1_PLACEMENT")]=SGMInternal::STEPTags::AXIS1_PLACEMENT;
     mSTEPTagMap[std::string("AXIS2_PLACEMENT_3D")]=SGMInternal::STEPTags::AXIS2_PLACEMENT_3D;
     mSTEPTagMap[std::string("B_SPLINE_SURFACE")]=SGMInternal::STEPTags::B_SPLINE_SURFACE;
+    mSTEPTagMap[std::string("B_SPLINE_CURVE")]=SGMInternal::STEPTags::B_SPLINE_CURVE;
     mSTEPTagMap[std::string("B_SPLINE_CURVE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS;
     mSTEPTagMap[std::string("B_SPLINE_SURFACE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS;
     mSTEPTagMap[std::string("BOUNDED_SURFACE")]=SGMInternal::STEPTags::BOUNDED_SURFACE;
@@ -1230,6 +1259,7 @@ void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
     mSTEPTagMap[std::string("MANIFOLD_SOLID_BREP")]=SGMInternal::STEPTags::MANIFOLD_SOLID_BREP;
     mSTEPTagMap[std::string("MANIFOLD_SURFACE_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION;
     mSTEPTagMap[std::string("MAPPED_ITEM")]=SGMInternal::STEPTags::MAPPED_ITEM;
+    mSTEPTagMap[std::string("MASS_UNIT")]=SGMInternal::STEPTags::MASS_UNIT;
     mSTEPTagMap[std::string("MEASURE_REPRESENTATION_ITEM")]=SGMInternal::STEPTags::MEASURE_REPRESENTATION_ITEM;
     mSTEPTagMap[std::string("MECHANICAL_CONTEXT")]=SGMInternal::STEPTags::MECHANICAL_CONTEXT;
     mSTEPTagMap[std::string("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION")]=SGMInternal::STEPTags::MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION;
@@ -1352,6 +1382,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 aFaces.push_back(nID);
                 break;
                 }
+            case SGMInternal::STEPTags::B_SPLINE_CURVE:
             case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                 {
                 size_t nPoints=DataIter->second.m_aIDs.size();
@@ -1367,8 +1398,10 @@ void CreateEntities(SGM::Result                   &rResult,
                     aControlPoints.push_back(Pos);
                     }
                 std::vector<double> aKnots;
+                size_t nKnotCount=0;
                 for(Index1=0;Index1<nKnots;++Index1)
                     {
+                    ++nKnotCount;
                     double dKnot=DataIter->second.m_aDoubles[Index1];
                     unsigned int nMultiplicity=DataIter->second.m_aInts[Index1];
                     for(Index2=0;Index2<nMultiplicity;++Index2)
@@ -1376,8 +1409,29 @@ void CreateEntities(SGM::Result                   &rResult,
                         aKnots.push_back(dKnot);
                         }
                     }
-                curve *pCurve=new NUBcurve(rResult,aControlPoints,aKnots);
-                mEntityMap[nID]=pCurve;
+                if(DataIter->second.m_bFlag==false)
+                    {
+                    // #157=(B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
+                    // B_SPLINE_CURVE_WITH_KNOTS((4,4),(-6.28318530717959,-0.0),.UNSPECIFIED.)
+                    // RATIONAL_B_SPLINE_CURVE((1.0,0.804737854124365,0.804737854124365,1.0))
+                    // BOUNDED_CURVE()REPRESENTATION_ITEM('')GEOMETRIC_REPRESENTATION_ITEM()CURVE());
+
+                    std::vector<SGM::Point4D> aControlPoints4D;
+                    aControlPoints4D.reserve(nPoints);
+                    for(Index1=0;Index1<nPoints;++Index1)
+                        {
+                        SGM::Point3D const &Pos=aControlPoints[Index1];
+                        SGM::Point4D Pos4D(Pos.m_x,Pos.m_y,Pos.m_z,DataIter->second.m_aDoubles[Index1+nKnotCount]);
+                        aControlPoints4D.push_back(Pos4D);
+                        }
+                    curve *pCurve=new NURBcurve(rResult,aControlPoints4D,aKnots);
+                    mEntityMap[nID]=pCurve;
+                    }
+                else
+                    {
+                    curve *pCurve=new NUBcurve(rResult,aControlPoints,aKnots);
+                    mEntityMap[nID]=pCurve;
+                    }
                 break;
                 }
             case SGMInternal::STEPTags::B_SPLINE_SURFACE:
@@ -1754,6 +1808,7 @@ void CreateEntities(SGM::Result                   &rResult,
         // ShellID(s) ...
 
         std::vector<size_t> const &aIDs=mSTEPData[nVolumeID].m_aIDs;
+        STEPTags nVolumeType=(STEPTags)(mSTEPData[nVolumeID].m_nType);
         size_t nShells=aIDs.size();
         for(Index2=0;Index2<nShells;++Index2)
             {
@@ -1761,7 +1816,37 @@ void CreateEntities(SGM::Result                   &rResult,
 
             std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(aIDs[Index2]);
             size_t nType=SLD->second.m_nType;
-            if(nType==SGMInternal::STEPTags::TRIMMED_CURVE)
+            if(nVolumeType==SGMInternal::STEPTags::GEOMETRIC_CURVE_SET)
+                {
+                curve *pCurve=(curve *)mEntityMap[aIDs[Index2]];
+                if(pCurve->GetCurveType()==SGM::NUBCurveType)
+                    {
+                    NUBcurve *pNUB=(NUBcurve *)pCurve;
+                    size_t nDegree=pNUB->GetDegree();
+                    if(nDegree==1)
+                        {
+                        // Deal with polylines.
+                        std::vector<SGM::Point3D> const &aControlPoints=pNUB->GetControlPoints();
+                        if(SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_ZERO))
+                            {
+                            size_t nPoints=aControlPoints.size();
+                            for(Index3=1;Index3<nPoints;++Index3)
+                                {
+                                SGM::Point3D const &Pos0=aControlPoints[Index3-1];
+                                SGM::Point3D const &Pos1=aControlPoints[Index3];
+                                edge *pEdge=CreateEdge(rResult,Pos0,Pos1);
+                                pVolume->AddEdge(pEdge);
+                                }
+                            rResult.GetThing()->DeleteEntity(pNUB);
+                            }
+                        else
+                            {
+                            throw;
+                            }
+                        }
+                    }
+                }
+            else if(nType==SGMInternal::STEPTags::TRIMMED_CURVE)
                 {
                 for(Index3=0;Index3<nShells;++Index3)
                     {
@@ -1935,14 +2020,20 @@ void CreateEntities(SGM::Result                   &rResult,
                 }
             if(pCurve->GetCurveType()==SGM::EntityType::CircleType)
                 {
-                SGM::Point3D StartPos=pStart->GetPoint();
-                double dStartParam=pCurve->Inverse(StartPos);
+                //SGM::Point3D StartPos=pStart->GetPoint();
+                double dStartParam=0.0;//pCurve->Inverse(StartPos);
                 SGM::Interval1D Domain(dStartParam,dStartParam+SGM_TWO_PI);
                 pCurve->SetDomain(Domain);
                 }
             pEdge->SetStart(pStart);
             pEdge->SetEnd(pEnd);
             pEdge->SetCurve(pCurve);
+            SGM::Interval1D Domain=pEdge->GetDomain();
+            if(Domain.IsEmpty())
+                {
+                Domain.m_dMax+=pCurve->GetDomain().Length();
+                pEdge->SetDomain(rResult,Domain);
+                }
             }
         else // TRIMMED_CURVE case
             {
@@ -2033,16 +2124,20 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     // Code for testing to be removed.
 #if 1
+    std::set<vertex *,EntityCompare> sVertices;
+    FindVertices(rResult,pThing,sVertices);
+
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces);
     std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-        if(pFace->GetID()==1000)
-            {
-            pFace->GetTriangles(rResult);
-            }
+        size_t ID=pFace->GetID();
+        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
+        ID;
+        nType;
+        pFace->GetTriangles(rResult);
         ++iter;
         }
 #endif

@@ -95,8 +95,6 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(primitive_cone()));
   connect(mPrimitiveMenu, SIGNAL(torus()),
           this, SLOT(primitive_torus()));
-  connect(mPrimitiveMenu, SIGNAL(NUBSurface()),
-          this, SLOT(primitive_NUBSurface()));
   connect(mPrimitiveMenu, SIGNAL(line()),
           this, SLOT(primitive_line()));
   connect(mPrimitiveMenu, SIGNAL(circle()),
@@ -398,11 +396,6 @@ void MainWindow::primitive_torus()
     SGM::Point3D Center(0,0,0);
     SGM::UnitVector3D Axis(0,0,1);
     mModel->create_torus(Center,Axis,1,3);
-    }
-
-void MainWindow::primitive_NUBSurface()
-    {
-    
     }
 
 void MainWindow::primitive_line()

@@ -48,6 +48,12 @@ edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
                  SGM::Interval1D const *pDomain);
 
+// Returns a linear edge from the start point to the end points.
+
+edge *CreateEdge(SGM::Result        &rResult,
+                 SGM::Point3D const &StartPos,
+                 SGM::Point3D const &EndPos);
+
 NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
                          std::vector<SGM::Point3D> const &aPoints,
                          std::vector<double>       const *pParams=nullptr);
