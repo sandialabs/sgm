@@ -15,6 +15,7 @@
 #include <utility>
 #include <string>
 #include <algorithm>
+#include <string.h>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
