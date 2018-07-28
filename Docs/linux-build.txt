@@ -46,9 +46,10 @@ export SGM_QT_PATH=$SCRATCH/cubit-linux_libs/open
 # You might want this in your home space rather than scratch space, so you can get to it from different machines
 export SGM_INSTALL_PATH=~samitch/sgm
 
+# for NGS morph mesher, be sure to set shared_libs to OFF
 cmake \
 -DCMAKE_BUILD_TYPE=Debug \
--DBUILD_SHARED_LIBS=ON \
+-DBUILD_SHARED_LIBS=OFF \
 -DBUILD_MODEL_VIEWER=ON \
 -DBUILD_VIEWER_WITH_GTEST=ON \
 -DQt5_DIR=$SGM_QT_PATH/Qt/Qt-5.8.0-64/lib/cmake/Qt5 \
@@ -56,6 +57,7 @@ cmake \
 $SGM_PATH
 
 # alternatively:  -DCMAKE_BUILD_TYPE=Release \
+# alternatively:  -DBUILD_SHARED_LIBS=ON \
 
 make -j16
 
