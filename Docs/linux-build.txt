@@ -1,0 +1,137 @@
+# linux machine sgm hints for cloning, building, and running sgm and the viewer
+# This isn't a full script to run, but you can copy and paste parts of it into a terminal window
+# Questions? Try Scott A. Mitchell and Byron W. Hanks
+
+#log onto a cee machine, either your own blade, or one of the compute servers
+# compute server
+# ssh -Y cee-compute011
+# samitch's blade
+# ssh -Y ceerws1016.sandia.gov 
+
+# decide where you want to put the source and compile
+# scratch space is a reasonable option, but it will tie you to always building on that machine
+# e.g. on a compute server, try /scratch/samitch, replacing samitch with your user name
+
+#SGM source
+git clone https://cee-gitlab.sandia.gov/meshing/sgm
+cd sgm
+export SGM_PATH=`pwd`
+
+#SGM building
+# make a build directory
+cd $SGM_PATH
+mkdir build
+cd build
+
+# on the cee-lan, the default cmake and compiler are too old, need to load the sparc ones
+module purge
+module load sparc-dev/gcc
+
+# If you want just the tests and the main executable, not the ModelViewer, following is sufficient
+cmake ..
+make -j16
+
+# To make ModelViewer as well
+# first need to get Qt5 
+# e.g. from the cubit repo
+cd $SCRATCH
+svn checkout https://cubit.sandia.gov/svn/cubit/LIBRARIES/linux_libs/trunk 
+
+# set some environment variables for paths; you will need to change these for you
+# wherever you checked out cubit, Qt5 is in the "open" subdirectory
+# you could get Qt5 from somewhere else instead
+export SGM_QT_PATH=$SCRATCH/cubit-linux_libs/open
+
+# choose wherever you want to install. 
+# You might want this in your home space rather than scratch space, so you can get to it from different machines
+export SGM_INSTALL_PATH=~samitch/sgm
+
+# for NGS morph mesher, be sure to set shared_libs to OFF
+cmake \
+-DCMAKE_BUILD_TYPE=Debug \
+-DBUILD_SHARED_LIBS=OFF \
+-DBUILD_MODEL_VIEWER=ON \
+-DBUILD_VIEWER_WITH_GTEST=ON \
+-DQt5_DIR=$SGM_QT_PATH/Qt/Qt-5.8.0-64/lib/cmake/Qt5 \
+-DCMAKE_INSTALL_PREFIX=$SGM_INSTALL_PATH/sgm/install \
+$SGM_PATH
+
+# alternatively:  -DCMAKE_BUILD_TYPE=Release \
+# alternatively:  -DBUILD_SHARED_LIBS=ON \
+
+make -j16
+
+# install sgm libraries (not executables) to wherever you set the install path
+make install
+ 
+#running sgm
+# In either build scenario, the executables are in SGM_PATH/build/bin 
+cd $SGM_PATH/build/bin 
+# or
+# export $PATH=$PATH:$SGM_PATH/build/bin 
+
+./sgm_test
+# you should see about 40 lines of run and OK and pass tests
+
+# you can't run sgm_model_tests unless you have also checked out the sgm-models into $SGM_PATH/../sgm-models
+./sgm_model_tests
+
+# timing test for search datastructure
+./boxtree_tests
+
+# the modelviewer is here, but you can't run it from a standard ssh -Y shell, at least on a mac, because opengl won't work
+# cubit has the same problems
+# instead get a session going through RGS and run it from there. Setting up RGS is out of scope
+# first set your LD_LIBRARY_PATH so it can find Qt
+export QT_LD=$SGM_QT_PATH/Qt/Qt-5.8.0-64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:SGM_INSTALL_PATH/sgm/install/lib:$QT_LD/lib
+
+./sgm_viewer
+
+# to move sgm_viewer, say to your home space, you also need to move Qt-5.8.0-64 and update qt.conf to point to the new location of Qt
+# If you don't get qt.conf right, you will get an error about " Qt platform plugin "xcb""
+# edit qt.conf
+# note qt.conf will not work with ~ in the path, use an absolute path
+[Paths]
+Prefix = /ascldap/users/samitch/Qt-5.8.0-64
+
+
+# e.g.
+export MY_BIN=~/bin
+cp $SGM_PATH/build/bin/sgm_viewer $MY_BIN/sgm_viewer
+cp $SGM_PATH/build/bin/qt.conf    $MY_BIN/qt.conf
+export MY_QT=~
+cp -r $QT_LD $MY_QT
+export QT_LD=$MY_QT/Qt-5.8.0.64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QT_LD/lib
+export PATH=$PATH:$MY_BIN
+# be aware which copy takes precedence in your path
+
+# add the bin directory or directories to your path
+
+=
+
+# NGS is expecting it to be called SMG_ROOT, not SGM_PATH
+export SGM_ROOT=$SGM_PATH
+
+=
+# samitch has the following in his bashrc:
+
+# SGM 
+export SGM_PATH=$SCRATCH/sgm
+export SGM_QT_PATH=$SCRATCH/cubit-linux_libs/open
+export SGM_INSTALL_PATH=~samitch/sgm
+
+# ld libraries, first scratch build area, then where I copied them to
+export QT_LD=$SGM_QT_PATH/Qt/Qt-5.8.0-64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SGM_INSTALL_PATH/sgm/install/lib:$QT_LD/lib
+export QT_LD=~/Qt-5.8.0-64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QT_LD/lib
+
+# executables: look in the scratch build area, then in my home directory
+export PATH=$PATH:$SGM_PATH/build/bin:~/bin
+
+# for use with building the morph_mesher
+export SGM_ROOT=$SGM_PATH
+
+===
