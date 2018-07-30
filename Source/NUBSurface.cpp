@@ -14,8 +14,8 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     {
     m_Domain.m_UDomain.m_dMin=aUKnots.front();
     m_Domain.m_UDomain.m_dMax=aUKnots.back();
-    m_Domain.m_VDomain.m_dMin=aUKnots.front();
-    m_Domain.m_VDomain.m_dMax=aUKnots.back();
+    m_Domain.m_VDomain.m_dMin=aVKnots.front();
+    m_Domain.m_VDomain.m_dMax=aVKnots.back();
 
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
@@ -35,10 +35,10 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
     m_aSeedPoints.reserve(nParams);
     for(Index1=0;Index1<m_nUParams;++Index1)
         {
-        double u=aUParams[Index1];
+        double v=aUParams[Index1];
         for(Index2=0;Index2<m_nVParams;++Index2)
             {
-            double v=aVParams[Index2];
+            double u=aVParams[Index2];
             SGM::Point2D uv(u,v);
             m_aSeedParams.push_back(uv);
             SGM::Point3D Pos;

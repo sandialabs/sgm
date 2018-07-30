@@ -469,9 +469,13 @@ curve *surface::UParamLine(SGM::Result &rResult,
                     {
                     for(Index2=0;Index2<=nUDegree;++Index2)
                         {
-                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
-                            SGM::Vector4D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
+                        SGM::Point4D const &XYZW=aaControlPoints[nSpanIndex-nUDegree+Index2][Index1];
+                        double dBasisWeight=XYZW.m_w*aaBasisFunctions[0][Index2];
+                        aControlPoints[Index1]+=SGM::Vector4D(XYZW.m_x*dBasisWeight,XYZW.m_y*dBasisWeight,XYZW.m_z*dBasisWeight,dBasisWeight);
                         }
+                    SGM::Point4D const &Pos=aControlPoints[Index1];
+                    double dRWeight=1.0/Pos.m_w;
+                    aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
                     }
                 curve *pParamCurve=new NURBcurve(rResult,aControlPoints,pNURBSurface->GetVKnots());
                 return pParamCurve;
@@ -618,10 +622,15 @@ curve *surface::VParamLine(SGM::Result &rResult,
                     {
                     for(Index2=0;Index2<=nVDegree;++Index2)
                         {
-                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
-                            SGM::Vector4D(aaControlPoints[Index1][nSpanIndex-nVDegree+Index2]);
+                        SGM::Point4D const &XYZW=aaControlPoints[Index1][nSpanIndex-nVDegree+Index2];
+                        double dBasisWeight=XYZW.m_w*aaBasisFunctions[0][Index2];
+                        aControlPoints[Index1]+=SGM::Vector4D(XYZW.m_x*dBasisWeight,XYZW.m_y*dBasisWeight,XYZW.m_z*dBasisWeight,dBasisWeight);
                         }
+                    SGM::Point4D const &Pos=aControlPoints[Index1];
+                    double dRWeight=1.0/Pos.m_w;
+                    aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
                     }
+
                 return new NURBcurve(rResult,aControlPoints,pNURBSurface->GetUKnots());
                 }
             break;

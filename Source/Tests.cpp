@@ -452,7 +452,8 @@ bool RunTestFile(SGM::Result                       &rResult,
 namespace SGMInternal
 {
 
-bool TestSurface(SGMInternal::surface const *pSurface,
+bool TestSurface(SGM::Result                &rResult,
+                 SGMInternal::surface const *pSurface,
                  SGM::Point2D         const &uv1)
     {
     bool bAnswer=true;
@@ -537,6 +538,33 @@ bool TestSurface(SGMInternal::surface const *pSurface,
             bAnswer=false;
             }
         }
+
+    // Test parameter curves.
+
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    curve *pUParamLine=pSurface->UParamLine(rResult,Domain.m_UDomain.MidPoint());
+    curve *pVParamLine=pSurface->VParamLine(rResult,Domain.m_VDomain.MidPoint());
+
+    SGM::Point3D PosU,PosV;
+    pUParamLine->Evaluate(pUParamLine->GetDomain().MidPoint(),&PosU);
+    pVParamLine->Evaluate(pVParamLine->GetDomain().MidPoint(),&PosV);
+    SGM::Point3D SurfPosU,SurfPosV;
+    SGM::Point2D Uuv=pSurface->Inverse(PosU,&SurfPosU);
+    SGM::Point2D Vuv=pSurface->Inverse(PosV,&SurfPosV);
+    SGM::Point3D Zero(0,0,0);
+    double dParamUTol=SGM_FIT*PosU.Distance(Zero);
+    if(SGM::NearEqual(PosU,SurfPosU,dParamUTol)==false)
+        {
+        bAnswer=false;
+        }
+    double dParamVTol=SGM_FIT*PosV.Distance(Zero);
+    if(SGM::NearEqual(PosV,SurfPosV,dParamVTol)==false)
+        {
+        bAnswer=false;
+        }
+
+    rResult.GetThing()->DeleteEntity(pUParamLine);
+    rResult.GetThing()->DeleteEntity(pVParamLine);
 
     return bAnswer;
     }
@@ -1030,7 +1058,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         double dScale=2.5;
         SGMInternal::plane *pPlane=new SGMInternal::plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
 
-        bool bAnswer=SGMInternal::TestSurface(pPlane,SGM::Point2D(0.5,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pPlane,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pPlane);
 
         return bAnswer;
@@ -1046,7 +1074,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         double dRadius=2.5;
         SGMInternal::sphere *pSphere=new SGMInternal::sphere(rResult,Origin,dRadius,&XAxis,&YAxis);
 
-        bool bAnswer=SGMInternal::TestSurface(pSphere,SGM::Point2D(0.5,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pSphere,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pSphere);
 
         return bAnswer;
@@ -1060,7 +1088,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         double dRadius=2.5;
         SGMInternal::cylinder *pCylinder=new SGMInternal::cylinder(rResult,Bottom,Top,dRadius);
 
-        bool bAnswer=SGMInternal::TestSurface(pCylinder,SGM::Point2D(0.5,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pCylinder,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pCylinder);
 
         return bAnswer;
@@ -1074,7 +1102,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D ZAxis(0,0,1);
         SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,Origin,ZAxis,2,5,true);
 
-        bool bAnswer=SGMInternal::TestSurface(pTorus,SGM::Point2D(0.5,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pTorus,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pTorus);
 
         return bAnswer;
@@ -1088,7 +1116,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D ZAxis(1,2,3);
         SGMInternal::cone *pCone=new SGMInternal::cone(rResult,Origin,ZAxis,2,0.4);
 
-        bool bAnswer=SGMInternal::TestSurface(pCone,SGM::Point2D(0.5,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pCone,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pCone);
 
         return bAnswer;
@@ -1604,7 +1632,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
         SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
 
-        bool bAnswer=SGMInternal::TestSurface(pNUB,SGM::Point2D(0.3,0.2));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pNUB,SGM::Point2D(0.3,0.2));
         
         SGM::UnitVector3D Vec1,Vec2;
         double k1,k2;
@@ -2460,7 +2488,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D Axis2(1.0,2.0,0.0);
         SGMInternal::revolve *pRevolve2 = new SGMInternal::revolve(rResult, Origin2, Axis2, pNUB2);
 
-        bool bAnswer2 = SGMInternal::TestSurface(pRevolve2, SGM::Point2D(0.5,0.2));
+        bool bAnswer2 = SGMInternal::TestSurface(rResult,pRevolve2, SGM::Point2D(0.5,0.2));
 
         bAnswer = (bAnswer1 && bAnswer2);
 
@@ -3028,7 +3056,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aVKnots.push_back(SGM_TWO_PI);
 
         SGMInternal::NURBsurface *pNURB=new SGMInternal::NURBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
-        bool bAnswer=SGMInternal::TestSurface(pNURB,SGM::Point2D(0.245,0.678));
+        bool bAnswer=SGMInternal::TestSurface(rResult,pNURB,SGM::Point2D(0.245,0.678));
 
         SGM::Point3D Pos0,Pos1,Pos2;
         pNURB->Evaluate(SGM::Point2D(0.145,0.578),&Pos0);

@@ -46,6 +46,16 @@ size_t SGM::RayFire(SGM::Result                        &rResult,
     return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance);
     }
 
+size_t SGM::IntersectSegment(SGM::Result               &rResult,
+                             SGM::Segment3D      const &Segment,
+                             SGM::Entity         const &EntityID,
+                             std::vector<SGM::Point3D> &aPoints,
+                             double                     dTolerance)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);  
+    return SGMInternal::IntersectSegment(rResult,Segment,pEntity,aPoints,dTolerance);
+    }
+
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
                                   std::vector<unsigned int> const &aTriangles)
@@ -1372,6 +1382,30 @@ bool SGM::PointInEntity(SGM::Result        &rResult,
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity const *pEntity=pThing->FindEntity(EntityID.m_ID);
     return SGMInternal::PointInEntity(rResult,Point,pEntity,dTolerance);
+    }
+
+void SGM::PointsInVolumes(SGM::Result                            &rResult,
+                          std::vector<SGM::Point3D>        const &aPoints,
+                          std::vector<std::vector<SGM::Volume> > &aaVolumeIDs,
+                          double                                  dTolerance)
+    {
+    std::vector<std::vector<SGMInternal::volume *> > aaVolumes;
+    SGMInternal::PointsInVolumes(rResult,aPoints,aaVolumes,dTolerance);
+    size_t Index1,Index2;
+    size_t nPoints=aPoints.size();
+    aaVolumes.reserve(nPoints);
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        std::vector<SGMInternal::volume *> const &aVolumes=aaVolumes[Index1];
+        size_t nVolumes=aVolumes.size();
+        std::vector<SGM::Volume> aVolumeIDs;
+        aVolumeIDs.reserve(nVolumes);
+        for(Index2=0;Index2<nVolumes;++Index2)
+            {
+            aVolumeIDs.push_back(aVolumes[Index2]->GetID());
+            }
+        aaVolumeIDs.push_back(aVolumeIDs);
+        }
     }
 
 size_t SGM::FindCloseFaces(SGM::Result            &rResult,

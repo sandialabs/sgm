@@ -66,6 +66,16 @@ namespace SGM {
         return bAnswer;
     }
 
+    inline double Segment3D::Length() const
+    {
+    return m_Start.Distance(m_End);
+    }
+
+    inline double Segment3D::LengthSquared() const
+    {
+    return m_Start.DistanceSquared(m_End);
+    }
+
     inline bool Segment3D::Intersect(Segment3D const &Seg,
                                      Point3D         &Pos1,
                                      Point3D         &Pos2) const
