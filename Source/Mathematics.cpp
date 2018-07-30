@@ -271,7 +271,7 @@ class EdgeData
     public:
 
         EdgeData(unsigned int nPosA,unsigned int nPosB,unsigned int nTriangle,unsigned int nEdge):
-            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge) 
+            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge)
             {
             if(nPosB<nPosA)
                 {
@@ -378,15 +378,15 @@ double IntegrateTetra(double f(SGM::Point2D const &uv,void const *pData),
                       void                                 const *pData,
                       double                                      dTolerance)
     {
-    //   A----------B         _ay  _Line(d,b)          
-    //    \        /         /    /                    
-    //     \      /        _/   _/         f(x,y)dx,dy 
-    //      C----D        cy   Line(a,c)    
+    //   A----------B         _ay  _Line(d,b)
+    //    \        /         /    /
+    //     \      /        _/   _/         f(x,y)dx,dy
+    //      C----D        cy   Line(a,c)
 
     //     _Ay _Line(d,b)        _Ay
-    //    /   /                 /  
-    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),Line(a,c),Line(d,b))(y) = 
-    //  Cy  Line(a,c)         Cy   
+    //    /   /                 /
+    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),Line(a,c),Line(d,b))(y) =
+    //  Cy  Line(a,c)         Cy
     //
     //  Integrate1D(Integrate1D(f(x),Line(a,c),Line(d,b))(y),Cy,Ay)
 
@@ -922,6 +922,7 @@ void TriangulatePolygonSub(SGM::Result                                   &,//rRe
         // Sort the inside polygons by extream u value.
 
         std::vector<SGMInternal::PolyData> aUValues;
+        aUValues.reserve(nPolygons - 1);
         for (Index1 = 1; Index1 < nPolygons; ++Index1)
             {
             double dUValue = -DBL_MAX;
