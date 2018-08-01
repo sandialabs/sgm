@@ -23,8 +23,6 @@ signals:
 
     void torus();
 
-    void NUBSurface();
-
     void revolve();
 
     void line();

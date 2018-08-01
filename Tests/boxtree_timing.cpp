@@ -85,7 +85,7 @@ void boxtree_timing()
 
     sum = std::chrono::milliseconds(0);
 
-    const size_t nodes = 100000;
+    const size_t nodes = 1000000;
     const void * ptr = nullptr;
     std::cout << "Insert: " << nodes << " nodes " << std::flush;
     start = NOW;

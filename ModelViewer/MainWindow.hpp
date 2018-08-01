@@ -78,8 +78,6 @@ private slots:
 
     void primitive_torus();
 
-    void primitive_NUBSurface();
-
     void primitive_line();
 
     void primitive_circle();

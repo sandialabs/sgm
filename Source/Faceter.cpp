@@ -355,16 +355,17 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
     double dDet;
     SGM::InCircumcircle(A,B,C,G,dDet);
     bool bFlip=false;
-    if(SGM_MIN_TOL<dDet)
+    double dTol=SGM_MIN_TOL;
+    if(dTol<dDet)
         {
         bFlip=true;
         }
-    else if(fabs(dDet)<=SGM_MIN_TOL)
+    else if(fabs(dDet)<=dTol)
         {
         if(nEdge==0)
             {
             // CG<AB
-            if(G.Distance(C)+SGM_MIN_TOL<A.Distance(B) && TestTriangle(G,C,A) && TestTriangle(G,B,C))
+            if(G.Distance(C)+dTol<A.Distance(B) && TestTriangle(G,C,A) && TestTriangle(G,B,C))
                 {
                 bFlip=true;
                 }
@@ -372,7 +373,7 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
         else if(nEdge==1)
             {
             // AG<BC
-            if(G.Distance(A)+SGM_MIN_TOL<C.Distance(B) && TestTriangle(G,A,B) && TestTriangle(G,C,A))
+            if(G.Distance(A)+dTol<C.Distance(B) && TestTriangle(G,A,B) && TestTriangle(G,C,A))
                 {
                 bFlip=true;
                 }
@@ -380,7 +381,7 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
         else
             {
             // BG<CA
-            if(G.Distance(B)+SGM_MIN_TOL<A.Distance(C) && TestTriangle(G,A,B) && TestTriangle(G,B,C))
+            if(G.Distance(B)+dTol<A.Distance(C) && TestTriangle(G,A,B) && TestTriangle(G,B,C))
                 {
                 bFlip=true;
                 }
@@ -716,6 +717,7 @@ void FindCrossingPoint(curve  const *pCurve1, // Seam
 
 bool SplitAtSeams(SGM::Result                     &rResult,
                   surface                   const *pSurface,
+                  edge                      const *pEdge,
                   curve                     const *pCurve,
                   std::vector<SGM::Point3D> const &aPoints3D,
                   std::vector<double>       const &aParams,
@@ -762,8 +764,11 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
-                        aCrosses.push_back(t);
-                        bFound=true;
+                        if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
+                            {
+                            aCrosses.push_back(t);
+                            bFound=true;
+                            }
                         }
                     }
                 }
@@ -786,8 +791,11 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
-                        aCrosses.push_back(t);
-                        bFound=true;
+                        if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
+                            {
+                            aCrosses.push_back(t);
+                            bFound=true;
+                            }
                         }
                     }
                 }
@@ -916,7 +924,7 @@ void FacetEdge(SGM::Result               &rResult,
     bool bFound=false;
     while(iter!=sSurfaces.end())
         {
-        if(SplitAtSeams(rResult,*iter,pCurve,aPoints3D,aParams,aCrosses))
+        if(SplitAtSeams(rResult,*iter,pEdge,pCurve,aPoints3D,aParams,aCrosses))
             {
             bFound=true;
             }
@@ -2433,6 +2441,7 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
     size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+
     bool bFlip=pFace->GetFlipped();
     std::set<vertex *,EntityCompare> sVertices;
     FindVertices(rResult,pFace,sVertices);
@@ -2454,12 +2463,12 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
             std::vector<SGM::Point3D> aFacets=pEdge->GetFacets(rResult);
             std::vector<double> aParams=pEdge->GetParams(rResult);
             SGM::EdgeSideType nSide=aSides[Index2];
-            if(bFlip==false && nSide==SGM::EdgeSideType::FaceOnRightType)
+            if(nSide==SGM::EdgeSideType::FaceOnRightType)
                 {
                 std::reverse(aFacets.begin(),aFacets.end());
                 std::reverse(aParams.begin(),aParams.end());
                 }
-            else if(bFlip==true && nSide==SGM::EdgeSideType::FaceOnLeftType)
+            if(bFlip)
                 {
                 std::reverse(aFacets.begin(),aFacets.end());
                 std::reverse(aParams.begin(),aParams.end());
@@ -3370,7 +3379,7 @@ void InsertPoints(SGM::Result                     &,//rResult,
                     // Point already there.
                     break;
                     }
-                else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_FIT,nOther,nEdge1,nEdge2))
+                else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_MIN_TOL,nOther,nEdge1,nEdge2))
                     {
                     // Split nHitTri at nEdge1 and nOther at nEdge2.
                     if(bEdge)
@@ -3401,6 +3410,28 @@ void InsertPoints(SGM::Result                     &,//rResult,
     aInsertPoints=aEdgePoints;
     }
 
+void OrderPoints(std::vector<SGM::Point2D> &aPoints,
+                 SGM::Point2D        const &Pos)
+    {
+    size_t nPoints=aPoints.size();
+    std::vector<std::pair<double,size_t> > aPairs;
+    aPairs.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double dDist=Pos.DistanceSquared(aPoints[Index1]);
+        aPairs.push_back(std::pair<double,size_t>(dDist,Index1));
+        }
+    std::sort(aPairs.begin(),aPairs.end());
+    std::vector<SGM::Point2D> aTemp;
+    aTemp.reserve(nPoints);
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        aTemp.push_back(aPoints[aPairs[Index1].second]);
+        }
+    aPoints=aTemp;
+    }
+
 bool AddGrid(SGM::Result                    &rResult,
              face                     const *pFace,
              FacetOptions             const &Options,
@@ -3429,6 +3460,7 @@ bool AddGrid(SGM::Result                    &rResult,
                 aInsertPoints.push_back(uv);
                 }
             }
+        OrderPoints(aInsertPoints,Box.MidPoint());
         InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
         aAdjacencies.clear();
         SGM::FindAdjacences2D(aTriangles,aAdjacencies);

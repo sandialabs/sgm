@@ -309,7 +309,7 @@ void TestDialog::runTest()
     string_arg += string_name;
 
     // run the gtests specified by the given command-line-like arg
-    int ret_value = SGMTesting::PerformViewerTest(pThing, string_arg.c_str(), mTestPrinter);
+    SGMTesting::PerformViewerTest(pThing, string_arg.c_str(), mTestPrinter);
 
     if (pThing != nullptr)
         updateModelView();

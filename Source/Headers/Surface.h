@@ -122,6 +122,8 @@ class surface : public entity
 
         int VContinuity() const;
 
+        void SnapToDomain(SGM::Point2D &uv) const;
+
     protected:
 
         std::set<face *,EntityCompare> m_sFaces;
