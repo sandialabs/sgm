@@ -2,9 +2,12 @@
 #define INTERSECTOR_H
 
 #include "SGMVector.h"
+#include "SGMSegment.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
+
 namespace SGMInternal
 {
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +39,12 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
                      double                       const dTolerance);
+
+size_t IntersectSegment(SGM::Result               &rResult,
+                        SGM::Segment3D      const &Segment,
+                        entity              const *pEntity,
+                        std::vector<SGM::Point3D> &aPoints,
+                        double                     dTolerance);
 
 size_t IntersectCurves(SGM::Result                        &rResult,
                        curve                        const *pCurve1,

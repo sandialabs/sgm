@@ -863,7 +863,9 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
             }
         else
             {
-            pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+            SGM::Point3D TestPos;
+            pSurface->Evaluate(uv,&TestPos,nullptr,nullptr,&Norm);
+            TestPos.m_x*=1;
             }
         FacetNodeNormal Node(aParams[Index1],Pos);
         if(bSingular)

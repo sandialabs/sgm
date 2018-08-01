@@ -241,6 +241,31 @@ size_t RayFireThing(SGM::Result                        &rResult,
     return nAnswer;
     }
 
+size_t IntersectSegment(SGM::Result               &rResult,
+                        SGM::Segment3D      const &Segment,
+                        entity              const *pEntity,
+                        std::vector<SGM::Point3D> &aPoints,
+                        double                     dTolerance)
+    {
+    std::vector<SGM::IntersectionType> aTypes;
+    std::vector<SGM::Point3D> aTempPoints;
+    SGM::Point3D Origin=Segment.m_Start;
+    SGM::UnitVector3D Axis=Segment.m_End-Origin;
+    size_t nHits=RayFire(rResult,Origin,Axis,pEntity,aTempPoints,aTypes,dTolerance);
+    double dLengthSquared=Segment.LengthSquared();
+    size_t Index1,nAnswer=0;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        double dTest=Origin.DistanceSquared(aTempPoints[Index1]);
+        if(dTest<dLengthSquared+dTolerance)
+            {
+            aPoints.push_back(aTempPoints[Index1]);
+            ++nAnswer;
+            }
+        }
+    return nAnswer;
+    }
+
 size_t RayFire(SGM::Result                        &rResult,
                SGM::Point3D                 const &Origin,
                SGM::UnitVector3D            const &Axis,

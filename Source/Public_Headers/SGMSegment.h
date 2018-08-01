@@ -62,6 +62,15 @@ namespace SGM {
                 m_Start(Start), m_End(End)
         {}
 
+        // Returns the length of this segment squared, which is
+        // faster than finding length.
+
+        double LengthSquared() const;
+
+        // Returns the length of this segment squared.
+
+        double Length() const;
+
         // Returns the closest pairs of points on the two lines defined by
         // this and the given segment.  If the two points are not on the two
         // segments, then false is returned.

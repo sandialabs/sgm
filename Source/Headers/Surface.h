@@ -433,7 +433,8 @@ class extrude : public surface
         SGM::UnitVector3D  m_vAxis;
     };
 
-bool TestSurface(SGMInternal::surface const *pSurface,
+bool TestSurface(SGM::Result                &rResult,
+                 SGMInternal::surface const *pSurface,
                  SGM::Point2D         const &uv1);
 }
 

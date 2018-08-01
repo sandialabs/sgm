@@ -690,7 +690,7 @@ bool surface::Check(SGM::Result              &rResult,
         std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
         uv=SGM::FindCenterOfMass2D(aPoints);
         }
-    bool bAnswer=TestSurface(this,uv);
+    bool bAnswer=TestSurface(rResult,this,uv);
 
     if(bAnswer==false)
         {

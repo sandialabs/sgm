@@ -63,6 +63,32 @@ bool PointInBody(SGM::Result        &rResult,
     return bAnswer;
     }
 
+void PointsInVolumes(SGM::Result                         &rResult,
+                     std::vector<SGM::Point3D>     const &aPoints,
+                     std::vector<std::vector<volume *> > &aaVolumes,
+                     double                               dTolerance)
+    {
+    thing *pThing=rResult.GetThing();
+    std::set<volume *,EntityCompare> sVolumes;
+    FindVolumes(rResult,pThing,sVolumes);
+    size_t nPoints=aPoints.size();
+    aaVolumes.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        std::vector<volume *> aVolumes;
+        for(auto pVolume : sVolumes)
+            {
+            if(PointInEntity(rResult,Pos,pVolume,dTolerance))
+                {
+                aVolumes.push_back(pVolume);
+                }
+            }
+        aaVolumes.push_back(aVolumes);
+        }
+    }
+
 bool PointInEntity(SGM::Result        &rResult,
                    SGM::Point3D const &Point,
                    entity       const *pEntity,
