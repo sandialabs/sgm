@@ -127,13 +127,12 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
         }
     }
 
-unsigned int GetPrevious(unsigned int             nEar,
+inline unsigned int GetPrevious(unsigned int      nEar,
                          std::vector<bool> const &aCutOff)
     {
     unsigned int nAnswer=nEar;
     unsigned int nPolygon=(unsigned int)aCutOff.size();
-    size_t Index1;
-    for(Index1=1;Index1<nPolygon;++Index1)
+    for(unsigned int Index1=1;Index1<nPolygon;++Index1)
         {
         nAnswer=(nEar+nPolygon-Index1)%nPolygon;
         if(aCutOff[nAnswer]==false)
@@ -144,13 +143,12 @@ unsigned int GetPrevious(unsigned int             nEar,
     return nAnswer;
     }
 
-unsigned int GetNext(unsigned int             nEar,
+inline unsigned int GetNext(unsigned int      nEar,
                      std::vector<bool> const &aCutOff)
     {
     unsigned int nAnswer=nEar;
     unsigned int nPolygon=(unsigned int)aCutOff.size();
-    size_t Index1;
-    for(Index1=1;Index1<nPolygon;++Index1)
+    for(unsigned int Index1=1;Index1<nPolygon;++Index1)
         {
         nAnswer=(nEar+Index1)%nPolygon;
         if(aCutOff[nAnswer]==false)
@@ -159,6 +157,21 @@ unsigned int GetNext(unsigned int             nEar,
             }
         }
     return nAnswer;
+    }
+
+inline bool InTriangleInline(SGM::Point2D const &A,
+                             SGM::Point2D const &B,
+                             SGM::Point2D const &C,
+                             SGM::Point2D const &D)
+    {
+        bool b1 = SGMInternal::sign(D, A, B) < 0;
+        bool b2 = SGMInternal::sign(D, B, C) < 0;
+        if (b1 == b2)
+            {
+            bool b3 = SGMInternal::sign(D, C, A) < 0;
+            return b2 == b3;
+            }
+        return false;
     }
 
 bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
@@ -177,14 +190,13 @@ bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &A=aPoints[nEarA];
     SGM::Point2D const &B=aPoints[nEarB];
     SGM::Point2D const &C=aPoints[nEarC];
-    size_t Index1;
-    for(Index1=0;Index1<nPolygon;++Index1)
+    for(unsigned int Index1=0;Index1<nPolygon;++Index1)
         {
         unsigned int nPos=aPolygon[Index1];
         if(nPos!=nEarA && nPos!=nEarB && nPos!=nEarC)
             {
             SGM::Point2D const &Pos=aPoints[nPos];
-            if(InTriangle(A,B,C,Pos))
+            if(InTriangleInline(A,B,C,Pos))
                 {
                 return false;
                 }
@@ -259,7 +271,7 @@ class EdgeData
     public:
 
         EdgeData(unsigned int nPosA,unsigned int nPosB,unsigned int nTriangle,unsigned int nEdge):
-            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge) 
+            m_nPosA(nPosA),m_nPosB(nPosB),m_nTriangle(nTriangle),m_nEdge(nEdge)
             {
             if(nPosB<nPosA)
                 {
@@ -366,15 +378,15 @@ double IntegrateTetra(double f(SGM::Point2D const &uv,void const *pData),
                       void                                 const *pData,
                       double                                      dTolerance)
     {
-    //   A----------B         _ay  _Line(d,b)          
-    //    \        /         /    /                    
-    //     \      /        _/   _/         f(x,y)dx,dy 
-    //      C----D        cy   Line(a,c)    
+    //   A----------B         _ay  _Line(d,b)
+    //    \        /         /    /
+    //     \      /        _/   _/         f(x,y)dx,dy
+    //      C----D        cy   Line(a,c)
 
     //     _Ay _Line(d,b)        _Ay
-    //    /   /                 /  
-    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),Line(a,c),Line(d,b))(y) = 
-    //  Cy  Line(a,c)         Cy   
+    //    /   /                 /
+    //  _/  _/  f(x,y)dx,dy = _/  Integrate1D(f(x),Line(a,c),Line(d,b))(y) =
+    //  Cy  Line(a,c)         Cy
     //
     //  Integrate1D(Integrate1D(f(x),Line(a,c),Line(d,b))(y),Cy,Ay)
 
@@ -742,8 +754,12 @@ bool InTriangle(Point2D const &A,
     {
     bool b1 = SGMInternal::sign(D, A, B) < 0;
     bool b2 = SGMInternal::sign(D, B, C) < 0;
-    bool b3 = SGMInternal::sign(D, C, A) < 0;
-    return ((b1 == b2) && (b2 == b3));
+    if (b1 == b2)
+        {
+        bool b3 = SGMInternal::sign(D, C, A) < 0;
+        return b2 == b3;
+        }
+    return false;
     }
 
 bool InCircumcircle(SGM::Point2D const &A,
@@ -906,6 +922,7 @@ void TriangulatePolygonSub(SGM::Result                                   &,//rRe
         // Sort the inside polygons by extream u value.
 
         std::vector<SGMInternal::PolyData> aUValues;
+        aUValues.reserve(nPolygons - 1);
         for (Index1 = 1; Index1 < nPolygons; ++Index1)
             {
             double dUValue = -DBL_MAX;
