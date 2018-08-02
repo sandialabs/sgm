@@ -727,10 +727,10 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
 
 complex *CreateComplex(SGM::Result                     &rResult,
                        std::vector<SGM::Point3D> const &aPoints,
-                       std::vector<unsigned int> const &,//aSegments,
+                       std::vector<unsigned int> const &aSegments,
                        std::vector<unsigned int> const &aTriangles)
     {
-    return new complex(rResult,aPoints,aTriangles);
+    return new complex(rResult,aPoints,aSegments,aTriangles);
     }
 
 body *CreateDisk(SGM::Result             &rResult,

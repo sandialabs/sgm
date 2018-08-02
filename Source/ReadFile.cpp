@@ -1820,7 +1820,26 @@ void CreateEntities(SGM::Result                   &rResult,
             if(nVolumeType==SGMInternal::STEPTags::GEOMETRIC_CURVE_SET)
                 {
                 curve *pCurve=(curve *)mEntityMap[aIDs[Index2]];
-                if(pCurve->GetCurveType()==SGM::NUBCurveType)
+                if(pCurve==nullptr)
+                    {
+                    STEPLineData const &SLD=mSTEPData[aIDs[Index2]];
+                    if(SLD.m_nType==STEPTags::CARTESIAN_POINT)
+                        {
+                        double x=SLD.m_aDoubles[0];
+                        double y=SLD.m_aDoubles[1];
+                        double z=SLD.m_aDoubles[2];
+                        body *pBody=pVolume->GetBody();
+                        pBody->RemoveVolume(pVolume);
+                        pVolume->SetBody(nullptr);
+                        rResult.GetThing()->DeleteEntity(pVolume);
+                        pBody->AddPoint(SGM::Point3D(x,y,z));
+                        }
+                    else
+                        {
+                        throw;
+                        }
+                    }
+                else if(pCurve->GetCurveType()==SGM::NUBCurveType)
                     {
                     NUBcurve *pNUB=(NUBcurve *)pCurve;
                     size_t nDegree=pNUB->GetDegree();

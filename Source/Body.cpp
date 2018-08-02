@@ -79,6 +79,11 @@ void body::RemoveVolume(volume *pVolume)
     pVolume->SetBody(nullptr);
     }
 
+void body::AddPoint(SGM::Point3D const &Pos)
+    {
+    m_aPoints.push_back(Pos);
+    }
+
 void body::ClearBox(SGM::Result &rResult) const
     {
     m_Box.Reset();

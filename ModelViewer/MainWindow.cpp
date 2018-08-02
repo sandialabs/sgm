@@ -457,12 +457,29 @@ void MainWindow::primitive_complex()
     {
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned int> aSegments,aTriangles;
+
     aPoints.push_back(SGM::Point3D(0,0,0));
     aPoints.push_back(SGM::Point3D(1,0,0));
     aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(0,0,0.5));
+    aPoints.push_back(SGM::Point3D(1,0,0.5));
+    aPoints.push_back(SGM::Point3D(0,1,0.5));
+
+    aPoints.push_back(SGM::Point3D(0.5,0,0.5));
+    aPoints.push_back(SGM::Point3D(0.5,0.5,0.5));
+    aPoints.push_back(SGM::Point3D(0,0.5,0.5));
+
     aTriangles.push_back(0);
     aTriangles.push_back(1);
     aTriangles.push_back(2);
+
+    aSegments.push_back(0);
+    aSegments.push_back(3);
+    aSegments.push_back(1);
+    aSegments.push_back(4);
+    aSegments.push_back(2);
+    aSegments.push_back(5);
+    
     mModel->create_complex(aPoints,aSegments,aTriangles);
     }
 
