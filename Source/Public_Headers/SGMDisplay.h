@@ -36,11 +36,11 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::Point3D> const &GetComplexPoints(SGM::Result        &rResult,
                                                                  SGM::Complex const &ComplexID);
 
-    SGM_EXPORT std::vector<size_t> const &GetComplexSegments(SGM::Result        &rResult,
-                                                             SGM::Complex const &ComplexID);
+    SGM_EXPORT std::vector<unsigned int> const &GetComplexSegments(SGM::Result        &rResult,
+                                                                   SGM::Complex const &ComplexID);
 
-    SGM_EXPORT std::vector<size_t> const &GetComplexTriangles(SGM::Result        &rResult,
-                                                              SGM::Complex const &ComplexID);
+    SGM_EXPORT std::vector<unsigned int> const &GetComplexTriangles(SGM::Result        &rResult,
+                                                                    SGM::Complex const &ComplexID);
 
     // Returns false if the entity does not have a color.
 

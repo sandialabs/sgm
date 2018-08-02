@@ -107,6 +107,10 @@ public:
 
     SGM::Curve create_NUBcurve(std::vector<SGM::Point3D> const &aPoints);
 
+    void create_complex(std::vector<SGM::Point3D> const &aPoints,
+                        std::vector<unsigned int> const &aSegments,
+                        std::vector<unsigned int> const &aTriangles);
+
     void create_torus_knot(SGM::Point3D const &Center,
                            SGM::UnitVector3D const &XAxis,
                            SGM::UnitVector3D const &YAxis,
@@ -163,6 +167,8 @@ private:
 
     void add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID);
 
+    void add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex VolumeID);
+
     void add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID);
 
     void add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID);
@@ -182,6 +188,8 @@ private:
     void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> &edge_colors) const;
 
     void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> &face_colors) const;
+
+    void get_complex_colors(const SGM::Complex &pComplex, std::vector<SGM::Vector3D> &complex_colors) const;
 
     SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
 

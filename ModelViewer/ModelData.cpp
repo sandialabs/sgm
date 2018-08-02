@@ -9,6 +9,7 @@
 #include "SGMChecker.h"
 #include "SGMEntityFunctions.h"
 #include "SGMAttribute.h"
+#include "SGMVector.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
@@ -292,6 +293,15 @@ SGM::Curve ModelData::create_NUBcurve(std::vector<SGM::Point3D> const &aPoints)
     return IDCurve;
 }
 
+void ModelData::create_complex(std::vector<SGM::Point3D> const &aPoints,
+                               std::vector<unsigned int> const &aSegments,
+                               std::vector<unsigned int> const &aTriangles)
+{
+    SGM::CreateComplex(dPtr->mResult,aPoints,aSegments,aTriangles);
+    rebuild_tree();
+    rebuild_graphics();
+}
+
 void ModelData::create_revolve(SGM::Point3D const &Origin,
                                SGM::UnitVector3D const &Axis,
                                SGM::Curve &IDCurve)
@@ -431,6 +441,11 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
         {
         add_volume_to_tree(body_item, vol);
         }
+}
+
+void ModelData::add_complex_to_tree(QTreeWidgetItem * /*parent*/, SGM::Complex /*VolumeID*/)
+{
+    
 }
 
 void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID)
@@ -1147,6 +1162,13 @@ void ModelData::rebuild_tree()
         add_volume_to_tree(ThingItem, top_volume);
         }
 
+    std::set<SGM::Complex> top_level_complexes;
+    SGM::FindComplexes(dPtr->mResult, SGM::Thing(), top_level_complexes, true);
+    for (const SGM::Complex &top_complex : top_level_complexes)
+        {
+        add_complex_to_tree(ThingItem, top_complex);
+        }
+
     std::set<SGM::Body> top_level_bodies;
     std::vector<SGM::Body> aBodies, aSheetBodies, aWireBodies;
     SGM::FindBodies(dPtr->mResult, SGM::Thing(), top_level_bodies, true);
@@ -1215,6 +1237,12 @@ inline void update_bounds_face(SGM::Result &rResult, const SGM::Face &face_id, S
     mGraphics->update_box_bounds(box);
 }
 
+inline void update_bounds_complex(SGM::Result &rResult, const SGM::Complex &complex_id, SGMGraphicsWidget *mGraphics)
+{
+    SGM::Interval3D const &box = SGM::GetBoundingBox(rResult, complex_id);
+    mGraphics->update_box_bounds(box);
+}
+
 inline void update_bounds_vertex(SGM::Point3D const &vertex, SGMGraphicsWidget *mGraphics)
 {
     mGraphics->update_point_bounds(vertex);
@@ -1273,6 +1301,24 @@ void ModelData::get_face_colors(const SGM::Face &face,
         face_colors.push_back(ColorVec);
 }
 
+void ModelData::get_complex_colors(const SGM::Complex &pComplex,
+                                   std::vector<SGM::Vector3D> &complex_colors) const
+{
+    int nRed, nGreen, nBlue;
+    SGM::Vector3D ColorVec = {dDefaultFaceRed, dDefaultFaceGreen, dDefaultFaceBlue};
+
+    if (SGM::GetColor(dPtr->mResult, pComplex, nRed, nGreen, nBlue))
+        ColorVec = {nRed / 255.0, nGreen / 255.0, nBlue / 255.0};
+
+    const std::vector<SGM::Point3D> &complex_points =
+            SGM::GetComplexPoints(dPtr->mResult, pComplex);
+
+    size_t nPoints = complex_points.size();
+    complex_colors.reserve(nPoints);
+    for (size_t Index1 = 0; Index1 < nPoints; ++Index1)
+        complex_colors.push_back(ColorVec);
+}
+
 SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex) const
 {
     int nRed, nGreen, nBlue;
@@ -1287,6 +1333,9 @@ void ModelData::rebuild_graphics(bool bReset)
         return;
 
     dPtr->mGraphics->reset_bounds();
+
+    std::set<SGM::Complex> complex_list;
+    SGM::FindComplexes(dPtr->mResult, SGM::Thing(), complex_list);
 
     if (muvspace_mode || mfacet_mode)
         {
@@ -1308,6 +1357,23 @@ void ModelData::rebuild_graphics(bool bReset)
                 update_bounds_points_uv(face_points2D, dPtr->mGraphics);
                 }
             }
+
+        if (mfacet_mode)
+            {
+            for (const SGM::Complex &complex : complex_list)
+                {
+                const std::vector<SGM::Point3D> &aPoints = SGM::GetComplexPoints(dPtr->mResult, complex);
+                const std::vector<unsigned int> &aTriangles=SGM::GetComplexTriangles(dPtr->mResult, complex);
+                std::vector<unsigned int> face_tris;
+                face_tris.reserve(aTriangles.size());
+                for(size_t nInt : aTriangles)
+                    {
+                    face_tris.push_back((unsigned int)nInt);
+                    }
+                dPtr->mGraphics->add_triangle_lines(aPoints, face_tris);
+                update_bounds_complex(dPtr->mResult, complex, dPtr->mGraphics);
+                }
+            }
         }
 
     if (mface_mode)
@@ -1327,6 +1393,45 @@ void ModelData::rebuild_graphics(bool bReset)
             dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
             update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
             }
+
+        for (const SGM::Complex &ComplexID : complex_list)
+            {
+            const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
+            const std::vector<unsigned int> &complex_triangles=SGM::GetComplexTriangles(dPtr->mResult, ComplexID);
+
+            std::vector<SGM::Point3D> aPoints;
+            std::vector<SGM::UnitVector3D> aNormals;
+            std::vector<unsigned int> aTriangles;
+            std::vector<SGM::Vector3D> aColors;
+
+            size_t nTriangles=complex_triangles.size();
+            aTriangles.reserve(nTriangles);
+            aPoints.reserve(nTriangles);
+            aNormals.reserve(nTriangles);
+            aColors.reserve(nTriangles);
+            SGM::Vector3D Green(0,1,0);
+            size_t Index1;
+            for(Index1=0;Index1<nTriangles;++Index1)
+                {
+                aTriangles.push_back((unsigned int)Index1);
+                aPoints.push_back(complex_points[complex_triangles[Index1]]);
+                aColors.push_back(Green);
+                }
+            for(Index1=0;Index1<nTriangles;Index1+=3)
+                {
+                SGM::Point3D const &A=aPoints[complex_triangles[Index1]];
+                SGM::Point3D const &B=aPoints[complex_triangles[Index1+1]];
+                SGM::Point3D const &C=aPoints[complex_triangles[Index1+2]];
+                SGM::UnitVector3D Norm=(B-A)*(C-A);
+                aNormals.push_back(Norm);
+                aNormals.push_back(Norm);
+                aNormals.push_back(Norm);
+                }
+
+            dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aColors);
+            update_bounds_complex(dPtr->mResult, ComplexID, dPtr->mGraphics);
+            }
+
         dPtr->mGraphics->set_render_faces(true);
         }
     else

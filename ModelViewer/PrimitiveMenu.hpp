@@ -38,6 +38,8 @@ signals:
     void NUBcurve();
 
     void TorusKnot();
+
+    void Complex();
 };
 
 #endif // PRIMITIVIEMENU_HPP

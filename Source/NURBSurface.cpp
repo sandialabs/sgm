@@ -17,6 +17,12 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     m_Domain.m_VDomain.m_dMin=aVKnots.front();
     m_Domain.m_VDomain.m_dMax=aVKnots.back();
 
+    SGM::Point3D Pos0,Pos1,Pos2,Pos3;
+    this->Evaluate(m_Domain.MidPoint(0.5,0),&Pos0);
+    this->Evaluate(m_Domain.MidPoint(0.5,1),&Pos1);
+    this->Evaluate(m_Domain.MidPoint(0,0.5),&Pos2);
+    this->Evaluate(m_Domain.MidPoint(1,0.5),&Pos3);
+
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;

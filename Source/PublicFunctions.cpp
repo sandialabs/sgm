@@ -242,6 +242,27 @@ std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResu
     return pFace->GetNormals(rResult);
     }
 
+std::vector<SGM::Point3D> const &SGM::GetComplexPoints(SGM::Result        &rResult,
+                                                       SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetPoints();
+    }
+
+std::vector<unsigned int> const &SGM::GetComplexSegments(SGM::Result        &rResult,
+                                                         SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetSegments();
+    }
+
+std::vector<unsigned int> const &SGM::GetComplexTriangles(SGM::Result        &rResult,
+                                                          SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetTriangles();
+    }
+
 SGM::Interval3D const &SGM::GetBoundingBox(SGM::Result       &rResult,
                                            SGM::Entity const &EntityID)
     {
@@ -632,6 +653,15 @@ SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
     SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
 
     return {pBody->GetID()};
+    }
+
+SGM::Complex SGM::CreateComplex(SGM::Result                     &rResult,
+                                std::vector<SGM::Point3D> const &aPoints,
+                                std::vector<unsigned int> const &aSegments,
+                                std::vector<unsigned int> const &aTriangles)
+    {
+    SGMInternal::complex *pComplex=SGMInternal::CreateComplex(rResult,aPoints,aSegments,aTriangles);
+    return {pComplex->GetID()};
     }
 
 SGM::Body SGM::CreateDisk(SGM::Result             &rResult,

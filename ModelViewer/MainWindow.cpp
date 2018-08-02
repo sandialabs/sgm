@@ -109,6 +109,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(primitive_NUBcurve()));
   connect(mPrimitiveMenu, SIGNAL(TorusKnot()),
           this, SLOT(primitive_torus_knot()));
+  connect(mPrimitiveMenu, SIGNAL(Complex()),
+          this, SLOT(primitive_complex()));
   connect(mPrimitiveMenu, SIGNAL(revolve()),
           this, SLOT(primitive_revolve()));
 
@@ -449,6 +451,19 @@ void MainWindow::primitive_NUBcurve()
     aPoints.emplace_back(1,0.5,0);
     aPoints.emplace_back(2,0,0);
     mModel->create_NUBcurve(aPoints);
+    }
+
+void MainWindow::primitive_complex()
+    {
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned int> aSegments,aTriangles;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    mModel->create_complex(aPoints,aSegments,aTriangles);
     }
 
 void MainWindow::primitive_torus_knot()
