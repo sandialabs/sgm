@@ -588,6 +588,13 @@ SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
     return pVertex->GetPoint();
     }
 
+std::vector<SGM::Point3D> const &SGM::GetPointsOfBody(SGM::Result     &rResult,
+                                                      SGM::Body const &BodyID)
+    {
+    SGMInternal::body const *pBody=(SGMInternal::body const *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+    return pBody->GetPoints();
+    }
+
 SGMInternal::thing *SGM::CreateThing()
     {
     return new SGMInternal::thing();

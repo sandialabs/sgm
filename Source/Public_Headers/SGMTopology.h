@@ -79,6 +79,9 @@ namespace SGM
     SGM_EXPORT SGM::Point3D const &GetPointOfVertex(SGM::Result       &rResult,
                                                     SGM::Vertex const &VertexID);
 
+    SGM_EXPORT std::vector<SGM::Point3D> const &GetPointsOfBody(SGM::Result     &rResult,
+                                                                SGM::Body const &BodyID);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Topology Modification Functions.
