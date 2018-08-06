@@ -505,6 +505,19 @@ void SGM::FindSurfaces(SGM::Result            &rResult,
         }
     }
 
+void SGM::FindWireEdges(SGM::Result         &rResult,
+                        SGM::Entity   const &EntityID,
+                        std::set<SGM::Edge> &sOutEdges)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
+    FindWireEdges(rResult,pEntity,sEdges);
+    for(auto pEdge : sEdges)
+        {
+        sOutEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    }
+
 void SGM::FindEdges(SGM::Result         &rResult,
                     SGM::Entity   const &EntityID,
                     std::set<SGM::Edge> &sEdges,

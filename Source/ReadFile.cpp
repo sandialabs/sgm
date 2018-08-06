@@ -11,6 +11,7 @@
 #include "STEP.h"
 #include "Curve.h"
 #include "Primitive.h"
+#include "Graph.h"
 
 #include <utility>
 #include <string>
@@ -869,6 +870,33 @@ void ProcessBodyTransform(SGM::Result       &,//rResult,
     FindIndices(line,STEPData.m_aIDs);
     }
 
+void FindStepTag(std::string const &line,
+                 std::string       &sTag)
+    {
+    size_t nCount=2;
+    char const *pData=line.c_str();
+    while(pData[nCount++]!='=');
+    while(pData[nCount++]!='(')
+        {
+        char cData=pData[nCount-1];
+        if(cData>32)
+            {
+            sTag+=cData;
+            }
+        }
+    if(sTag.empty())
+        {
+        while(pData[nCount++]!='(')
+            {
+            char cData=pData[nCount-1];
+            if(cData>32)
+                {
+                sTag+=cData;
+                }
+            }
+        }
+    }
+
 void ProcessLine(SGM::Result                        &rResult,
                  std::map<std::string,size_t> const &mSTEPTagMap,
                  std::string                  const &line,
@@ -886,30 +914,8 @@ void ProcessLine(SGM::Result                        &rResult,
 
         // Find the STEP tag string.
 
-        size_t nCount=2;
-        while(pData[nCount++]!='=');
         std::string sTag;
-        while(pData[nCount++]!='(')
-            {
-            char cData=pData[nCount-1];
-            if(cData>32)
-                {
-                sTag+=cData;
-                }
-            }
-        if(sTag.empty())
-            {
-            while(pData[nCount++]!='(')
-                {
-                char cData=pData[nCount-1];
-                if(cData>32)
-                    {
-                    sTag+=cData;
-                    }
-                }
-            int a=0;
-            a*=1;
-            }
+        FindStepTag(line,sTag);
 
         // Process the data.
 
@@ -2099,6 +2105,80 @@ void CreateEntities(SGM::Result                   &rResult,
         }
     }
 
+void SplitFile(FILE              *pFile,
+               std::string const &)//FileName)
+    {
+    // Read the file.
+
+    std::set<std::string> sBadTags;
+    sBadTags.insert("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION");
+    sBadTags.insert("STYLED_ITEM");
+    sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
+    sBadTags.insert("SURFACE_STYLE_USAGE");
+    sBadTags.insert("SURFACE_SIDE_STYLE");
+    sBadTags.insert("SURFACE_STYLE_FILL_AREA");
+    sBadTags.insert("FILL_AREA_STYLE");
+    sBadTags.insert("FILL_AREA_STYLE_COLOUR");
+    sBadTags.insert("COLOUR_RGB");
+    sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
+    sBadTags.insert("CURVE_STYLE");
+    sBadTags.insert("DRAUGHTING_PRE_DEFINED_CURVE_FONT");
+    sBadTags.insert("APPLICATION_PROTOCOL_DEFINITION");
+    sBadTags.insert("PRODUCT_DEFINITION_CONTEXT");
+    sBadTags.insert("PRODUCT_CATEGORY_RELATIONSHIP");
+    sBadTags.insert("PRODUCT_CATEGORY");
+    sBadTags.insert("PRODUCT_RELATED_PRODUCT_CATEGORY");
+
+    std::map<int,std::vector<size_t> > aIDMap;
+    std::string sFileLine;
+    while(ReadFileLine(pFile,sFileLine))
+        {
+        std::vector<size_t> aIDs;
+        if(sFileLine.front()=='#')
+            {
+            std::string sTag;
+            FindStepTag(sFileLine,sTag);
+            if(sBadTags.find(sTag)==sBadTags.end())
+                {
+                char const *pData=sFileLine.c_str();
+                int nLineNumber;
+                sscanf(pData+1,"%d",&nLineNumber);
+                FindIndices(sFileLine,aIDs);
+                aIDMap[nLineNumber]=aIDs;
+                }
+            }
+        sFileLine.clear();
+        }
+    fclose(pFile);
+        
+    // Create a directed graph.
+
+    std::set<size_t> sVertices;
+    std::set<GraphEdge> sEdges;
+    size_t nCount=0;
+    for(auto MapIter : aIDMap)
+        {
+        size_t nLine=(size_t)MapIter.first;
+        sVertices.insert(nLine);
+        std::vector<size_t> const &aIDs=MapIter.second;
+        for(auto nID : aIDs)
+            {
+            sEdges.insert(GraphEdge(nLine,nID,nCount,true));
+            ++nCount;
+            }
+        }
+    Graph graph(sVertices,sEdges);
+
+    std::vector<size_t> aSources;
+    graph.FindSources(aSources);
+
+    std::vector<Graph> aComponents;
+    graph.FindComponents(aComponents);
+    
+    int a=0;
+    a*=1;
+    }
+
 size_t ReadStepFile(SGM::Result                  &rResult,
                     std::string            const &FileName,
                     thing                        *pThing,
@@ -2112,6 +2192,14 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        return 0;
+        }
+
+    // Split the file.
+
+    if(Options.m_bSplitFile)
+        {
+        SplitFile(pFile,FileName);
         return 0;
         }
 

@@ -47,6 +47,10 @@ namespace SGM
                               SGM::Entity   const &EntityID,
                               std::set<SGM::Edge> &sEdges,
                               bool                 bTopLevel=false);
+
+    SGM_EXPORT void FindWireEdges(SGM::Result         &rResult,
+                                  SGM::Entity   const &EntityID,
+                                  std::set<SGM::Edge> &sEdges);
     
     SGM_EXPORT void FindCurves(SGM::Result         &rResult,
                               SGM::Entity    const &EntityID,

@@ -20,14 +20,17 @@ class GraphEdge
     public:
 
     explicit GraphEdge(size_t nStart=0,
-                  size_t nEnd=0,
-                  size_t nID=0):m_nStart(nStart),m_nEnd(nEnd),m_nID(nID) {}
+                       size_t nEnd=0,
+                       size_t nID=0,
+                       bool   bOneWay=false):
+        m_nStart(nStart),m_nEnd(nEnd),m_nID(nID),m_bOneWay(bOneWay) {}
 
         bool operator<(GraphEdge const &) const;
 
         size_t m_nStart;
         size_t m_nEnd;
         size_t m_nID;
+        bool   m_bOneWay;
     };
 
 class Graph
@@ -39,12 +42,12 @@ class Graph
         // If an edge is closed, then a non-simple graph is returned and extra vertices may  
         // be added with potentially invalid IDs if the closed edge(s) do not have vertices.
 
-        Graph(SGM::Result            &rResult,
+        Graph(SGM::Result                          &rResult,
               std::set<edge *,EntityCompare> const &sEdges);
 
-        Graph(SGM::Result            &rResult,
+        Graph(SGM::Result                          &rResult,
               std::set<face *,EntityCompare> const &sFaces,
-              bool                    bEdgeConnected);
+              bool                                  bEdgeConnected);
 
         // Get methods
 
@@ -65,6 +68,10 @@ class Graph
         bool IsCycle() const;
 
         bool OrderVertices(std::vector<size_t> &aVertices) const;
+
+        // Methods for directed graphs.
+
+        size_t FindSources(std::vector<size_t> &aSources) const;
 
     private:
 
