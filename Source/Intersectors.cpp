@@ -28,6 +28,8 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
     size_t Index1;
     if(size_t nAllHits=aPoints.size())
         {
+        // Save all the points that occur in the right direction from the ray origin
+        // Put them into aParams
         std::vector<std::pair<double,size_t> > aParams;
         aParams.reserve(nAllHits);
         for(Index1=0;Index1<nAllHits;++Index1)
@@ -38,13 +40,24 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                 aParams.emplace_back(dDist,Index1);
                 }
             }
+
+        // no points were valid
+        if ( aParams.empty() )
+            {
+            aPoints.clear();
+            aTypes.clear();
+            return 0;    
+            }
+
+        // Order them
         std::sort(aParams.begin(),aParams.end());
 
-        // Remove duplicates.
-
+        // Remove duplicates. They are consecutive.
         size_t nGoodHits=aParams.size();
         std::vector<SGM::Point3D> aTempPoints;
         std::vector<SGM::IntersectionType> aTempTypes;
+        aTempPoints.reserve(nGoodHits);
+        aTempTypes.reserve(nGoodHits);
         aTempPoints.push_back(aPoints[aParams[0].second]);
         aTempTypes.push_back(aTypes[aParams[0].second]);
         double dLastParam=aParams[0].first;
@@ -59,8 +72,8 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                 ++nAnswer;
                 }
             }
-        aPoints=aTempPoints;
-        aTypes=aTempTypes;
+        aPoints.swap(aTempPoints);
+        aTypes.swap(aTempTypes);
         }
     return nAnswer;
     }
