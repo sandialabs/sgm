@@ -14,6 +14,7 @@ add_executable(sgm_tests
         intersection_check.cpp
         test_utility.cpp
         math_check.cpp
+        models_ouo_check.cpp
         )
 target_link_libraries(sgm_tests gtest_main gtest)
 target_link_libraries(sgm_tests SGM)

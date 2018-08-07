@@ -5,35 +5,7 @@
 #include <fstream>
 
 #include <gtest/gtest.h>
-
-#include <SGMChecker.h>
-#include <SGMPrimitives.h>
-#include <SGMTranslators.h>
-
-#ifdef _MSC_VER
-#include <Windows.h>
-#else
-#include <dirent.h>
-#endif
-
-using testing::internal::FilePath;
-
-// absolute path to test/data directory must be defined on compile line with -D
-#if !defined(SGM_MODELS_DIRECTORY)
-#error Path to test data directory is undefined.
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Constants and strings
-//
-///////////////////////////////////////////////////////////////////////////////
-
-// name of file which is the concatenated log file
-static const std::string SGM_MODELS_LOG_FILE = {"models_check.log"};
-
-// list of file extensions of models we try to read
-static const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".STP",".step"};
+#include "test_utility.h"
 
 // process exit codes for calls to built-in exit() function.
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
@@ -41,158 +13,13 @@ enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 // limit
 static const size_t MODELS_CHECK_TIMEOUT = 20000000; // milliseconds
 
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Utility helper functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
-// replace all instances of 'from' in the 'str' with 'to'
-void replace_all_substring(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty())
-        return;
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos)
-        {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-        }
-}
-
-// return a full path to a given file name in the models directory
-inline std::string get_models_file_path(std::string const &file_name)
-{
-    static const FilePath models_directory(SGM_MODELS_DIRECTORY);
-    FilePath full_path = FilePath::ConcatPaths(models_directory, FilePath(file_name));
-    return full_path.string();
-}
-
-// return true the main string ends with the match string
-inline bool ends_with(const std::string &main_str, const std::string &to_match_str) {
-    return (main_str.size() >= to_match_str.size() &&
-            main_str.compare(main_str.size() - to_match_str.size(), to_match_str.size(), to_match_str) == 0);
-}
-
-// true if the file_path ends with one of the extensions
-bool has_model_extension(const std::string &file_path)
-{
-    for (auto const &extension : SGM_MODELS_EXTENSIONS)
-        if (ends_with(file_path, extension))
-            return true;
-    return false;
-}
+// name of file which is the concatenated log file
+static const std::string SGM_MODELS_LOG_FILE = {"models_check.log"};
 
 // return true if the file_path has the *.log extension (and is not the concatenated summary SGM_MODELS_LOG_FILE).
 bool has_log_extension(const std::string &file_path)
 {
-    if(ends_with(file_path, ".log") && file_path != SGM_MODELS_LOG_FILE)
-        return true;
-    return false;
-}
-
-// if the path ends with one of the extensions,
-// return the path with the extensions erased, else return the original path
-inline std::string erase_model_extension(std::string const &file_path)
-{
-    std::string new_path(file_path);
-    for (auto const &extension : SGM_MODELS_EXTENSIONS)
-        {
-        size_t pos = new_path.rfind(extension);
-        if (pos != std::string::npos)
-            {
-            new_path.erase(pos, extension.length());
-            return new_path;
-            }
-        }
-    return new_path;
-}
-
-inline std::string erase_directory(std::string const &file_path)
-{
-    const FilePath file_path_object(file_path);
-    auto file_name_only = file_path_object.RemoveDirectoryName();
-    return file_name_only.string();
-}
-
-// filter out file names from list that do not have our extensions
-inline void filter_model_extension(std::vector<std::string> &names)
-{
-    names.erase(std::remove_if(names.begin(), names.end(), [](const std::string& x)
-                    {
-                    return !has_model_extension(x);
-                    }),
-                names.end());
-}
-
-// if string ends with newline ("\n") remove last the newline
-inline std::string strip_new_line(const std::string & line)
-{
-    std::string s(line);
-    if (!s.empty() && s[s.length()-1] == '\n')
-        s.erase(s.length()-1);
-    return s;
-}
-
-/**
- * Return the subset of files in a directory that match a condition.
- *
- * @param dir - name of the directory containing all the files to
- * @param fileNameKeep - a function that returns true or false given a filename
- * @return a vector holding the  filenames
- */
-std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNameKeep)(const std::string&))
-{
-    std::vector<std::string> names;
-
-#ifdef _MSC_VER
-    std::string search_path = dir + "/*.*"; // all files with any . extension
-    WIN32_FIND_DATA fd;
-    HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
-    if (hFind != INVALID_HANDLE_VALUE) {
-        do {
-            // read all (real) files in current dir
-            // , delete '!' read other 2 default dir . and ..
-            if(! (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ) 
-            {
-            if(fileNameKeep(fd.cFileName))
-                names.push_back(fd.cFileName);
-            }
-        } while(::FindNextFile(hFind, &fd));
-        ::FindClose(hFind);
-    }
-#else
-    DIR *dp;
-    struct dirent *dirp;
-    if ((dp  = opendir(dir.c_str())) == NULL)
-        {
-        std::cerr << "Error(" << errno << ") opening " << dir << std::endl;
-        exit(errno);
-        }
-    while ((dirp = readdir(dp)) != NULL) {
-        std::string name(dirp->d_name);
-        if (fileNameKeep(name))
-            names.push_back(name);
-        }
-    closedir(dp);
-#endif
-
-    return names;
-}
-
-// Get current date/time, format is YYYY-MM-DD HH:mm:ss
-const std::string current_date_time()
-{
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-#ifdef _MSC_VER
-    localtime_s(&tstruct,&now);
-#else
-    tstruct = *localtime(&now);
-#endif
-    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-    return buf;
+    return ends_with(file_path, ".log") && file_path != SGM_MODELS_LOG_FILE;
 }
 
 // Open the output stream log_file (using the prefix of the file_path and adding ".log")
@@ -484,24 +311,24 @@ TEST(DataDirectoriesCheck, file_extensions)
 }
 
 // import and check a single file
-//TEST(DataDirectoriesCheck, import_check_single)
-//{
-//    std::cout << std::endl << std::flush;
-//    std::string file_path = get_models_file_path("_ASSY, SCORPION REV 01 2.STEP");
-//    std::ofstream log_file;
-//
-//    open_log_file(file_path, log_file);
-//    EXPECT_TRUE(log_file.is_open());
-//
-//    SGM::Result result(SGM::CreateThing());
-//
-//    int status = import_file(file_path, result, log_file);
-//    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
-//
-//    if (status == ModelsCheckResult::SUCCESS)
-//        status = check_file(file_path, result, log_file);
-//    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
-//}
+TEST(DataDirectoriesCheck, import_check_single)
+{
+    std::cout << std::endl << std::flush;
+    std::string file_path = get_models_file_path("_ASSY, SCORPION REV 01 2.STEP");
+    std::ofstream log_file;
+
+    open_log_file(file_path, log_file);
+    EXPECT_TRUE(log_file.is_open());
+
+    SGM::Result result(SGM::CreateThing());
+
+    int status = import_file(file_path, result, log_file);
+    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
+
+    if (status == ModelsCheckResult::SUCCESS)
+        status = check_file(file_path, result, log_file);
+    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
+}
 
 //
 // test whether the Gtest exit function works properly
@@ -515,18 +342,18 @@ TEST(ModelDeathTest, exit_code)
 
 // Test just a single file using our timeout wrapper, but it better not timeout
 // or whole process will exit().
-//TEST(ModelDeathTest, import_check_timeout)
-//{
-//    std::cout << std::endl << std::flush;
-//    std::string base_dir(SGM_MODELS_DIRECTORY);
-//    std::string file_path = get_models_file_path("ball.stp");
-//    std::ofstream log_file;
-//    open_log_file(file_path, log_file);
-//    int status = import_check_timeout(file_path, log_file);
-//    log_file << "Success" << std::endl;
-//    log_file.close();
-//    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
-//}
+TEST(ModelDeathTest, import_check_timeout)
+{
+    std::cout << std::endl << std::flush;
+    std::string base_dir(SGM_MODELS_DIRECTORY);
+    std::string file_path = get_models_file_path("ball.stp");
+    std::ofstream log_file;
+    open_log_file(file_path, log_file);
+    int status = import_check_timeout(file_path, log_file);
+    log_file << "Success" << std::endl;
+    log_file.close();
+    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
+}
 
 TEST(ModelDeathTest, sgm_models)
 {
