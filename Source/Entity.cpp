@@ -529,6 +529,10 @@ void entity::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
             {
             break;
             }
+        case SGM::ComplexType:
+            {
+            break; 
+            }
         case SGM::SurfaceType:
             {
             surface const *pSurface=(surface const *)this;

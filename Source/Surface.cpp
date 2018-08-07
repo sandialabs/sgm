@@ -1444,6 +1444,10 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         double dDot=(Pos-SurfPos)%Norm;
+        if(fabs(dDot)<SGM_ZERO)
+            {
+            break;
+            }
         SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
