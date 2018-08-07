@@ -92,6 +92,8 @@ private slots:
 
     void primitive_torus_knot();
 
+    void primitive_complex();
+
     void primitive_revolve();
 
 private:

@@ -824,7 +824,8 @@ void SplitFacet(curve                          const *pCurve,
     ++NodeB;
     }
 
-void SplitWithSurfaceNormals(FacetOptions        const &Options,
+void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
+                             FacetOptions        const &Options,
                              surface             const *pSurface,
                              curve               const *pCurve,
                              std::vector<SGM::Point3D> &aPoints3D,
@@ -865,7 +866,6 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
             {
             SGM::Point3D TestPos;
             pSurface->Evaluate(uv,&TestPos,nullptr,nullptr,&Norm);
-            TestPos.m_x*=1;
             }
         FacetNodeNormal Node(aParams[Index1],Pos);
         if(bSingular)
@@ -875,8 +875,9 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
         Node.m_Norm=Norm;
         lNodes.push_back(Node);
         }
+
     bool bSplit=false;
-    double dDotTol=std::cos(Options.m_dEdgeAngleTol);
+    double dDotTol=std::cos(Options.m_dFaceAngleTol);
     std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
     std::list<FacetNodeNormal>::iterator LastIter=iter;
     ++iter;
@@ -893,6 +894,7 @@ void SplitWithSurfaceNormals(FacetOptions        const &Options,
             ++iter;
             }
         }
+
     if(bSplit)
         {
         aPoints3D.clear();
@@ -974,7 +976,7 @@ void FacetEdge(SGM::Result               &rResult,
     iter=sSurfaces.begin();
     while(iter!=sSurfaces.end())
         {
-        SplitWithSurfaceNormals(Options,*iter,pCurve,aPoints3D,aParams);
+        SplitWithSurfaceNormals(rResult,Options,*iter,pCurve,aPoints3D,aParams);
         ++iter;
         }
     }

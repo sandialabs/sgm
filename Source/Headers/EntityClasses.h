@@ -199,6 +199,8 @@ class body : public topology
 
         void SetPoints(std::vector<SGM::Point3D> const &aPoints);
 
+        void AddPoint(SGM::Point3D const &Pos);
+
         // Get methods
 
         SGM::Interval3D const &GetBox() const;
@@ -248,6 +250,11 @@ class complex : public topology
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned int> const &aTriangles);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned int> const &aSegments,
                 std::vector<unsigned int> const &aTriangles);
 
         // Get methods

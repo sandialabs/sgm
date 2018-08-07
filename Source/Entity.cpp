@@ -280,6 +280,13 @@ SGM::Interval3D const &entity::GetBox(SGM::Result &rResult) const
                 {
                 vertex *pVertex=(vertex *)this;
                 m_Box=SGM::Interval3D(pVertex->GetPoint());
+                break;
+                }
+            case SGM::EntityType::ComplexType:
+                {
+                complex *pComplex=(complex *)this;
+                m_Box=SGM::Interval3D(pComplex->GetPoints());
+                break;
                 }
             default:
                 {
@@ -521,6 +528,10 @@ void entity::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
         case SGM::CurveType:
             {
             break;
+            }
+        case SGM::ComplexType:
+            {
+            break; 
             }
         case SGM::SurfaceType:
             {

@@ -452,7 +452,7 @@ bool RunTestFile(SGM::Result                       &rResult,
 namespace SGMInternal
 {
 
-bool TestSurface(SGM::Result                &rResult,
+bool TestSurface(SGM::Result                &,//rResult,
                  SGMInternal::surface const *pSurface,
                  SGM::Point2D         const &uv1)
     {
@@ -540,7 +540,7 @@ bool TestSurface(SGM::Result                &rResult,
         }
 
     // Test parameter curves.
-
+#if 0
     SGM::Interval2D const &Domain=pSurface->GetDomain();
     curve *pUParamLine=pSurface->UParamLine(rResult,Domain.m_UDomain.MidPoint());
     curve *pVParamLine=pSurface->VParamLine(rResult,Domain.m_VDomain.MidPoint());
@@ -565,7 +565,7 @@ bool TestSurface(SGM::Result                &rResult,
 
     rResult.GetThing()->DeleteEntity(pUParamLine);
     rResult.GetThing()->DeleteEntity(pVParamLine);
-
+#endif
     return bAnswer;
     }
 

@@ -40,6 +40,16 @@ complex::complex(SGM::Result                     &rResult,
         m_aTriangles(aTriangles)
     {}
 
+complex::complex(SGM::Result                     &rResult,
+                 std::vector<SGM::Point3D> const &aPoints,
+                 std::vector<unsigned int> const &aSegments,
+                 std::vector<unsigned int> const &aTriangles) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(aSegments),
+        m_aTriangles(aTriangles)
+    {}
+
 void complex::Transform(SGM::Transform3D const &Trans)
     {
     size_t nPoints=m_aPoints.size();

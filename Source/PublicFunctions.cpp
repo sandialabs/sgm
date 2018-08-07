@@ -242,6 +242,27 @@ std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResu
     return pFace->GetNormals(rResult);
     }
 
+std::vector<SGM::Point3D> const &SGM::GetComplexPoints(SGM::Result        &rResult,
+                                                       SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetPoints();
+    }
+
+std::vector<unsigned int> const &SGM::GetComplexSegments(SGM::Result        &rResult,
+                                                         SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetSegments();
+    }
+
+std::vector<unsigned int> const &SGM::GetComplexTriangles(SGM::Result        &rResult,
+                                                          SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);    
+    return pComplex->GetTriangles();
+    }
+
 SGM::Interval3D const &SGM::GetBoundingBox(SGM::Result       &rResult,
                                            SGM::Entity const &EntityID)
     {
@@ -484,6 +505,19 @@ void SGM::FindSurfaces(SGM::Result            &rResult,
         }
     }
 
+void SGM::FindWireEdges(SGM::Result         &rResult,
+                        SGM::Entity   const &EntityID,
+                        std::set<SGM::Edge> &sOutEdges)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
+    FindWireEdges(rResult,pEntity,sEdges);
+    for(auto pEdge : sEdges)
+        {
+        sOutEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    }
+
 void SGM::FindEdges(SGM::Result         &rResult,
                     SGM::Entity   const &EntityID,
                     std::set<SGM::Edge> &sEdges,
@@ -567,6 +601,13 @@ SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
     return pVertex->GetPoint();
     }
 
+std::vector<SGM::Point3D> const &SGM::GetPointsOfBody(SGM::Result     &rResult,
+                                                      SGM::Body const &BodyID)
+    {
+    SGMInternal::body const *pBody=(SGMInternal::body const *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+    return pBody->GetPoints();
+    }
+
 SGMInternal::thing *SGM::CreateThing()
     {
     return new SGMInternal::thing();
@@ -632,6 +673,15 @@ SGM::Body SGM::CreateRevolve(SGM::Result             &rResult,
     SGMInternal::body *pBody=SGMInternal::CreateRevolve(rResult, Origin, Axis, pCurve);
 
     return {pBody->GetID()};
+    }
+
+SGM::Complex SGM::CreateComplex(SGM::Result                     &rResult,
+                                std::vector<SGM::Point3D> const &aPoints,
+                                std::vector<unsigned int> const &aSegments,
+                                std::vector<unsigned int> const &aTriangles)
+    {
+    SGMInternal::complex *pComplex=SGMInternal::CreateComplex(rResult,aPoints,aSegments,aTriangles);
+    return {pComplex->GetID()};
     }
 
 SGM::Body SGM::CreateDisk(SGM::Result             &rResult,

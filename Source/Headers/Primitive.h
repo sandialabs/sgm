@@ -73,5 +73,10 @@ body *CreateDisk(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
                  SGM::UnitVector3D const &Normal,
                  double                   dRadius);
+
+complex *CreateComplex(SGM::Result                     &rResult,
+                       std::vector<SGM::Point3D> const &aPoints,
+                       std::vector<unsigned int> const &aSegments,
+                       std::vector<unsigned int> const &aTriangles);
     }
 #endif // PRIMITIVE_H

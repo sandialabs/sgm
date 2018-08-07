@@ -106,6 +106,17 @@ SGM_EXPORT SGM::Body CreateWireBody(SGM::Result               &rResult,
 SGM_EXPORT SGM::Body CreatePolyLine(SGM::Result                     &rResult,
                                     std::vector<SGM::Point3D> const &aPoints);
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Simplicial Complex Creation Functions
+//
+///////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT SGM::Complex CreateComplex(SGM::Result                     &rResult,
+                                      std::vector<SGM::Point3D> const &aPoints,
+                                      std::vector<unsigned int> const &aSegments,
+                                      std::vector<unsigned int> const &aTriangles);
+
     } // End of SGM namespace
 
 #endif // SGM_PRIMITIVES_H

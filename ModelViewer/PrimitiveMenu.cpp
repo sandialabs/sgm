@@ -34,5 +34,7 @@ PrimitiveMenu::PrimitiveMenu(QWidget *parent) :
     nub_curve_action->setShortcut(tr("Ctrl+r"));
     QAction *torus_knot_action = addAction("Torus &Knot", this, SIGNAL(TorusKnot()));
     torus_knot_action->setShortcut(tr("Ctrl+K"));
+    QAction *complex_action = addAction("&Complex", this, SIGNAL(Complex()));
+    complex_action->setShortcut(tr("Ctrl+C"));
 }
 
