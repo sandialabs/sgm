@@ -24,20 +24,18 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes)
     {
-    size_t nAnswer=0;
-    size_t Index1;
     if(size_t nAllHits=aPoints.size())
         {
         // Save all the points that occur in the right direction from the ray origin
         // Put them into aParams
         std::vector<std::pair<double,size_t> > aParams;
         aParams.reserve(nAllHits);
-        for(Index1=0;Index1<nAllHits;++Index1)
+        for(size_t Index1=0;Index1<nAllHits;++Index1)
             {
-            if(-dTolerance<(aPoints[Index1]-Origin)%Axis)
+            const double ray_distance = (aPoints[Index1]-Origin)%Axis;
+            if(-dTolerance<ray_distance)
                 {
-                double dDist=Origin.Distance(aPoints[Index1]);
-                aParams.emplace_back(dDist,Index1);
+                aParams.emplace_back(ray_distance, Index1);
                 }
             }
 
@@ -48,34 +46,37 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
             aTypes.clear();
             return 0;    
             }
+        // only one point was given, and it was valid, so no need to do anything
+        else if ( aParams.size() == 1 && aPoints.size() == 1 )
+            {
+                return 1;
+            }
 
         // Order them
         std::sort(aParams.begin(),aParams.end());
 
         // Remove duplicates. They are consecutive.
-        size_t nGoodHits=aParams.size();
+        const size_t nGoodHits=aParams.size();
         std::vector<SGM::Point3D> aTempPoints;
         std::vector<SGM::IntersectionType> aTempTypes;
         aTempPoints.reserve(nGoodHits);
-        aTempTypes.reserve(nGoodHits);
+        aTempTypes .reserve(nGoodHits);
         aTempPoints.push_back(aPoints[aParams[0].second]);
-        aTempTypes.push_back(aTypes[aParams[0].second]);
+        aTempTypes .push_back( aTypes[aParams[0].second]);
         double dLastParam=aParams[0].first;
-        ++nAnswer;
-        for(Index1=1;Index1<nGoodHits;++Index1)
+        for(size_t Index1=1;Index1<nGoodHits;++Index1)
             {
             if(dTolerance<aParams[Index1].first-dLastParam)
                 {
                 dLastParam=aParams[Index1].first;
                 aTempPoints.push_back(aPoints[aParams[Index1].second]);
-                aTempTypes.push_back(aTypes[aParams[Index1].second]);
-                ++nAnswer;
+                aTempTypes .push_back( aTypes[aParams[Index1].second]);
                 }
             }
         aPoints.swap(aTempPoints);
-        aTypes.swap(aTempTypes);
+        aTypes .swap(aTempTypes);
         }
-    return nAnswer;
+    return aPoints.size();
     }
 
 size_t RayFireFace(SGM::Result                        &rResult,
