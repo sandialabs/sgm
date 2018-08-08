@@ -1629,3 +1629,17 @@ size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
     return SGMInternal::IntersectCurveAndPlane(rResult, pCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
 }
 
+size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                                  SGM::Edge                    const &EdgeID,
+                                  SGM::Point3D                 const &PlaneOrigin,
+                                  SGM::UnitVector3D            const &PlaneNorm,
+                                  std::vector<SGM::Point3D>          &aPoints,
+                                  std::vector<SGM::IntersectionType> &aTypes,
+                                  double                              dTolerance)
+{
+    SGMInternal::entity *pEntity = rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::edge *pEdge = (SGMInternal::edge *)pEntity;
+    return SGMInternal::IntersectEdgeAndPlane(rResult, pEdge, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+}
+
+

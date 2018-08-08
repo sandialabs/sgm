@@ -117,6 +117,13 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     m_sOwners=m_sFixedOwners;
     }
 
+bool edge::PointInEdge(SGM::Point3D const &Pos,double dTolerance) const
+    {
+    double t=m_pCurve->Inverse(Pos);
+    SnapToDomain(t,dTolerance);
+    return m_Domain.InInterval(t,dTolerance);
+    }
+
 void edge::TransformFacets(SGM::Transform3D const &Trans)
     {
     size_t nPoints=m_aPoints3D.size();

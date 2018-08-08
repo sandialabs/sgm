@@ -2735,6 +2735,33 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
      return aPoints.size();
 }
 
+size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                             edge                         const *pEdge,
+                             SGM::Point3D                 const &PlaneOrigin,
+                             SGM::UnitVector3D            const &PlaneNorm,
+                             std::vector<SGM::Point3D>          &aPoints,
+                             std::vector<SGM::IntersectionType> &aTypes,
+                             double                              dTolerance)
+    {
+    curve const *pCurve=pEdge->GetCurve();
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectCurveAndPlane(rResult,pCurve,PlaneOrigin,PlaneNorm,aTempPoints,aTempTypes,dTolerance);
+    size_t nAnswer=0;
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        if(pEdge->PointInEdge(Pos,dTolerance))
+            {
+            aPoints.push_back(Pos);
+            aTypes.push_back(aTempTypes[Index1]);
+            ++nAnswer;
+            }
+        }
+    return nAnswer;
+    }
+
 size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
                                  NUBcurve                     const *pCurve,
                                  SGM::Point3D                 const &PlaneOrigin,

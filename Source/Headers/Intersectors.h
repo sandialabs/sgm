@@ -82,6 +82,14 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
                               std::vector<SGM::IntersectionType> &aTypes,
                               double                              dTolerance);
 
+size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                             edge                         const *pEdge,
+                             SGM::Point3D                 const &PlaneOrigin,
+                             SGM::UnitVector3D            const &PlaneNorm,
+                             std::vector<SGM::Point3D>          &aPoints,
+                             std::vector<SGM::IntersectionType> &aTypes,
+                             double                              dTolerance);
+
 size_t IntersectSurfaces(SGM::Result                &rResult,
                          surface              const *pSurface1,
                          surface              const *pSurface2,
