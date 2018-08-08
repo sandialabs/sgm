@@ -40,10 +40,11 @@ size_t SGM::RayFire(SGM::Result                        &rResult,
                     SGM::Entity                  const &EntityID,
                     std::vector<SGM::Point3D>          &aPoints,
                     std::vector<SGM::IntersectionType> &aTypes,
-                    double                              dTolerance)
+                    double                              dTolerance,
+                    bool                                bUseWholeLine)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);  
-    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance);
+    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
     }
 
 size_t SGM::IntersectSegment(SGM::Result               &rResult,

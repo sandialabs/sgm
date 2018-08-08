@@ -23,7 +23,8 @@ namespace SGM
                               SGM::Entity                  const &EntityID,
                               std::vector<SGM::Point3D>          &aPoints,
                               std::vector<SGM::IntersectionType> &aTypes,
-                              double                              dTolerance=SGM_ZERO);
+                              double                              dTolerance=SGM_ZERO,
+                              bool                                bUseWholeLine=false);
 
     SGM_EXPORT size_t IntersectCurves(SGM::Result &rResult,
                                       SGM::Curve const &CurveID1,
