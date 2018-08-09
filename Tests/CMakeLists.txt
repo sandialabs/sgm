@@ -21,7 +21,8 @@ target_link_libraries(sgm_tests SGM)
 
 # sgm_model_tests
 add_executable(sgm_model_tests
-        models_check.cpp)
+        models_check.cpp
+        test_utility.cpp)
 target_link_libraries(sgm_model_tests gtest_main gtest)
 target_link_libraries(sgm_model_tests SGM)
 

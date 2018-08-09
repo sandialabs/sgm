@@ -1128,6 +1128,7 @@ bool TriangulatePolygon(Result                                        &rResult,
         std::vector<unsigned int> aSubTriangles, aSubAdjacencies;
         TriangulatePolygonSub(rResult, aPoints, aaaPolygonGroups[Index1], aSubTriangles, aSubAdjacencies);
         size_t nSubTriangles = aSubTriangles.size();
+        aTriangles.reserve(aTriangles.size() + nSubTriangles);
         for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
             {
             aTriangles.push_back(aSubTriangles[Index2]);
