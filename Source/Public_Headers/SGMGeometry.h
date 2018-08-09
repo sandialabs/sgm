@@ -65,6 +65,13 @@ SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                  
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);
 
+SGM_EXPORT SGM::Curve CreateNURBCurveWithControlPointsAndKnots(SGM::Result                          &rResult,
+                                                                    std::vector<SGM::Point4D> const &aControlPoints,
+                                                                    std::vector<double>       const &aKnots);
+
+SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
+                                       SGM::Point3D &Pos);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Surface Creation Functions

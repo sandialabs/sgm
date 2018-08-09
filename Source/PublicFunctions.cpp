@@ -900,6 +900,14 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     return {pCurve->GetID()};
     }
 
+SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
+                                                        std::vector<SGM::Point4D> const &aControlPoints,
+                                                        std::vector<double>       const &aKnots)
+    {
+    SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
+    return {pNURB->GetID()};
+    }
+
 SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      SGM::Point3D      const &Center,
                                      SGM::UnitVector3D const &Axis,
@@ -1643,3 +1651,9 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
 }
 
 
+SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
+                            SGM::Point3D &Pos)
+{
+    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
+    return {pCurve->GetID()};
+}

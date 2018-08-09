@@ -76,8 +76,10 @@ namespace SGM {
         // segments, then false is returned.
 
         bool Intersect(Segment3D const &Seg,
-                       Point3D &Pos1,
-                       Point3D &Pos2) const;
+                       Point3D         &Pos1,
+                       Point3D         &Pos2,
+                       double          *dS = nullptr,
+                       double          *dT = nullptr) const;
 
         Point3D m_Start;
         Point3D m_End;

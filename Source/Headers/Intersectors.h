@@ -444,6 +444,14 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &rResult,
                                  std::vector<SGM::IntersectionType> &aTypes,
                                  double                              dTolerance);
 
+size_t IntersectNURBCurveAndPlane(SGM::Result                         &rResult,
+                                  NURBcurve                     const *pCurve,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNorm,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes,
+                                  double                               dTolerance);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Specific Ellipse Surface Intersectors.

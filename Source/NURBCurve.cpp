@@ -17,7 +17,7 @@ NURBcurve::NURBcurve(SGM::Result                     &rResult,
     m_Domain.m_dMin=aKnots.front();
     m_Domain.m_dMax=aKnots.back();
     SGM::Point4D const &Pos0=aControlPoints.front();
-    SGM::Point4D const &Pos1=aControlPoints.front();
+    SGM::Point4D const &Pos1=aControlPoints.back();
     SGM::Point3D Pos3D0(Pos0.m_x,Pos0.m_y,Pos0.m_z);
     SGM::Point3D Pos3D1(Pos1.m_x,Pos1.m_y,Pos1.m_z);
     if(SGM::NearEqual(Pos3D0,Pos3D1,SGM_MIN_TOL))
