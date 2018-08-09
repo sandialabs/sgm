@@ -22,7 +22,8 @@ size_t RayFire(SGM::Result                        &rResult,
                entity                       const *pEntity,
                std::vector<SGM::Point3D>          &aPoints,
                std::vector<SGM::IntersectionType> &aTypes,
-               double                              dTolerance=SGM_ZERO);
+               double                              dTolerance=SGM_ZERO,
+               bool                                bUseWholeLine=false);
 
 size_t RayFireBody(SGM::Result                        &rResult,
                    SGM::Point3D                 const &Origin,
@@ -30,7 +31,8 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    body                         const *pBody,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
-                   double                       const dTolerance);
+                   double                       const dTolerance,
+                   bool                               bUseWholeLine=false);
 
 size_t RayFireVolume(SGM::Result                        &rResult,
                      SGM::Point3D                 const &Origin,
@@ -38,7 +40,8 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      volume                       const *pVolume,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
-                     double                       const dTolerance);
+                     double                       const dTolerance,
+                     bool                               bUseWholeLine=false);
 
 size_t IntersectSegment(SGM::Result               &rResult,
                         SGM::Segment3D      const &Segment,
@@ -78,6 +81,14 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
                               std::vector<SGM::Point3D>          &aPoints,
                               std::vector<SGM::IntersectionType> &aTypes,
                               double                              dTolerance);
+
+size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                             edge                         const *pEdge,
+                             SGM::Point3D                 const &PlaneOrigin,
+                             SGM::UnitVector3D            const &PlaneNorm,
+                             std::vector<SGM::Point3D>          &aPoints,
+                             std::vector<SGM::IntersectionType> &aTypes,
+                             double                              dTolerance);
 
 size_t IntersectSurfaces(SGM::Result                &rResult,
                          surface              const *pSurface1,
@@ -432,6 +443,14 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &rResult,
                                  std::vector<SGM::Point3D>          &aPoints,
                                  std::vector<SGM::IntersectionType> &aTypes,
                                  double                              dTolerance);
+
+size_t IntersectNURBCurveAndPlane(SGM::Result                         &rResult,
+                                  NURBcurve                     const *pCurve,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNorm,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes,
+                                  double                               dTolerance);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

@@ -40,10 +40,11 @@ size_t SGM::RayFire(SGM::Result                        &rResult,
                     SGM::Entity                  const &EntityID,
                     std::vector<SGM::Point3D>          &aPoints,
                     std::vector<SGM::IntersectionType> &aTypes,
-                    double                              dTolerance)
+                    double                              dTolerance,
+                    bool                                bUseWholeLine)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);  
-    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance);
+    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
     }
 
 size_t SGM::IntersectSegment(SGM::Result               &rResult,
@@ -899,6 +900,14 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     return {pCurve->GetID()};
     }
 
+SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
+                                                        std::vector<SGM::Point4D> const &aControlPoints,
+                                                        std::vector<double>       const &aKnots)
+    {
+    SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
+    return {pNURB->GetID()};
+    }
+
 SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      SGM::Point3D      const &Center,
                                      SGM::UnitVector3D const &Axis,
@@ -1628,3 +1637,23 @@ size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
     return SGMInternal::IntersectCurveAndPlane(rResult, pCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
 }
 
+size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                                  SGM::Edge                    const &EdgeID,
+                                  SGM::Point3D                 const &PlaneOrigin,
+                                  SGM::UnitVector3D            const &PlaneNorm,
+                                  std::vector<SGM::Point3D>          &aPoints,
+                                  std::vector<SGM::IntersectionType> &aTypes,
+                                  double                              dTolerance)
+{
+    SGMInternal::entity *pEntity = rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::edge *pEdge = (SGMInternal::edge *)pEntity;
+    return SGMInternal::IntersectEdgeAndPlane(rResult, pEdge, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+}
+
+
+SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
+                            SGM::Point3D &Pos)
+{
+    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
+    return {pCurve->GetID()};
+}

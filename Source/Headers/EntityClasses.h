@@ -517,6 +517,11 @@ class edge : public topology
 
         void TransformFacets(SGM::Transform3D const &Trans);
 
+        // It is assumed that the point is on the curve.  This function checkes
+        // to see if it is in the domain of this edge.
+
+        bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
+
     private:
 
         vertex                         *m_pStart;

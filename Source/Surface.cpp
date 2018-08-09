@@ -1444,10 +1444,6 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         double dDot=(Pos-SurfPos)%Norm;
-        if(fabs(dDot)<SGM_ZERO)
-            {
-            break;
-            }
         SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
@@ -1455,6 +1451,10 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
         pSurface->SnapToDomain(Answer);
+        if(fabs(dDot)<SGM_ZERO)
+            {
+            break;
+            }
         ++nCount;
         }
     return Answer;

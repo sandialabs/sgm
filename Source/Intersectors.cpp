@@ -21,6 +21,7 @@ namespace SGMInternal
 size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 double                              dTolerance,
+                                bool                                bUseWholeLine,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes)
     {
@@ -34,7 +35,7 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         aParams.reserve(nAllHits);
         for(Index1=0;Index1<nAllHits;++Index1)
             {
-            if(-dTolerance<(aPoints[Index1]-Origin)%Axis)
+            if(bUseWholeLine || -dTolerance<(aPoints[Index1]-Origin)%Axis)
                 {
                 double dDist=Origin.Distance(aPoints[Index1]);
                 aParams.emplace_back(dDist,Index1);
@@ -84,7 +85,8 @@ size_t RayFireFace(SGM::Result                        &rResult,
                    face                         const *pFace,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
-                   double                              dTolerance)
+                   double                              dTolerance,
+                   bool                                bUseWholeLine)
     {
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
@@ -105,7 +107,7 @@ size_t RayFireFace(SGM::Result                        &rResult,
             }
         }
     
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -117,7 +119,8 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      volume                       const *pVolume,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
-                     double                              dTolerance)
+                     double                              dTolerance,
+                     bool                                bUseWholeLine)
     {
     // Find all ray hits for all faces.
 
@@ -134,7 +137,7 @@ size_t RayFireVolume(SGM::Result                        &rResult,
         face *pFace=(face *)(FaceIter->first);
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance);
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
         for(Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -143,7 +146,7 @@ size_t RayFireVolume(SGM::Result                        &rResult,
         ++FaceIter;
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -155,7 +158,8 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    body                         const *pBody,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
-                   double                              dTolerance)
+                   double                              dTolerance,
+                   bool                                bUseWholeLine)
     {
     // Find all ray hits for all volumes.
 
@@ -169,7 +173,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
         volume *pVolume=*iter;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance);
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
         for(Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -178,7 +182,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
         ++iter;
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -190,7 +194,8 @@ size_t RayFireThing(SGM::Result                        &rResult,
                     thing                        const *pThing,
                     std::vector<SGM::Point3D>          &aPoints,
                     std::vector<SGM::IntersectionType> &aTypes,
-                    double                              dTolerance)
+                    double                              dTolerance,
+                    bool                                bUseWholeLine)
     {
     // Find all top level bodies, volumes, and faces.
 
@@ -205,7 +210,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
         body *pBody=*BodyIter;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance);
+        size_t nHits=RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
         for(Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -222,7 +227,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
         volume *pVolume=*VolumeIter;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance);
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
         for(Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -239,7 +244,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
         face *pFace=*FaceIter;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance);
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
         for(Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -248,7 +253,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
         ++FaceIter;
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -285,25 +290,26 @@ size_t RayFire(SGM::Result                        &rResult,
                entity                       const *pEntity,
                std::vector<SGM::Point3D>          &aPoints,
                std::vector<SGM::IntersectionType> &aTypes,
-               double                              dTolerance)
+               double                              dTolerance,
+               bool                                bUseWholeLine)
     {
     switch(pEntity->GetType())
         {
         case SGM::ThingType:
             {
-            return RayFireThing(rResult,Origin,Axis,(thing const *)pEntity,aPoints,aTypes,dTolerance);
+            return RayFireThing(rResult,Origin,Axis,(thing const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
         case SGM::BodyType:
             {
-            return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,dTolerance);
+            return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
         case SGM::VolumeType:
             {
-            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,dTolerance);
+            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
         case SGM::FaceType:
             {
-            return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance);
+            return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
         default:
             {
@@ -854,6 +860,141 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+void FindStartingPointsForLineCurveIntersection(SGM::Point3D             const &Origin,
+                                               SGM::UnitVector3D         const &Axis,
+                                               std::vector<SGM::Point3D> const &aSeedPoints,
+                                               double                           dTolerance,
+                                               std::vector<SGM::Point3D>       &aStartPoints)
+{
+    SGM::Segment3D LineSeg(Origin,Origin+Axis);
+    size_t nSeedPoints=aSeedPoints.size();
+    double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
+    size_t Index1;
+    for(Index1=1;Index1<nSeedPoints;++Index1)
+    {
+        SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
+        SGM::Point3D const &Pos1=aSeedPoints[Index1];
+        SGM::Segment3D Seg(Pos0,Pos1);
+        SGM::Point3D Pos2,Pos3;
+        double s, t;
+        bool bIntersect = Seg.Intersect(LineSeg,Pos2,Pos3,&s,&t);
+        if(bIntersect)
+        {
+            aStartPoints.push_back(Pos2);
+        }
+        else
+        {
+            double dLength=Pos0.Distance(Pos1);
+            double dTol=dTolerance+dLength*dTanHalfAngle;
+            if ((Pos2.DistanceSquared(Pos3) < dTol*dTol) && (s>-SGM_ZERO && s<(1+SGM_ZERO)))
+            {
+                aStartPoints.push_back(Pos2);
+            }
+            SGM::Vector3D PointOnLine = SGM::Vector3D(Origin) + ((Pos0 - Origin) % Axis) * Axis;
+            if(Pos0.DistanceSquared(SGM::Point3D(PointOnLine))<dTol*dTol)
+            {
+                aStartPoints.push_back(Pos0);
+            }
+            PointOnLine = SGM::Vector3D(Origin) + ((Pos1 - Origin) % Axis) * Axis;
+            if(Pos1.DistanceSquared(SGM::Point3D(PointOnLine))<dTol*dTol)
+            {
+                aStartPoints.push_back(Pos1);
+            }
+        }
+    }
+}
+
+void FindLineCurveIntersections(SGM::Point3D                           const &Origin,
+                                SGM::UnitVector3D                      const &Axis,
+                                curve                                  const *pCurve,
+                                double                                        dTolerance,
+                                std::vector<SGM::Point3D>              const &aStartPoints,
+                                std::vector<std::pair<double,SGM::Point3D> > &aRefinedPoints)
+
+{
+    size_t nStartPoints=aStartPoints.size();
+    size_t nCountLimit=100;
+    SGM::Segment3D Seg1(Origin,Origin+Axis);
+    size_t Index1;
+    for(Index1=0;Index1<nStartPoints;++Index1)
+    {
+        SGM::Point3D Pos=aStartPoints[Index1];
+        size_t nCount=0;
+        double dOldDist=SGM_MAX;
+        while(nCount<nCountLimit)
+        {
+            SGM::Point3D CPos;
+            double dNUBt=pCurve->Inverse(Pos);
+            SGM::Vector3D LocalTan;
+            pCurve->Evaluate(dNUBt,&CPos,&LocalTan);
+            SGM::Segment3D Seg2(CPos,CPos+LocalTan);
+            SGM::Point3D Pos0,Pos1;
+            Seg1.Intersect(Seg2,Pos0,Pos1);
+            SGM::Point3D Temp=SGM::MidPoint(Pos0,Pos1);
+            double dDist=Temp.Distance(CPos);
+            if(dDist<dOldDist)
+            {
+                Pos=Temp;
+            }
+            else
+            {
+                // Newton lead us astray.
+                double t=(CPos-Origin)%Axis;
+                Pos=Origin+t*Axis;
+                dDist=Pos.Distance(CPos);
+            }
+            double tNUB = pCurve->Inverse(Pos, nullptr, &dNUBt);
+            if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
+            {
+                aRefinedPoints.emplace_back(tNUB,Pos);
+                break;
+            }
+            if(nCount==nCountLimit-1 && dDist<dTolerance)
+            {
+                aRefinedPoints.emplace_back(tNUB,Pos);
+                break;
+            }
+            dOldDist=dDist;
+            ++nCount;
+        }
+    }
+}
+
+void RemoveLineCurveIntersectionDuplicates(SGM::UnitVector3D                      const &LineDirection,
+                                           curve                                  const *pCurve,
+                                           double                                        dTolerance,
+                                           std::vector<std::pair<double,SGM::Point3D> > &aRefinedPoints,
+                                           std::vector<SGM::Point3D>                     &aPoints,
+                                           std::vector<SGM::IntersectionType>            &aTypes)
+{
+    size_t Index1;
+    if(size_t nRefinedPoints=aRefinedPoints.size())
+    {
+        double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
+        std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
+        for(Index1=0;Index1<nRefinedPoints;++Index1)
+        {
+            SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
+            if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
+            {
+                double t=aRefinedPoints[Index1].first;
+                SGM::Vector3D DPos;
+                pCurve->Evaluate(t,nullptr,&DPos);
+                aPoints.push_back(Pos);
+                SGM::UnitVector3D Test(DPos);
+                if(fabs(1.0-fabs(Test%LineDirection))<SGM_MIN_TOL)
+                {
+                    aTypes.push_back(SGM::IntersectionType::TangentType);
+                }
+                else
+                {
+                    aTypes.push_back(SGM::IntersectionType::PointType);
+                }
+            }
+        }
+    }
+}
+
 size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 SGM::Interval1D              const &,//Domain,
@@ -862,105 +1003,38 @@ size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes)
     {
-    // Find the starting points.
-
-    SGM::Segment3D LineSeg(Origin,Origin+Axis);
     std::vector<SGM::Point3D> const &aSeedPoints=pNUBCurve->GetSeedPoints();
-    size_t nSeedPoints=aSeedPoints.size();
-    double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
     std::vector<SGM::Point3D> aStartPoints;
-    size_t Index1;
-    for(Index1=1;Index1<nSeedPoints;++Index1)
-        {
-        SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
-        SGM::Point3D const &Pos1=aSeedPoints[Index1];
-        SGM::Segment3D Seg(Pos0,Pos1);
-        SGM::Point3D Pos2,Pos3;
-        Seg.Intersect(LineSeg,Pos2,Pos3);
-        double dLength=Pos0.Distance(Pos1);
-        double dTol=dTolerance+dLength*dTanHalfAngle;
-        if(Pos2.DistanceSquared(Pos3)<dTol*dTol)
-            {
-            aStartPoints.push_back(Pos2);
-            }
-        }
-
-    // Find the intersection points.
+    SGMInternal::FindStartingPointsForLineCurveIntersection(Origin, Axis, aSeedPoints, dTolerance, aStartPoints);
 
     std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
-    size_t nStartPoints=aStartPoints.size();
-    size_t nCountLimit=100;
-    SGM::Segment3D Seg1(Origin,Origin+Axis);
-    for(Index1=0;Index1<nStartPoints;++Index1)
-        {
-        SGM::Point3D Pos=aStartPoints[Index1];
-        size_t nCount=0;
-        double dOldDist=SGM_MAX;
-        while(nCount<nCountLimit)
-            {
-            SGM::Point3D CPos;
-            double dNUBt=pNUBCurve->Inverse(Pos);
-            SGM::Vector3D LocalTan;
-            pNUBCurve->Evaluate(dNUBt,&CPos,&LocalTan);
-            SGM::Segment3D Seg2(CPos,CPos+LocalTan);
-            SGM::Point3D Pos0,Pos1;
-            Seg1.Intersect(Seg2,Pos0,Pos1);
-            SGM::Point3D Temp=SGM::MidPoint(Pos0,Pos1);
-            double dDist=Temp.Distance(CPos);
-            if(dDist<dOldDist)
-                {
-                Pos=Temp;
-                }
-            else
-                {
-                // Newton lead us astray.
-                double t=(CPos-Origin)%Axis;
-                Pos=Origin+t*Axis;
-                dDist=Pos.Distance(CPos);
-                }
-            double t=(Pos-Origin)%Axis;
-            if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
-                {
-                aRefinedPoints.emplace_back(t,Pos);
-                break;
-                }
-            if(nCount==nCountLimit-1 && dDist<dTolerance)
-                {
-                aRefinedPoints.emplace_back(t,Pos);
-                break;
-                }
-            dOldDist=dDist;
-            ++nCount;
-            }
-        }
+    SGMInternal::FindLineCurveIntersections(Origin, Axis, pNUBCurve, dTolerance, aStartPoints, aRefinedPoints);
 
     // Remove duplicates and find the types.
+    SGMInternal::RemoveLineCurveIntersectionDuplicates(Axis, pNUBCurve, dTolerance, aRefinedPoints, aPoints, aTypes);
 
-    if(size_t nRefinedPoints=aRefinedPoints.size())
-        {
-        double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
-        std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
-        for(Index1=0;Index1<nRefinedPoints;++Index1)
-            {
-            SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
-            if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
-                {
-                double t=aRefinedPoints[Index1].first;
-                SGM::Vector3D DPos;
-                pNUBCurve->Evaluate(t,nullptr,&DPos);
-                aPoints.push_back(Pos);
-                SGM::UnitVector3D Test(DPos);
-                if(fabs(1.0-fabs(Test%Axis))<SGM_MIN_TOL)
-                    {
-                    aTypes.push_back(SGM::IntersectionType::TangentType);
-                    }
-                else
-                    {
-                    aTypes.push_back(SGM::IntersectionType::PointType);
-                    }
-                }
-            }
-        }
+    return aPoints.size();
+    }
+
+size_t IntersectLineAndNURBCurve(SGM::Point3D                  const &Origin,
+                                 SGM::UnitVector3D             const &Axis,
+                                 SGM::Interval1D               const &,//Domain,
+                                 NURBcurve                     const *pNURBCurve,
+                                 double                               dTolerance,
+                                 std::vector<SGM::Point3D>           &aPoints,
+                                 std::vector<SGM::IntersectionType>  &aTypes)
+    {
+    // Find the starting points.
+    std::vector<SGM::Point3D> const &aSeedPoints=pNURBCurve->GetSeedPoints();
+    std::vector<SGM::Point3D> aStartPoints;
+    SGMInternal::FindStartingPointsForLineCurveIntersection(Origin, Axis, aSeedPoints, dTolerance, aStartPoints);
+
+
+    std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
+    SGMInternal::FindLineCurveIntersections(Origin, Axis, pNURBCurve, dTolerance, aStartPoints, aRefinedPoints);
+
+    // Remove duplicates and find the types.
+    SGMInternal::RemoveLineCurveIntersectionDuplicates(Axis, pNURBCurve, dTolerance, aRefinedPoints, aPoints, aTypes);
 
     return aPoints.size();
     }
@@ -2706,19 +2780,21 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
             }
         case SGM::NURBCurveType:
             {
+            NURBcurve const *pNURBCurve = (NURBcurve const *)pCurve;
+            IntersectNURBCurveAndPlane(rResult, pNURBCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
             break;
             }
         case SGM::PointCurveType:
             {
-            //PointCurve const *pPointCurve=(PointCurve const *)pCurve;
-            //SGM::Point3D const &Pos=pPointCurve->m_Pos;
-            //SGM::Point3D CPos;
-            //pSurface->Inverse(Pos,&CPos);
-            //if(Pos.Distance(CPos)<dTolerance)
-            //    {
-            //    aPoints.push_back(CPos);
-            //    aTypes.push_back(SGM::IntersectionType::CoincidentType);
-            //    }
+            PointCurve const *pPointCurve=(PointCurve const *)pCurve;
+            SGM::Point3D const &Pos=pPointCurve->m_Pos;
+            double dDist = (Pos-PlaneOrigin)%PlaneNorm;
+            if(fabs(dDist)<dTolerance)
+                {
+                SGM::Point3D PlanePoint = Pos + dDist*PlaneNorm;
+                aPoints.push_back(PlanePoint);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                }
             break;
             }
         default:
@@ -2727,6 +2803,179 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
             }
         }
      return aPoints.size();
+}
+
+size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                             edge                         const *pEdge,
+                             SGM::Point3D                 const &PlaneOrigin,
+                             SGM::UnitVector3D            const &PlaneNorm,
+                             std::vector<SGM::Point3D>          &aPoints,
+                             std::vector<SGM::IntersectionType> &aTypes,
+                             double                              dTolerance)
+    {
+    curve const *pCurve=pEdge->GetCurve();
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectCurveAndPlane(rResult,pCurve,PlaneOrigin,PlaneNorm,aTempPoints,aTempTypes,dTolerance);
+    size_t nAnswer=0;
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        if(pEdge->PointInEdge(Pos,dTolerance))
+            {
+            aPoints.push_back(Pos);
+            aTypes.push_back(aTempTypes[Index1]);
+            ++nAnswer;
+            }
+        }
+    return nAnswer;
+    }
+
+void FindStartingPointsForCurvePlaneIntersection(SGM::Point3D              const &PlaneOrigin,
+                                                 SGM::UnitVector3D         const &PlaneNorm,
+                                                 double                          dTolerance,
+                                                 std::vector<SGM::Point3D> const &aSeedPoints,
+                                                 std::vector<SGM::Point3D>       &aStartPoints)
+{
+    size_t nSeedPoints=aSeedPoints.size();
+    double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
+    size_t Index1;
+    for(Index1=1;Index1<nSeedPoints;++Index1)
+    {
+        SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
+        SGM::Point3D const &Pos1=aSeedPoints[Index1];
+        double dDist0 = ((Pos0 - PlaneOrigin) % PlaneNorm);
+        double dDist1 = ((Pos1 - PlaneOrigin) % PlaneNorm);
+        if ((dDist0 * dDist1) < SGM_ZERO) // opposite sides of the plane
+        {
+            double dFraction = fabs(dDist0) / (fabs(dDist0) + fabs(dDist1));
+            SGM::Point3D Start = Pos0 + (dFraction * (Pos1 - Pos0)); 
+            aStartPoints.push_back(Start);
+        }
+        else
+        {
+            double dLength=Pos0.Distance(Pos1);
+            double dTol=dTolerance+dLength*dTanHalfAngle;
+            if (fabs(dDist0) < dTol)
+            {
+                aStartPoints.push_back(Pos0);
+            }
+            if (fabs(dDist1) < dTol)
+            {
+                aStartPoints.push_back(Pos1);
+            }
+        }
+    }
+}
+
+void FindCurvePlaneIntersections(curve                                  const *pCurve,
+                                 SGM::Point3D                           const &PlaneOrigin,
+                                 SGM::UnitVector3D                      const &PlaneNorm,
+                                 double                                        dTolerance,
+                                 std::vector<SGM::Point3D>              const &aStartPoints,
+                                 std::vector<std::pair<double,SGM::Point3D> > &aRefinedPoints)
+{
+    size_t nStartPoints=aStartPoints.size();
+    size_t nCountLimit=100;
+    size_t Index1;
+
+    for(Index1=0;Index1<nStartPoints;++Index1)
+    {
+        SGM::Point3D Pos=aStartPoints[Index1];
+        size_t nCount=0;
+        double dOldDist=SGM_MAX;
+        while(nCount<nCountLimit)
+        {
+#if 0 // project back and forth
+            // project point to NUBCurve
+            double dNUBt=pCurve->Inverse(Pos);
+            SGM::Point3D CPos;
+            pCurve->Evaluate(dNUBt,&CPos);
+
+            // project point to plane
+            Pos = CPos + ((PlaneOrigin - CPos) % PlaneNorm) * PlaneNorm;
+
+            double dDist = Pos.Distance(CPos);
+
+            //if(dDist<dOldDist)
+            //{
+            //    Pos=Temp;
+            //}
+#endif
+#if 1 // newton
+            // project point to NUBCurve and get the tangent
+            double dNUBt=pCurve->Inverse(Pos);
+            SGM::Point3D CPos;
+            SGM::Vector3D LocalTan;
+            pCurve->Evaluate(dNUBt,&CPos,&LocalTan);
+
+            SGM::UnitVector3D uLocalTan(LocalTan);
+            double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
+            SGM::Point3D Temp = CPos + dT * uLocalTan;
+            double dDist=Temp.Distance(CPos);
+            if(dDist<dOldDist)
+            {
+                Pos=Temp;
+            }
+            else
+            {
+                // Newton led us astray.  Just project to plane.
+                double Dist=(CPos-PlaneOrigin)%PlaneNorm;
+                Pos=CPos - Dist*PlaneNorm;
+                dDist=Pos.Distance(CPos);
+            }
+#endif
+            if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
+            {
+                if (dDist<dTolerance)
+                    aRefinedPoints.emplace_back(dNUBt,Pos);
+                break;
+            }
+            if(nCount==nCountLimit-1 && dDist<dTolerance)
+            {
+                aRefinedPoints.emplace_back(dNUBt,Pos);
+                break;
+            }
+            dOldDist=dDist;
+            ++nCount;
+        }
+    }
+}
+
+void RemoveCurvePlaneIntersectionDuplicates(curve const *pCurve,
+                                            SGM::UnitVector3D                      const &PlaneNorm,
+                                            double                                        dTolerance,
+                                            std::vector<std::pair<double,SGM::Point3D> > &aRefinedPoints,
+                                            std::vector<SGM::Point3D>                    &aPoints,
+                                            std::vector<SGM::IntersectionType>           &aTypes)
+{
+    size_t Index1;
+    if(size_t nRefinedPoints=aRefinedPoints.size())
+    {
+        double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
+        std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
+        for(Index1=0;Index1<nRefinedPoints;++Index1)
+        {
+            SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
+            if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
+            {
+                double t=aRefinedPoints[Index1].first;
+                SGM::Vector3D DPos;
+                pCurve->Evaluate(t,nullptr,&DPos);
+                aPoints.push_back(Pos);
+                SGM::UnitVector3D Test(DPos);
+                if(fabs(Test%PlaneNorm)<SGM_MIN_TOL)
+                {
+                    aTypes.push_back(SGM::IntersectionType::TangentType);
+                }
+                else
+                {
+                    aTypes.push_back(SGM::IntersectionType::PointType);
+                }
+            }
+        }
+    }
 }
 
 size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
@@ -2766,136 +3015,71 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &,//rResult,
     }
     else
     {
-        // Find the starting points.
-
         std::vector<SGM::Point3D> const &aSeedPoints=pCurve->GetSeedPoints();
-        size_t nSeedPoints=aSeedPoints.size();
-        double dTanHalfAngle=SEED_POINT_HALF_ANGLE_TANGENT;
         std::vector<SGM::Point3D> aStartPoints;
-        size_t Index1;
-        for(Index1=1;Index1<nSeedPoints;++Index1)
-        {
-            SGM::Point3D const &Pos0=aSeedPoints[Index1-1];
-            SGM::Point3D const &Pos1=aSeedPoints[Index1];
-            double dDist0 = ((Pos0 - PlaneOrigin) % PlaneNorm);
-            double dDist1 = ((Pos1 - PlaneOrigin) % PlaneNorm);
-            if ((dDist0 * dDist1) < SGM_ZERO) // opposite sides of the plane
-            {
-                double dFraction = fabs(dDist0) / (fabs(dDist0) + fabs(dDist1));
-                SGM::Point3D Start = Pos0 + (dFraction * (Pos1 - Pos0)); 
-                aStartPoints.push_back(Start);
-            }
-            else
-            {
-                double dLength=Pos0.Distance(Pos1);
-                double dTol=dTolerance+dLength*dTanHalfAngle;
-                if (fabs(dDist0) < dTol)
-                {
-                    aStartPoints.push_back(Pos0);
-                }
-                if (fabs(dDist1) < dTol)
-                {
-                    aStartPoints.push_back(Pos1);
-                }
-            }
-        }
-
-
-        // Find the intersection points.
+        SGMInternal::FindStartingPointsForCurvePlaneIntersection(PlaneOrigin, PlaneNorm, dTolerance, aSeedPoints, aStartPoints);
 
         std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
-        size_t nStartPoints=aStartPoints.size();
-        size_t nCountLimit=100;
+        SGMInternal::FindCurvePlaneIntersections(pCurve, PlaneOrigin, PlaneNorm, dTolerance, aStartPoints, aRefinedPoints);
 
-        for(Index1=0;Index1<nStartPoints;++Index1)
+        RemoveCurvePlaneIntersectionDuplicates(pCurve, PlaneNorm, dTolerance, aRefinedPoints, aPoints, aTypes);
+    }
+
+    return aPoints.size();    
+}
+
+size_t IntersectNURBCurveAndPlane(SGM::Result                         &,//rResult,
+                                  NURBcurve                     const *pCurve,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNorm,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes,
+                                  double                               dTolerance)
+{
+    SGM::Point3D      CurvePlaneOrigin;
+    SGM::UnitVector3D CurvePlaneNormal;
+
+    std::vector<SGM::Point4D> const &aControlPoints4D = pCurve->GetControlPoints();
+
+    std::vector<SGM::Point3D> aControlPoints3D;
+    for (SGM::Point4D Pos4D : aControlPoints4D)
+        aControlPoints3D.push_back(SGM::Point3D(Pos4D.m_x, Pos4D.m_y, Pos4D.m_z));
+
+
+    if (SGM::ArePointsCoplanar(aControlPoints3D, dTolerance, &CurvePlaneOrigin, &CurvePlaneNormal))
+    {
+        if(SGM::NearEqual(fabs(CurvePlaneNormal%PlaneNorm),1.0,SGM_MIN_TOL,false)) // planes are parallel
         {
-            SGM::Point3D Pos=aStartPoints[Index1];
-            size_t nCount=0;
-            double dOldDist=SGM_MAX;
-            while(nCount<nCountLimit)
+            if(fabs((CurvePlaneOrigin-PlaneOrigin)%PlaneNorm)<dTolerance)
             {
-#if 0 // project back and forth
-                // project point to NUBCurve
-                double dNUBt=pCurve->Inverse(Pos);
-                SGM::Point3D CPos;
-                pCurve->Evaluate(dNUBt,&CPos);
-
-                // project point to plane
-                Pos = CPos + ((PlaneOrigin - CPos) % PlaneNorm) * PlaneNorm;
-
-                double dDist = Pos.Distance(CPos);
-
-                //if(dDist<dOldDist)
-                //{
-                //    Pos=Temp;
-                //}
-#endif
-#if 1 // newton
-                // project point to NUBCurve and get the tangent
-                double dNUBt=pCurve->Inverse(Pos);
-                SGM::Point3D CPos;
-                SGM::Vector3D LocalTan;
-                pCurve->Evaluate(dNUBt,&CPos,&LocalTan);
-
-                SGM::UnitVector3D uLocalTan(LocalTan);
-                double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
-                SGM::Point3D Temp = CPos + dT * uLocalTan;
-                double dDist=Temp.Distance(CPos);
-                if(dDist<dOldDist)
-                {
-                    Pos=Temp;
-                }
-                else
-                {
-                    // Newton led us astray.  Just project to plane.
-                    double Dist=(CPos-PlaneOrigin)%PlaneNorm;
-                    Pos=CPos - Dist*PlaneNorm;
-                    dDist=Pos.Distance(CPos);
-                }
-#endif
-                if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
-                {
-                    if (dDist<dTolerance)
-                        aRefinedPoints.emplace_back(dNUBt,Pos);
-                    break;
-                }
-                if(nCount==nCountLimit-1 && dDist<dTolerance)
-                {
-                    aRefinedPoints.emplace_back(dNUBt,Pos);
-                    break;
-                }
-                dOldDist=dDist;
-                ++nCount;
-                }
-            }
-
-        // Remove duplicates and find the types.
-
-        if(size_t nRefinedPoints=aRefinedPoints.size())
-        {
-            double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
-            std::sort(aRefinedPoints.begin(),aRefinedPoints.end());
-            for(Index1=0;Index1<nRefinedPoints;++Index1)
-            {
-                SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
-                if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
-                {
-                    double t=aRefinedPoints[Index1].first;
-                    SGM::Vector3D DPos;
-                    pCurve->Evaluate(t,nullptr,&DPos);
-                    aPoints.push_back(Pos);
-                    SGM::UnitVector3D Test(DPos);
-                    if(fabs(Test%PlaneNorm)<SGM_MIN_TOL)
-                    {
-                        aTypes.push_back(SGM::IntersectionType::TangentType);
-                    }
-                    else
-                    {
-                        aTypes.push_back(SGM::IntersectionType::PointType);
-                    }
-                }
+                SGM::Point3D StartPos;
+                SGM::Point3D EndPos;
+                pCurve->Evaluate(pCurve->GetDomain().m_dMin, &StartPos);
+                pCurve->Evaluate(pCurve->GetDomain().m_dMax, &EndPos);
+                aPoints.push_back(StartPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                aPoints.push_back(EndPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
             }
         }
+        else
+        {
+            SGM::Point3D LineOrigin;
+            SGM::UnitVector3D LineAxis;
+            IntersectNonParallelPlanes(CurvePlaneOrigin, CurvePlaneNormal, PlaneOrigin, PlaneNorm, LineOrigin, LineAxis);
+            IntersectLineAndNURBCurve(LineOrigin, LineAxis, SGM::Interval1D(-SGM_MAX, +SGM_MAX), pCurve, dTolerance, aPoints, aTypes);
+        }
+    }
+    else
+    {
+        std::vector<SGM::Point3D> const &aSeedPoints=pCurve->GetSeedPoints();
+        std::vector<SGM::Point3D> aStartPoints;
+        SGMInternal::FindStartingPointsForCurvePlaneIntersection(PlaneOrigin, PlaneNorm, dTolerance, aSeedPoints, aStartPoints);
+
+        std::vector<std::pair<double,SGM::Point3D> > aRefinedPoints;
+        SGMInternal::FindCurvePlaneIntersections(pCurve, PlaneOrigin, PlaneNorm, dTolerance, aStartPoints, aRefinedPoints);
+
+        RemoveCurvePlaneIntersectionDuplicates(pCurve, PlaneNorm, dTolerance, aRefinedPoints, aPoints, aTypes);
     }
 
     return aPoints.size();    

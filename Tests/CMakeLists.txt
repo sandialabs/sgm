@@ -6,23 +6,28 @@ set(CMAKE_CXX_STANDARD 11)
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
+set(SGM_GTEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/boxtree_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/interval_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/volume_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/intersection_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/math_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/models_ouo_check.cpp
+    )
+
+# add source variable in parent scope to be able to build viewer with gtests
+set(SGM_VIEWER_GTEST_SOURCES ${SGM_GTEST_SOURCES} PARENT_SCOPE)
+
 # sgm_tests
-add_executable(sgm_tests
-        boxtree_check.cpp
-        interval_check.cpp
-        volume_check.cpp
-        intersection_check.cpp
-        test_utility.cpp
-        math_check.cpp
-        models_ouo_check.cpp
-        )
-target_link_libraries(sgm_tests gtest_main gtest)
-target_link_libraries(sgm_tests SGM)
+add_executable(sgm_tests ${SGM_GTEST_SOURCES})
+target_link_libraries(sgm_tests gtest_main gtest SGM)
 
 # sgm_model_tests
 add_executable(sgm_model_tests
-        models_check.cpp
-        test_utility.cpp)
+               models_check.cpp
+               test_utility.cpp)
+
 target_link_libraries(sgm_model_tests gtest_main gtest)
 target_link_libraries(sgm_model_tests SGM)
 
