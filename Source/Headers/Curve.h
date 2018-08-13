@@ -27,7 +27,7 @@ namespace SGMInternal
 //      Set m_CurveType, m_Domain and m_Closed.
 //  Add a copy constructor.
 //      Set m_CurveType, m_Domain and m_Closed.
-//  Add to the MakeCopy method of curve.
+//  Add to the Clone method of curve.
 //  Add to the Evalute method of curve.
 //  Add to the Inverse method of curve.
 //  Add to the Transform method of curve.
@@ -61,8 +61,9 @@ class curve : public entity
 
         void Remove(SGM::Result &rResult);
 
-        curve *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        curve *Clone(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void AddEdge(edge *pEdge);
 

@@ -24,7 +24,7 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighV=false;
     }
 
-surface *surface::MakeCopy(SGM::Result &rResult) const
+surface *surface::Clone(SGM::Result &rResult) const
     {
     surface *pAnswer=NULL;
     switch(m_SurfaceType)
@@ -486,7 +486,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             {
             revolve const *pRevolve=(revolve const *)this;
             curve const *pCurve=pRevolve->m_pCurve;
-            curve *pParam=(curve *)pCurve->Copy(rResult);
+            curve *pParam=pCurve->Clone(rResult);
             return pParam;
             break;
             }

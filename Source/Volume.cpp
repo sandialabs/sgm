@@ -10,12 +10,47 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace SGMInternal
 {
-body *volume::GetBody() const 
+
+body *volume::GetBody() const
     {
     return m_pBody;
     }
 
-void volume::AddFace(face *pFace) 
+SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
+    {
+    if (m_Box.IsEmpty())
+        {
+        auto sFaces = GetFaces();
+        auto sEdges = GetEdges();
+        StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
+        StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
+        }
+    return m_Box;
+    }
+
+bool volume::GetColor(int &nRed,int &nGreen,int &nBlue) const
+    {
+    body * pBody = GetBody();
+    if (pBody)
+        return pBody->GetColor(nRed,nGreen,nBlue);
+    else
+        return entity::GetColor(nRed,nGreen,nBlue);
+    }
+
+void volume::SeverRelations(SGM::Result &rResult)
+    {
+    if(GetBody())
+        GetBody()->RemoveVolume(this);
+    std::set<edge *,EntityCompare> sEdges=GetEdges();
+    for(edge *pEdge : sEdges)
+        RemoveEdge(pEdge);
+    std::set<face *,EntityCompare> sFaces=GetFaces();
+    for(face *pFace : sFaces)
+        RemoveFace(pFace);
+    RemoveAllOwners();
+    }
+
+void volume::AddFace(face *pFace)
     {
     m_sFaces.insert(pFace);
     pFace->SetVolume(this);
@@ -33,7 +68,7 @@ void volume::RemoveEdge(edge *pEdge)
     m_sEdges.erase(pEdge);
     }
 
-volume *volume::MakeCopy(SGM::Result &rResult) const
+volume *volume::Clone(SGM::Result &rResult) const
     {
     volume *pAnswer=new volume(rResult);
     pAnswer->m_sFaces=m_sFaces;
@@ -141,14 +176,12 @@ double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return dAnswer/6;
     }
 
-void volume::ClearBox(SGM::Result &rResult) const
+void volume::ResetBox(SGM::Result &rResult) const
     {
     m_Box.Reset();
     m_FaceTree.Clear();
     if(m_pBody)
-        {
-        m_pBody->ClearBox(rResult);
-        }
+        m_pBody->ResetBox(rResult);
     }
 
 SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const

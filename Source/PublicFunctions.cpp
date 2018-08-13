@@ -1368,7 +1368,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         SGMInternal::vertex const *pEnd=pEdge->GetEnd();
         SGMInternal::vertex *pNewStart=mVertices[pStart];
         SGMInternal::vertex *pNewEnd=mVertices[pEnd];
-        SGMInternal::curve *pNewCurve=pCurve->MakeCopy(rResult);
+        SGMInternal::curve *pNewCurve=pCurve->Clone(rResult);
         SGM::Interval1D const &Domain=pEdge->GetDomain();
         SGMInternal::edge *pNewEdge=new SGMInternal::edge(rResult);
         pNewEdge->SetStart(pNewStart);

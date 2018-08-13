@@ -24,11 +24,17 @@ thing::~thing()
         }
     }
 
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
+    {
+    return m_Box;
+    }
+
 void thing::AddToMap(size_t nID,entity *pEntity)
     {
     m_mAllEntities[nID] = pEntity;
     }
 
+//TODO: probably just call "delete pEntity" after call to erase
 void thing::DeleteEntity(entity *pEntity)
     {
     m_mAllEntities.erase(pEntity->GetID());

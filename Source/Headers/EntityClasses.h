@@ -33,70 +33,76 @@ struct EntityCompare {
 };
 
 class entity
-    {
-    public:
-
-        entity(SGM::Result     &rResult,
-               SGM::EntityType  Type);
-
-        entity *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
-        
-        size_t GetID() const;
-
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
-
-        SGM::EntityType GetType() const {return m_Type;}
-
-        // If the entity does not have a color, then false is returned.
-
-        bool GetColor(int &nRed,int &nGreen,int &nBlue) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
-
-        void AddOwner(entity *pEntity) {m_sOwners.insert(pEntity);}
-        void RemoveOwner(entity *pEntity) {m_sOwners.erase(pEntity);}
-
-        void SeverRelations(SGM::Result &rResult);
-
-        std::set<entity *,EntityCompare> const &GetOwners() const {return m_sOwners;}
-
-        void AddAttribute(attribute *pEntity) {m_sAttributes.insert(pEntity);}
-        void RemoveAttribute(attribute *pEntity) {m_sAttributes.erase(pEntity);}
-        std::set<attribute *,EntityCompare> const &GetAttributes() const {return m_sAttributes;}
-        
-        entity *Copy(SGM::Result &rResult) const;
-
-        void TransformBox(SGM::Transform3D const &Trans);
-
-        
-        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
-
-        void ChangeColor(SGM::Result &rResult,
-                         int nRed,int nGreen,int nBlue);
-
-        void RemoveColor(SGM::Result &rResult);
-
-    protected:
-
-        size_t          m_ID;
-        SGM::EntityType m_Type;
-
-        mutable std::set<entity *,EntityCompare>    m_sOwners;
-        mutable std::set<attribute *,EntityCompare> m_sAttributes;
-        mutable SGM::Interval3D                     m_Box;
-
-        // Only to be called from the thing constructor.
-
-        entity();
-    };
-
-inline bool EntityCompare::operator()(entity* const& ent1, entity* const& ent2) const
 {
-    return ent1->GetID() < ent2->GetID();
-}
+public:
+
+    entity(SGM::Result &rResult, SGM::EntityType nType);
+
+    virtual ~entity() = default;
+
+    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
+
+    virtual void ResetBox(SGM::Result &rResult) const;
+
+    virtual entity *Clone(SGM::Result &rResult) const;
+
+    virtual bool GetColor(int &nRed, int &nGreen, int &nBlue) const; // If entity has no color, return false.
+
+    virtual void ReplacePointers(std::map<entity *, entity *> const &mEntityMap);
+
+    virtual void SeverRelations(SGM::Result &rResult);
+
+    size_t GetID() const;
+
+    SGM::EntityType GetType() const;
+
+    bool Check(SGM::Result              &rResult,
+               SGM::CheckOptions const  &Options,
+               std::vector<std::string> &aCheckStrings) const;
+
+    void AddOwner(entity *pEntity);
+
+    void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
+
+    std::set<entity *, EntityCompare> const &GetOwners() const;
+
+    void RemoveOwner(entity *pEntity);
+
+    void AddAttribute(attribute *pEntity);
+
+    std::set<attribute *, EntityCompare> const &GetAttributes() const;
+
+    void RemoveAttribute(attribute *pEntity);
+
+    void TransformBox(SGM::Transform3D const &Trans);
+
+    void ChangeColor(SGM::Result &rResult, int nRed, int nGreen, int nBlue);
+
+    void RemoveColor(SGM::Result &rResult);
+
+protected:
+
+    size_t m_ID;
+    SGM::EntityType m_Type;
+
+    mutable std::set<entity *, EntityCompare> m_sOwners;
+    mutable std::set<attribute *, EntityCompare> m_sAttributes;
+    mutable SGM::Interval3D m_Box;
+
+    // Only to be called from the thing constructor.
+
+    entity() : m_ID(0), m_Type(SGM::ThingType) {}
+
+    entity(const entity&) = default;
+
+    entity(entity&&) = default;
+
+    entity& operator=(const entity&) = default;
+
+    entity& operator=(entity&&) = default;
+
+    void RemoveAllOwners();
+};
 
 class thing : public entity
     {
@@ -106,7 +112,11 @@ class thing : public entity
         
         thing():entity(),m_nNextID(1) {}
 
-        ~thing();
+        ~thing() override;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ResetBox(SGM::Result &rResult) const override { m_Box.Reset(); }
 
         void AddToMap(size_t nID,entity *pEntity);
 
@@ -148,8 +158,6 @@ class thing : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        void ClearBox() const {m_Box.Reset();}
-        
     private:
 
         std::map<size_t,entity* > m_mAllEntities;
@@ -164,6 +172,8 @@ class topology : public entity
 
         topology(SGM::Result     &rResult,
                  SGM::EntityType  Type):entity(rResult,Type) {}
+
+        ~topology() override = default;
     };
 
 class assembly : public topology
@@ -172,14 +182,17 @@ class assembly : public topology
 
         explicit assembly(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
 
+        ~assembly() override = default;
     };
 
 class reference : public topology
     {
     public:
 
-        explicit reference(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+        explicit reference(SGM::Result &rResult) : topology(rResult, SGM::EntityType::BodyType)
+        {}
 
+        ~reference() override = default;
     };
 
 class body : public topology
@@ -190,20 +203,25 @@ class body : public topology
 
         explicit body(SGM::Result &rResult);
 
-        body *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~body() override = default;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ResetBox(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void SeverRelations(SGM::Result &rResult) override;
+
+        body *Clone(SGM::Result &rResult) const override;
 
         void AddVolume(volume *pVolume);
 
         void RemoveVolume(volume *pVolume);
 
-        void SetPoints(std::vector<SGM::Point3D> const &aPoints);
-
         void AddPoint(SGM::Point3D const &Pos);
 
         // Get methods
-
-        SGM::Interval3D const &GetBox() const;
         
         std::set<volume *,EntityCompare> const &GetVolumes() const {return m_sVolumes;}
 
@@ -212,15 +230,13 @@ class body : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const;
+                   bool                      bChildren) const;
 
         bool IsTopLevel() const {return m_sOwners.empty();}
 
         bool IsSheetBody(SGM::Result &rResult) const;
 
         bool IsWireBody(SGM::Result &rResult) const;
-
-        void ClearBox(SGM::Result &rResult) const;
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
@@ -238,8 +254,7 @@ class complex : public topology
 
         explicit complex(SGM::Result &rResult);
 
-        complex *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~complex() override = default;
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints);
@@ -259,7 +274,13 @@ class complex : public topology
 
         // Get methods
 
-        SGM::Interval3D const &GetBox() const;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override
+        { throw std::logic_error("not implemented"); }
+
+        complex *Clone(SGM::Result &rResult) const override
+        { throw std::logic_error("not implemented"); }
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
@@ -277,7 +298,8 @@ class complex : public topology
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings) const;
 
-        double FindVolume(SGM::Result &rResult) const;
+        double FindVolume(SGM::Result &rResult) const
+        { throw std::logic_error("not implemented"); }
 
         void Transform(SGM::Transform3D const &Trans);
 
@@ -294,8 +316,19 @@ class volume : public topology
 
         explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
 
-        volume *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~volume() override = default;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ResetBox(SGM::Result &rResult) const override;
+
+        bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void SeverRelations(SGM::Result &rResult) override;
+
+        volume *Clone(SGM::Result &rResult) const override;
 
         void AddFace(face *pFace);
 
@@ -322,14 +355,12 @@ class volume : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const;
+                   bool                      bChildren) const;
 
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
-
-        void ClearBox(SGM::Result &rResult) const;
 
     private:
     
@@ -348,8 +379,17 @@ class face : public topology
 
         explicit face(SGM::Result &rResult);
 
-        face *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~face() override = default;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        face *Clone(SGM::Result &rResult) const override;
+
+        void SeverRelations(SGM::Result &rResult) override;
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
 
@@ -411,7 +451,7 @@ class face : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const;
+                   bool                      bChildren) const;
 
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,
@@ -453,8 +493,15 @@ class edge : public topology
 
         explicit edge(SGM::Result &rResult);
 
-        edge *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~edge() override = default;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void SeverRelations(SGM::Result &rResult) override;
+
+        edge *Clone(SGM::Result &rResult) const override;
 
         // Set and Remove Methods
 
@@ -506,7 +553,7 @@ class edge : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const;
+                   bool                      bChildren) const;
 
         double FindLength(double dTolerance) const;
 
@@ -545,8 +592,15 @@ class vertex : public topology
         vertex(SGM::Result  &rResult,
                vertex const *pVertex);
 
-        vertex *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        ~vertex() override = default;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void SeverRelations(SGM::Result &rResult) override;
+
+        vertex *Clone(SGM::Result &rResult) const override;
 
         void AddEdge(edge *pEdge) {m_sEdges.insert(pEdge);}
 
@@ -583,6 +637,8 @@ class attribute : public entity
                   std::string const &Name):
             entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(Type) {}
 
+        ~attribute() override = default;
+
         std::string const &GetName() const {return m_Name;}
 
         SGM::EntityType GetAttributeType() const {return m_AttributeType;}
@@ -604,6 +660,8 @@ class StringAttribute : public attribute
                         std::string const &Data):
             attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(Data) {}
 
+        ~StringAttribute() override = default;
+
         std::string const &GetData() const {return m_Data;}
 
     private:
@@ -621,6 +679,8 @@ class IntegerAttribute : public attribute
                          std::vector<int> const &aData):
             attribute(rResult,SGM::EntityType::IntegerAttributeType,Name),m_aData(aData) {}
 
+        ~IntegerAttribute() override = default;
+
         std::vector<int> const &GetData() const {return m_aData;}
 
     private:
@@ -636,6 +696,8 @@ class DoubleAttribute : public attribute
                         std::string         const &Name,
                         std::vector<double> const &aData):
         attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
+
+        ~DoubleAttribute() override = default;
 
         std::vector<double> const &GetData() const {return m_aData;}
 
@@ -653,6 +715,8 @@ class CharAttribute : public attribute
                       std::vector<char> const &aData):
         attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
 
+        ~CharAttribute() override = default;
+
         std::vector<char> const &GetData() const {return m_aData;}
 
     private:
@@ -660,5 +724,7 @@ class CharAttribute : public attribute
         std::vector<char> m_aData;
     };
 }
+
+#include "Inline/EntityClasses.inl"
 
 #endif // ENTITY_CLASSES_H

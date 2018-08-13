@@ -1,3 +1,4 @@
+#include <EntityFunctions.h>
 #include "EntityClasses.h"
 #include "Topology.h"
 
@@ -9,7 +10,7 @@ body::body(SGM::Result &rResult):
     {
     }
 
-body *body::MakeCopy(SGM::Result &rResult) const
+body *body::Clone(SGM::Result &rResult) const
     {
     body *pAnswer=new body(rResult);
     pAnswer->m_sVolumes=m_sVolumes;
@@ -84,10 +85,28 @@ void body::AddPoint(SGM::Point3D const &Pos)
     m_aPoints.push_back(Pos);
     }
 
-void body::ClearBox(SGM::Result &rResult) const
+SGM::Interval3D const &body::GetBox(SGM::Result &rResult) const
+    {
+    if (m_Box.IsEmpty())
+        {
+        std::set<volume *,EntityCompare> const &sVolumes = GetVolumes();
+        StretchBox(rResult,m_Box,sVolumes.begin(),sVolumes.end());
+        }
+    return m_Box;
+    }
+
+void body::ResetBox(SGM::Result &rResult) const
     {
     m_Box.Reset();
-    rResult.GetThing()->ClearBox();
+    rResult.GetThing()->ResetBox(rResult);
+    }
+
+void body::SeverRelations(SGM::Result &rResult)
+    {
+    std::set<volume *,EntityCompare> sVolumes=GetVolumes();
+    for(volume *pVolume : sVolumes)
+        RemoveVolume(pVolume);
+    RemoveAllOwners();
     }
 
 double body::FindVolume(SGM::Result &rResult,bool bApproximate) const

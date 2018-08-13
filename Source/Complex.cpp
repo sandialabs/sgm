@@ -50,6 +50,13 @@ complex::complex(SGM::Result                     &rResult,
         m_aTriangles(aTriangles)
     {}
 
+SGM::Interval3D const &complex::GetBox(SGM::Result &rResult) const
+    {
+    if (m_Box.IsEmpty())
+        m_Box=SGM::Interval3D(GetPoints());
+    return m_Box;
+    }
+
 void complex::Transform(SGM::Transform3D const &Trans)
     {
     size_t nPoints=m_aPoints.size();

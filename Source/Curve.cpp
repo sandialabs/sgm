@@ -35,7 +35,7 @@ void curve::RemoveEdge(edge *pEdge)
     m_sEdges.erase(pEdge);
     }
 
-curve *curve::MakeCopy(SGM::Result &rResult) const
+curve *curve::Clone(SGM::Result &rResult) const
     {
     curve *pAnswer=NULL;
     switch(m_CurveType)

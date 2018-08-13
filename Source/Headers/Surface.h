@@ -40,8 +40,9 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
-        surface *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        surface *Clone(SGM::Result &rResult) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void AddFace(face *pFace);
 

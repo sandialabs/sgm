@@ -13,7 +13,7 @@ edge::edge(SGM::Result &rResult):
     m_dTolerance=SGM_MIN_TOL;
     }
 
-edge *edge::MakeCopy(SGM::Result &rResult) const
+edge *edge::Clone(SGM::Result &rResult) const
     {
     edge *pAnswer=new edge(rResult);
     pAnswer->m_pStart=m_pStart;
@@ -29,6 +29,37 @@ edge *edge::MakeCopy(SGM::Result &rResult) const
     pAnswer->m_sAttributes=m_sAttributes;
     pAnswer->m_sOwners=m_sOwners;
     return pAnswer;
+    }
+
+SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
+    {
+    if (m_Box.IsEmpty())
+        {
+        auto aPoints = GetFacets(rResult);
+        size_t nPoints = aPoints.size();
+        size_t Index1;
+        double dMaxLength = 0;
+        for(Index1 = 1; Index1<nPoints; ++Index1)
+            {
+            double dLength = aPoints[Index1].DistanceSquared(aPoints[Index1-1]);
+            dMaxLength = std::max(dMaxLength, dLength);
+            }
+        m_Box = SGM::Interval3D(aPoints);
+        m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
+        }
+    return m_Box;
+    }
+
+void edge::SeverRelations(SGM::Result &rResult)
+    {
+    std::set<face *,EntityCompare> sFaces=GetFaces();
+    for(auto pFace : sFaces)
+        pFace->RemoveEdge(rResult,this);
+    if(GetStart())
+        GetStart()->RemoveEdge(this);
+    if(GetEnd())
+        GetEnd()->RemoveEdge(this);
+    RemoveAllOwners();
     }
 
 void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
