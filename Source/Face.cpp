@@ -352,12 +352,139 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
-        SGM::Point3D const &VertexPos=((vertex *)pEntity)->GetPoint();
+        vertex *pVertex=(vertex *)pEntity;
+        SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)
             {
             *pPos=VertexPos;
             }
-        return SGM::NearEqual(VertexPos, Pos, SGM_ZERO);
+        if(SGM::NearEqual(VertexPos, Pos, SGM_ZERO))
+            {
+            return true;
+            }
+        else
+            {
+            // Consider the non-seam edges of the vertex on this face.
+            
+            std::set<edge *,EntityCompare> const &sVertexEdges=pVertex->GetEdges();
+            std::vector<edge *> aTestEdges;
+            for(auto *pEdge : sVertexEdges)
+                {
+                std::set<face *,EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
+                if(sEdgeFaces.find((face *)this)!=sEdgeFaces.end())
+                    {
+                    aTestEdges.push_back(pEdge);
+                    }
+                }
+            if(aTestEdges.size()==1)
+                {
+                edge *pEdge=aTestEdges[0];
+                SGM::EdgeSideType nSideType=GetSideType(pEdge);
+                SGM::Vector3D StartDir=pEdge->FindStartVector();
+                SGM::Vector3D EndDir=pEdge->FindEndVector();
+                EndDir.Negate();
+                SGM::Point2D uvC=EvaluateParamSpace(pEdge,nSideType,VertexPos);
+                SGM::Point2D uvA=uvC,uvB=uvC;
+                if(nSideType==SGM::FaceOnLeftType)
+                    {
+                    uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                    uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                    }
+                else if(nSideType==SGM::FaceOnRightType)
+                    {
+                    uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                    uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                    }
+                else
+                    {
+                    throw;  // A case that has not been considered.
+                    }
+
+                return InAngle(uvC,uvA,uvB,uv);
+                }
+            else if(aTestEdges.size()==2)
+                {
+                edge *pEdge0=aTestEdges[0];
+                edge *pEdge1=aTestEdges[1];
+                SGM::EdgeSideType nSideType0=GetSideType(pEdge0);
+                SGM::EdgeSideType nSideType1=GetSideType(pEdge1);
+                SGM::Point2D uvC=EvaluateParamSpace(pEdge0,nSideType0,VertexPos);
+                SGM::Point2D uvA=uvC,uvB=uvC;
+
+                if(nSideType0==SGM::FaceOnLeftType)
+                    {
+                    if(pEdge0->GetStart()==pVertex)
+                        {
+                        SGM::Vector3D StartDir=pEdge0->FindStartVector();
+                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        }
+                    else
+                        {
+                        SGM::Vector3D EndDir=pEdge0->FindEndVector();
+                        EndDir.Negate();
+                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        }
+                    }
+                else if(nSideType0==SGM::FaceOnRightType)
+                    {
+                    if(pEdge0->GetStart()==pVertex)
+                        {
+                        SGM::Vector3D StartDir=pEdge0->FindStartVector();
+                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        }
+                    else
+                        {
+                        SGM::Vector3D EndDir=pEdge0->FindEndVector();
+                        EndDir.Negate();
+                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        }
+                    }
+                else
+                    {
+                    throw;  // A case that has not been considered.
+                    }
+
+                if(nSideType1==SGM::FaceOnLeftType)
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        SGM::Vector3D StartDir=pEdge1->FindStartVector();
+                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        }
+                    else
+                        {
+                        SGM::Vector3D EndDir=pEdge1->FindEndVector();
+                        EndDir.Negate();
+                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        }
+                    }
+                else if(nSideType1==SGM::FaceOnRightType)
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        SGM::Vector3D StartDir=pEdge1->FindStartVector();
+                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        }
+                    else
+                        {
+                        SGM::Vector3D EndDir=pEdge1->FindEndVector();
+                        EndDir.Negate();
+                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        }
+                    }
+                else
+                    {
+                    throw;  // A case that has not been considered.
+                    }
+                return InAngle(uvC,uvA,uvB,uv);
+                }
+            else
+                {
+                throw;  // More code has to be added for the 
+                // case of being closest to a vertex with more than 
+                // two edges on the given face.
+                }
+            }
         }
     }
 

@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <vector>
+#include <algorithm>
 
 #include "sgm_export.h"
 
@@ -13,8 +14,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #define SGM_INTERVAL_TOLERANCE 1E-12
-#define SGM_INTERVAL_POS_MAX (std::numeric_limits<double>::max())
-#define SGM_INTERVAL_NEG_MIN (-std::numeric_limits<double>::max())
+#define SGM_INTERVAL_POS_MAX 1E+12//(std::numeric_limits<double>::max())
+#define SGM_INTERVAL_NEG_MIN -1E+12//(-std::numeric_limits<double>::max())
 
 namespace SGM {
 

@@ -131,6 +131,10 @@ public:
 
     void Copy(SGM::Entity EntityID);
 
+    void Cover(SGM::Entity EntityID);
+
+    void Merge(SGM::Entity EngityID);
+
     void Unhook(std::vector<SGM::Entity> &aEnts);
 
     void DeleteEntity(SGM::Entity EntityID);
@@ -148,6 +152,8 @@ public:
         dDefaultEdgeGreen = nGreen / 255.0;
         dDefaultEdgeBlue = nBlue / 255.0;
     }
+
+    SGM::Result GetResult() const;
 
     void rebuild_tree();
 

@@ -128,6 +128,12 @@ class surface : public entity
 
         void SnapToDomain(SGM::Point2D &uv) const;
 
+        // Returns the two-dimensional unit vector in the parameters space 
+        // of this surface that Vec projects onto at the point uv.
+        
+        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D        &uv,
+                                               SGM::Vector3D const &Vec) const;
+
     protected:
 
         std::set<face *,EntityCompare> m_sFaces;

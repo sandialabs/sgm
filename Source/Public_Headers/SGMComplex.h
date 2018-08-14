@@ -76,6 +76,12 @@ namespace SGM
                                        SGM::Complex        const &SliceID,
                                        std::vector<SGM::Complex> &aComponents);
 
+    SGM_EXPORT SGM::Complex CoverComplex(SGM::Result        &rResult,
+                                         SGM::Complex const &ComplexID);
+
+    SGM_EXPORT SGM::Complex MergeComplex(SGM::Result        &rResult,
+                                         SGM::Complex const &ComplexID);
+
     } // End of SGM namespace
 
 #endif // SGM_COMPLEX_H

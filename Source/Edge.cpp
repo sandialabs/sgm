@@ -290,6 +290,20 @@ SGM::Point3D const &edge::FindEndPoint() const
     return m_pEnd->GetPoint();
     }
 
+SGM::Vector3D edge::FindStartVector() const
+    {
+    SGM::Vector3D Answer;
+    m_pCurve->Evaluate(m_Domain.m_dMin,nullptr,&Answer);
+    return Answer;
+    }
+
+SGM::Vector3D edge::FindEndVector() const
+    {
+    SGM::Vector3D Answer;
+    m_pCurve->Evaluate(m_Domain.m_dMax,nullptr,&Answer);
+    return Answer;
+    }
+
 SGM::Point3D edge::FindMidPoint(double dFraction) const
     {
     SGM::Point3D Pos;

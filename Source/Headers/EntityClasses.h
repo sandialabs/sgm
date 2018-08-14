@@ -302,6 +302,12 @@ class complex : public topology
 
         void Transform(SGM::Transform3D const &Trans);
 
+        complex *Cover(SGM::Result &rResult) const;
+
+        complex *Merge(SGM::Result &rResult) const;
+
+        std::vector<complex *> FindBoundary(SGM::Result &rResult) const;
+
     private:
 
         std::vector<SGM::Point3D> m_aPoints;
@@ -553,6 +559,10 @@ class edge : public topology
         SGM::Point3D const &FindStartPoint() const;
 
         SGM::Point3D const &FindEndPoint() const;
+
+        SGM::Vector3D FindStartVector() const;
+
+        SGM::Vector3D FindEndVector() const;
 
         SGM::Point3D FindMidPoint(double dFraction=0.5) const;
 

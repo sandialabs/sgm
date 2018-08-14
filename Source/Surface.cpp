@@ -1800,6 +1800,17 @@ void surface::SnapToDomain(SGM::Point2D &uv) const
         }
     }
 
+SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
+                                                SGM::Vector3D const &Vec) const
+    {
+    SGM::Vector3D Du,Dv;
+    Evaluate(uv,nullptr,&Du,&Dv);
+    SGM::UnitVector3D UDu=Du,VDv=Dv;
+    double du=UDu%Vec;
+    double dv=VDv%Vec;
+    return SGM::UnitVector2D(du,dv);
+    }
+
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
                               SGM::Point3D       *ClosePos,
                               SGM::Point2D const *pGuess) const

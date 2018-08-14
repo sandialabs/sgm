@@ -410,6 +410,22 @@ SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
     return {pComplex->GetID()};
     }
 
+SGM::Complex SGM::CoverComplex(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->Cover(rResult);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->Merge(rResult);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
 void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies,

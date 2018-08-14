@@ -106,6 +106,14 @@ namespace SGM
                                SGM::Point2D const &B,
                                SGM::Point2D const &C,
                                SGM::Point2D const &D);
+
+    // Returns true if D is on the same side of line AB and C
+    // and D is on the same side of line AC as B.
+
+    SGM_EXPORT bool InAngle(SGM::Point2D const &A,
+                            SGM::Point2D const &B,
+                            SGM::Point2D const &C,
+                            SGM::Point2D const &D);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
