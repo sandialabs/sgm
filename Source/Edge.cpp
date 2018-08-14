@@ -31,6 +31,15 @@ edge *edge::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void edge::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(GetCurve());
+    if(vertex * start = GetStart())
+        sChildren.insert(start);
+    if(vertex * end = GetEnd())
+        sChildren.insert(end);
+    }
+
 SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

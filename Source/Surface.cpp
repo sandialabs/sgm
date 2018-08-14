@@ -46,6 +46,16 @@ surface *surface::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void surface::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    // do nothing, derived classes can override
+    }
+
+void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(m_pCurve);
+    }
+
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     

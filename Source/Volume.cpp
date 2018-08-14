@@ -11,6 +11,20 @@
 namespace SGMInternal
 {
 
+void volume::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    for (auto pFace : GetFaces())
+        {
+        sChildren.insert(pFace);
+        pFace->FindAllChildren(sChildren);
+        }
+    for (auto pEdge : GetEdges())
+        {
+        sChildren.insert(pEdge);
+        pEdge->FindAllChildren(sChildren);
+        }
+    }
+
 body *volume::GetBody() const
     {
     return m_pBody;

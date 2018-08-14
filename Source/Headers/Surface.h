@@ -47,6 +47,8 @@ class surface : public entity
 
         surface *Clone(SGM::Result &rResult) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void AddFace(face *pFace);
@@ -405,7 +407,9 @@ class revolve : public surface
 
         ~revolve();
 
-        void SetCurve(curve *pCurve);
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+    void SetCurve(curve *pCurve);
 
     public:
 

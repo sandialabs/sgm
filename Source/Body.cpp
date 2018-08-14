@@ -18,6 +18,15 @@ body *body::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void body::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    for (auto pVolume : GetVolumes())
+        {
+        sChildren.insert(pVolume);
+        pVolume->FindAllChildren(sChildren);
+        }
+    }
+
 void body::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.

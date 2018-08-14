@@ -64,12 +64,11 @@ class curve : public entity
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
-
-        void Remove(SGM::Result &rResult);
-
         curve *Clone(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void Remove(SGM::Result &rResult);
 
         void AddEdge(edge *pEdge);
 

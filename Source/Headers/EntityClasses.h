@@ -1,32 +1,28 @@
 #ifndef SGM_INTERNAL_ENTITY_CLASSES_H
 #define SGM_INTERNAL_ENTITY_CLASSES_H
 
-#include "SGMVector.h"
-#include "SGMEntityClasses.h"
-#include "SGMChecker.h"
-#include "SGMMathematics.h"
-#include "SGMInterval.h"
-#include "SGMEnums.h"
-#include "SGMBoxTree.h"
-
-#include <vector>
-#include <set>
 #include <map>
+#include <set>
+#include <vector>
+#include <utility>
+
+#include "SGMChecker.h"
+#include "SGMBoxTree.h"
 
 namespace SGMInternal
 {
 
-class thing;
-class complex;
-class body;
-class volume;
-class face;
-class edge;
-class vertex;
-class surface;
-class curve;
-class entity;
 class attribute;
+class body;
+class complex;
+class curve;
+class edge;
+class entity;
+class face;
+class surface;
+class thing;
+class vertex;
+class volume;
 
 struct EntityCompare {
     bool operator()(entity* const& ent1, entity* const& ent2) const;
@@ -47,6 +43,8 @@ public:
 
     virtual entity *Clone(SGM::Result &rResult) const;
 
+    virtual void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
+
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
 
     virtual void ResetBox(SGM::Result &rResult) const;
@@ -62,8 +60,6 @@ public:
     SGM::EntityType GetType() const;
 
     void AddOwner(entity *pEntity);
-
-    void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
 
     std::set<entity *, EntityCompare> const &GetOwners() const;
 
@@ -212,6 +208,8 @@ class body : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ResetBox(SGM::Result &rResult) const override;
@@ -324,6 +322,8 @@ class volume : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ResetBox(SGM::Result &rResult) const override;
@@ -385,6 +385,8 @@ class face : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
@@ -422,9 +424,7 @@ class face : public topology
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
-        std::vector<entity *> const &GetEntities() const;
-
-        surface const *GetSurface() const {return m_pSurface;}
+        surface *GetSurface() const {return m_pSurface;}
 
         // Returns true if the face is on the left as one moves from 
         // start to end, while standing up in the direction of the face
@@ -499,6 +499,8 @@ class edge : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -530,7 +532,7 @@ class edge : public topology
 
         vertex *GetEnd() const {return m_pEnd;}
 
-        curve const *GetCurve() const {return m_pCurve;}
+        curve *GetCurve() const {return m_pCurve;}
 
         SGM::Interval1D const &GetDomain() const;
 
@@ -598,6 +600,8 @@ class vertex : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &) const override { }
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -629,8 +633,8 @@ class attribute : public entity
     public:
 
         attribute(SGM::Result       &rResult,
-                  std::string const &Name):
-            entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(SGM::AttributeType) {}
+                  std::string Name):
+            entity(rResult,SGM::AttributeType),m_Name(std::move(Name)),m_AttributeType(SGM::AttributeType) {}
 
         attribute(SGM::Result       &rResult,
                   SGM::EntityType    Type,
@@ -662,8 +666,8 @@ class StringAttribute : public attribute
 
         StringAttribute(SGM::Result       &rResult,
                         std::string const &Name,
-                        std::string const &Data):
-            attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(Data) {}
+                        std::string Data):
+            attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(std::move(Data)) {}
 
         ~StringAttribute() override = default;
 

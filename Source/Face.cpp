@@ -49,6 +49,16 @@ face *face::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(GetSurface());
+    for (auto pEdge : GetEdges())
+        {
+        sChildren.insert(pEdge);
+        pEdge->FindAllChildren(sChildren);
+        }
+    }
+
 SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())
