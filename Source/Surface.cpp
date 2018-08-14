@@ -1444,10 +1444,6 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         double dDot=(Pos-SurfPos)%Norm;
-        if(fabs(dDot)<SGM_ZERO)
-            {
-            break;
-            }
         SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
@@ -1788,6 +1784,17 @@ void surface::SnapToDomain(SGM::Point2D &uv) const
             uv.m_v=m_Domain.m_VDomain.m_dMax;
             }
         }
+    }
+
+SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
+                                                SGM::Vector3D const &Vec) const
+    {
+    SGM::Vector3D Du,Dv;
+    Evaluate(uv,nullptr,&Du,&Dv);
+    SGM::UnitVector3D UDu=Du,VDv=Dv;
+    double du=UDu%Vec;
+    double dv=VDv%Vec;
+    return SGM::UnitVector2D(du,dv);
     }
 
 SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,

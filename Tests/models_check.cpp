@@ -10,6 +10,8 @@
 #include <SGMPrimitives.h>
 #include <SGMTranslators.h>
 
+//#define PRSCOPY 1
+
 #ifdef _MSC_VER
 #include <Windows.h>
 #else
@@ -39,7 +41,7 @@ static const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".
 enum ModelsCheckResult: int { SUCCESS=0, FAIL_READ, FAIL_CHECK, FAIL_TIMEOUT };
 
 // limit
-static const size_t MODELS_CHECK_TIMEOUT = 20000000; // milliseconds
+static const size_t MODELS_CHECK_TIMEOUT = 10000; // milliseconds
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -217,7 +219,7 @@ void concatenate_log_files()
         return;
         }
 
-    //output_log.exceptions(std::ofstream::badbit | std::ofstream::failbit);
+    output_log.exceptions(std::ofstream::badbit | std::ofstream::failbit);
 
     // get a list of all the *.log files in the directory, besides the SGM_MODELS_LOG_FILE
     std::vector<std::string> log_files = get_file_names_if(SGM_MODELS_DIRECTORY, has_log_extension);
@@ -232,10 +234,10 @@ void concatenate_log_files()
             std::cerr << "Error: Could not open log file: '" << path_name << "'" << std::endl;
             continue;
             }
-        //input_log.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+        input_log.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         std::string str;
 
-#if PRSCOPY
+#if 1
 
         bool bFirst=true;
         std::string file_path = "c:/sgm-models/";
@@ -323,6 +325,7 @@ int check_file(std::string const &/*file_path*/, SGM::Result &result, std::ofstr
     else
         {
         // Copy passed files to the "Check Errors" directory.  PRS
+        std::string file_path("C:/sgm-models");
         const testing::internal::FilePath file_path_object(file_path);
         auto file_name_only = file_path_object.RemoveFileName();
         std::string BaseDir=file_name_only.string();
@@ -420,8 +423,8 @@ void import_check_log_process(std::string const &file_path)
         std::cerr << "Success" << std::endl; // gtest will EXPECT this
         log_file << current_date_time() << ", Success " << time_in_milliseconds << "ms." << std::endl;
 
-        // Copy passed files to the passed directory.  PRS
         /*
+        // Copy passed files to the passed directory.  PRS
         const testing::internal::FilePath file_path_object(file_path);
         auto file_name_only = file_path_object.RemoveFileName();
         std::string BaseDir=file_name_only.string();
@@ -549,12 +552,12 @@ TEST(ModelDeathTest, sgm_models)
     for (const std::string& name : names)
         {
         std::string path_name = std::string(SGM_MODELS_DIRECTORY) + "/" + name;
-        //std::cout << "Checking " << path_name << std::endl << std::flush;
-        //printf("Checking %s\n",path_name.c_str());
+        std::cout << "Checking " << path_name << std::endl << std::flush;
+        printf("Checking %s\n",path_name.c_str());
         EXPECT_EXIT(import_check_log_process(path_name),
                     ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),
                     "Success");
         }
 
     concatenate_log_files();
-}
+    }

@@ -3448,8 +3448,8 @@ bool AddGrid(SGM::Result                    &rResult,
     if(pSurface->GetSurfaceType()==SGM::TorusType)
         {
         SGM::Interval2D Box(aPoints2D);
-        size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
-        size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dEdgeAngleTol+SGM_MIN_TOL);
+        size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+        size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
         double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
         std::vector<SGM::Point2D> aInsertPoints;
         aInsertPoints.reserve(nU*nV);

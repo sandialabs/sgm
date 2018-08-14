@@ -164,14 +164,14 @@ inline bool InTriangleInline(SGM::Point2D const &A,
                              SGM::Point2D const &C,
                              SGM::Point2D const &D)
     {
-        bool b1 = SGMInternal::sign(D, A, B) < 0;
-        bool b2 = SGMInternal::sign(D, B, C) < 0;
-        if (b1 == b2)
-            {
-            bool b3 = SGMInternal::sign(D, C, A) < 0;
-            return b2 == b3;
-            }
-        return false;
+    bool b1 = SGMInternal::sign(D, A, B) < 0;
+    bool b2 = SGMInternal::sign(D, B, C) < 0;
+    if (b1 == b2)
+        {
+        bool b3 = SGMInternal::sign(D, C, A) < 0;
+        return b2 == b3;
+        }
+    return false;
     }
 
 bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
@@ -761,6 +761,20 @@ bool InTriangle(Point2D const &A,
         }
     return false;
     }
+
+
+bool InAngle(SGM::Point2D const &A,
+                    SGM::Point2D const &B,
+                    SGM::Point2D const &C,
+                    SGM::Point2D const &D)
+    {
+    A;
+    B;
+    C;
+    D;
+    return true;
+    }
+
 
 bool InCircumcircle(SGM::Point2D const &A,
                     SGM::Point2D const &B,

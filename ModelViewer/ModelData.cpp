@@ -10,6 +10,7 @@
 #include "SGMEntityFunctions.h"
 #include "SGMAttribute.h"
 #include "SGMVector.h"
+#include "SGMComplex.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
@@ -330,6 +331,20 @@ void ModelData::Copy(SGM::Entity EntityID)
     rebuild_graphics(false);
 }
 
+void ModelData::Cover(SGM::Entity EntityID)
+{
+    SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_graphics(false);
+}
+
+void ModelData::Merge(SGM::Entity EntityID)
+{
+    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_graphics(false);
+}
+
 void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
 {
     std::vector<SGM::Face> aFaces;
@@ -348,6 +363,11 @@ void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
     rebuild_graphics(false);
+}
+
+SGM::Result ModelData::GetResult() const
+{
+    return dPtr->mResult;
 }
 
 void ModelData::create_torus_knot(SGM::Point3D const &Center,
@@ -1463,9 +1483,9 @@ void ModelData::rebuild_graphics(bool bReset)
                 }
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
-                SGM::Point3D const &A=aPoints[complex_triangles[Index1]];
-                SGM::Point3D const &B=aPoints[complex_triangles[Index1+1]];
-                SGM::Point3D const &C=aPoints[complex_triangles[Index1+2]];
+                SGM::Point3D const &A=aPoints[aTriangles[Index1]];
+                SGM::Point3D const &B=aPoints[aTriangles[Index1+1]];
+                SGM::Point3D const &C=aPoints[aTriangles[Index1+2]];
                 SGM::UnitVector3D Norm=(B-A)*(C-A);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);

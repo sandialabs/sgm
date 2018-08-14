@@ -2,6 +2,8 @@
 #include "SGMInterval.h"
 #include "SGMComplex.h"
 #include "SGMTranslators.h"
+#include "SGMBoxTree.h"
+
 #include "EntityClasses.h"
 
 namespace SGMInternal
@@ -58,6 +60,61 @@ void complex::Transform(SGM::Transform3D const &Trans)
         {
         m_aPoints[Index1]*=Trans;
         }
+    }
+
+complex *complex::Cover(SGM::Result &rResult) const
+    {
+    rResult;
+    return nullptr;
+    }
+
+complex *complex::Merge(SGM::Result &rResult) const
+    {
+    // Find duplicate points.
+
+    SGM::BoxTree BTree;
+    size_t Index1;
+    size_t nPoints=m_aPoints.size();
+    double dTolerance=SGM_MIN_TOL;
+    std::map<size_t,size_t> mMergeMap;
+    SGM::Point3D const *pBase=&m_aPoints[0];
+    std::vector<SGM::Point3D> aNewPoints;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=m_aPoints[Index1];
+        SGM::Interval3D Bound(Pos,dTolerance);
+        std::vector<SGM::BoxTree::BoundedItemType> aHits=BTree.FindIntersectsPoint(Pos,dTolerance);
+        if(aHits.empty())
+            {
+            BTree.Insert(&m_aPoints[Index1],Bound);
+            mMergeMap[Index1]=aNewPoints.size();
+            aNewPoints.push_back(Pos);
+            }
+        else
+            {
+            mMergeMap[Index1]=mMergeMap[(SGM::Point3D const *)aHits[0].first-pBase];
+            }
+        }
+
+    // Remap points to their first version.
+
+    size_t nSegments=m_aSegments.size();
+    std::vector<unsigned int> aNewSegments;
+    aNewSegments.reserve(nSegments);
+    for(Index1=0;Index1<nSegments;++Index1)
+        {
+        aNewSegments.push_back((unsigned int)mMergeMap[m_aSegments[Index1]]);
+        }
+
+    size_t nTriangles=m_aTriangles.size();
+    std::vector<unsigned int> aNewTriangles;
+    aNewTriangles.reserve(nTriangles);
+    for(Index1=0;Index1<nTriangles;++Index1)
+        {
+        aNewTriangles.push_back((unsigned int)mMergeMap[m_aTriangles[Index1]]);
+        }
+
+    return new complex(rResult,aNewPoints,aNewSegments,aNewTriangles);
     }
 
 double complex::Area() const
