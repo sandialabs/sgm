@@ -426,6 +426,13 @@ SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
     return SGM::Complex(pAnswer->GetID());
     }
 
+std::vector<SGM::Complex> SGM::FindBoundary(SGM::Result        &,//rResult,
+                                            SGM::Complex const &)//ComplexID)
+    {
+    std::vector<SGM::Complex> aAnswer;
+    return aAnswer;
+    }
+
 void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies,

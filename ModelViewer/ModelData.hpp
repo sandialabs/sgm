@@ -135,6 +135,8 @@ public:
 
     void Merge(SGM::Entity EngityID);
 
+    void Boundary(SGM::Entity EngityID);
+
     void Unhook(std::vector<SGM::Entity> &aEnts);
 
     void DeleteEntity(SGM::Entity EntityID);

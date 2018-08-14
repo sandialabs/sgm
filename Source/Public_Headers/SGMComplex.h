@@ -82,6 +82,9 @@ namespace SGM
     SGM_EXPORT SGM::Complex MergeComplex(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);
 
+    SGM_EXPORT std::vector<SGM::Complex> FindBoundary(SGM::Result        &rResult,
+                                                      SGM::Complex const &ComplexID);
+
     } // End of SGM namespace
 
 #endif // SGM_COMPLEX_H

@@ -66,6 +66,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     *option_unhook=nullptr,
                     *option_cover=nullptr,
                     *option_rebuild=nullptr,
+                    *option_boundary=nullptr,
                     *option_merge=nullptr;
 
             option_color = menu.addAction(tr("Set Color"));
@@ -81,6 +82,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 {
                 option_cover = menu.addAction(tr("Cover"));
                 option_merge = menu.addAction(tr("Merge"));
+                option_boundary = menu.addAction(tr("Boundary"));
                 }
             option_rebuild = menu.addAction(tr("Rebuild Tree"));
 
@@ -125,6 +127,13 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 for(Index1=0;Index1<nEnts;++Index1)
                     {
                     mModel->Merge(aEnts[Index1]);
+                    }
+                }
+            else if(result == option_boundary)
+                {
+                for(Index1=0;Index1<nEnts;++Index1)
+                    {
+                    mModel->Boundary(aEnts[Index1]);
                     }
                 }
             else if(result == option_delete)

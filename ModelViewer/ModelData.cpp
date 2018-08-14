@@ -345,6 +345,13 @@ void ModelData::Merge(SGM::Entity EntityID)
     rebuild_graphics(false);
 }
 
+void ModelData::Boundary(SGM::Entity EntityID)
+{
+    SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_graphics(false);
+}
+
 void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
 {
     std::vector<SGM::Face> aFaces;
