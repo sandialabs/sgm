@@ -763,15 +763,11 @@ bool InTriangle(Point2D const &A,
     }
 
 
-bool InAngle(SGM::Point2D const &A,
-                    SGM::Point2D const &B,
-                    SGM::Point2D const &C,
-                    SGM::Point2D const &D)
+bool InAngle(SGM::Point2D const &,//A,
+             SGM::Point2D const &,//B,
+             SGM::Point2D const &,//C,
+             SGM::Point2D const &)//D)
     {
-    A;
-    B;
-    C;
-    D;
     return true;
     }
 
@@ -1142,6 +1138,7 @@ bool TriangulatePolygon(Result                                        &rResult,
         std::vector<unsigned int> aSubTriangles, aSubAdjacencies;
         TriangulatePolygonSub(rResult, aPoints, aaaPolygonGroups[Index1], aSubTriangles, aSubAdjacencies);
         size_t nSubTriangles = aSubTriangles.size();
+        aTriangles.reserve(aTriangles.size() + nSubTriangles);
         for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
             {
             aTriangles.push_back(aSubTriangles[Index2]);

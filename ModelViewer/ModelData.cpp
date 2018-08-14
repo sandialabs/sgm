@@ -478,7 +478,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
             }
         else
             {
-            snprintf(Data0, sizeof(Data0), "1 Point", nPoints);
+            snprintf(Data0, sizeof(Data0), "1 Point");
             }
         points_item->setText(0, "Points");
         points_item->setText(1, Data0);

@@ -2612,12 +2612,12 @@ void FixEdgeData(surface                                         const *pSurface
                  std::set<EdgeValue>                                   &sEdgeData,
                  std::map<std::pair<unsigned int,unsigned int>,double> &mEdgeData)
     {
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,0)],nTri1,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,1)],nTri1,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,2)],nTri1,2));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,0)],nTri2,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,1)],nTri2,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,2)],nTri2,2));
+    sEdgeData.erase({mEdgeData[{nTri1,0}],nTri1,0});
+    sEdgeData.erase({mEdgeData[{nTri1,1}],nTri1,1});
+    sEdgeData.erase({mEdgeData[{nTri1,2}],nTri1,2});
+    sEdgeData.erase({mEdgeData[{nTri2,0}],nTri2,0});
+    sEdgeData.erase({mEdgeData[{nTri2,1}],nTri2,1});
+    sEdgeData.erase({mEdgeData[{nTri2,2}],nTri2,2});
 
     unsigned int A2=aTriangles[nTri1];
     unsigned int B2=aTriangles[nTri1+1];
@@ -2629,38 +2629,38 @@ void FixEdgeData(surface                                         const *pSurface
     if(aTriangles[nTri1]<aTriangles[nTri1+1] && aAdjacencies[nTri1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,A2,B2);
-        sEdgeData.insert(EdgeValue(dVal,nTri1,0));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,0)]=dVal;
+        sEdgeData.emplace(dVal,nTri1,0);
+        mEdgeData[{nTri1,0}]=dVal;
         }
     if(aTriangles[nTri1+1]<aTriangles[nTri1+2] && aAdjacencies[nTri1+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,B2,C2);
-        sEdgeData.insert(EdgeValue(dVal,nTri1,1));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,1)]=dVal;
+        sEdgeData.emplace(dVal,nTri1,1);
+        mEdgeData[{nTri1,1}]=dVal;
         }
     if(aTriangles[nTri1+2]<aTriangles[nTri1] && aAdjacencies[nTri1+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,C2,A2);
-        sEdgeData.insert(EdgeValue(dVal,nTri1,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri1,2)]=dVal;
+        sEdgeData.emplace(dVal,nTri1,2);
+        mEdgeData[{nTri1,2}]=dVal;
         }
     if(aTriangles[nTri2]<aTriangles[nTri2+1] && aAdjacencies[nTri2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,D2,E2);
-        sEdgeData.insert(EdgeValue(dVal,nTri2,0));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,0)]=dVal;
+        sEdgeData.emplace(dVal,nTri2,0);
+        mEdgeData[{nTri2,0}]=dVal;
         }
     if(aTriangles[nTri2+1]<aTriangles[nTri2+2] && aAdjacencies[nTri2+1]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,E2,F2);
-        sEdgeData.insert(EdgeValue(dVal,nTri2,1));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,1)]=dVal;
+        sEdgeData.emplace(dVal,nTri2,1);
+        mEdgeData[{nTri2,1}]=dVal;
         }
     if(aTriangles[nTri2+2]<aTriangles[nTri2] && aAdjacencies[nTri2+2]!=std::numeric_limits<unsigned int>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,F2,D2);
-        sEdgeData.insert(EdgeValue(dVal,nTri2,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nTri2,2)]=dVal;
+        sEdgeData.emplace(dVal,nTri2,2);
+        mEdgeData[{nTri2,2}]=dVal;
         }
     }
 
@@ -3346,9 +3346,9 @@ void InsertPoints(SGM::Result                     &,//rResult,
         SGM::Point2D const &A=aPoints2D[a];
         SGM::Point2D const &B=aPoints2D[b];
         SGM::Point2D const &C=aPoints2D[c];
-        aVertices.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
-        aVertices.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
-        aVertices.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+        aVertices.emplace_back(A.m_u,A.m_v,0.0);
+        aVertices.emplace_back(B.m_u,B.m_v,0.0);
+        aVertices.emplace_back(C.m_u,C.m_v,0.0);
         SGM::Interval3D Box(aVertices);
         aVertices.clear();
         Tree.Insert(&aTris[Index1/3],Box);
@@ -3363,6 +3363,9 @@ void InsertPoints(SGM::Result                     &,//rResult,
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
         std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,SGM_MIN_TOL);
         size_t nHits=aHits.size();
+        // potentially nHits on aEdgePoints and aPoints3D
+        aEdgePoints.reserve(aPoints3D.size() + nHits);
+        aPoints3D.reserve(aPoints3D.size() + nHits);
         for(Index2=0;Index2<nHits;++Index2)
             {
             size_t nHitTri=*((size_t *)aHits[Index2].first);
@@ -3521,11 +3524,7 @@ void FacetFace(SGM::Result                    &rResult,
         {
         FindNormals(rResult,pFace,aPoints2D,aNormals);
         size_t nNewSize=aPoints2D.size();
-        size_t Index1;
-        for(Index1=nOldSize;Index1<nNewSize;++Index1)
-            {
-            aEntities.push_back((entity *)pFace);
-            }
+        aEntities.resize(aEntities.size()+nNewSize-nOldSize,(entity *)pFace);
         AddVertices(aPoints3D,aEntities);
         DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
         }
@@ -3536,11 +3535,7 @@ void FacetFace(SGM::Result                    &rResult,
         double dScale=ScaledUVs(pFace,aPoints2D,aScaled);
         RefineTriangles(dScale,pFace,Options,aPoints2D,aScaled,aPoints3D,aNormals,aTriangles,aAdjacencies);
         size_t nNewSize=aPoints2D.size();
-        size_t Index1;
-        for(Index1=nOldSize;Index1<nNewSize;++Index1)
-            {
-            aEntities.push_back((entity *)pFace);
-            }
+        aEntities.resize(aEntities.size()+nNewSize-nOldSize,(entity *)pFace);
         AddVertices(aPoints3D,aEntities);
         DelaunayFlips(aScaled,aTriangles,aAdjacencies);
         }

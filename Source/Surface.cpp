@@ -1451,6 +1451,10 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
         pSurface->SnapToDomain(Answer);
+        if(fabs(dDot)<SGM_ZERO)
+            {
+            break;
+            }
         ++nCount;
         }
     return Answer;

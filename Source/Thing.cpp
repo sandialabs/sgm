@@ -66,6 +66,9 @@ void thing::DeleteEntity(entity *pEntity)
               case SGM::ConeType:
                 delete reinterpret_cast<cone*>(pEntity);
                 break;
+              case SGM::ExtrudeType:
+                delete reinterpret_cast<extrude*>(pEntity);
+                break;
               case SGM::SphereType:
                 delete reinterpret_cast<sphere*>(pEntity);
                 break;

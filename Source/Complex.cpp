@@ -62,10 +62,15 @@ void complex::Transform(SGM::Transform3D const &Trans)
         }
     }
 
-complex *complex::Cover(SGM::Result &rResult) const
+complex *complex::Cover(SGM::Result &) const
     {
-    rResult;
     return nullptr;
+    }
+
+std::vector<complex *> complex::FindBoundary(SGM::Result &) const
+    {
+    std::vector<complex *> aAnswer;
+    return aAnswer;
     }
 
 complex *complex::Merge(SGM::Result &rResult) const

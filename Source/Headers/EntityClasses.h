@@ -285,6 +285,8 @@ class complex : public topology
 
         complex *Merge(SGM::Result &rResult) const;
 
+        std::vector<complex *> FindBoundary(SGM::Result &rResult) const;
+
     private:
 
         std::vector<SGM::Point3D> m_aPoints;

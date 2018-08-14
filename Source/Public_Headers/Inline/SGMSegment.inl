@@ -44,7 +44,7 @@ namespace SGM {
         double e = v % w;
         double denom = a * c - b * b;
         bool bAnswer = true;
-        if (1E-12 < denom)
+        if (SGM_ZERO < denom)
             {
             double s = (b * e - c * d) / denom;
             double t = (a * e - b * d) / denom;
@@ -78,7 +78,9 @@ namespace SGM {
 
     inline bool Segment3D::Intersect(Segment3D const &Seg,
                                      Point3D         &Pos1,
-                                     Point3D         &Pos2) const
+                                     Point3D         &Pos2,
+                                     double          *dS,
+                                     double          *dT) const
     {
         SGM::Vector3D v = Seg.m_End - Seg.m_Start;
         SGM::Vector3D u = m_End - m_Start;
@@ -90,27 +92,111 @@ namespace SGM {
         double e = v % w;
         double denom = a * c - b * b;
         bool bAnswer = true;
-        if (1E-12 < denom)
+        if (SGM_ZERO < denom)
             {
             double s = (b * e - c * d) / denom;
             double t = (a * e - b * d) / denom;
             Pos1 = m_Start + u * s;
             Pos2 = Seg.m_Start + v * t;
-            if (s < 0 || 1 < s || t < 0 || 1 < t)
+            if (s < -SGM_ZERO || 1+SGM_ZERO < s || t < -SGM_ZERO || 1+SGM_ZERO < t)
                 {
                 bAnswer = false;
                 }
+            if (dS != nullptr)
+                *dS = s;
+            if (dT != nullptr)
+                *dT = t;
             }
-        else
+        else // segments are parallel
             {
-            double t = e / c;
-            Pos1 = m_Start;
-            Pos2 = Seg.m_Start + v * t;
-            if (t < 0 || 1 < t)
+            SGM::UnitVector3D uUnit(u);
+            SGM::UnitVector3D vUnit(v);
+            
+            // are segments collinear
+            if ( SGM::NearEqual(fabs(w % uUnit), w.Magnitude(), SGM_ZERO, false))
+            {
+                // do they overlap?
+
+                // does my start lie within Seg?
+                double tMyStart = (w % vUnit) / v.Magnitude();
+                if (tMyStart > -SGM_ZERO && tMyStart < 1+SGM_ZERO)
                 {
-                bAnswer = false;
+                    bAnswer = true;
+                    Pos1 = m_Start;
+                    Pos2 = Seg.m_Start + v * tMyStart;
+                    if (dS != nullptr)
+                        *dS = 0.0;
+                    if (dT != nullptr)
+                        *dT = tMyStart;
+                }
+                else
+                {
+                    double tMyEnd = (((m_End - Seg.m_Start) % vUnit) / v.Magnitude());
+                    if (tMyEnd > -SGM_ZERO && tMyEnd < 1+SGM_ZERO)
+                    {
+                        bAnswer = true;
+                        Pos1 = m_End;
+                        Pos2 = Seg.m_Start + v * tMyEnd;
+                        if (dS != nullptr)
+                            *dS = 1.0;
+                        if (dT != nullptr)
+                            *dT = tMyEnd;
+                    }
+                    else
+                    {
+                        double sSegStart = ((-1.0*w) % uUnit) / u.Magnitude();
+                        if (sSegStart > -SGM_ZERO && sSegStart < 1+SGM_ZERO)
+                        {
+                            bAnswer = true;
+                            Pos1 = m_Start + u * sSegStart;
+                            Pos2 = Seg.m_Start;
+                            if (dS != nullptr)
+                                *dS = sSegStart;
+                            if (dT != nullptr)
+                                *dT = 0.0;
+                        }
+                        else
+                        {
+                            // I think this case will never be hit
+                            //
+                            //double sSegEnd = ((Seg.m_End - m_Start) % uUnit) / u.Magnitude();
+                            //if (sSegEnd > -SGM_ZERO && sSegEnd < 1+SGM_ZERO)
+                            //{
+                            //    bAnswer = true;
+                            //    Pos1 = m_Start + u * sSegEnd;
+                            //    Pos2 = Seg.m_End;
+                            //    if (dS != nullptr)
+                            //        *dS = sSegEnd;
+                            //    if (dT != nullptr)
+                            //        *dT = 1.0;
+                            //}
+                            //else  // no overlap
+                            {
+                                bAnswer = false;
+                                Pos1 = m_Start;
+                                double t = ((m_Start - Seg.m_Start) % vUnit) / v.Magnitude();
+                                Pos2 = Seg.m_Start + (t * v);
+                                if (dS != nullptr)
+                                    *dS = 0.0;
+                                if (dT != nullptr)
+                                    *dT = t;
+                            }
+                        }
+                    }
                 }
             }
+            else // not collinear
+            {
+                bAnswer = false;
+                Pos1 = m_Start;
+                double t = ((m_Start - Seg.m_Start) % vUnit) / v.Magnitude();
+                Pos2 = Seg.m_Start + (t * v);
+                if (dS != nullptr)
+                    *dS = 0.0;
+                if (dT != nullptr)
+                    *dT = t;
+            }
+        }
         return bAnswer;
     }
 
