@@ -35,7 +35,7 @@ void curve::RemoveEdge(edge *pEdge)
     m_sEdges.erase(pEdge);
     }
 
-curve *curve::MakeCopy(SGM::Result &rResult) const
+curve *curve::Clone(SGM::Result &rResult) const
     {
     curve *pAnswer=NULL;
     switch(m_CurveType)
@@ -71,6 +71,11 @@ curve *curve::MakeCopy(SGM::Result &rResult) const
     pAnswer->m_Box=m_Box;
     return pAnswer;
     }
+
+void curve::FindAllChildren(std::set<entity *, EntityCompare> &) const
+{
+    // do nothing, derived classes can override
+}
 
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {

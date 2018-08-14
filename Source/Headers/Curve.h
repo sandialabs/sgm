@@ -27,7 +27,7 @@ namespace SGMInternal
 //      Set m_CurveType, m_Domain and m_Closed.
 //  Add a copy constructor.
 //      Set m_CurveType, m_Domain and m_Closed.
-//  Add to the MakeCopy method of curve.
+//  Add to the Clone method of curve.
 //  Add to the Evalute method of curve.
 //  Add to the Inverse method of curve.
 //  Add to the Transform method of curve.
@@ -59,10 +59,18 @@ class curve : public entity
 
         curve(SGM::Result &rResult,SGM::EntityType nType);
 
-        void Remove(SGM::Result &rResult);
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
-        curve *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        curve *Clone(SGM::Result &rResult) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void Remove(SGM::Result &rResult);
 
         void AddEdge(edge *pEdge);
 
@@ -90,10 +98,6 @@ class curve : public entity
         double Inverse(SGM::Point3D const &Pos,
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         void Transform(SGM::Transform3D const &Trans);
 

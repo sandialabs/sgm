@@ -1325,7 +1325,7 @@ body *UnhookFaces(SGM::Result         &rResult,
     std::map<entity *,entity *> mCopyMap;
     for(entity *pEnt : sCopyEnts)
         {
-        mCopyMap[pEnt]=pEnt->Copy(rResult);
+        mCopyMap[pEnt]=pEnt->Clone(rResult);
         }
 
     // Replace the shaired entities with the copies in the unhooked faces.

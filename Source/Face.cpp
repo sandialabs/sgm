@@ -2,6 +2,7 @@
 #include "SGMVector.h"
 
 #include "EntityClasses.h"
+#include "EntityFunctions.h"
 #include "Faceter.h"
 #include "Graph.h"
 #include "Topology.h"
@@ -24,7 +25,7 @@ face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
     {
     }
 
-face *face::MakeCopy(SGM::Result &rResult) const
+face *face::Clone(SGM::Result &rResult) const
     {
     face *pAnswer=new face(rResult);
 
@@ -46,6 +47,66 @@ face *face::MakeCopy(SGM::Result &rResult) const
     pAnswer->m_sAttributes=m_sAttributes;
     pAnswer->m_sOwners=m_sOwners;
     return pAnswer;
+    }
+
+void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(GetSurface());
+    for (auto pEdge : GetEdges())
+        {
+        sChildren.insert(pEdge);
+        pEdge->FindAllChildren(sChildren);
+        }
+    }
+
+SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
+    {
+    if (m_Box.IsEmpty())
+        {
+        switch(GetSurface()->GetSurfaceType())
+            {
+            case SGM::EntityType::ConeType:
+            case SGM::EntityType::CylinderType:
+            case SGM::EntityType::PlaneType:
+                {
+                // Only use the edge boxes.
+                auto sEdges = GetEdges();
+                StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
+                break;
+                }
+            default:
+                {
+                // Use all the points.
+                auto aPoints = GetPoints3D(rResult);
+                auto aTriangles = GetTriangles(rResult);
+                double dMaxLength = SGM::FindMaxEdgeLength(aPoints,aTriangles);
+                m_Box = SGM::Interval3D(aPoints);
+                m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
+                }
+            }
+        }
+    return m_Box;
+    }
+
+bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
+    {
+    volume* pVolume = GetVolume();
+    if (pVolume)
+        return pVolume->GetColor(nRed,nGreen,nBlue);
+    else
+        return entity::GetColor(nRed,nGreen,nBlue);
+    }
+
+void face::SeverRelations(SGM::Result &rResult)
+    {
+    if(GetVolume())
+        GetVolume()->RemoveFace(this);
+    std::set<edge *,EntityCompare> sEdges=GetEdges();
+    for(edge *pEdge : sEdges)
+        pEdge->RemoveFace(this);
+    if(GetSurface())
+        SetSurface(nullptr);
+    RemoveAllOwners();
     }
 
 void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
@@ -456,7 +517,7 @@ void face::ClearFacets(SGM::Result &rResult) const
         m_mSeamType.clear();
         if(m_pVolume)
             {
-            m_pVolume->ClearBox(rResult);
+            m_pVolume->ResetBox(rResult);
             }
         }
     }

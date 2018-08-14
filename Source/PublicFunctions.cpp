@@ -844,7 +844,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings);
+    return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
     }
 
 SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
@@ -1391,7 +1391,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         SGMInternal::vertex const *pEnd=pEdge->GetEnd();
         SGMInternal::vertex *pNewStart=mVertices[pStart];
         SGMInternal::vertex *pNewEnd=mVertices[pEnd];
-        SGMInternal::curve *pNewCurve=pCurve->MakeCopy(rResult);
+        SGMInternal::curve *pNewCurve=pCurve->Clone(rResult);
         SGM::Interval1D const &Domain=pEdge->GetDomain();
         SGMInternal::edge *pNewEdge=new SGMInternal::edge(rResult);
         pNewEdge->SetStart(pNewStart);

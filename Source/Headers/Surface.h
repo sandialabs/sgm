@@ -40,8 +40,16 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
-        surface *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
+        surface *Clone(SGM::Result &rResult) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void AddFace(face *pFace);
 
@@ -76,10 +84,6 @@ class surface : public entity
 
         double DirectionalCurvature(SGM::Point2D      const &uv,
                                     SGM::UnitVector3D const &Direction) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         bool ClosedInU() const {return m_bClosedU;}
 
@@ -409,6 +413,8 @@ class revolve : public surface
 
         ~revolve();
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         void SetCurve(curve *pCurve);
 
     public:
@@ -429,6 +435,8 @@ class extrude : public surface
                 curve                   *pCurve);
 
         ~extrude();
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         void SetCurve(curve *pCurve);
 

@@ -24,6 +24,27 @@ thing::~thing()
         }
     }
 
+bool thing::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings,
+                  bool                      bChildren) const
+    {
+    // thing *always* checks at least top level children,
+    // and passing bChildren=true will check further down hierarchy
+    bool bAnswer = true;
+    for (auto const &iter : m_mAllEntities)
+        {
+        if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
+            bAnswer = false;
+        }
+    return bAnswer;
+    }
+
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
+    {
+    return m_Box;
+    }
+
 void thing::AddToMap(size_t nID,entity *pEntity)
     {
     m_mAllEntities[nID] = pEntity;
@@ -32,104 +53,7 @@ void thing::AddToMap(size_t nID,entity *pEntity)
 void thing::DeleteEntity(entity *pEntity)
     {
     m_mAllEntities.erase(pEntity->GetID());
-    switch(pEntity->GetType()) {
-          case SGM::BodyType:
-            delete reinterpret_cast<body*>(pEntity);
-            break;
-          case SGM::ComplexType:
-            delete reinterpret_cast<complex*>(pEntity);
-            break;
-          case SGM::VolumeType:
-            delete reinterpret_cast<volume*>(pEntity);
-            break;
-          case SGM::FaceType:
-            delete reinterpret_cast<face*>(pEntity);
-            break;
-          case SGM::EdgeType:
-            delete reinterpret_cast<edge*>(pEntity);
-            break;
-          case SGM::VertexType:
-            delete reinterpret_cast<vertex*>(pEntity);
-            break;
-          case SGM::AttributeType:
-            delete reinterpret_cast<attribute*>(pEntity);
-            break;
-          case SGM::SurfaceType: {
-            surface* pSurface = reinterpret_cast<surface*>(pEntity);
-            switch (pSurface->GetSurfaceType()) {
-              case SGM::PlaneType:
-                delete reinterpret_cast<plane*>(pEntity);
-                break;
-              case SGM::CylinderType:
-                delete reinterpret_cast<cylinder*>(pEntity);
-                break;
-              case SGM::ConeType:
-                delete reinterpret_cast<cone*>(pEntity);
-                break;
-              case SGM::ExtrudeType:
-                delete reinterpret_cast<extrude*>(pEntity);
-                break;
-              case SGM::SphereType:
-                delete reinterpret_cast<sphere*>(pEntity);
-                break;
-              case SGM::TorusType:
-                delete reinterpret_cast<torus*>(pEntity);
-                break;
-              case SGM::NUBSurfaceType:
-                delete reinterpret_cast<NUBsurface*>(pEntity);
-                break;
-              case SGM::NURBSurfaceType:
-                delete reinterpret_cast<NURBsurface*>(pEntity);
-                break;
-              case SGM::RevolveType:
-                delete reinterpret_cast<revolve*>(pEntity);
-                break;
-              default:
-                std::abort();
-            }
-            break;
-          }
-          case SGM::CurveType: {
-            curve* pCurve = reinterpret_cast<curve*>(pEntity);
-            switch(pCurve->GetCurveType()) {
-              case SGM::LineType:
-                delete reinterpret_cast<line*>(pEntity);
-                break;
-              case SGM::CircleType:
-                delete reinterpret_cast<circle*>(pEntity);
-                break;
-              case SGM::EllipseType:
-                delete reinterpret_cast<ellipse*>(pEntity);
-                break;
-              case SGM::NUBCurveType:
-                delete reinterpret_cast<NUBcurve*>(pEntity);
-                break;
-              case SGM::NURBCurveType:
-                delete reinterpret_cast<NURBcurve*>(pEntity);
-                break;
-              case SGM::PointCurveType:
-                delete reinterpret_cast<PointCurve*>(pEntity);
-                break;
-              case SGM::HermiteCurveType:
-                delete reinterpret_cast<hermite*>(pEntity);
-                break;
-              case SGM::TorusKnotCurveType:
-                delete reinterpret_cast<TorusKnot*>(pEntity);
-                break;
-              case SGM::ParabolaType:
-                delete reinterpret_cast<parabola*>(pEntity);
-                break;
-              case SGM::HyperbolaType:
-                delete reinterpret_cast<hyperbola*>(pEntity);
-                break;
-              default:
-                std::abort();
-            }
-            break;
-          }
-          default:
-            std::abort();
-        }
+    delete pEntity;
     }
 
 void thing::SeverOwners(entity *pEntity)

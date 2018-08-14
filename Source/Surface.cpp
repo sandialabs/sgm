@@ -24,7 +24,7 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighV=false;
     }
 
-surface *surface::MakeCopy(SGM::Result &rResult) const
+surface *surface::Clone(SGM::Result &rResult) const
     {
     surface *pAnswer=NULL;
     switch(m_SurfaceType)
@@ -44,6 +44,22 @@ surface *surface::MakeCopy(SGM::Result &rResult) const
     pAnswer->m_sAttributes=m_sAttributes;
     pAnswer->m_Box=m_Box;
     return pAnswer;
+    }
+
+void surface::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    // do nothing, derived classes can override
+    }
+
+void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+        sChildren.insert(m_pCurve);
+    }
+
+
+void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(m_pCurve);
     }
 
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
@@ -486,7 +502,7 @@ curve *surface::UParamLine(SGM::Result &rResult,
             {
             revolve const *pRevolve=(revolve const *)this;
             curve const *pCurve=pRevolve->m_pCurve;
-            curve *pParam=(curve *)pCurve->Copy(rResult);
+            curve *pParam=pCurve->Clone(rResult);
             return pParam;
             break;
             }
