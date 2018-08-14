@@ -11,24 +11,34 @@
 namespace SGMInternal
 {
 
+bool entity::Check(SGM::Result              &,
+                   SGM::CheckOptions const  &,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      ) const
+{
+    // we do not throw so that checking may continue
+    aCheckStrings.emplace_back("Derived class must override Check()\n");
+    return false;
+}
+
 entity *entity::Clone(SGM::Result &rResult) const
     {
-    throw std::logic_error("derived classes must override Clone()");
+    throw std::logic_error("Derived classes must override Clone()");
     }
 
 SGM::Interval3D const &entity::GetBox(SGM::Result &) const
     {
-    throw std::logic_error("derived class must implement GetBox()");
+    throw std::logic_error("Derived class must implement GetBox()");
     }
 
 void entity::ResetBox(SGM::Result &) const
     {
-    throw std::logic_error("derived class must implement ResetBox()");
+    throw std::logic_error("Derived class must implement ResetBox()");
     }
 
 void entity::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
-    throw std::logic_error("derived class must implement ReplacePointers()");
+    throw std::logic_error("Derived class must implement ReplacePointers()");
     }
 
 void entity::ChangeColor(SGM::Result &rResult,

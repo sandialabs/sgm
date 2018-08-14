@@ -40,6 +40,11 @@ class surface : public entity
 
         surface(SGM::Result &rResult,SGM::EntityType nType);
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         surface *Clone(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -77,10 +82,6 @@ class surface : public entity
 
         double DirectionalCurvature(SGM::Point2D      const &uv,
                                     SGM::UnitVector3D const &Direction) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         bool ClosedInU() const {return m_bClosedU;}
 

@@ -40,11 +40,16 @@ public:
 
     virtual ~entity() = default;
 
+    virtual bool Check(SGM::Result              &rResult,
+                       SGM::CheckOptions const  &Options,
+                       std::vector<std::string> &aCheckStrings,
+                       bool                      bChildren) const;
+
+    virtual entity *Clone(SGM::Result &rResult) const;
+
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
 
     virtual void ResetBox(SGM::Result &rResult) const;
-
-    virtual entity *Clone(SGM::Result &rResult) const;
 
     virtual bool GetColor(int &nRed, int &nGreen, int &nBlue) const; // If entity has no color, return false.
 
@@ -55,10 +60,6 @@ public:
     size_t GetID() const;
 
     SGM::EntityType GetType() const;
-
-    bool Check(SGM::Result              &rResult,
-               SGM::CheckOptions const  &Options,
-               std::vector<std::string> &aCheckStrings) const;
 
     void AddOwner(entity *pEntity);
 
@@ -114,6 +115,11 @@ class thing : public entity
 
         ~thing() override;
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ResetBox(SGM::Result &rResult) const override { m_Box.Reset(); }
@@ -153,10 +159,6 @@ class thing : public entity
         // Find methods
         
         entity *FindEntity(size_t ID) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
     private:
 
@@ -205,6 +207,11 @@ class body : public topology
 
         ~body() override = default;
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ResetBox(SGM::Result &rResult) const override;
@@ -227,11 +234,6 @@ class body : public topology
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
         
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const;
-
         bool IsTopLevel() const {return m_sOwners.empty();}
 
         bool IsSheetBody(SGM::Result &rResult) const;
@@ -272,7 +274,10 @@ class complex : public topology
                 std::vector<unsigned int> const &aSegments,
                 std::vector<unsigned int> const &aTriangles);
 
-        // Get methods
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -294,10 +299,6 @@ class complex : public topology
 
         double Area() const;
 
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
-
         double FindVolume(SGM::Result &rResult) const
         { throw std::logic_error("not implemented"); }
 
@@ -317,6 +318,11 @@ class volume : public topology
         explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
 
         ~volume() override = default;
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -350,13 +356,6 @@ class volume : public topology
 
         bool IsTopLevel() const {return m_pBody==nullptr && m_sOwners.empty();}
 
-        // Other methods
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const;
-
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
 
@@ -380,6 +379,11 @@ class face : public topology
         explicit face(SGM::Result &rResult);
 
         ~face() override = default;
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -448,11 +452,6 @@ class face : public topology
                          std::vector<std::vector<edge *> >            &aaLoops,
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const;
-
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,
                          SGM::Point3D       *ClosePos=nullptr,    // The closest point.
@@ -494,6 +493,11 @@ class edge : public topology
         explicit edge(SGM::Result &rResult);
 
         ~edge() override = default;
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -550,11 +554,6 @@ class edge : public topology
 
         SGM::Point3D FindMidPoint(double dFraction=0.5) const;
 
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const;
-
         double FindLength(double dTolerance) const;
 
         // Will pick the correct value of a closed curve's 
@@ -594,6 +593,11 @@ class vertex : public topology
 
         ~vertex() override = default;
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -611,10 +615,6 @@ class vertex : public topology
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
         bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         void TransformData(SGM::Transform3D const &Trans);
 
@@ -638,6 +638,11 @@ class attribute : public entity
             entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(Type) {}
 
         ~attribute() override = default;
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override { return true; }
 
         std::string const &GetName() const {return m_Name;}
 

@@ -59,6 +59,12 @@ class curve : public entity
 
         curve(SGM::Result &rResult,SGM::EntityType nType);
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
+
         void Remove(SGM::Result &rResult);
 
         curve *Clone(SGM::Result &rResult) const override;
@@ -91,10 +97,6 @@ class curve : public entity
         double Inverse(SGM::Point3D const &Pos,
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         void Transform(SGM::Transform3D const &Trans);
 

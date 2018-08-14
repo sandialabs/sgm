@@ -821,7 +821,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings);
+    return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
     }
 
 SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
