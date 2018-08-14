@@ -415,7 +415,7 @@ class revolve : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-    void SetCurve(curve *pCurve);
+        void SetCurve(curve *pCurve);
 
     public:
 
@@ -435,6 +435,8 @@ class extrude : public surface
                 curve                   *pCurve);
 
         ~extrude();
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         void SetCurve(curve *pCurve);
 

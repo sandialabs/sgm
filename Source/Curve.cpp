@@ -72,6 +72,11 @@ curve *curve::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void curve::FindAllChildren(std::set<entity *, EntityCompare> &) const
+{
+    // do nothing, derived classes can override
+}
+
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.

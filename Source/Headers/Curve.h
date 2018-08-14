@@ -66,6 +66,8 @@ class curve : public entity
 
         curve *Clone(SGM::Result &rResult) const override;
 
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void Remove(SGM::Result &rResult);

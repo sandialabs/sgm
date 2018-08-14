@@ -51,6 +51,12 @@ void surface::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
     // do nothing, derived classes can override
     }
 
+void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+        sChildren.insert(m_pCurve);
+    }
+
+
 void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     sChildren.insert(m_pCurve);
