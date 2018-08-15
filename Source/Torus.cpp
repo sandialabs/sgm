@@ -1,7 +1,10 @@
 #include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMInterval.h"
+#include "SGMTransform.h"
+
 #include "EntityClasses.h"
+#include "Curve.h"
 #include "Surface.h"
 #include <cmath>
 
@@ -67,6 +70,52 @@ torus::torus(SGM::Result             &rResult,
         m_Domain.m_VDomain.m_dMax=SGM_TWO_PI;
         m_nKind=SGM::TorusKindType::DonutType;
         }
+    }
+
+void torus::Transform(SGM::Transform3D const &Trans)
+    {
+    m_Center=Trans*m_Center;
+    m_XAxis=Trans*m_XAxis;
+    m_YAxis=Trans*m_YAxis;
+    m_ZAxis=Trans*m_ZAxis;
+    m_dMinorRadius*=Trans.Scale();
+    m_dMajorRadius*=Trans.Scale();
+    }
+
+curve* torus::UParamLine(SGM::Result &rResult, double dU) const
+    {
+    SGM::Interval2D const &Domain=GetDomain();
+    SGM::Point2D uv0(dU,Domain.m_VDomain.MidPoint(0.0));
+    SGM::Point2D uv1(dU,Domain.m_VDomain.MidPoint(0.3));
+    SGM::Point2D uv2(dU,Domain.m_VDomain.MidPoint(0.7));
+    SGM::Point3D Pos0,Pos1,Pos2;
+    Evaluate(uv0,&Pos0);
+    Evaluate(uv1,&Pos1);
+    Evaluate(uv2,&Pos2);
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal;
+    double dRadius;
+    SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
+    SGM::UnitVector3D XAxis=Pos0-Center;
+    return new circle(rResult,Center,Normal,dRadius,&XAxis);
+    }
+
+curve *torus::VParamLine(SGM::Result &rResult, double dV) const
+    {
+    SGM::Interval2D const &Domain=GetDomain();
+    SGM::Point2D uv0(Domain.m_UDomain.MidPoint(0.0),dV);
+    SGM::Point2D uv1(Domain.m_UDomain.MidPoint(0.3),dV);
+    SGM::Point2D uv2(Domain.m_UDomain.MidPoint(0.7),dV);
+    SGM::Point3D Pos0,Pos1,Pos2;
+    Evaluate(uv0,&Pos0);
+    Evaluate(uv1,&Pos1);
+    Evaluate(uv2,&Pos2);
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal;
+    double dRadius;
+    SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
+    SGM::UnitVector3D XAxis=Pos0-Center;
+    return new circle(rResult,Center,Normal,dRadius,&XAxis);
     }
 
 void FindSeedPoints(torus               const *pTorus,

@@ -25,60 +25,27 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     }
 
 surface *surface::Clone(SGM::Result &rResult) const
-    {
-    surface *pAnswer=NULL;
-    switch(m_SurfaceType)
-        {
-        case SGM::PlaneType:
-            {
-            pAnswer = new plane(rResult,(plane const *)this);
-            break;
-            }
-        default:
-            {
-            throw;
-            }
-        }
-    pAnswer->m_sFaces=m_sFaces;
-    pAnswer->m_sOwners=m_sOwners;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_Box=m_Box;
-    return pAnswer;
-    }
+{
+    throw std::logic_error("Derived class of surface did not override Clone()");
+    return nullptr;
+}
 
 void surface::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     // do nothing, derived classes can override
     }
 
-void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
-    {
-        sChildren.insert(m_pCurve);
-    }
-
-
-void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
-    {
-    sChildren.insert(m_pCurve);
-    }
-
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
-    
     // Run though all the pointers and change them if they are in the map.
-    
     std::set<face *,EntityCompare> m_sFixedFaces;
     for(auto pFace : m_sFaces)
         {
         auto MapValue=mEntityMap.find(pFace);
         if(MapValue!=mEntityMap.end())
-            {
             m_sFixedFaces.insert((face *)MapValue->second);
-            }
         else
-            {
             m_sFixedFaces.insert(pFace);
-            }
         }
     m_sFaces=m_sFixedFaces;
 
@@ -87,13 +54,9 @@ void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
         {
         auto MapValue=mEntityMap.find(pAttribute);
         if(MapValue!=mEntityMap.end())
-            {
             m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
         else
-            {
             m_sFixedAttributes.insert(pAttribute);
-            }
         }
     m_sAttributes=m_sFixedAttributes;
 
@@ -102,32 +65,21 @@ void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
         {
         auto MapValue=mEntityMap.find(pEntity);
         if(MapValue!=mEntityMap.end())
-            {
             m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
         else
-            {
             m_sFixedOwners.insert(pEntity);
-            }
         }
-    m_sOwners=m_sFixedOwners;}
+    m_sOwners=m_sFixedOwners;
+    }
 
 void surface::AddFace(face *pFace) 
     {
-    void* other = (void*)this;
-    if(other)
-        {
-        m_sFaces.insert(pFace);
-        }
+    m_sFaces.insert(pFace);
     }
 
 void surface::RemoveFace(face *pFace) 
     {
-    void* other = (void*)this;
-    if(other)
-        {
-        m_sFaces.erase(pFace);
-        }
+    m_sFaces.erase(pFace);
     }
 
 double AreaIntegrand(SGM::Point2D const &uv,void const *pData)
@@ -147,516 +99,15 @@ double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
     }
 
 void surface::Transform(SGM::Transform3D const &Trans)
+    { throw std::logic_error("Derived class of surface must override Transform()"); }
+
+curve *surface::UParamLine(SGM::Result &, double) const
+    { throw std::logic_error("Derived class of surface must override UParamLine()"); }
+
+
+curve *surface::VParamLine(SGM::Result &, double) const
     {
-    switch(m_SurfaceType)
-        {
-        case SGM::PlaneType:
-            {
-            plane *pPlane=(plane *)this;
-            SGM::Point3D &Origin=pPlane->m_Origin;
-            SGM::UnitVector3D &XAxis=pPlane->m_XAxis;
-            SGM::UnitVector3D &YAxis=pPlane->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pPlane->m_ZAxis;
-            double dPlaneScale=pPlane->m_dScale;
-
-            Origin=Trans*Origin;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-            if(double dScale=Trans.Scale())
-                {
-                dPlaneScale*=dScale;
-                }
-
-            break;
-            }
-        case SGM::CylinderType:
-            {
-            cylinder *pCylinder=(cylinder *)this;
-            SGM::Point3D &Origin=pCylinder->m_Origin;
-            SGM::UnitVector3D &XAxis=pCylinder->m_XAxis;
-            SGM::UnitVector3D &YAxis=pCylinder->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pCylinder->m_ZAxis;
-            double &dRadius=pCylinder->m_dRadius;
-
-            Origin=Trans*Origin;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-            if(double dScale=Trans.Scale())
-                {
-                dRadius*=dScale;
-                }
-
-            break;
-            }
-        case SGM::ConeType:
-            {
-            cone *pCone=(cone *)this;
-            SGM::Point3D &Origin=pCone->m_Origin;
-            SGM::UnitVector3D &XAxis=pCone->m_XAxis;
-            SGM::UnitVector3D &YAxis=pCone->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pCone->m_ZAxis;
-            double &dRadius=pCone->m_dRadius;
-
-            Origin=Trans*Origin;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-            if(double dScale=Trans.Scale())
-                {
-                dRadius*=dScale;
-                }
-            break;
-            }
-        case SGM::SphereType:
-            {
-            sphere *pSphere=(sphere *)this;
-            SGM::Point3D &Center=pSphere->m_Center;
-            SGM::UnitVector3D &XAxis=pSphere->m_XAxis;
-            SGM::UnitVector3D &YAxis=pSphere->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pSphere->m_ZAxis;
-            double &dRadius=pSphere->m_dRadius;
-
-            Center=Trans*Center;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-            if(double dScale=Trans.Scale())
-                {
-                dRadius*=dScale;
-                }
-            break;
-            }
-        case SGM::TorusType:
-            {
-            torus *pTorus=(torus *)this;
-            SGM::Point3D &Center=pTorus->m_Center;
-            SGM::UnitVector3D &XAxis=pTorus->m_XAxis;
-            SGM::UnitVector3D &YAxis=pTorus->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pTorus->m_ZAxis;
-            double &dMinorRadius=pTorus->m_dMinorRadius;
-            double &dMajorRadius=pTorus->m_dMajorRadius;
-
-            Center=Trans*Center;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-            if(double dScale=Trans.Scale())
-                {
-                dMinorRadius*=dScale;
-                dMajorRadius*=dScale;
-                }
-            break;
-            }
-        case SGM::NUBSurfaceType:
-            {
-            NUBsurface *pNUBSurface=(NUBsurface *)this;
-            std::vector<std::vector<SGM::Point3D> > aaPoints=pNUBSurface->m_aaControlPoints;
-            size_t nSize1=aaPoints.size();
-            size_t nSize2=aaPoints[0].size();
-            size_t Index1,Index2;
-            for(Index1=0;Index1<nSize1;++Index1)
-                {
-                for(Index2=0;Index2<nSize2;++Index2)
-                    {
-                    aaPoints[Index1][Index2]=Trans*aaPoints[Index1][Index2];
-                    }
-                }
-            break;
-            }
-        case SGM::NURBSurfaceType:
-            {
-            NURBsurface *pNURBSurface=(NURBsurface *)this;
-            std::vector<std::vector<SGM::Point4D> > aaPoints=pNURBSurface->m_aaControlPoints;
-            size_t nSize1=aaPoints.size();
-            size_t nSize2=aaPoints[0].size();
-            size_t Index1,Index2;
-            for(Index1=0;Index1<nSize1;++Index1)
-                {
-                for(Index2=0;Index2<nSize2;++Index2)
-                    {
-                    SGM::Point4D Pos=aaPoints[Index1][Index2];
-                    SGM::Point3D Pos3D(Pos.m_x,Pos.m_y,Pos.m_z);
-                    Pos3D=Trans*Pos3D;
-                    aaPoints[Index1][Index2]=SGM::Point4D(Pos3D.m_x,Pos3D.m_y,Pos3D.m_z,Pos.m_w);
-                    }
-                }
-            break;
-            }
-        case SGM::RevolveType:
-            {
-            revolve *pRevolve=(revolve *)this;
-            SGM::Point3D &Origin=pRevolve->m_Origin;
-            SGM::UnitVector3D &XAxis=pRevolve->m_XAxis;
-            SGM::UnitVector3D &YAxis=pRevolve->m_YAxis;
-            SGM::UnitVector3D &ZAxis=pRevolve->m_ZAxis;
-            curve *pCurve=pRevolve->m_pCurve;
-
-            Origin=Trans*Origin;
-            XAxis=Trans*XAxis;
-            YAxis=Trans*YAxis;
-            ZAxis=Trans*ZAxis;
-
-            if(pCurve->GetEdges().empty() && pCurve->GetOwners().size()==1)
-                {
-                pCurve->Transform(Trans);
-                }
-            else
-                {
-                // Make a copy and tranform the copy.
-                throw;
-                }
-
-            break;
-            }
-        
-        case SGM::ExtrudeType:
-            {
-            extrude *pExtrude=(extrude *)this;
-            SGM::UnitVector3D &vAxis=pExtrude->m_vAxis;
-            vAxis=Trans*vAxis;
-            curve *pCurve=pExtrude->m_pCurve;
-
-            if(pCurve->GetEdges().empty() && pCurve->GetOwners().size()==1)
-                {
-                pCurve->Transform(Trans);
-                }
-            else
-                {
-                // Make a copy and transform the copy.
-                throw;
-                }
-
-            break;
-            }
-        default:
-            {
-            throw;
-            break;
-            }
-        }
-    }
-
-curve *surface::UParamLine(SGM::Result &rResult,
-                           double       dU) const
-    {
-    switch(m_SurfaceType)
-        {
-        case SGM::PlaneType:
-            {
-            break;
-            }
-        case SGM::ConeType:
-            {
-            cone const *pCone=(cone const *)this;
-            SGM::Point3D Apex=pCone->FindApex();
-            SGM::Point3D UZero;
-            SGM::Point2D uv(dU,0.0);
-            pCone->Evaluate(uv,&UZero);
-            return new line(rResult,Apex,UZero-Apex,pCone->m_dRadius);
-            break;
-            }
-        case SGM::CylinderType:
-            {
-            cylinder const *pCylinder=(cylinder const *)this;
-            double dRadius=pCylinder->m_dRadius;
-            SGM::Point2D uv(dU,0);
-            SGM::Point3D Pos;
-            SGM::Vector3D Vec;
-            Evaluate(uv,&Pos,nullptr,&Vec);
-            return new line(rResult,Pos,Vec,dRadius);
-            }
-        case SGM::SphereType:
-            {
-            sphere const *pSphere=(sphere const *)this;
-            SGM::Point2D uv(dU,0);
-            SGM::Point3D Pos;
-            Evaluate(uv,&Pos);
-            SGM::Point3D const &Center=pSphere->m_Center;
-            SGM::UnitVector3D const &ZAxis=pSphere->m_ZAxis;
-            double dRadius=pSphere->m_dRadius;
-            SGM::UnitVector3D XAxis=Pos-Center;
-            SGM::UnitVector3D Normal=XAxis*ZAxis;
-            SGM::Interval2D const &Domain=pSphere->GetDomain();
-            return new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain.m_VDomain);
-            break;
-            }
-        case SGM::TorusType:
-            {
-            torus const *pTorus=(torus const *)this;
-            SGM::Interval2D const &Domain=pTorus->GetDomain();
-            SGM::Point2D uv0(dU,Domain.m_VDomain.MidPoint(0.0));
-            SGM::Point2D uv1(dU,Domain.m_VDomain.MidPoint(0.3));
-            SGM::Point2D uv2(dU,Domain.m_VDomain.MidPoint(0.7));
-            SGM::Point3D Pos0,Pos1,Pos2;
-            Evaluate(uv0,&Pos0);
-            Evaluate(uv1,&Pos1);
-            Evaluate(uv2,&Pos2);
-            SGM::Point3D Center;
-            SGM::UnitVector3D Normal;
-            double dRadius;
-            SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
-            SGM::UnitVector3D XAxis=Pos0-Center;
-            return new circle(rResult,Center,Normal,dRadius,&XAxis);
-            break;
-            }
-        case SGM::NUBSurfaceType:
-            {
-            NUBsurface const *pNUBSurface=(NUBsurface const *)this;
-            if(pNUBSurface->m_bSingularHighU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNUBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else if(pNUBSurface->m_bSingularLowU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNUBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else
-                {
-                std::vector<double> const &aUKnots=pNUBSurface->GetUKnots();
-                std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUBSurface->GetControlPoints();
-                size_t nUDegree=pNUBSurface->GetUDegree();
-                size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
-
-                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-                size_t Index1,Index2;
-                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
-                    {
-                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
-                    }
-                FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
-
-                std::vector<SGM::Point3D> aControlPoints;
-                size_t nControlPoints=aaControlPoints[0].size();
-                aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
-                for(Index1=0;Index1<nControlPoints;++Index1)
-                    {
-                    for(Index2=0;Index2<=nUDegree;++Index2)
-                        {
-                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
-                            SGM::Vector3D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
-                        }
-                    }
-                curve *pCurve=new NUBcurve(rResult,aControlPoints,pNUBSurface->GetVKnots());
-                return pCurve;
-                }
-            }
-        case SGM::NURBSurfaceType:
-            {
-            NURBsurface const *pNURBSurface=(NURBsurface const *)this;
-            if(pNURBSurface->m_bSingularHighU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNURBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else if(pNURBSurface->m_bSingularLowU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNURBSurface->Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else
-                {
-                std::vector<double> const &aUKnots=pNURBSurface->GetUKnots();
-                std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURBSurface->GetControlPoints();
-                size_t nUDegree=pNURBSurface->GetUDegree();
-                size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
-
-                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-                size_t Index1,Index2;
-                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
-                    {
-                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
-                    }
-                FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
-
-                std::vector<SGM::Point4D> aControlPoints;
-                size_t nControlPoints=aaControlPoints[0].size();
-                aControlPoints.assign(nControlPoints,SGM::Point4D(0.0,0.0,0.0,0.0));
-                for(Index1=0;Index1<nControlPoints;++Index1)
-                    {
-                    for(Index2=0;Index2<=nUDegree;++Index2)
-                        {
-                        SGM::Point4D const &XYZW=aaControlPoints[nSpanIndex-nUDegree+Index2][Index1];
-                        double dBasisWeight=XYZW.m_w*aaBasisFunctions[0][Index2];
-                        aControlPoints[Index1]+=SGM::Vector4D(XYZW.m_x*dBasisWeight,XYZW.m_y*dBasisWeight,XYZW.m_z*dBasisWeight,dBasisWeight);
-                        }
-                    SGM::Point4D const &Pos=aControlPoints[Index1];
-                    double dRWeight=1.0/Pos.m_w;
-                    aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
-                    }
-                curve *pParamCurve=new NURBcurve(rResult,aControlPoints,pNURBSurface->GetVKnots());
-                return pParamCurve;
-                }
-            break;
-            }
-        case SGM::RevolveType:
-            {
-            revolve const *pRevolve=(revolve const *)this;
-            curve const *pCurve=pRevolve->m_pCurve;
-            curve *pParam=pCurve->Clone(rResult);
-            return pParam;
-            break;
-            }
-        default:
-            {
-            throw;
-            }
-        }
-    return nullptr;
-    }
-
-curve *surface::VParamLine(SGM::Result &rResult,
-                           double       dV) const
-    {
-    switch(m_SurfaceType)
-        {
-        case SGM::PlaneType:
-            {
-            break;
-            }
-        case SGM::ConeType:
-            {
-            break;
-            }
-        case SGM::CylinderType:
-            {
-            break;
-            }
-        case SGM::SphereType:
-            {
-            break;
-            }
-        case SGM::TorusType:
-            {
-            torus const *pTorus=(torus const *)this;
-            SGM::Interval2D const &Domain=pTorus->GetDomain();
-            SGM::Point2D uv0(Domain.m_UDomain.MidPoint(0.0),dV);
-            SGM::Point2D uv1(Domain.m_UDomain.MidPoint(0.3),dV);
-            SGM::Point2D uv2(Domain.m_UDomain.MidPoint(0.7),dV);
-            SGM::Point3D Pos0,Pos1,Pos2;
-            Evaluate(uv0,&Pos0);
-            Evaluate(uv1,&Pos1);
-            Evaluate(uv2,&Pos2);
-            SGM::Point3D Center;
-            SGM::UnitVector3D Normal;
-            double dRadius;
-            SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius);
-            SGM::UnitVector3D XAxis=Pos0-Center;
-            return new circle(rResult,Center,Normal,dRadius,&XAxis);
-            break;
-            }
-        case SGM::NUBSurfaceType:
-            {
-            NUBsurface const *pNUBSurface=(NUBsurface const *)this;
-            if(pNUBSurface->m_bSingularHighV && SGM::NearEqual(m_Domain.m_VDomain.m_dMax,dV,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNUBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else if(pNUBSurface->m_bSingularLowV && SGM::NearEqual(m_Domain.m_VDomain.m_dMin,dV,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNUBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else
-                {
-                std::vector<double> const &aVKnots=pNUBSurface->GetVKnots();
-                std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=pNUBSurface->GetControlPoints();
-                size_t nUDegree=pNUBSurface->GetUDegree();
-                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nUDegree,dV,aVKnots);
-
-                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-                size_t Index1,Index2;
-                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
-                    {
-                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
-                    }
-                FindBasisFunctions(nSpanIndex,dV,nUDegree,0,&aVKnots[0],aaBasisFunctions);
-
-                std::vector<SGM::Point3D> aControlPoints;
-                size_t nControlPoints=aaControlPoints.size();
-                aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
-                for(Index1=0;Index1<nControlPoints;++Index1)
-                    {
-                    for(Index2=0;Index2<=nUDegree;++Index2)
-                        {
-                        aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
-                            SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nUDegree+Index2]);
-                        }
-                    }
-                return new NUBcurve(rResult,aControlPoints,pNUBSurface->GetUKnots());
-                }
-            break;
-            }
-        case SGM::NURBSurfaceType:
-            {
-            NURBsurface const *pNURBSurface=(NURBsurface const *)this;
-            if(pNURBSurface->m_bSingularHighV && SGM::NearEqual(m_Domain.m_VDomain.m_dMax,dV,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNURBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else if(pNURBSurface->m_bSingularLowV && SGM::NearEqual(m_Domain.m_VDomain.m_dMin,dV,SGM_MIN_TOL,false))
-                {
-                SGM::Point3D Pos;
-                pNURBSurface->Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
-                return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
-                }
-            else
-                {
-                std::vector<double> const &aVKnots=pNURBSurface->GetVKnots();
-                std::vector<std::vector<SGM::Point4D> > const &aaControlPoints=pNURBSurface->GetControlPoints();
-                size_t nVDegree=pNURBSurface->GetVDegree();
-                size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,dV,aVKnots);
-
-                double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-                double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-                size_t Index1,Index2;
-                for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
-                    {
-                    aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
-                    }
-                FindBasisFunctions(nSpanIndex,dV,nVDegree,0,&aVKnots[0],aaBasisFunctions);
-
-                std::vector<SGM::Point4D> aControlPoints;
-                size_t nControlPoints=aaControlPoints.size();
-                aControlPoints.assign(nControlPoints,SGM::Point4D(0.0,0.0,0.0,0.0));
-                for(Index1=0;Index1<nControlPoints;++Index1)
-                    {
-                    for(Index2=0;Index2<=nVDegree;++Index2)
-                        {
-                        SGM::Point4D const &XYZW=aaControlPoints[Index1][nSpanIndex-nVDegree+Index2];
-                        double dBasisWeight=XYZW.m_w*aaBasisFunctions[0][Index2];
-                        aControlPoints[Index1]+=SGM::Vector4D(XYZW.m_x*dBasisWeight,XYZW.m_y*dBasisWeight,XYZW.m_z*dBasisWeight,dBasisWeight);
-                        }
-                    SGM::Point4D const &Pos=aControlPoints[Index1];
-                    double dRWeight=1.0/Pos.m_w;
-                    aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
-                    }
-
-                return new NURBcurve(rResult,aControlPoints,pNURBSurface->GetUKnots());
-                }
-            break;
-            }
-        default:
-            {
-            throw;
-            }
-        }
-    return nullptr;
+    throw std::logic_error("Derived class of surface must override VParamLine()");
     }
 
 void surface::Evaluate(SGM::Point2D const &uv,
@@ -667,7 +118,6 @@ void surface::Evaluate(SGM::Point2D const &uv,
                        SGM::Vector3D      *Duu,
                        SGM::Vector3D      *Duv,
                        SGM::Vector3D      *Dvv) const
-
     {
     switch(m_SurfaceType)
         {

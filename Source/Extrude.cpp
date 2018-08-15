@@ -2,6 +2,8 @@
 #include "SGMInterval.h"
 #include "SGMMathematics.h"
 #include "SGMEntityClasses.h"
+#include "SGMTransform.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
@@ -28,6 +30,32 @@ extrude::~extrude()
     if (m_pCurve)
         m_pCurve->RemoveOwner(this);
     }
+
+void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+    {
+    sChildren.insert(m_pCurve);
+    }
+
+void extrude::Transform(SGM::Transform3D const &Trans)
+    {
+    m_vAxis=Trans*m_vAxis;
+    curve *pCurve=m_pCurve;
+    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
+        {
+        m_pCurve->Transform(Trans);
+        }
+    else
+        {
+        //TODO: Make a copy and transform the copy.
+        throw std::logic_error("Missing implementation of Transform() when curve has other owners");
+        }
+    }
+
+curve *extrude::UParamLine(SGM::Result &, double) const
+    { throw std::logic_error("Derived class of surface must override UParamLine()"); }
+
+curve *extrude::VParamLine(SGM::Result &, double) const
+    { throw std::logic_error("Derived class of surface must override VParamLine()"); }
 
 void extrude::SetCurve(curve *pCurve)
     {

@@ -1,4 +1,6 @@
 #include "SGMVector.h"
+#include "SGMTransform.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
@@ -45,6 +47,110 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
             Evaluate(uv,&Pos);
             m_aSeedPoints.push_back(Pos);
             }
+        }
+    }
+
+void NUBsurface::Transform(SGM::Transform3D const &Trans)
+    {
+    size_t nSize1=m_aaControlPoints.size();
+    size_t nSize2=m_aaControlPoints[0].size();
+    for(size_t Index1=0;Index1<nSize1;++Index1)
+        {
+        for(size_t Index2=0;Index2<nSize2;++Index2)
+            {
+            m_aaControlPoints[Index1][Index2]=Trans*m_aaControlPoints[Index1][Index2];
+            }
+        }
+    }
+
+curve *NUBsurface::UParamLine(SGM::Result &rResult, double dU) const
+    {
+    if(m_bSingularHighU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+        {
+        SGM::Point3D Pos;
+        Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+        return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+        }
+    else if(m_bSingularLowU && SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+        {
+        SGM::Point3D Pos;
+        Evaluate(SGM::Point2D(dU,m_Domain.m_VDomain.m_dMin),&Pos);
+        return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+        }
+    else
+        {
+        std::vector<double> const &aUKnots=GetUKnots();
+        std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=GetControlPoints();
+        size_t nUDegree=GetUDegree();
+        size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
+
+        double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+        double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+        size_t Index1,Index2;
+        for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+            {
+            aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+            }
+        FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
+
+        std::vector<SGM::Point3D> aControlPoints;
+        size_t nControlPoints=aaControlPoints[0].size();
+        aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
+        for(Index1=0;Index1<nControlPoints;++Index1)
+            {
+            for(Index2=0;Index2<=nUDegree;++Index2)
+                {
+                aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                                        SGM::Vector3D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
+                }
+            }
+        curve *pCurve=new NUBcurve(rResult,aControlPoints,GetVKnots());
+        return pCurve;
+        }
+    }
+
+curve *NUBsurface::VParamLine(SGM::Result &rResult, double dV) const
+    {
+    if(m_bSingularHighV && SGM::NearEqual(m_Domain.m_VDomain.m_dMax,dV,SGM_MIN_TOL,false))
+        {
+        SGM::Point3D Pos;
+        Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+        return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+        }
+    else if(m_bSingularLowV && SGM::NearEqual(m_Domain.m_VDomain.m_dMin,dV,SGM_MIN_TOL,false))
+        {
+        SGM::Point3D Pos;
+        Evaluate(SGM::Point2D(dV,m_Domain.m_VDomain.m_dMin),&Pos);
+        return new PointCurve(rResult,Pos,&m_Domain.m_UDomain);
+        }
+    else
+        {
+        std::vector<double> const &aVKnots=GetVKnots();
+        std::vector<std::vector<SGM::Point3D> > const &aaControlPoints=GetControlPoints();
+        size_t nUDegree=GetUDegree();
+        size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nUDegree,dV,aVKnots);
+
+        double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+        double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+        size_t Index1,Index2;
+        for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+            {
+            aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+            }
+        FindBasisFunctions(nSpanIndex,dV,nUDegree,0,&aVKnots[0],aaBasisFunctions);
+
+        std::vector<SGM::Point3D> aControlPoints;
+        size_t nControlPoints=aaControlPoints.size();
+        aControlPoints.assign(nControlPoints,SGM::Point3D(0,0,0));
+        for(Index1=0;Index1<nControlPoints;++Index1)
+            {
+            for(Index2=0;Index2<=nUDegree;++Index2)
+                {
+                aControlPoints[Index1]+=aaBasisFunctions[0][Index2]*
+                                        SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nUDegree+Index2]);
+                }
+            }
+        return new NUBcurve(rResult,aControlPoints,GetUKnots());
         }
     }
 
