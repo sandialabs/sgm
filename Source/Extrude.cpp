@@ -39,7 +39,6 @@ void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
 void extrude::Transform(SGM::Transform3D const &Trans)
     {
     m_vAxis=Trans*m_vAxis;
-    curve *pCurve=m_pCurve;
     if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
         {
         m_pCurve->Transform(Trans);

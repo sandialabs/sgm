@@ -1,14 +1,14 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
-#include <Intersectors.h>
+//#include <Intersectors.h>
 
 #include "SGMVector.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMIntersector.h"
 #include "SGMSegment.h"
-#include "Surface.h"
+//#include "Surface.h"
 
 #include "test_utility.h"
 
@@ -1340,6 +1340,7 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+#if 0
 TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -1357,7 +1358,7 @@ TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
     std::vector<SGM::IntersectionType> aTypes;
       
     double dTolerance = SGM_MIN_TOL;
-    const bool bUseWholeLine = false;
+    //const bool bUseWholeLine = false;
 
     SGM::Interval1D Domain(1.e-6,1.e12);
 
@@ -1380,5 +1381,6 @@ TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
 
     EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
-}
+    }
+#endif
 

@@ -68,7 +68,7 @@ void plane::Transform(SGM::Transform3D const &Trans)
     m_dScale*=Trans.Scale();
     }
 
-curve *plane::UParamLine(SGM::Result &rResult, double dU) const
+curve *plane::UParamLine(SGM::Result &, double) const
     { return nullptr; } // no curve
 
 curve *plane::VParamLine(SGM::Result &, double) const

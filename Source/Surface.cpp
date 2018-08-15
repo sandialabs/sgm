@@ -24,11 +24,10 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularHighV=false;
     }
 
-surface *surface::Clone(SGM::Result &rResult) const
-{
-    throw std::logic_error("Derived class of surface did not override Clone()");
+surface *surface::Clone(SGM::Result &) const
+    {
     return nullptr;
-}
+    }
 
 void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
@@ -98,7 +97,7 @@ double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
     return SGM::IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
     }
 
-void surface::Transform(SGM::Transform3D const &Trans)
+void surface::Transform(SGM::Transform3D const &)
     { throw std::logic_error("Derived class of surface must override Transform()"); }
 
 curve *surface::UParamLine(SGM::Result &, double) const
