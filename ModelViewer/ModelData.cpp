@@ -466,6 +466,8 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
 
     add_attributes_to_tree(body_item, BodyID);
 
+    add_bounding_box_to_tree(body_item, BodyID);
+
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(dPtr->mResult, BodyID, sVolumes);
 
@@ -675,6 +677,27 @@ void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID
     snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Pos.m_x, Pos.m_y, Pos.m_z);
     data_item->setText(0, "Position");
     data_item->setText(1, Data);
+}
+
+void ModelData::add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID)
+{
+    SGM::Interval3D Interval = SGM::GetBoundingBox(dPtr->mResult, EntityID);
+
+    auto *box_data_item = new QTreeWidgetItem(parent);
+    box_data_item->setText(0, "Bounding Box");
+    char Data[100];
+    auto *Xdata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_XDomain.m_dMin, Interval.m_XDomain.m_dMax);
+    Xdata_item->setText(0, "X Range");
+    Xdata_item->setText(1, Data);
+    auto *Ydata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_YDomain.m_dMin, Interval.m_YDomain.m_dMax);
+    Ydata_item->setText(0, "Y Range");
+    Ydata_item->setText(1, Data);
+    auto *Zdata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_ZDomain.m_dMin, Interval.m_ZDomain.m_dMax);
+    Zdata_item->setText(0, "Z Range");
+    Zdata_item->setText(1, Data);
 }
 
 void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface SurfaceID)
