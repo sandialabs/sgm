@@ -1,6 +1,7 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
+#include <Intersectors.h>
 
 #include "SGMVector.h"
 #include "SGMPrimitives.h"
@@ -1357,7 +1358,20 @@ TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
       
     double dTolerance = SGM_MIN_TOL;
     const bool bUseWholeLine = false;
-    RayFire(rResult,Origin,Axis, EntityID, aPoints, aTypes, dTolerance, bUseWholeLine);
+
+    SGM::Interval1D Domain(1.e-6,1.e12);
+
+    SGMInternal::IntersectLineAndSurface(
+            rResult,
+            Origin,
+            Axis,
+            Domain,
+            &cylinder,
+            dTolerance,
+            aPoints,
+            aTypes);
+
+    //RayFire(rResult,Origin,Axis, EntityID, aPoints, aTypes, dTolerance, bUseWholeLine);
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
