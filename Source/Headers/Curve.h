@@ -70,8 +70,6 @@ class curve : public entity
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
-        void Remove(SGM::Result &rResult);
-
         void AddEdge(edge *pEdge);
 
         void RemoveEdge(edge *pEdge);
@@ -88,27 +86,27 @@ class curve : public entity
 
         bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
 
-        void Evaluate(double         t,
+        virtual void Evaluate(double         t,
                       SGM::Point3D  *Pos,
                       SGM::Vector3D *D1=nullptr,
                       SGM::Vector3D *D2=nullptr) const;
 
-        SGM::Vector3D Curvature(double t) const;
+        virtual SGM::Vector3D Curvature(double t) const;
 
-        double Inverse(SGM::Point3D const &Pos,
+        virtual double Inverse(SGM::Point3D const &Pos,
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const;
 
-        void Transform(SGM::Transform3D const &Trans);
+        virtual void Transform(SGM::Transform3D const &Trans);
 
-        void Negate();
+        virtual void Negate();
 
-        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
+        virtual double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
 
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
-        int Continuity() const;
+        virtual int Continuity() const;
 
     protected:
         
