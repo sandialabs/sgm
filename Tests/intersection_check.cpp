@@ -1337,7 +1337,16 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
       EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
     }
 
-    SGMTesting::ReleaseTestThing(pThing);
+    //SGM::Interval1D domain = SGM::GetDomainOfCurve(rResult, NURBcurve);
+    //SGM::CreateEdge(rResult, NURBcurve, &domain);
+    //SGM::Curve curve = SGM::CreatePointCurve(rResult, aPoints[0]);
+    //SGM::CreateEdge(rResult, curve);
+    //curve = SGM::CreatePointCurve(rResult, aPoints[1]);
+    //SGM::CreateEdge(rResult, curve);
+
+    //SGM::CreateDisk(rResult, aPoints[0], PlaneNorm, 3);
+
+    SGMTesting::ReleaseTestThing(pThing); 
 }
 
 #if 0
