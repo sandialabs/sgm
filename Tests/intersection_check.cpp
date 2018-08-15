@@ -7,6 +7,7 @@
 #include "SGMGeometry.h"
 #include "SGMIntersector.h"
 #include "SGMSegment.h"
+#include "Surface.h"
 
 #include "test_utility.h"
 
@@ -1337,3 +1338,33 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Bottom(0,0,-5),Top(0,0,5);
+    double dRadius=7.0;
+    SGMInternal::cylinder cylinder(rResult,Bottom,Top,dRadius);
+    SGM::Entity EntityID = cylinder.GetID();
+    
+    SGM::Point3D Origin(4,-4,0);
+    SGM::UnitVector3D Axis(1,-1,0);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+      
+    double dTolerance = SGM_MIN_TOL;
+    const bool bUseWholeLine = false;
+    RayFire(rResult,Origin,Axis, EntityID, aPoints, aTypes, dTolerance, bUseWholeLine);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+
+    SGM::Point3D ExpectedPos(sqrt(7.0),-sqrt(7.0),0);
+
+    EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
+    EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+}
+
