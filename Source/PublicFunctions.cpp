@@ -70,18 +70,26 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
     return SGM::Complex(pComplex->GetID());
     }
 
-size_t SGM::FindComponents(SGM::Result               &,//rResult,
-                           SGM::Complex const        &,//ComplexID,
-                           std::vector<SGM::Complex> &)//aComponents)
+size_t SGM::FindComponents(SGM::Result               &rResult,
+                           SGM::Complex const        &ComplexID,
+                           std::vector<SGM::Complex> &aComponents)
     {
-    return 0;
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    std::vector<SGMInternal::complex *> aComps=pComplex->FindComponents(rResult);
+    size_t nComps=aComps.size();
+    for(auto pComp : aComps)
+        {
+        aComponents.push_back(SGM::Complex(pComp->GetID()));
+        }
+    return nComps;
     }
 
-size_t SGM::FindBoundary(SGM::Result               &,//rResult,
-                         SGM::Complex        const &,//ComplexID,
-                         std::vector<SGM::Complex> &)//aBoundary)
+SGM::Complex SGM::FindBoundary(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
     {
-    return 0;
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    SGMInternal::complex *pBoundary=pComplex->FindBoundary(rResult);
+    return SGM::Complex(pBoundary->GetID());
     }
 
 size_t SGM::FindGenus(SGM::Result        &,//rResult,
@@ -426,11 +434,11 @@ SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
     return SGM::Complex(pAnswer->GetID());
     }
 
-std::vector<SGM::Complex> SGM::FindBoundary(SGM::Result        &,//rResult,
-                                            SGM::Complex const &)//ComplexID)
+void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
+                             SGM::Complex &ComplexID)
     {
-    std::vector<SGM::Complex> aAnswer;
-    return aAnswer;
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    pComplex->ReduceToUsedPoints();
     }
 
 void SGM::FindBodies(SGM::Result         &rResult,

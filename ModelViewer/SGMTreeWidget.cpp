@@ -67,6 +67,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     *option_cover=nullptr,
                     *option_rebuild=nullptr,
                     *option_boundary=nullptr,
+                    *option_find_components=nullptr,
                     *option_merge=nullptr;
 
             option_color = menu.addAction(tr("Set Color"));
@@ -83,6 +84,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 option_cover = menu.addAction(tr("Cover"));
                 option_merge = menu.addAction(tr("Merge"));
                 option_boundary = menu.addAction(tr("Boundary"));
+                option_find_components = menu.addAction(tr("Split by Components"));
                 }
             option_rebuild = menu.addAction(tr("Rebuild Tree"));
 
@@ -127,6 +129,13 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 for(Index1=0;Index1<nEnts;++Index1)
                     {
                     mModel->Merge(aEnts[Index1]);
+                    }
+                }
+            else if(result == option_find_components)
+                {
+                for(Index1=0;Index1<nEnts;++Index1)
+                    {
+                    mModel->FindComponents(aEnts[Index1]);
                     }
                 }
             else if(result == option_boundary)

@@ -25,14 +25,14 @@ vertex *vertex::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
-SGM::Interval3D const &vertex::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
     {
     if (m_Box.IsEmpty())
         m_Box=SGM::Interval3D(GetPoint());
     return m_Box;
     }
 
-void vertex::SeverRelations(SGM::Result &rResult)
+void vertex::SeverRelations(SGM::Result &)
     {
     std::set<edge *,EntityCompare> sEdges=GetEdges();
     for(auto pEdge : sEdges)

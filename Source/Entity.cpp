@@ -21,7 +21,7 @@ bool entity::Check(SGM::Result              &,
     return false;
 }
 
-entity *entity::Clone(SGM::Result &rResult) const
+entity *entity::Clone(SGM::Result &) const
     {
     throw std::logic_error("Derived classes must override Clone()");
     }
@@ -36,7 +36,7 @@ void entity::ResetBox(SGM::Result &) const
     throw std::logic_error("Derived class must implement ResetBox()");
     }
 
-void entity::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+void entity::ReplacePointers(std::map<entity *,entity *> const &)
     {
     throw std::logic_error("Derived class must implement ReplacePointers()");
     }

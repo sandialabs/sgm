@@ -46,7 +46,7 @@ surface *surface::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
-void surface::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
     // do nothing, derived classes can override
     }

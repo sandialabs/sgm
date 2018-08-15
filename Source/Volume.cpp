@@ -51,7 +51,7 @@ bool volume::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
-void volume::SeverRelations(SGM::Result &rResult)
+void volume::SeverRelations(SGM::Result &)
     {
     if(GetBody())
         GetBody()->RemoveVolume(this);

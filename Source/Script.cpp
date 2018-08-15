@@ -888,34 +888,6 @@ bool ReadFindComponents(SGM::Result                    &rResult,
     return bAnswer;
     }
 
-bool ReadFindBoundary(SGM::Result                    &rResult,
-                      std::string                    &sLineString,
-                      std::map<std::string,Argument> &mArgumentMap)
-    {
-    bool bAnswer=true;
-    
-    // size_t=FindBoundary(Complex,ComplexVector);
-
-    std::vector<ArgumentType> aTypes;
-    aTypes.push_back(boolType);
-    aTypes.push_back(ComplexType);
-    aTypes.push_back(aComplexType);
-    std::vector<Argument> aArguments;
-    FindArguments(sLineString,aTypes,aArguments,mArgumentMap);
-
-    std::vector<SGM::Complex> aOutput;
-    size_t nSize=SGM::FindBoundary(rResult,aArguments[1].m_Complex,aOutput);
-
-    Argument Arg;
-    Arg.m_Size=nSize;
-    mArgumentMap[aArguments[0].m_String]=Arg;
-    Argument Arg2;
-    Arg2.m_aComplex=aOutput;
-    mArgumentMap[aArguments[2].m_String]=Arg2;
-
-    return bAnswer;
-    }
-
 bool ReadFindGenus(SGM::Result                    &rResult,
                    std::string                    &sLineString,
                    std::map<std::string,Argument> &mArgumentMap)
@@ -2731,7 +2703,6 @@ void FindFunctionMap(std::map<std::string,SGMFunction> &FunctionMap)
     FunctionMap["CreateRectangle"]=ReadCreateRectangle;
 
     FunctionMap["FindComponents"]=ReadFindComponents;
-    FunctionMap["FindBoundary"]  =ReadFindBoundary;
     FunctionMap["FindGenus"]     =ReadFindGenus;
 
     FunctionMap["SplitWithPlane"]  =ReadSplitWithPlane;

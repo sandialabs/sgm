@@ -316,18 +316,21 @@ void ModelData::create_revolve(SGM::Point3D const &Origin,
 void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue)
 {
     SGM::ChangeColor(dPtr->mResult, EntityID, nRed, nGreen, nBlue);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -335,6 +338,7 @@ void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -342,6 +346,16 @@ void ModelData::Merge(SGM::Entity EntityID)
 {
     SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
+    rebuild_graphics(false);
+}
+
+void ModelData::FindComponents(SGM::Entity EntityID)
+{
+    std::vector<SGM::Complex> aComponents;
+    SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -349,6 +363,7 @@ void ModelData::Boundary(SGM::Entity EntityID)
 {
     SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -363,12 +378,14 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             }
         }
     SGM::UnhookFaces(dPtr->mResult, aFaces);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 

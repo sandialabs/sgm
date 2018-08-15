@@ -43,7 +43,7 @@ namespace SGMInternal {
             pOwner->RemoveOwner(this);
     }
 
-    inline void entity::SeverRelations(SGM::Result &rResult)
+    inline void entity::SeverRelations(SGM::Result &)
     { RemoveAllOwners(); } // default implementation
 
 }

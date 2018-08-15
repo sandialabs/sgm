@@ -92,11 +92,7 @@ protected:
 
     entity(const entity&) = default;
 
-    entity(entity&&) = default;
-
     entity& operator=(const entity&) = default;
-
-    entity& operator=(entity&&) = default;
 
     void RemoveAllOwners();
 };
@@ -118,7 +114,7 @@ class thing : public entity
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        void ResetBox(SGM::Result &rResult) const override { m_Box.Reset(); }
+        void ResetBox(SGM::Result &) const override { m_Box.Reset(); }
 
         void AddToMap(size_t nID,entity *pEntity);
 
@@ -279,10 +275,10 @@ class complex : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override
+        void ReplacePointers(std::map<entity *,entity *> const &) override
         { throw std::logic_error("not implemented"); }
 
-        complex *Clone(SGM::Result &rResult) const override
+        complex *Clone(SGM::Result &) const override
         { throw std::logic_error("not implemented"); }
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
@@ -297,7 +293,7 @@ class complex : public topology
 
         double Area() const;
 
-        double FindVolume(SGM::Result &rResult) const
+        double FindVolume(SGM::Result &) const
         { throw std::logic_error("not implemented"); }
 
         void Transform(SGM::Transform3D const &Trans);
@@ -306,7 +302,11 @@ class complex : public topology
 
         complex *Merge(SGM::Result &rResult) const;
 
-        std::vector<complex *> FindBoundary(SGM::Result &rResult) const;
+        complex *FindBoundary(SGM::Result &rResult) const;
+
+        std::vector<complex *> FindComponents(SGM::Result &rResult) const;
+
+        void ReduceToUsedPoints();
 
     private:
 
@@ -653,10 +653,10 @@ class attribute : public entity
 
         ~attribute() override = default;
 
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const override { return true; }
+        bool Check(SGM::Result              &,
+                   SGM::CheckOptions  const &,
+                   std::vector<std::string> &,
+                   bool                      ) const override { return true; }
 
         std::string const &GetName() const {return m_Name;}
 

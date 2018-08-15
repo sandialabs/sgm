@@ -97,7 +97,7 @@ bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
-void face::SeverRelations(SGM::Result &rResult)
+void face::SeverRelations(SGM::Result &)
     {
     if(GetVolume())
         GetVolume()->RemoveFace(this);
