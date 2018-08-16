@@ -34,6 +34,8 @@ namespace SGMInternal
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+class surface;
+
 class surface : public entity
     {
     public:
@@ -62,7 +64,7 @@ class surface : public entity
                               SGM::UnitVector3D  *Norm=nullptr,
                               SGM::Vector3D      *Duu=nullptr,
                               SGM::Vector3D      *Duv=nullptr,
-                              SGM::Vector3D      *Dvv=nullptr) const;
+                              SGM::Vector3D      *Dvv=nullptr) const = 0;
 
         virtual SGM::Point2D Inverse(SGM::Point3D const &Pos,
                                      SGM::Point3D       *ClosePos=nullptr,
@@ -78,13 +80,13 @@ class surface : public entity
                                         double             &k1,
                                         double             &k2) const;
 
+        virtual void Transform(SGM::Transform3D const &Trans);
+
         // TODO: rename this to CreateUParamLine because it returns the result of a call to new
         virtual curve *UParamLine(SGM::Result &rResult,double dU) const;
 
         // TODO: rename this to CreateVParamLine because it returns the result of a call to new
         virtual curve *VParamLine(SGM::Result &rResult,double dV) const;
-
-        virtual void Transform(SGM::Transform3D const &Trans);
 
         // Returns the largest integer that the surface is Cn with respect to U for.
         // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
@@ -141,6 +143,9 @@ class surface : public entity
         SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D        &uv,
                                                SGM::Vector3D const &Vec) const;
 
+        SGM::Point2D NewtonsMethod(SGM::Point2D const &StartUV,
+                                   SGM::Point3D const &Pos) const;
+
     protected:
 
         std::set<face *,EntityCompare> m_sFaces;
@@ -174,12 +179,31 @@ class plane : public surface
               plane  const *pPlane);
 
         plane *Clone(SGM::Result &rResult) const override;
-        
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -199,12 +223,33 @@ class cylinder : public surface
                  SGM::Point3D      const &Top,
                  double                   dRadius,
                  SGM::UnitVector3D const *XAxis=nullptr);
-        
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -228,12 +273,33 @@ class cone : public surface
              SGM::UnitVector3D const *XAxis=nullptr);
 
         double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
-        
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
 
@@ -257,12 +323,33 @@ class sphere : public surface
                double                   dRadius,
                SGM::UnitVector3D const *XAxis=nullptr,
                SGM::UnitVector3D const *YAxis=nullptr);
-        
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -284,12 +371,27 @@ class torus : public surface
               double                   dMajorRadius,
               bool                     bApple,
               SGM::UnitVector3D const *XAxis=nullptr);
-        
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         SGM::TorusKindType GetKind() const {return m_nKind;}
 
@@ -320,11 +422,24 @@ class NUBsurface: public surface
                    std::vector<double>                     const &aUKnots,
                    std::vector<double>                     const &aVKnots);
 
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
@@ -381,11 +496,24 @@ class NURBsurface: public surface
                     std::vector<double>                     const &aUKnots,
                     std::vector<double>                     const &aVKnots);
 
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
@@ -444,13 +572,26 @@ class revolve : public surface
 
         ~revolve() override;
 
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         void SetCurve(curve *pCurve);
 
@@ -473,13 +614,26 @@ class extrude : public surface
 
         ~extrude() override;
 
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
-
-        void Transform(SGM::Transform3D const &Trans) override;
 
         void SetCurve(curve *pCurve);
 

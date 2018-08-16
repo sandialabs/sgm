@@ -59,6 +59,90 @@ plane *plane::Clone(SGM::Result &rResult) const
     return pAnswer;
     }
 
+void plane::Evaluate(SGM::Point2D const &uv,
+                     SGM::Point3D       *Pos,
+                     SGM::Vector3D      *Du,
+                     SGM::Vector3D      *Dv,
+                     SGM::UnitVector3D  *Norm,
+                     SGM::Vector3D      *Duu,
+                     SGM::Vector3D      *Duv,
+                     SGM::Vector3D      *Dvv) const
+    {
+    if(Pos)
+        {
+        Pos->m_x=m_Origin.m_x+(m_XAxis.m_x*uv.m_u+m_YAxis.m_x*uv.m_v)*m_dScale;
+        Pos->m_y=m_Origin.m_y+(m_XAxis.m_y*uv.m_u+m_YAxis.m_y*uv.m_v)*m_dScale;
+        Pos->m_z=m_Origin.m_z+(m_XAxis.m_z*uv.m_u+m_YAxis.m_z*uv.m_v)*m_dScale;
+        }
+    if(Du)
+        {
+        Du->m_x=m_XAxis.m_x*m_dScale;
+        Du->m_y=m_XAxis.m_y*m_dScale;
+        Du->m_z=m_XAxis.m_z*m_dScale;
+        }
+    if(Dv)
+        {
+        Dv->m_x=m_YAxis.m_x*m_dScale;
+        Dv->m_y=m_YAxis.m_y*m_dScale;
+        Dv->m_z=m_YAxis.m_z*m_dScale;
+        }
+    if(Norm)
+        {
+        *Norm=m_ZAxis;
+        }
+    if(Duu)
+        {
+        Duu->m_x=0;
+        Duu->m_y=0;
+        Duu->m_z=0;
+        }
+    if(Duv)
+        {
+        Duv->m_x=0;
+        Duv->m_y=0;
+        Duv->m_z=0;
+        }
+    if(Dvv)
+        {
+        Dvv->m_x=0;
+        Dvv->m_y=0;
+        Dvv->m_z=0;
+        }
+    }
+
+SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
+                            SGM::Point3D       *ClosePos,
+                            SGM::Point2D const *) const
+    {
+    SGM::Point2D uv;
+
+    double dx=Pos.m_x-m_Origin.m_x;
+    double dy=Pos.m_y-m_Origin.m_y;
+    double dz=Pos.m_z-m_Origin.m_z;
+    uv.m_u=(dx*m_XAxis.m_x+dy*m_XAxis.m_y+dz*m_XAxis.m_z)/m_dScale;
+    uv.m_v=(dx*m_YAxis.m_x+dy*m_YAxis.m_y+dz*m_YAxis.m_z)/m_dScale;
+
+    if(ClosePos)
+        {
+        ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*uv.m_u+m_YAxis.m_x*uv.m_v)*m_dScale;
+        ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*uv.m_u+m_YAxis.m_y*uv.m_v)*m_dScale;
+        ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*uv.m_u+m_YAxis.m_z*uv.m_v)*m_dScale;
+        }
+    return uv;
+    }
+
+void plane::PrincipleCurvature(SGM::Point2D const   &,
+                                 SGM::UnitVector3D  &Vec1,
+                                 SGM::UnitVector3D  &Vec2,
+                                 double             &k1,
+                                 double             &k2) const
+    {
+    Vec1=m_XAxis;
+    Vec2=m_YAxis;
+    k1=0;
+    k2=0;
+    }
+
 void plane::Transform(SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
