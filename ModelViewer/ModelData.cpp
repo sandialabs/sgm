@@ -465,7 +465,6 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     body_item->setText(0, Data0);
 
     add_attributes_to_tree(body_item, BodyID);
-
     add_bounding_box_to_tree(body_item, BodyID);
 
     std::set<SGM::Volume> sVolumes;
@@ -536,6 +535,8 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     complex_item->setText(0, Data0);
 
     add_attributes_to_tree(complex_item, ComplexID);
+    add_bounding_box_to_tree(complex_item, ComplexID);
+
 }
 
 void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID)
@@ -548,6 +549,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     volume_item->setText(0, Data0);
 
     add_attributes_to_tree(volume_item, VolumeID);
+    add_bounding_box_to_tree(volume_item, VolumeID);
 
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(dPtr->mResult, VolumeID, sFaces);
@@ -599,6 +601,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     face_item->setText(0, Data0);
 
     add_attributes_to_tree(face_item, FaceID);
+    add_bounding_box_to_tree(face_item, FaceID);
 
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(dPtr->mResult, FaceID, sEdges);
@@ -619,6 +622,13 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     SGM::FindSurfaces(dPtr->mResult, FaceID, sSurfaces);
     add_surface_to_tree(face_item, *(sSurfaces.begin()));
 
+    int nSides = SGM::GetSidesOfFace(dPtr->mResult, FaceID);
+    auto *sides_data_item = new QTreeWidgetItem(face_item);
+    sides_data_item->setText(0, "Sides");
+    char Data[100];
+    snprintf(Data, sizeof(Data), "%d", nSides);
+    sides_data_item->setText(1, Data);
+
     for (const SGM::Edge &EdgeID : sEdges)
         {
         add_edge_to_tree(face_item, EdgeID);
@@ -635,6 +645,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     edge_item->setText(0, Data0);
 
     add_attributes_to_tree(edge_item, EdgeID);
+    add_bounding_box_to_tree(edge_item, EdgeID);
 
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(dPtr->mResult, EdgeID, sVertices);
