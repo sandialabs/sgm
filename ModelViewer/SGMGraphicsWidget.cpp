@@ -614,7 +614,9 @@ public:
 
     /// Next index available in a vertex temporary index buffer.
     GLuint get_vertex_index_offset()
-    { return (GLuint)(mTempDataBuffer.size() / 6); }
+    { 
+    return (GLuint)(mTempDataBuffer.size() / 6); 
+    }
 
     void flush(QtOpenGL *opengl)
     {

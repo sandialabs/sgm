@@ -54,7 +54,7 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
             dMaxLength = std::max(dMaxLength, dLength);
             }
         m_Box = SGM::Interval3D(aPoints);
-        m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
+        m_Box=m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
         }
     return m_Box;
     }

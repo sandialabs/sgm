@@ -1845,11 +1845,18 @@ void CreateEntities(SGM::Result                   &rResult,
                         double x=SLD.m_aDoubles[0];
                         double y=SLD.m_aDoubles[1];
                         double z=SLD.m_aDoubles[2];
+
+                        //body *pBody=pVolume->GetBody();
+                        //pBody->RemoveVolume(pVolume);
+                        //pVolume->SetBody(nullptr);
+                        //rResult.GetThing()->DeleteEntity(pVolume);
+                        //pBody->AddPoint(SGM::Point3D(x,y,z));
+
                         body *pBody=pVolume->GetBody();
-                        pBody->RemoveVolume(pVolume);
-                        pVolume->SetBody(nullptr);
+                        rResult.GetThing()->DeleteEntity(pBody);
                         rResult.GetThing()->DeleteEntity(pVolume);
-                        pBody->AddPoint(SGM::Point3D(x,y,z));
+                        vertex *pVertex=new vertex(rResult,SGM::Point3D(x,y,z));
+                        mEntityMap[nVolumeID]=pVertex;
                         }
                     else
                         {

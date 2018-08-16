@@ -1334,6 +1334,9 @@ inline void update_bounds_complex(SGM::Result &rResult, const SGM::Complex &comp
 inline void update_bounds_vertex(SGM::Point3D const &vertex, SGMGraphicsWidget *mGraphics)
 {
     mGraphics->update_point_bounds(vertex);
+    SGM::Interval3D box(vertex);
+    box=box.Extend(SGM_FIT);
+    mGraphics->update_box_bounds(box);
 }
 
 inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGMGraphicsWidget *mGraphics)
@@ -1567,8 +1570,16 @@ void ModelData::rebuild_graphics(bool bReset)
 
     if (mvertex_mode)
         {
+        
         std::set<SGM::Vertex> vertex_list;
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
+        SGM::Vector3D Green(0,1,0);
+
+        if(vertex_list.size())
+            {
+            update_bounds_edge(dPtr->mResult, SGM::Edge(0), dPtr->mGraphics);
+            }
+
         for (const SGM::Vertex &vertex : vertex_list)
             {
             SGM::Point3D const &Pos = SGM::GetPointOfVertex(dPtr->mResult, vertex);
@@ -1581,7 +1592,6 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             
             size_t nPoints=complex_points.size();
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nPoints;++Index1)
                 {
