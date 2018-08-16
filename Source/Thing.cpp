@@ -40,7 +40,7 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &thing::GetBox(SGM::Result &) const
     {
     return m_Box;
     }

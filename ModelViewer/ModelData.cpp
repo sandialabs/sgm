@@ -316,18 +316,21 @@ void ModelData::create_revolve(SGM::Point3D const &Origin,
 void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue)
 {
     SGM::ChangeColor(dPtr->mResult, EntityID, nRed, nGreen, nBlue);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -335,6 +338,7 @@ void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -342,6 +346,24 @@ void ModelData::Merge(SGM::Entity EntityID)
 {
     SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
+    rebuild_graphics(false);
+}
+
+void ModelData::FindComponents(SGM::Entity EntityID)
+{
+    std::vector<SGM::Complex> aComponents;
+    SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
+    rebuild_graphics(false);
+}
+
+void ModelData::Boundary(SGM::Entity EntityID)
+{
+    SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -356,12 +378,14 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             }
         }
     SGM::UnhookFaces(dPtr->mResult, aFaces);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
 void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+    rebuild_tree();
     rebuild_graphics(false);
 }
 
@@ -441,6 +465,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     body_item->setText(0, Data0);
 
     add_attributes_to_tree(body_item, BodyID);
+    add_bounding_box_to_tree(body_item, BodyID);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(dPtr->mResult, BodyID, sVolumes);
@@ -510,6 +535,8 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     complex_item->setText(0, Data0);
 
     add_attributes_to_tree(complex_item, ComplexID);
+    add_bounding_box_to_tree(complex_item, ComplexID);
+
 }
 
 void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID)
@@ -522,6 +549,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     volume_item->setText(0, Data0);
 
     add_attributes_to_tree(volume_item, VolumeID);
+    add_bounding_box_to_tree(volume_item, VolumeID);
 
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(dPtr->mResult, VolumeID, sFaces);
@@ -573,6 +601,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     face_item->setText(0, Data0);
 
     add_attributes_to_tree(face_item, FaceID);
+    add_bounding_box_to_tree(face_item, FaceID);
 
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(dPtr->mResult, FaceID, sEdges);
@@ -593,6 +622,13 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     SGM::FindSurfaces(dPtr->mResult, FaceID, sSurfaces);
     add_surface_to_tree(face_item, *(sSurfaces.begin()));
 
+    int nSides = SGM::GetSidesOfFace(dPtr->mResult, FaceID);
+    auto *sides_data_item = new QTreeWidgetItem(face_item);
+    sides_data_item->setText(0, "Sides");
+    char Data[100];
+    snprintf(Data, sizeof(Data), "%d", nSides);
+    sides_data_item->setText(1, Data);
+
     for (const SGM::Edge &EdgeID : sEdges)
         {
         add_edge_to_tree(face_item, EdgeID);
@@ -609,6 +645,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     edge_item->setText(0, Data0);
 
     add_attributes_to_tree(edge_item, EdgeID);
+    add_bounding_box_to_tree(edge_item, EdgeID);
 
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(dPtr->mResult, EdgeID, sVertices);
@@ -651,6 +688,27 @@ void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID
     snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Pos.m_x, Pos.m_y, Pos.m_z);
     data_item->setText(0, "Position");
     data_item->setText(1, Data);
+}
+
+void ModelData::add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID)
+{
+    SGM::Interval3D Interval = SGM::GetBoundingBox(dPtr->mResult, EntityID);
+
+    auto *box_data_item = new QTreeWidgetItem(parent);
+    box_data_item->setText(0, "Bounding Box");
+    char Data[100];
+    auto *Xdata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_XDomain.m_dMin, Interval.m_XDomain.m_dMax);
+    Xdata_item->setText(0, "X Range");
+    Xdata_item->setText(1, Data);
+    auto *Ydata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_YDomain.m_dMin, Interval.m_YDomain.m_dMax);
+    Ydata_item->setText(0, "Y Range");
+    Ydata_item->setText(1, Data);
+    auto *Zdata_item = new QTreeWidgetItem(box_data_item);
+    snprintf(Data, sizeof(Data), "(%.15G to %.15G)", Interval.m_ZDomain.m_dMin, Interval.m_ZDomain.m_dMax);
+    Zdata_item->setText(0, "Z Range");
+    Zdata_item->setText(1, Data);
 }
 
 void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface SurfaceID)
@@ -1310,6 +1368,9 @@ inline void update_bounds_complex(SGM::Result &rResult, const SGM::Complex &comp
 inline void update_bounds_vertex(SGM::Point3D const &vertex, SGMGraphicsWidget *mGraphics)
 {
     mGraphics->update_point_bounds(vertex);
+    SGM::Interval3D box(vertex);
+    box=box.Extend(SGM_FIT);
+    mGraphics->update_box_bounds(box);
 }
 
 inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGMGraphicsWidget *mGraphics)
@@ -1543,8 +1604,16 @@ void ModelData::rebuild_graphics(bool bReset)
 
     if (mvertex_mode)
         {
+        
         std::set<SGM::Vertex> vertex_list;
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
+        SGM::Vector3D Green(0,1,0);
+
+        if(vertex_list.size())
+            {
+            update_bounds_edge(dPtr->mResult, SGM::Edge(0), dPtr->mGraphics);
+            }
+
         for (const SGM::Vertex &vertex : vertex_list)
             {
             SGM::Point3D const &Pos = SGM::GetPointOfVertex(dPtr->mResult, vertex);
@@ -1557,7 +1626,6 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             
             size_t nPoints=complex_points.size();
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nPoints;++Index1)
                 {

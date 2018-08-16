@@ -110,7 +110,7 @@ void body::ResetBox(SGM::Result &rResult) const
     rResult.GetThing()->ResetBox(rResult);
     }
 
-void body::SeverRelations(SGM::Result &rResult)
+void body::SeverRelations(SGM::Result &)
     {
     std::set<volume *,EntityCompare> sVolumes=GetVolumes();
     for(volume *pVolume : sVolumes)

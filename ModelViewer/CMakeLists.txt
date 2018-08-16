@@ -6,10 +6,20 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
 
-# When we drop VTK see if we can stop hiding this warning
+#use lower warning level for viewer project
 if(MSVC)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4996")
-endif()
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+  endif()
+  # Force to always compile with WX
+  if(CMAKE_CXX_FLAGS MATCHES "/WX")
+    string(REGEX REPLACE "/WX" "/WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  endif()
+endif(MSVC)
+
 
 get_target_property(_loc Qt5::qmake LOCATION)
 get_filename_component(_qmake_dir ${_loc} DIRECTORY)

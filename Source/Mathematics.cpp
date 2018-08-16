@@ -763,12 +763,30 @@ bool InTriangle(Point2D const &A,
     }
 
 
-bool InAngle(SGM::Point2D const &,//A,
-             SGM::Point2D const &,//B,
-             SGM::Point2D const &,//C,
-             SGM::Point2D const &)//D)
+bool InAngle(SGM::Point2D const &A,
+             SGM::Point2D const &B,
+             SGM::Point2D const &C,
+             SGM::Point2D const &D)
     {
-    return true;
+    SGM::UnitVector2D X=B-A;
+    SGM::UnitVector2D Y(-X.m_v,X.m_u);
+    SGM::Vector2D DA=D-A;
+    double dx=DA%X;
+    double dy=DA%Y;
+    double dAngleD=SAFEatan2(dy,dx);
+    if(dAngleD<0)
+        {
+        dAngleD+=SGM_TWO_PI;
+        }
+    SGM::Vector2D CA=C-A;
+    dx=CA%X;
+    dy=CA%Y;
+    double dAngleC=SAFEatan2(dy,dx);
+    if(dAngleC<0)
+        {
+        dAngleC+=SGM_TWO_PI;
+        }
+    return dAngleD<=dAngleC;
     }
 
 

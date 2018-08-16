@@ -107,8 +107,10 @@ namespace SGM
                                SGM::Point2D const &C,
                                SGM::Point2D const &D);
 
-    // Returns true if D is on the same side of line AB and C
-    // and D is on the same side of line AC as B.
+    // Returns true if D is inside the angle formed by A as the angle vertex
+    // and B and C as its sides.  If D is found first, before C when going
+    // counter clockwise from B to D around C, or if D is on the ray AB or AC,
+    // then then true is returned. 
 
     SGM_EXPORT bool InAngle(SGM::Point2D const &A,
                             SGM::Point2D const &B,

@@ -43,12 +43,11 @@ namespace SGM
                                      SGM::Complex const        &ComplexID,
                                      std::vector<SGM::Complex> &aComponents);
 
-    SGM_EXPORT size_t FindBoundary(SGM::Result               &rResult,
-                                   SGM::Complex        const &ComplexID,
-                                   std::vector<SGM::Complex> &aBoundary);
-
     SGM_EXPORT size_t FindGenus(SGM::Result        &rResult,
                                 SGM::Complex const &ComplexID);
+    
+    SGM_EXPORT SGM::Complex FindBoundary(SGM::Result        &rResult,
+                                         SGM::Complex const &ComplexID);
 
     // Splitting functions
 
@@ -81,6 +80,9 @@ namespace SGM
 
     SGM_EXPORT SGM::Complex MergeComplex(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);
+
+    SGM_EXPORT void ReduceToUsedPoints(SGM::Result  &rResult,
+                                       SGM::Complex &ComplexID);
 
     } // End of SGM namespace
 

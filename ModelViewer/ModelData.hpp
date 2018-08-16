@@ -135,6 +135,10 @@ public:
 
     void Merge(SGM::Entity EngityID);
 
+    void FindComponents(SGM::Entity EntityID);
+
+    void Boundary(SGM::Entity EngityID);
+
     void Unhook(std::vector<SGM::Entity> &aEnts);
 
     void DeleteEntity(SGM::Entity EntityID);
@@ -198,6 +202,8 @@ private:
     void get_complex_colors(const SGM::Complex &pComplex, std::vector<SGM::Vector3D> &complex_colors) const;
 
     SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
+
+    void add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID);
 
     double dDefaultFaceRed;
     double dDefaultFaceGreen;

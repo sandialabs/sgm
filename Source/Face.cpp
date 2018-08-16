@@ -81,7 +81,7 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
                 auto aTriangles = GetTriangles(rResult);
                 double dMaxLength = SGM::FindMaxEdgeLength(aPoints,aTriangles);
                 m_Box = SGM::Interval3D(aPoints);
-                m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
+                m_Box=m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
                 }
             }
         }
@@ -97,7 +97,7 @@ bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
-void face::SeverRelations(SGM::Result &rResult)
+void face::SeverRelations(SGM::Result &)
     {
     if(GetVolume())
         GetVolume()->RemoveFace(this);
