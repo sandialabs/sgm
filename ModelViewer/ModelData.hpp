@@ -203,6 +203,8 @@ private:
 
     SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
 
+    void add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID);
+
     double dDefaultFaceRed;
     double dDefaultFaceGreen;
     double dDefaultFaceBlue;

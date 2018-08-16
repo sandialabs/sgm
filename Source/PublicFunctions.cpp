@@ -619,6 +619,13 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
     return pFace->GetSurface()->GetID();
     }
 
+int SGM::GetSidesOfFace(SGM::Result     &rResult,
+                        SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->GetSides();
+    }
+
 SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,
                                             SGM::Edge const &EdgeID)
     {
