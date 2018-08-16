@@ -31,7 +31,7 @@ edge *CreateEdge(SGM::Result           &rResult,
         {
         SGM::Point3D StartPos,EndPos;
         pCurve->Evaluate(Domain.m_dMin,&StartPos);
-        pCurve->Evaluate(Domain.m_dMin,&EndPos);
+        pCurve->Evaluate(Domain.m_dMax,&EndPos);
         vertex *pStart=new vertex(rResult,StartPos);
         vertex *pEnd=new vertex(rResult,EndPos);
         pEdge->SetStart(pStart);

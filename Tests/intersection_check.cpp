@@ -1337,10 +1337,19 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
       EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
     }
 
-    SGMTesting::ReleaseTestThing(pThing);
+    //SGM::Interval1D domain = SGM::GetDomainOfCurve(rResult, NURBcurve);
+    //SGM::CreateEdge(rResult, NURBcurve, &domain);
+    //SGM::Curve curve = SGM::CreatePointCurve(rResult, aPoints[0]);
+    //SGM::CreateEdge(rResult, curve);
+    //curve = SGM::CreatePointCurve(rResult, aPoints[1]);
+    //SGM::CreateEdge(rResult, curve);
+
+    //SGM::CreateDisk(rResult, aPoints[0], PlaneNorm, 3);
+
+    SGMTesting::ReleaseTestThing(pThing); 
 }
 
-#if 0
+
 TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -1348,39 +1357,37 @@ TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
 
     SGM::Point3D Bottom(0,0,-5),Top(0,0,5);
     double dRadius=7.0;
-    SGMInternal::cylinder cylinder(rResult,Bottom,Top,dRadius);
-    SGM::Entity EntityID = cylinder.GetID();
+    SGM::Body BodyID = CreateCylinder(rResult, Bottom, Top, dRadius);
     
-    SGM::Point3D Origin(4,-4,0);
+    SGM::Point3D Origin(4,-3,0);
     SGM::UnitVector3D Axis(1,-1,0);
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
       
     double dTolerance = SGM_MIN_TOL;
-    //const bool bUseWholeLine = false;
+    const bool bUseWholeLine = false;
 
     SGM::Interval1D Domain(1.e-6,1.e12);
 
-    SGMInternal::IntersectLineAndSurface(
-            rResult,
-            Origin,
-            Axis,
-            Domain,
-            &cylinder,
-            dTolerance,
-            aPoints,
-            aTypes);
-
-    //RayFire(rResult,Origin,Axis, EntityID, aPoints, aTypes, dTolerance, bUseWholeLine);
+    RayFire(rResult,Origin,Axis, BodyID, aPoints, aTypes, dTolerance, bUseWholeLine);
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
 
-    SGM::Point3D ExpectedPos(sqrt(7.0),-sqrt(7.0),0);
+    SGM::Point3D ExpectedPos(sqrt(49./2.),-sqrt(49./2.),0);
 
     EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
-    }
-#endif
+
+    SGM::Curve LineID = SGM::CreateLine(rResult, Origin, Axis);
+    SGM::Interval1D LineInterval(0.0, 10.0); 
+    SGM::CreateEdge(rResult, LineID, &LineInterval);
+
+    SGM::Curve PointCurveID = SGM::CreatePointCurve(rResult, aPoints[0]);
+    SGM::CreateEdge(rResult, PointCurveID);
+
+    SGMTesting::ReleaseTestThing(pThing); 
+}
+
 
