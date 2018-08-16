@@ -1846,12 +1846,6 @@ void CreateEntities(SGM::Result                   &rResult,
                         double y=SLD.m_aDoubles[1];
                         double z=SLD.m_aDoubles[2];
 
-                        //body *pBody=pVolume->GetBody();
-                        //pBody->RemoveVolume(pVolume);
-                        //pVolume->SetBody(nullptr);
-                        //rResult.GetThing()->DeleteEntity(pVolume);
-                        //pBody->AddPoint(SGM::Point3D(x,y,z));
-
                         body *pBody=pVolume->GetBody();
                         rResult.GetThing()->DeleteEntity(pBody);
                         rResult.GetThing()->DeleteEntity(pVolume);
@@ -2259,8 +2253,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-//        size_t ID=pFace->GetID();
-//        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
+        size_t ID=pFace->GetID();
+        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
+        ID;
+        nType;
         pFace->GetTriangles(rResult);
         ++iter;
         }

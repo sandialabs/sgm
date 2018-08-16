@@ -1775,12 +1775,18 @@ SGM::Point2D surface::Inverse(SGM::Point3D const &Pos,
             SGM::Point3D PlanePos=Pos-vAxis*uv.m_v;
             if(pGuess)
                 {
-                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos,ClosePos,&(pGuess->m_u));
+                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos,nullptr,&(pGuess->m_u));
                 }
             else
                 {
-                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos,ClosePos);
+                uv.m_u=pExtrude->m_pCurve->Inverse(PlanePos);
                 }
+
+            if(ClosePos != nullptr)
+            {
+                pExtrude->Evaluate(uv,ClosePos);
+            }
+
             break;
             }
         default:
