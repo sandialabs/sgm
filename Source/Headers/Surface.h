@@ -68,7 +68,7 @@ class surface : public entity
 
         virtual SGM::Point2D Inverse(SGM::Point3D const &Pos,
                                      SGM::Point3D       *ClosePos=nullptr,
-                                     SGM::Point2D const *pGuess=nullptr) const;
+                                     SGM::Point2D const *pGuess=nullptr) const = 0;
 
         virtual bool IsSame(surface const *pOther,double dTolerance) const;
 
@@ -80,13 +80,11 @@ class surface : public entity
                                         double             &k1,
                                         double             &k2) const;
 
-        virtual void Transform(SGM::Transform3D const &Trans);
+        virtual void Transform(SGM::Transform3D const &Trans) = 0;
 
-        // TODO: rename this to CreateUParamLine because it returns the result of a call to new
-        virtual curve *UParamLine(SGM::Result &rResult,double dU) const;
+        virtual curve *UParamLine(SGM::Result &rResult,double dU) const = 0;
 
-        // TODO: rename this to CreateVParamLine because it returns the result of a call to new
-        virtual curve *VParamLine(SGM::Result &rResult,double dV) const;
+        virtual curve *VParamLine(SGM::Result &rResult,double dV) const = 0;
 
         // Returns the largest integer that the surface is Cn with respect to U for.
         // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
@@ -98,14 +96,13 @@ class surface : public entity
 
         virtual int VContinuity() const;
 
-        void AddFace(face *pFace);
+        void AddFace(face *pFace) { m_sFaces.insert(pFace); };
 
-        void RemoveFace(face *pFace);
+        void RemoveFace(face *pFace) { m_sFaces.erase(pFace); };
 
         std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
 
         SGM::EntityType GetSurfaceType() const {return m_SurfaceType;}
-
 
         // Returns the curvature in the given direction at the given uv point.
 
@@ -441,6 +438,16 @@ class NUBsurface: public surface
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
+        // Returns the largest integer that the surface is Cn with respect to U for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const override;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const override;
+
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
         size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
@@ -464,16 +471,6 @@ class NUBsurface: public surface
         size_t GetUParams() const {return m_nUParams;}
 
         size_t GetVParams() const {return m_nVParams;}
-
-        // Returns the largest integer that the surface is Cn with respect to U for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int UContinuity() const override;
-
-        // Returns the largest integer that the surface is Cn with respect to V for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int VContinuity() const override;
 
     public:
 
@@ -515,6 +512,16 @@ class NURBsurface: public surface
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
+        // Returns the largest integer that the surface is Cn with respect to U for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const override;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const override;
+
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
         size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
@@ -538,16 +545,6 @@ class NURBsurface: public surface
         size_t GetUParams() const {return m_nUParams;}
 
         size_t GetVParams() const {return m_nVParams;}
-
-        // Returns the largest integer that the surface is Cn with respect to U for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int UContinuity() const override;
-
-        // Returns the largest integer that the surface is Cn with respect to V for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int VContinuity() const override;
 
     public:
 

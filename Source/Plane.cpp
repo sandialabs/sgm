@@ -114,21 +114,21 @@ SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
                             SGM::Point3D       *ClosePos,
                             SGM::Point2D const *) const
     {
-    SGM::Point2D uv;
+        double dU, dV;
 
-    double dx=Pos.m_x-m_Origin.m_x;
-    double dy=Pos.m_y-m_Origin.m_y;
-    double dz=Pos.m_z-m_Origin.m_z;
-    uv.m_u=(dx*m_XAxis.m_x+dy*m_XAxis.m_y+dz*m_XAxis.m_z)/m_dScale;
-    uv.m_v=(dx*m_YAxis.m_x+dy*m_YAxis.m_y+dz*m_YAxis.m_z)/m_dScale;
+        double dx=Pos.m_x-m_Origin.m_x;
+        double dy=Pos.m_y-m_Origin.m_y;
+        double dz=Pos.m_z-m_Origin.m_z;
+        dU=(dx*m_XAxis.m_x+dy*m_XAxis.m_y+dz*m_XAxis.m_z)/m_dScale;
+        dV=(dx*m_YAxis.m_x+dy*m_YAxis.m_y+dz*m_YAxis.m_z)/m_dScale;
 
-    if(ClosePos)
-        {
-        ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*uv.m_u+m_YAxis.m_x*uv.m_v)*m_dScale;
-        ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*uv.m_u+m_YAxis.m_y*uv.m_v)*m_dScale;
-        ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*uv.m_u+m_YAxis.m_z*uv.m_v)*m_dScale;
-        }
-    return uv;
+        if(ClosePos)
+            {
+            ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*dU+m_YAxis.m_x*dV)*m_dScale;
+            ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*dU+m_YAxis.m_y*dV)*m_dScale;
+            ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*dU+m_YAxis.m_z*dV)*m_dScale;
+            }
+        return {dU,dV};
     }
 
 void plane::PrincipleCurvature(SGM::Point2D const   &,

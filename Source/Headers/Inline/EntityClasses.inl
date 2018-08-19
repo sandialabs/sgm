@@ -13,6 +13,10 @@ namespace SGMInternal {
     m_ID(rResult.GetThing()->GetNextID()),m_Type(nType)
     { rResult.GetThing()->AddToMap(m_ID,this); }
 
+    inline entity::entity(SGM::Result &rResult, entity const *other) :
+    m_ID(), m_Type(other->m_Type), m_sOwners(other->m_sOwners), m_sAttributes(other->m_sAttributes), m_Box(other->m_Box)
+    { rResult.GetThing()->AddToMap(m_ID,this); }
+
     inline size_t entity::GetID() const
     { return m_ID; }
 

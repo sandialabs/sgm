@@ -90,6 +90,10 @@ protected:
 
     entity() : m_ID(0), m_Type(SGM::ThingType) {}
 
+    // For calls to derived class Clone method
+
+    entity(SGM::Result &rResult, entity const *other);
+
     entity(const entity&) = default;
 
     entity& operator=(const entity&) = default;

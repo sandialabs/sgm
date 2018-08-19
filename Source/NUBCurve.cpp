@@ -1,15 +1,7 @@
 #include "SGMVector.h"
-#include "SGMInterval.h"
-#include "SGMMathematics.h"
-
-#include "EntityClasses.h"
+#include "SGMTransform.h"
 #include "Curve.h"
-
 #include "Faceter.h"
-#include <limits>
-#include <vector>
-#include <algorithm>
-#include <cfloat>
 
 namespace SGMInternal
 {
@@ -20,22 +12,126 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
     {
     m_Domain.m_dMin=m_aKnots.front();
     m_Domain.m_dMax=m_aKnots.back();
-    if(SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL))
+    m_bClosed = SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL);
+    }
+
+NUBcurve::NUBcurve(SGM::Result &rResult, NUBcurve const *other):
+    curve(rResult,SGM::NUBCurveType),
+    m_aControlPoints(other->m_aControlPoints),
+    m_aKnots(other->m_aKnots),
+    m_aSeedPoints(other->m_aSeedPoints),
+    m_aSeedParams(other->m_aSeedParams)
+    { }
+
+NUBcurve *NUBcurve::Clone(SGM::Result &rResult) const
+    {
+    return new NUBcurve(rResult,this);
+    }
+
+void NUBcurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
+    {
+    // From "The NURBS Book", page 82, Algorithm A3.1.
+
+    size_t nDegree=GetDegree();
+    size_t nSpanIndex=FindSpanIndex(m_Domain,nDegree,t,m_aKnots);
+    assert(nSpanIndex>=nDegree);
+    size_t nStart = nSpanIndex-nDegree;
+    size_t nDerivatives=0;
+    if(D1) nDerivatives=1;
+    if(D2) nDerivatives=2;
+    double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+    double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+    size_t Index1,Index2;
+    for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
         {
-        m_bClosed=true;
+        aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+        }
+    FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&m_aKnots[0],aaBasisFunctions);
+    if(Pos)
+        {
+        double *aBasis=aaBasisFunctions[0];
+        double x=0,y=0,z=0;
+        for(Index1=0,Index2=nStart;Index1<=nDegree;++Index1,++Index2)
+            {
+            x+=aBasis[Index1]*m_aControlPoints[Index2].m_x;
+            y+=aBasis[Index1]*m_aControlPoints[Index2].m_y;
+            z+=aBasis[Index1]*m_aControlPoints[Index2].m_z;
+            }
+        Pos->m_x=x;
+        Pos->m_y=y;
+        Pos->m_z=z;
+        }
+    if(D1)
+        {
+        double *aBasis=aaBasisFunctions[1];
+        double x=0,y=0,z=0;
+        for(Index1=0,Index2=nStart;Index1<=nDegree;++Index1,++Index2)
+            {
+            x+=aBasis[Index1]*m_aControlPoints[Index2].m_x;
+            y+=aBasis[Index1]*m_aControlPoints[Index2].m_y;
+            z+=aBasis[Index1]*m_aControlPoints[Index2].m_z;
+            }
+        D1->m_x=x;
+        D1->m_y=y;
+        D1->m_z=z;
+        }
+    if(D2)
+        {
+        double *aBasis=aaBasisFunctions[2];
+        double x=0,y=0,z=0;
+        for(Index1=0,Index2=nStart;Index1<=nDegree;++Index1,++Index2)
+            {
+            x+=aBasis[Index1]*m_aControlPoints[Index2].m_x;
+            y+=aBasis[Index1]*m_aControlPoints[Index2].m_y;
+            z+=aBasis[Index1]*m_aControlPoints[Index2].m_z;
+            }
+        D2->m_x=x;
+        D2->m_y=y;
+        D2->m_z=z;
         }
     }
 
-NUBcurve::NUBcurve(SGM::Result    &rResult,
-                   NUBcurve const *pNUB):
-    curve(rResult,SGM::NUBCurveType),m_aControlPoints(pNUB->m_aControlPoints),m_aKnots(pNUB->m_aKnots)
+double NUBcurve::Inverse(SGM::Point3D const &Pos,
+                         SGM::Point3D       *ClosePos,
+                         double       const *pGuess) const
     {
-    m_Domain.m_dMin=m_aKnots.front();
-    m_Domain.m_dMax=m_aKnots.back();
-    if(SGM::NearEqual(m_aControlPoints.front(),m_aControlPoints.back(),SGM_MIN_TOL))
+    double dParam=0;
+    if(pGuess)
         {
-        m_bClosed=true;
+        dParam=*pGuess;
         }
+    else
+        {
+        std::vector<SGM::Point3D> const &aPoints=GetSeedPoints();
+        std::vector<double> const &aParams=GetSeedParams();
+        double dMin=std::numeric_limits<double>::max();
+        size_t Index1;
+        size_t nPoints=aPoints.size();
+        for(Index1=0;Index1<nPoints;++Index1)
+            {
+            SGM::Point3D const &TestPos=aPoints[Index1];
+            double dDist=TestPos.DistanceSquared(Pos);
+            if(dDist<dMin)
+                {
+                dMin=dDist;
+                dParam=aParams[Index1];
+                }
+            }
+        }
+    double dAnswer=NewtonsMethod(dParam,Pos);
+    if(ClosePos)
+        {
+        Evaluate(dAnswer,ClosePos);
+        }
+    return dAnswer;
+    }
+
+void NUBcurve::Transform(SGM::Transform3D const &Trans)
+    {
+    for (auto & Pos: m_aControlPoints)
+        Pos=Trans*Pos;
+    m_aSeedParams.clear();
+    m_aSeedPoints.clear();
     }
 
 size_t NUBcurve::FindMultiplicity(std::vector<int> &aMultiplicity,
@@ -47,7 +143,7 @@ size_t NUBcurve::FindMultiplicity(std::vector<int> &aMultiplicity,
     for(Index1=0;Index1<nKnots;++Index1)
         {
         double dKnot=m_aKnots[Index1];
-        if(SGM::NearEqual(dLastKnot,dKnot,SGM_ZERO,false)==false)
+        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
             {
             aUniqueKnots.push_back(dKnot);
             aMultiplicity.push_back(1);
@@ -94,8 +190,8 @@ int NUBcurve::Continuity() const
     double dLookFor=m_aKnots.front();
     for(Index1=1;Index1<nKnots;++Index1)
         {
-        if(SGM::NearEqual(m_aKnots[Index1],m_aKnots.front(),SGM_MIN_TOL,false)==false && 
-           SGM::NearEqual(m_aKnots[Index1],m_aKnots.back(),SGM_MIN_TOL,false)==false)
+        if(!SGM::NearEqual(m_aKnots[Index1], m_aKnots.front(), SGM_MIN_TOL, false) &&
+           !SGM::NearEqual(m_aKnots[Index1], m_aKnots.back(), SGM_MIN_TOL, false))
             {
             ++nCount;
             dLookFor=m_aKnots[Index1];
@@ -103,10 +199,7 @@ int NUBcurve::Continuity() const
         else if(SGM::NearEqual(m_aKnots[Index1],dLookFor,SGM_MIN_TOL,false))
             {
             ++nCount;
-            if(nMaxCount<nCount)
-                {
-                nMaxCount=nCount;
-                }
+            nMaxCount = std::max(nMaxCount,nCount);
             }
         else
             {

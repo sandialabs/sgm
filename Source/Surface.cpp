@@ -26,7 +26,7 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
 
 surface *surface::Clone(SGM::Result &) const
     {
-    return nullptr;
+    return nullptr; // default if not overridden by derived class
     }
 
 void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
@@ -77,34 +77,14 @@ void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-SGM::Point2D surface::Inverse(SGM::Point3D const &,
-                              SGM::Point3D       *,
-                              SGM::Point2D const *) const
-    { throw std::logic_error("Derived class of surface should override Inverse()"); }
-
 bool surface::IsSame(surface const *,double ) const
     { return false; } // Derived classes may override
-
-void surface::Transform(SGM::Transform3D const &)
-    { throw std::logic_error("Derived class of surface must override Transform()"); }
-
-curve *surface::UParamLine(SGM::Result &, double) const
-    { throw std::logic_error("Derived class of surface must override UParamLine()"); }
-
-curve *surface::VParamLine(SGM::Result &, double) const
-    { throw std::logic_error("Derived class of surface must override VParamLine()"); }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // surface other member functions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-void surface::AddFace(face *pFace)
-    { m_sFaces.insert(pFace); }
-
-void surface::RemoveFace(face *pFace)
-    { m_sFaces.erase(pFace); }
 
 double AreaIntegrand(SGM::Point2D const &uv,void const *pData)
     {
@@ -234,46 +214,10 @@ double surface::DirectionalCurvature(SGM::Point2D      const &uv,
     }
 
 int surface::UContinuity() const
-    {
-    switch(m_SurfaceType)
-        {
-        case SGM::NUBSurfaceType:
-            {
-            NUBsurface const *pNUB=(NUBsurface const*)this;
-            return pNUB->UContinuity();
-            }
-        case SGM::NURBSurfaceType:
-            {
-            NURBsurface const *pNURB=(NURBsurface const*)this;
-            return pNURB->UContinuity();
-            }
-        default:
-            {
-            return std::numeric_limits<int>::max();
-            }
-        }
-    }
+    { return std::numeric_limits<int>::max(); }
 
 int surface::VContinuity() const
-    {
-    switch(m_SurfaceType)
-        {
-        case SGM::NUBSurfaceType:
-            {
-            NUBsurface const *pNUB=(NUBsurface const*)this;
-            return pNUB->VContinuity();
-            }
-        case SGM::NURBSurfaceType:
-            {
-            NURBsurface const *pNURB=(NURBsurface const*)this;
-            return pNURB->VContinuity();
-            }
-        default:
-            {
-            return std::numeric_limits<int>::max();
-            }
-        }
-    }
+    { return std::numeric_limits<int>::max(); }
 
 void surface::SnapToDomain(SGM::Point2D &uv) const
     {

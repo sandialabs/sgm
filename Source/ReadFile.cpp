@@ -2253,10 +2253,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-        size_t ID=pFace->GetID();
-        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
-        ID;
-        nType;
+        //size_t ID=pFace->GetID();
+        //SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
         pFace->GetTriangles(rResult);
         ++iter;
         }

@@ -27,17 +27,8 @@ namespace SGMInternal
 //      Set m_CurveType, m_Domain and m_Closed.
 //  Add a copy constructor.
 //      Set m_CurveType, m_Domain and m_Closed.
-//  Add to the Clone method of curve.
-//  Add to the Evalute method of curve.
-//  Add to the Inverse method of curve.
-//  Add to the Transform method of curve.
-//  Add to the Negate method of curve.
-//
-//  Optional check list functions.
-//
-//  Add to the Curvature method of curve.
-//  Add to the Check method of curve.
-//  Add to the FindLength method of curve.
+//  Override the Clone method of entity.
+//  Override pure virtual methods of curve.
 //
 //  Additional functions that check the curve type.
 //
@@ -59,20 +50,54 @@ class curve : public entity
 
         curve(SGM::Result &rResult,SGM::EntityType nType);
 
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Virtual methods of entity
+        //
+        ///////////////////////////////////////////////////////////////////////
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
-        curve *Clone(SGM::Result &rResult) const override;
+        curve *Clone(SGM::Result &) const override { return nullptr; } // subclasses must override
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
-        void AddEdge(edge *pEdge);
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Virtual methods of curve
+        //
+        ///////////////////////////////////////////////////////////////////////
 
-        void RemoveEdge(edge *pEdge);
+        // Returns the largest integer that the curve is Cn for.  If the curve
+        // is C infinity then std::numeric_limits<int>::max() is returned.
+
+        virtual int Continuity() const;
+
+        virtual SGM::Vector3D Curvature(double t) const;
+
+        virtual void Evaluate(double         t,
+                              SGM::Point3D  *Pos,
+                              SGM::Vector3D *D1=nullptr,
+                              SGM::Vector3D *D2=nullptr) const = 0;
+
+        virtual double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
+
+        virtual double Inverse(SGM::Point3D const &Pos,
+                               SGM::Point3D       *ClosePos=nullptr,
+                               double       const *pGuess=nullptr) const = 0;
+
+        virtual void Negate();
+
+        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+
+        void AddEdge(edge *pEdge) { m_sEdges.insert(pEdge); };
+
+        void RemoveEdge(edge *pEdge) { m_sEdges.erase(pEdge); };
 
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
@@ -80,35 +105,18 @@ class curve : public entity
 
         SGM::Interval1D const &GetDomain() const {return m_Domain;}
 
-        void SetDomain(SGM::Interval1D const &rDomain);
+        void SetDomain(SGM::Interval1D const &rDomain) { m_Domain=rDomain; }
 
         bool GetClosed() const {return m_bClosed;}
 
         bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
 
-        virtual void Evaluate(double         t,
-                      SGM::Point3D  *Pos,
-                      SGM::Vector3D *D1=nullptr,
-                      SGM::Vector3D *D2=nullptr) const;
-
-        virtual SGM::Vector3D Curvature(double t) const;
-
-        virtual double Inverse(SGM::Point3D const &Pos,
-                       SGM::Point3D       *ClosePos=nullptr,
-                       double       const *pGuess=nullptr) const;
-
-        virtual void Transform(SGM::Transform3D const &Trans);
-
-        virtual void Negate();
-
-        virtual double FindLength(SGM::Interval1D const &Domain,double dTolerance) const;
-
-        // Returns the largest integer that the curve is Cn for.  If the curve
-        // is C infinity then std::numeric_limits<int>::max() is returned.
-
-        virtual int Continuity() const;
+        double NewtonsMethod(double              dStart,
+                             SGM::Point3D const &Pos) const;
 
     protected:
+
+        curve(SGM::Result &rResult, curve const *other); // used by derived class only
         
         std::set<edge *,EntityCompare> m_sEdges;
         SGM::EntityType  m_CurveType;
@@ -129,8 +137,20 @@ class line : public curve
              SGM::UnitVector3D const &Axis,
              double                   dScale);
 
-        line(SGM::Result  &rResult,
-             line   const *pLine);
+        line(SGM::Result &rResult, line const *other);
+
+        line *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
@@ -154,8 +174,20 @@ class circle : public curve
                SGM::UnitVector3D const *pXAxis=nullptr,
                SGM::Interval1D   const *pDomain=nullptr);
 
-        circle(SGM::Result  &rResult,
-               circle const *pCircle);
+        circle(SGM::Result &rResult, circle const *other);
+
+        circle *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double     t,
+                  SGM::Point3D  *Pos,
+                  SGM::Vector3D *D1=nullptr,
+                  SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         SGM::Point3D       const &GetCenter() const {return m_Center;}
         SGM::UnitVector3D  const &GetNormal() const {return m_Normal;}
@@ -183,8 +215,20 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
-        NUBcurve(SGM::Result    &rResult,
-                 NUBcurve const *pNUB);
+        NUBcurve(SGM::Result &rResult, NUBcurve const *other);
+
+        NUBcurve *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
@@ -202,7 +246,7 @@ class NUBcurve: public curve
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
-        int Continuity() const;
+        int Continuity() const override;
 
     public:
 
@@ -221,6 +265,23 @@ class NURBcurve: public curve
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
 
+        NURBcurve(SGM::Result &rResult, NURBcurve const *other);
+
+        NURBcurve *Clone(SGM::Result &rResult) const override;
+
+        int Continuity() const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
@@ -233,11 +294,6 @@ class NURBcurve: public curve
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
         std::vector<double> const &GetSeedParams() const;
-
-        // Returns the largest integer that the curve is Cn for.  If the curve
-        // is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int Continuity() const;
 
     public:
 
@@ -256,6 +312,21 @@ class PointCurve: public curve
                    SGM::Point3D    const &Pos,
                    SGM::Interval1D const *pDomain=nullptr);
 
+        PointCurve(SGM::Result &rResult, PointCurve const *other);
+
+        PointCurve *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
     public:
 
         SGM::Point3D m_Pos;
@@ -273,6 +344,21 @@ class ellipse: public curve
                 SGM::UnitVector3D const &YAxis,
                 double                   dA,
                 double                   dB);
+
+        ellipse(SGM::Result &rResult, ellipse const* other);
+
+        ellipse *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -297,6 +383,21 @@ class hyperbola: public curve
                   double                   dA,
                   double                   dB);
 
+        hyperbola(SGM::Result &rResult, hyperbola const *other);
+
+        hyperbola *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -318,6 +419,21 @@ class parabola: public curve
                  SGM::UnitVector3D const &XAxis,
                  SGM::UnitVector3D const &YAxis,
                  double                   dA);
+
+        parabola(SGM::Result &rResult, parabola const* other);
+
+        parabola *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -348,8 +464,20 @@ class TorusKnot: public curve
                   size_t                   nA,
                   size_t                   nB);
 
-        TorusKnot(SGM::Result     &rResult,
-                  TorusKnot const *pTorusKnot);
+        TorusKnot(SGM::Result &rResult, TorusKnot const *other);
+
+        TorusKnot *Clone(SGM::Result &rResult) const override;
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
     public:
 
@@ -371,6 +499,25 @@ class hermite: public curve
                 std::vector<SGM::Point3D>  const &aPoints,
                 std::vector<SGM::Vector3D> const &aTangents,
                 std::vector<double>        const &aParams);
+
+        hermite(SGM::Result &rResult, hermite const *other);
+
+        hermite *Clone(SGM::Result &rResult) const override;
+
+        int Continuity() const override { return 1; }
+
+        void Evaluate(double         t,
+                      SGM::Point3D  *Pos,
+                      SGM::Vector3D *D1=nullptr,
+                      SGM::Vector3D *D2=nullptr) const override;
+
+        double Inverse(SGM::Point3D const &Pos,
+                       SGM::Point3D       *ClosePos=nullptr,
+                       double       const *pGuess=nullptr) const override;
+
+        void Negate() override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
 
         size_t FindSpan(double t) const;
 
