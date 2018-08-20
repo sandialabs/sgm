@@ -968,6 +968,16 @@ void SGMGraphicsWidget::enable_perspective(bool enable)
     update();
 }
 
+void SGMGraphicsWidget::set_background(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    QtOpenGL *opengl = get_opengl();
+    if (!opengl)
+        return;
+
+    opengl->glClearColor(red,green,blue,alpha);
+    opengl->glClear(GL_COLOR_BUFFER_BIT);
+}
+
 QSurfaceFormat SGMGraphicsWidget::default_format()
 {
     QSurfaceFormat fmt;
@@ -1007,7 +1017,8 @@ void SGMGraphicsWidget::initializeGL()
     opengl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     opengl->glLineWidth(5.f);
     opengl->glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
+    //opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
+    opengl->glClearColor(0.0, 0.0, 0.0, 1.0);
 
     opengl->glEnable(GL_POLYGON_OFFSET_FILL);
     opengl->glPolygonOffset(2, 1);

@@ -98,6 +98,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->ChangeColor(aEnts[Index1],color.red(),color.green(),color.blue());
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_remove_color)
                 {
@@ -105,6 +107,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->RemoveColor(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_copy)
                 {
@@ -112,10 +116,14 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->Copy(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_unhook)
                 {
                 mModel->Unhook(aEnts);
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_cover)
                 {
@@ -123,6 +131,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->Cover(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_merge)
                 {
@@ -130,6 +140,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->Merge(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_find_components)
                 {
@@ -137,6 +149,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->FindComponents(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_boundary)
                 {
@@ -144,6 +158,8 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->Boundary(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
+                mModel->rebuild_graphics();
                 }
             else if(result == option_delete)
                 {
@@ -151,6 +167,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     {
                     mModel->DeleteEntity(aEnts[Index1]);
                     }
+                mModel->rebuild_tree();
                 mModel->rebuild_graphics();
                 }
             else if(result == option_rebuild)

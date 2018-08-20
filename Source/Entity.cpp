@@ -99,8 +99,5 @@ void entity::TransformBox(SGM::Transform3D const &Trans)
 
 void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
-        throw std::logic_error("Derived class must implement FindAllChildren()");
     }
-
-
 }

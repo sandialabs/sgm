@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(view_uvspace()));
   connect(mViewMenu, SIGNAL(perspective()),
           this, SLOT(view_perspective()));
+  connect(mViewMenu, SIGNAL(background()),
+          this, SLOT(view_background()));
 
   ui->menubar->addMenu(mTestMenu);
   connect(mTestMenu, SIGNAL(all()),
@@ -234,6 +236,11 @@ void MainWindow::view_uvspace()
 void MainWindow::view_perspective()
     {
     mModel->perspective_mode();
+    }
+
+void MainWindow::view_background()
+    {
+    mModel->set_background();
     }
 
 void MainWindow::test_all()

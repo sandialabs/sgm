@@ -24,6 +24,8 @@ signals:
     void uvspace();
 
     void perspective();
+
+    void background();
 };
 
 #endif // VIEWMENU_HPP

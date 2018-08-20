@@ -182,6 +182,12 @@ void ModelData::perspective_mode()
     dPtr->mGraphics->enable_perspective(mperspective_mode);
 }
 
+void ModelData::set_background()
+{
+    dPtr->mGraphics->set_background(0.0,0.0,0.0,1.0);
+    rebuild_graphics();
+}
+
 bool ModelData::RunCPPTest(size_t nTest)
 {
     bool bAnswer = SGM::RunCPPTest(dPtr->mResult, nTest);
@@ -316,38 +322,28 @@ void ModelData::create_revolve(SGM::Point3D const &Origin,
 void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue)
 {
     SGM::ChangeColor(dPtr->mResult, EntityID, nRed, nGreen, nBlue);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
     SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::FindComponents(SGM::Entity EntityID)
@@ -355,16 +351,12 @@ void ModelData::FindComponents(SGM::Entity EntityID)
     std::vector<SGM::Complex> aComponents;
     SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Boundary(SGM::Entity EntityID)
 {
     SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
@@ -378,15 +370,11 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             }
         }
     SGM::UnhookFaces(dPtr->mResult, aFaces);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 SGM::Result ModelData::GetResult() const
@@ -1215,6 +1203,11 @@ void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity Enti
             while (iter != sAttributes.end())
                 {
                 add_attribute_to_tree(owner_item, *iter);
+
+                std::map<QTreeWidgetItem *, SGM::Entity> &mMap = dPtr->mTree->mTreeMap;
+                auto attribute_item = new QTreeWidgetItem(parent);
+                mMap[attribute_item] = *iter;
+            
                 ++iter;
                 }
             }
@@ -1228,6 +1221,7 @@ void ModelData::rebuild_tree()
         return;
         }
     dPtr->mTree->clear();
+    dPtr->mTree->mTreeMap.clear();
 
     SGM::Thing ThingID;
     auto ThingItem = new QTreeWidgetItem(dPtr->mTree);

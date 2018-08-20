@@ -50,6 +50,8 @@ public:
 
     void perspective_mode();
 
+    void set_background();
+
     bool RunCPPTest(size_t nTest);
 
     void check(std::vector<std::string> &aLog);
