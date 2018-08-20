@@ -148,7 +148,7 @@ bool body::IsSheetBody(SGM::Result &rResult) const
             }
         ++iter;
         }
-    if(sFaces.size())
+    if(!sFaces.empty())
         {
         return true;
         }

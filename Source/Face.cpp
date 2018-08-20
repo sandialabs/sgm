@@ -339,11 +339,11 @@ bool face::PointInFace(SGM::Result        &rResult,
             }
         if(SGM_ZERO<=dZ)
             {
-            return m_bFlipped==true ? false : true;
+            return !m_bFlipped;
             }
         else if(-SGM_ZERO>=dZ)
             {
-            return m_bFlipped==true ? true : false;
+            return m_bFlipped;
             }
         else
             {
@@ -506,7 +506,7 @@ double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
 
 void face::ClearFacets(SGM::Result &rResult) const
     {
-    if(m_aPoints2D.empty()==false)
+    if(!m_aPoints2D.empty())
         {
         m_aPoints3D.clear();
         m_aPoints2D.clear();

@@ -548,8 +548,9 @@ bool TestCurve(SGMInternal::curve const *pCurve,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define SMG_MAX_NURB_DEGREE_PLUS_ONE 21
-#define SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED 441
+#define SGM_MAX_NURB_DEGREE_PLUS_ONE 21
+#define SGM_MAX_NURB_DEGREE_PLUS_ONE_SQUARED 441
+#define SGM_MAX_NURB_DERIVATIVE_PLUS_ONE 3
 
 void FindBasisFunctions(size_t        i,     // One based span index.
                         double        u,     // The value of the domain to be evaluated.

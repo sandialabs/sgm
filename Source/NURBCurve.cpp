@@ -1,3 +1,4 @@
+#include <iostream>
 #include "SGMVector.h"
 #include "SGMTransform.h"
 
@@ -35,98 +36,72 @@ NURBcurve::NURBcurve(SGM::Result &rResult, NURBcurve const *other):
 NURBcurve *NURBcurve::Clone(SGM::Result &rResult) const
     { return new NURBcurve(rResult,this); }
 
+// evaluate basis to get position, or derivative
+inline void NURBEvaluateBasis(std::vector<SGM::Point4D> const &aControlPoints,
+                              double const                    *aBasis,
+                              size_t                           nStart,
+                              size_t                           nDegree,
+                              double                           *aAnswer)
+    {
+    double d;
+    aAnswer[0] = 0.0, aAnswer[1] = 0.0, aAnswer[2] = 0.0, aAnswer[3] = 0.0;
+    for(size_t i = 0; i <= nDegree; ++i, ++nStart)
+        {
+        SGM::Point4D const &p = aControlPoints[nStart];
+        d = aBasis[i] * p.m_w;
+        aAnswer[0] += d * p.m_x;
+        aAnswer[1] += d * p.m_y;
+        aAnswer[2] += d * p.m_z;
+        aAnswer[3] += d;
+        }
+    }
+
 void NURBcurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {
     // From "The NURBS Book", page 82, Algorithm A3.1.
 
+    double aMemory[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE*SGM_MAX_NURB_DEGREE_PLUS_ONE];
+    double *aaBasisFunctions[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE];
+
+    size_t nDerivatives = D2 ? 2 : D1 ? 1 : 0;
     size_t nDegree=GetDegree();
     size_t nSpanIndex=FindSpanIndex(m_Domain,nDegree,t,m_aKnots);
-    size_t nDerivatives=0;
-    if(D1) nDerivatives=1;
-    if(D2) nDerivatives=2;
-    double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-    double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+    size_t nStart = nSpanIndex - nDegree;
     size_t Index1;
-    for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+
+    assert(nDerivatives <= SGM_MAX_NURB_DERIVATIVE_PLUS_ONE);
+    assert(nSpanIndex >= nDegree);
+
+    for(Index1=0;Index1<1+nDerivatives;++Index1)
         {
-        aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+        aaBasisFunctions[Index1]=aMemory+Index1*SGM_MAX_NURB_DEGREE_PLUS_ONE;
         }
     FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&m_aKnots[0],aaBasisFunctions);
-    SGM::Point4D PosFour(0,0,0,0);
-    SGM::Vector4D D1Four(0,0,0,0),D2Four(0,0,0,0);
-    if(Pos || D1 || D2)
-        {
-        double *aBasis=aaBasisFunctions[0];
-        double x=0,y=0,z=0,w=0;
-        for(Index1=0;Index1<=nDegree;++Index1)
-            {
-            double dBasis=aBasis[Index1]*m_aControlPoints[nSpanIndex-nDegree+Index1].m_w;
-            x+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-            y+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-            z+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-            w+=dBasis;
-            }
-        PosFour.m_x=x;
-        PosFour.m_y=y;
-        PosFour.m_z=z;
-        PosFour.m_w=w;
-        }
-    if(D1 || D2)
-        {
-        double *aBasis=aaBasisFunctions[1];
-        double x=0,y=0,z=0,w=0;
-        for(Index1=0;Index1<=nDegree;++Index1)
-            {
-            double dBasis=aBasis[Index1]*m_aControlPoints[nSpanIndex-nDegree+Index1].m_w;
-            x+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-            y+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-            z+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-            w+=dBasis;
-            }
-        D1Four.m_x=x;
-        D1Four.m_y=y;
-        D1Four.m_z=z;
-        D1Four.m_w=w;
-        }
-    if(D2)
-        {
-        double *aBasis=aaBasisFunctions[2];
-        double x=0,y=0,z=0,w=0;
-        for(Index1=0;Index1<=nDegree;++Index1)
-            {
-            double dBasis=aBasis[Index1]*m_aControlPoints[nSpanIndex-nDegree+Index1].m_w;
-            x+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_x;
-            y+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_y;
-            z+=dBasis*m_aControlPoints[nSpanIndex-nDegree+Index1].m_z;
-            w+=dBasis;
-            }
-        D2Four.m_x=x;
-        D2Four.m_y=y;
-        D2Four.m_z=z;
-        D2Four.m_w=w;
-        }
 
-    double rw=1.0/PosFour.m_w;
+    SGM::Point4D PosFour;
+    SGM::Vector4D D1Four, D2Four;
     SGM::Vector3D vxyz,dvxyz;
-    if(Pos || D1 || D2)
+    double rw;
+
+    if (Pos || D1 || D2)
         {
-        vxyz=SGM::Vector3D(PosFour.m_x*rw,PosFour.m_y*rw,PosFour.m_z*rw);
-        if(Pos)
-            {
-            *Pos=SGM::Point3D(vxyz);
-            }
+        NURBEvaluateBasis(m_aControlPoints, aaBasisFunctions[0], nStart, nDegree, &PosFour.m_x);
+        rw = 1.0 / PosFour.m_w;
+        vxyz = {PosFour.m_x*rw, PosFour.m_y*rw, PosFour.m_z*rw};
+        if (Pos)
+            *Pos = {vxyz.m_x, vxyz.m_y, vxyz.m_z};
         }
-    if(D1 || D2)
+    if (D1 || D2)
         {
-        dvxyz=(SGM::Vector3D(D1Four.m_x,D1Four.m_y,D1Four.m_z)-D1Four.m_w*vxyz)*rw;
-        if(D1)
-            {
-            *D1=dvxyz;
-            }
+        NURBEvaluateBasis(m_aControlPoints, aaBasisFunctions[1], nStart, nDegree, &D1Four.m_x);
+        dvxyz = (SGM::Vector3D(D1Four.m_x, D1Four.m_y, D1Four.m_z) - D1Four.m_w * vxyz) * rw;
+        if (D1)
+            *D1 = dvxyz;
         }
-    if(D2)
+    if (D2)
         {
-        *D2=(SGM::Vector3D(D2Four.m_x,D2Four.m_y,D2Four.m_z)-2*D1Four.m_w*dvxyz-D2Four.m_w*vxyz)*rw;
+        NURBEvaluateBasis(m_aControlPoints, aaBasisFunctions[2], nStart, nDegree, &D2Four.m_x);
+        *D2 = (SGM::Vector3D(D2Four.m_x, D2Four.m_y, D2Four.m_z) - 2 * D1Four.m_w * dvxyz - D2Four.m_w * vxyz) * rw;
         }
     }
 
