@@ -28,7 +28,7 @@ class Result
                 m_bLog(false)
         {}
 
-        SGM_EXPORT void SetResult(SGM::ResultType nType) { m_nType = nType; }
+        SGM_EXPORT void SetResult(SGM::ResultType nType);
 
         SGM_EXPORT void SetMessage(std::string const &sMessage) { m_sMessage += sMessage; }
 

@@ -217,7 +217,7 @@ complex *complex::Cover(SGM::Result &rResult) const
             rResult.GetThing()->DeleteEntity(aaPlanarSets[Index1][Index2]);
             }
         }
-    /*
+    
     std::vector<complex *> aAnswer=MakeSymmetriesMatch(aAllParts);
     complex *pAnswer=Merge(rResult,aAnswer);
     for(Index1=0;Index1<nPlanes;++Index1)
@@ -225,8 +225,6 @@ complex *complex::Cover(SGM::Result &rResult) const
         rResult.GetThing()->DeleteEntity(aAllParts[Index1]);
         }
     return pAnswer;
-    */
-    return aAllParts[0];
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const

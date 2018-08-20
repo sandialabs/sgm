@@ -1521,20 +1521,20 @@ void ModelData::rebuild_graphics(bool bReset)
             std::vector<SGM::Point3D> aPoints;
             std::vector<SGM::UnitVector3D> aNormals;
             std::vector<unsigned int> aTriangles;
-            std::vector<SGM::Vector3D> aColors;
+            std::vector<SGM::Vector3D> aColors,aTriColors;
+
+            get_complex_colors(ComplexID, aColors);
 
             size_t nTriangles=complex_triangles.size();
             aTriangles.reserve(nTriangles);
             aPoints.reserve(nTriangles);
             aNormals.reserve(nTriangles);
             aColors.reserve(nTriangles);
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nTriangles;++Index1)
                 {
                 aTriangles.push_back((unsigned int)Index1);
                 aPoints.push_back(complex_points[complex_triangles[Index1]]);
-                aColors.push_back(Green);
                 }
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
@@ -1545,9 +1545,12 @@ void ModelData::rebuild_graphics(bool bReset)
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
+                aTriColors.push_back(aColors[aTriangles[Index1]]);
+                aTriColors.push_back(aColors[aTriangles[Index1+1]]);
+                aTriColors.push_back(aColors[aTriangles[Index1+2]]);
                 }
 
-            dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aColors);
+            dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aTriColors);
             update_bounds_complex(dPtr->mResult, ComplexID, dPtr->mGraphics);
             }
 
@@ -1577,19 +1580,22 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             const std::vector<unsigned int> &complex_segments=SGM::GetComplexSegments(dPtr->mResult, ComplexID);
             
+            std::vector<SGM::Vector3D> aColors;
+            get_complex_colors(ComplexID, aColors);
+
             size_t nSegments=complex_segments.size();
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nSegments;Index1+=2)
                 {
                 std::vector<SGM::Point3D> aPoints;
-                std::vector<SGM::Vector3D> aColors;
+                std::vector<SGM::Vector3D> aSegColors;
 
                 aPoints.push_back(complex_points[complex_segments[Index1]]);
                 aPoints.push_back(complex_points[complex_segments[Index1+1]]);
-                aColors.push_back(Green);
-                aColors.push_back(Green);
-                dPtr->mGraphics->add_edge(aPoints, aColors);
+                aSegColors.push_back(aColors[complex_segments[Index1]]);
+                aSegColors.push_back(aColors[complex_segments[Index1+1]]);
+                
+                dPtr->mGraphics->add_edge(aPoints, aSegColors);
                 update_bounds_vertex(aPoints[0], dPtr->mGraphics);
                 update_bounds_vertex(aPoints[1], dPtr->mGraphics);
                 }
@@ -1601,7 +1607,6 @@ void ModelData::rebuild_graphics(bool bReset)
         
         std::set<SGM::Vertex> vertex_list;
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
-        SGM::Vector3D Green(0,1,0);
 
         if(vertex_list.size())
             {
@@ -1617,6 +1622,9 @@ void ModelData::rebuild_graphics(bool bReset)
 
         for (const SGM::Complex &ComplexID : complex_list)
             {
+            std::vector<SGM::Vector3D> aColors;
+            get_complex_colors(ComplexID, aColors);
+
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             
             size_t nPoints=complex_points.size();
@@ -1624,7 +1632,7 @@ void ModelData::rebuild_graphics(bool bReset)
             for(Index1=0;Index1<nPoints;++Index1)
                 {
                 SGM::Point3D const &Pos=complex_points[Index1];
-                dPtr->mGraphics->add_vertex(Pos, Green);
+                dPtr->mGraphics->add_vertex(Pos, aColors[Index1]);
                 update_bounds_vertex(Pos, dPtr->mGraphics);
                 }
             }
