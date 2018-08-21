@@ -287,6 +287,8 @@ class complex : public topology
 
         std::vector<unsigned int> const &GetTriangles() const {return m_aTriangles;}
 
+        std::vector<unsigned int> &GetTrianglesNonConst() {return m_aTriangles;}
+
         bool IsTopLevel() const {return m_sOwners.empty();}
 
         // Other methods

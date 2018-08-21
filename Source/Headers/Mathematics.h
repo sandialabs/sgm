@@ -17,6 +17,8 @@ namespace SGMInternal
 
             void SetMinTolerance(double dMinTolerance);
 
+            // Planes are shorted so that parallel planes are next to each other.
+
             bool operator<(SortablePlane const &) const;
 
             bool operator==(SortablePlane const &) const;
@@ -26,6 +28,10 @@ namespace SGMInternal
             SGM::UnitVector3D Normal() const;
 
             double Tolerance() const;
+
+            bool Parallel(SortablePlane const &Other,
+                          SGM::Vector3D       &Offset,
+                          double               dTolerance) const;
 
         private:
 

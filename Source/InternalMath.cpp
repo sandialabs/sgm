@@ -73,7 +73,21 @@ SortablePlane::SortablePlane(std::vector<SGM::Point3D> const &aPoints)
         aData[3]=0;
         aData[4]=0;
         }
+    }
 
+bool SortablePlane::Parallel(SortablePlane const &Other,
+                             SGM::Vector3D       &Offset,
+                             double               dTolerance) const
+    {
+    SGM::UnitVector3D Norm0=Normal();
+    SGM::UnitVector3D Norm1=Other.Normal();
+    if(fabs(Norm0%Norm1-1.0)<dTolerance)
+        {
+        double dOffset=Other.aData[3]-aData[3];
+        Offset=Norm0*dOffset;
+        return true;
+        }
+    return false;
     }
 
 void SortablePlane::SetMinTolerance(double dMinTolerance)

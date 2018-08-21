@@ -60,10 +60,10 @@ namespace SGM
     // within the given tolerance, and it returns a map that maps vector aPoints1,
     // to vector aPoints2.
 
-    SGM_EXPORT bool DoPointsMatch(std::vector<SGM::Point3D> const &aPoints1,
-                                  std::vector<SGM::Point3D> const &aPoints2,
-                                  std::map<size_t,size_t>         &mMatchMap,
-                                  double                           dTolerance);
+    SGM_EXPORT bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
+                                  std::vector<SGM::Point3D>     const &aPoints2,
+                                  std::map<unsigned int,unsigned int> &mMatchMap,
+                                  double                              dTolerance);
 
     /////////////////////////////////////////////////////////////////////////
     //

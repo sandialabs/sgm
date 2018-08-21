@@ -676,10 +676,10 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
     return bCoplanar;
     }
 
-bool DoPointsMatch(std::vector<SGM::Point3D> const &aPoints1,
-                   std::vector<SGM::Point3D> const &aPoints2,
-                   std::map<size_t,size_t>         &mMatchMap,
-                   double                           dTolerance)
+bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
+                   std::vector<SGM::Point3D>     const &aPoints2,
+                   std::map<unsigned int,unsigned int> &mMatchMap,
+                   double                               dTolerance)
     {
     size_t nPoints=aPoints1.size();
     if(nPoints!=aPoints2.size())
@@ -701,8 +701,8 @@ bool DoPointsMatch(std::vector<SGM::Point3D> const &aPoints1,
             {
             return false;
             }
-        size_t nWhere=pBase-(SGM::Point3D const *)aHits[0].first;
-        mMatchMap[Index1]=nWhere;
+        size_t nWhere=(SGM::Point3D const *)aHits[0].first-pBase;
+        mMatchMap[(unsigned int)Index1]=(unsigned int)nWhere;
         }
     return true;
     }

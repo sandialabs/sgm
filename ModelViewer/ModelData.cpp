@@ -184,7 +184,7 @@ void ModelData::perspective_mode()
 
 void ModelData::set_background()
 {
-    dPtr->mGraphics->set_background(0.0,0.0,0.0,1.0);
+    dPtr->mGraphics->set_background(0.0,1.0,0.0,1.0);
     rebuild_graphics();
 }
 
@@ -1538,16 +1538,16 @@ void ModelData::rebuild_graphics(bool bReset)
                 }
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
-                SGM::Point3D const &A=aPoints[aTriangles[Index1]];
-                SGM::Point3D const &B=aPoints[aTriangles[Index1+1]];
-                SGM::Point3D const &C=aPoints[aTriangles[Index1+2]];
+                SGM::Point3D const &A=complex_points[complex_triangles[Index1]];
+                SGM::Point3D const &B=complex_points[complex_triangles[Index1+1]];
+                SGM::Point3D const &C=complex_points[complex_triangles[Index1+2]];
                 SGM::UnitVector3D Norm=(B-A)*(C-A);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
-                aTriColors.push_back(aColors[aTriangles[Index1]]);
-                aTriColors.push_back(aColors[aTriangles[Index1+1]]);
-                aTriColors.push_back(aColors[aTriangles[Index1+2]]);
+                aTriColors.push_back(aColors[complex_triangles[Index1]]);
+                aTriColors.push_back(aColors[complex_triangles[Index1+1]]);
+                aTriColors.push_back(aColors[complex_triangles[Index1+2]]);
                 }
 
             dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aTriColors);

@@ -72,7 +72,8 @@ void complex::Transform(SGM::Transform3D const &Trans)
     }
 
 size_t SortByPlane(std::vector<complex *>         const &aComplexes,
-                   std::vector<std::vector<complex *> > &aaPlanarSets)
+                   std::vector<std::vector<complex *> > &aaPlanarSets,
+                   std::vector<SortablePlane>           &aPlanes)
     {
     size_t nComplexes=aComplexes.size();
     size_t Index1;
@@ -95,6 +96,7 @@ size_t SortByPlane(std::vector<complex *>         const &aComplexes,
     std::vector<complex *> aPlanarSet;
     aPlanarSet.push_back(aComplexes[aTempPlane[0].second]);
     SortablePlane LastPlane=aTempPlane[0].first;
+    aPlanes.push_back(LastPlane);
     for(Index1=1;Index1<nComplexes;++Index1)
         {
         if(aTempPlane[Index1].first==LastPlane)
@@ -106,6 +108,7 @@ size_t SortByPlane(std::vector<complex *>         const &aComplexes,
             aaPlanarSets.push_back(aPlanarSet);
             aPlanarSet.clear();
             LastPlane=aTempPlane[Index1].first;
+            aPlanes.push_back(LastPlane);
             aPlanarSet.push_back(aComplexes[aTempPlane[Index1].second]);
             }
         }
@@ -191,8 +194,38 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     return new complex(rResult,aPoints3D,aTriangles);
     }
 
-std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *> const &aComplexes)
+std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aComplexes,
+                                           std::vector<SortablePlane> const &aPlanes)
     {
+    size_t nPlanes=aPlanes.size();
+    size_t Index1,Index2;
+    for(Index1=1;Index1<nPlanes;++Index1)
+        {
+        SGM::Vector3D Offset;
+        if(aPlanes[Index1-1].Parallel(aPlanes[Index1],Offset,SGM_MIN_TOL))
+            {
+            complex *pComplex0=aComplexes[Index1-1];
+            complex *pComplex1=aComplexes[Index1];
+            std::vector<SGM::Point3D> aPoints0=pComplex0->GetPoints();
+            std::vector<SGM::Point3D> const &aPoints1=pComplex1->GetPoints();
+            size_t nPoints1=aPoints1.size();
+            for(Index2=0;Index2<nPoints1;++Index2)
+                {
+                aPoints0[Index2]+=Offset;
+                }
+            std::map<unsigned int,unsigned int> mMatchMap;
+            if(DoPointsMatch(aPoints0,aPoints1,mMatchMap,SGM_MIN_TOL))
+                {
+                std::vector<unsigned int> const &aTriangles0=pComplex0->GetTriangles();
+                std::vector<unsigned int> &aTriangles1=pComplex1->GetTrianglesNonConst();
+                size_t nTriangles1=aTriangles1.size();
+                for(Index2=0;Index2<nTriangles1;++Index2)
+                    {
+                    aTriangles1[Index2]=mMatchMap[aTriangles0[Index2]];
+                    }
+                }
+            }
+        }
     return aComplexes;
     }
 
@@ -204,7 +237,8 @@ complex *complex::Cover(SGM::Result &rResult) const
     std::vector<complex *> aBoundary=pBoundary->FindComponents(rResult);
     rResult.GetThing()->DeleteEntity(pBoundary);
     std::vector<std::vector<complex *> > aaPlanarSets;
-    size_t nPlanes=SortByPlane(aBoundary,aaPlanarSets);
+    std::vector<SortablePlane> aPlanes;
+    size_t nPlanes=SortByPlane(aBoundary,aaPlanarSets,aPlanes);
     size_t Index1,Index2;
     std::vector<complex *> aAllParts;
     aAllParts.reserve(nPlanes);
@@ -218,7 +252,7 @@ complex *complex::Cover(SGM::Result &rResult) const
             }
         }
     
-    std::vector<complex *> aAnswer=MakeSymmetriesMatch(aAllParts);
+    std::vector<complex *> aAnswer=MakeSymmetriesMatch(aAllParts,aPlanes);
     complex *pAnswer=Merge(rResult,aAnswer);
     for(Index1=0;Index1<nPlanes;++Index1)
         {
