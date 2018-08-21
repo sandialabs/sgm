@@ -223,6 +223,10 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
                     {
                     aTriangles1[Index2]=mMatchMap[aTriangles0[Index2]];
                     }
+                for(Index2=0;Index2<nTriangles1;Index2+=3)
+                    {
+                    std::swap(aTriangles1[Index2],aTriangles1[Index2+1]);
+                    }
                 }
             }
         }

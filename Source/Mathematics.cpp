@@ -690,13 +690,13 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        SGM::Interval3D Box(aPoints1[Index1]);
-        Tree.Insert(&aPoints1[Index1],Box);
+        SGM::Interval3D Box(aPoints2[Index1]);
+        Tree.Insert(&aPoints2[Index1],Box);
         }
-    SGM::Point3D const *pBase=&aPoints1[0];
+    SGM::Point3D const *pBase=&aPoints2[0];
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(aPoints2[Index1],dTolerance);
+        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(aPoints1[Index1],dTolerance);
         if(aHits.size()!=1)
             {
             return false;

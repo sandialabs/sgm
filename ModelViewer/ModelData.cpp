@@ -1203,11 +1203,6 @@ void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity Enti
             while (iter != sAttributes.end())
                 {
                 add_attribute_to_tree(owner_item, *iter);
-
-                std::map<QTreeWidgetItem *, SGM::Entity> &mMap = dPtr->mTree->mTreeMap;
-                auto attribute_item = new QTreeWidgetItem(parent);
-                mMap[attribute_item] = *iter;
-            
                 ++iter;
                 }
             }

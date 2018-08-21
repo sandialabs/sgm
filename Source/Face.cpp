@@ -90,6 +90,11 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
 
 bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
     {
+    if(entity::GetColor(nRed,nGreen,nBlue)==true)
+        {
+        return true;
+        }
+
     volume* pVolume = GetVolume();
     if (pVolume)
         return pVolume->GetColor(nRed,nGreen,nBlue);
