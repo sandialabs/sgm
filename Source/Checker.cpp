@@ -70,10 +70,36 @@ bool body::Check(SGM::Result              &rResult,
 
 bool complex::Check(SGM::Result              &,//rResult,
                     SGM::CheckOptions  const &,//Options,
-                    std::vector<std::string> &,//aCheckStrings,
+                    std::vector<std::string> &aCheckStrings,
                     bool                      ) const //bChildren)
     {
     bool bAnswer=true;
+
+    size_t nPoints=m_aPoints.size();
+    size_t Index1;
+    size_t nSegments=m_aSegments.size();
+    for(Index1=0;Index1<nSegments;++Index1)
+        {
+        if(nPoints<=m_aSegments[Index1])
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer, sizeof(Buffer), "Complex %ld has out of bounds segment indexes.\n",this->GetID());
+            aCheckStrings.emplace_back(Buffer);
+            }
+        }
+    size_t nTriangles=m_aTriangles.size();
+    for(Index1=0;Index1<nTriangles;++Index1)
+        {
+        if(nPoints<=m_aTriangles[Index1])
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer, sizeof(Buffer), "Complex %ld has out of bounds triangle indexes.\n",this->GetID());
+            aCheckStrings.emplace_back(Buffer);
+            }
+        }
+
     return bAnswer;
     }
 

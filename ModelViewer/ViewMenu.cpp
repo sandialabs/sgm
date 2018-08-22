@@ -32,4 +32,9 @@ ViewMenu::ViewMenu(QWidget *parent) :
     QAction *perspective_action = addAction("&Perspective Mode", this, SIGNAL(perspective()));
     perspective_action->setShortcut(tr("Ctrl+p"));
     perspective_action->setCheckable(true);
+
+    addSeparator();
+
+    QAction *background_action = addAction("&Background Color", this, SIGNAL(background()));
+    background_action->setShortcut(tr("Ctrl+B"));
 }

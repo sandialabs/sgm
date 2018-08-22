@@ -146,8 +146,10 @@ SGM::Point2D cylinder::Inverse(SGM::Point3D const &Pos,
 
 bool cylinder::IsSame(surface const *pOther,double dTolerance) const
     {
-    if (pOther->GetType()!=m_SurfaceType)
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
         return false;
+        }
 
     bool bAnswer=true;
     cylinder const *pCylinder1=(cylinder const *)this;

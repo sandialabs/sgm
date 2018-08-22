@@ -44,6 +44,11 @@ SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
 
 bool volume::GetColor(int &nRed,int &nGreen,int &nBlue) const
     {
+    if(entity::GetColor(nRed,nGreen,nBlue)==true)
+        {
+        return true;
+        }
+
     body * pBody = GetBody();
     if (pBody)
         return pBody->GetColor(nRed,nGreen,nBlue);

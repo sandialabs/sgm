@@ -291,6 +291,8 @@ class complex : public topology
 
         std::vector<unsigned int> const &GetTriangles() const {return m_aTriangles;}
 
+        std::vector<unsigned int> &GetTrianglesNonConst() {return m_aTriangles;}
+
         bool IsTopLevel() const {return m_sOwners.empty();}
 
         // Other methods
@@ -306,9 +308,25 @@ class complex : public topology
 
         complex *Merge(SGM::Result &rResult) const;
 
+        // Merges the given vector of complexes with this complex and returns
+        // the answer.
+
+        complex *Merge(SGM::Result                  &rResult,
+                       std::vector<complex *> const &aComplexes) const;
+
         complex *FindBoundary(SGM::Result &rResult) const;
 
         std::vector<complex *> FindComponents(SGM::Result &rResult) const;
+
+        double FindAverageEdgeLength() const;
+
+        // FindPolygon returns false if this complex is not a polygon.
+        // Otherwise the function fills in aPolygon to point the the points
+        // in m_aPoints in order of the given segments.
+
+        bool FindPolygon(std::vector<unsigned int> &aPolygon) const;
+
+        double FindLength() const;
 
         void ReduceToUsedPoints();
 

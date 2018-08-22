@@ -270,8 +270,10 @@ SGM::Point2D torus::Inverse(SGM::Point3D const &Pos,
 
 bool torus::IsSame(surface const *pOther,double dTolerance) const
     {
-    if (pOther->GetType()!=m_SurfaceType)
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
         return false;
+        }
     bool bAnswer=true;
     torus const *pTorus1=this;
     torus const *pTorus2=dynamic_cast<torus const*>(pOther);

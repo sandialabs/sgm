@@ -91,71 +91,91 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
             QAction* result = menu.exec(QCursor::pos());
             mModel->ClearSelection();
             size_t Index1;
-            if(result == option_color)
+            if(result!=nullptr)
                 {
-                QColor color = QColorDialog::getColor(Qt::yellow, this );
-                for(Index1=0;Index1<nEnts;++Index1)
+                if(result == option_color)
                     {
-                    mModel->ChangeColor(aEnts[Index1],color.red(),color.green(),color.blue());
+                    QColor color = QColorDialog::getColor(Qt::yellow, this );
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->ChangeColor(aEnts[Index1],color.red(),color.green(),color.blue());
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_remove_color)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_remove_color)
                     {
-                    mModel->RemoveColor(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->RemoveColor(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_copy)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_copy)
                     {
-                    mModel->Copy(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->Copy(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_unhook)
-                {
-                mModel->Unhook(aEnts);
-                }
-            else if(result == option_cover)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_unhook)
                     {
-                    mModel->Cover(aEnts[Index1]);
+                    mModel->Unhook(aEnts);
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_merge)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_cover)
                     {
-                    mModel->Merge(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->Cover(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_find_components)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_merge)
                     {
-                    mModel->FindComponents(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->Merge(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_boundary)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_find_components)
                     {
-                    mModel->Boundary(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->FindComponents(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                }
-            else if(result == option_delete)
-                {
-                for(Index1=0;Index1<nEnts;++Index1)
+                else if(result == option_boundary)
                     {
-                    mModel->DeleteEntity(aEnts[Index1]);
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->Boundary(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
                     }
-                mModel->rebuild_graphics();
-                }
-            else if(result == option_rebuild)
-                {
-                mModel->rebuild_tree();
+                else if(result == option_delete)
+                    {
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->DeleteEntity(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_rebuild)
+                    {
+                    mModel->rebuild_tree();
+                    }
                 }
             }
         else

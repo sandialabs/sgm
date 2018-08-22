@@ -3363,9 +3363,11 @@ void InsertPoints(SGM::Result                     &,//rResult,
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
         std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,SGM_MIN_TOL);
         size_t nHits=aHits.size();
-        // potentially nHits on aEdgePoints and aPoints3D
+
+        // There are potentially nHits on aEdgePoints and aPoints3D.
         aEdgePoints.reserve(aPoints3D.size() + nHits);
         aPoints3D.reserve(aPoints3D.size() + nHits);
+
         for(Index2=0;Index2<nHits;++Index2)
             {
             size_t nHitTri=*((size_t *)aHits[Index2].first);

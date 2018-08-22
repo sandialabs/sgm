@@ -1,6 +1,13 @@
+#include "SGMResult.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
+
+void SGM::Result::SetResult(SGM::ResultType nType)
+    {
+    m_nType=nType;
+    }
 
 namespace SGMInternal
 {

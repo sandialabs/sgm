@@ -173,8 +173,10 @@ SGM::Point2D sphere::Inverse(SGM::Point3D const &Pos,
 
 bool sphere::IsSame(surface const *pOther,double dTolerance) const
     {
-    if (pOther->GetType() != m_SurfaceType)
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
         return false;
+        }
     bool bAnswer=true;
     sphere const *pSphere1=(sphere const *)this;
     sphere const *pSphere2=(sphere const *)pOther;

@@ -182,6 +182,12 @@ void ModelData::perspective_mode()
     dPtr->mGraphics->enable_perspective(mperspective_mode);
 }
 
+void ModelData::set_background()
+{
+    dPtr->mGraphics->set_background(0.0,1.0,0.0,1.0);
+    rebuild_graphics();
+}
+
 bool ModelData::RunCPPTest(size_t nTest)
 {
     bool bAnswer = SGM::RunCPPTest(dPtr->mResult, nTest);
@@ -316,38 +322,28 @@ void ModelData::create_revolve(SGM::Point3D const &Origin,
 void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue)
 {
     SGM::ChangeColor(dPtr->mResult, EntityID, nRed, nGreen, nBlue);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
     SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::FindComponents(SGM::Entity EntityID)
@@ -355,16 +351,12 @@ void ModelData::FindComponents(SGM::Entity EntityID)
     std::vector<SGM::Complex> aComponents;
     SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Boundary(SGM::Entity EntityID)
 {
     SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
@@ -378,15 +370,11 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             }
         }
     SGM::UnhookFaces(dPtr->mResult, aFaces);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
-    rebuild_tree();
-    rebuild_graphics(false);
 }
 
 SGM::Result ModelData::GetResult() const
@@ -1228,6 +1216,7 @@ void ModelData::rebuild_tree()
         return;
         }
     dPtr->mTree->clear();
+    dPtr->mTree->mTreeMap.clear();
 
     SGM::Thing ThingID;
     auto ThingItem = new QTreeWidgetItem(dPtr->mTree);
@@ -1527,33 +1516,36 @@ void ModelData::rebuild_graphics(bool bReset)
             std::vector<SGM::Point3D> aPoints;
             std::vector<SGM::UnitVector3D> aNormals;
             std::vector<unsigned int> aTriangles;
-            std::vector<SGM::Vector3D> aColors;
+            std::vector<SGM::Vector3D> aColors,aTriColors;
+
+            get_complex_colors(ComplexID, aColors);
 
             size_t nTriangles=complex_triangles.size();
             aTriangles.reserve(nTriangles);
             aPoints.reserve(nTriangles);
             aNormals.reserve(nTriangles);
             aColors.reserve(nTriangles);
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nTriangles;++Index1)
                 {
                 aTriangles.push_back((unsigned int)Index1);
                 aPoints.push_back(complex_points[complex_triangles[Index1]]);
-                aColors.push_back(Green);
                 }
             for(Index1=0;Index1<nTriangles;Index1+=3)
                 {
-                SGM::Point3D const &A=aPoints[aTriangles[Index1]];
-                SGM::Point3D const &B=aPoints[aTriangles[Index1+1]];
-                SGM::Point3D const &C=aPoints[aTriangles[Index1+2]];
+                SGM::Point3D const &A=complex_points[complex_triangles[Index1]];
+                SGM::Point3D const &B=complex_points[complex_triangles[Index1+1]];
+                SGM::Point3D const &C=complex_points[complex_triangles[Index1+2]];
                 SGM::UnitVector3D Norm=(B-A)*(C-A);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
                 aNormals.push_back(Norm);
+                aTriColors.push_back(aColors[complex_triangles[Index1]]);
+                aTriColors.push_back(aColors[complex_triangles[Index1+1]]);
+                aTriColors.push_back(aColors[complex_triangles[Index1+2]]);
                 }
 
-            dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aColors);
+            dPtr->mGraphics->add_face(aPoints, aTriangles, aNormals, aTriColors);
             update_bounds_complex(dPtr->mResult, ComplexID, dPtr->mGraphics);
             }
 
@@ -1583,19 +1575,22 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             const std::vector<unsigned int> &complex_segments=SGM::GetComplexSegments(dPtr->mResult, ComplexID);
             
+            std::vector<SGM::Vector3D> aColors;
+            get_complex_colors(ComplexID, aColors);
+
             size_t nSegments=complex_segments.size();
-            SGM::Vector3D Green(0,1,0);
             size_t Index1;
             for(Index1=0;Index1<nSegments;Index1+=2)
                 {
                 std::vector<SGM::Point3D> aPoints;
-                std::vector<SGM::Vector3D> aColors;
+                std::vector<SGM::Vector3D> aSegColors;
 
                 aPoints.push_back(complex_points[complex_segments[Index1]]);
                 aPoints.push_back(complex_points[complex_segments[Index1+1]]);
-                aColors.push_back(Green);
-                aColors.push_back(Green);
-                dPtr->mGraphics->add_edge(aPoints, aColors);
+                aSegColors.push_back(aColors[complex_segments[Index1]]);
+                aSegColors.push_back(aColors[complex_segments[Index1+1]]);
+                
+                dPtr->mGraphics->add_edge(aPoints, aSegColors);
                 update_bounds_vertex(aPoints[0], dPtr->mGraphics);
                 update_bounds_vertex(aPoints[1], dPtr->mGraphics);
                 }
@@ -1607,7 +1602,6 @@ void ModelData::rebuild_graphics(bool bReset)
         
         std::set<SGM::Vertex> vertex_list;
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
-        SGM::Vector3D Green(0,1,0);
 
         if(vertex_list.size())
             {
@@ -1623,6 +1617,9 @@ void ModelData::rebuild_graphics(bool bReset)
 
         for (const SGM::Complex &ComplexID : complex_list)
             {
+            std::vector<SGM::Vector3D> aColors;
+            get_complex_colors(ComplexID, aColors);
+
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             
             size_t nPoints=complex_points.size();
@@ -1630,7 +1627,7 @@ void ModelData::rebuild_graphics(bool bReset)
             for(Index1=0;Index1<nPoints;++Index1)
                 {
                 SGM::Point3D const &Pos=complex_points[Index1];
-                dPtr->mGraphics->add_vertex(Pos, Green);
+                dPtr->mGraphics->add_vertex(Pos, aColors[Index1]);
                 update_bounds_vertex(Pos, dPtr->mGraphics);
                 }
             }
