@@ -592,6 +592,15 @@ void thing::WriteSGM(SGM::Result                  &rResult,
     Options;
     }
 
+void entity::WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
 void SaveSGM(SGM::Result                  &rResult,
              std::string            const &sFileName,
              entity                 const *pEntity,

@@ -58,7 +58,7 @@ public:
 
     virtual void WriteSGM(SGM::Result                  &rResult,
                           FILE                         *pFile,
-                          SGM::TranslatorOptions const &Options) const = 0;
+                          SGM::TranslatorOptions const &Options) const;
 
     size_t GetID() const;
 
