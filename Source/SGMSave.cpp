@@ -14,6 +14,9 @@ __pragma(warning(disable: 4996 ))
 
 namespace SGMInternal
 {
+
+#if 0
+
 void OutputCurve(SGM::Result                  &,//rResult,
                  curve                  const *pCurve,
                  FILE                         *pFile,
@@ -272,93 +275,327 @@ void OutputComplex(SGM::Result                  &,//rResult,
         fprintf(pFile,"  %u,%u,%u;\n",aTriangles[Index1],aTriangles[Index1+1],aTriangles[Index1+2]);
         }
     }
+#endif
 
-void OutputThing(SGM::Result                  &rResult,
-                 thing                  const *pThing,
-                 FILE                         *pFile,
-                 SGM::TranslatorOptions const &Options)
+void body::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
     {
-    // Shareable entities.
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<curve *,EntityCompare> sCurves;
-    std::set<surface *,EntityCompare> sSurfaces;
-    std::set<vertex *,EntityCompare> sVertices;
-    std::set<edge *,EntityCompare> sEdges;
+void complex::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    FindCurves(rResult,pThing,sCurves);
-    FindSurfaces(rResult,pThing,sSurfaces);
-    FindVertices(rResult,pThing,sVertices);
-    FindEdges(rResult,pThing,sEdges);
+void volume::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    fprintf(pFile,"\n");
+void face::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<curve *,EntityCompare>::iterator CurveIter=sCurves.begin();
-    while(CurveIter!=sCurves.end())
-        {
-        OutputCurve(rResult,*CurveIter,pFile,Options);
-        ++CurveIter;
-        }
+void edge::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<surface *,EntityCompare>::iterator SurfaceIter=sSurfaces.begin();
-    while(SurfaceIter!=sSurfaces.end())
-        {
-        OutputSurface(rResult,*SurfaceIter,pFile,Options);
-        ++SurfaceIter;
-        }
+void vertex::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<vertex *,EntityCompare>::iterator VertexIter=sVertices.begin();
-    while(VertexIter!=sVertices.end())
-        {
-        OutputVertex(rResult,*VertexIter,pFile,Options);
-        ++VertexIter;
-        }
+void curve::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<edge *,EntityCompare>::iterator EdgeIter=sEdges.begin();
-    while(EdgeIter!=sEdges.end())
-        {
-        OutputEdge(rResult,*EdgeIter,pFile,Options);
-        ++EdgeIter;
-        }
+void surface::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    // Top level entities.
+void attribute::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<body *,EntityCompare> sBodies;
-    FindBodies(rResult,pThing,sBodies,true);
-    size_t nBodies=sBodies.size();
-    if(nBodies)
-        {
-        fprintf(pFile,"%ld Bodies ",nBodies);
-        }
+void StringAttribute::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<complex *,EntityCompare> sComplexes;
-    FindComplexes(rResult,pThing,sComplexes);
-    size_t nComplexes=sComplexes.size();
-    if(nComplexes)
-        {
-        fprintf(pFile,"%ld Complexes",nBodies);
-        }
+void IntegerAttribute::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    fprintf(pFile,";\n");
+void DoubleAttribute::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<body *,EntityCompare>::iterator BodyIter=sBodies.begin();
-    while(BodyIter!=sBodies.end())
-        {
-        OutputBody(rResult,*BodyIter,pFile,Options);
-        ++BodyIter;
-        }
+void CharAttribute::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
 
-    std::set<complex *,EntityCompare>::iterator ComplexIter=sComplexes.begin();
-    while(ComplexIter!=sComplexes.end())
-        {
-        OutputComplex(rResult,*ComplexIter,pFile,Options);
-        ++ComplexIter;
-        }
+void line::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void circle::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void ellipse::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void parabola::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void hyperbola::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void NUBcurve::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void NURBcurve::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void PointCurve::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void hermite::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void TorusKnot::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void plane::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void cylinder::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void cone::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void sphere::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void torus::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void NUBsurface::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void NURBsurface::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void revolve::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void extrude::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void reference::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void assembly::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
+    }
+
+void thing::WriteSGM(SGM::Result                  &rResult,
+                     FILE                         *pFile,
+                     SGM::TranslatorOptions const &Options) const
+    {
+    rResult;
+    pFile;
+    Options;
     }
 
 void SaveSGM(SGM::Result                  &rResult,
              std::string            const &sFileName,
              entity                 const *pEntity,
-             SGM::TranslatorOptions const &Options)
+             SGM::TranslatorOptions const &)//Options)
     {
     // Open the file.
 
@@ -376,17 +613,10 @@ void SaveSGM(SGM::Result                  &rResult,
 
     // Output the data.
 
-    switch(pEntity->GetType())
+    if(pEntity)
         {
-        case SGM::EntityType::ThingType:
-            {
-            OutputThing(rResult,(thing *)pEntity,pFile,Options);
-            break;
-            }
-        default:
-            {
-            break;
-            }
+        int a=0;
+        a*=1;
         }
     }
 

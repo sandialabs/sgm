@@ -8,6 +8,7 @@
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
+#include "SGMTranslators.h"
 
 namespace SGMInternal
 {
@@ -54,6 +55,10 @@ public:
     virtual void ReplacePointers(std::map<entity *, entity *> const &mEntityMap);
 
     virtual void SeverRelations(SGM::Result &rResult);
+
+    virtual void WriteSGM(SGM::Result                  &rResult,
+                          FILE                         *pFile,
+                          SGM::TranslatorOptions const &Options) const = 0;
 
     size_t GetID() const;
 
@@ -113,6 +118,10 @@ class thing : public entity
                    bool                      bChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void ResetBox(SGM::Result &) const override { m_Box.Reset(); }
 
@@ -177,6 +186,12 @@ class assembly : public topology
         explicit assembly(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
 
         ~assembly() override = default;
+
+        bool IsTopLevel() const {return m_sOwners.empty();}
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
     };
 
 class reference : public topology
@@ -187,6 +202,12 @@ class reference : public topology
         {}
 
         ~reference() override = default;
+
+        bool IsTopLevel() const {return m_sOwners.empty();}
+        
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
     };
 
 class body : public topology
@@ -215,6 +236,10 @@ class body : public topology
         void SeverRelations(SGM::Result &rResult) override;
 
         body *Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void AddVolume(volume *pVolume);
 
@@ -280,6 +305,10 @@ class complex : public topology
 
         complex *Clone(SGM::Result &) const override
         { throw std::logic_error("not implemented"); }
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
@@ -360,6 +389,10 @@ class volume : public topology
 
         volume *Clone(SGM::Result &rResult) const override;
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         void AddFace(face *pFace);
 
         void RemoveFace(face *pFace);
@@ -420,6 +453,10 @@ class face : public topology
         face *Clone(SGM::Result &rResult) const override;
 
         void SeverRelations(SGM::Result &rResult) override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
 
@@ -533,6 +570,10 @@ class edge : public topology
 
         edge *Clone(SGM::Result &rResult) const override;
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         // Set and Remove Methods
 
         void SetStart(vertex *pStart);
@@ -638,6 +679,10 @@ class vertex : public topology
 
         vertex *Clone(SGM::Result &rResult) const override;
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         void AddEdge(edge *pEdge) {m_sEdges.insert(pEdge);}
 
         void RemoveEdge(edge *pEdge);
@@ -676,6 +721,10 @@ class attribute : public entity
                    std::vector<std::string> &,
                    bool                      ) const override { return true; }
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         std::string const &GetName() const {return m_Name;}
 
         SGM::EntityType GetAttributeType() const {return m_AttributeType;}
@@ -697,6 +746,10 @@ class StringAttribute : public attribute
                         std::string Data):
             attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(std::move(Data)) {}
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         ~StringAttribute() override = default;
 
         std::string const &GetData() const {return m_Data;}
@@ -715,6 +768,10 @@ class IntegerAttribute : public attribute
                          std::string      const &Name,
                          std::vector<int> const &aData):
             attribute(rResult,SGM::EntityType::IntegerAttributeType,Name),m_aData(aData) {}
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         ~IntegerAttribute() override = default;
 
@@ -736,6 +793,10 @@ class DoubleAttribute : public attribute
 
         ~DoubleAttribute() override = default;
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         std::vector<double> const &GetData() const {return m_aData;}
 
     private:
@@ -753,6 +814,10 @@ class CharAttribute : public attribute
         attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
 
         ~CharAttribute() override = default;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         std::vector<char> const &GetData() const {return m_aData;}
 

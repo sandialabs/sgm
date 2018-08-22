@@ -14,26 +14,6 @@
 namespace SGMInternal
 {
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Check list of adding a new surface type.
-//
-//  Methods to add
-//
-//  A Constructor
-//      Set it domain.
-//      Set if it is closed in U or V
-//      Set if it is singular at high or low U or V.
-//  Evaluate
-//  Inverse
-//  UParamLine
-//  VParamLine
-//  Transform
-//
-//  Get[Surface Name]Data
-//
-///////////////////////////////////////////////////////////////////////////////
-
 class surface;
 
 class surface : public entity
@@ -46,6 +26,10 @@ class surface : public entity
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         surface *Clone(SGM::Result &rResult) const override;
 
@@ -178,6 +162,10 @@ class plane : public surface
         plane(SGM::Result  &rResult,
               plane  const *pPlane);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         plane *Clone(SGM::Result &rResult) const override;
 
         void Evaluate(SGM::Point2D const &uv,
@@ -223,6 +211,10 @@ class cylinder : public surface
                  SGM::Point3D      const &Top,
                  double                   dRadius,
                  SGM::UnitVector3D const *XAxis=nullptr);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -271,6 +263,10 @@ class cone : public surface
              double                   dRadius,
              double                   dHalfAngle,
              SGM::UnitVector3D const *XAxis=nullptr);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
 
@@ -324,6 +320,10 @@ class sphere : public surface
                SGM::UnitVector3D const *XAxis=nullptr,
                SGM::UnitVector3D const *YAxis=nullptr);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,
@@ -371,6 +371,10 @@ class torus : public surface
               double                   dMajorRadius,
               bool                     bApple,
               SGM::UnitVector3D const *XAxis=nullptr);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -421,6 +425,10 @@ class NUBsurface: public surface
                    std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
                    std::vector<double>                     const &aUKnots,
                    std::vector<double>                     const &aVKnots);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -496,6 +504,10 @@ class NURBsurface: public surface
                     std::vector<double>                     const &aUKnots,
                     std::vector<double>                     const &aVKnots);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,
@@ -570,6 +582,10 @@ class revolve : public surface
                 SGM::UnitVector3D const &uAxisVector,
                 curve                   *pCurve);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         ~revolve() override;
 
         void Evaluate(SGM::Point2D const &uv,
@@ -611,6 +627,10 @@ class extrude : public surface
         extrude(SGM::Result             &rResult,
                 SGM::UnitVector3D const &vAxis,
                 curve                   *pCurve);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         ~extrude() override;
 

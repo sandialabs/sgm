@@ -194,6 +194,51 @@ size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
                     }
                 break;
                 }
+            case SGM::ComplexType:
+                {
+                complex *pComplex=(complex *)pEntity;
+                if(pComplex->IsTopLevel())
+                    {
+                    aEntities.push_back(pComplex);
+                    }
+                break;
+                }
+            case SGM::CurveType:
+                {
+                curve *pCurve=(curve *)pEntity;
+                if(pCurve->IsTopLevel())
+                    {
+                    aEntities.push_back(pCurve);
+                    }
+                break;
+                }
+            case SGM::SurfaceType:
+                {
+                surface *pSurface=(surface *)pEntity;
+                if(pSurface->IsTopLevel())
+                    {
+                    aEntities.push_back(pSurface);
+                    }
+                break;
+                }
+            case SGM::AttributeType:
+                {
+                attribute *pAttribute=(attribute *)pEntity;
+                if(pAttribute->IsTopLevel())
+                    {
+                    aEntities.push_back(pAttribute);
+                    }
+                break;
+                }
+            case SGM::ReferenceType:
+                {
+                reference *pReference=(reference *)pEntity;
+                if(pReference->IsTopLevel())
+                    {
+                    aEntities.push_back(pReference);
+                    }
+                break;
+                }
             default:
                 {
                 throw;

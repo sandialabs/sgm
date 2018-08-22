@@ -17,42 +17,6 @@
 namespace SGMInternal
 {
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  The check list for adding a new curve type.
-//
-//  Derive a class from curve.
-//  Add a type to SGM::EntityType.
-//  Add a constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Add a copy constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Add to the Clone method of curve.
-//  Add to the Evalute method of curve.
-//  Add to the Inverse method of curve.
-//  Add to the Transform method of curve.
-//  Add to the Negate method of curve.
-//
-//  Optional check list functions.
-//
-//  Add to the Curvature method of curve.
-//  Add to the Check method of curve.
-//  Add to the FindLength method of curve.
-//
-//  Additional functions that check the curve type.
-//
-//  Add to the function FacetCurve.
-//  Add to the function IntersectCurveAndSurface.
-//  Add to the function IntersectLineAndCurve.
-//  Add to the function IntersectCircleAndCurve.
-//  Add to the function IntersectCurves.
-//  Add to the function FindClosestPointOnEdge.
-//  Add to the function OutputCurve.
-//  Add to the function WriteCurves in STEP.cpp.
-//  Add to the function DeleteEntity in Thing.cpp
-//
-//////////////////////////////////////////////////////////////////////////////
-
 class curve : public entity
     {
     public:
@@ -69,6 +33,10 @@ class curve : public entity
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         void AddEdge(edge *pEdge);
 
@@ -132,6 +100,10 @@ class line : public curve
         line(SGM::Result  &rResult,
              line   const *pLine);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
         double GetScale() const {return m_dScale;}
@@ -156,6 +128,10 @@ class circle : public curve
 
         circle(SGM::Result  &rResult,
                circle const *pCircle);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         SGM::Point3D       const &GetCenter() const {return m_Center;}
         SGM::UnitVector3D  const &GetNormal() const {return m_Normal;}
@@ -185,6 +161,10 @@ class NUBcurve: public curve
 
         NUBcurve(SGM::Result    &rResult,
                  NUBcurve const *pNUB);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
@@ -221,6 +201,10 @@ class NURBcurve: public curve
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
         std::vector<SGM::Point4D> const &GetControlPoints() const {return m_aControlPoints;}
@@ -256,6 +240,10 @@ class PointCurve: public curve
                    SGM::Point3D    const &Pos,
                    SGM::Interval1D const *pDomain=nullptr);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
     public:
 
         SGM::Point3D m_Pos;
@@ -273,6 +261,10 @@ class ellipse: public curve
                 SGM::UnitVector3D const &YAxis,
                 double                   dA,
                 double                   dB);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
     public:
 
@@ -297,6 +289,10 @@ class hyperbola: public curve
                   double                   dA,
                   double                   dB);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -318,6 +314,10 @@ class parabola: public curve
                  SGM::UnitVector3D const &XAxis,
                  SGM::UnitVector3D const &YAxis,
                  double                   dA);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
     public:
 
@@ -351,6 +351,10 @@ class TorusKnot: public curve
         TorusKnot(SGM::Result     &rResult,
                   TorusKnot const *pTorusKnot);
 
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -371,6 +375,10 @@ class hermite: public curve
                 std::vector<SGM::Point3D>  const &aPoints,
                 std::vector<SGM::Vector3D> const &aTangents,
                 std::vector<double>        const &aParams);
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
 
         size_t FindSpan(double t) const;
 
