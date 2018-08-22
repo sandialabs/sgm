@@ -371,56 +371,77 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
     {
     // IsEmpty, coincident, one tangent point, or two points.
 
-    SGM::Point3D Center=pCylinder->m_Origin;
-    SGM::UnitVector3D CylinderAxis=pCylinder->m_ZAxis;
+    SGM::UnitVector3D const &CylinderAxis=pCylinder->m_ZAxis;
+    SGM::Point3D const &Center=pCylinder->m_Origin;
+    SGM::Point3D Pos=Origin+Axis;
     double dRadius=pCylinder->m_dRadius;
-    SGM::Segment3D Seg1(Origin,Origin+Axis);
-    SGM::Segment3D Seg2(Center,Center+CylinderAxis);
+    if(fabs(fabs(CylinderAxis%Axis)-1.0)<dTolerance)
+        {
+        // Empty or coincident.
+
+        double dDistanceFromCylinderAxis=Origin.Distance(Center+CylinderAxis*((Origin-Center)%CylinderAxis));
+        if(fabs(dDistanceFromCylinderAxis-dRadius)<dTolerance)
+            {
+            aPoints.push_back(Origin);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::CoincidentType);
+            aTypes.push_back(SGM::CoincidentType);
+            return 2;
+            }
+        else
+            {
+            return 0;
+            }
+        }
+    else
+        {
+        SGM::Point3D ProjectedOrigin=Origin-CylinderAxis*((Origin-Center)%CylinderAxis);
+        SGM::Point3D ProjectedPos=Pos-CylinderAxis*((Pos-Center)%CylinderAxis);
+        SGM::UnitVector3D ProjectedAxis=ProjectedPos-ProjectedOrigin;
+        size_t nHits=IntersectLineAndCircle(ProjectedOrigin,ProjectedAxis,Domain,Center,CylinderAxis,dRadius,dTolerance,aPoints,aTypes);
+        size_t Index1;
+        SGM::Interval1D MaxDomain(-SGM_MAX,SGM_MAX);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            std::vector<SGM::Point3D> aTempPoints;
+            std::vector<SGM::IntersectionType> aTempTypes;
+            IntersectLineAndLine(Origin,Axis,Domain,aPoints[Index1],CylinderAxis,MaxDomain,dTolerance,aTempPoints,aTempTypes);
+            aPoints[Index1]=aTempPoints[0];
+            }
+        return nHits;
+        }
+    }
+
+size_t IntersectLineAndLine(SGM::Point3D                 const &Origin1,
+                            SGM::UnitVector3D            const &Axis1,
+                            SGM::Interval1D              const &Domain1,
+                            SGM::Point3D                 const &Origin2,
+                            SGM::UnitVector3D            const &Axis2,
+                            SGM::Interval1D              const &,//Domain2,
+                            double                              dTolerance,
+                            std::vector<SGM::Point3D>          &aPoints,
+                            std::vector<SGM::IntersectionType> &aTypes)
+    {
+    SGM::Segment3D Seg1(Origin1,Origin1+Axis1);
+    SGM::Segment3D Seg2(Origin2,Origin2+Axis2);
     SGM::Point3D Pos1,Pos2;
     Seg1.Intersect(Seg2,Pos1,Pos2);
     if(SGM::NearEqual(Pos1,Pos2,dTolerance))
         {
-        if(fabs(Axis%CylinderAxis)<1.0-dTolerance)
+        if(fabs(Axis1%Axis2)<1.0-dTolerance)
             {
-            SGM::UnitVector3D LineAxis=CylinderAxis*Axis*CylinderAxis;
-            SGM::Point3D LineOrigin=Center-((Origin-Center)%CylinderAxis)*CylinderAxis;
-            double dCloseT=(Center-LineOrigin)%LineAxis;
-            SGM::Point3D Pos=LineOrigin+dCloseT*LineAxis;
-            double dDist=Pos.Distance(Center);
-            SGM::Point3D TestPos=Origin+Axis;
-            SGM::Point3D ProjectedTestPos=TestPos-((TestPos-Center)%CylinderAxis)*CylinderAxis;
-            double dScale=LineOrigin.Distance(ProjectedTestPos);
-            if(fabs(dDist-dRadius)<dTolerance)
-                {
-                aPoints.push_back(Origin+(dCloseT*dScale)*Axis);
-                aTypes.push_back(SGM::IntersectionType::TangentType);
-                }
-            else if(dDist<dRadius)
-                {
-                SGM::Point3D ClosePos=LineOrigin+(dCloseT*dScale)*Axis;
-                double t=sqrt(dRadius*dRadius-dDist*dDist);
-                aPoints.push_back(ClosePos+(t*dScale)*Axis);
-                aTypes.push_back(SGM::IntersectionType::PointType);
-                aPoints.push_back(ClosePos-(t*dScale)*Axis);
-                aTypes.push_back(SGM::IntersectionType::PointType);
-                }
+            aPoints.push_back(SGM::MidPoint(Pos1,Pos2));
+            aTypes.push_back(SGM::IntersectionType::PointType);
             }
-        else 
+        else
             {
-            SGM::Point3D CylinderPos;
-            pCylinder->Inverse(Origin,&CylinderPos);
-            if(CylinderPos.DistanceSquared(Origin)<dTolerance*dTolerance)
-                {
-                aPoints.push_back(Origin+Domain.m_dMin*Axis);
-                aTypes.push_back(SGM::IntersectionType::CoincidentType);
-                aPoints.push_back(Origin+Domain.m_dMax*Axis);
-                aTypes.push_back(SGM::IntersectionType::CoincidentType);
-                }
+            aPoints.push_back(Origin1+Axis1*Domain1.m_dMin);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            aPoints.push_back(Origin1+Axis1*Domain1.m_dMax);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
             }
-        return aPoints.size();
         }
-
-    return 0;
+    return aPoints.size();
     }
 
 size_t IntersectLineAndLine(SGM::Point3D                 const &Origin,
