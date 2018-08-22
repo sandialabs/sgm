@@ -1380,7 +1380,8 @@ inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGM
 }
 
 void ModelData::get_edge_colors(const SGM::Edge &edge,
-                                std::vector<SGM::Vector3D> &edge_colors) const
+                                std::vector<SGM::Vector3D> &edge_colors,
+                                std::vector<SGM::Entity> *) const
 {
     int nRed, nGreen, nBlue;
     SGM::Vector3D ColorVec = {dDefaultEdgeRed, dDefaultEdgeGreen, dDefaultEdgeBlue};
@@ -1398,13 +1399,28 @@ void ModelData::get_edge_colors(const SGM::Edge &edge,
 }
 
 void ModelData::get_face_colors(const SGM::Face &face,
-                                std::vector<SGM::Vector3D> &face_colors) const
+                                std::vector<SGM::Vector3D> &face_colors,
+                                std::vector<SGM::Entity> *aEnts) const
 {
     int nRed, nGreen, nBlue;
     SGM::Vector3D ColorVec = {dDefaultFaceRed, dDefaultFaceGreen, dDefaultFaceBlue};
 
     if (SGM::GetColor(dPtr->mResult, face, nRed, nGreen, nBlue))
+        {
         ColorVec = {nRed / 255.0, nGreen / 255.0, nBlue / 255.0};
+        }
+    if(aEnts)
+        {
+        size_t nEnts=aEnts->size();
+        size_t Index1;
+        for(Index1=0;Index1<nEnts;++Index1)
+            {
+            if(face.m_ID==(*aEnts)[Index1].m_ID)
+                {
+                ColorVec = {1,0,0};
+                }
+            }
+        }
 
     const std::vector<SGM::Point3D> &face_points =
             SGM::GetFacePoints3D(dPtr->mResult, face);
@@ -1416,7 +1432,8 @@ void ModelData::get_face_colors(const SGM::Face &face,
 }
 
 void ModelData::get_complex_colors(const SGM::Complex &pComplex,
-                                   std::vector<SGM::Vector3D> &complex_colors) const
+                                   std::vector<SGM::Vector3D> &complex_colors,
+                                   std::vector<SGM::Entity> *) const
 {
     int nRed, nGreen, nBlue;
     SGM::Vector3D ColorVec = {dDefaultFaceRed, dDefaultFaceGreen, dDefaultFaceBlue};
@@ -1433,7 +1450,8 @@ void ModelData::get_complex_colors(const SGM::Complex &pComplex,
         complex_colors.push_back(ColorVec);
 }
 
-SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex) const
+SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex,
+                                          std::vector<SGM::Entity> *) const
 {
     int nRed, nGreen, nBlue;
     if (SGM::GetColor(dPtr->mResult, vertex, nRed, nGreen, nBlue))
@@ -1441,7 +1459,8 @@ SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex) const
     return {dDefaultEdgeRed, dDefaultEdgeGreen, dDefaultEdgeBlue};
 }
 
-void ModelData::rebuild_graphics(bool bReset)
+void ModelData::rebuild_graphics(bool                      bReset,
+                                 std::vector<SGM::Entity> *aEnts)
 {
     if (!dPtr->mGraphics)
         return;
@@ -1503,7 +1522,7 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<SGM::UnitVector3D> &face_normals =
                     SGM::GetFaceNormals(dPtr->mResult, face);
             std::vector<SGM::Vector3D> face_colors;
-            get_face_colors(face, face_colors);
+            get_face_colors(face, face_colors, aEnts);
             dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
             update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
             }
@@ -1518,7 +1537,7 @@ void ModelData::rebuild_graphics(bool bReset)
             std::vector<unsigned int> aTriangles;
             std::vector<SGM::Vector3D> aColors,aTriColors;
 
-            get_complex_colors(ComplexID, aColors);
+            get_complex_colors(ComplexID, aColors,nullptr);
 
             size_t nTriangles=complex_triangles.size();
             aTriangles.reserve(nTriangles);
@@ -1565,7 +1584,7 @@ void ModelData::rebuild_graphics(bool bReset)
             std::vector<SGM::Point3D> const &edge_points =
                     SGM::GetEdgePoints(dPtr->mResult, edge);
             std::vector<SGM::Vector3D> edge_colors;
-            get_edge_colors(edge, edge_colors);
+            get_edge_colors(edge, edge_colors,nullptr);
             dPtr->mGraphics->add_edge(edge_points, edge_colors);
             update_bounds_edge(dPtr->mResult, edge, dPtr->mGraphics);
             }
@@ -1576,7 +1595,7 @@ void ModelData::rebuild_graphics(bool bReset)
             const std::vector<unsigned int> &complex_segments=SGM::GetComplexSegments(dPtr->mResult, ComplexID);
             
             std::vector<SGM::Vector3D> aColors;
-            get_complex_colors(ComplexID, aColors);
+            get_complex_colors(ComplexID, aColors,nullptr);
 
             size_t nSegments=complex_segments.size();
             size_t Index1;
@@ -1611,14 +1630,14 @@ void ModelData::rebuild_graphics(bool bReset)
         for (const SGM::Vertex &vertex : vertex_list)
             {
             SGM::Point3D const &Pos = SGM::GetPointOfVertex(dPtr->mResult, vertex);
-            dPtr->mGraphics->add_vertex(Pos, get_vertex_color(vertex));
+            dPtr->mGraphics->add_vertex(Pos, get_vertex_color(vertex,nullptr));
             update_bounds_vertex(Pos, dPtr->mGraphics);
             }
 
         for (const SGM::Complex &ComplexID : complex_list)
             {
             std::vector<SGM::Vector3D> aColors;
-            get_complex_colors(ComplexID, aColors);
+            get_complex_colors(ComplexID, aColors,nullptr);
 
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             

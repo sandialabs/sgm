@@ -79,6 +79,7 @@ public:
     static QSurfaceFormat default_format();
 
 protected:
+
     void initializeGL() override;
 
     void paintGL() override;
