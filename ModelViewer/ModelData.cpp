@@ -537,8 +537,6 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     snprintf(Data0, sizeof(Data0), "Volume %ld", VolumeID.m_ID);
     volume_item->setText(0, Data0);
 
-    double dVolume=SGM::FindVolume(dPtr->mResult, VolumeID, true);
-
     add_attributes_to_tree(volume_item, VolumeID);
     add_bounding_box_to_tree(volume_item, VolumeID);
 
