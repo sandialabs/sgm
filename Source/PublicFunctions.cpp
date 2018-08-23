@@ -626,6 +626,13 @@ int SGM::GetSidesOfFace(SGM::Result     &rResult,
     return pFace->GetSides();
     }
 
+bool SGM::IsFaceFlipped(SGM::Result     &rResult,
+                        SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->GetFlipped();
+    }
+
 SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,
                                             SGM::Edge const &EdgeID)
     {

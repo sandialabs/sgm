@@ -11,6 +11,7 @@
 #include "SGMAttribute.h"
 #include "SGMVector.h"
 #include "SGMComplex.h"
+#include "SGMMeasure.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"
@@ -536,6 +537,8 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     snprintf(Data0, sizeof(Data0), "Volume %ld", VolumeID.m_ID);
     volume_item->setText(0, Data0);
 
+    double dVolume=SGM::FindVolume(dPtr->mResult, VolumeID, true);
+
     add_attributes_to_tree(volume_item, VolumeID);
     add_bounding_box_to_tree(volume_item, VolumeID);
 
@@ -616,6 +619,12 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     char Data[100];
     snprintf(Data, sizeof(Data), "%d", nSides);
     sides_data_item->setText(1, Data);
+
+    if(bool bFlipped = SGM::IsFaceFlipped(dPtr->mResult, FaceID))
+        {
+        auto *flipped_data_item = new QTreeWidgetItem(face_item);
+        flipped_data_item->setText(0, "Flipped");
+        }
 
     for (const SGM::Edge &EdgeID : sEdges)
         {
