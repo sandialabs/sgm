@@ -182,7 +182,7 @@ class NUBcurve: public curve
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
-        int Continuity() const;
+        int Continuity() const override;
 
     public:
 
@@ -221,7 +221,7 @@ class NURBcurve: public curve
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
-        int Continuity() const;
+        int Continuity() const override;
 
     public:
 
