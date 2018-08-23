@@ -171,14 +171,13 @@ double curve::Inverse(SGM::Point3D const &Pos,
             line const *pLine=(line const *)this;
             SGM::Point3D const &Origin=pLine->GetOrigin();
             SGM::UnitVector3D const &Axis=pLine->GetAxis();
-            double dScale=pLine->GetScale();
-            double t=((Pos.m_x-Origin.m_x)*Axis.m_x+(Pos.m_y-Origin.m_y)*Axis.m_y+(Pos.m_z-Origin.m_z)*Axis.m_z)/dScale;
+            double t=((Pos.m_x-Origin.m_x)*Axis.m_x+(Pos.m_y-Origin.m_y)*Axis.m_y+(Pos.m_z-Origin.m_z)*Axis.m_z);
 
             if(ClosePos)
                 {
-                ClosePos->m_x=Origin.m_x+Axis.m_x*t*dScale;
-                ClosePos->m_y=Origin.m_y+Axis.m_y*t*dScale;
-                ClosePos->m_z=Origin.m_z+Axis.m_z*t*dScale;
+                ClosePos->m_x=Origin.m_x+Axis.m_x*t;
+                ClosePos->m_y=Origin.m_y+Axis.m_y*t;
+                ClosePos->m_z=Origin.m_z+Axis.m_z*t;
                 }
             return t;
             }
@@ -535,8 +534,7 @@ double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
         {
         case SGM::LineType:
             {
-            line const *pLine=(line const *)this;
-            return Domain.Length()/pLine->m_dScale;
+            return Domain.Length();
             break;
             }
         case SGM::CircleType:
@@ -614,11 +612,9 @@ void curve::Transform(SGM::Transform3D const &Trans)
             line *pLine=(line *)this;
             SGM::Point3D &Origin=pLine->m_Origin;
             SGM::UnitVector3D &Axis=pLine->m_Axis;
-            double dScale=pLine->m_dScale;
 
             Origin=Trans*Origin;
             Axis=Trans*Axis;
-            dScale=dScale*Trans.Scale(Axis);
 
             break;
             }
@@ -810,19 +806,18 @@ void curve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D 
             line const *pLine=(line const *)this;
             SGM::Point3D const &Origin=pLine->GetOrigin();
             SGM::UnitVector3D const &Axis=pLine->GetAxis();
-            double dScale=pLine->GetScale();
 
             if(Pos)
                 {
-                Pos->m_x=Origin.m_x+Axis.m_x*t*dScale;
-                Pos->m_y=Origin.m_y+Axis.m_y*t*dScale;
-                Pos->m_z=Origin.m_z+Axis.m_z*t*dScale;
+                Pos->m_x=Origin.m_x+Axis.m_x*t;
+                Pos->m_y=Origin.m_y+Axis.m_y*t;
+                Pos->m_z=Origin.m_z+Axis.m_z*t;
                 }
             if(D1)
                 {
-                D1->m_x=Axis.m_x*dScale;
-                D1->m_y=Axis.m_y*dScale;
-                D1->m_z=Axis.m_z*dScale;
+                D1->m_x=Axis.m_x;
+                D1->m_y=Axis.m_y;
+                D1->m_z=Axis.m_z;
                 }
             if(D2)
                 {

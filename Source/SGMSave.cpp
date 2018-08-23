@@ -189,7 +189,8 @@ void edge::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"Edge ");
     entity::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile,"Start %ld End %ld Curve %ld Domain (%#.15G,%#.15G);\n",m_pStart->GetID(),m_pEnd->GetID(),m_pCurve->GetID(),m_Domain.m_dMin,m_Domain.m_dMax);
+    fprintf(pFile,"Start %ld End %ld Curve %ld Domain (%#.15G,%#.15G);\n",
+        m_pStart->GetID(),m_pEnd->GetID(),m_pCurve->GetID(),m_Domain.m_dMin,m_Domain.m_dMax);
     }
 
 void vertex::WriteSGM(SGM::Result                  &rResult,
@@ -206,7 +207,7 @@ void curve::WriteSGM(SGM::Result                  &rResult,
                      SGM::TranslatorOptions const &Options) const
     {
     entity::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile,"Domain (%#.15G,%#.15G) Closed %s ",m_Domain.m_dMin,m_Domain.m_dMax,m_bClosed ? "T" : "F");
+    fprintf(pFile,"Domain (%#.15G,%#.15G) ",m_Domain.m_dMin,m_Domain.m_dMax);
     }
 
 void surface::WriteSGM(SGM::Result                  &rResult,
@@ -214,6 +215,8 @@ void surface::WriteSGM(SGM::Result                  &rResult,
                        SGM::TranslatorOptions const &Options) const
     {
     entity::WriteSGM(rResult,pFile,Options);
+    fprintf(pFile,"Domain (%#.15G,%#.15G,%#.15G,%#.15G) ",
+        m_Domain.m_UDomain.m_dMin,m_Domain.m_UDomain.m_dMax,m_Domain.m_VDomain.m_dMin,m_Domain.m_VDomain.m_dMax);
     }
 
 void attribute::WriteSGM(SGM::Result                  &rResult,
@@ -294,8 +297,8 @@ void line::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"Line ");
     curve::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile,"Origin (%#.15G,%#.15G,%#.15G) Axis (%#.15G,%#.15G,%#.15G) Scale %#.15G;\n",
-        m_Origin.m_x,m_Origin.m_y,m_Origin.m_z,m_Axis.m_x,m_Axis.m_y,m_Axis.m_z,m_dScale);
+    fprintf(pFile,"Origin (%#.15G,%#.15G,%#.15G) Axis (%#.15G,%#.15G,%#.15G);\n",
+        m_Origin.m_x,m_Origin.m_y,m_Origin.m_z,m_Axis.m_x,m_Axis.m_y,m_Axis.m_z);
     }
 
 void circle::WriteSGM(SGM::Result                  &rResult,
@@ -398,6 +401,8 @@ void plane::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"Plane ");
     surface::WriteSGM(rResult,pFile,Options);
+
+
     }
 
 void cylinder::WriteSGM(SGM::Result                  &rResult,

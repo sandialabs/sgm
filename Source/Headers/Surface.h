@@ -156,8 +156,7 @@ class plane : public surface
               SGM::Point3D      const &Origin,
               SGM::UnitVector3D const &XAxis,
               SGM::UnitVector3D const &YAxis,
-              SGM::UnitVector3D const &ZAxis,
-              double                   dScale);
+              SGM::UnitVector3D const &ZAxis);
 
         plane(SGM::Result  &rResult,
               plane  const *pPlane);
@@ -199,7 +198,6 @@ class plane : public surface
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
         SGM::UnitVector3D m_ZAxis;
-        double            m_dScale;
     };
 
 class cylinder : public surface

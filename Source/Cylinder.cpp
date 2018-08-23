@@ -198,18 +198,17 @@ void cylinder::Transform(SGM::Transform3D const &Trans)
         m_dRadius *= Trans.Scale();
     }
 
-    curve *cylinder::UParamLine(SGM::Result &rResult, double dU) const
+curve *cylinder::UParamLine(SGM::Result &rResult, double dU) const
     {
-        double dRadius=m_dRadius;
-        SGM::Point2D uv(dU,0);
-        SGM::Point3D Pos;
-        SGM::Vector3D Vec;
-        Evaluate(uv,&Pos,nullptr,&Vec);
-        return new line(rResult,Pos,Vec,dRadius);
+    SGM::Point2D uv(dU,0);
+    SGM::Point3D Pos;
+    SGM::Vector3D Vec;
+    Evaluate(uv,&Pos,nullptr,&Vec);
+    return new line(rResult,Pos,Vec);
     }
 
-    curve *cylinder::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
-
-
+curve *cylinder::VParamLine(SGM::Result &, double) const
+    { 
+    return nullptr; 
+    }
 }

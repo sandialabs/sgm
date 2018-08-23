@@ -160,8 +160,7 @@ SGM_EXPORT SGM::Interval1D const &GetDomainOfCurve(SGM::Result      &rResult,
 SGM_EXPORT bool GetLineData(SGM::Result       &rResult,
                             SGM::Curve  const &CurveID,
                             SGM::Point3D      &Origin,
-                            SGM::UnitVector3D &Axis,
-                            double            &dScale);
+                            SGM::UnitVector3D &Axis);
 
 SGM_EXPORT bool GetCircleData(SGM::Result       &rResult,
                               SGM::Curve  const &CurveID,
@@ -228,8 +227,7 @@ SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Point3D       &Origin,
                              SGM::UnitVector3D  &XAxis,
                              SGM::UnitVector3D  &YAxis,
-                             SGM::UnitVector3D  &ZAxis,
-                             double             &dScale);   
+                             SGM::UnitVector3D  &ZAxis);   
              
 SGM_EXPORT bool GetCylinderData(SGM::Result        &rResult,
                                 SGM::Surface const &SurfaceID,

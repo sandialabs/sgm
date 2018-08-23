@@ -94,8 +94,7 @@ class line : public curve
 
         line(SGM::Result             &rResult,
              SGM::Point3D      const &Origin,
-             SGM::UnitVector3D const &Axis,
-             double                   dScale);
+             SGM::UnitVector3D const &Axis);
 
         line(SGM::Result  &rResult,
              line   const *pLine);
@@ -106,13 +105,11 @@ class line : public curve
 
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
-        double GetScale() const {return m_dScale;}
 
     public:
 
         SGM::Point3D      m_Origin;
         SGM::UnitVector3D m_Axis;
-        double            m_dScale;
     };
 
 class circle : public curve

@@ -774,7 +774,7 @@ SGM::Curve SGM::CreateLine(SGM::Result             &rResult,
                            SGM::Point3D      const &Origin,
                            SGM::UnitVector3D const &Axis)
     {
-    SGMInternal::curve *pCurve=new SGMInternal::line(rResult,Origin,Axis,1.0);
+    SGMInternal::curve *pCurve=new SGMInternal::line(rResult,Origin,Axis);
     return {pCurve->GetID()};
     }
 
@@ -1033,8 +1033,7 @@ SGM::Interval2D const &SGM::GetDomainOfSurface(SGM::Result        &rResult,
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,
-                      SGM::UnitVector3D &Axis,
-                      double            &dScale)
+                      SGM::UnitVector3D &Axis)
     {
     SGMInternal::curve const *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
     if(pCurve->GetCurveType()!=SGM::EntityType::LineType)
@@ -1044,7 +1043,6 @@ bool SGM::GetLineData(SGM::Result       &rResult,
     SGMInternal::line const *pLine=(SGMInternal::line const *)pCurve;
     Origin =pLine->m_Origin;
     Axis   =pLine->m_Axis;
-    dScale =pLine->m_dScale;
     return true;
     }
 
@@ -1191,8 +1189,7 @@ bool SGM::GetPlaneData(SGM::Result        &rResult,
                        SGM::Point3D       &Origin,
                        SGM::UnitVector3D  &XAxis,
                        SGM::UnitVector3D  &YAxis,
-                       SGM::UnitVector3D  &ZAxis,
-                       double             &dScale)
+                       SGM::UnitVector3D  &ZAxis)
     {
     SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
     if(pSurface->GetSurfaceType()!=SGM::EntityType::PlaneType)
@@ -1204,7 +1201,6 @@ bool SGM::GetPlaneData(SGM::Result        &rResult,
     XAxis =pPlane->m_XAxis;
     YAxis =pPlane->m_YAxis;
     ZAxis =pPlane->m_ZAxis;
-    dScale=pPlane->m_dScale;
     return true;
     }
   

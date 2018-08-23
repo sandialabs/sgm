@@ -227,7 +227,7 @@ void cone::Transform(SGM::Transform3D const &Trans)
         SGM::Point3D UZero;
         SGM::Point2D uv(dU,0.0);
         Evaluate(uv,&UZero);
-        return new line(rResult,Apex,UZero-Apex,m_dRadius);
+        return new line(rResult,Apex,UZero-Apex);
     }
 
     curve *cone::VParamLine(SGM::Result &, double) const

@@ -2059,7 +2059,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
          for(Index1=0;Index1<nRoots;++Index1)
              {
              SGM::UnitVector3D LineAxis=aPoints[Index1]-Apex;
-             aCurves.push_back(new line(rResult,aPoints[Index1],LineAxis,1.0));
+             aCurves.push_back(new line(rResult,aPoints[Index1],LineAxis));
              }
          if(nRoots==0)
              {
@@ -2140,7 +2140,7 @@ size_t IntersectPlaneAndPlane(SGM::Result                &rResult,
          SGM::Point3D Origin;
          SGM::UnitVector3D Axis;
          IntersectNonParallelPlanes(Origin1,Norm1,Origin2,Norm2,Origin,Axis);
-         aCurves.push_back(new line(rResult,Origin,Axis,1.0));
+         aCurves.push_back(new line(rResult,Origin,Axis));
          }
      return aCurves.size();
      }
@@ -2193,7 +2193,7 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
         {
         // One line.
         SGM::Point3D Pos=Center-Norm*((Center-Origin)%Norm);
-        aCurves.push_back(new line(rResult,Pos,pCylinder->m_ZAxis,1.0));
+        aCurves.push_back(new line(rResult,Pos,pCylinder->m_ZAxis));
         }
     if(dDist<dRadius)
         {
@@ -2207,8 +2207,8 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
             double dH=sqrt(dRadius*dRadius-dDist*dDist);
             SGM::Point3D Pos0=Pos+UVec*dH;
             SGM::Point3D Pos1=Pos-UVec*dH;
-            aCurves.push_back(new line(rResult,Pos0,pCylinder->m_ZAxis,1.0));
-            aCurves.push_back(new line(rResult,Pos1,pCylinder->m_ZAxis,1.0));
+            aCurves.push_back(new line(rResult,Pos0,pCylinder->m_ZAxis));
+            aCurves.push_back(new line(rResult,Pos1,pCylinder->m_ZAxis));
             }
         else if(SGM::NearEqual(dFABSDot,1.0,dTolerance,false))
             {

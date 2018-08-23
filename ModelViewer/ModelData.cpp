@@ -726,8 +726,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             char Data[100];
             SGM::Point3D Origin{};
             SGM::UnitVector3D XAxis, YAxis, ZAxis;
-            double dScale;
-            SGM::GetPlaneData(dPtr->mResult, SurfaceID, Origin, XAxis, YAxis, ZAxis, dScale);
+            SGM::GetPlaneData(dPtr->mResult, SurfaceID, Origin, XAxis, YAxis, ZAxis);
 
             auto *data_item1 = new QTreeWidgetItem(surface_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
@@ -748,11 +747,6 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
-
-            auto *data_item5 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "%.15G", dScale);
-            data_item5->setText(0, "Scale");
-            data_item5->setText(1, Data);
 
             break;
             }
@@ -1008,8 +1002,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
             char Data[100];
             SGM::Point3D Origin{};
             SGM::UnitVector3D Axis;
-            double dScale;
-            SGM::GetLineData(dPtr->mResult, CurveID, Origin, Axis, dScale);
+            SGM::GetLineData(dPtr->mResult, CurveID, Origin, Axis);
 
             auto data_item1 = new QTreeWidgetItem(curve_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
@@ -1020,11 +1013,6 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Axis.m_x, Axis.m_y, Axis.m_z);
             data_item2->setText(0, "Axis");
             data_item2->setText(1, Data);
-
-            auto *data_item3 = new QTreeWidgetItem(curve_item);
-            snprintf(Data, sizeof(Data), "%.15G", dScale);
-            data_item3->setText(0, "Scale");
-            data_item3->setText(1, Data);
 
             break;
             }
