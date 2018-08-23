@@ -32,7 +32,7 @@ void WriteEntityList(FILE                                   *pFile,
     auto iter=sEntities->begin();
     while(iter!=sEntities->end())
         {
-        fprintf(pFile,"ld",(*iter)->GetID());
+        fprintf(pFile,"%ld",(*iter)->GetID());
         ++iter;
         if(iter!=sEntities->end())
             {

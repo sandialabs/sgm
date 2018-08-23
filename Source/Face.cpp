@@ -605,6 +605,10 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     std::vector<entity *> aEntities=m_aEntities;
     std::vector<unsigned int> aTriangles=m_aTriangles;
     double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
+    if(m_bFlipped)
+        {
+        dAnswer0=-dAnswer0;
+        }
     if(bApproximate)
         {
         return dAnswer0;
@@ -616,6 +620,10 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         {
         SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
+        if(m_bFlipped)
+            {
+            dAnswer1=-dAnswer1;
+            }
         dVolume=(4*dAnswer1-dAnswer0)/3;
         dAnswer0=dAnswer1;
         }
