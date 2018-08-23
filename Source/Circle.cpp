@@ -43,17 +43,17 @@ circle::circle(SGM::Result &rResult,
         }
     }
 
-circle::circle(SGM::Result &rResult, circle const *other) :
+circle::circle(SGM::Result &rResult, circle const &other) :
         curve(rResult, other),
-        m_Center(other->m_Center),
-        m_Normal(other->m_Normal),
-        m_XAxis(other->m_XAxis),
-        m_YAxis(other->m_YAxis),
-        m_dRadius(other->m_dRadius)
+        m_Center(other.m_Center),
+        m_Normal(other.m_Normal),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_dRadius(other.m_dRadius)
     {}
 
 circle *circle::Clone(SGM::Result &rResult) const
-    { return new circle(rResult,this); }
+    { return new circle(rResult,*this); }
 
 void circle::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

@@ -1,4 +1,5 @@
 #include "SGMResult.h"
+#include "SGMTransform.h"
 
 #include "EntityClasses.h"
 #include "Surface.h"
@@ -47,20 +48,29 @@ bool thing::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-SGM::Interval3D const &thing::GetBox(SGM::Result &) const
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
+    if (m_Box.IsEmpty())
+        {
+        // stretch box around every bounded entity that is top level
+        for (auto const &iter : m_mAllEntities)
+            {
+            entity *pEntity = iter.second;
+            auto type = pEntity->GetType();
+            // if bounded entity
+            if (type == SGM::BodyType ||
+                type == SGM::VolumeType ||
+                type == SGM::FaceType ||
+                type == SGM::EdgeType ||
+                type == SGM::VertexType ||
+                type == SGM::ComplexType)
+                {
+                if (pEntity->IsTopLevel())
+                    m_Box.Stretch(pEntity->GetBox(rResult));
+                }
+            }
+        }
     return m_Box;
-    }
-
-void thing::AddToMap(size_t nID,entity *pEntity)
-    {
-    m_mAllEntities[nID] = pEntity;
-    }
-
-void thing::DeleteEntity(entity *pEntity)
-    {
-    m_mAllEntities.erase(pEntity->GetID());
-    delete pEntity;
     }
 
 void thing::SeverOwners(entity *pEntity)
@@ -129,6 +139,13 @@ void thing::SeverOwners(entity *pEntity)
         }
     }
 
+void thing::TransformBox(SGM::Result &, SGM::Transform3D const &transform3D)
+{
+    if (!transform3D.IsScaleAndTranslate())
+        m_Box.Reset();
+    m_Box *= transform3D;
+}
+
 entity *thing::FindEntity(size_t ID) const
     {
     if (ID == 0) return const_cast<thing*>(this);
@@ -143,63 +160,12 @@ entity *thing::FindEntity(size_t ID) const
 
 size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
     {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
+    for (auto &entry : m_mAllEntities)
         {
-        entity *pEntity=iter->second;
-        switch(pEntity->GetType())
-            {
-            case SGM::BodyType:
-                {
-                body *pBody=(body *)pEntity;
-                if(pBody->IsTopLevel())
-                    {
-                    aEntities.push_back(pBody);
-                    }
-                break;
-                }
-            case SGM::VolumeType:
-                {
-                volume *pVolume=(volume *)pEntity;
-                if(pVolume->IsTopLevel())
-                    {
-                    aEntities.push_back(pVolume);
-                    }
-                break;
-                }
-            case SGM::FaceType:
-                {
-                face *pFace=(face *)pEntity;
-                if(pFace->IsTopLevel())
-                    {
-                    aEntities.push_back(pFace);
-                    }
-                break;
-                }
-            case SGM::EdgeType:
-                {
-                edge *pEdge=(edge *)pEntity;
-                if(pEdge->IsTopLevel())
-                    {
-                    aEntities.push_back(pEdge);
-                    }
-                break;
-                }
-            case SGM::VertexType:
-                {
-                vertex *pVertex=(vertex *)pEntity;
-                if(pVertex->IsTopLevel())
-                    {
-                    aEntities.push_back(pVertex);
-                    }
-                break;
-                }
-            default:
-                {
-                throw;
-                }
-            }
-        ++iter;
+        entity *pEntity = entry.second;
+        // include any top level entity, including attribute, curve, surface
+        if (pEntity->IsTopLevel())
+            aEntities.push_back(pEntity);
         }
     return aEntities.size();
     }

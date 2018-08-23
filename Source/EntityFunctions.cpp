@@ -130,8 +130,8 @@ entity *CopyEntity(SGM::Result &rResult,
     return pAnswer;
     }
 
-void TransformEntity(SGM::Result            &,//rResult,
-                     SGM::Transform3D const &Trans,
+void TransformEntity(SGM::Result            &rResult,
+                     SGM::Transform3D const &transform3D,
                      entity                 *pEntity)
     {
     std::set<entity *,EntityCompare> sChildren;
@@ -141,43 +141,46 @@ void TransformEntity(SGM::Result            &,//rResult,
     while(iter!=sChildren.end())
         {
         entity *pChildEntity=*iter;
-        pChildEntity->TransformBox(Trans);
         switch(pChildEntity->GetType())
             {
             case SGM::FaceType:
                 {
                 face *pFace=(face *)pChildEntity;
-                pFace->TransformFacets(Trans);
+                pFace->TransformBox(rResult, transform3D);
+                pFace->TransformFacets(transform3D);
                 break;
                 }
             case SGM::EdgeType:
                 {
                 edge *pEdge=(edge *)pChildEntity;
-                pEdge->TransformFacets(Trans);
+                pEdge->TransformBox(rResult, transform3D);
+                pEdge->TransformFacets(transform3D);
                 break;
                 }
             case SGM::VertexType:
                 {
                 vertex *pVertex=(vertex *)pChildEntity;
-                pVertex->TransformData(Trans);
+                pVertex->TransformBox(rResult, transform3D);
+                pVertex->TransformData(transform3D);
                 break;
                 }
             case SGM::SurfaceType:
                 {
                 surface *pSurface=(surface *)pChildEntity;
-                pSurface->Transform(Trans);
+                pSurface->Transform(transform3D);
                 break;
                 }
             case SGM::CurveType:
                 {
                 curve *pCurve=(curve *)pChildEntity;
-                pCurve->Transform(Trans);
+                pCurve->Transform(transform3D);
                 break;
                 }
             case SGM::ComplexType:
                 {
                 complex *pComplex=(complex *)pChildEntity;
-                pComplex->Transform(Trans);
+                pComplex->TransformBox(rResult, transform3D);
+                pComplex->Transform(transform3D);
                 break;
                 }
             default:
@@ -185,12 +188,6 @@ void TransformEntity(SGM::Result            &,//rResult,
             }
         ++iter;
         }
-    }
-
-SGM::Interval3D const &GetBoundingBox(SGM::Result  &rResult,
-                                      entity const *pEntity)
-    {
-    return pEntity->GetBox(rResult);
     }
 
 void Heal(SGM::Result           &rResult,

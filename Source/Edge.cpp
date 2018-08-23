@@ -6,30 +6,6 @@
 
 namespace SGMInternal
 {
-edge::edge(SGM::Result &rResult):
-    topology(rResult,SGM::EntityType::EdgeType),
-    m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
-    {
-    m_dTolerance=SGM_MIN_TOL;
-    }
-
-edge *edge::Clone(SGM::Result &rResult) const
-    {
-    edge *pAnswer=new edge(rResult);
-    pAnswer->m_pStart=m_pStart;
-    pAnswer->m_pEnd=m_pEnd;
-    pAnswer->m_sFaces=m_sFaces;
-    pAnswer->m_pVolume=m_pVolume;
-    pAnswer->m_pCurve=m_pCurve;
-    pAnswer->m_aPoints3D=m_aPoints3D;
-    pAnswer->m_aParams=m_aParams;
-    pAnswer->m_Domain=m_Domain;
-    pAnswer->m_dTolerance=m_dTolerance;
-    pAnswer->m_Box=m_Box;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_sOwners=m_sOwners;
-    return pAnswer;
-    }
 
 void edge::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {

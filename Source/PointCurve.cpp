@@ -20,13 +20,13 @@ PointCurve::PointCurve(SGM::Result           &rResult,
         }
     }
     
-PointCurve::PointCurve(SGM::Result &rResult, const PointCurve *other) :
+PointCurve::PointCurve(SGM::Result &rResult, const PointCurve &other) :
         curve(rResult, other),
-        m_Pos(other->m_Pos)
+        m_Pos(other.m_Pos)
 {}
 
 PointCurve * PointCurve::Clone(SGM::Result &rResult) const
-{ return new PointCurve(rResult,this); }
+{ return new PointCurve(rResult, *this); }
 
 void PointCurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

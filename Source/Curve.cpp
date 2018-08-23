@@ -11,12 +11,12 @@ curve::curve(SGM::Result &rResult,SGM::EntityType nType):
     entity(rResult,SGM::EntityType::CurveType),m_CurveType(nType), m_bClosed(false)
     {}
 
-curve::curve(SGM::Result &rResult, curve const *other)
-        : entity(rResult, other),
-          m_sEdges(other->m_sEdges),
-          m_CurveType(other->m_CurveType),
-          m_Domain(other->m_Domain),
-          m_bClosed(other->m_bClosed)
+curve::curve(SGM::Result &rResult, curve const &other) :
+        entity(rResult, other),
+        m_sEdges(other.m_sEdges),
+        m_CurveType(other.m_CurveType),
+        m_Domain(other.m_Domain),
+        m_bClosed(other.m_bClosed)
     {}
 
 void curve::FindAllChildren(std::set<entity *, EntityCompare> &) const

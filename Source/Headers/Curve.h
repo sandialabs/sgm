@@ -48,7 +48,9 @@ class curve : public entity
     {
     public:
 
-        curve(SGM::Result &rResult,SGM::EntityType nType);
+        curve(SGM::Result &rResult, SGM::EntityType nType);
+
+        curve(SGM::Result &rResult, curve const &other);
 
         ///////////////////////////////////////////////////////////////////////
         //
@@ -65,7 +67,16 @@ class curve : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        SGM::Interval3D const &GetBox(SGM::Result &) const override
+        { return m_Box; } // default box is max extent
+
+        bool IsTopLevel() const override {return m_sEdges.empty() && m_sOwners.empty();}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void ResetBox(SGM::Result &) const override { /* do nothing */ }
+
+        void TransformBox(SGM::Result &, SGM::Transform3D const &) override { /* do nothing */ }
 
         ///////////////////////////////////////////////////////////////////////
         //
@@ -109,15 +120,11 @@ class curve : public entity
 
         bool GetClosed() const {return m_bClosed;}
 
-        bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
-
         double NewtonsMethod(double              dStart,
                              SGM::Point3D const &Pos) const;
 
     protected:
 
-        curve(SGM::Result &rResult, curve const *other); // used by derived class only
-        
         std::set<edge *,EntityCompare> m_sEdges;
         SGM::EntityType  m_CurveType;
         SGM::Interval1D  m_Domain;
@@ -137,7 +144,7 @@ class line : public curve
              SGM::UnitVector3D const &Axis,
              double                   dScale);
 
-        line(SGM::Result &rResult, line const *other);
+        line(SGM::Result &rResult, line const &other);
 
         line *Clone(SGM::Result &rResult) const override;
 
@@ -174,7 +181,7 @@ class circle : public curve
                SGM::UnitVector3D const *pXAxis=nullptr,
                SGM::Interval1D   const *pDomain=nullptr);
 
-        circle(SGM::Result &rResult, circle const *other);
+        circle(SGM::Result &rResult, circle const &other);
 
         circle *Clone(SGM::Result &rResult) const override;
 
@@ -215,7 +222,7 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
-        NUBcurve(SGM::Result &rResult, NUBcurve const *other);
+        NUBcurve(SGM::Result &rResult, NUBcurve const &other);
 
         NUBcurve *Clone(SGM::Result &rResult) const override;
 
@@ -265,7 +272,7 @@ class NURBcurve: public curve
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
 
-        NURBcurve(SGM::Result &rResult, NURBcurve const *other);
+        NURBcurve(SGM::Result &rResult, NURBcurve const &other);
 
         NURBcurve *Clone(SGM::Result &rResult) const override;
 
@@ -312,7 +319,7 @@ class PointCurve: public curve
                    SGM::Point3D    const &Pos,
                    SGM::Interval1D const *pDomain=nullptr);
 
-        PointCurve(SGM::Result &rResult, PointCurve const *other);
+        PointCurve(SGM::Result &rResult, PointCurve const &other);
 
         PointCurve *Clone(SGM::Result &rResult) const override;
 
@@ -345,7 +352,7 @@ class ellipse: public curve
                 double                   dA,
                 double                   dB);
 
-        ellipse(SGM::Result &rResult, ellipse const* other);
+        ellipse(SGM::Result &rResult, ellipse const &other);
 
         ellipse *Clone(SGM::Result &rResult) const override;
 
@@ -383,7 +390,7 @@ class hyperbola: public curve
                   double                   dA,
                   double                   dB);
 
-        hyperbola(SGM::Result &rResult, hyperbola const *other);
+        hyperbola(SGM::Result &rResult, hyperbola const &other);
 
         hyperbola *Clone(SGM::Result &rResult) const override;
 
@@ -420,7 +427,7 @@ class parabola: public curve
                  SGM::UnitVector3D const &YAxis,
                  double                   dA);
 
-        parabola(SGM::Result &rResult, parabola const* other);
+        parabola(SGM::Result &rResult, parabola const &other);
 
         parabola *Clone(SGM::Result &rResult) const override;
 
@@ -464,7 +471,7 @@ class TorusKnot: public curve
                   size_t                   nA,
                   size_t                   nB);
 
-        TorusKnot(SGM::Result &rResult, TorusKnot const *other);
+        TorusKnot(SGM::Result &rResult, TorusKnot const &other);
 
         TorusKnot *Clone(SGM::Result &rResult) const override;
 
@@ -500,7 +507,7 @@ class hermite: public curve
                 std::vector<SGM::Vector3D> const &aTangents,
                 std::vector<double>        const &aParams);
 
-        hermite(SGM::Result &rResult, hermite const *other);
+        hermite(SGM::Result &rResult, hermite const &other);
 
         hermite *Clone(SGM::Result &rResult) const override;
 

@@ -20,34 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace SGMInternal
 {
-face::face(SGM::Result &rResult):topology(rResult,SGM::EntityType::FaceType),
-    m_pVolume(nullptr),m_pSurface(nullptr),m_bFlipped(false),m_nSides(1)
-    {
-    }
-
-face *face::Clone(SGM::Result &rResult) const
-    {
-    face *pAnswer=new face(rResult);
-
-    pAnswer->m_sEdges=m_sEdges;
-    pAnswer->m_mSideType=m_mSideType;
-    pAnswer->m_pVolume=m_pVolume;
-    pAnswer->m_pSurface=m_pSurface;
-    pAnswer->m_bFlipped=m_bFlipped;
-    pAnswer->m_nSides=m_nSides;
-
-    pAnswer->m_aPoints3D=m_aPoints3D;
-    pAnswer->m_aPoints2D=m_aPoints2D;
-    pAnswer->m_aEntities=m_aEntities;
-    pAnswer->m_aTriangles=m_aTriangles;
-    pAnswer->m_aNormals=m_aNormals;
-    pAnswer->m_mSeamType=m_mSeamType;
-
-    pAnswer->m_Box=m_Box;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_sOwners=m_sOwners;
-    return pAnswer;
-    }
 
 void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {

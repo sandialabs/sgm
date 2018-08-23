@@ -15,17 +15,17 @@ NUBcurve::NUBcurve(SGM::Result                     &rResult,
     m_bClosed = SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL);
     }
 
-NUBcurve::NUBcurve(SGM::Result &rResult, NUBcurve const *other):
-    curve(rResult,SGM::NUBCurveType),
-    m_aControlPoints(other->m_aControlPoints),
-    m_aKnots(other->m_aKnots),
-    m_aSeedPoints(other->m_aSeedPoints),
-    m_aSeedParams(other->m_aSeedParams)
+NUBcurve::NUBcurve(SGM::Result &rResult, NUBcurve const &other):
+    curve(rResult, other),
+    m_aControlPoints(other.m_aControlPoints),
+    m_aKnots(other.m_aKnots),
+    m_aSeedPoints(other.m_aSeedPoints),
+    m_aSeedParams(other.m_aSeedParams)
     { }
 
 NUBcurve *NUBcurve::Clone(SGM::Result &rResult) const
     {
-    return new NUBcurve(rResult,this);
+    return new NUBcurve(rResult, *this);
     }
 
 inline void NUBEvaluateBasis(std::vector<SGM::Point3D> const &aControlPoints,

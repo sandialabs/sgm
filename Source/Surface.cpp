@@ -13,8 +13,9 @@
 
 namespace SGMInternal
 {
-surface::surface(SGM::Result &rResult,SGM::EntityType nType):
-    entity(rResult,SGM::EntityType::SurfaceType),m_SurfaceType(nType)
+surface::surface(SGM::Result &rResult,SGM::EntityType nType) :
+        entity(rResult,SGM::EntityType::SurfaceType),
+        m_SurfaceType(nType)
     {
     m_bClosedU=false;
     m_bClosedV=false;
@@ -23,6 +24,20 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType):
     m_bSingularLowV=false;
     m_bSingularHighV=false;
     }
+    
+surface::surface(SGM::Result &rResult, surface const &other) :
+        entity(rResult, other),
+        m_sFaces(other.m_sFaces),
+        m_Domain(other.m_Domain),
+        m_SurfaceType(other.m_SurfaceType),
+        m_bClosedU(other.m_bClosedU),
+        m_bClosedV(other.m_bClosedV),
+        m_bSingularLowU(other.m_bSingularLowU),
+        m_bSingularHighU(other.m_bSingularHighU),
+        m_bSingularLowV(other.m_bSingularLowV),
+        m_bSingularHighV(other.m_bSingularHighV)
+{}
+
 
 surface *surface::Clone(SGM::Result &) const
     {

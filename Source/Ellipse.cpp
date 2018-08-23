@@ -18,18 +18,18 @@ ellipse::ellipse(SGM::Result             &rResult,
     m_bClosed=true;
     }
 
-ellipse::ellipse(SGM::Result &rResult, ellipse const *other):
-        curve(rResult,other),
-        m_Center(other->m_Center),
-        m_XAxis(other->m_XAxis),
-        m_YAxis(other->m_YAxis),
-        m_Normal(other->m_Normal),
-        m_dA(other->m_dA),
-        m_dB(other->m_dB)
+ellipse::ellipse(SGM::Result &rResult, ellipse const &other):
+        curve(rResult, other),
+        m_Center(other.m_Center),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_Normal(other.m_Normal),
+        m_dA(other.m_dA),
+        m_dB(other.m_dB)
 {}
 
 ellipse *ellipse::Clone(SGM::Result &rResult) const
-{ return new ellipse(rResult,this); }
+{ return new ellipse(rResult, *this); }
 
 void ellipse::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

@@ -9,21 +9,6 @@
 
 namespace SGMInternal
 {
-vertex::vertex(SGM::Result  &rResult,
-               vertex const *pVertex):
-    topology(rResult,SGM::EntityType::VertexType),m_Pos(pVertex->m_Pos) 
-    {
-    }
-
-vertex *vertex::Clone(SGM::Result &rResult) const
-    {
-    vertex *pAnswer=new vertex(rResult,m_Pos);
-    pAnswer->m_sEdges=m_sEdges;
-    pAnswer->m_Box=m_Box;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_sOwners=m_sOwners;
-    return pAnswer;
-    }
 
 SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
     {

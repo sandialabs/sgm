@@ -26,17 +26,17 @@ hermite::hermite(SGM::Result &rResult,
         }
     }
 
-hermite::hermite(SGM::Result &rResult, hermite const *other):
-        curve(rResult,other),
-        m_aPoints(other->m_aPoints),
-        m_aTangents(other->m_aTangents),
-        m_aParams(other->m_aParams),
-        m_aSeedPoints(other->m_aSeedPoints),
-        m_aSeedParams(other->m_aSeedParams)
+hermite::hermite(SGM::Result &rResult, hermite const &other):
+        curve(rResult, other),
+        m_aPoints(other.m_aPoints),
+        m_aTangents(other.m_aTangents),
+        m_aParams(other.m_aParams),
+        m_aSeedPoints(other.m_aSeedPoints),
+        m_aSeedParams(other.m_aSeedParams)
     {}
 
 hermite *hermite::Clone(SGM::Result &rResult) const
-    { return new hermite(rResult,this); }
+    { return new hermite(rResult, *this); }
 
 void hermite::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

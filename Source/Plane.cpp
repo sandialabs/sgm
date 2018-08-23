@@ -30,8 +30,8 @@ plane::plane(SGM::Result        &rResult,
              SGM::Point3D const &Origin,
              SGM::Point3D const &XPos,
              SGM::Point3D const &YPos):
-    surface(rResult,SGM::PlaneType),m_Origin(Origin),
-    m_XAxis(XPos-Origin),m_YAxis(YPos-Origin),m_ZAxis(m_XAxis*m_YAxis),m_dScale(1.0)
+        surface(rResult,SGM::PlaneType),m_Origin(Origin),
+        m_XAxis(XPos-Origin),m_YAxis(YPos-Origin),m_ZAxis(m_XAxis*m_YAxis),m_dScale(1.0)
     {
     m_Domain.m_UDomain.m_dMin=-SGM_MAX;
     m_Domain.m_UDomain.m_dMax=SGM_MAX;
@@ -41,22 +41,18 @@ plane::plane(SGM::Result        &rResult,
     m_bClosedV=false;
     }
 
-plane::plane(SGM::Result &rResult,
-             plane const *pPlane):
-    surface(rResult,SGM::PlaneType),m_Origin(pPlane->m_Origin),
-    m_XAxis(pPlane->m_XAxis),m_YAxis(pPlane->m_YAxis),m_ZAxis(pPlane->m_ZAxis),m_dScale(pPlane->m_dScale)
-    {
-    m_Domain=pPlane->m_Domain;
-    }
+plane::plane(SGM::Result &rResult, plane const &other):
+        surface(rResult,other),
+        m_Origin(other.m_Origin),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_ZAxis(other.m_ZAxis),
+        m_dScale(other.m_dScale)
+{ }
 
 plane *plane::Clone(SGM::Result &rResult) const
     {
-    plane *pAnswer = new plane(rResult, this);
-    pAnswer->m_sFaces=m_sFaces;
-    pAnswer->m_sOwners=m_sOwners;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_Box=m_Box;
-    return pAnswer;
+    return new plane(rResult, *this);
     }
 
 void plane::Evaluate(SGM::Point2D const &uv,

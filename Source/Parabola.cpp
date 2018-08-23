@@ -22,17 +22,17 @@ parabola::parabola(SGM::Result &rResult,
     m_Domain.m_dMax = SGM_MAX;
     }
 
-parabola::parabola(SGM::Result &rResult, parabola const *other):
-            curve(rResult,other),
-            m_Center(other->m_Center),
-            m_XAxis(other->m_XAxis),
-            m_YAxis(other->m_YAxis),
-            m_Normal(other->m_Normal),
-            m_dA(other->m_dA)
+parabola::parabola(SGM::Result &rResult, parabola const &other):
+            curve(rResult, other),
+            m_Center(other.m_Center),
+            m_XAxis(other.m_XAxis),
+            m_YAxis(other.m_YAxis),
+            m_Normal(other.m_Normal),
+            m_dA(other.m_dA)
     {}
 
 parabola *parabola::Clone(SGM::Result &rResult) const
-    { return new parabola(rResult,this); }
+    { return new parabola(rResult, *this); }
 
 void parabola::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

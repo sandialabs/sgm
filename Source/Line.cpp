@@ -25,16 +25,15 @@ line::line(SGM::Result             &rResult,
     m_Domain.m_dMax=SGM_MAX;
     }
 
-line::line(SGM::Result &rResult,
-           line const  *other):
-        curve(rResult,other),
-        m_Origin(other->m_Origin),
-        m_Axis(other->m_Axis),
-        m_dScale(other->m_dScale)
+line::line(SGM::Result &rResult, line const &other):
+        curve(rResult, other),
+        m_Origin(other.m_Origin),
+        m_Axis(other.m_Axis),
+        m_dScale(other.m_dScale)
     {}
 
 line *line::Clone(SGM::Result &rResult) const
-    { return new line(rResult,this); }
+    { return new line(rResult, *this); }
 
 void line::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {

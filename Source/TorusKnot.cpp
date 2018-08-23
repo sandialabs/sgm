@@ -22,19 +22,21 @@ TorusKnot::TorusKnot(SGM::Result             &rResult,
     m_bClosed=true;
     }          
 
-TorusKnot::TorusKnot(SGM::Result     &rResult,
-                     TorusKnot const *pTorusKnot):
-    curve(rResult,SGM::TorusKnotCurveType),m_Center(pTorusKnot->m_Center),m_XAxis(pTorusKnot->m_XAxis),
-    m_YAxis(pTorusKnot->m_YAxis),m_Normal(m_XAxis*m_YAxis),m_dMinorRadius(pTorusKnot->m_dMinorRadius),
-    m_dMajorRadius(pTorusKnot->m_dMajorRadius),m_nA(pTorusKnot->m_nA),m_nB(pTorusKnot->m_nB)
-    {
-    m_bClosed=pTorusKnot->m_bClosed;
-    m_Domain=pTorusKnot->m_Domain;
-    }
+TorusKnot::TorusKnot(SGM::Result &rResult, TorusKnot const &other):
+        curve(rResult, other),
+        m_Center(other.m_Center),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_Normal(m_XAxis*m_YAxis),
+        m_dMinorRadius(other.m_dMinorRadius),
+        m_dMajorRadius(other.m_dMajorRadius),
+        m_nA(other.m_nA),
+        m_nB(other.m_nB)
+    {}
 
 TorusKnot *TorusKnot::Clone(SGM::Result &rResult) const
     {
-        return new TorusKnot(rResult,this);
+        return new TorusKnot(rResult, *this);
     }
 
 void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const

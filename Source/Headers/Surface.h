@@ -40,7 +40,9 @@ class surface : public entity
     {
     public:
 
-        surface(SGM::Result &rResult,SGM::EntityType nType);
+        surface(SGM::Result &rResult, SGM::EntityType nType);
+
+        surface(SGM::Result &rResult, surface const &other);
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -51,7 +53,16 @@ class surface : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        SGM::Interval3D const &GetBox(SGM::Result &) const override
+        { return m_Box; } // default box is max extent
+
+        bool IsTopLevel() const override {return m_sFaces.empty() && m_sOwners.empty();}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void ResetBox(SGM::Result &) const override { /* do nothing */ }
+
+        void TransformBox(SGM::Result &, SGM::Transform3D const &) override { /* do nothing */ }
 
         //
         // surface virtual members
@@ -123,8 +134,6 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_sOwners.empty();}
-
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
         double FindAreaOfParametricTriangle(SGM::Result        &rResult,
@@ -172,8 +181,7 @@ class plane : public surface
               SGM::UnitVector3D const &ZAxis,
               double                   dScale);
 
-        plane(SGM::Result  &rResult,
-              plane  const *pPlane);
+        plane(SGM::Result &rResult, plane const &other);
 
         plane *Clone(SGM::Result &rResult) const override;
 
@@ -220,6 +228,8 @@ class cylinder : public surface
                  SGM::Point3D      const &Top,
                  double                   dRadius,
                  SGM::UnitVector3D const *XAxis=nullptr);
+
+        cylinder(SGM::Result &rResult, cylinder const &other);
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -268,6 +278,8 @@ class cone : public surface
              double                   dRadius,
              double                   dHalfAngle,
              SGM::UnitVector3D const *XAxis=nullptr);
+
+        cone(SGM::Result &rResult, cone const &other);
 
         double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
 
@@ -321,6 +333,8 @@ class sphere : public surface
                SGM::UnitVector3D const *XAxis=nullptr,
                SGM::UnitVector3D const *YAxis=nullptr);
 
+        sphere(SGM::Result &rResult, sphere const &other);
+
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,
@@ -368,6 +382,8 @@ class torus : public surface
               double                   dMajorRadius,
               bool                     bApple,
               SGM::UnitVector3D const *XAxis=nullptr);
+
+        torus(SGM::Result &rResult, torus const &other);
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -418,6 +434,8 @@ class NUBsurface: public surface
                    std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
                    std::vector<double>                     const &aUKnots,
                    std::vector<double>                     const &aVKnots);
+
+        NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -493,6 +511,8 @@ class NURBsurface: public surface
                     std::vector<double>                     const &aUKnots,
                     std::vector<double>                     const &aVKnots);
 
+        NURBsurface(SGM::Result &rResult, NURBsurface const &other);
+
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,
@@ -567,6 +587,8 @@ class revolve : public surface
                 SGM::UnitVector3D const &uAxisVector,
                 curve                   *pCurve);
 
+        revolve(SGM::Result &rResult, revolve const &other);
+
         ~revolve() override;
 
         void Evaluate(SGM::Point2D const &uv,
@@ -608,6 +630,8 @@ class extrude : public surface
         extrude(SGM::Result             &rResult,
                 SGM::UnitVector3D const &vAxis,
                 curve                   *pCurve);
+
+        extrude(SGM::Result &rResult, extrude const &other);
 
         ~extrude() override;
 

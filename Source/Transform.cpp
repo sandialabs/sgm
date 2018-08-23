@@ -28,6 +28,25 @@ namespace SGM {
         Trans = (Trans1 * Trans2) * Trans0;
     }
 
+    bool Transform3D::IsScaleAndTranslate() const
+    {
+        // if any entries of 3x3 are not the same,
+        // it has rotation or shear
+        const Vector4D& u = m_Matrix[0];
+        if (u.m_x != u.m_y || u.m_x != u.m_z || u.m_x != u.m_z)
+            return false;
+        const Vector4D& v = m_Matrix[1];
+        if (v.m_x != v.m_y || v.m_x != v.m_z || v.m_x != v.m_z)
+            return false;
+        const Vector4D& w = m_Matrix[2];
+        if (w.m_x != w.m_y || w.m_x != w.m_z || w.m_x != w.m_z)
+            return false;
+        if (u.m_x != v.m_x && u.m_x != w.m_x && v.m_x != w.m_x)
+            return false;
+        return u.m_x >= 0.0; // if negative, it is a reflection
+    }
+
+
     void Transform3D::Inverse(Transform3D &Trans) const
     {
         double s0 = m_Matrix[0].m_x * m_Matrix[1].m_y - m_Matrix[1].m_x * m_Matrix[0].m_y;

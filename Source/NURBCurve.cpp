@@ -25,16 +25,16 @@ NURBcurve::NURBcurve(SGM::Result                 &rResult,
     m_bClosed = SGM::NearEqual(Pos3D0,Pos3D1,SGM_MIN_TOL);
     }
 
-NURBcurve::NURBcurve(SGM::Result &rResult, NURBcurve const *other):
-            curve(rResult,SGM::NURBCurveType),
-            m_aControlPoints(other->m_aControlPoints),
-            m_aKnots(other->m_aKnots),
-            m_aSeedPoints(other->m_aSeedPoints),
-            m_aSeedParams(other->m_aSeedParams)
+NURBcurve::NURBcurve(SGM::Result &rResult, NURBcurve const &other):
+            curve(rResult, other),
+            m_aControlPoints(other.m_aControlPoints),
+            m_aKnots(other.m_aKnots),
+            m_aSeedPoints(other.m_aSeedPoints),
+            m_aSeedParams(other.m_aSeedParams)
     { }
 
 NURBcurve *NURBcurve::Clone(SGM::Result &rResult) const
-    { return new NURBcurve(rResult,this); }
+    { return new NURBcurve(rResult, *this); }
 
 // evaluate basis to get position, or derivative
 inline void NURBEvaluateBasis(std::vector<SGM::Point4D> const &aControlPoints,
