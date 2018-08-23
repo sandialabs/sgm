@@ -38,7 +38,7 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
-    Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
+    Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
     FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aVParams);
