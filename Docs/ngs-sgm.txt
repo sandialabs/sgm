@@ -1,0 +1,23 @@
+see
+code/ngs/morph_mesher/unit_tests/pgeom/ACISFixtures/
+for an example of how to convert an acis pgeom into a step sgm
+in the parent directory, there are examples of tests that use these geometries
+
+
+# to bake ngs for the sgm tests
+bake ngs -e debug
+
+executable will end up someplace like this
+/scratch/samitch/code/bin/linux-gcc-4.9.3-ip-openmpi-1.10.2/debug/morph_mesher
+
+
+run morph_mesher_pgeom_utest
+to just do your test, do
+morph_mesher_pgeom_utest --gtest_filter=this.that
+where in the test file it says
+TEST(this,that)
+see for example
+code/ngs/morph_mesher/unit_tests/pgeom/ACISFixtures/UnitTestGeometryFixtures.cpp 
+
+Matt suggested that to be a good test to start with
+
