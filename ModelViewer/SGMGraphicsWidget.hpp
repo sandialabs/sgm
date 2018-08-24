@@ -73,10 +73,13 @@ public:
 
     void enable_perspective(bool enable);
 
+    void set_background(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+
     // Get the default format that the QApplication needs for rendering
     static QSurfaceFormat default_format();
 
 protected:
+
     void initializeGL() override;
 
     void paintGL() override;

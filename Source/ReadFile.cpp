@@ -387,6 +387,17 @@ void ProcessEdge(SGM::Result       &,//rResult,
     FindFlag(line,STEPData.m_bFlag);
     }
 
+void ProcessTrimmedCurve(SGM::Result       &,//rResult,
+                         std::string const &line,
+                         STEPLineData      &STEPData)
+    {
+    // #28=TRIMMED_CURVE('',#27,(PARAMETER_VALUE(0.000000000000000)),(PARAMETER_VALUE(5.19615242270663)),.T.,.UNSPECIFIED.);
+    
+    FindIndices(line,STEPData.m_aIDs);
+    FindFlag(line,STEPData.m_bFlag);
+    FindParameters(line,STEPData.m_aDoubles);
+    }
+
 void ProcessLoop(SGM::Result       &,//rResult,
                  std::string const &line,
                  STEPLineData      &STEPData)
@@ -1160,7 +1171,7 @@ void ProcessLine(SGM::Result                        &rResult,
                         }
                     case SGMInternal::STEPTags::TRIMMED_CURVE:
                         {
-                        ProcessEdge(rResult,line,STEPData);
+                        ProcessTrimmedCurve(rResult,line,STEPData);
                         mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
@@ -1660,8 +1671,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 STEPLineData SLDD=mSTEPData[nDir];
                 SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D Axis(SLDD.m_aDoubles[0],SLDD.m_aDoubles[1],SLDD.m_aDoubles[2]);
-                double dScale=SLDV.m_aDoubles[0];
-                mEntityMap[nID]=new line(rResult,Origin,Axis,dScale);
+                mEntityMap[nID]=new line(rResult,Origin,Axis);
                 break;
                 }
             case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
@@ -1688,7 +1698,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 GetAxis(SLDA,mSTEPData,Origin,ZAxis,XAxis);
 
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
-                mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis,1.0);
+                mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis);
                 break;
                 }
             case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
@@ -1834,11 +1844,12 @@ void CreateEntities(SGM::Result                   &rResult,
                         double x=SLD.m_aDoubles[0];
                         double y=SLD.m_aDoubles[1];
                         double z=SLD.m_aDoubles[2];
+
                         body *pBody=pVolume->GetBody();
-                        pBody->RemoveVolume(pVolume);
-                        pVolume->SetBody(nullptr);
+                        rResult.GetThing()->DeleteEntity(pBody);
                         rResult.GetThing()->DeleteEntity(pVolume);
-                        pBody->AddPoint(SGM::Point3D(x,y,z));
+                        vertex *pVertex=new vertex(rResult,SGM::Point3D(x,y,z));
+                        mEntityMap[nVolumeID]=pVertex;
                         }
                     else
                         {
@@ -2230,7 +2241,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    // Code for testing to be removed.
+    //TODO: Code for testing to be removed.
 #if 1
     std::set<vertex *,EntityCompare> sVertices;
     FindVertices(rResult,pThing,sVertices);
@@ -2241,10 +2252,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     while(iter!=sFaces.end())
         {
         face *pFace=*iter;
-        size_t ID=pFace->GetID();
-        SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
-        ID;
-        nType;
+        //size_t ID=pFace->GetID();
+        //SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
         pFace->GetTriangles(rResult);
         ++iter;
         }

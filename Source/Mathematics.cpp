@@ -164,14 +164,14 @@ inline bool InTriangleInline(SGM::Point2D const &A,
                              SGM::Point2D const &C,
                              SGM::Point2D const &D)
     {
-        bool b1 = SGMInternal::sign(D, A, B) < 0;
-        bool b2 = SGMInternal::sign(D, B, C) < 0;
-        if (b1 == b2)
-            {
-            bool b3 = SGMInternal::sign(D, C, A) < 0;
-            return b2 == b3;
-            }
-        return false;
+    bool b1 = SGMInternal::sign(D, A, B) < 0;
+    bool b2 = SGMInternal::sign(D, B, C) < 0;
+    if (b1 == b2)
+        {
+        bool b3 = SGMInternal::sign(D, C, A) < 0;
+        return b2 == b3;
+        }
+    return false;
     }
 
 bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
@@ -301,6 +301,25 @@ class EdgeData
         unsigned int m_nEdge;
     };
 
+class VertexData
+    {
+    public:
+
+        VertexData(unsigned int nPos,unsigned int nSegment,unsigned int nVertex):
+            m_nPos(nPos),m_nSegment(nSegment),m_nVertex(nVertex)
+            {
+            }
+
+        bool operator<(VertexData const &VD) const
+            {
+            return m_nPos<VD.m_nPos;
+            }
+
+        unsigned int m_nPos;
+        unsigned int m_nSegment;
+        unsigned int m_nVertex;
+    };
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Internal Integration Functions
@@ -422,124 +441,178 @@ namespace SGM {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-    Point3D FindCenterOfMass3D(std::vector<Point3D> const &aPoints)
+Point3D FindCenterOfMass3D(std::vector<Point3D> const &aPoints)
     {
-        size_t nPoints = aPoints.size();
-        size_t Index1;
-        double x = 0.0, y = 0.0, z = 0.0;
-        for (Index1 = 0; Index1 < nPoints; ++Index1)
-            {
-            Point3D const &Pos = aPoints[Index1];
-            x += Pos.m_x;
-            y += Pos.m_y;
-            z += Pos.m_z;
-            }
-        return {x / nPoints, y / nPoints, z / nPoints};
+    size_t nPoints = aPoints.size();
+    size_t Index1;
+    double x = 0.0, y = 0.0, z = 0.0;
+    for (Index1 = 0; Index1 < nPoints; ++Index1)
+        {
+        Point3D const &Pos = aPoints[Index1];
+        x += Pos.m_x;
+        y += Pos.m_y;
+        z += Pos.m_z;
+        }
+    return {x / nPoints, y / nPoints, z / nPoints};
     }
 
-    Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints)
+Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints)
     {
-        size_t nPoints = aPoints.size();
-        size_t Index1;
-        double u = 0.0, v = 0.0;
-        for (Index1 = 0; Index1 < nPoints; ++Index1)
-            {
-            Point2D const &Pos = aPoints[Index1];
-            u += Pos.m_u;
-            v += Pos.m_v;
-            }
-        return {u / nPoints, v / nPoints};
+    size_t nPoints = aPoints.size();
+    size_t Index1;
+    double u = 0.0, v = 0.0;
+    for (Index1 = 0; Index1 < nPoints; ++Index1)
+        {
+        Point2D const &Pos = aPoints[Index1];
+        u += Pos.m_u;
+        v += Pos.m_v;
+        }
+    return {u / nPoints, v / nPoints};
     }
 
-    bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
-                                    Point3D &Origin,
-                                    UnitVector3D &Axis)
+bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
+                           Point3D                    &Origin,
+                           UnitVector3D               &Axis)
     {
-        UnitVector3D YVec, ZVec;
-        return FindLeastSquarePlane(aPoints, Origin, Axis, YVec, ZVec);
+    UnitVector3D YVec, ZVec;
+    return FindLeastSquarePlane(aPoints, Origin, Axis, YVec, ZVec);
     }
 
-    bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
-                                   Point3D &Origin,
-                                   UnitVector3D &XVec,
-                                   UnitVector3D &YVec,
-                                   UnitVector3D &ZVec)
+bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
+                          Point3D                    &Origin,
+                          UnitVector3D               &XVec,
+                          UnitVector3D               &YVec,
+                          UnitVector3D               &ZVec)
     {
-        double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
-        Origin = FindCenterOfMass3D(aPoints);
-        size_t nPoints = aPoints.size();
-        size_t Index1;
-        for (Index1 = 0; Index1 < nPoints; ++Index1)
+    double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
+    Origin = FindCenterOfMass3D(aPoints);
+    size_t nPoints = aPoints.size();
+    size_t Index1;
+    for (Index1 = 0; Index1 < nPoints; ++Index1)
+        {
+        Point3D const &Pos = aPoints[Index1];
+        double x = Pos.m_x - Origin.m_x;
+        double y = Pos.m_y - Origin.m_y;
+        double z = Pos.m_z - Origin.m_z;
+        SumXX += x * x;
+        SumXY += x * y;
+        SumXZ += x * z;
+        SumYY += y * y;
+        SumYZ += y * z;
+        SumZZ += z * z;
+        }
+    const double aaMatrix[3][3] =
             {
-            Point3D const &Pos = aPoints[Index1];
-            double x = Pos.m_x - Origin.m_x;
-            double y = Pos.m_y - Origin.m_y;
-            double z = Pos.m_z - Origin.m_z;
-            SumXX += x * x;
-            SumXY += x * y;
-            SumXZ += x * z;
-            SumYY += y * y;
-            SumYZ += y * z;
-            SumZZ += z * z;
-            }
-        const double aaMatrix[3][3] =
+            SumXX, SumXY, SumXZ,
+            SumXY, SumYY, SumYZ,
+            SumXZ, SumYZ, SumZZ
+            };
+
+    std::vector<double> aValues;
+    std::vector<UnitVector3D> aVectors;
+    size_t nFound = FindEigenVectors3D(&aaMatrix[0], aValues, aVectors);
+    if (nFound == 3)
+        {
+        // Smallest value is the normal.
+        // Largest value is the XVec.
+        if(aValues[0]<aValues[1] && aValues[0]<aValues[2])
+            {
+            if(aValues[1]<aValues[2])
                 {
-                        SumXX, SumXY, SumXZ,
-                        SumXY, SumYY, SumYZ,
-                        SumXZ, SumYZ, SumZZ
-                };
-
-        std::vector<double> aValues;
-        std::vector<UnitVector3D> aVectors;
-        size_t nFound = FindEigenVectors3D(&aaMatrix[0], aValues, aVectors);
-        if (nFound == 3)
-            {
-            XVec = aVectors[0];
-            YVec = aVectors[1];
-            ZVec = aVectors[2];
-            return true;
+                XVec = aVectors[2];
+                YVec = aVectors[1];
+                ZVec = aVectors[0];
+                }
+            else
+                {
+                XVec = aVectors[1];
+                YVec = aVectors[2];
+                ZVec = aVectors[0];
+                }
             }
-        else if (nFound == 2)
+        else if(aValues[1]<aValues[0] && aValues[1]<aValues[2])
+            {
+            if(aValues[0]<aValues[2])
+                {
+                XVec = aVectors[2];
+                YVec = aVectors[0];
+                ZVec = aVectors[1];
+                }
+            else
+                {
+                XVec = aVectors[0];
+                YVec = aVectors[2];
+                ZVec = aVectors[1];
+                }
+            }
+        else
+            {
+            if(aValues[0]<aValues[1])
+                {
+                XVec = aVectors[1];
+                YVec = aVectors[0];
+                ZVec = aVectors[2];
+                }
+            else
+                {
+                XVec = aVectors[0];
+                YVec = aVectors[1];
+                ZVec = aVectors[2];
+                }
+            }
+        return true;
+        }
+    else if (nFound == 2)
+        {
+        if(aValues[0]<aValues[1])
             {
             XVec = aVectors[1];
             YVec = aVectors[0];
-            ZVec = XVec * YVec;
-            return true;
             }
-        else if (nFound == 1)
+        else
             {
             XVec = aVectors[0];
-            YVec = XVec.Orthogonal();
-            ZVec = XVec * YVec;
+            YVec = aVectors[1];
+            }
+        ZVec = XVec * YVec;
+        return true;
+        }
+    else if (nFound == 1)
+        {
+        XVec = aVectors[0];
+        YVec = XVec.Orthogonal();
+        ZVec = XVec * YVec;
+        return true;
+        }
+    else if (nFound == 0)
+        {
+        if (fabs(SumXX) < SGM_ZERO)
+            {
+            XVec = SGM::UnitVector3D(0,1,0);
+            YVec = SGM::UnitVector3D(0,0,1);
+            ZVec = SGM::UnitVector3D(1,0,0);
             return true;
             }
-        else if (nFound == 0)
+        else if (fabs(SumYY) < SGM_ZERO)
             {
-            if (fabs(SumXX) < SGM_ZERO)
-                {
-                XVec = SGM::UnitVector3D(0,1,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(1,0,0);
-                return true;
-                }
-            else if (fabs(SumYY) < SGM_ZERO)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(0,-1,0);
-                return true;
-                }
-            else if (fabs(SumZZ) < SGM_ZERO)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,1,0);
-                ZVec = SGM::UnitVector3D(0,0,1);
-                return true;
-                }
-            else
-                return false;
+            XVec = SGM::UnitVector3D(1,0,0);
+            YVec = SGM::UnitVector3D(0,0,1);
+            ZVec = SGM::UnitVector3D(0,-1,0);
+            return true;
             }
-        return false;
+        else if (fabs(SumZZ) < SGM_ZERO)
+            {
+            XVec = SGM::UnitVector3D(1,0,0);
+            YVec = SGM::UnitVector3D(0,1,0);
+            ZVec = SGM::UnitVector3D(0,0,1);
+            return true;
+            }
+        else
+            {
+            return false;
+            }
+        }
+    return false;
     }
 
     double ProjectPointsToPlane(std::vector<Point3D> const &aPoints3D,
@@ -573,54 +646,91 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                             double                           dTolerance,
                             SGM::Point3D                    *Origin,
                             SGM::UnitVector3D               *Normal)
-{
+    {
     bool bCoplanar = false;
     SGM::Point3D PlaneOrigin;
     SGM::UnitVector3D XVec;
     SGM::UnitVector3D YVec;
     SGM::UnitVector3D ZVec;
     if (SGM::FindLeastSquarePlane(aPoints, PlaneOrigin, XVec, YVec, ZVec))
-    {
+        {
         std::vector<SGM::Point2D> aPoints2D;
         double dMaxDist = SGM::ProjectPointsToPlane(aPoints, PlaneOrigin, XVec, YVec, ZVec, aPoints2D);
         if (dMaxDist < dTolerance)
+            {
             bCoplanar = true;
-    }
+            }
+        }
 
     if (bCoplanar)
-    {
+        {
         if (nullptr != Origin)
+            {
             *Origin = PlaneOrigin;
+            }
         if (nullptr != Normal)
+            {
             *Normal = ZVec;
-    }
+            }
+        }
     return bCoplanar;
-}
+    }
 
-    void FindLengths3D(std::vector<Point3D> const &aPoints,
-                            std::vector<double> &aLengths,
-                            bool bNormalize)
+bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
+                   std::vector<SGM::Point3D>     const &aPoints2,
+                   std::map<unsigned int,unsigned int> &mMatchMap,
+                   double                               dTolerance)
     {
-        size_t nPoints = aPoints.size();
-        size_t Index1;
-        aLengths.reserve(nPoints);
-        aLengths.push_back(0);
-        double dLast = 0.0;
+    size_t nPoints=aPoints1.size();
+    if(nPoints!=aPoints2.size())
+        {
+        return false;
+        }
+    BoxTree Tree;
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Interval3D Box(aPoints2[Index1]);
+        Tree.Insert(&aPoints2[Index1],Box);
+        }
+    SGM::Point3D const *pBase=&aPoints2[0];
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(aPoints1[Index1],dTolerance);
+        if(aHits.size()!=1)
+            {
+            return false;
+            }
+        size_t nWhere=(SGM::Point3D const *)aHits[0].first-pBase;
+        mMatchMap[(unsigned int)Index1]=(unsigned int)nWhere;
+        }
+    return true;
+    }
+
+void FindLengths3D(std::vector<Point3D> const &aPoints,
+                   std::vector<double> &aLengths,
+                   bool bNormalize)
+    {
+    size_t nPoints = aPoints.size();
+    size_t Index1;
+    aLengths.reserve(nPoints);
+    aLengths.push_back(0);
+    double dLast = 0.0;
+    for (Index1 = 1; Index1 < nPoints; ++Index1)
+        {
+        dLast += aPoints[Index1].Distance(aPoints[Index1 - 1]);
+        aLengths.push_back(dLast);
+        }
+    if (bNormalize)
+        {
+        double dScale = 1.0 / aLengths.back();
+        --nPoints;
         for (Index1 = 1; Index1 < nPoints; ++Index1)
             {
-            dLast += aPoints[Index1].Distance(aPoints[Index1 - 1]);
-            aLengths.push_back(dLast);
+            aLengths[Index1] *= dScale;
             }
-        if (bNormalize)
-            {
-            double dScale = 1.0 / aLengths.back();
-            --nPoints;
-            for (Index1 = 1; Index1 < nPoints; ++Index1)
-                {
-                aLengths[Index1] *= dScale;
-                }
-            aLengths[Index1] = 1.0;
-            }
+        aLengths[Index1] = 1.0;
+        }
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -762,6 +872,34 @@ bool InTriangle(Point2D const &A,
     return false;
     }
 
+
+bool InAngle(SGM::Point2D const &A,
+             SGM::Point2D const &B,
+             SGM::Point2D const &C,
+             SGM::Point2D const &D)
+    {
+    SGM::UnitVector2D X=B-A;
+    SGM::UnitVector2D Y(-X.m_v,X.m_u);
+    SGM::Vector2D DA=D-A;
+    double dx=DA%X;
+    double dy=DA%Y;
+    double dAngleD=SAFEatan2(dy,dx);
+    if(dAngleD<0)
+        {
+        dAngleD+=SGM_TWO_PI;
+        }
+    SGM::Vector2D CA=C-A;
+    dx=CA%X;
+    dy=CA%Y;
+    double dAngleC=SAFEatan2(dy,dx);
+    if(dAngleC<0)
+        {
+        dAngleC+=SGM_TWO_PI;
+        }
+    return dAngleD<=dAngleC;
+    }
+
+
 bool InCircumcircle(SGM::Point2D const &A,
                     SGM::Point2D const &B,
                     SGM::Point2D const &C,
@@ -835,8 +973,49 @@ void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangl
         }
     }
 
+size_t FindAdjacences1D(std::vector<unsigned int> const &aSegments,
+                        std::vector<unsigned int>       &aAdjacency)
+    {
+    std::vector<SGMInternal::VertexData> aVertices;
+    size_t nSegments = aSegments.size();
+    aAdjacency.assign(nSegments, std::numeric_limits<unsigned int>::max());
+    aVertices.reserve(nSegments);
+    size_t Index1, Index2;
+    for (Index1 = 0; Index1 < nSegments; Index1 += 2)
+        {
+        unsigned int a = aSegments[Index1];
+        unsigned int b = aSegments[Index1 + 1];
+        aVertices.emplace_back(a, (unsigned int)Index1, 0);
+        aVertices.emplace_back(b, (unsigned int)Index1, 1);
+        }
+    std::sort(aVertices.begin(), aVertices.end());
+    size_t nVertices = aVertices.size();
+    Index1 = 0;
+    while (Index1 < nVertices)
+        {
+        size_t nStart = Index1;
+        size_t nPos = aVertices[Index1].m_nPos;
+        ++Index1;
+        while (Index1 < nVertices &&
+               aVertices[Index1].m_nPos == nPos)
+            {
+            ++Index1;
+            }
+        for (Index2 = nStart; Index2 < Index1; ++Index2)
+            {
+            SGMInternal::VertexData const &VD1 = aVertices[Index2];
+            SGMInternal::VertexData const &VD2 = aVertices[Index2 + 1 < Index1 ? Index2 + 1 : nStart];
+            if (VD1.m_nSegment != VD2.m_nSegment)
+                {
+                aAdjacency[VD1.m_nSegment + VD1.m_nVertex] = VD2.m_nSegment;
+                }
+            }
+        }
+    return nSegments;
+    }
+
 size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
-                        std::vector<unsigned int> &aAdjacency)
+                        std::vector<unsigned int>       &aAdjacency)
     {
     std::vector<SGMInternal::EdgeData> aEdges;
     size_t nTriangles = aTriangles.size();
@@ -1128,6 +1307,7 @@ bool TriangulatePolygon(Result                                        &rResult,
         std::vector<unsigned int> aSubTriangles, aSubAdjacencies;
         TriangulatePolygonSub(rResult, aPoints, aaaPolygonGroups[Index1], aSubTriangles, aSubAdjacencies);
         size_t nSubTriangles = aSubTriangles.size();
+        aTriangles.reserve(aTriangles.size() + nSubTriangles);
         for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
             {
             aTriangles.push_back(aSubTriangles[Index2]);

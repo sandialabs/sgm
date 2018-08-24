@@ -1,6 +1,14 @@
+#include "SGMResult.h"
+#include "SGMTransform.h"
+
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
+
+void SGM::Result::SetResult(SGM::ResultType nType)
+    {
+    m_nType=nType;
+    }
 
 namespace SGMInternal
 {
@@ -24,109 +32,45 @@ thing::~thing()
         }
     }
 
-void thing::AddToMap(size_t nID,entity *pEntity)
+bool thing::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings,
+                  bool                      bChildren) const
     {
-    m_mAllEntities[nID] = pEntity;
+    // thing *always* checks at least top level children,
+    // and passing bChildren=true will check further down hierarchy
+    bool bAnswer = true;
+    for (auto const &iter : m_mAllEntities)
+        {
+        if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
+            bAnswer = false;
+        }
+    return bAnswer;
     }
 
-void thing::DeleteEntity(entity *pEntity)
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
-    m_mAllEntities.erase(pEntity->GetID());
-    switch(pEntity->GetType()) {
-          case SGM::BodyType:
-            delete reinterpret_cast<body*>(pEntity);
-            break;
-          case SGM::ComplexType:
-            delete reinterpret_cast<complex*>(pEntity);
-            break;
-          case SGM::VolumeType:
-            delete reinterpret_cast<volume*>(pEntity);
-            break;
-          case SGM::FaceType:
-            delete reinterpret_cast<face*>(pEntity);
-            break;
-          case SGM::EdgeType:
-            delete reinterpret_cast<edge*>(pEntity);
-            break;
-          case SGM::VertexType:
-            delete reinterpret_cast<vertex*>(pEntity);
-            break;
-          case SGM::AttributeType:
-            delete reinterpret_cast<attribute*>(pEntity);
-            break;
-          case SGM::SurfaceType: {
-            surface* pSurface = reinterpret_cast<surface*>(pEntity);
-            switch (pSurface->GetSurfaceType()) {
-              case SGM::PlaneType:
-                delete reinterpret_cast<plane*>(pEntity);
-                break;
-              case SGM::CylinderType:
-                delete reinterpret_cast<cylinder*>(pEntity);
-                break;
-              case SGM::ConeType:
-                delete reinterpret_cast<cone*>(pEntity);
-                break;
-              case SGM::SphereType:
-                delete reinterpret_cast<sphere*>(pEntity);
-                break;
-              case SGM::TorusType:
-                delete reinterpret_cast<torus*>(pEntity);
-                break;
-              case SGM::NUBSurfaceType:
-                delete reinterpret_cast<NUBsurface*>(pEntity);
-                break;
-              case SGM::NURBSurfaceType:
-                delete reinterpret_cast<NURBsurface*>(pEntity);
-                break;
-              case SGM::RevolveType:
-                delete reinterpret_cast<revolve*>(pEntity);
-                break;
-              default:
-                std::abort();
+    if (m_Box.IsEmpty())
+        {
+        // stretch box around every bounded entity that is top level
+        for (auto const &iter : m_mAllEntities)
+            {
+            entity *pEntity = iter.second;
+            auto type = pEntity->GetType();
+            // if bounded entity
+            if (type == SGM::BodyType ||
+                type == SGM::VolumeType ||
+                type == SGM::FaceType ||
+                type == SGM::EdgeType ||
+                type == SGM::VertexType ||
+                type == SGM::ComplexType)
+                {
+                if (pEntity->IsTopLevel())
+                    m_Box.Stretch(pEntity->GetBox(rResult));
+                }
             }
-            break;
-          }
-          case SGM::CurveType: {
-            curve* pCurve = reinterpret_cast<curve*>(pEntity);
-            switch(pCurve->GetCurveType()) {
-              case SGM::LineType:
-                delete reinterpret_cast<line*>(pEntity);
-                break;
-              case SGM::CircleType:
-                delete reinterpret_cast<circle*>(pEntity);
-                break;
-              case SGM::EllipseType:
-                delete reinterpret_cast<ellipse*>(pEntity);
-                break;
-              case SGM::NUBCurveType:
-                delete reinterpret_cast<NUBcurve*>(pEntity);
-                break;
-              case SGM::NURBCurveType:
-                delete reinterpret_cast<NURBcurve*>(pEntity);
-                break;
-              case SGM::PointCurveType:
-                delete reinterpret_cast<PointCurve*>(pEntity);
-                break;
-              case SGM::HermiteCurveType:
-                delete reinterpret_cast<hermite*>(pEntity);
-                break;
-              case SGM::TorusKnotCurveType:
-                delete reinterpret_cast<TorusKnot*>(pEntity);
-                break;
-              case SGM::ParabolaType:
-                delete reinterpret_cast<parabola*>(pEntity);
-                break;
-              case SGM::HyperbolaType:
-                delete reinterpret_cast<hyperbola*>(pEntity);
-                break;
-              default:
-                std::abort();
-            }
-            break;
-          }
-          default:
-            std::abort();
         }
+    return m_Box;
     }
 
 void thing::SeverOwners(entity *pEntity)
@@ -195,6 +139,13 @@ void thing::SeverOwners(entity *pEntity)
         }
     }
 
+void thing::TransformBox(SGM::Result &, SGM::Transform3D const &transform3D)
+{
+    if (!transform3D.IsScaleAndTranslate())
+        m_Box.Reset();
+    m_Box *= transform3D;
+}
+
 entity *thing::FindEntity(size_t ID) const
     {
     if (ID == 0) return const_cast<thing*>(this);
@@ -209,66 +160,17 @@ entity *thing::FindEntity(size_t ID) const
 
 size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
     {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
+    for (auto &entry : m_mAllEntities)
         {
-        entity *pEntity=iter->second;
-        switch(pEntity->GetType())
-            {
-            case SGM::BodyType:
-                {
-                body *pBody=(body *)pEntity;
-                if(pBody->IsTopLevel())
-                    {
-                    aEntities.push_back(pBody);
-                    }
-                break;
-                }
-            case SGM::VolumeType:
-                {
-                volume *pVolume=(volume *)pEntity;
-                if(pVolume->IsTopLevel())
-                    {
-                    aEntities.push_back(pVolume);
-                    }
-                break;
-                }
-            case SGM::FaceType:
-                {
-                face *pFace=(face *)pEntity;
-                if(pFace->IsTopLevel())
-                    {
-                    aEntities.push_back(pFace);
-                    }
-                break;
-                }
-            case SGM::EdgeType:
-                {
-                edge *pEdge=(edge *)pEntity;
-                if(pEdge->IsTopLevel())
-                    {
-                    aEntities.push_back(pEdge);
-                    }
-                break;
-                }
-            case SGM::VertexType:
-                {
-                vertex *pVertex=(vertex *)pEntity;
-                if(pVertex->IsTopLevel())
-                    {
-                    aEntities.push_back(pVertex);
-                    }
-                break;
-                }
-            default:
-                {
-                throw;
-                }
-            }
-        ++iter;
+        // include any top level entity, including attribute, curve, surface
+        entity *pEntity = entry.second;
+        if (pEntity->IsTopLevel())
+            aEntities.push_back(pEntity);
         }
     return aEntities.size();
     }
+
+// TODO: write a template function to implement all these GetBodies,GetVolumes, etc.
 
 size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const
     {

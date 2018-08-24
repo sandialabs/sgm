@@ -70,18 +70,26 @@ SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
     return SGM::Complex(pComplex->GetID());
     }
 
-size_t SGM::FindComponents(SGM::Result               &,//rResult,
-                           SGM::Complex const        &,//ComplexID,
-                           std::vector<SGM::Complex> &)//aComponents)
+size_t SGM::FindComponents(SGM::Result               &rResult,
+                           SGM::Complex const        &ComplexID,
+                           std::vector<SGM::Complex> &aComponents)
     {
-    return 0;
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    std::vector<SGMInternal::complex *> aComps=pComplex->FindComponents(rResult);
+    size_t nComps=aComps.size();
+    for(auto pComp : aComps)
+        {
+        aComponents.push_back(SGM::Complex(pComp->GetID()));
+        }
+    return nComps;
     }
 
-size_t SGM::FindBoundary(SGM::Result               &,//rResult,
-                         SGM::Complex        const &,//ComplexID,
-                         std::vector<SGM::Complex> &)//aBoundary)
+SGM::Complex SGM::FindBoundary(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
     {
-    return 0;
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    SGMInternal::complex *pBoundary=pComplex->FindBoundary(rResult);
+    return SGM::Complex(pBoundary->GetID());
     }
 
 size_t SGM::FindGenus(SGM::Result        &,//rResult,
@@ -410,6 +418,29 @@ SGM::Complex SGM::CreateSegments(SGM::Result                    &rResult,
     return {pComplex->GetID()};
     }
 
+SGM::Complex SGM::CoverComplex(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->Cover(rResult);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->Merge(rResult);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
+                             SGM::Complex &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    pComplex->ReduceToUsedPoints();
+    }
+
 void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies,
@@ -588,6 +619,20 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
     return pFace->GetSurface()->GetID();
     }
 
+int SGM::GetSidesOfFace(SGM::Result     &rResult,
+                        SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->GetSides();
+    }
+
+bool SGM::IsFaceFlipped(SGM::Result     &rResult,
+                        SGM::Face const &FaceID)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->GetFlipped();
+    }
+
 SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,
                                             SGM::Edge const &EdgeID)
     {
@@ -729,7 +774,7 @@ SGM::Curve SGM::CreateLine(SGM::Result             &rResult,
                            SGM::Point3D      const &Origin,
                            SGM::UnitVector3D const &Axis)
     {
-    SGMInternal::curve *pCurve=new SGMInternal::line(rResult,Origin,Axis,1.0);
+    SGMInternal::curve *pCurve=new SGMInternal::line(rResult,Origin,Axis);
     return {pCurve->GetID()};
     }
 
@@ -821,7 +866,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings);
+    return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
     }
 
 SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
@@ -898,6 +943,14 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     {
     SGMInternal::curve *pCurve=SGMInternal::CreateNUBCurveWithEndVectors(rResult,aInterpolate,StartVec,EndVec,pParams);
     return {pCurve->GetID()};
+    }
+
+SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
+                                                        std::vector<SGM::Point4D> const &aControlPoints,
+                                                        std::vector<double>       const &aKnots)
+    {
+    SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
+    return {pNURB->GetID()};
     }
 
 SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
@@ -980,8 +1033,7 @@ SGM::Interval2D const &SGM::GetDomainOfSurface(SGM::Result        &rResult,
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,
-                      SGM::UnitVector3D &Axis,
-                      double            &dScale)
+                      SGM::UnitVector3D &Axis)
     {
     SGMInternal::curve const *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
     if(pCurve->GetCurveType()!=SGM::EntityType::LineType)
@@ -991,7 +1043,6 @@ bool SGM::GetLineData(SGM::Result       &rResult,
     SGMInternal::line const *pLine=(SGMInternal::line const *)pCurve;
     Origin =pLine->m_Origin;
     Axis   =pLine->m_Axis;
-    dScale =pLine->m_dScale;
     return true;
     }
 
@@ -1138,8 +1189,7 @@ bool SGM::GetPlaneData(SGM::Result        &rResult,
                        SGM::Point3D       &Origin,
                        SGM::UnitVector3D  &XAxis,
                        SGM::UnitVector3D  &YAxis,
-                       SGM::UnitVector3D  &ZAxis,
-                       double             &dScale)
+                       SGM::UnitVector3D  &ZAxis)
     {
     SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
     if(pSurface->GetSurfaceType()!=SGM::EntityType::PlaneType)
@@ -1151,7 +1201,6 @@ bool SGM::GetPlaneData(SGM::Result        &rResult,
     XAxis =pPlane->m_XAxis;
     YAxis =pPlane->m_YAxis;
     ZAxis =pPlane->m_ZAxis;
-    dScale=pPlane->m_dScale;
     return true;
     }
   
@@ -1348,7 +1397,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
     while(VertexIter!=sVertices.end())
         {
         SGMInternal::vertex *pVertex=*VertexIter;
-        mVertices[pVertex]=new SGMInternal::vertex(rResult,pVertex);
+        mVertices[pVertex]=pVertex->Clone(rResult);
         ++VertexIter;
         }
     std::set<SGMInternal::edge *,SGMInternal::EntityCompare>::iterator EdgeIter=sEdges.begin();
@@ -1360,7 +1409,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         SGMInternal::vertex const *pEnd=pEdge->GetEnd();
         SGMInternal::vertex *pNewStart=mVertices[pStart];
         SGMInternal::vertex *pNewEnd=mVertices[pEnd];
-        SGMInternal::curve *pNewCurve=pCurve->MakeCopy(rResult);
+        SGMInternal::curve *pNewCurve=pCurve->Clone(rResult);
         SGM::Interval1D const &Domain=pEdge->GetDomain();
         SGMInternal::edge *pNewEdge=new SGMInternal::edge(rResult);
         pNewEdge->SetStart(pNewStart);
@@ -1643,3 +1692,9 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
 }
 
 
+SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
+                            SGM::Point3D &Pos)
+{
+    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
+    return {pCurve->GetID()};
+}

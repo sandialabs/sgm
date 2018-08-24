@@ -56,6 +56,8 @@ private slots:
 
     void view_perspective();
 
+    void view_background();
+
     void test_all();
 
     void test_number();

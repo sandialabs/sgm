@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(view_uvspace()));
   connect(mViewMenu, SIGNAL(perspective()),
           this, SLOT(view_perspective()));
+  connect(mViewMenu, SIGNAL(background()),
+          this, SLOT(view_background()));
 
   ui->menubar->addMenu(mTestMenu);
   connect(mTestMenu, SIGNAL(all()),
@@ -172,8 +174,13 @@ void MainWindow::file_exit()
   this->close();
 }
 
+#define SGM_ADD_ALL_FILES_TO_LIST 1
+
 void MainWindow::file_open_recent(const QString &filename)
 {
+#if SGM_ADD_ALL_FILES_TO_LIST
+  mFileMenu->add_recent_file(filename);
+#endif
   bool opened = mModel->open_file(filename);
   if(opened)
     mFileMenu->add_recent_file(filename);
@@ -234,6 +241,11 @@ void MainWindow::view_uvspace()
 void MainWindow::view_perspective()
     {
     mModel->perspective_mode();
+    }
+
+void MainWindow::view_background()
+    {
+    mModel->set_background();
     }
 
 void MainWindow::test_all()

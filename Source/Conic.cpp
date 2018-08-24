@@ -248,7 +248,7 @@ curve *FindConic(SGM::Result                     &rResult,
                         }
                     if(dTest2<dTest1)
                         {
-                        std::swap(a,b);
+                        std::swap<double>(a,b);
                         }
                     if(SGM::NearEqual(a,b,dTolerance,false))
                         {
@@ -280,7 +280,7 @@ curve *FindConic(SGM::Result                     &rResult,
                     return nullptr;
                     }
                 }
-            return new line(rResult,Origin,XVec,1.0);
+            return new line(rResult,Origin,XVec);
             }
         }
     return nullptr;

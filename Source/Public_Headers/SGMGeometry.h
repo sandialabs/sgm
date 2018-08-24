@@ -65,6 +65,13 @@ SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                  
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);
 
+SGM_EXPORT SGM::Curve CreateNURBCurveWithControlPointsAndKnots(SGM::Result                          &rResult,
+                                                                    std::vector<SGM::Point4D> const &aControlPoints,
+                                                                    std::vector<double>       const &aKnots);
+
+SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
+                                       SGM::Point3D &Pos);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Surface Creation Functions
@@ -153,8 +160,7 @@ SGM_EXPORT SGM::Interval1D const &GetDomainOfCurve(SGM::Result      &rResult,
 SGM_EXPORT bool GetLineData(SGM::Result       &rResult,
                             SGM::Curve  const &CurveID,
                             SGM::Point3D      &Origin,
-                            SGM::UnitVector3D &Axis,
-                            double            &dScale);
+                            SGM::UnitVector3D &Axis);
 
 SGM_EXPORT bool GetCircleData(SGM::Result       &rResult,
                               SGM::Curve  const &CurveID,
@@ -221,8 +227,7 @@ SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Point3D       &Origin,
                              SGM::UnitVector3D  &XAxis,
                              SGM::UnitVector3D  &YAxis,
-                             SGM::UnitVector3D  &ZAxis,
-                             double             &dScale);   
+                             SGM::UnitVector3D  &ZAxis);   
              
 SGM_EXPORT bool GetCylinderData(SGM::Result        &rResult,
                                 SGM::Surface const &SurfaceID,

@@ -50,6 +50,8 @@ public:
 
     void perspective_mode();
 
+    void set_background();
+
     bool RunCPPTest(size_t nTest);
 
     void check(std::vector<std::string> &aLog);
@@ -131,6 +133,14 @@ public:
 
     void Copy(SGM::Entity EntityID);
 
+    void Cover(SGM::Entity EntityID);
+
+    void Merge(SGM::Entity EngityID);
+
+    void FindComponents(SGM::Entity EntityID);
+
+    void Boundary(SGM::Entity EngityID);
+
     void Unhook(std::vector<SGM::Entity> &aEnts);
 
     void DeleteEntity(SGM::Entity EntityID);
@@ -149,9 +159,12 @@ public:
         dDefaultEdgeBlue = nBlue / 255.0;
     }
 
+    SGM::Result GetResult() const;
+
     void rebuild_tree();
 
-    void rebuild_graphics(bool bReset = false);
+    void rebuild_graphics(bool                      bReset=false,
+                          std::vector<SGM::Entity> *aEnts=nullptr);
 
 private:
 
@@ -185,13 +198,17 @@ private:
 
     void add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID);
 
-    void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> &edge_colors) const;
 
-    void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> &face_colors) const;
+    void get_edge_colors(const SGM::Edge &edge, std::vector<SGM::Vector3D> &edge_colors,std::vector<SGM::Entity> *aEnts) const;
 
-    void get_complex_colors(const SGM::Complex &pComplex, std::vector<SGM::Vector3D> &complex_colors) const;
+    void get_face_colors(const SGM::Face &face, std::vector<SGM::Vector3D> &face_colors,std::vector<SGM::Entity> *aEnts) const;
 
-    SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex) const;
+    void get_complex_colors(const SGM::Complex &pComplex, std::vector<SGM::Vector3D> &complex_colors,std::vector<SGM::Entity> *aEnts) const;
+
+    SGM::Vector3D get_vertex_color(SGM::Vertex const &vertex,std::vector<SGM::Entity> *aEnts) const;
+
+
+    void add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID);
 
     double dDefaultFaceRed;
     double dDefaultFaceGreen;

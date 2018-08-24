@@ -614,7 +614,9 @@ public:
 
     /// Next index available in a vertex temporary index buffer.
     GLuint get_vertex_index_offset()
-    { return (GLuint)(mTempDataBuffer.size() / 6); }
+    { 
+    return (GLuint)(mTempDataBuffer.size() / 6); 
+    }
 
     void flush(QtOpenGL *opengl)
     {
@@ -966,6 +968,18 @@ void SGMGraphicsWidget::enable_perspective(bool enable)
     update();
 }
 
+void SGMGraphicsWidget::set_background(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    QtOpenGL *opengl = get_opengl();
+    if (!opengl)
+        return;
+
+    opengl->glClear (GL_COLOR_BUFFER_BIT);
+    opengl->glClearColor(red,green,blue,alpha);
+    opengl->glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    opengl->glFlush();
+}
+
 QSurfaceFormat SGMGraphicsWidget::default_format()
 {
     QSurfaceFormat fmt;
@@ -1005,7 +1019,12 @@ void SGMGraphicsWidget::initializeGL()
     opengl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     opengl->glLineWidth(5.f);
     opengl->glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    opengl->glClearColor(0.5, 0.5, 0.5, 1.0);
+
+    float red=1.0;
+    float green=1.0;
+    float blue=1.0;
+    float alpha=1.0;
+    opengl->glClearColor(red, green, blue, alpha);
 
     opengl->glEnable(GL_POLYGON_OFFSET_FILL);
     opengl->glPolygonOffset(2, 1);

@@ -3,7 +3,6 @@
 
 #include "SGMVector.h"
 
-#include <algorithm>
 //
 // Inline function definitions
 //

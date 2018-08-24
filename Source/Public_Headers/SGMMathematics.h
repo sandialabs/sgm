@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 #include "sgm_export.h"
 #include "SGMConstants.h"
@@ -55,6 +56,15 @@ namespace SGM
                                   std::vector<double>             &aLengths,
                                   bool                             bNormalize=false);
 
+    // DoPointsMatch returns true if aPoints1 and aPoints2 contain the same points
+    // within the given tolerance, and it returns a map that maps vector aPoints1,
+    // to vector aPoints2.
+
+    SGM_EXPORT bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
+                                  std::vector<SGM::Point3D>     const &aPoints2,
+                                  std::map<unsigned int,unsigned int> &mMatchMap,
+                                  double                              dTolerance);
+
     /////////////////////////////////////////////////////////////////////////
     //
     //  Polygon functions
@@ -106,18 +116,41 @@ namespace SGM
                                SGM::Point2D const &B,
                                SGM::Point2D const &C,
                                SGM::Point2D const &D);
+
+    // Returns true if D is inside the angle formed by A as the angle vertex
+    // and B and C as its sides.  If D is found first, before C when going
+    // counter clockwise from B to D around C, or if D is on the ray AB or AC,
+    // then then true is returned. 
+
+    SGM_EXPORT bool InAngle(SGM::Point2D const &A,
+                            SGM::Point2D const &B,
+                            SGM::Point2D const &C,
+                            SGM::Point2D const &D);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
     // such that Tab0 is the index of the start of the triangle in aTriangles
     // that is adjacent to the first triangle along the edge ab.
     // If more than one triangle is adjacent to the first triangle along the same
-    // edge for example T0, T1, T2. Then T0 will point to T1, T1 will point to T2
+    // edge for example T0, T1, T2, then T0 will point to T1, T1 will point to T2
     // and T2 will point to T0.  If an edge does not have a triangle that is
     // adjacent to it then the vector aAdjacency will have the value 
     // std::numeric_limits<unsigned int>::max() for that edges.
 
     SGM_EXPORT size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
+                                       std::vector<unsigned int>       &aAdjacences);
+
+    // Given segments in the form <a0,b0,a1,b1,b2,c2,...>
+    // FindAdjacences1D returns a verctor of the form <Sa0,Sb0,Sa1,Sb1,...>
+    // such that Sa0 is the index of the start of the segment in aSegments
+    // that is adjacent to the first segment at the point a.
+    // If more than one segment is adjacent to the first segment a the seam
+    // point, then all ajecent segments are given in no order in a cycle of one
+    // pointing to the next and eventually bact to the first one.  If no segment
+    // is adjecent then std::numeric_limits<unsigned int>::max() is returned for 
+    // the point.
+
+    SGM_EXPORT size_t FindAdjacences1D(std::vector<unsigned int> const &aSegments,
                                        std::vector<unsigned int>       &aAdjacences);
 
     // Returns the length of the longest edges of the given triangles. 

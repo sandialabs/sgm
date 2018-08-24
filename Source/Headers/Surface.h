@@ -14,72 +14,97 @@
 namespace SGMInternal
 {
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Check list of adding a new surface type.
-//
-//  Methods to add
-//
-//  A Constructor
-//      Set it domain.
-//      Set if it is closed in U or V
-//      Set if it is singular at high or low U or V.
-//  Evaluate
-//  Inverse
-//  UParamLine
-//  VParamLine
-//  Transform
-//
-//  Get[Surface Name]Data
-//
-///////////////////////////////////////////////////////////////////////////////
+class surface;
 
 class surface : public entity
     {
     public:
 
-        surface(SGM::Result &rResult,SGM::EntityType nType);
+        surface(SGM::Result &rResult, SGM::EntityType nType);
 
-        surface *MakeCopy(SGM::Result &rResult) const;
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        surface(SGM::Result &rResult, surface const &other);
 
-        void AddFace(face *pFace);
+        ~surface() override = default;
 
-        void RemoveFace(face *pFace);
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
+        surface *Clone(SGM::Result &rResult) const override = 0;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Interval3D const &GetBox(SGM::Result &) const override
+        { return m_Box; } // default box is max extent
+
+        bool IsTopLevel() const override {return m_sFaces.empty() && m_sOwners.empty();}
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        void ResetBox(SGM::Result &) const override { /* do nothing */ }
+
+        void TransformBox(SGM::Result &, SGM::Transform3D const &) override { /* do nothing */ }
+
+        //
+        // surface virtual members
+        //
+
+        virtual void Evaluate(SGM::Point2D const &uv,
+                              SGM::Point3D       *Pos,
+                              SGM::Vector3D      *Du=nullptr,
+                              SGM::Vector3D      *Dv=nullptr,
+                              SGM::UnitVector3D  *Norm=nullptr,
+                              SGM::Vector3D      *Duu=nullptr,
+                              SGM::Vector3D      *Duv=nullptr,
+                              SGM::Vector3D      *Dvv=nullptr) const = 0;
+
+        virtual SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                                     SGM::Point3D       *ClosePos=nullptr,
+                                     SGM::Point2D const *pGuess=nullptr) const = 0;
+
+        virtual bool IsSame(surface const *pOther,double dTolerance) const;
+
+        // Returns the principle curvature vectors and values at the given uv point.
+
+        virtual void PrincipleCurvature(SGM::Point2D const &uv,
+                                        SGM::UnitVector3D  &Vec1,
+                                        SGM::UnitVector3D  &Vec2,
+                                        double             &k1,
+                                        double             &k2) const;
+
+        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+
+        virtual curve *UParamLine(SGM::Result &rResult,double dU) const = 0;
+
+        virtual curve *VParamLine(SGM::Result &rResult,double dV) const = 0;
+
+        // Returns the largest integer that the surface is Cn with respect to U for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        virtual int UContinuity() const;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        virtual int VContinuity() const;
+
+        void AddFace(face *pFace) { m_sFaces.insert(pFace); };
+
+        void RemoveFace(face *pFace) { m_sFaces.erase(pFace); };
 
         std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
 
         SGM::EntityType GetSurfaceType() const {return m_SurfaceType;}
 
-        void Evaluate(SGM::Point2D const &uv,
-                      SGM::Point3D       *Pos,
-                      SGM::Vector3D      *Du=nullptr,
-                      SGM::Vector3D      *Dv=nullptr,
-                      SGM::UnitVector3D  *Norm=nullptr,
-                      SGM::Vector3D      *Duu=nullptr,
-                      SGM::Vector3D      *Duv=nullptr,
-                      SGM::Vector3D      *Dvv=nullptr) const;
-
-        SGM::Point2D Inverse(SGM::Point3D const &Pos,
-                             SGM::Point3D       *ClosePos=nullptr,
-                             SGM::Point2D const *pGuess=nullptr) const;
-
-        // Returns the principle curvature vectors and values at the given uv point.
-
-        void PrincipleCurvature(SGM::Point2D const &uv,
-                                SGM::UnitVector3D  &Vec1,
-                                SGM::UnitVector3D  &Vec2,
-                                double             &k1,
-                                double             &k2) const;
-
         // Returns the curvature in the given direction at the given uv point.
 
         double DirectionalCurvature(SGM::Point2D      const &uv,
                                     SGM::UnitVector3D const &Direction) const;
-
-        bool Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const;
 
         bool ClosedInU() const {return m_bClosedU;}
 
@@ -95,34 +120,23 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_sOwners.empty();}
-
-        bool IsSame(surface const *pOther,double dTolerance) const;
-
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
-
-        curve *UParamLine(SGM::Result &rResult,double dU) const;
-
-        curve *VParamLine(SGM::Result &rResult,double dV) const;
-
-        void Transform(SGM::Transform3D const &Trans);
 
         double FindAreaOfParametricTriangle(SGM::Result        &rResult,
                                             SGM::Point2D const &PosA,
                                             SGM::Point2D const &PosB,
                                             SGM::Point2D const &PosC) const;
 
-        // Returns the largest integer that the surface is Cn with respect to U for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int UContinuity() const;
-
-        // Returns the largest integer that the surface is Cn with respect to V for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int VContinuity() const;
-
         void SnapToDomain(SGM::Point2D &uv) const;
+
+        // Returns the two-dimensional unit vector in the parameters space 
+        // of this surface that Vec projects onto at the point uv.
+        
+        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D        &uv,
+                                               SGM::Vector3D const &Vec) const;
+
+        SGM::Point2D NewtonsMethod(SGM::Point2D const &StartUV,
+                                   SGM::Point3D const &Pos) const;
 
     protected:
 
@@ -150,15 +164,42 @@ class plane : public surface
               SGM::Point3D      const &Origin,
               SGM::UnitVector3D const &XAxis,
               SGM::UnitVector3D const &YAxis,
-              SGM::UnitVector3D const &ZAxis,
-              double                   dScale);
+              SGM::UnitVector3D const &ZAxis);
 
-        plane(SGM::Result  &rResult,
-              plane  const *pPlane);
-        
-        curve *UParamLine(double dU) const;
+        plane(SGM::Result &rResult, plane const &other);
 
-        curve *VParamLine(double dV) const;
+        ~plane() override = default;
+
+        plane *Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
     public:
 
@@ -166,7 +207,6 @@ class plane : public surface
         SGM::UnitVector3D m_XAxis;
         SGM::UnitVector3D m_YAxis;
         SGM::UnitVector3D m_ZAxis;
-        double            m_dScale;
     };
 
 class cylinder : public surface
@@ -178,10 +218,43 @@ class cylinder : public surface
                  SGM::Point3D      const &Top,
                  double                   dRadius,
                  SGM::UnitVector3D const *XAxis=nullptr);
-        
-        curve *UParamLine(double dU) const;
 
-        curve *VParamLine(double dV) const;
+        cylinder(SGM::Result &rResult, cylinder const &other);
+
+        ~cylinder() override = default;
+
+        cylinder *Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
     public:
 
@@ -204,11 +277,44 @@ class cone : public surface
              double                   dHalfAngle,
              SGM::UnitVector3D const *XAxis=nullptr);
 
-        double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
-        
-        curve *UParamLine(double dU) const;
+        cone(SGM::Result &rResult, cone const &other);
 
-        curve *VParamLine(double dV) const;
+        ~cone() override = default;
+
+        cone *Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
 
@@ -232,10 +338,43 @@ class sphere : public surface
                double                   dRadius,
                SGM::UnitVector3D const *XAxis=nullptr,
                SGM::UnitVector3D const *YAxis=nullptr);
-        
-        curve *UParamLine(double dU) const;
 
-        curve *VParamLine(double dV) const;
+        sphere(SGM::Result &rResult, sphere const &other);
+
+        ~sphere() override = default;
+
+        sphere *Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void PrincipleCurvature(SGM::Point2D const &uv,
+                                SGM::UnitVector3D  &Vec1,
+                                SGM::UnitVector3D  &Vec2,
+                                double             &k1,
+                                double             &k2) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
     public:
 
@@ -257,10 +396,38 @@ class torus : public surface
               double                   dMajorRadius,
               bool                     bApple,
               SGM::UnitVector3D const *XAxis=nullptr);
-        
-        curve *UParamLine(double dU) const;
 
-        curve *VParamLine(double dV) const;
+        torus(SGM::Result &rResult, torus const &other);
+
+        ~torus() override = default;
+
+        torus* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         SGM::TorusKindType GetKind() const {return m_nKind;}
 
@@ -291,6 +458,45 @@ class NUBsurface: public surface
                    std::vector<double>                     const &aUKnots,
                    std::vector<double>                     const &aVKnots);
 
+        NUBsurface(SGM::Result &rResult, NUBsurface const &other);
+
+        ~NUBsurface() override = default;
+
+        NUBsurface* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+
+        // Returns the largest integer that the surface is Cn with respect to U for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const override;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const override;
+
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
         size_t GetVDegree() const {return (m_aVKnots.size()-m_aaControlPoints[0].size()-1);}
@@ -315,16 +521,6 @@ class NUBsurface: public surface
 
         size_t GetVParams() const {return m_nVParams;}
 
-        // Returns the largest integer that the surface is Cn with respect to U for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int UContinuity() const;
-
-        // Returns the largest integer that the surface is Cn with respect to V for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int VContinuity() const;
-
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
@@ -345,6 +541,45 @@ class NURBsurface: public surface
                     std::vector<std::vector<SGM::Point4D> > const &aControlPoints,
                     std::vector<double>                     const &aUKnots,
                     std::vector<double>                     const &aVKnots);
+
+        NURBsurface(SGM::Result &rResult, NURBsurface const &other);
+
+        ~NURBsurface() override = default;
+
+        NURBsurface* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+
+        // Returns the largest integer that the surface is Cn with respect to U for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int UContinuity() const override;
+
+        // Returns the largest integer that the surface is Cn with respect to V for.
+        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int VContinuity() const override;
 
         size_t GetUDegree() const {return (m_aUKnots.size()-m_aaControlPoints.size()-1);}
 
@@ -370,16 +605,6 @@ class NURBsurface: public surface
 
         size_t GetVParams() const {return m_nVParams;}
 
-        // Returns the largest integer that the surface is Cn with respect to U for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int UContinuity() const;
-
-        // Returns the largest integer that the surface is Cn with respect to V for.  
-        // If the surface is C infinity then std::numeric_limits<int>::max() is returned.
-
-        int VContinuity() const;
-
     public:
 
         std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
@@ -401,7 +626,36 @@ class revolve : public surface
                 SGM::UnitVector3D const &uAxisVector,
                 curve                   *pCurve);
 
-        ~revolve();
+        revolve(SGM::Result &rResult, revolve const &other);
+
+        ~revolve() override;
+
+        revolve* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         void SetCurve(curve *pCurve);
 
@@ -422,7 +676,36 @@ class extrude : public surface
                 SGM::UnitVector3D const &vAxis,
                 curve                   *pCurve);
 
-        ~extrude();
+        extrude(SGM::Result &rResult, extrude const &other);
+
+        ~extrude() override;
+
+        extrude* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &Pos,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         void SetCurve(curve *pCurve);
 

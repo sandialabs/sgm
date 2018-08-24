@@ -233,6 +233,16 @@ size_t IntersectLineAndLine(SGM::Point3D                 const &Origin,
                             std::vector<SGM::Point3D>          &aPoints,
                             std::vector<SGM::IntersectionType> &aTypes);
 
+size_t IntersectLineAndLine(SGM::Point3D                 const &Origin1,
+                            SGM::UnitVector3D            const &Axis1,
+                            SGM::Interval1D              const &Domain1,
+                            SGM::Point3D                 const &Origin2,
+                            SGM::UnitVector3D            const &Axis2,
+                            SGM::Interval1D              const &Domain2,
+                            double                              dTolerance,
+                            std::vector<SGM::Point3D>          &aPoints,
+                            std::vector<SGM::IntersectionType> &aTypes);
+
 size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
                               SGM::UnitVector3D            const &Axis,
                               SGM::Interval1D              const &Domain,
@@ -443,6 +453,14 @@ size_t IntersectNUBCurveAndPlane(SGM::Result                        &rResult,
                                  std::vector<SGM::Point3D>          &aPoints,
                                  std::vector<SGM::IntersectionType> &aTypes,
                                  double                              dTolerance);
+
+size_t IntersectNURBCurveAndPlane(SGM::Result                         &rResult,
+                                  NURBcurve                     const *pCurve,
+                                  SGM::Point3D                  const &PlaneOrigin,
+                                  SGM::UnitVector3D             const &PlaneNorm,
+                                  std::vector<SGM::Point3D>           &aPoints,
+                                  std::vector<SGM::IntersectionType>  &aTypes,
+                                  double                               dTolerance);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QSurfaceFormat>
+#include <QFont>
 
 #include "MainWindow.hpp"
 #include "SGMGraphicsWidget.hpp"
@@ -22,7 +23,14 @@ int main(int argc, char **argv)
     MainWindow mw;
     mw.show();
 
-    // Run the application
+#if defined (__linux__)
+    QFont new_font = app.font();
+    new_font.setPointSize( 14 ); //your option
+    //new_font.setWeight( int ** ); //your option
+    app.setFont( new_font );     // Run the application
+#endif
+
+
     return QApplication::exec();
 }
 

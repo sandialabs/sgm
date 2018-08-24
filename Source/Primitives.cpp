@@ -31,7 +31,7 @@ edge *CreateEdge(SGM::Result           &rResult,
         {
         SGM::Point3D StartPos,EndPos;
         pCurve->Evaluate(Domain.m_dMin,&StartPos);
-        pCurve->Evaluate(Domain.m_dMin,&EndPos);
+        pCurve->Evaluate(Domain.m_dMax,&EndPos);
         vertex *pStart=new vertex(rResult,StartPos);
         vertex *pEnd=new vertex(rResult,EndPos);
         pEdge->SetStart(pStart);
@@ -156,8 +156,8 @@ body *CreateCylinder(SGM::Result        &rResult,
         pVolume->AddFace(pBottom);
         pVolume->AddFace(pTop);
 
-        plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
-        plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
+        plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis);
+        plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis);
 
         pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
         pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
@@ -199,8 +199,8 @@ body *CreateCone(SGM::Result        &rResult,
     edge *pEdgeBottom=new edge(rResult);
     edge *pEdgeTop=new edge(rResult);
 
-    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis,1);
-    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis,1);
+    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis);
+    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis);
 
     double dy=dBottomRadius-dTopRadius;
     double dx=TopCenter.Distance(BottomCenter);
@@ -745,7 +745,7 @@ body *CreateDisk(SGM::Result             &rResult,
     pVolume->AddFace(pFace);
     SGM::UnitVector3D XAxis=Normal.Orthogonal();
     SGM::UnitVector3D YAxis=Normal*XAxis;
-    surface *pSurface=new plane(rResult,Center,XAxis,YAxis,Normal,1.0);
+    surface *pSurface=new plane(rResult,Center,XAxis,YAxis,Normal);
     pFace->SetSurface(pSurface);
     curve *pCurve=new circle(rResult,Center,Normal,dRadius,&XAxis);
     edge *pEdge=SGMInternal::CreateEdge(rResult,pCurve,nullptr);

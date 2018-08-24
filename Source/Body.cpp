@@ -1,20 +1,17 @@
+#include <EntityFunctions.h>
 #include "EntityClasses.h"
 #include "Topology.h"
 
 namespace SGMInternal
 {
 
-body::body(SGM::Result &rResult):
-    topology(rResult,SGM::EntityType::BodyType) 
+void body::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
-    }
-
-body *body::MakeCopy(SGM::Result &rResult) const
-    {
-    body *pAnswer=new body(rResult);
-    pAnswer->m_sVolumes=m_sVolumes;
-    pAnswer->m_aPoints=m_aPoints;
-    return pAnswer;
+    for (auto pVolume : GetVolumes())
+        {
+        sChildren.insert(pVolume);
+        pVolume->FindAllChildren(sChildren);
+        }
     }
 
 void body::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
@@ -84,10 +81,22 @@ void body::AddPoint(SGM::Point3D const &Pos)
     m_aPoints.push_back(Pos);
     }
 
-void body::ClearBox(SGM::Result &rResult) const
+SGM::Interval3D const &body::GetBox(SGM::Result &rResult) const
     {
-    m_Box.Reset();
-    rResult.GetThing()->ClearBox();
+    if (m_Box.IsEmpty())
+        {
+        std::set<volume *,EntityCompare> const &sVolumes = GetVolumes();
+        StretchBox(rResult,m_Box,sVolumes.begin(),sVolumes.end());
+        }
+    return m_Box;
+    }
+
+void body::SeverRelations(SGM::Result &)
+    {
+    std::set<volume *,EntityCompare> sVolumes=GetVolumes();
+    for(volume *pVolume : sVolumes)
+        RemoveVolume(pVolume);
+    RemoveAllOwners();
     }
 
 double body::FindVolume(SGM::Result &rResult,bool bApproximate) const
@@ -120,7 +129,7 @@ bool body::IsSheetBody(SGM::Result &rResult) const
             }
         ++iter;
         }
-    if(sFaces.size())
+    if(!sFaces.empty())
         {
         return true;
         }

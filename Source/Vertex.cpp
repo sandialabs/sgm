@@ -9,20 +9,25 @@
 
 namespace SGMInternal
 {
-vertex::vertex(SGM::Result  &rResult,
-               vertex const *pVertex):
-    topology(rResult,SGM::EntityType::VertexType),m_Pos(pVertex->m_Pos) 
+
+SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
     {
+    if (m_Box.IsEmpty())
+        m_Box=SGM::Interval3D(GetPoint());
+    return m_Box;
     }
 
-vertex *vertex::MakeCopy(SGM::Result &rResult) const
+void vertex::SeverRelations(SGM::Result &)
     {
-    vertex *pAnswer=new vertex(rResult,m_Pos);
-    pAnswer->m_sEdges=m_sEdges;
-    pAnswer->m_Box=m_Box;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_sOwners=m_sOwners;
-    return pAnswer;
+    std::set<edge *,EntityCompare> sEdges=GetEdges();
+    for(auto pEdge : sEdges)
+        {
+        if (pEdge->GetStart() == this)
+            pEdge->SetStart(nullptr);
+        if (pEdge->GetEnd() == this)
+            pEdge->SetEnd(nullptr);
+        }
+    RemoveAllOwners();
     }
 
 void vertex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)

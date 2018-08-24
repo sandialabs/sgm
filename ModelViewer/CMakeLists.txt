@@ -6,10 +6,20 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
 
-# When we drop VTK see if we can stop hiding this warning
+#use lower warning level for viewer project
 if(MSVC)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4996")
-endif()
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+  endif()
+  # Force to always compile with WX
+  if(CMAKE_CXX_FLAGS MATCHES "/WX")
+    string(REGEX REPLACE "/WX" "/WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  endif()
+endif(MSVC)
+
 
 get_target_property(_loc Qt5::qmake LOCATION)
 get_filename_component(_qmake_dir ${_loc} DIRECTORY)
@@ -20,24 +30,11 @@ option(BUILD_VIEWER_WITH_GTEST "Build viewer with gtest" ON)
 set(MODEL_VIEWER_UIS
     MainWindow.ui)
 
-if(BUILD_VIEWER_WITH_GTEST)
-  get_filename_component(MODEL_VIEWER_TEST_DIR Tests ABSOLUTE BASE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
-  set(MODEL_VIEWER_TEST_SRC
-          ${MODEL_VIEWER_TEST_DIR}/boxtree_check.cpp
-          ${MODEL_VIEWER_TEST_DIR}/intersection_check.cpp
-          ${MODEL_VIEWER_TEST_DIR}/interval_check.cpp
-          ${MODEL_VIEWER_TEST_DIR}/math_check.cpp
-          ${MODEL_VIEWER_TEST_DIR}/volume_check.cpp
-          ${MODEL_VIEWER_TEST_DIR}/test_utility.cpp)
-else()
-  set(MODEL_VIEWER_TEST_SRC "")
-endif()
-
 qt5_wrap_ui(UI_SRC ${MODEL_VIEWER_UIS})
 
 set(MODEL_VIEWER_SRC
     ${UI_SRC}
-    ${MODEL_VIEWER_TEST_SRC}
+    ${SGM_VIEWER_GTEST_SOURCES}
     FileMenu.cpp
     FileMenu.hpp
     ViewMenu.cpp
@@ -72,7 +69,6 @@ target_include_directories(sgm_viewer PRIVATE
 
 if(BUILD_VIEWER_WITH_GTEST)
   message(STATUS "Build viewer with gtest")
-  include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
   target_link_libraries(sgm_viewer PRIVATE gtest)
   target_compile_definitions(sgm_viewer PRIVATE -DVIEWER_WITH_GTEST)
 endif()

@@ -50,14 +50,13 @@ void WriteLine(FILE                    *pFile,
 
     SGM::Point3D const &Pos=pLine->GetOrigin();
     SGM::UnitVector3D const &Axis=pLine->GetAxis();
-    double dScale=pLine->GetScale();
 
     size_t nPos=nLine;
     fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nDirection=nLine;
     fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Axis.m_x,Axis.m_y,Axis.m_z);
     size_t nVector=nLine;
-    fprintf(pFile,"#%ld=VECTOR('',#%ld,%#.15G);\n",nLine++,nDirection,dScale);
+    fprintf(pFile,"#%ld=VECTOR('',#%ld,%#.15G);\n",nLine++,nDirection,1.0);
     mCurveMap[pLine->GetID()]=nLine;
     fprintf(pFile,"#%ld=LINE('',#%ld,#%ld);\n",nLine++,nPos,nVector);
     }

@@ -86,6 +86,12 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::Point3D> const &GetPointsOfBody(SGM::Result     &rResult,
                                                                 SGM::Body const &BodyID);
 
+    SGM_EXPORT int GetSidesOfFace(SGM::Result     &rResult,
+                                  SGM::Face const &FaceID);
+
+    SGM_EXPORT bool IsFaceFlipped(SGM::Result     &rResult,
+                                  SGM::Face const &FaceID);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Topology Modification Functions.

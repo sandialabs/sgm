@@ -30,6 +30,8 @@ public:
 
     void mouseReleaseEvent(QMouseEvent *event) override;
 
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
+
     ModelData *mModel;
 
     SGM::Entity mCurentEnt;

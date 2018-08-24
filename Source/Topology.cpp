@@ -1,15 +1,26 @@
 #include "SGMVector.h"
+#include "SGMTransform.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
 #include "Intersectors.h"
 
+
 #include <limits>
 #include <algorithm>
 
 namespace SGMInternal
 {
+
+void topology::TransformBox(SGM::Result& rResult, SGM::Transform3D const &transform3D)
+{
+    if (!transform3D.IsScaleAndTranslate())
+        ResetBox(rResult);
+    else
+        m_Box *= transform3D;
+}
+
 void FindBodies(SGM::Result                    &,//rResult,
                 entity                   const *pEntity,
                 std::set<body *,EntityCompare> &sBodies,
@@ -1325,7 +1336,7 @@ body *UnhookFaces(SGM::Result         &rResult,
     std::map<entity *,entity *> mCopyMap;
     for(entity *pEnt : sCopyEnts)
         {
-        mCopyMap[pEnt]=pEnt->Copy(rResult);
+        mCopyMap[pEnt]=pEnt->Clone(rResult);
         }
 
     // Replace the shaired entities with the copies in the unhooked faces.

@@ -6,29 +6,61 @@
 
 namespace SGMInternal
 {
-edge::edge(SGM::Result &rResult):
-    topology(rResult,SGM::EntityType::EdgeType),
-    m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
+
+void edge::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
-    m_dTolerance=SGM_MIN_TOL;
+    sChildren.insert(GetCurve());
+    if(vertex * start = GetStart())
+        sChildren.insert(start);
+    if(vertex * end = GetEnd())
+        sChildren.insert(end);
     }
 
-edge *edge::MakeCopy(SGM::Result &rResult) const
+SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
     {
-    edge *pAnswer=new edge(rResult);
-    pAnswer->m_pStart=m_pStart;
-    pAnswer->m_pEnd=m_pEnd;
-    pAnswer->m_sFaces=m_sFaces;
-    pAnswer->m_pVolume=m_pVolume;
-    pAnswer->m_pCurve=m_pCurve;
-    pAnswer->m_aPoints3D=m_aPoints3D;
-    pAnswer->m_aParams=m_aParams;
-    pAnswer->m_Domain=m_Domain;
-    pAnswer->m_dTolerance=m_dTolerance;
-    pAnswer->m_Box=m_Box;
-    pAnswer->m_sAttributes=m_sAttributes;
-    pAnswer->m_sOwners=m_sOwners;
-    return pAnswer;
+    if (m_Box.IsEmpty())
+        {
+        switch(GetCurve()->GetCurveType())
+            {
+            case SGM::EntityType::LineType:
+            case SGM::EntityType::PointCurveType:
+                {
+                // Only use the edge boxes.
+                auto startVertex = GetStart();
+                auto endVertex = GetEnd();
+                SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
+                m_Box.Stretch(box);
+                break;
+                }
+            default:
+                {
+                auto aPoints = GetFacets(rResult);
+                size_t nPoints = aPoints.size();
+                size_t Index1;
+                double dMaxLength = 0;
+                for(Index1 = 1; Index1<nPoints; ++Index1)
+                    {
+                    double dLength = aPoints[Index1].DistanceSquared(aPoints[Index1-1]);
+                    dMaxLength = std::max(dMaxLength, dLength);
+                    }
+                m_Box = SGM::Interval3D(aPoints);
+                m_Box=m_Box.Extend(sqrt(dMaxLength)*FACET_HALF_TANGENT_OF_FACET_FACE_ANGLE);
+                }
+            }
+        }
+    return m_Box;
+    }
+
+void edge::SeverRelations(SGM::Result &rResult)
+    {
+    std::set<face *,EntityCompare> sFaces=GetFaces();
+    for(auto pFace : sFaces)
+        pFace->RemoveEdge(rResult,this);
+    if(GetStart())
+        GetStart()->RemoveEdge(this);
+    if(GetEnd())
+        GetEnd()->RemoveEdge(this);
+    RemoveAllOwners();
     }
 
 void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
@@ -248,6 +280,20 @@ SGM::Point3D const &edge::FindStartPoint() const
 SGM::Point3D const &edge::FindEndPoint() const
     {
     return m_pEnd->GetPoint();
+    }
+
+SGM::Vector3D edge::FindStartVector() const
+    {
+    SGM::Vector3D Answer;
+    m_pCurve->Evaluate(m_Domain.m_dMin,nullptr,&Answer);
+    return Answer;
+    }
+
+SGM::Vector3D edge::FindEndVector() const
+    {
+    SGM::Vector3D Answer;
+    m_pCurve->Evaluate(m_Domain.m_dMax,nullptr,&Answer);
+    return Answer;
     }
 
 SGM::Point3D edge::FindMidPoint(double dFraction) const

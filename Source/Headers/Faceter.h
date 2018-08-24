@@ -4,6 +4,10 @@
 #include "SGMVector.h"
 #include "EntityClasses.h"
 
+#define FACET_FACE_ANGLE_TOLERANCE 0.17453292519943295769236907684886 // 10 degrees.
+#define FACET_EDGE_ANGLE_TOLERANCE 0.08726646259971647884618453842443 //  5 degrees.
+#define FACET_HALF_TANGENT_OF_FACET_FACE_ANGLE 0.08816349035423248673554519343431 //0.5*tan(10)
+
 namespace SGMInternal
 {
 
@@ -12,8 +16,8 @@ class FacetOptions
     public:
 
         FacetOptions():
-            m_dFaceAngleTol(0.17453292519943295769236907684886), // 10 degrees.
-            m_dEdgeAngleTol(0.08726646259971647884618453842443), //  5 degrees.
+            m_dFaceAngleTol(FACET_FACE_ANGLE_TOLERANCE), // 10 degrees.
+            m_dEdgeAngleTol(FACET_EDGE_ANGLE_TOLERANCE), //  5 degrees.
             //m_dEdgeAngleTol(0.17453292519943295769236907684886),
             m_dMaxLength(0),
             m_dCordHight(0),
