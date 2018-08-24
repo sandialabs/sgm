@@ -50,6 +50,13 @@ bool AllComplexes(SGM::Result                    &rResult,
     return true;
     }
 
+void SGMTreeWidget::selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/) 
+    {
+    std::vector<SGM::Entity> aEnts;
+    size_t nEnts=mModel->GetSelection(aEnts);
+    mModel->rebuild_graphics(false,&aEnts);
+    }
+
 void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
     {
     if(event->button() == Qt::RightButton)

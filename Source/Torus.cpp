@@ -72,6 +72,22 @@ torus::torus(SGM::Result             &rResult,
         }
     }
 
+torus::torus(SGM::Result &rResult, torus const &other) :
+        surface(rResult, other),
+        m_Center(other.m_Center),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_ZAxis(other.m_ZAxis),
+        m_dMinorRadius(other.m_dMinorRadius),
+        m_dMajorRadius(other.m_dMajorRadius),
+        m_nKind(other.m_nKind),
+        m_aSeedPoints(other.m_aSeedPoints),
+        m_aSeedParams(other.m_aSeedParams)
+{}
+
+torus* torus::Clone(SGM::Result &rResult) const
+{ return new torus(rResult, *this); }
+
 void torus::Evaluate(SGM::Point2D const &uv,
                      SGM::Point3D       *Pos,
                      SGM::Vector3D      *Du,

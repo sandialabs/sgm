@@ -19,11 +19,6 @@ curve::curve(SGM::Result &rResult, curve const &other) :
         m_bClosed(other.m_bClosed)
     {}
 
-void curve::FindAllChildren(std::set<entity *, EntityCompare> &) const
-{
-    // do nothing, derived classes can override
-}
-
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.
@@ -106,43 +101,12 @@ double curve::NewtonsMethod(double              dStart,
     return dStart;
     }
 
-double DerivativeMagnitude(double t,void const *pData)
+double curve::DerivativeMagnitude(double t)
     {
-    curve const *pCurve=(curve const*)pData;
     SGM::Vector3D Vec;
-    pCurve->Evaluate(t,nullptr,&Vec);
+    Evaluate(t,nullptr,&Vec);
     return Vec.Magnitude();
     }
-
-double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
-    {
-    switch(m_CurveType)
-        {
-        case SGM::LineType:
-            {
-            line const *pLine=(line const *)this;
-            return Domain.Length()/pLine->m_dScale;
-            break;
-            }
-        case SGM::CircleType:
-            {
-            circle const *pCircle=(circle const *)this;
-            return Domain.Length()*pCircle->m_dRadius;
-            break;
-            }
-        default:
-            {
-            return SGM::Integrate1D(DerivativeMagnitude,Domain,this,dTolerance);
-            break;
-            }
-        }
-    }
-
-int curve::Continuity() const
-    { return std::numeric_limits<int>::max(); }
-
-void curve::Negate()
-    { throw std::logic_error("Derived class must override curve::Negate()"); }
 
 SGM::Vector3D curve::Curvature(double t) const
     {
@@ -247,31 +211,31 @@ void FindBasisFunctions(size_t        i,    // One based span index.
         }
     }
 
-    size_t FindSpanIndex(SGM::Interval1D     const &Domain,
-                         size_t                     nDegree,
-                         double                     t,
-                         std::vector<double> const &aKnots)
+size_t FindSpanIndex(SGM::Interval1D     const &Domain,
+                     size_t                     nDegree,
+                     double                     t,
+                     std::vector<double> const &aKnots)
     {
-        size_t nSpanIndex;
-        if(Domain.m_dMax<=t)
-            {
-            assert(aKnots.size() >= (nDegree+2));
-            nSpanIndex=aKnots.size()-nDegree-2;
-            }
-        else if(t<=Domain.m_dMin)
-            {
-            nSpanIndex=nDegree;
-            }
-        else
-            {
-            nSpanIndex=(int)(std::upper_bound(aKnots.begin(),aKnots.end(),t)-aKnots.begin()-1);
-            nSpanIndex=std::min(nSpanIndex,aKnots.size()-nDegree-2);
-            }
-        if(nSpanIndex<nDegree)
-            {
-            nSpanIndex=nDegree;
-            }
-        return nSpanIndex;
+    size_t nSpanIndex;
+    if(Domain.m_dMax<=t)
+        {
+        assert(aKnots.size() >= (nDegree+2));
+        nSpanIndex=aKnots.size()-nDegree-2;
+        }
+    else if(t<=Domain.m_dMin)
+        {
+        nSpanIndex=nDegree;
+        }
+    else
+        {
+        nSpanIndex=(int)(std::upper_bound(aKnots.begin(),aKnots.end(),t)-aKnots.begin()-1);
+        nSpanIndex=std::min(nSpanIndex,aKnots.size()-nDegree-2);
+        }
+    if(nSpanIndex<nDegree)
+        {
+        nSpanIndex=nDegree;
+        }
+    return nSpanIndex;
     }
 
 }

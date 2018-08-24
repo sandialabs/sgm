@@ -184,7 +184,7 @@ std::vector<SGM::Point3D> const &NURBcurve::GetSeedPoints() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
+        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
@@ -195,7 +195,7 @@ std::vector<double> const &NURBcurve::GetSeedParams() const
     if(m_aSeedPoints.empty())
         {
         FacetOptions Options;
-        Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
+        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;

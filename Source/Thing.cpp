@@ -162,13 +162,15 @@ size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
     {
     for (auto &entry : m_mAllEntities)
         {
-        entity *pEntity = entry.second;
         // include any top level entity, including attribute, curve, surface
+        entity *pEntity = entry.second;
         if (pEntity->IsTopLevel())
             aEntities.push_back(pEntity);
         }
     return aEntities.size();
     }
+
+// TODO: write a template function to implement all these GetBodies,GetVolumes, etc.
 
 size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const
     {

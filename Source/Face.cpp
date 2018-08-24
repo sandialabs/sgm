@@ -53,7 +53,7 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
                 auto aTriangles = GetTriangles(rResult);
                 double dMaxLength = SGM::FindMaxEdgeLength(aPoints,aTriangles);
                 m_Box = SGM::Interval3D(aPoints);
-                m_Box=m_Box.Extend(sqrt(dMaxLength)*0.08908870145605166538285132205469); // 0.5*tan(15)
+                m_Box=m_Box.Extend(sqrt(dMaxLength)*FACET_HALF_TANGENT_OF_FACET_FACE_ANGLE);
                 }
             }
         }
@@ -577,6 +577,10 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     std::vector<entity *> aEntities=m_aEntities;
     std::vector<unsigned int> aTriangles=m_aTriangles;
     double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
+    if(m_bFlipped)
+        {
+        dAnswer0=-dAnswer0;
+        }
     if(bApproximate)
         {
         return dAnswer0;
@@ -588,6 +592,10 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         {
         SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
+        if(m_bFlipped)
+            {
+            dAnswer1=-dAnswer1;
+            }
         dVolume=(4*dAnswer1-dAnswer0)/3;
         dAnswer0=dAnswer1;
         }

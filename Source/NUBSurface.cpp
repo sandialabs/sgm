@@ -50,6 +50,20 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
         }
     }
 
+NUBsurface::NUBsurface(SGM::Result &rResult, NUBsurface const &other) :
+        surface(rResult, other),
+        m_aaControlPoints(other.m_aaControlPoints),
+        m_aUKnots(other.m_aUKnots),
+        m_aVKnots(other.m_aVKnots),
+        m_aSeedPoints(other.m_aSeedPoints),
+        m_aSeedParams(other.m_aSeedParams),
+        m_nUParams(other.m_nUParams),
+        m_nVParams(other.m_nVParams)
+{}
+
+NUBsurface* NUBsurface::Clone(SGM::Result &rResult) const
+{ return new NUBsurface(rResult, *this); }
+
 void NUBsurface::Evaluate(SGM::Point2D const &uv,
                           SGM::Point3D       *Pos,
                           SGM::Vector3D      *Du,

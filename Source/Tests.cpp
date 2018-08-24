@@ -1055,8 +1055,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::UnitVector3D XAxis(1,2,3);
         SGM::UnitVector3D YAxis=XAxis.Orthogonal();
         SGM::UnitVector3D ZAxis=XAxis*YAxis;
-        double dScale=2.5;
-        SGMInternal::plane *pPlane=new SGMInternal::plane(rResult,Origin,XAxis,YAxis,ZAxis,dScale);
+        SGMInternal::plane *pPlane=new SGMInternal::plane(rResult,Origin,XAxis,YAxis,ZAxis);
 
         bool bAnswer=SGMInternal::TestSurface(rResult,pPlane,SGM::Point2D(0.5,0.2));
         rResult.GetThing()->DeleteEntity(pPlane);
@@ -1144,13 +1143,12 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         {
         SGM::Point3D Pos0(1,2,3),Pos1(4,5,6);
         SGM::UnitVector3D Axis(7,8,9);
-        double dScale=10;
 
         SGMInternal::line *pLine1=new SGMInternal::line(rResult,Pos0,Pos1);
         bool bAnswer=TestCurve(pLine1,0.5);
         rResult.GetThing()->DeleteEntity(pLine1);
 
-        SGMInternal::line *pLine2=new SGMInternal::line(rResult,Pos0,Axis,dScale);
+        SGMInternal::line *pLine2=new SGMInternal::line(rResult,Pos0,Axis);
         if(TestCurve(pLine2,0.5)==false)
             {
             bAnswer=false;

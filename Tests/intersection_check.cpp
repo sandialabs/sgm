@@ -1350,7 +1350,7 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
 }
 
 
-TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
+TEST(intersection_check, intersect_line_and_cylinder)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1359,7 +1359,7 @@ TEST(intersection_check, DISABLED_intersect_line_and_cylinder)
     double dRadius=7.0;
     SGM::Body BodyID = CreateCylinder(rResult, Bottom, Top, dRadius);
     
-    SGM::Point3D Origin(4,-3,0);
+    SGM::Point3D Origin(4,-4,0);
     SGM::UnitVector3D Axis(1,-1,0);
 
     std::vector<SGM::Point3D> aPoints;

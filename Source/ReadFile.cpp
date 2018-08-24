@@ -1671,8 +1671,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 STEPLineData SLDD=mSTEPData[nDir];
                 SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D Axis(SLDD.m_aDoubles[0],SLDD.m_aDoubles[1],SLDD.m_aDoubles[2]);
-                double dScale=SLDV.m_aDoubles[0];
-                mEntityMap[nID]=new line(rResult,Origin,Axis,dScale);
+                mEntityMap[nID]=new line(rResult,Origin,Axis);
                 break;
                 }
             case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
@@ -1699,7 +1698,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 GetAxis(SLDA,mSTEPData,Origin,ZAxis,XAxis);
 
                 SGM::UnitVector3D YAxis=ZAxis*XAxis;
-                mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis,1.0);
+                mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis);
                 break;
                 }
             case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
@@ -2242,7 +2241,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     fclose(pFile);
 
-    // Code for testing to be removed.
+    //TODO: Code for testing to be removed.
 #if 1
     std::set<vertex *,EntityCompare> sVertices;
     FindVertices(rResult,pThing,sVertices);

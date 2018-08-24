@@ -20,7 +20,7 @@ namespace SGMInternal {
     { rResult.GetThing()->AddToMap(m_ID,this); }
 
     inline entity::entity(SGM::Result &rResult, entity const &other) :
-            m_ID(),
+            m_ID(rResult.GetThing()->GetNextID()),
             m_Type(other.m_Type),
             m_sOwners(other.m_sOwners),
             m_sAttributes(other.m_sAttributes),
@@ -118,7 +118,7 @@ namespace SGMInternal {
     { throw std::logic_error("not implemented for assembly"); }
 
     inline bool assembly::IsTopLevel() const
-    { return true; }
+    { return m_sOwners.empty(); }
 
     inline void assembly::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented for assembly"); }
@@ -226,6 +226,9 @@ namespace SGMInternal {
 
     inline bool complex::IsTopLevel() const
     { return m_sOwners.empty(); }
+
+    inline void complex::ReplacePointers(std::map<entity *,entity *> const &)
+    { throw std::logic_error("not implemented"); }
 
     //
     // volume

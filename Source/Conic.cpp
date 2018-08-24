@@ -280,7 +280,7 @@ curve *FindConic(SGM::Result                     &rResult,
                     return nullptr;
                     }
                 }
-            return new line(rResult,Origin,XVec,1.0);
+            return new line(rResult,Origin,XVec);
             }
         }
     return nullptr;

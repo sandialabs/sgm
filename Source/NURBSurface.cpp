@@ -38,7 +38,7 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
-    Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
+    Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
     FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aVParams);
@@ -66,6 +66,20 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
             }
         }
     }
+
+NURBsurface::NURBsurface(SGM::Result &rResult, NURBsurface const &other) :
+        surface(rResult, other),
+        m_aaControlPoints(other.m_aaControlPoints),
+        m_aUKnots(other.m_aUKnots),
+        m_aVKnots(other.m_aVKnots),
+        m_aSeedPoints(other.m_aSeedPoints),
+        m_aSeedParams(other.m_aSeedParams),
+        m_nUParams(other.m_nUParams),
+        m_nVParams(other.m_nVParams)
+{}
+
+NURBsurface* NURBsurface::Clone(SGM::Result &rResult) const
+{ return new NURBsurface(rResult, *this); }
 
 void NURBsurface::Evaluate(SGM::Point2D const &uv,
                            SGM::Point3D       *Pos,

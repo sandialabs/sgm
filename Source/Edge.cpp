@@ -20,17 +20,33 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())
         {
-        auto aPoints = GetFacets(rResult);
-        size_t nPoints = aPoints.size();
-        size_t Index1;
-        double dMaxLength = 0;
-        for(Index1 = 1; Index1<nPoints; ++Index1)
+        switch(GetCurve()->GetCurveType())
             {
-            double dLength = aPoints[Index1].DistanceSquared(aPoints[Index1-1]);
-            dMaxLength = std::max(dMaxLength, dLength);
+            case SGM::EntityType::LineType:
+            case SGM::EntityType::PointCurveType:
+                {
+                // Only use the edge boxes.
+                auto startVertex = GetStart();
+                auto endVertex = GetEnd();
+                SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
+                m_Box.Stretch(box);
+                break;
+                }
+            default:
+                {
+                auto aPoints = GetFacets(rResult);
+                size_t nPoints = aPoints.size();
+                size_t Index1;
+                double dMaxLength = 0;
+                for(Index1 = 1; Index1<nPoints; ++Index1)
+                    {
+                    double dLength = aPoints[Index1].DistanceSquared(aPoints[Index1-1]);
+                    dMaxLength = std::max(dMaxLength, dLength);
+                    }
+                m_Box = SGM::Interval3D(aPoints);
+                m_Box=m_Box.Extend(sqrt(dMaxLength)*FACET_HALF_TANGENT_OF_FACET_FACE_ANGLE);
+                }
             }
-        m_Box = SGM::Interval3D(aPoints);
-        m_Box=m_Box.Extend(sqrt(dMaxLength)*0.08816349035423248673554519343431); // 0.5*tan(10)
         }
     return m_Box;
     }

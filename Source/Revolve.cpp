@@ -11,19 +11,20 @@ namespace SGMInternal
     revolve::revolve(SGM::Result             &rResult,
                      SGM::Point3D      const &pAxisOrigin,
                      SGM::UnitVector3D const &uAxisVector,
-                     curve                   *pCurve)
-                     : surface(rResult, SGM::RevolveType)
+                     curve                   *pCurve) :
+        surface(rResult, SGM::RevolveType),
+        m_pCurve(nullptr),
+        m_Origin(pAxisOrigin),
+        m_XAxis(),
+        m_YAxis(),
+        m_ZAxis(uAxisVector)
     {
-    m_ZAxis = uAxisVector;
-    m_Origin = pAxisOrigin;
     this->m_bClosedU = true;
     m_Domain.m_UDomain.m_dMin = 0.0;
     m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
 
-    if (nullptr != pCurve)
-        {
+    if (pCurve)
         SetCurve(pCurve);
-        }
     }
 
 revolve::~revolve()
@@ -31,6 +32,21 @@ revolve::~revolve()
     if (m_pCurve)
         m_pCurve->RemoveOwner(this);
     }
+
+revolve::revolve(SGM::Result &rResult, revolve const &other) :
+        surface(rResult, other),
+        m_pCurve(nullptr),
+        m_Origin(other.m_Origin),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_ZAxis(other.m_ZAxis)
+    {
+    if (other.m_pCurve)
+        SetCurve(other.m_pCurve->Clone(rResult));
+    }
+
+revolve* revolve::Clone(SGM::Result &rResult) const
+{ return new revolve(rResult, *this); }
 
 void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
