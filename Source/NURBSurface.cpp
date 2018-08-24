@@ -114,8 +114,8 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
     if(Dvv) nVDerivatives=2;
 
     size_t Index1,Index2,Index3;
-    size_t nUStart = nUStart;
-    size_t nVStart = nVStart;
+    size_t nUStart = nUSpanIndex - nUDegree;
+    size_t nVStart = nVSpanIndex - nVDegree;
 
     assert(nUDerivatives <= SGM_MAX_NURB_DERIVATIVE_PLUS_ONE);
     for(Index1=0;Index1<1+nUDerivatives;++Index1)
