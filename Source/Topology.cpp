@@ -1202,10 +1202,19 @@ void MergeOutSeams(SGM::Result &rResult,
 
     // Merge out the edges.
 
+    std::set<vertex *> sVertices;
     EdgeIter=sMergable.begin();
     while(EdgeIter!=sMergable.end())
         {
         edge *pEdge=*EdgeIter;
+        if(pEdge->GetStart())
+            {
+            sVertices.insert(pEdge->GetStart());
+            }
+        if(pEdge->GetEnd())
+            {
+            sVertices.insert(pEdge->GetEnd());
+            }
         std::set<face *,EntityCompare> sFaces;
         FindFaces(rResult,pEdge,sFaces,false);
         pEdge->SeverRelations(rResult);
@@ -1219,6 +1228,16 @@ void MergeOutSeams(SGM::Result &rResult,
             MergeFaces(rResult,pFace1,pFace2);
             }
         ++EdgeIter;
+        }
+
+    // Remove vertices that are no longer needed.
+
+    for(auto pVertex : sVertices)
+        {
+        if(pVertex->IsTopLevel())
+            {
+            rResult.GetThing()->DeleteEntity(pVertex);
+            }
         }
     }
 

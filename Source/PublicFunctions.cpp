@@ -40,10 +40,11 @@ size_t SGM::RayFire(SGM::Result                        &rResult,
                     SGM::Entity                  const &EntityID,
                     std::vector<SGM::Point3D>          &aPoints,
                     std::vector<SGM::IntersectionType> &aTypes,
-                    double                              dTolerance)
+                    double                              dTolerance,
+                    bool                                bUseWholeLine)
     {
     SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);  
-    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance);
+    return SGMInternal::RayFire(rResult,Origin,Axis,pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
     }
 
 size_t SGM::IntersectSegment(SGM::Result               &rResult,
@@ -502,6 +503,19 @@ void SGM::FindSurfaces(SGM::Result            &rResult,
         {
         sSurfaces.insert(SGM::Surface((*iter)->GetID()));
         ++iter;
+        }
+    }
+
+void SGM::FindWireEdges(SGM::Result         &rResult,
+                        SGM::Entity   const &EntityID,
+                        std::set<SGM::Edge> &sOutEdges)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
+    FindWireEdges(rResult,pEntity,sEdges);
+    for(auto pEdge : sEdges)
+        {
+        sOutEdges.insert(SGM::Edge(pEdge->GetID()));
         }
     }
 
@@ -1614,4 +1628,18 @@ size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
     SGMInternal::curve *pCurve = (SGMInternal::curve *)pEntity;
     return SGMInternal::IntersectCurveAndPlane(rResult, pCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
 }
+
+size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
+                                  SGM::Edge                    const &EdgeID,
+                                  SGM::Point3D                 const &PlaneOrigin,
+                                  SGM::UnitVector3D            const &PlaneNorm,
+                                  std::vector<SGM::Point3D>          &aPoints,
+                                  std::vector<SGM::IntersectionType> &aTypes,
+                                  double                              dTolerance)
+{
+    SGMInternal::entity *pEntity = rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::edge *pEdge = (SGMInternal::edge *)pEntity;
+    return SGMInternal::IntersectEdgeAndPlane(rResult, pEdge, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
+}
+
 

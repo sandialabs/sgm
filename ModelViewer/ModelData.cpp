@@ -432,14 +432,50 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
         snprintf(Data, sizeof(Data), "%ld Volumes", nVolumes);
         body_item->setText(1, Data);
         }
-    else
+    else if(nVolumes==1)
         {
         body_item->setText(1, "1 Volume");
+        }
+    else
+        {
+        body_item->setText(1, "0 Volumes");
         }
 
     for (const SGM::Volume &vol : sVolumes)
         {
         add_volume_to_tree(body_item, vol);
+        }
+
+    std::vector<SGM::Point3D> const &aPoints=SGM::GetPointsOfBody(dPtr->mResult,BodyID);
+    if(aPoints.size())
+        {
+        auto *points_item = new QTreeWidgetItem(body_item);
+        size_t nPoints=aPoints.size();
+        char Data0[100];
+        if(nPoints>1)
+            {
+            snprintf(Data0, sizeof(Data0), "%ld Points", nPoints);
+            }
+        else
+            {
+            snprintf(Data0, sizeof(Data0), "1 Point", nPoints);
+            }
+        points_item->setText(0, "Points");
+        points_item->setText(1, Data0);
+
+        size_t Index1;
+        for(Index1=0;Index1<nPoints;++Index1)
+            {
+            auto *pos_item = new QTreeWidgetItem(points_item);
+            char Data1[100];
+            snprintf(Data1, sizeof(Data1), "Point %ld", Index1);
+            pos_item->setText(0, Data1);
+
+            char Data2[100];
+            SGM::Point3D const &Pos=aPoints[Index1];
+            snprintf(Data2, sizeof(Data2), "%lf, %lf, %lf", Pos.m_x,Pos.m_y,Pos.m_z);
+            pos_item->setText(1, Data2);
+            }
         }
 }
 
@@ -488,7 +524,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
         }
 
     std::set<SGM::Edge> sEdges;
-    SGM::FindEdges(dPtr->mResult, VolumeID, sEdges);
+    SGM::FindWireEdges(dPtr->mResult, VolumeID, sEdges);
     size_t nEdges = sEdges.size();
     if (nEdges > 1)
         {
@@ -528,7 +564,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
         snprintf(Data, sizeof(Data), "%ld Edges", nEdges);
         face_item->setText(1, Data);
         }
-    else
+    else if(nEdges==1)
         {
         face_item->setText(1, "1 Edge");
         }

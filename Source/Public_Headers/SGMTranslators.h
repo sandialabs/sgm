@@ -27,7 +27,8 @@ namespace SGM
                 //m_bRemoveSeams(true),
                 //m_bHeal(true)
                 m_bRemoveSeams(false),
-                m_bHeal(false)
+                m_bHeal(false),
+                m_bSplitFile(false)
                 {}
 
             explicit TranslatorOptions(std::string const &sOptions);
@@ -64,6 +65,10 @@ namespace SGM
 
             bool m_bHeal;          // Runs the healer on the part.
                                    // Default is true,
+                                   // Used in STEP read.
+
+            bool m_bSplitFile;     // Split the file into smaller parts.
+                                   // Default is false;
                                    // Used in STEP read.
         };
 

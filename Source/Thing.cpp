@@ -76,7 +76,7 @@ void thing::DeleteEntity(entity *pEntity)
                 delete reinterpret_cast<NUBsurface*>(pEntity);
                 break;
               case SGM::NURBSurfaceType:
-                delete reinterpret_cast<NUBsurface*>(pEntity);
+                delete reinterpret_cast<NURBsurface*>(pEntity);
                 break;
               case SGM::RevolveType:
                 delete reinterpret_cast<revolve*>(pEntity);

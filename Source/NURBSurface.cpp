@@ -4,6 +4,8 @@
 #include "Curve.h"
 #include "Faceter.h"
 
+#include "Primitive.h"
+
 namespace SGMInternal
 {
 NURBsurface::NURBsurface(SGM::Result                                   &rResult,
@@ -18,10 +20,18 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     m_Domain.m_VDomain.m_dMax=aVKnots.back();
 
     SGM::Point3D Pos0,Pos1,Pos2,Pos3;
-    this->Evaluate(m_Domain.MidPoint(0.5,0),&Pos0);
-    this->Evaluate(m_Domain.MidPoint(0.5,1),&Pos1);
-    this->Evaluate(m_Domain.MidPoint(0,0.5),&Pos2);
-    this->Evaluate(m_Domain.MidPoint(1,0.5),&Pos3);
+    Evaluate(m_Domain.MidPoint(0.5,0),&Pos0);
+    Evaluate(m_Domain.MidPoint(0.5,1),&Pos1);
+    Evaluate(m_Domain.MidPoint(0,0.5),&Pos2);
+    Evaluate(m_Domain.MidPoint(1,0.5),&Pos3);
+    if(SGM::NearEqual(Pos0,Pos1,SGM_MIN_TOL))
+        {
+        m_bClosedU=true;
+        }
+    if(SGM::NearEqual(Pos2,Pos3,SGM_MIN_TOL))
+        {
+        m_bClosedV=true;
+        }
 
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
@@ -29,10 +39,14 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     Options.m_dEdgeAngleTol=0.17453292519943295769236907684886; // 10 degrees.
     std::vector<double> aUParams,aVParams;
     std::vector<SGM::Point3D> aUPoints,aVPoints;
-    FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aUParams);
-    FacetCurve(pVCurve,pVCurve->GetDomain(),Options,aVPoints,aVParams);
-    rResult.GetThing()->DeleteEntity(pUCurve);
-    rResult.GetThing()->DeleteEntity(pVCurve);
+    FacetCurve(pUCurve,pUCurve->GetDomain(),Options,aUPoints,aVParams);
+    FacetCurve(pVCurve,pVCurve->GetDomain(),Options,aVPoints,aUParams);
+    //rResult.GetThing()->DeleteEntity(pUCurve);
+    //rResult.GetThing()->DeleteEntity(pVCurve);
+
+    CreateEdge(rResult,pUCurve,&(pUCurve->GetDomain()));
+    CreateEdge(rResult,pVCurve,&(pVCurve->GetDomain()));
+
     size_t Index1,Index2;
     m_nUParams=aUParams.size();
     m_nVParams=aVParams.size();
@@ -41,10 +55,10 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
     m_aSeedPoints.reserve(nParams);
     for(Index1=0;Index1<m_nUParams;++Index1)
         {
-        double v=aUParams[Index1];
+        double u=aUParams[Index1];
         for(Index2=0;Index2<m_nVParams;++Index2)
             {
-            double u=aVParams[Index2];
+            double v=aVParams[Index2];
             SGM::Point2D uv(u,v);
             m_aSeedParams.push_back(uv);
             SGM::Point3D Pos;
@@ -52,6 +66,25 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
             m_aSeedPoints.push_back(Pos);
             }
         }
+#if 0
+    for(Index1=0;Index1<m_aSeedParams.size();++Index1)
+        {
+        SGM::Point3D Pos=m_aSeedPoints[Index1];
+        SGM::Point2D uv=m_aSeedParams[Index1];
+        SGM::Point3D ClosePos;
+        SGM::Point2D testuv=Inverse(Pos,&ClosePos);
+        if(SGM::NearEqual(testuv,uv,SGM_ZERO)==false)
+            {
+            int a=0;
+            a*=1;
+            }
+        if(SGM::NearEqual(Pos,ClosePos,SGM_ZERO)==false)
+            {
+            int a=0;
+            a*=1;
+            }
+        }
+#endif
     }
 
 std::vector<SGM::Point3D> const &NURBsurface::GetSeedPoints() const

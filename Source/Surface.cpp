@@ -1444,6 +1444,10 @@ SGM::Point2D NewtonsMethod(surface      const *pSurface,
         {
         pSurface->Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         double dDot=(Pos-SurfPos)%Norm;
+        if(fabs(dDot)<SGM_ZERO)
+            {
+            break;
+            }
         SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
         DeltaU=(S%DU)/DU.MagnitudeSquared();
@@ -1495,13 +1499,28 @@ bool surface::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    switch(m_SurfaceType)
+    switch(m_SurfaceType) // Note that at this point we know that this and pOther are the same type.
         {
+        case SGM::EntityType::SphereType:
+            {
+            bool bAnswer=true;
+            sphere const *pSphere1=(sphere const *)this;
+            sphere const *pSphere2=(sphere const *)pOther;
+            if(SGM::NearEqual(pSphere1->m_dRadius,pSphere2->m_dRadius,dTolerance,false)==false)
+                {
+                bAnswer=false;
+                }
+            else if(SGM::NearEqual(pSphere1->m_Center,pSphere2->m_Center,dTolerance)==false)
+                {
+                bAnswer=false;
+                }
+            return bAnswer;
+            }
         case SGM::EntityType::CylinderType:
             {
             bool bAnswer=true;
             cylinder const *pCylinder1=(cylinder const *)this;
-            cylinder const *pCylinder2=(cylinder const *)this;
+            cylinder const *pCylinder2=(cylinder const *)pOther;
             if(SGM::NearEqual(pCylinder1->m_dRadius,pCylinder2->m_dRadius,dTolerance,false)==false)
                 {
                 bAnswer=false;
@@ -1526,7 +1545,7 @@ bool surface::IsSame(surface const *pOther,double dTolerance) const
             {
             bool bAnswer=true;
             cone const *pCone1=(cone const *)this;
-            cone const *pCone2=(cone const *)this;
+            cone const *pCone2=(cone const *)pOther;
             if(SGM::NearEqual(pCone1->m_dCosHalfAngle,pCone2->m_dCosHalfAngle,dTolerance,false)==false)
                 {
                 bAnswer=false;
@@ -1550,7 +1569,7 @@ bool surface::IsSame(surface const *pOther,double dTolerance) const
             {
             bool bAnswer=true;
             torus const *pTorus1=(torus const *)this;
-            torus const *pTorus2=(torus const *)this;
+            torus const *pTorus2=(torus const *)pOther;
             if(SGM::NearEqual(pTorus1->m_dMajorRadius,pTorus2->m_dMajorRadius,dTolerance,false)==false)
                 {
                 bAnswer=false;

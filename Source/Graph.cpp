@@ -291,6 +291,28 @@ bool Graph::IsCycle() const
     return true;
     }
 
+size_t Graph::FindSources(std::vector<size_t> &aSources) const
+    {
+    std::map<size_t,size_t> aIncoming;
+    for(auto nVertex : m_sVertices)
+        {
+        aIncoming[nVertex]=0;
+        }
+    for(auto gEdge : m_sEdges)
+        {
+        size_t nEnd=gEdge.m_nEnd;
+        aIncoming[nEnd]=aIncoming[nEnd]+1;
+        }
+    for(auto nMap : aIncoming)
+        {
+        if(nMap.second==0)
+            {
+            aSources.push_back(nMap.first);
+            }
+        }
+    return aSources.size();
+    }
+
 bool Graph::OrderVertices(std::vector<size_t> &aVertices) const
     {
     bool bAnswer=false;

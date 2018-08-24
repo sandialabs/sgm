@@ -26,7 +26,7 @@ bool PointInVolume(SGM::Result        &rResult,
         bFound=false;
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,dTolerance);
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,dTolerance,false);
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
