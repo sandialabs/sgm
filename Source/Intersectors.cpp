@@ -34,7 +34,8 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         for(size_t Index1=0;Index1<nAllHits;++Index1)
             {
             const double ray_distance = (aPoints[Index1]-Origin)%Axis;
-            // compare to Origin.Distance(aPoints[Index1]) which ignores the axis
+            // compare to the following which ignores the axis
+            // const double ray_distance = Origin.Distance(aPoints[Index1]);
             if(bUseWholeLine || -dTolerance<ray_distance)
                 {
                 aParams.emplace_back(ray_distance, Index1);

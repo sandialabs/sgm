@@ -70,10 +70,14 @@ cd $SGM_PATH/build/bin
 # or
 # export $PATH=$PATH:$SGM_PATH/build/bin 
 
-./sgm_test
+./sgm_tests
 # you should see about 40 lines of run and OK and pass tests
 
 # you can't run sgm_model_tests unless you have also checked out the sgm-models into $SGM_PATH/../sgm-models
+# cd $SGM_PATH/..
+# git clone https://cee-gitlab.sandia.gov/meshing/sgm-models
+#
+# cd $SGM_PATH/build/bin 
 ./sgm_model_tests
 
 # timing test for search datastructure
