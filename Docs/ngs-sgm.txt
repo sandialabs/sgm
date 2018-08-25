@@ -1,14 +1,54 @@
-see
-code/ngs/morph_mesher/unit_tests/pgeom/ACISFixtures/
-for an example of how to convert an acis pgeom into a step sgm
-in the parent directory, there are examples of tests that use these geometries
 
+========== ngs pre-built
+http://compsim.sandia.gov/compsim/Development_SprintSummaries.html
+Slides from the review (and all the Sierra reviews for that matter, including the meshing review) 
+
+
+NGS mesher (called morph_mesher) on your CEE blade, by doing a "module load sierra/master"  which should put the latest nightly build into your path. 
+Run "morph_mesher --help" to see the 3 input arguments.
+The only geom files that we really support right now are acis sat files.
+
+module purge
+module load sierra/master
+morph_mesher --help
+which morph_mesher
+#      /projects/sierra/linux_rh6/install/master/bin/morph_mesher
+
+
+There are many throws in the code for unhandled cases that you are likely to hit.
+
+Discussed snapping with Matt. He's interested in "sibling" boxes for each connected component of a box \intersect domain.
+
+15 June 2018
+Q. Do you do anything with aligning mesh edges with geometric curves? Same for faces.
+A. Yes.  When we split the overlay grid cells into tets, we choose the tet edges so they align with the curves.  Likewise, we choose the tets so that the tri faces on the tets align with the surfaces.
+ 
+========== ngs unit tests with sgm
+
+# NGS is expecting SGM to be installed to SMG_ROOT, not SGM_PATH
+# if it is not defined, then morph_mesher will be built without sgm support
+export SGM_ROOT=$SGM_INSTALL_PATH
+
+# pay attention to which library is being linked in the ngs Jamfile
+# debug
+#    [ if-defined-val $(sgm-root) : $(sgm-root)/sgm/install/lib/libSGMD.a ]
+# release
+#    [ if-defined-val $(sgm-root) : $(sgm-root)/sgm/install/lib/libSGM.a ]
+# and make sure you are building and installing the corresponding sgm build type! 
+# see linux-build.txt for the appropriate cmake parameters to set the build type
 
 # to bake ngs for the sgm tests
 bake ngs -e debug
 
 executable will end up someplace like this
 /scratch/samitch/code/bin/linux-gcc-4.9.3-ip-openmpi-1.10.2/debug/morph_mesher
+
+
+
+========== ngs unit tests with sgm
+code/ngs/morph_mesher/unit_tests/pgeom/ACISFixtures/
+for an example of how to convert an acis pgeom into a step sgm
+in the parent directory, there are examples of tests that use these geometries
 
 
 run morph_mesher_pgeom_utest
