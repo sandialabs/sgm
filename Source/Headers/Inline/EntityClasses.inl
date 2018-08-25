@@ -84,6 +84,20 @@ namespace SGMInternal {
     inline void thing::DeleteEntity(entity *pEntity)
     { m_mAllEntities.erase(pEntity->GetID()); delete pEntity; }
 
+    template <typename ENTITY_TYPE, typename ENTITY_SET>
+    inline size_t thing::GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const
+    {
+        typedef typename ENTITY_SET::value_type SpecificEntityPointerType;
+        for (auto iter: m_mAllEntities)
+            {
+            entity* pEntity = iter.second;
+            if (pEntity->GetType() == type)
+                if (!bTopLevel || pEntity->IsTopLevel())
+                    sEntities.insert(reinterpret_cast<SpecificEntityPointerType>(pEntity));
+            }
+        return sEntities.size();
+    }
+
     //
     // topology
     //

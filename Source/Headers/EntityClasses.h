@@ -174,6 +174,9 @@ class thing : public entity
         size_t GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const;
 
         size_t GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const;
+
+        template <class ENTITY_TYPE, class ENTITY_SET>
+        size_t GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const;
         
         // Find methods
         

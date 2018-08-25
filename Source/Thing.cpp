@@ -170,239 +170,34 @@ size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
     return aEntities.size();
     }
 
-// TODO: write a template function to implement all these GetBodies,GetVolumes, etc.
+// get a set of a specific type of entity
 
-size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::BodyType)
-            {
-            body *pBody=(body *)pEntity;
-            if(bTopLevel)
-                {
-                if(pBody->IsTopLevel())
-                    {
-                    sBodies.insert(pBody);
-                    }
-                }
-            else
-                {
-                sBodies.insert(pBody);
-                }
-            }
-        ++iter;
-        }
-    return sBodies.size();
-    }
+    size_t thing::GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::BodyType, sBodies, bTopLevel); }
 
-size_t thing::GetVolumes(std::set<volume *,EntityCompare> &sVolumes,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::VolumeType)
-            {
-            volume *pVolume=(volume *)pEntity;
-            if(bTopLevel)
-                {
-                if(pVolume->IsTopLevel())
-                    {
-                    sVolumes.insert(pVolume);
-                    }
-                }
-            else
-                {
-                sVolumes.insert(pVolume);
-                }
-            }
-        ++iter;
-        }
-    return sVolumes.size();
-    }
+    size_t thing::GetVolumes(std::set<volume *,EntityCompare> &sVolumes,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::VolumeType, sVolumes, bTopLevel); }
 
-size_t thing::GetFaces(std::set<face *,EntityCompare> &sFaces,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::FaceType)
-            {
-            face *pFace=(face *)pEntity;
-            if(bTopLevel)
-                {
-                if(pFace->IsTopLevel())
-                    {
-                    sFaces.insert(pFace);
-                    }
-                }
-            else
-                {
-                sFaces.insert(pFace);
-                }
-            }
-        ++iter;
-        }
-    return sFaces.size();
-    }
+    size_t thing::GetFaces(std::set<face *,EntityCompare> &sFaces,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::FaceType, sFaces, bTopLevel); }
 
-size_t thing::GetEdges(std::set<edge *,EntityCompare> &sEdges,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::EdgeType)
-            {
-            edge *pEdge=(edge *)pEntity;
-            if(bTopLevel)
-                {
-                if(pEdge->IsTopLevel())
-                    {
-                    sEdges.insert(pEdge);
-                    }
-                }
-            else
-                {
-                sEdges.insert(pEdge);
-                }
-            }
-        ++iter;
-        }
-    return sEdges.size();
-    }
+    size_t thing::GetEdges(std::set<edge *,EntityCompare> &sEdges,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::EdgeType, sEdges, bTopLevel); }
 
-size_t thing::GetVertices(std::set<vertex *,EntityCompare> &sVertices,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::VertexType)
-            {
-            vertex *pVertex=(vertex *)pEntity;
-            if(bTopLevel)
-                {
-                if(pVertex->IsTopLevel())
-                    {
-                    sVertices.insert(pVertex);
-                    }
-                }
-            else
-                {
-                sVertices.insert(pVertex);
-                }
-            }
-        ++iter;
-        }
-    return sVertices.size();
-    }
+    size_t thing::GetVertices(std::set<vertex *,EntityCompare> &sVertices,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::VertexType, sVertices, bTopLevel); }
 
-size_t thing::GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::SurfaceType)
-            {
-            surface *pSurface=(surface *)pEntity;
-            if(bTopLevel)
-                {
-                if(pSurface->IsTopLevel())
-                    {
-                    sSurfaces.insert(pSurface);
-                    }
-                }
-            else
-                {
-                sSurfaces.insert(pSurface);
-                }
-            }
-        ++iter;
-        }
-    return sSurfaces.size();
-    }
+    size_t thing::GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::SurfaceType, sSurfaces, bTopLevel); }
 
-size_t thing::GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::AttributeType)
-            {
-            attribute *pAttribute=(attribute *)pEntity;
-            if(bTopLevel)
-                {
-                if(pAttribute->IsTopLevel())
-                    {
-                    sAttribute.insert(pAttribute);
-                    }
-                }
-            else
-                {
-                sAttribute.insert(pAttribute);
-                }
-            }
-        ++iter;
-        }
-    return sAttribute.size();
-    }
+    size_t thing::GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::AttributeType, sAttribute, bTopLevel); }
 
-size_t thing::GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::CurveType)
-            {
-            curve *pCurve=(curve *)pEntity;
-            if(bTopLevel)
-                {
-                if(pCurve->IsTopLevel())
-                    {
-                    sCurves.insert(pCurve);
-                    }
-                }
-            else
-                {
-                sCurves.insert(pCurve);
-                }
-            }
-        ++iter;
-        }
-    return sCurves.size();
-    }
+    size_t thing::GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::CurveType, sCurves, bTopLevel); }
 
-size_t thing::GetComplexes(std::set<complex *,EntityCompare> &sComplexes,bool bTopLevel) const
-    {
-    std::map<size_t,entity* >::const_iterator iter=m_mAllEntities.begin();
-    while(iter!=m_mAllEntities.end())
-        {
-        entity *pEntity=iter->second;
-        if(pEntity->GetType()==SGM::EntityType::ComplexType)
-            {
-            complex *pComplex=(complex *)pEntity;
-            if(bTopLevel)
-                {
-                if(pComplex->IsTopLevel())
-                    {
-                    sComplexes.insert(pComplex);
-                    }
-                }
-            else
-                {
-                sComplexes.insert(pComplex);
-                }
-            }
-        ++iter;
-        }
-    return sComplexes.size();
-    }
+    size_t thing::GetComplexes(std::set<complex *,EntityCompare> &sComplexes,bool bTopLevel) const
+    { return GetEntities(SGM::EntityType::ComplexType, sComplexes, bTopLevel); }
+
+
 }
