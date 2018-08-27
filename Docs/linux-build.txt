@@ -70,10 +70,14 @@ cd $SGM_PATH/build/bin
 # or
 # export $PATH=$PATH:$SGM_PATH/build/bin 
 
-./sgm_test
+./sgm_tests
 # you should see about 40 lines of run and OK and pass tests
 
 # you can't run sgm_model_tests unless you have also checked out the sgm-models into $SGM_PATH/../sgm-models
+# cd $SGM_PATH/..
+# git clone https://cee-gitlab.sandia.gov/meshing/sgm-models
+#
+# cd $SGM_PATH/build/bin 
 ./sgm_model_tests
 
 # timing test for search datastructure
@@ -135,3 +139,13 @@ export PATH=$PATH:$SGM_PATH/build/bin:~/bin
 export SGM_ROOT=$SGM_PATH
 
 ===
+
+# simple cube test of morph_mesher over SGM
+# make a cube in cubit, save it as a step file and/or a sat file
+cd ~/play
+mpirun -np 1 -tv  morph_mesher --geom=cube.stp --outmesh=cube_mesh.g --size=0.5 --create_bad --echo-command-line 
+# ./mm.txt
+# the -tv brings up total view debugger on error
+
+try also
+morph_mesher --help

@@ -37,6 +37,18 @@ sphere::sphere(SGM::Result             &rResult,
         }
     }
 
+sphere::sphere(SGM::Result &rResult, sphere const &other) :
+    surface(rResult, other),
+    m_Center(other.m_Center),
+    m_XAxis(other.m_XAxis),
+    m_YAxis(other.m_YAxis),
+    m_ZAxis(other.m_ZAxis),
+    m_dRadius(other.m_dRadius)
+{}
+
+sphere *sphere::Clone(SGM::Result &rResult) const
+{ return new sphere(rResult, *this); }
+
 void sphere::Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du,

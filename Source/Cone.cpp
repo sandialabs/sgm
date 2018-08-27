@@ -6,37 +6,53 @@
 
 namespace SGMInternal {
 
-    cone::cone(SGM::Result &rResult,
-               SGM::Point3D const &Center,
-               SGM::UnitVector3D const &ZAxis,
-               double dRadius,
-               double dHalfAngle,
-               SGM::UnitVector3D const *XAxis) :
-            surface(rResult, SGM::ConeType), m_Origin(Center), m_ZAxis(ZAxis)
+cone::cone(SGM::Result &rResult,
+           SGM::Point3D const &Center,
+           SGM::UnitVector3D const &ZAxis,
+           double dRadius,
+           double dHalfAngle,
+           SGM::UnitVector3D const *XAxis) :
+                surface(rResult, SGM::ConeType),
+                m_Origin(Center),
+                m_ZAxis(ZAxis)
     {
-        m_dSinHalfAngle = sin(dHalfAngle);
-        m_dCosHalfAngle = cos(dHalfAngle);
+    m_dSinHalfAngle = sin(dHalfAngle);
+    m_dCosHalfAngle = cos(dHalfAngle);
 
-        m_Domain.m_UDomain.m_dMin = 0.0;
-        m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
-        m_Domain.m_VDomain.m_dMin = -SGM_MAX;
-        m_Domain.m_VDomain.m_dMax = 1.0 / m_dSinHalfAngle;
+    m_Domain.m_UDomain.m_dMin = 0.0;
+    m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
+    m_Domain.m_VDomain.m_dMin = -SGM_MAX;
+    m_Domain.m_VDomain.m_dMax = 1.0 / m_dSinHalfAngle;
 
-        m_bClosedU = true;
-        m_bClosedV = false;
-        m_bSingularHighV = true;
-        m_dRadius = dRadius;
+    m_bClosedU = true;
+    m_bClosedV = false;
+    m_bSingularHighV = true;
+    m_dRadius = dRadius;
 
-        if (XAxis)
-            {
-            m_XAxis = *XAxis;
-            }
-        else
-            {
-            m_XAxis = m_ZAxis.Orthogonal();
-            }
-        m_YAxis = m_ZAxis * m_XAxis;
+    if (XAxis)
+        {
+        m_XAxis = *XAxis;
+        }
+    else
+        {
+        m_XAxis = m_ZAxis.Orthogonal();
+        }
+    m_YAxis = m_ZAxis * m_XAxis;
     }
+    
+cone::cone(SGM::Result &rResult, const SGMInternal::cone &other) :
+        surface(rResult, other),
+        m_Origin(other.m_Origin),
+        m_XAxis(other.m_XAxis),
+        m_YAxis(other.m_YAxis),
+        m_ZAxis(other.m_ZAxis),
+        m_dSinHalfAngle(other.m_dSinHalfAngle),
+        m_dCosHalfAngle(other.m_dCosHalfAngle),
+        m_dRadius(other.m_dRadius)
+    {}
+
+cone *cone::Clone(SGM::Result &rResult) const
+{ return new cone(rResult, *this); }
 
 void cone::Evaluate(SGM::Point2D const &uv,
                     SGM::Point3D       *Pos,
@@ -189,10 +205,10 @@ bool cone::IsSame(surface const *pOther,double dTolerance) const
     }
 
 void cone::PrincipleCurvature(SGM::Point2D const &uv,
-                                 SGM::UnitVector3D  &Vec1,
-                                 SGM::UnitVector3D  &Vec2,
-                                 double             &k1,
-                                 double             &k2) const
+                              SGM::UnitVector3D  &Vec1,
+                              SGM::UnitVector3D  &Vec2,
+                              double             &k1,
+                              double             &k2) const
     {
     SGM::Vector3D dU,dV;
     SGM::Point3D Pos;
@@ -213,23 +229,25 @@ void cone::PrincipleCurvature(SGM::Point2D const &uv,
 
 void cone::Transform(SGM::Transform3D const &Trans)
     {
-        m_Origin = Trans * m_Origin;
-        m_XAxis = Trans * m_XAxis;
-        m_YAxis = Trans * m_YAxis;
-        m_ZAxis = Trans * m_ZAxis;
-        m_dRadius *= Trans.Scale();
+    m_Origin = Trans * m_Origin;
+    m_XAxis = Trans * m_XAxis;
+    m_YAxis = Trans * m_YAxis;
+    m_ZAxis = Trans * m_ZAxis;
+    m_dRadius *= Trans.Scale();
     }
 
-    curve *cone::UParamLine(SGM::Result &rResult, double dU) const
+curve *cone::UParamLine(SGM::Result &rResult, double dU) const
     {
-        SGM::Point3D Apex=FindApex();
-        SGM::Point3D UZero;
-        SGM::Point2D uv(dU,0.0);
-        Evaluate(uv,&UZero);
-        return new line(rResult,Apex,UZero-Apex);
+    SGM::Point3D Apex=FindApex();
+    SGM::Point3D UZero;
+    SGM::Point2D uv(dU,0.0);
+    Evaluate(uv,&UZero);
+    return new line(rResult,Apex,UZero-Apex);
     }
 
-    curve *cone::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
+curve *cone::VParamLine(SGM::Result &, double) const
+    { 
+    return nullptr; 
+    }
 
 }

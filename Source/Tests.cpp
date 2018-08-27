@@ -1154,7 +1154,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
-        SGMInternal::line *pLine3=new SGMInternal::line(rResult,pLine2);
+        SGMInternal::line *pLine3=pLine2->Clone(rResult);
         if(TestCurve(pLine3,0.5)==false)
             {
             bAnswer=false;
@@ -1190,7 +1190,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
-        SGMInternal::circle *pCircle4=new SGMInternal::circle(rResult,pCircle3);
+        SGMInternal::circle *pCircle4=pCircle3->Clone(rResult);
         if(TestCurve(pCircle4,0.5)==false)
             {
             bAnswer=false;

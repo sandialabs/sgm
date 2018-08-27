@@ -21,26 +21,6 @@ bool entity::Check(SGM::Result              &,
     return false;
 }
 
-entity *entity::Clone(SGM::Result &) const
-    {
-    throw std::logic_error("Derived classes must override Clone()");
-    }
-
-SGM::Interval3D const &entity::GetBox(SGM::Result &) const
-    {
-    throw std::logic_error("Derived class must implement GetBox()");
-    }
-
-void entity::ResetBox(SGM::Result &) const
-    {
-    throw std::logic_error("Derived class must implement ResetBox()");
-    }
-
-void entity::ReplacePointers(std::map<entity *,entity *> const &)
-    {
-    throw std::logic_error("Derived class must implement ReplacePointers()");
-    }
-
 void entity::ChangeColor(SGM::Result &rResult,
                          int nRed,int nGreen,int nBlue)
     {
@@ -91,11 +71,6 @@ bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
         }
     return false;
 }
-
-void entity::TransformBox(SGM::Transform3D const &Trans)
-    {
-    m_Box*=Trans;
-    }
 
 void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {

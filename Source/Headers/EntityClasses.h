@@ -35,6 +35,12 @@ public:
 
     entity(SGM::Result &rResult, SGM::EntityType nType);
 
+    entity(SGM::Result &rResult, entity const &other);
+
+    entity(const entity&) = delete;
+
+    entity& operator=(const entity&) = delete;
+
     virtual ~entity() = default;
 
     virtual bool Check(SGM::Result              &rResult,
@@ -42,25 +48,27 @@ public:
                        std::vector<std::string> &aCheckStrings,
                        bool                      bChildren) const;
 
-    virtual entity *Clone(SGM::Result &rResult) const;
+    virtual entity *Clone(SGM::Result &rResult) const = 0;
 
     virtual void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
 
-    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const;
+    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
 
-    virtual void ResetBox(SGM::Result &rResult) const;
+    virtual void ResetBox(SGM::Result &rResult) const = 0;
+
+    virtual bool IsTopLevel() const = 0;
 
     virtual bool GetColor(int &nRed, int &nGreen, int &nBlue) const; // If entity has no color, return false.
 
-    virtual void ReplacePointers(std::map<entity *, entity *> const &mEntityMap);
+    virtual void ReplacePointers(std::map<entity *, entity *> const &mEntityMap) = 0;
 
     virtual void SeverRelations(SGM::Result &rResult);
+
+    virtual void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) = 0;
 
     virtual void WriteSGM(SGM::Result                  &rResult,
                           FILE                         *pFile,
                           SGM::TranslatorOptions const &Options) const;
-
-    virtual bool IsTopLevel() const {return m_sOwners.empty();}
 
     size_t GetID() const;
 
@@ -78,8 +86,6 @@ public:
 
     void RemoveAttribute(attribute *pEntity);
 
-    void TransformBox(SGM::Transform3D const &Trans);
-
     void ChangeColor(SGM::Result &rResult, int nRed, int nGreen, int nBlue);
 
     void RemoveColor(SGM::Result &rResult);
@@ -89,17 +95,13 @@ protected:
     size_t m_ID;
     SGM::EntityType m_Type;
 
+    mutable SGM::Interval3D   m_Box;
     mutable std::set<entity *, EntityCompare> m_sOwners;
     mutable std::set<attribute *, EntityCompare> m_sAttributes;
-    mutable SGM::Interval3D m_Box;
 
     // Only to be called from the thing constructor.
 
-    entity() : m_ID(0), m_Type(SGM::ThingType) {}
-
-    entity(const entity&) = default;
-
-    entity& operator=(const entity&) = default;
+    entity() : m_ID(0), m_Type(SGM::ThingType), m_Box(), m_sOwners(), m_sAttributes() {}
 
     void RemoveAllOwners();
 };
@@ -110,7 +112,11 @@ class thing : public entity
 
         // Construction methods
         
-        thing():entity(),m_nNextID(1) {}
+        thing();
+
+        thing(const thing&) = delete;
+        
+        thing& operator=(const thing&) = delete;
 
         ~thing() override;
 
@@ -119,13 +125,23 @@ class thing : public entity
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        thing *Clone(SGM::Result &) const override
+        { throw std::logic_error("not allowed"); }
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        bool IsTopLevel() const override;
+
+        void ReplacePointers(std::map<entity *, entity *> const &) override;
+
+        void ResetBox(SGM::Result &) const override;
+
+        void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        void ResetBox(SGM::Result &) const override { m_Box.Reset(); }
 
         void AddToMap(size_t nID,entity *pEntity);
 
@@ -158,6 +174,9 @@ class thing : public entity
         size_t GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const;
 
         size_t GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const;
+
+        template <class ENTITY_TYPE, class ENTITY_SET>
+        size_t GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const;
         
         // Find methods
         
@@ -167,46 +186,86 @@ class thing : public entity
 
         std::map<size_t,entity* > m_mAllEntities;
         size_t                    m_nNextID;
-        
-        mutable SGM::Interval3D   m_Box;
     };
 
 class topology : public entity
     {
     public:
 
-        topology(SGM::Result     &rResult,
-                 SGM::EntityType  Type):entity(rResult,Type) {}
+        topology(SGM::Result &rResult, SGM::EntityType Type);
 
+        topology(SGM::Result &rResult, topology const &other);
+
+        topology() = delete;
+    
+        topology(const topology&) = delete;
+    
+        topology& operator=(const topology&) = delete;
+    
         ~topology() override = default;
-    };
+
+        void ResetBox(SGM::Result &rResult) const override;
+
+        void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) override;
+
+protected:
+
+        mutable SGM::Interval3D m_Box;
+};
 
 class assembly : public topology
     {
     public:
 
-        explicit assembly(SGM::Result &rResult):topology(rResult,SGM::EntityType::BodyType) {}
+        explicit assembly(SGM::Result &rResult);
 
+        assembly(SGM::Result &rResult, assembly const &other);
+
+        assembly() = delete;
+    
+        assembly(const assembly&) = delete;
+    
+        assembly& operator=(const assembly&) = delete;
+    
         ~assembly() override = default;
 
-        bool IsTopLevel() const {return m_sOwners.empty();}
+        assembly *Clone(SGM::Result &rResult) const override;
+
+        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+
+        bool IsTopLevel() const override;
+
+        void ReplacePointers(std::map<entity *, entity *> const &) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
-    };
+};
 
 class reference : public topology
     {
     public:
 
-        explicit reference(SGM::Result &rResult) : topology(rResult, SGM::EntityType::BodyType)
-        {}
+        explicit reference(SGM::Result &rResult);
+
+        reference(SGM::Result &rResult, reference const &other);
+
+        reference() = delete;
+    
+        reference(const reference&) = delete;
+    
+        reference& operator=(const reference&) = delete;
 
         ~reference() override = default;
 
-        bool IsTopLevel() const {return m_sOwners.empty();}
-        
+        reference *Clone(SGM::Result &rResult) const override;
+
+        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+
+        bool IsTopLevel() const override;
+
+        void ReplacePointers(std::map<entity *, entity *> const &) override;
+
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
@@ -216,9 +275,15 @@ class body : public topology
     {
     public:
 
-        // Construction methods
-
         explicit body(SGM::Result &rResult);
+
+        body(SGM::Result &rResult, body const &other);
+
+        body() = delete;
+    
+        body(const body&) = delete;
+    
+        body& operator=(const body&) = delete;
 
         ~body() override = default;
 
@@ -227,17 +292,17 @@ class body : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        body *Clone(SGM::Result &rResult) const override;
+
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        void ResetBox(SGM::Result &rResult) const override;
+        bool IsTopLevel() const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
-
-        body *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -276,37 +341,45 @@ class complex : public topology
         // Construction methods
 
         explicit complex(SGM::Result &rResult);
+        
+        complex(SGM::Result &rResult, complex const &other);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<unsigned int> const &aSegments,
+                std::vector<SGM::Point3D> const &aPoints);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned int> const &aTriangles);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned int> const &aSegments,
+                std::vector<unsigned int> const &aTriangles);
+
+        complex() = delete;
+
+        complex(const complex&) = delete;
+
+        complex& operator=(const complex&) = delete;
 
         ~complex() override = default;
-
-        complex(SGM::Result                     &rResult,
-                std::vector<SGM::Point3D> const &aPoints);
-
-        complex(SGM::Result                     &rResult,
-                std::vector<unsigned int> const &aSegments,
-                std::vector<SGM::Point3D> const &aPoints);
-
-        complex(SGM::Result                     &rResult,
-                std::vector<SGM::Point3D> const &aPoints,
-                std::vector<unsigned int> const &aTriangles);
-
-        complex(SGM::Result                     &rResult,
-                std::vector<SGM::Point3D> const &aPoints,
-                std::vector<unsigned int> const &aSegments,
-                std::vector<unsigned int> const &aTriangles);
-
+    
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        complex *Clone(SGM::Result &rResult) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        void ReplacePointers(std::map<entity *,entity *> const &) override
-        { throw std::logic_error("not implemented"); }
+        bool IsTopLevel() const override;
 
-        complex *Clone(SGM::Result &) const override
-        { throw std::logic_error("not implemented"); }
+        void ReplacePointers(std::map<entity *,entity *> const &) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -383,8 +456,16 @@ class volume : public topology
     {
     public:
 
-        explicit volume(SGM::Result &rResult):topology(rResult,SGM::EntityType::VolumeType), m_pBody(nullptr) {}
+        explicit volume(SGM::Result &rResult);
 
+        volume(SGM::Result &rResult, volume const &other);
+
+        volume() = delete;
+    
+        volume(const volume&) = delete;
+    
+        volume& operator=(const volume&) = delete;
+        
         ~volume() override = default;
 
         bool Check(SGM::Result              &rResult,
@@ -392,19 +473,19 @@ class volume : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        volume *Clone(SGM::Result &) const override;
+
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
-
-        void ResetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
-        void SeverRelations(SGM::Result &rResult) override;
+        void ResetBox(SGM::Result &) const override;
 
-        volume *Clone(SGM::Result &rResult) const override;
+        void SeverRelations(SGM::Result &rResult) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -428,7 +509,7 @@ class volume : public topology
 
         SGM::BoxTree const &GetFaceTree(SGM::Result &rResult) const;
 
-        bool IsTopLevel() const override {return m_pBody==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override;
 
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
@@ -451,6 +532,14 @@ class face : public topology
         // Construction methods
 
         explicit face(SGM::Result &rResult);
+
+        face(SGM::Result &rResult, face const &other);
+
+        face() = delete;
+    
+        face(const face&) = delete;
+    
+        face& operator=(const face&) = delete;
 
         ~face() override = default;
 
@@ -522,7 +611,7 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const override {return m_pVolume==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override;
 
         // Find methods
 
@@ -546,7 +635,7 @@ class face : public topology
         void ClearFacets(SGM::Result &rResult) const;
 
         void TransformFacets(SGM::Transform3D const &Trans);
-                        
+
     private:
 
         std::set<edge *,EntityCompare>      m_sEdges;
@@ -569,6 +658,14 @@ class edge : public topology
     public:
 
         explicit edge(SGM::Result &rResult);
+
+        edge(SGM::Result &rResult, edge const &other);
+    
+        edge() = delete;
+    
+        edge(const edge&) = delete;
+    
+        edge& operator=(const edge&) = delete;
 
         ~edge() override = default;
 
@@ -630,7 +727,7 @@ class edge : public topology
 
         double GetTolerance() const {return m_dTolerance;}
 
-        bool IsTopLevel() const override {return m_sFaces.empty() && m_pVolume==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override;
 
         // Other Methods
 
@@ -653,7 +750,7 @@ class edge : public topology
 
         void TransformFacets(SGM::Transform3D const &Trans);
 
-        // It is assumed that the point is on the curve.  This function checkes
+        // It is assumed that the point is on the curve.  This function checks
         // to see if it is in the domain of this edge.
 
         bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
@@ -676,10 +773,15 @@ class vertex : public topology
     {
     public:
 
-        vertex(SGM::Result &rResult,SGM::Point3D const &Pos):topology(rResult,SGM::EntityType::VertexType),m_Pos(Pos) {}
+        vertex(SGM::Result &rResult,SGM::Point3D const &Pos);
 
-        vertex(SGM::Result  &rResult,
-               vertex const *pVertex);
+        vertex(SGM::Result &rResult, vertex const &other);
+    
+        vertex() = delete;
+    
+        vertex(const vertex&) = delete;
+    
+        vertex& operator=(const vertex&) = delete;
 
         ~vertex() override = default;
 
@@ -688,6 +790,8 @@ class vertex : public topology
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
+        vertex *Clone(SGM::Result &rResult) const override;
+
         void FindAllChildren(std::set<entity *, EntityCompare> &) const override { }
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
@@ -695,8 +799,6 @@ class vertex : public topology
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
-
-        vertex *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -710,7 +812,7 @@ class vertex : public topology
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
-        bool IsTopLevel() const override {return m_sEdges.empty() && m_sOwners.empty();}
+        bool IsTopLevel() const override;
 
         void TransformData(SGM::Transform3D const &Trans);
 
@@ -724,14 +826,17 @@ class attribute : public entity
     {
     public:
 
-        attribute(SGM::Result       &rResult,
-                  std::string Name):
-            entity(rResult,SGM::AttributeType),m_Name(std::move(Name)),m_AttributeType(SGM::AttributeType) {}
+        attribute(SGM::Result &rResult, std::string Name);
 
-        attribute(SGM::Result       &rResult,
-                  SGM::EntityType    Type,
-                  std::string const &Name):
-            entity(rResult,SGM::AttributeType),m_Name(Name),m_AttributeType(Type) {}
+        attribute(SGM::Result &rResult, SGM::EntityType Type, std::string Name);
+
+        attribute(SGM::Result &rResult, attribute const &other);
+    
+        attribute() = delete;
+    
+        attribute(const attribute&) = delete;
+    
+        attribute& operator=(const attribute&) = delete;
 
         ~attribute() override = default;
 
@@ -739,6 +844,18 @@ class attribute : public entity
                    SGM::CheckOptions  const &,
                    std::vector<std::string> &,
                    bool                      ) const override { return true; }
+
+        attribute *Clone(SGM::Result &rResult) const override;
+
+        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        bool IsTopLevel() const override;
+
+        void ReplacePointers(std::map<entity *, entity *> const &) override;
+
+        void ResetBox(SGM::Result &rResult) const override;
+
+        void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -758,16 +875,23 @@ class StringAttribute : public attribute
     {
     public:
 
-        StringAttribute(SGM::Result       &rResult,
-                        std::string const &Name,
-                        std::string Data):
-            attribute(rResult,SGM::EntityType::StringAttributeType,Name),m_Data(std::move(Data)) {}
+        StringAttribute(SGM::Result &rResult, std::string Name, std::string Data);
+
+        StringAttribute(SGM::Result &rResult, StringAttribute const &other);
+    
+        StringAttribute() = delete;
+    
+        StringAttribute(const StringAttribute&) = delete;
+    
+        StringAttribute& operator=(const StringAttribute&) = delete;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
         ~StringAttribute() override = default;
+
+        StringAttribute *Clone(SGM::Result &rResult) const override;
 
         std::string const &GetData() const {return m_Data;}
 
@@ -781,16 +905,23 @@ class IntegerAttribute : public attribute
     {
     public:
 
-        IntegerAttribute(SGM::Result            &rResult,
-                         std::string      const &Name,
-                         std::vector<int> const &aData):
-            attribute(rResult,SGM::EntityType::IntegerAttributeType,Name),m_aData(aData) {}
+        IntegerAttribute(SGM::Result &rResult, std::string Name, std::vector<int> const &aData);
+
+        IntegerAttribute(SGM::Result &rResult, IntegerAttribute const &other);
+    
+        IntegerAttribute() = delete;
+    
+        IntegerAttribute(const IntegerAttribute&) = delete;
+    
+        IntegerAttribute& operator=(const IntegerAttribute&) = delete;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
         ~IntegerAttribute() override = default;
+
+        IntegerAttribute *Clone(SGM::Result &rResult) const override;
 
         std::vector<int> const &GetData() const {return m_aData;}
 
@@ -803,12 +934,19 @@ class DoubleAttribute : public attribute
     {
     public:
 
-        DoubleAttribute(SGM::Result               &rResult,
-                        std::string         const &Name,
-                        std::vector<double> const &aData):
-        attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
+        DoubleAttribute(SGM::Result &rResult, std::string Name, std::vector<double> const &aData);
+
+        DoubleAttribute(SGM::Result &rResult, DoubleAttribute const &other);
+    
+        DoubleAttribute() = delete;
+    
+        DoubleAttribute(const DoubleAttribute&) = delete;
+    
+        DoubleAttribute& operator=(const DoubleAttribute&) = delete;
 
         ~DoubleAttribute() override = default;
+
+        DoubleAttribute *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -825,12 +963,19 @@ class CharAttribute : public attribute
     {
     public:
 
-        CharAttribute(SGM::Result             &rResult,
-                      std::string       const &Name,
-                      std::vector<char> const &aData):
-        attribute(rResult,SGM::EntityType::BodyType,Name),m_aData(aData) {}
+        CharAttribute(SGM::Result &rResult, std::string Name, std::vector<char> const &aData);
+
+        CharAttribute(SGM::Result &rResult, CharAttribute const &other);
+    
+        CharAttribute() = delete;
+    
+        CharAttribute(const CharAttribute&) = delete;
+    
+        CharAttribute& operator=(const CharAttribute&) = delete;
 
         ~CharAttribute() override = default;
+
+        CharAttribute *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,

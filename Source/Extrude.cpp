@@ -14,15 +14,14 @@ namespace SGMInternal
 extrude::extrude(SGM::Result             &rResult,
                  SGM::UnitVector3D const &vAxis,
                  curve                   *pCurve): 
-    surface(rResult, SGM::ExtrudeType)
+    surface(rResult, SGM::ExtrudeType),
+    m_pCurve(nullptr),
+    m_Origin(),
+    m_vAxis(vAxis)
     {
-    m_vAxis  = vAxis;
     m_Domain.m_VDomain=SGM::Interval1D(-SGM_MAX,SGM_MAX);
-
-    if (nullptr != pCurve)
-        {
+    if (pCurve)
         SetCurve(pCurve);
-        }
     }
 
 extrude::~extrude()
@@ -52,6 +51,19 @@ bool extrude::IsSame(surface const *pOther,double dTolerance) const
         }
     return true;
     }
+
+extrude::extrude(SGM::Result &rResult, extrude const &other) :
+        surface(rResult, other),
+        m_pCurve(nullptr),
+        m_Origin(other.m_Origin),
+        m_vAxis(other.m_vAxis)
+    {
+    if (other.m_pCurve)
+        SetCurve(other.m_pCurve->Clone(rResult));
+    }
+
+extrude* extrude::Clone(SGM::Result &rResult) const
+    { return new extrude(rResult, *this); }
 
 void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {

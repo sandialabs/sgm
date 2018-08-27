@@ -67,6 +67,20 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
         }
     }
 
+NURBsurface::NURBsurface(SGM::Result &rResult, NURBsurface const &other) :
+        surface(rResult, other),
+        m_aaControlPoints(other.m_aaControlPoints),
+        m_aUKnots(other.m_aUKnots),
+        m_aVKnots(other.m_aVKnots),
+        m_aSeedPoints(other.m_aSeedPoints),
+        m_aSeedParams(other.m_aSeedParams),
+        m_nUParams(other.m_nUParams),
+        m_nVParams(other.m_nVParams)
+{}
+
+NURBsurface* NURBsurface::Clone(SGM::Result &rResult) const
+{ return new NURBsurface(rResult, *this); }
+
 void NURBsurface::Evaluate(SGM::Point2D const &uv,
                            SGM::Point3D       *Pos,
                            SGM::Vector3D      *Du,
@@ -77,6 +91,13 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
                            SGM::Vector3D      *Dvv) const
     {
     // From "The NURBs Book" Algorithm A3.6.
+
+    double aUMemory[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE*SGM_MAX_NURB_DEGREE_PLUS_ONE];
+    double aVMemory[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE*SGM_MAX_NURB_DEGREE_PLUS_ONE];
+    double *aaUBasisFunctions[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE];
+    double *aaVBasisFunctions[SGM_MAX_NURB_DERIVATIVE_PLUS_ONE];
+    SGM::Point4D temp[SGM_MAX_NURB_DEGREE_PLUS_ONE];
+    SGM::Point4D SKL[3][3];
 
     size_t nUDegree=GetUDegree();
     size_t nUSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,uv.m_u,m_aUKnots);
@@ -93,34 +114,32 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
     if(Dvv) nVDerivatives=2;
 
     size_t Index1,Index2,Index3;
+    size_t nUStart = nUSpanIndex - nUDegree;
+    size_t nVStart = nVSpanIndex - nVDegree;
 
-    double aUMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-    double *aaUBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-    for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+    assert(nUDerivatives <= SGM_MAX_NURB_DERIVATIVE_PLUS_ONE);
+    for(Index1=0;Index1<1+nUDerivatives;++Index1)
         {
-        aaUBasisFunctions[Index1]=aUMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+        aaUBasisFunctions[Index1]=aUMemory+Index1*SGM_MAX_NURB_DEGREE_PLUS_ONE;
         }
     FindBasisFunctions(nUSpanIndex,uv.m_u,nUDegree,nUDerivatives,&m_aUKnots[0],aaUBasisFunctions);
 
-    double aVMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-    double *aaVBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-    for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+    assert(nVDerivatives <= SGM_MAX_NURB_DERIVATIVE_PLUS_ONE);
+    for(Index1=0;Index1<1+nVDerivatives;++Index1)
         {
-        aaVBasisFunctions[Index1]=aVMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+        aaVBasisFunctions[Index1]=aVMemory+Index1*SGM_MAX_NURB_DEGREE_PLUS_ONE;
         }
     FindBasisFunctions(nVSpanIndex,uv.m_v,nVDegree,nVDerivatives,&m_aVKnots[0],aaVBasisFunctions);
-
-    SGM::Point4D temp[SMG_MAX_NURB_DEGREE_PLUS_ONE];
-    SGM::Point4D SKL[3][3];
+    
     for(Index1=0;Index1<=nUDerivatives;++Index1)
         {
         for(Index2=0;Index2<=nVDegree;++Index2)
             {
-            temp[Index2]=SGM::Point4D(0.0,0.0,0.0,0.0);
+            SGM::Point4D & T = temp[Index2];
+            T={0.0,0.0,0.0,0.0};
             for(Index3=0;Index3<=nUDegree;++Index3)
                 {
-                SGM::Point4D const &ControlPos=m_aaControlPoints[nUSpanIndex-nUDegree+Index3]
-                [nVSpanIndex-nVDegree+Index2];
+                SGM::Point4D const &ControlPos=m_aaControlPoints[nUStart+Index3][nVStart+Index2];
                 double dBasis=ControlPos.m_w*aaUBasisFunctions[Index1][Index3];
                 temp[Index2].m_x+=dBasis*ControlPos.m_x;
                 temp[Index2].m_y+=dBasis*ControlPos.m_y;
@@ -131,16 +150,16 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
 
         for(Index2=0;Index2<=nVDerivatives;++Index2)
             {
-            SKL[Index1][Index2].m_x=0.0;
-            SKL[Index1][Index2].m_y=0.0;
-            SKL[Index1][Index2].m_z=0.0;
-            SKL[Index1][Index2].m_w=0.0;
+            SGM::Point4D & S = SKL[Index1][Index2];
+            S={0.0,0.0,0.0,0.0};
             for(Index3=0;Index3<=nVDegree;++Index3)
                 {
-                SKL[Index1][Index2].m_x+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_x;
-                SKL[Index1][Index2].m_y+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_y;
-                SKL[Index1][Index2].m_z+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_z;
-                SKL[Index1][Index2].m_w+=aaVBasisFunctions[Index2][Index3]*temp[Index3].m_w;
+                SGM::Point4D & T = temp[Index3];
+                double dBasis=aaVBasisFunctions[Index2][Index3];
+                S.m_x+=dBasis*T.m_x;
+                S.m_y+=dBasis*T.m_y;
+                S.m_z+=dBasis*T.m_z;
+                S.m_w+=dBasis*T.m_w;
                 }
             }
         }
@@ -417,12 +436,12 @@ curve *NURBsurface::UParamLine(SGM::Result &rResult, double dU) const
         size_t nUDegree=GetUDegree();
         size_t nSpanIndex=FindSpanIndex(m_Domain.m_UDomain,nUDegree,dU,aUKnots);
 
-        double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-        double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+        double aMemory[SGM_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+        double *aaBasisFunctions[SGM_MAX_NURB_DEGREE_PLUS_ONE];
         size_t Index1,Index2;
-        for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+        for(Index1=0;Index1<SGM_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
             {
-            aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+            aaBasisFunctions[Index1]=aMemory+Index1*SGM_MAX_NURB_DEGREE_PLUS_ONE;
             }
         FindBasisFunctions(nSpanIndex,dU,nUDegree,0,&aUKnots[0],aaBasisFunctions);
 
@@ -467,12 +486,12 @@ curve *NURBsurface::VParamLine(SGM::Result &rResult, double dV) const
         size_t nVDegree=GetVDegree();
         size_t nSpanIndex=FindSpanIndex(m_Domain.m_VDomain,nVDegree,dV,aVKnots);
 
-        double aMemory[SMG_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
-        double *aaBasisFunctions[SMG_MAX_NURB_DEGREE_PLUS_ONE];
+        double aMemory[SGM_MAX_NURB_DEGREE_PLUS_ONE_SQUARED];
+        double *aaBasisFunctions[SGM_MAX_NURB_DEGREE_PLUS_ONE];
         size_t Index1,Index2;
-        for(Index1=0;Index1<SMG_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
+        for(Index1=0;Index1<SGM_MAX_NURB_DEGREE_PLUS_ONE;++Index1)
             {
-            aaBasisFunctions[Index1]=aMemory+Index1*SMG_MAX_NURB_DEGREE_PLUS_ONE;
+            aaBasisFunctions[Index1]=aMemory+Index1*SGM_MAX_NURB_DEGREE_PLUS_ONE;
             }
         FindBasisFunctions(nSpanIndex,dV,nVDegree,0,&aVKnots[0],aaBasisFunctions);
 

@@ -1404,7 +1404,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
     while(VertexIter!=sVertices.end())
         {
         SGMInternal::vertex *pVertex=*VertexIter;
-        mVertices[pVertex]=new SGMInternal::vertex(rResult,pVertex);
+        mVertices[pVertex]=pVertex->Clone(rResult);
         ++VertexIter;
         }
     std::set<SGMInternal::edge *,SGMInternal::EntityCompare>::iterator EdgeIter=sEdges.begin();

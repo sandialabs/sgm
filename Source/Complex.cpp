@@ -11,49 +11,6 @@
 namespace SGMInternal
 {
 
-complex::complex(SGM::Result &rResult) :
-        topology(rResult, SGM::EntityType::ComplexType),
-        m_aPoints(),
-        m_aSegments(),
-        m_aTriangles()
-    {}
-
-complex::complex(SGM::Result &rResult,
-                 std::vector<SGM::Point3D> const &aPoints) :
-        topology(rResult, SGM::EntityType::ComplexType),
-        m_aPoints(aPoints),
-        m_aSegments(),
-        m_aTriangles()
-    {}
-
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<unsigned int> const &aSegments,
-                 std::vector<SGM::Point3D> const &aPoints) :
-        topology(rResult, SGM::EntityType::ComplexType),
-        m_aPoints(aPoints),
-        m_aSegments(aSegments),
-        m_aTriangles()
-    {}
-
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<SGM::Point3D> const &aPoints,
-                 std::vector<unsigned int> const &aTriangles) :
-        topology(rResult, SGM::EntityType::ComplexType),
-        m_aPoints(aPoints),
-        m_aSegments(),
-        m_aTriangles(aTriangles)
-    {}
-
-complex::complex(SGM::Result                     &rResult,
-                 std::vector<SGM::Point3D> const &aPoints,
-                 std::vector<unsigned int> const &aSegments,
-                 std::vector<unsigned int> const &aTriangles) :
-        topology(rResult, SGM::EntityType::ComplexType),
-        m_aPoints(aPoints),
-        m_aSegments(aSegments),
-        m_aTriangles(aTriangles)
-    {}
-
 SGM::Interval3D const &complex::GetBox(SGM::Result &) const
     {
     if (m_Box.IsEmpty())

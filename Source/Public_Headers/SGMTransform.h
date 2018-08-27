@@ -57,6 +57,10 @@ namespace SGM {
                     Vector4D const &ZAxis,
                     Vector4D const &Translate);
 
+        // true if transformation does not include any non-uniform scale or rotation or shear or reflection
+
+        bool IsScaleAndTranslate() const;
+
         // Returns a transform, Trans, such that this*Trans = Trans*this = Identity.
 
         void Inverse(Transform3D &Trans) const;

@@ -39,7 +39,7 @@ cylinder::cylinder(SGM::Result             &rResult,
                    SGM::Point3D      const &Top,
                    double                   dRadius,
                    SGM::UnitVector3D const *XAxis) :
-    surface(rResult, SGM::CylinderType), m_Origin(SGM::MidPoint(Bottom,Top))
+    surface(rResult, SGM::CylinderType),m_Origin(SGM::MidPoint(Bottom, Top))
     {
     m_Domain.m_UDomain.m_dMin = 0.0;
     m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
@@ -48,18 +48,30 @@ cylinder::cylinder(SGM::Result             &rResult,
     m_bClosedU = true;
     m_bClosedV = false;
 
-    m_dRadius = dRadius;
     m_ZAxis = Top - Bottom;
-    if(XAxis)
+    if (XAxis)
         {
-        m_XAxis=Snap(*XAxis);
+        m_XAxis = *XAxis;
         }
     else
         {
-        m_XAxis=m_ZAxis.Orthogonal();
+        m_XAxis = m_ZAxis.Orthogonal();
         }
-    m_YAxis=m_ZAxis*m_XAxis;
+    m_YAxis = m_ZAxis * m_XAxis;
+    m_dRadius = dRadius;
     }
+
+cylinder::cylinder(SGM::Result &rResult, cylinder const &other) :
+            surface(rResult, other),
+            m_Origin(other.m_Origin),
+            m_XAxis(other.m_XAxis),
+            m_YAxis(other.m_YAxis),
+            m_ZAxis(other.m_ZAxis),
+            m_dRadius(other.m_dRadius)
+{}
+
+cylinder *cylinder::Clone(SGM::Result &rResult) const
+{ return new cylinder(rResult,*this); }
 
 void cylinder::Evaluate(SGM::Point2D const &uv,
                         SGM::Point3D       *Pos,

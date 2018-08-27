@@ -5,19 +5,6 @@
 namespace SGMInternal
 {
 
-body::body(SGM::Result &rResult):
-    topology(rResult,SGM::EntityType::BodyType) 
-    {
-    }
-
-body *body::Clone(SGM::Result &rResult) const
-    {
-    body *pAnswer=new body(rResult);
-    pAnswer->m_sVolumes=m_sVolumes;
-    pAnswer->m_aPoints=m_aPoints;
-    return pAnswer;
-    }
-
 void body::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     for (auto pVolume : GetVolumes())
@@ -109,12 +96,6 @@ SGM::Interval3D const &body::GetBox(SGM::Result &rResult) const
     return m_Box;
     }
 
-void body::ResetBox(SGM::Result &rResult) const
-    {
-    m_Box.Reset();
-    rResult.GetThing()->ResetBox(rResult);
-    }
-
 void body::SeverRelations(SGM::Result &)
     {
     std::set<volume *,EntityCompare> sVolumes=GetVolumes();
@@ -153,7 +134,7 @@ bool body::IsSheetBody(SGM::Result &rResult) const
             }
         ++iter;
         }
-    if(sFaces.size())
+    if(!sFaces.empty())
         {
         return true;
         }
