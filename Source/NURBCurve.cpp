@@ -103,4 +103,39 @@ int NURBcurve::Continuity() const
         }
     return std::max(0,nDegree-nMaxCount);
     }
+
+bool NURBcurve::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=GetCurveType())
+        {
+        return false;
+        }
+    NURBcurve const *pNUB2=(NURBcurve const *)pOther;
+    if(m_aKnots.size()!=pNUB2->m_aKnots.size())
+        {
+        return false;
+        }
+    if(m_aControlPoints.size()!=pNUB2->m_aControlPoints.size())
+        {
+        return false;
+        }
+    size_t Index1;
+    size_t nKnots=m_aKnots.size();
+    for(Index1=0;Index1<nKnots;++Index1)
+        {
+        if(m_aKnots[Index1]!=pNUB2->m_aKnots[Index1])
+            {
+            return false;
+            }
+        }
+    size_t nSize=m_aControlPoints.size();
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        if(SGM::NearEqual(m_aControlPoints[Index1],pNUB2->m_aControlPoints[Index1],dTolerance)==false)
+            {
+            return false;
+            }
+        }
+    return true;
+    }
 }

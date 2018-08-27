@@ -24,9 +24,9 @@ namespace SGM
                 m_b2D(false),
                 m_bSingleVolume(false),
                 m_bVerbose(false),
-                //m_bRemoveSeams(true),
+                //m_bMerge(true),
                 //m_bHeal(true)
-                m_bRemoveSeams(false),
+                m_bMerge(false),
                 m_bHeal(false),
                 m_bSplitFile(false)
                 {}
@@ -59,7 +59,7 @@ namespace SGM
                                    // Default is false.
                                    // Used in SGM write.
 
-            bool m_bRemoveSeams;   // Merge seams out when reading.
+            bool m_bMerge;         // Merge faces and edges when reading.
                                    // Default is true,
                                    // Used in STEP read.
 

@@ -52,4 +52,34 @@ circle::circle(SGM::Result  &rResult,
     m_bClosed=pCircle->m_bClosed;
     m_Domain=pCircle->m_Domain;
     }
+
+bool circle::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=m_CurveType)
+        {
+        return false;
+        }
+    circle const *pCurve2=(circle const *)pOther;
+    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_dRadius,pCurve2->m_dRadius,dTolerance,false)==false)
+        {
+        return false;
+        }
+    return true;
+    }
 }

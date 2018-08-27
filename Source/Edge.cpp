@@ -257,6 +257,33 @@ void edge::SetCurve(curve *pCurve)
     m_pCurve->AddEdge(this);
     }
 
+void edge::FixDomain(SGM::Result &rResult)
+    {
+    if(m_pStart && m_pStart!=m_pEnd)
+        {
+        double dStart=m_pCurve->Inverse(m_pStart->GetPoint());
+        double dEnd=m_pCurve->Inverse(m_pEnd->GetPoint());
+        m_Domain=SGM::Interval1D(dStart,dEnd);
+        }
+    else
+        {
+        m_Domain=m_pCurve->GetDomain();
+        }
+    if(m_aPoints3D.empty()==false)
+        {
+        m_aPoints3D.clear();
+        m_aParams.clear();
+        m_Box.Reset();
+        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
+        while(iter!=m_sFaces.end())
+            {
+            face *pFace=*iter;
+            pFace->ClearFacets(rResult);
+            ++iter;
+            }
+        }
+    }
+
 void edge::SetDomain(SGM::Result           &rResult,
                      SGM::Interval1D const &Domain)
     {

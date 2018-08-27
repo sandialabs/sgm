@@ -686,8 +686,8 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
 void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
     {
     m_sEdges.insert(pEdge);
-    pEdge->AddFace(this);
     m_mSideType[pEdge]=nEdgeType;
+    pEdge->AddFace(this);
     }
 
 void face::RemoveEdge(SGM::Result &rResult,

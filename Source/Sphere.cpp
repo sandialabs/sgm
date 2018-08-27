@@ -178,13 +178,12 @@ bool sphere::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    sphere const *pSphere1=(sphere const *)this;
     sphere const *pSphere2=(sphere const *)pOther;
-    if(SGM::NearEqual(pSphere1->m_dRadius,pSphere2->m_dRadius,dTolerance,false)==false)
+    if(SGM::NearEqual(m_dRadius,pSphere2->m_dRadius,dTolerance,false)==false)
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(pSphere1->m_Center,pSphere2->m_Center,dTolerance)==false)
+    else if(SGM::NearEqual(m_Center,pSphere2->m_Center,dTolerance)==false)
         {
         bAnswer=false;
         }

@@ -34,10 +34,6 @@ class curve : public entity
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
-        void WriteSGM(SGM::Result                  &rResult,
-                      FILE                         *pFile,
-                      SGM::TranslatorOptions const &Options) const override;
-
         void AddEdge(edge *pEdge);
 
         void RemoveEdge(edge *pEdge);
@@ -52,7 +48,7 @@ class curve : public entity
 
         bool GetClosed() const {return m_bClosed;}
 
-        bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_sEdges.empty() && m_sOwners.empty();}
 
         virtual void Evaluate(double         t,
                       SGM::Point3D  *Pos,
@@ -75,6 +71,8 @@ class curve : public entity
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
         virtual int Continuity() const;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const = 0;
 
     protected:
         
@@ -106,6 +104,8 @@ class line : public curve
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Origin;
@@ -135,6 +135,8 @@ class circle : public curve
         SGM::UnitVector3D  const &GetXAxis()  const {return m_XAxis;}
         SGM::UnitVector3D  const &GetYAxis()  const {return m_YAxis;}
         double GetRadius() const {return m_dRadius;}
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -181,6 +183,8 @@ class NUBcurve: public curve
 
         int Continuity() const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<SGM::Point3D> m_aControlPoints;
@@ -220,6 +224,8 @@ class NURBcurve: public curve
 
         int Continuity() const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<SGM::Point4D> m_aControlPoints;
@@ -240,6 +246,8 @@ class PointCurve: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -262,6 +270,8 @@ class ellipse: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -290,6 +300,8 @@ class hyperbola: public curve
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -315,6 +327,8 @@ class parabola: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -352,6 +366,8 @@ class TorusKnot: public curve
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -386,6 +402,8 @@ class hermite: public curve
         // Concatenate / adds pEndHermite to the end of this.
 
         void Concatenate(hermite const *pEndHermite);
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 

@@ -34,6 +34,8 @@ public:
 
     bool open_file(const QString &filename);
 
+    void sgm(QString const &SaveName);
+
     void step(QString const &SaveName);
 
     void stl(QString const &SaveName);
@@ -130,6 +132,8 @@ public:
     void ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue);
 
     void RemoveColor(SGM::Entity EntityID);
+
+    void CreateComplex(SGM::Entity EntityID);
 
     void Copy(SGM::Entity EntityID);
 

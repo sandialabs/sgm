@@ -20,4 +20,18 @@ PointCurve::PointCurve(SGM::Result           &rResult,
         m_Domain.m_dMax=0.0;
         }
     }
+
+bool PointCurve::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=m_CurveType)
+        {
+        return false;
+        }
+    PointCurve const *pCurve2=(PointCurve const *)pOther;
+    if(SGM::NearEqual(m_Pos,pCurve2->m_Pos,dTolerance)==false)
+        {
+        return false;
+        }
+    return true;
+    }
 }

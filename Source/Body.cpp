@@ -94,6 +94,11 @@ void body::AddPoint(SGM::Point3D const &Pos)
     m_aPoints.push_back(Pos);
     }
 
+void body::SetPoints(std::vector<SGM::Point3D> const &aPoints)
+    {
+    m_aPoints=aPoints;
+    }
+
 SGM::Interval3D const &body::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

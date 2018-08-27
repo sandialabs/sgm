@@ -31,6 +31,28 @@ extrude::~extrude()
         m_pCurve->RemoveOwner(this);
     }
 
+bool extrude::IsSame(surface const *pOther,double dTolerance) const
+    {
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
+        return false;
+        }
+    extrude const *pExtrude2=(extrude const *)pOther;
+    if(SGM::NearEqual(m_Origin,pExtrude2->m_Origin,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_vAxis,pExtrude2->m_vAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(m_pCurve->IsSame(pExtrude2->m_pCurve,dTolerance)==false)
+        {
+        return false;
+        }
+    return true;
+    }
+
 void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     sChildren.insert(m_pCurve);

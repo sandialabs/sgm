@@ -2263,13 +2263,13 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         Heal(rResult,aEntities,Options);
         }
 
-    if(Options.m_bRemoveSeams)
+    if(Options.m_bMerge)
         {
         size_t nEntities=aEntities.size();
         size_t Index1;
         for(Index1=0;Index1<nEntities;++Index1)
             {
-            MergeOutSeams(rResult,aEntities[Index1]);
+            Merge(rResult,aEntities[Index1]);
             }
         }
 

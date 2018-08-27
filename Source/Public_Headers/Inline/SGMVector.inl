@@ -147,6 +147,30 @@ namespace SGM {
 
     ///////////////////////////////////////////////////////////////////////////
     //
+    //  Point4 methods
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    inline double Point4D::Distance(Point4D const &Pos) const
+    {
+        double dX=Pos.m_x-m_x;
+        double dY=Pos.m_y-m_y;
+        double dZ=Pos.m_z-m_z;
+        double dW=Pos.m_z-m_z;
+        return sqrt(dX*dX+dY*dY+dZ*dZ+dW*dW);
+    }
+
+    inline double Point4D::DistanceSquared(Point4D const &Pos) const
+    {
+        double dX=Pos.m_x-m_x;
+        double dY=Pos.m_y-m_y;
+        double dZ=Pos.m_z-m_z;
+        double dW=Pos.m_z-m_z;
+        return dX*dX+dY*dY+dZ*dZ+dW*dW;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
     //  Point3D methods
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -507,6 +531,11 @@ namespace SGM {
     }
 
     inline bool NearEqual(Point3D const &Pos1,Point3D const &Pos2,double dTolerance)
+    {
+        return Pos1.DistanceSquared(Pos2)<dTolerance*dTolerance;
+    }
+
+    inline bool NearEqual(Point4D const &Pos1,Point4D const &Pos2,double dTolerance)
     {
         return Pos1.DistanceSquared(Pos2)<dTolerance*dTolerance;
     }

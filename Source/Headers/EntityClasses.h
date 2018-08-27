@@ -60,6 +60,8 @@ public:
                           FILE                         *pFile,
                           SGM::TranslatorOptions const &Options) const;
 
+    virtual bool IsTopLevel() const {return m_sOwners.empty();}
+
     size_t GetID() const;
 
     SGM::EntityType GetType() const;
@@ -247,13 +249,13 @@ class body : public topology
 
         void AddPoint(SGM::Point3D const &Pos);
 
+        void SetPoints(std::vector<SGM::Point3D> const &aPoints);
+
         // Get methods
         
         std::set<volume *,EntityCompare> const &GetVolumes() const {return m_sVolumes;}
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
-        
-        bool IsTopLevel() const {return m_sOwners.empty();}
 
         bool IsSheetBody(SGM::Result &rResult) const;
 
@@ -318,8 +320,6 @@ class complex : public topology
 
         std::vector<unsigned int> &GetTrianglesNonConst() {return m_aTriangles;}
 
-        bool IsTopLevel() const {return m_sOwners.empty();}
-
         // Other methods
 
         double Area() const;
@@ -329,7 +329,24 @@ class complex : public topology
 
         void Transform(SGM::Transform3D const &Trans);
 
+        bool IsPlanar(SGM::Point3D      &Origin,
+                      SGM::UnitVector3D &Normal,
+                      double             dTolerance) const;
+
         complex *Cover(SGM::Result &rResult) const;
+
+        complex *SplitByPlane(SGM::Result             &rResult,
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Normal,
+                              double                   dTolerance) const;
+
+        // Splits a one dimensional complex up into co-planar parts.
+
+        std::vector<complex *> SplitByPlanes(SGM::Result &rResult,double dTolerance) const;
+
+        // Closes a one dimensional complex off with the bounding rectangle.
+
+        void ClosedWithBoundary();
 
         complex *Merge(SGM::Result &rResult) const;
 
@@ -411,7 +428,7 @@ class volume : public topology
 
         SGM::BoxTree const &GetFaceTree(SGM::Result &rResult) const;
 
-        bool IsTopLevel() const {return m_pBody==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_pBody==nullptr && m_sOwners.empty();}
 
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
@@ -505,7 +522,7 @@ class face : public topology
 
         int GetSides() const {return m_nSides;}
 
-        bool IsTopLevel() const {return m_pVolume==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_pVolume==nullptr && m_sOwners.empty();}
 
         // Find methods
 
@@ -585,6 +602,8 @@ class edge : public topology
         void SetDomain(SGM::Result           &rResult,
                        SGM::Interval1D const &Domain);
 
+        void FixDomain(SGM::Result &rResult);
+
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
         void AddFace(face *pFace) {m_sFaces.insert(pFace);}
@@ -611,7 +630,7 @@ class edge : public topology
 
         double GetTolerance() const {return m_dTolerance;}
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_pVolume==nullptr && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_sFaces.empty() && m_pVolume==nullptr && m_sOwners.empty();}
 
         // Other Methods
 
@@ -691,7 +710,7 @@ class vertex : public topology
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
-        bool IsTopLevel() const {return m_sEdges.empty() && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_sEdges.empty() && m_sOwners.empty();}
 
         void TransformData(SGM::Transform3D const &Trans);
 
@@ -728,8 +747,6 @@ class attribute : public entity
         std::string const &GetName() const {return m_Name;}
 
         SGM::EntityType GetAttributeType() const {return m_AttributeType;}
-
-        bool IsTopLevel() const {return m_sOwners.empty();}
 
     private:
 

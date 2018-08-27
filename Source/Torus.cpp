@@ -275,21 +275,20 @@ bool torus::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    torus const *pTorus1=this;
-    torus const *pTorus2=dynamic_cast<torus const*>(pOther);
-    if(SGM::NearEqual(pTorus1->m_dMajorRadius,pTorus2->m_dMajorRadius,dTolerance,false)==false)
+    torus const *pTorus2=(torus const *)pOther;
+    if(SGM::NearEqual(m_dMajorRadius,pTorus2->m_dMajorRadius,dTolerance,false)==false)
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(pTorus1->m_dMinorRadius,pTorus2->m_dMinorRadius,dTolerance,false)==false)
+    else if(SGM::NearEqual(m_dMinorRadius,pTorus2->m_dMinorRadius,dTolerance,false)==false)
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(fabs(pTorus1->m_ZAxis%pTorus2->m_ZAxis),1.0,dTolerance,false)==false)
+    else if(SGM::NearEqual(fabs(m_ZAxis%pTorus2->m_ZAxis),1.0,dTolerance,false)==false)
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(pTorus1->m_Center,pTorus2->m_Center,dTolerance)==false)
+    else if(SGM::NearEqual(m_Center,pTorus2->m_Center,dTolerance)==false)
         {
         bAnswer=false;
         }

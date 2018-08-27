@@ -136,6 +136,12 @@ void ModelData::step(QString const &SaveName)
     SGM::SaveSTEP(dPtr->mResult, SaveName.toUtf8().data(), SGM::Thing(), Options);
 }
 
+void ModelData::sgm(QString const &SaveName)
+{
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(dPtr->mResult, SaveName.toUtf8().data(), SGM::Thing(), Options);
+}
+
 void ModelData::stl(QString const &SaveName)
 {
     SGM::TranslatorOptions Options;
@@ -328,6 +334,11 @@ void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlu
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
+}
+
+void ModelData::CreateComplex(SGM::Entity EntityID)
+{
+    SGM::CreateComplex(dPtr->mResult, EntityID);
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
@@ -764,7 +775,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
 
             auto *data_item1 = new QTreeWidgetItem(surface_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
-            data_item1->setText(0, "Origin");
+            data_item1->setText(0, "Center");
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
@@ -818,7 +829,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
 
             auto *data_item1 = new QTreeWidgetItem(surface_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
-            data_item1->setText(0, "Origin");
+            data_item1->setText(0, "Center");
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);

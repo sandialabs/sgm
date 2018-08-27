@@ -123,6 +123,13 @@ size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
     return 0;
     }
 
+SGM::Complex SGM::CreateComplex(SGM::Result       &rResult,
+                                SGM::Entity const &EntityID)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    return SGM::Complex(SGMInternal::CreateComplex(rResult,pEntity)->GetID());
+    }
+
 SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
                                   SGM::Point2D const &Pos0,
                                   SGM::Point2D const &Pos1,
@@ -1555,6 +1562,10 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
     else if(Extension=="stl")
         {
         SGMInternal::ReadSTLFile(rResult,FileName,pThing,aEnts,aLog,Options);
+        }
+    else if(Extension=="sgm")
+        {
+        SGMInternal::ReadSGMFile(rResult,FileName,aEnts,aLog,Options);
         }
     else
         {

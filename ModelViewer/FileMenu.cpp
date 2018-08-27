@@ -13,8 +13,10 @@ FileMenu::FileMenu(QWidget *parent) :
     restore_recent_files();
 
     addSeparator();
+    QAction *sgm_action = addAction("&Save SGM", this, SIGNAL(sgm()));
+    sgm_action->setShortcut(tr("Ctrl+S"));
     QAction *step_action = addAction("&Save STEP", this, SIGNAL(step()));
-    step_action->setShortcut(tr("Ctrl+S"));
+    step_action->setShortcut(tr("Ctrl+P"));
     QAction *stl_action = addAction("Save S&TL", this, SIGNAL(stl()));
     stl_action->setShortcut(tr("Ctrl+T"));
 

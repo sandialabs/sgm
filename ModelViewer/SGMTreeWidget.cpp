@@ -75,18 +75,24 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     *option_rebuild=nullptr,
                     *option_boundary=nullptr,
                     *option_find_components=nullptr,
-                    *option_merge=nullptr;
+                    *option_merge=nullptr,
+                    *option_create_complex=nullptr;
 
             option_color = menu.addAction(tr("Set Color"));
             option_remove_color = menu.addAction(tr("Remove Color"));
             option_copy = menu.addAction(tr("Copy"));
             option_delete = menu.addAction(tr("Delete"));
+
             SGM::Result rResult=mModel->GetResult();
             if(AllFaces(rResult,aEnts))
                 {
                 option_unhook = menu.addAction(tr("Unhook"));
                 }
-            if(AllComplexes(rResult,aEnts))
+            if(aEnts.size()==1 && SGM::GetType(rResult,aEnts[0])==SGM::BodyType)
+                {
+                option_create_complex = menu.addAction(tr("Create Complex"));
+                }
+            else if(AllComplexes(rResult,aEnts))
                 {
                 option_cover = menu.addAction(tr("Cover"));
                 option_merge = menu.addAction(tr("Merge"));
@@ -107,6 +113,12 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                         {
                         mModel->ChangeColor(aEnts[Index1],color.red(),color.green(),color.blue());
                         }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_create_complex)
+                    {
+                    mModel->CreateComplex(aEnts[0]);
                     mModel->rebuild_tree();
                     mModel->rebuild_graphics();
                     }

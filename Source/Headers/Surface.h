@@ -27,10 +27,6 @@ class surface : public entity
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
-        void WriteSGM(SGM::Result                  &rResult,
-                      FILE                         *pFile,
-                      SGM::TranslatorOptions const &Options) const override;
-
         surface *Clone(SGM::Result &rResult) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
@@ -54,7 +50,7 @@ class surface : public entity
                                      SGM::Point3D       *ClosePos=nullptr,
                                      SGM::Point2D const *pGuess=nullptr) const;
 
-        virtual bool IsSame(surface const *pOther,double dTolerance) const;
+        virtual bool IsSame(surface const *pOther,double dTolerance) const = 0;
 
         // Returns the principle curvature vectors and values at the given uv point.
 
@@ -110,7 +106,7 @@ class surface : public entity
 
         bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
-        bool IsTopLevel() const {return m_sFaces.empty() && m_sOwners.empty();}
+        bool IsTopLevel() const override {return m_sFaces.empty() && m_sOwners.empty();}
 
         SGM::Interval2D const &GetDomain() const {return m_Domain;}
 
@@ -192,6 +188,8 @@ class plane : public surface
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Origin;
@@ -203,6 +201,12 @@ class plane : public surface
 class cylinder : public surface
     {
     public:
+
+        cylinder(SGM::Result             &rResult,
+                 SGM::Point3D      const &Origin,
+                 SGM::UnitVector3D const &Axis,
+                 double                   dRadius,
+                 SGM::UnitVector3D const *XAxis=nullptr);
 
         cylinder(SGM::Result             &rResult,
                  SGM::Point3D      const &Bottom,
@@ -481,6 +485,8 @@ class NUBsurface: public surface
 
         int VContinuity() const override;
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
@@ -559,6 +565,8 @@ class NURBsurface: public surface
 
         int VContinuity() const override;
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
@@ -609,6 +617,8 @@ class revolve : public surface
 
         void SetCurve(curve *pCurve);
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         curve             *m_pCurve;
@@ -654,6 +664,8 @@ class extrude : public surface
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         void SetCurve(curve *pCurve);
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
 
     public:
 

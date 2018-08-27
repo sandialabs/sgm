@@ -766,7 +766,7 @@ void SaveSTEP(SGM::Result                  &rResult,
 
     // Write out the header
 
-    std::string sTime=GetDateAndTime();
+    std::string sTime=GetDateAndTime(false);
     std::string sShortName=GetFileName(FileName);
 
     fprintf(pFile,"ISO-10303-21;\n");

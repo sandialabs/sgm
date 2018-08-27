@@ -45,7 +45,7 @@ void FindFileExtension(std::string const &FileName,
 
 // Get current date/time, format is YYYY-MM-DDTHH:mm:ss
 
-std::string GetDateAndTime() 
+std::string GetDateAndTime(bool bGMT) 
     {
     time_t seconds=time(nullptr);
     struct tm TimeStruct;
@@ -64,8 +64,15 @@ std::string GetDateAndTime()
     int nMinute=TimeStruct.tm_min;
     int nSecond=TimeStruct.tm_sec;
 
-    char Buf[25];
-    snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
+    char Buf[30];
+    if(bGMT)
+        {
+        snprintf(Buf,sizeof(Buf),"%4d-%02d-%02d GMT %02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
+        }
+    else
+        {
+        snprintf(Buf,sizeof(Buf),"%4d-%02d-%02dT%02d:%02d:%02d",nYear,nMonth,nDay,nHour,nMinute,nSecond);
+        }
     std::string sDateAndTime(Buf);
     return sDateAndTime;
     }

@@ -235,6 +235,11 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
+    double dAvergeEdgeLength=FindAverageEdgeLength();
+    std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
+    aParts;
+    return aParts[0];
+#if 0
     complex *pMerge=Merge(rResult);
     complex *pBoundary=pMerge->FindBoundary(rResult);
     rResult.GetThing()->DeleteEntity(pMerge);
@@ -263,6 +268,7 @@ complex *complex::Cover(SGM::Result &rResult) const
         rResult.GetThing()->DeleteEntity(aAllParts[Index1]);
         }
     return pAnswer;
+#endif
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const
@@ -554,4 +560,82 @@ double complex::Area() const
         }
     return dArea*0.5;
     }
-}
+
+complex * complex::SplitByPlane(SGM::Result             &rResult,
+                                SGM::Point3D      const &Origin,
+                                SGM::UnitVector3D const &Normal,
+                                double                   dTolerance) const
+    {
+    std::vector<unsigned int> aSegments;
+    size_t nSegments=m_aSegments.size();
+    size_t Index1;
+    for(Index1=0;Index1<nSegments;Index1+=2)
+        {
+        unsigned int a=m_aSegments[Index1];
+        unsigned int b=m_aSegments[Index1+1];
+        SGM::Point3D const &A=m_aPoints[a];
+        SGM::Point3D const &B=m_aPoints[b];
+        double dDistA=(A-Origin)%Normal;
+        double dDistB=(B-Origin)%Normal;
+        if(fabs(dDistA)<dTolerance && fabs(dDistB)<dTolerance)
+            {
+            aSegments.push_back(a);
+            aSegments.push_back(b);
+            }
+        }
+    complex *pAnswer=new complex(rResult,aSegments,m_aPoints);
+    pAnswer->ReduceToUsedPoints();
+    return pAnswer;
+    }
+
+bool complex::IsPlanar(SGM::Point3D      &Origin,
+                       SGM::UnitVector3D &Normal,
+                       double             dTolerance) const
+    {
+    SGM::UnitVector3D XVec,YVec;
+    SGM::FindLeastSquarePlane(m_aPoints,Origin,XVec,YVec,Normal);
+    for(SGM::Point3D Pos : m_aPoints)
+        {
+        if(dTolerance<fabs((Pos-Origin)%Normal))
+            {
+            return false;
+            }
+        }
+    return true;
+    }
+
+std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dTolerance) const
+    {
+    // Look for planes.
+    
+    std::vector<complex *> aComponents=FindComponents(rResult);
+    std::set<SortablePlane> sPlanes;
+    for(auto pComp : aComponents)
+        {
+        SortablePlane SPlane(pComp->m_aPoints);
+        if(SPlane.Tolerance() && SPlane.Tolerance()<dTolerance)
+            {
+            sPlanes.insert(SPlane);
+            }
+        rResult.GetThing()->DeleteEntity(pComp);
+        }
+
+    // Find the planar parts.
+
+    std::vector<complex *> aAnswer;
+    for(auto SPlane : sPlanes)
+        {
+        SGM::Point3D Origin=SPlane.Origin();
+        SGM::UnitVector3D Normal=SPlane.Normal();
+        complex *pComplex=SplitByPlane(rResult,Origin,Normal,dTolerance);
+        aAnswer.push_back(pComplex);
+        }
+    return aAnswer;
+    }
+
+void complex::ClosedWithBoundary()
+    {
+    
+    }
+
+} // End of SGMInternal namespace

@@ -78,5 +78,8 @@ complex *CreateComplex(SGM::Result                     &rResult,
                        std::vector<SGM::Point3D> const &aPoints,
                        std::vector<unsigned int> const &aSegments,
                        std::vector<unsigned int> const &aTriangles);
+
+complex *CreateComplex(SGM::Result  &rResult,
+                       entity const *pEntity);
     }
 #endif // PRIMITIVE_H

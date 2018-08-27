@@ -37,6 +37,9 @@ namespace SGM
                                             SGM::Point2D const &Pos1,
                                             bool                bFilled);
 
+    SGM_EXPORT SGM::Complex CreateComplex(SGM::Result       &rResult,
+                                          SGM::Entity const &EntityID);
+
     // Find functions
 
     SGM_EXPORT size_t FindComponents(SGM::Result               &rResult,
@@ -74,6 +77,8 @@ namespace SGM
                                        SGM::Complex        const &ComplexID,
                                        SGM::Complex        const &SliceID,
                                        std::vector<SGM::Complex> &aComponents);
+
+    // Other complex functions.
 
     SGM_EXPORT SGM::Complex CoverComplex(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);

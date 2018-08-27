@@ -19,6 +19,10 @@ SortablePlane::SortablePlane(std::vector<SGM::Point3D> const &aPoints)
         {
         SGM::Point3D XYZ=Zero-ZVec*((Zero-Origin)%ZVec);
         double dDist=Zero.Distance(XYZ);
+        if((Origin-Zero)%ZVec<0)
+            {
+            ZVec.Negate();
+            }
         aData[0]=ZVec.m_x;
         aData[1]=ZVec.m_y;
         aData[2]=ZVec.m_z;

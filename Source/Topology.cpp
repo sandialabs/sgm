@@ -1173,8 +1173,8 @@ void MergeFaces(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pFace2);
     }
 
-void MergeOutSeams(SGM::Result &rResult,
-                   entity      *pEntity)
+void Merge(SGM::Result &rResult,
+           entity      *pEntity)
     {
     // Find the mergable edges.
 
@@ -1202,7 +1202,7 @@ void MergeOutSeams(SGM::Result &rResult,
 
     // Merge out the edges.
 
-    std::set<vertex *> sVertices;
+    std::set<vertex *,EntityCompare> sVertices;
     EdgeIter=sMergable.begin();
     while(EdgeIter!=sMergable.end())
         {
@@ -1238,6 +1238,69 @@ void MergeOutSeams(SGM::Result &rResult,
             {
             rResult.GetThing()->DeleteEntity(pVertex);
             }
+        }
+
+    // Check for vertices with less than three edges that can be merged out.
+    
+    sVertices.clear();
+    FindVertices(rResult,pEntity,sVertices,false);
+    std::set<edge *,EntityCompare> sFixEdges;
+    for(auto pVertex : sVertices)
+        {
+        std::set<edge *,EntityCompare> const &sVertexEdges=pVertex->GetEdges();
+        if(sVertexEdges.size()==1)
+            {
+            edge *pEdge0=*(sVertexEdges.begin());
+            pEdge0->SetStart(nullptr);
+            pEdge0->SetEnd(nullptr);
+            rResult.GetThing()->DeleteEntity(pVertex);
+            sFixEdges.insert(pEdge0);
+            }
+        else if(sVertexEdges.size()==2)
+            {
+            edge *pEdge0=*(sVertexEdges.begin());
+            edge *pEdge1=*(sVertexEdges.begin()++);
+            if(pEdge0->GetCurve()->IsSame(pEdge1->GetCurve(),SGM_MIN_TOL))
+                {
+                if(pEdge0->GetStart()==pVertex)
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        pEdge0->SetStart(pEdge1->GetEnd());
+                        }
+                    else
+                        {
+                        pEdge0->SetStart(pEdge1->GetStart());
+                        }
+                    }
+                else
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        pEdge0->SetEnd(pEdge1->GetEnd());
+                        }
+                    else
+                        {
+                        pEdge0->SetEnd(pEdge1->GetStart());
+                        }
+                    }
+                curve *pCurve=pEdge1->GetCurve();
+                pEdge1->SeverRelations(rResult);
+                if(pCurve->IsTopLevel())
+                    {
+                    rResult.GetThing()->DeleteEntity(pCurve);
+                    }
+                rResult.GetThing()->DeleteEntity(pEdge1);
+                pVertex->SeverRelations(rResult);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                sFixEdges.insert(pEdge0);
+                sFixEdges.erase(pEdge1);
+                }
+            }
+        }
+    for(auto pEdge : sFixEdges)
+        {
+        pEdge->FixDomain(rResult);
         }
     }
 
