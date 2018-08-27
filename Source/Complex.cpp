@@ -195,7 +195,6 @@ complex *complex::Cover(SGM::Result &rResult) const
     {
     double dAvergeEdgeLength=FindAverageEdgeLength();
     std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
-    aParts;
     return aParts[0];
 #if 0
     complex *pMerge=Merge(rResult);
