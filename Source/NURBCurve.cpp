@@ -79,9 +79,9 @@ void NURBcurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
     FindBasisFunctions(nSpanIndex,t,nDegree,nDerivatives,&m_aKnots[0],aaBasisFunctions);
 
     SGM::Point4D PosFour;
-    SGM::Vector4D D1Four, D2Four;
+    SGM::Vector4D D1Four(0,0,0,0), D2Four;
     SGM::Vector3D vxyz,dvxyz;
-    double rw;
+    double rw=0;
 
     if (Pos || D1 || D2)
         {
