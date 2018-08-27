@@ -170,7 +170,9 @@ class line : public curve
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
+
+        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const override;
 
     public:
 
@@ -214,7 +216,9 @@ class circle : public curve
         SGM::UnitVector3D  const &GetYAxis()  const {return m_YAxis;}
         double GetRadius() const {return m_dRadius;}
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
+
+        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const override;
 
     public:
 

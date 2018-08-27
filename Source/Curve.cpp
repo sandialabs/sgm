@@ -238,5 +238,17 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
     return nSpanIndex;
     }
 
-}
+double DerivativeMagnitude(double t,void const *pData)
+    {
+    curve const *pCurve=(curve const*)pData;
+    SGM::Vector3D Vec;
+    pCurve->Evaluate(t,nullptr,&Vec);
+    return Vec.Magnitude();
+    }
 
+double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
+    {
+    return SGM::Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
+    }
+
+}

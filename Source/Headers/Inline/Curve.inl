@@ -25,9 +25,6 @@ namespace SGMInternal {
     inline int curve::Continuity() const
     { return std::numeric_limits<int>::max(); /* derived class may override */ }
 
-    inline double curve::FindLength(SGM::Interval1D const &, double) const
-    { throw std::logic_error("curve subclass did not override FindLength()."); }
-
     inline void curve::Negate()
     { throw std::logic_error("curve subclass did not override Negate()."); }
 
