@@ -418,8 +418,9 @@ class complex : public topology
         std::vector<complex *> SplitByPlanes(SGM::Result &rResult,double dTolerance) const;
 
         // Closes a one dimensional complex off with the bounding rectangle.
+        // returns false if this complex is not planar and coordinate aligned.
 
-        void ClosedWithBoundary();
+        bool CloseWithBoundary(SGM::Result &rResult);
 
         complex *Merge(SGM::Result &rResult) const;
 

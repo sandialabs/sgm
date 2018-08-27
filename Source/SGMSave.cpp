@@ -502,7 +502,7 @@ void cone::WriteSGM(SGM::Result                  &rResult,
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
     WritePoint(pFile," XAxis ",SGM::Point3D(m_XAxis));
-    fprintf(pFile," Radius %#.15G HalfAngle %H.15G;\n",m_dRadius,FindHalfAngle());
+    fprintf(pFile," Radius %#.15G HalfAngle %#.15G;\n",m_dRadius,FindHalfAngle());
     }
 
 void sphere::WriteSGM(SGM::Result                  &rResult,
@@ -655,7 +655,7 @@ void SaveSGM(SGM::Result                  &rResult,
         pEntity->WriteSGM(rResult,pFile,Options);
         }
 
-    fprintf(pFile,"End of Data;\n",GetDateAndTime(true).c_str());
+    fprintf(pFile,"End of Data;\n");
     fclose(pFile);
     }
 

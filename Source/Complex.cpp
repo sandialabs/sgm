@@ -7,6 +7,7 @@
 #include "EntityClasses.h"
 #include "Graph.h"
 #include "Mathematics.h"
+#include "Primitive.h"
 
 namespace SGMInternal
 {
@@ -590,9 +591,61 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
     return aAnswer;
     }
 
-void complex::ClosedWithBoundary()
+bool complex::CloseWithBoundary(SGM::Result &rResult)
     {
-    
+    SGM::Interval3D box=GetBox(rResult);
+    if(box.m_XDomain.Length()<SGM_MIN_TOL)
+        {
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMax));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMax),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin));
+        return true;
+        }
+    else if(box.m_YDomain.Length()<SGM_MIN_TOL)
+        {
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMax),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin));
+        return true;
+        }
+    else if(box.m_ZDomain.Length()<SGM_MIN_TOL)
+        {
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMin,box.m_ZDomain.m_dMin));
+        CreateEdge(rResult,
+            SGM::Point3D(box.m_XDomain.m_dMin,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin),
+            SGM::Point3D(box.m_XDomain.m_dMax,box.m_YDomain.m_dMax,box.m_ZDomain.m_dMin));
+        return true;
+        }
+    else
+        {
+        return false;
+        }
     }
 
 } // End of SGMInternal namespace
