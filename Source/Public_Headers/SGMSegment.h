@@ -81,6 +81,9 @@ namespace SGM {
                        double          *dS = nullptr,
                        double          *dT = nullptr) const;
 
+        bool PointOnSegment(Point3D const &Pos,
+                            double         dTolerance) const;
+
         Point3D m_Start;
         Point3D m_End;
     };

@@ -200,6 +200,12 @@ namespace SGM {
         return bAnswer;
     }
 
+    inline bool Segment3D::PointOnSegment(Point3D const &Pos,
+                                          double         dTolerance) const
+        {
+        SGM::UnitVector3D Axis=m_End-m_Start;
+        return Pos.DistanceSquared(m_Start+Axis*((Pos-m_Start)%Axis))<dTolerance*dTolerance;
+        }
 
 } // namespace SGM
 

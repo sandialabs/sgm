@@ -2037,6 +2037,10 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nEdgeID=aEdges[Index1];
         edge *pEdge=(edge *)mEntityMap[nEdgeID];
+        if(pEdge->GetVolume()==nullptr && pEdge->GetFaces().empty())
+            {
+            aEntities.push_back(pEdge);
+            }
 
         // Start vertex ID, End vertex ID, Curve ID, bFlag
 

@@ -419,8 +419,11 @@ class complex : public topology
 
         // Closes a one dimensional complex off with the bounding rectangle.
         // returns false if this complex is not planar and coordinate aligned.
+        // It is assumed that the complex to be closed off with is oriented 
+        // so that the face is to the left.  
 
-        bool CloseWithBoundary(SGM::Result &rResult);
+        bool CloseWithBoundary(SGM::Result             &rResult,
+                               SGM::UnitVector3D const &UpVec);
 
         complex *Merge(SGM::Result &rResult) const;
 
@@ -442,9 +445,39 @@ class complex : public topology
 
         bool FindPolygon(std::vector<unsigned int> &aPolygon) const;
 
+        // Returns true if this complex is linear, and the indexes of the
+        // to end points.  If only one end segment is oriented going in and
+        // one oriented going out then nStart and nEnd are at the ends with
+        // orientation going in the directions of the segments.
+
+        bool IsLinear(unsigned int &nStart,
+                      unsigned int &nEnd) const;
+
         double FindLength() const;
 
         void ReduceToUsedPoints();
+
+        // Imprints aPoints onto the segments of this complex.  aWhere
+        // returns the index of each point in aPoints.  A point is added
+        // only if it is within dTolerance of this complex and a segment
+        // is split only if the split point is not within dTolerance of
+        // an existing point.  If a point is not in this complex and not
+        // within dTolerance of this complex, then 
+        // std::numeric_limits<unsigned int>::max() is returned in aWhere.
+
+        void ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
+                           std::vector<unsigned int>       &aWhere,
+                           double                           dTolerance);
+
+        // Splits the segments of this complex at the given points.
+
+        std::vector<complex *> SplitAtPoints(SGM::Result                     &rResult,
+                                             std::vector<SGM::Point3D> const &aPoints) const;
+
+        // Returns an oriented rectangle that goes counter clockwise with
+        // respect the given UpDirection.
+
+        complex *CreateOrientedBoundingBox(SGM::UnitVector3D const &UpDirection) const;
 
     private:
 

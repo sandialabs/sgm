@@ -296,6 +296,11 @@ namespace SGM {
 
         Interval3D operator*=(Transform3D const &Trans);
 
+        // Returns true if Pos is on the boundary of this interval within dTol.
+        // If the box is 2D then the 1D boundary is used.
+
+        bool OnBoundary(SGM::Point3D Pos, double dTol) const;
+
     public:
 
         Interval1D m_XDomain;

@@ -3364,6 +3364,33 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==52)
+        {
+        // Test imprinting of points on a complex
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(0,0,0));
+        aPoints.push_back(SGM::Point3D(10,0,0));
+        aPoints.push_back(SGM::Point3D(10,10,0));
+        std::vector<unsigned int> aSegments;
+        aSegments.push_back(0);
+        aSegments.push_back(1);
+        aSegments.push_back(1);
+        aSegments.push_back(2);
+
+        std::vector<SGM::Point3D> aNewPoints;
+        aNewPoints.push_back(SGM::Point3D(2,0,0));
+        aNewPoints.push_back(SGM::Point3D(7,0,0));
+        aNewPoints.push_back(SGM::Point3D(10,5,0));
+
+        SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
+        pComplex->SplitAtPoints(rResult,aNewPoints);
+
+        return bAnswer;
+        }
+
     return false;
     }
 

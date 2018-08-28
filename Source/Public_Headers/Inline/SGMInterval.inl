@@ -670,6 +670,23 @@ namespace SGM {
         return *this;
     }
 
+    inline bool Interval3D::OnBoundary(SGM::Point3D Pos, double dTol) const
+        {
+        if(SGM_ZERO<m_XDomain.Length() && m_XDomain.OnBoundary(Pos.m_x,dTol))
+            {
+            return true;
+            }
+        if(SGM_ZERO<m_YDomain.Length() && m_YDomain.OnBoundary(Pos.m_y,dTol))
+            {
+            return true;
+            }
+        if(SGM_ZERO<m_ZDomain.Length() && m_ZDomain.OnBoundary(Pos.m_z,dTol))
+            {
+            return true;
+            }
+        return false;
+        }
+
     inline bool Interval3D::operator&&(Interval3D const &domain) const
     {
         if (m_XDomain.m_dMax < m_XDomain.m_dMin || domain.m_XDomain.m_dMax < domain.m_XDomain.m_dMin)
