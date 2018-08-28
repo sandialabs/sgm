@@ -171,7 +171,7 @@ bool circle::IsSame(curve const *pOther,double dTolerance) const
     return true;
     }
 
-double circle::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
+double circle::FindLength(SGM::Interval1D const &Domain,double ) const
     {
     return Domain.Length()*m_dRadius;
     }
