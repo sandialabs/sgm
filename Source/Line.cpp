@@ -99,8 +99,8 @@ void line::Transform(SGM::Transform3D const &Trans)
     }
 
 double line::FindLength(SGM::Interval1D const &Domain,double ) const
-{
+    {
     return Domain.Length();
-}
+    }
 
 }

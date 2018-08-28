@@ -176,6 +176,4 @@ double circle::FindLength(SGM::Interval1D const &Domain,double ) const
     return Domain.Length()*m_dRadius;
     }
 
-
-
 }

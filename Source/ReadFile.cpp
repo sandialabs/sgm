@@ -1380,7 +1380,7 @@ void CreateEntities(SGM::Result                   &rResult,
                     std::map<size_t,entity *>     &mEntityMap,
                     std::vector<entity *>         &aEntities)
     {
-    std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
+    std::vector<size_t> aBodies,aVolumes,aFaces,aEdges,aVertices;
     std::vector<body *> aSheetBodies;
     std::map<size_t,STEPLineData>::iterator DataIter=mSTEPData.begin();
     while(DataIter!=mSTEPData.end())
@@ -1775,6 +1775,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 STEPLineData SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
                 SGM::Point3D Pos(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 mEntityMap[nID]=new vertex(rResult,Pos);
+                aVertices.push_back(nID);
                 break;
                 }
             default:break;
@@ -2116,6 +2117,18 @@ void CreateEntities(SGM::Result                   &rResult,
             face *pFace=*iter;
             pFace->SetSides(2);
             ++iter;
+            }
+        }
+
+    // Add top level vertices to the aEntities.
+
+    size_t nVertices=aVertices.size();
+    for(Index1=0;Index1<nVertices;++Index1)
+        {
+        vertex *pVertex=(vertex *)mEntityMap[aVertices[Index1]];
+        if(pVertex->IsTopLevel())
+            {
+            aEntities.push_back(pVertex);
             }
         }
     }
