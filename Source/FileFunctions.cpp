@@ -1,5 +1,10 @@
+#ifdef _MSC_VER
+#pragma warning(disable:4244)
+#endif
+
 #include "FileFunctions.h"
 #include "STEP.h"
+
 #include <string>
 #include <algorithm>
 #include <iomanip>

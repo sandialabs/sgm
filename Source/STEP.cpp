@@ -31,9 +31,9 @@ void WriteVertices(FILE                     *pFile,
         vertex const *pVertex=*iter;
         SGM::Point3D const &Pos=pVertex->GetPoint();
         size_t nPos=nLine;
-        fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+        fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
         mVertexMap[pVertex->GetID()]=nLine;
-        fprintf(pFile,"#%ld=VERTEX_POINT('',#%ld);\n",nLine++,nPos);
+        fprintf(pFile,"#%zd=VERTEX_POINT('',#%zd);\n",nLine++,nPos);
         ++iter;
         }
     }
@@ -52,13 +52,13 @@ void WriteLine(FILE                    *pFile,
     SGM::UnitVector3D const &Axis=pLine->GetAxis();
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nDirection=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Axis.m_x,Axis.m_y,Axis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Axis.m_x,Axis.m_y,Axis.m_z);
     size_t nVector=nLine;
-    fprintf(pFile,"#%ld=VECTOR('',#%ld,%#.15G);\n",nLine++,nDirection,1.0);
+    fprintf(pFile,"#%zd=VECTOR('',#%zd,%#.15G);\n",nLine++,nDirection,1.0);
     mCurveMap[pLine->GetID()]=nLine;
-    fprintf(pFile,"#%ld=LINE('',#%ld,#%ld);\n",nLine++,nPos,nVector);
+    fprintf(pFile,"#%zd=LINE('',#%zd,#%zd);\n",nLine++,nPos,nVector);
     }
 
 void WriteCircle(FILE                    *pFile,
@@ -78,15 +78,15 @@ void WriteCircle(FILE                    *pFile,
     double dRadius=pCircle->GetRadius();
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Center.m_x,Center.m_y,Center.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Center.m_x,Center.m_y,Center.m_z);
     size_t nDirection1=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,ZVec.m_x,ZVec.m_y,ZVec.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,ZVec.m_x,ZVec.m_y,ZVec.m_z);
     size_t nDirection2=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XVec.m_x,XVec.m_y,XVec.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XVec.m_x,XVec.m_y,XVec.m_z);
     size_t nAxis=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nDirection1,nDirection2);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nDirection1,nDirection2);
     mCurveMap[pCircle->GetID()]=nLine;
-    fprintf(pFile,"#%ld=CIRCLE('',#%ld,%#.15G);\n",nLine++,nAxis,dRadius);
+    fprintf(pFile,"#%zd=CIRCLE('',#%zd,%#.15G);\n",nLine++,nAxis,dRadius);
     }
 
 void WriteNUBCurve(FILE                    *pFile,
@@ -117,9 +117,9 @@ void WriteNUBCurve(FILE                    *pFile,
         {
         SGM::Point3D const &Pos=aControlPoints[Index1];
         size_t nPos=nLine;
-        fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+        fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
         char Arg[10];
-        snprintf(Arg,sizeof(Arg),"#%ld",nPos);
+        snprintf(Arg,sizeof(Arg),"#%zd",nPos);
         sControlPoints+=Arg;
         if(Index1<nControlPoints-1)
             {
@@ -161,7 +161,7 @@ void WriteNUBCurve(FILE                    *pFile,
     // Write out the b-spline
 
     mCurveMap[pNUBCurve->GetID()]=nLine;
-    fprintf(pFile,"#%ld=B_SPLINE_CURVE_WITH_KNOTS('',%ld,%s,.UNSPECIFIED.,.F.,.F.,%s,%s,.UNSPECIFIED.);\n",
+    fprintf(pFile,"#%zd=B_SPLINE_CURVE_WITH_KNOTS('',%ld,%s,.UNSPECIFIED.,.F.,.F.,%s,%s,.UNSPECIFIED.);\n",
         nLine++,(long)nDegree,sControlPoints.c_str(),sMultiplicity.c_str(),sUniqueKnots.c_str());
     }
 
@@ -226,13 +226,13 @@ void WriteCoedges(FILE                                      *pFile,
             vertex *pEnd=pEdge->GetEnd();
             if (nullptr == pStart)
                 {
-                fprintf(pFile,"#%ld=EDGE_CURVE('',*,*,#%ld,.T.);\n",nLine++,nCurve);
+                fprintf(pFile,"#%zd=EDGE_CURVE('',*,*,#%zd,.T.);\n",nLine++,nCurve);
                 }
             else
                 {
                 size_t nStart=mVertexMap[pStart->GetID()];
                 size_t nEnd=mVertexMap[pEnd->GetID()];
-                fprintf(pFile,"#%ld=EDGE_CURVE('',#%ld,#%ld,#%ld,.T.);\n",nLine++,nStart,nEnd,nCurve);
+                fprintf(pFile,"#%zd=EDGE_CURVE('',#%zd,#%zd,#%zd,.T.);\n",nLine++,nStart,nEnd,nCurve);
                 }
             std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
             std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
@@ -241,7 +241,7 @@ void WriteCoedges(FILE                                      *pFile,
                 face const *pFace=*FaceIter;
                 SGM::EdgeSideType bFlipped=pFace->GetSideType(pEdge);
                 mCoedgeMap[std::pair<size_t,size_t>(pEdge->GetID(),pFace->GetID())]=nLine;
-                fprintf(pFile,"#%ld=ORIENTED_EDGE('',*,*,#%ld,.%c.));\n",nLine++,nEdgeCurve,bFlipped==SGM::FaceOnRightType ? 'F' : 'T');
+                fprintf(pFile,"#%zd=ORIENTED_EDGE('',*,*,#%zd,.%c.));\n",nLine++,nEdgeCurve,bFlipped==SGM::FaceOnRightType ? 'F' : 'T');
                 ++FaceIter;
                 }
             }
@@ -253,7 +253,7 @@ void WriteCoedges(FILE                                      *pFile,
             double dStart=pEdge->GetDomain().m_dMin;
             double dEnd=pEdge->GetDomain().m_dMax;
             mEdgeMap[pEdge->GetID()]=nLine;
-            fprintf(pFile,"#%ld=TRIMMED_CURVE('',#%ld,(PARAMETER_VALUE(%#.15G)),(PARAMETER_VALUE(%#.15G)),.T.,.UNSPECIFIED.);\n",nLine++,nCurve,dStart,dEnd);
+            fprintf(pFile,"#%zd=TRIMMED_CURVE('',#%zd,(PARAMETER_VALUE(%#.15G)),(PARAMETER_VALUE(%#.15G)),.T.,.UNSPECIFIED.);\n",nLine++,nCurve,dStart,dEnd);
             }
 
         ++EdgeIter;
@@ -276,15 +276,15 @@ void WritePlane(FILE                    *pFile,
     SGM::UnitVector3D const &XAxis=pPlane->m_XAxis;
     
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
     size_t nAxis3D=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pPlane->GetID()]=nLine;
-    fprintf(pFile,"#%ld=PLANE('',#%ld);\n",nLine++,nAxis3D);
+    fprintf(pFile,"#%zd=PLANE('',#%zd);\n",nLine++,nAxis3D);
     }
 
 void WriteSphere(FILE                    *pFile,
@@ -304,15 +304,15 @@ void WriteSphere(FILE                    *pFile,
     double dRadius=pSphere->m_dRadius;
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
     size_t nAxis3D=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pSphere->GetID()]=nLine;
-    fprintf(pFile,"#%ld=SPHERICAL_SURFACE('',#%ld,%#.15G);\n",nLine++,nAxis3D,dRadius);
+    fprintf(pFile,"#%zd=SPHERICAL_SURFACE('',#%zd,%#.15G);\n",nLine++,nAxis3D,dRadius);
     }
 
 void WriteCylinder(FILE                    *pFile,
@@ -332,15 +332,15 @@ void WriteCylinder(FILE                    *pFile,
     double dRadius=pCylinder->m_dRadius;
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
     size_t nAxis3D=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pCylinder->GetID()]=nLine;
-    fprintf(pFile,"#%ld=CYLINDRICAL_SURFACE('',#%ld,%#.15G);\n",nLine++,nAxis3D,dRadius);
+    fprintf(pFile,"#%zd=CYLINDRICAL_SURFACE('',#%zd,%#.15G);\n",nLine++,nAxis3D,dRadius);
     }
 
 void WriteTorus(FILE                    *pFile,
@@ -371,25 +371,25 @@ void WriteTorus(FILE                    *pFile,
     SGM::TorusKindType nKind=pTorus->GetKind();
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
     size_t nAxis3D=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pTorus->GetID()]=nLine;
     if(nKind==SGM::TorusKindType::DonutType || nKind==SGM::TorusKindType::PinchedType)
         {
-        fprintf(pFile,"#%ld=TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        fprintf(pFile,"#%zd=TOROIDAL_SURFACE('',#%zd,%#.15G,%#.15G);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
         }
     else if(nKind==SGM::TorusKindType::AppleType)
         {
-        fprintf(pFile,"#%ld=DEGENERATE_TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G,.T.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        fprintf(pFile,"#%zd=DEGENERATE_TOROIDAL_SURFACE('',#%zd,%#.15G,%#.15G,.T.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
         }
     else // (nKind==SGM::TorusKindType::LemonType)
         {
-        fprintf(pFile,"#%ld=DEGENERATE_TOROIDAL_SURFACE('',#%ld,%#.15G,%#.15G,.F.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
+        fprintf(pFile,"#%zd=DEGENERATE_TOROIDAL_SURFACE('',#%zd,%#.15G,%#.15G,.F.);\n",nLine++,nAxis3D,dMajorRadius,dMinorRadius);
         }
     }
 
@@ -411,15 +411,15 @@ void WriteCone(FILE                    *pFile,
     double dHalfAngle=pCone->FindHalfAngle();
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.m_x,XAxis.m_y,XAxis.m_z);
     size_t nAxis3D=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPos,nNorm,nXAxis);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pCone->GetID()]=nLine;
-    fprintf(pFile,"#%ld=CONICAL_SURFACE('',#%ld,%#.15G,%#.15G);\n",nLine++,nAxis3D,dRadius,dHalfAngle);
+    fprintf(pFile,"#%zd=CONICAL_SURFACE('',#%zd,%#.15G,%#.15G);\n",nLine++,nAxis3D,dRadius,dHalfAngle);
     }
 
 void WriteRevolve(FILE                    *pFile,
@@ -439,11 +439,11 @@ void WriteRevolve(FILE                    *pFile,
     SGM::UnitVector3D const &Norm=pRevolve->m_ZAxis;
 
     size_t nPos=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
+    fprintf(pFile,"#%zd=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.m_x,Norm.m_y,Norm.m_z);
     size_t nAxis1=nLine;
-    fprintf(pFile,"#%ld=AXIS1_PLACEMENT('',#%ld,#%ld);\n",nLine++,nPos,nNorm);
+    fprintf(pFile,"#%zd=AXIS1_PLACEMENT('',#%zd,#%zd);\n",nLine++,nPos,nNorm);
 
     std::set<curve const *> sRevolveCurve;
     sRevolveCurve.insert(pRevolve->m_pCurve);
@@ -452,7 +452,7 @@ void WriteRevolve(FILE                    *pFile,
     size_t nCurve = CurveMap[pRevolve->m_pCurve->GetID()];
 
     mSurfaceMap[pRevolve->GetID()]=nLine;
-    fprintf(pFile,"#%ld=SURFACE_OF_REVOLUTION('',#%ld,#%ld);\n",nLine++,nCurve,nAxis1);
+    fprintf(pFile,"#%zd=SURFACE_OF_REVOLUTION('',#%zd,#%zd);\n",nLine++,nCurve,nAxis1);
     }
 
 void WriteSurfaces(FILE                            *pFile,
@@ -537,38 +537,38 @@ void WriteFaces(SGM::Result                               &rResult,
                 char Buf[25];
                 if(Index2)
                     {
-                    snprintf(Buf,sizeof(Buf),",#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    snprintf(Buf,sizeof(Buf),",#%zd",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 else
                     {
-                    snprintf(Buf,sizeof(Buf),"#%ld",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
+                    snprintf(Buf,sizeof(Buf),"#%zd",mCoedgeMap[std::pair<size_t,size_t>(nEdge,nFace)]);
                     }
                 sEdges+=Buf;
                 }
             size_t nLoop=nLine;
-            fprintf(pFile,"#%ld=EDGE_LOOP('',(%s));\n",nLine++,sEdges.c_str());
+            fprintf(pFile,"#%zd=EDGE_LOOP('',(%s));\n",nLine++,sEdges.c_str());
             size_t nBound=nLine;
             if(Index1)
                 {
-                fprintf(pFile,"#%ld=FACE_BOUND('',#%ld,.T.);\n",nLine++,nLoop);
+                fprintf(pFile,"#%zd=FACE_BOUND('',#%zd,.T.);\n",nLine++,nLoop);
                 }
             else
                 {
-                fprintf(pFile,"#%ld=FACE_OUTER_BOUND('',#%ld,.T.);\n",nLine++,nLoop);
+                fprintf(pFile,"#%zd=FACE_OUTER_BOUND('',#%zd,.T.);\n",nLine++,nLoop);
                 }
             char Buf2[25];
             if(Index1)
                 {
-                snprintf(Buf2,sizeof(Buf2),",#%ld",nBound);
+                snprintf(Buf2,sizeof(Buf2),",#%zd",nBound);
                 }
             else
                 {
-                snprintf(Buf2,sizeof(Buf2),"#%ld",nBound);
+                snprintf(Buf2,sizeof(Buf2),"#%zd",nBound);
                 }
             sLoops+=Buf2;
             }
         mFaceMap[pFace->GetID()]=nLine;
-        fprintf(pFile,"#%ld=ADVANCED_FACE('',(%s),#%ld,.%c.);\n",nLine++,sLoops.c_str(),nSurface,nFlipped ? 'F' : 'T');
+        fprintf(pFile,"#%zd=ADVANCED_FACE('',(%s),#%zd,.%c.);\n",nLine++,sLoops.c_str(),nSurface,nFlipped ? 'F' : 'T');
         ++iter;
         }
     }
@@ -609,11 +609,11 @@ void WriteVolumes(SGM::Result              &rResult,
                 char Buf[25];
                 if(bFirst)
                     {
-                    snprintf(Buf,sizeof(Buf),"#%ld",mFaceMap[pFace->GetID()]);
+                    snprintf(Buf,sizeof(Buf),"#%zd",mFaceMap[pFace->GetID()]);
                     }
                 else
                     {
-                    snprintf(Buf,sizeof(Buf),",#%ld",mFaceMap[pFace->GetID()]);
+                    snprintf(Buf,sizeof(Buf),",#%zd",mFaceMap[pFace->GetID()]);
                     }
                 sFaceList+=Buf;
                 bFirst=false;
@@ -623,24 +623,24 @@ void WriteVolumes(SGM::Result              &rResult,
             size_t nVolume;
             if(nSides==2)
                 {
-                fprintf(pFile,"#%ld=OPEN_SHELL('',(%s));\n",nLine++,sFaceList.c_str());
+                fprintf(pFile,"#%zd=OPEN_SHELL('',(%s));\n",nLine++,sFaceList.c_str());
                 nVolume=nLine;
-                fprintf(pFile,"#%ld=SHELL_BASED_SURFACE_MODEL('',(#%ld));\n",nLine++,nShell);
+                fprintf(pFile,"#%zd=SHELL_BASED_SURFACE_MODEL('',(#%zd));\n",nLine++,nShell);
                 }
             else
                 {
-                fprintf(pFile,"#%ld=CLOSED_SHELL('',(%s));\n",nLine++,sFaceList.c_str());
+                fprintf(pFile,"#%zd=CLOSED_SHELL('',(%s));\n",nLine++,sFaceList.c_str());
                 nVolume=nLine;
-                fprintf(pFile,"#%ld=MANIFOLD_SOLID_BREP('',#%ld);\n",nLine++,nShell);
+                fprintf(pFile,"#%zd=MANIFOLD_SOLID_BREP('',#%zd);\n",nLine++,nShell);
                 }
             char Buf2[25];
             if(bFirstVolume)
                 {
-                snprintf(Buf2,sizeof(Buf2),"#%ld",nVolume);
+                snprintf(Buf2,sizeof(Buf2),"#%zd",nVolume);
                 }
             else
                 {
-                snprintf(Buf2,sizeof(Buf2),",#%ld",nVolume);
+                snprintf(Buf2,sizeof(Buf2),",#%zd",nVolume);
                 }
             sVolumeList+=Buf2;
             bFirstVolume=false;
@@ -657,47 +657,47 @@ void WriteVolumes(SGM::Result              &rResult,
                 char Buf[25];
                 if(bFirst)
                     {
-                    snprintf(Buf,sizeof(Buf),"#%ld",mEdgeMap[pEdge->GetID()]);
+                    snprintf(Buf,sizeof(Buf),"#%zd",mEdgeMap[pEdge->GetID()]);
                     }
                 else
                     {
-                    snprintf(Buf,sizeof(Buf),",#%ld",mEdgeMap[pEdge->GetID()]);
+                    snprintf(Buf,sizeof(Buf),",#%zd",mEdgeMap[pEdge->GetID()]);
                     }
                 sEdgeList+=Buf;
                 bFirst=false;
                 ++EdgeIter;
                 }
             char Buf2[25];
-            snprintf(Buf2,sizeof(Buf2),"#%ld",nLine);
+            snprintf(Buf2,sizeof(Buf2),"#%zd",nLine);
             sVolumeList+=Buf2;
-            fprintf(pFile,"#%ld=GEOMETRIC_CURVE_SET('',(%s));\n",nLine++,sEdgeList.c_str());
+            fprintf(pFile,"#%zd=GEOMETRIC_CURVE_SET('',(%s));\n",nLine++,sEdgeList.c_str());
             bWireBody=true;
             }
         ++VolumeIter;
         }
 
     size_t nPoint=nLine;
-    fprintf(pFile,"#%ld=CARTESIAN_POINT('',(0.0,0.0,0.0));\n",nLine++);
+    fprintf(pFile,"#%zd=CARTESIAN_POINT('',(0.0,0.0,0.0));\n",nLine++);
     size_t nDirection1=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(0.0,0.0,1.0));\n",nLine++);
+    fprintf(pFile,"#%zd=DIRECTION('',(0.0,0.0,1.0));\n",nLine++);
     size_t nDirection2=nLine;
-    fprintf(pFile,"#%ld=DIRECTION('',(1.0,0.0,0.0));\n",nLine++);
+    fprintf(pFile,"#%zd=DIRECTION('',(1.0,0.0,0.0));\n",nLine++);
     size_t nAxis=nLine;
-    fprintf(pFile,"#%ld=AXIS2_PLACEMENT_3D('',#%ld,#%ld,#%ld);\n",nLine++,nPoint,nDirection1,nDirection2);
+    fprintf(pFile,"#%zd=AXIS2_PLACEMENT_3D('',#%zd,#%zd,#%zd);\n",nLine++,nPoint,nDirection1,nDirection2);
     size_t nBRep=nLine;
     if(nSides==2)
         {
-        fprintf(pFile,"#%ld=MANIFOLD_SURFACE_SHAPE_REPRESENTATION('',(%s,#%ld),#%ld);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
+        fprintf(pFile,"#%zd=MANIFOLD_SURFACE_SHAPE_REPRESENTATION('',(%s,#%zd),#%zd);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
         }
     else if(bWireBody)
         {
-        fprintf(pFile,"#%ld=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('',(%s,#%ld),#%ld);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
+        fprintf(pFile,"#%zd=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('',(%s,#%zd),#%zd);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
         }
     else
         {
-        fprintf(pFile,"#%ld=ADVANCED_BREP_SHAPE_REPRESENTATION('',(%s,#%ld),#%ld);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
+        fprintf(pFile,"#%zd=ADVANCED_BREP_SHAPE_REPRESENTATION('',(%s,#%zd),#%zd);\n",nLine++,sVolumeList.c_str(),nAxis,nGeoRepContext);
         }
-    fprintf(pFile,"#%ld=SHAPE_DEFINITION_REPRESENTATION(#%ld,#%ld);\n",nLine++,nProductDefShape,nBRep);
+    fprintf(pFile,"#%zd=SHAPE_DEFINITION_REPRESENTATION(#%zd,#%zd);\n",nLine++,nProductDefShape,nBRep);
     }
 
 void WriteDataHeader(FILE   *pFile,
@@ -706,45 +706,45 @@ void WriteDataHeader(FILE   *pFile,
                      size_t &nProductDefShape)
     {
     size_t nApplicationContext=nLine;
-    fprintf(pFile,"#%ld=APPLICATION_CONTEXT('automotive design');\n",nLine++);
+    fprintf(pFile,"#%zd=APPLICATION_CONTEXT('automotive design');\n",nLine++);
     size_t nProductDefContext=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_DEFINITION_CONTEXT('',#%ld,'design');\n",nLine++,nApplicationContext);
+    fprintf(pFile,"#%zd=PRODUCT_DEFINITION_CONTEXT('',#%zd,'design');\n",nLine++,nApplicationContext);
     size_t nProductContext=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_CONTEXT('',#%ld,'mechanical');\n",nLine++,nApplicationContext);
-    fprintf(pFile,"#%ld=APPLICATION_PROTOCOL_DEFINITION('International Standard','automotive_design',2001,#%ld);\n",nLine++,nApplicationContext);
+    fprintf(pFile,"#%zd=PRODUCT_CONTEXT('',#%zd,'mechanical');\n",nLine++,nApplicationContext);
+    fprintf(pFile,"#%zd=APPLICATION_PROTOCOL_DEFINITION('International Standard','automotive_design',2001,#%zd);\n",nLine++,nApplicationContext);
     size_t nDimExp1=nLine;
-    fprintf(pFile,"#%ld=DIMENSIONAL_EXPONENTS(1.0,0.0,0.0,0.0,0.0,0.0,0.0);\n",nLine++);
+    fprintf(pFile,"#%zd=DIMENSIONAL_EXPONENTS(1.0,0.0,0.0,0.0,0.0,0.0,0.0);\n",nLine++);
     size_t nDimExp2=nLine;
-    fprintf(pFile,"#%ld=DIMENSIONAL_EXPONENTS(0.0,0.0,0.0,0.0,0.0,0.0,0.0);\n",nLine++);
+    fprintf(pFile,"#%zd=DIMENSIONAL_EXPONENTS(0.0,0.0,0.0,0.0,0.0,0.0,0.0);\n",nLine++);
     size_t nNamedUnits1=nLine;
-    fprintf(pFile,"#%ld= (NAMED_UNIT(#%ld)LENGTH_UNIT()SI_UNIT(.MILLI.,.METRE.));\n",nLine++,nDimExp1);
+    fprintf(pFile,"#%zd= (NAMED_UNIT(#%zd)LENGTH_UNIT()SI_UNIT(.MILLI.,.METRE.));\n",nLine++,nDimExp1);
     size_t nNamedUnits2=nLine;
-    fprintf(pFile,"#%ld= (NAMED_UNIT(#%ld)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));\n",nLine++,nDimExp2);
+    fprintf(pFile,"#%zd= (NAMED_UNIT(#%zd)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));\n",nLine++,nDimExp2);
     size_t nNamedUnits3=nLine;
-    fprintf(pFile,"#%ld= (NAMED_UNIT(#%ld)SOLID_ANGLE_UNIT()SI_UNIT($,.STERADIAN.));\n",nLine++,nDimExp2);
+    fprintf(pFile,"#%zd= (NAMED_UNIT(#%zd)SOLID_ANGLE_UNIT()SI_UNIT($,.STERADIAN.));\n",nLine++,nDimExp2);
     size_t nLengthMeasure=nLine;
-    fprintf(pFile,"#%ld=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#%ld);\n",nLine++,nNamedUnits1);
+    fprintf(pFile,"#%zd=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#%zd);\n",nLine++,nNamedUnits1);
     size_t nConversionBaseUnit=nLine;
-    fprintf(pFile,"#%ld= (CONVERSION_BASED_UNIT('INCH',#%ld)LENGTH_UNIT()NAMED_UNIT(#%ld));\n",nLine++,nLengthMeasure,nDimExp1);
+    fprintf(pFile,"#%zd= (CONVERSION_BASED_UNIT('INCH',#%zd)LENGTH_UNIT()NAMED_UNIT(#%zd));\n",nLine++,nLengthMeasure,nDimExp1);
     size_t nUncertaintyMeasure=nLine;
-    fprintf(pFile,"#%ld=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.0E-006),#%ld,'','');\n",nLine++,nConversionBaseUnit);
+    fprintf(pFile,"#%zd=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.0E-006),#%zd,'','');\n",nLine++,nConversionBaseUnit);
     nGeoRepContext=nLine;
-    fprintf(pFile,"#%ld= (GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#%ld))GLOBAL_UNIT_ASSIGNED_CONTEXT((#%ld,#%ld,#%ld))REPRESENTATION_CONTEXT('NONE','WORKSPACE'));\n",
+    fprintf(pFile,"#%zd= (GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#%zd))GLOBAL_UNIT_ASSIGNED_CONTEXT((#%zd,#%zd,#%zd))REPRESENTATION_CONTEXT('NONE','WORKSPACE'));\n",
         nLine++,nUncertaintyMeasure,nConversionBaseUnit,nNamedUnits2,nNamedUnits3);
-    fprintf(pFile,"#%ld=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(),#%ld);\n",nLine++,nGeoRepContext);
+    fprintf(pFile,"#%zd=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(),#%zd);\n",nLine++,nGeoRepContext);
     size_t nProduct=nLine;
-    fprintf(pFile,"#%ld=PRODUCT('', '', ' ',(#%ld));\n",nLine++,nProductContext);
+    fprintf(pFile,"#%zd=PRODUCT('', '', ' ',(#%zd));\n",nLine++,nProductContext);
     size_t nProductDefFormation=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE (' ',' ', #%ld,.NOT_KNOWN.);\n",nLine++,nProduct);
+    fprintf(pFile,"#%zd=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE (' ',' ', #%zd,.NOT_KNOWN.);\n",nLine++,nProduct);
     size_t nProductCategory=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_CATEGORY('part','');\n",nLine++);
+    fprintf(pFile,"#%zd=PRODUCT_CATEGORY('part','');\n",nLine++);
     size_t nProductRelatedCategory=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_RELATED_PRODUCT_CATEGORY('detail',' ',(#%ld));\n",nLine++,nProduct);
-    fprintf(pFile,"#%ld=PRODUCT_CATEGORY_RELATIONSHIP(' ',' ',#%ld,#%ld);\n",nLine++,nProductCategory,nProductRelatedCategory);
+    fprintf(pFile,"#%zd=PRODUCT_RELATED_PRODUCT_CATEGORY('detail',' ',(#%zd));\n",nLine++,nProduct);
+    fprintf(pFile,"#%zd=PRODUCT_CATEGORY_RELATIONSHIP(' ',' ',#%zd,#%zd);\n",nLine++,nProductCategory,nProductRelatedCategory);
     size_t nProductDef=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_DEFINITION('','',#%ld,#%ld);\n",nLine++,nProductDefFormation,nProductDefContext);
+    fprintf(pFile,"#%zd=PRODUCT_DEFINITION('','',#%zd,#%zd);\n",nLine++,nProductDefFormation,nProductDefContext);
     nProductDefShape=nLine;
-    fprintf(pFile,"#%ld=PRODUCT_DEFINITION_SHAPE('NONE','NONE',#%ld);\n",nLine++,nProductDef);
+    fprintf(pFile,"#%zd=PRODUCT_DEFINITION_SHAPE('NONE','NONE',#%zd);\n",nLine++,nProductDef);
     }
 
 void SaveSTEP(SGM::Result                  &rResult,

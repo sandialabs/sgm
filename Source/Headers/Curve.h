@@ -58,6 +58,8 @@ class curve : public entity
         //
         ///////////////////////////////////////////////////////////////////////
 
+        void Accept(EntityVisitor &v) override = 0;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -148,6 +150,8 @@ class line : public curve
 
         line(SGM::Result &rResult, line const &other);
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         line *Clone(SGM::Result &rResult) const override;
 
         void Evaluate(double         t,
@@ -186,6 +190,8 @@ class circle : public curve
                SGM::Interval1D   const *pDomain=nullptr);
 
         circle(SGM::Result &rResult, circle const &other);
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         circle *Clone(SGM::Result &rResult) const override;
 
@@ -231,6 +237,8 @@ class NUBcurve: public curve
                  std::vector<double>       const &aKnots);
 
         NUBcurve(SGM::Result &rResult, NUBcurve const &other);
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         NUBcurve *Clone(SGM::Result &rResult) const override;
 
@@ -286,6 +294,8 @@ class NURBcurve: public curve
 
         NURBcurve(SGM::Result &rResult, NURBcurve const &other);
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         NURBcurve *Clone(SGM::Result &rResult) const override;
 
         int Continuity() const override;
@@ -337,6 +347,8 @@ class PointCurve: public curve
 
         PointCurve(SGM::Result &rResult, PointCurve const &other);
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         PointCurve *Clone(SGM::Result &rResult) const override;
 
         void Evaluate(double         t,
@@ -373,6 +385,8 @@ class ellipse: public curve
                 double                   dB);
 
         ellipse(SGM::Result &rResult, ellipse const &other);
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         ellipse *Clone(SGM::Result &rResult) const override;
 
@@ -416,6 +430,8 @@ class hyperbola: public curve
 
         hyperbola(SGM::Result &rResult, hyperbola const &other);
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         hyperbola *Clone(SGM::Result &rResult) const override;
 
         void Evaluate(double         t,
@@ -456,6 +472,8 @@ class parabola: public curve
                  double                   dA);
 
         parabola(SGM::Result &rResult, parabola const &other);
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         parabola *Clone(SGM::Result &rResult) const override;
 
@@ -505,6 +523,8 @@ class TorusKnot: public curve
 
         TorusKnot(SGM::Result &rResult, TorusKnot const &other);
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         TorusKnot *Clone(SGM::Result &rResult) const override;
 
         void Evaluate(double         t,
@@ -544,6 +564,8 @@ class hermite: public curve
                 std::vector<double>        const &aParams);
 
         hermite(SGM::Result &rResult, hermite const &other);
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         hermite *Clone(SGM::Result &rResult) const override;
 

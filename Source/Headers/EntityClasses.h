@@ -5,14 +5,17 @@
 #include <set>
 #include <vector>
 #include <utility>
+#include <mutex>
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
+#include "SGMSharedMutex.h"
 #include "SGMTranslators.h"
 
 namespace SGMInternal
 {
 
+class assembly;
 class attribute;
 class body;
 class complex;
@@ -20,13 +23,80 @@ class curve;
 class edge;
 class entity;
 class face;
+class reference;
 class surface;
 class thing;
 class vertex;
 class volume;
 
+class line;
+class circle;
+class ellipse;
+class hyperbola;
+class parabola;
+class hermite;
+class NUBcurve;
+class NURBcurve;
+class PointCurve;
+class TorusKnot;
+
+class plane;
+class cylinder;
+class cone;
+class sphere;
+class torus;
+class revolve;
+class extrude;
+class offset;
+class NUBsurface;
+class NURBsurface;
+
 struct EntityCompare {
     bool operator()(entity* const& ent1, entity* const& ent2) const;
+};
+
+struct EntityVisitor {
+
+    SGM::Result *pResult;
+
+    EntityVisitor() : pResult(nullptr) {}
+
+    explicit EntityVisitor(SGM::Result& rResult) : pResult(&rResult) {}
+
+    // no Visit for pure abstract classes
+
+    virtual void Visit(thing &) {}
+    virtual void Visit(assembly &) {}
+    virtual void Visit(attribute &) {}
+    virtual void Visit(body &) {}
+    virtual void Visit(complex &) {}
+    virtual void Visit(edge &) {}
+    virtual void Visit(face &) {}
+    virtual void Visit(reference &) {}
+    virtual void Visit(vertex &) {}
+    virtual void Visit(volume &) {}
+
+    virtual void Visit(line &) {}
+    virtual void Visit(circle&) {}
+    virtual void Visit(ellipse&) {}
+    virtual void Visit(hyperbola&) {}
+    virtual void Visit(parabola&) {}
+    virtual void Visit(hermite&) {}
+    virtual void Visit(NUBcurve&) {}
+    virtual void Visit(NURBcurve&) {}
+    virtual void Visit(PointCurve&) {}
+    virtual void Visit(TorusKnot&) {}
+
+    virtual void Visit(plane&) {}
+    virtual void Visit(cylinder&) {}
+    virtual void Visit(cone&) {}
+    virtual void Visit(sphere&) {}
+    virtual void Visit(torus&) {}
+    virtual void Visit(revolve&) {}
+    virtual void Visit(extrude&) {}
+    virtual void Visit(offset&) {}
+    virtual void Visit(NUBsurface&) {}
+    virtual void Visit(NURBsurface&) {}
 };
 
 class entity
@@ -42,6 +112,8 @@ public:
     entity& operator=(const entity&) = delete;
 
     virtual ~entity() = default;
+
+    virtual void Accept(EntityVisitor &) = 0;
 
     virtual bool Check(SGM::Result              &rResult,
                        SGM::CheckOptions const  &Options,
@@ -120,12 +192,14 @@ class thing : public entity
 
         ~thing() override;
 
+        void Accept(EntityVisitor &) override;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
                    bool                      bChildren) const override;
 
-        thing *Clone(SGM::Result &rResult) const override
+        thing *Clone(SGM::Result &) const override
         { throw std::logic_error("not allowed"); }
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
@@ -143,7 +217,7 @@ class thing : public entity
                       SGM::TranslatorOptions const &Options) const override;
 
 
-        void AddToMap(size_t nID,entity *pEntity);
+        size_t AddToMap(entity *pEntity);
 
         void DeleteEntity(entity *pEntity);
 
@@ -151,9 +225,7 @@ class thing : public entity
 
         // Get methods
 
-        size_t GetNextID() {return m_nNextID++;}
-
-        size_t GetMaxID() const {return m_nNextID;}
+        size_t GetMaxID() const;
 
         size_t GetTopLevelEntities(std::vector<entity *> &aEntities) const;
         
@@ -182,10 +254,17 @@ class thing : public entity
         
         entity *FindEntity(size_t ID) const;
 
+        void FindCachedData(SGM::Result&) const;
+
+        void SetConcurrentActive() const;
+
+        void SetConcurrentInactive() const;
+
     private:
 
         std::map<size_t,entity* > m_mAllEntities;
         size_t                    m_nNextID;
+        mutable bool              m_bIsConcurrentActive; // for debugging, true if inside multi-threaded block
     };
 
 class topology : public entity
@@ -203,6 +282,8 @@ class topology : public entity
         topology& operator=(const topology&) = delete;
     
         ~topology() override = default;
+
+        void Accept(EntityVisitor &) override = 0;
 
         void ResetBox(SGM::Result &rResult) const override;
 
@@ -228,6 +309,8 @@ class assembly : public topology
         assembly& operator=(const assembly&) = delete;
     
         ~assembly() override = default;
+
+        void Accept(EntityVisitor &) override;
 
         assembly *Clone(SGM::Result &rResult) const override;
 
@@ -258,6 +341,8 @@ class reference : public topology
 
         ~reference() override = default;
 
+        void Accept(EntityVisitor &) override;
+
         reference *Clone(SGM::Result &rResult) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &) const override;
@@ -286,6 +371,8 @@ class body : public topology
         body& operator=(const body&) = delete;
 
         ~body() override = default;
+
+        void Accept(EntityVisitor &) override;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -365,7 +452,9 @@ class complex : public topology
         complex& operator=(const complex&) = delete;
 
         ~complex() override = default;
-    
+
+        void Accept(EntityVisitor &) override;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -449,6 +538,8 @@ class volume : public topology
         
         ~volume() override = default;
 
+        void Accept(EntityVisitor &) override;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -523,6 +614,8 @@ class face : public topology
         face& operator=(const face&) = delete;
 
         ~face() override = default;
+
+        void Accept(EntityVisitor &) override;
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
@@ -650,6 +743,8 @@ class edge : public topology
 
         ~edge() override = default;
 
+        void Accept(EntityVisitor &) override;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -764,6 +859,8 @@ class vertex : public topology
 
         ~vertex() override = default;
 
+        void Accept(EntityVisitor &) override;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -818,6 +915,8 @@ class attribute : public entity
         attribute& operator=(const attribute&) = delete;
 
         ~attribute() override = default;
+
+        void Accept(EntityVisitor &) override;
 
         bool Check(SGM::Result              &,
                    SGM::CheckOptions  const &,
@@ -966,6 +1065,7 @@ class CharAttribute : public attribute
 
         std::vector<char> m_aData;
     };
+
 }
 
 #include "Inline/EntityClasses.inl"

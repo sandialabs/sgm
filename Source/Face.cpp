@@ -62,7 +62,7 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
 
 bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
     {
-    if(entity::GetColor(nRed,nGreen,nBlue)==true)
+    if(entity::GetColor(nRed, nGreen, nBlue))
         {
         return true;
         }

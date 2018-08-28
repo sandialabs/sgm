@@ -93,25 +93,21 @@ void FindLastDouble(std::string   const &line,
 void FindDoubles3(std::string   const &line,
                   std::vector<double> &aData)
     {
+    double xyz[3];
     char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nPCount=0;
-    while(pString[nCount]!=';')
+    size_t nPCount = 0;
+
+    while(*pString != ';')
         {
-        if(pString[nCount]=='(')
+        if(*pString++ == '(')
             {
-            ++nPCount;
+            if(++nPCount==2)
+                {
+                sscanf(pString,"%lf,%lf,%lf",&xyz[0],&xyz[1],&xyz[2]);
+                aData.insert(aData.end(),xyz, xyz+3);
+                return;
+                }
             }
-        if(nPCount==2)
-            {
-            double x,y,z;
-            sscanf(pString+nCount+1,"%lf,%lf,%lf",&x,&y,&z);
-            aData.push_back(x);
-            aData.push_back(y);
-            aData.push_back(z);
-            return;
-            }
-        ++nCount;
         }
     }
 
@@ -908,20 +904,28 @@ void FindStepTag(std::string const &line,
         }
     }
 
-void ProcessLine(SGM::Result                        &rResult,
-                 std::map<std::string,size_t> const &mSTEPTagMap,
-                 std::string                  const &line,
-                 std::map<size_t,STEPLineData>      &mSTEPData,
-                 std::vector<std::string>           &aLog,
-                 SGM::TranslatorOptions       const &Options)
+void ProcessStepCommand(SGM::Result                        &rResult,
+                        std::map<std::string,size_t> const &mSTEPTagMap,
+                        const char                         *pcBuffer,
+                        size_t                              lengthBuffer,
+                        std::map<size_t,STEPLineData>      &mSTEPData,
+                        std::vector<std::string>           &aLog,
+                        SGM::TranslatorOptions       const &Options)
     {
-    if(line.front()=='#')
+    // construct pData without leading whitespace/control characters
+    const char ignore[] = " \f\n\r\t\v";
+    size_t nSkip = strspn(pcBuffer,ignore);
+    const char * pData = pcBuffer + nSkip;
+
+    if(pData[0] == '#')
         {
         // Find the line number.
 
-        char const *pData=line.c_str();
         int nLineNumber;
         sscanf(pData+1,"%d",&nLineNumber);
+
+        // construct a C++ string for further processing
+        std::string line(pData,lengthBuffer-nSkip);
 
         // Find the STEP tag string.
 
@@ -942,7 +946,7 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
                         {
                         ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         STEPLineData STEPData2;
                         ProcessBody(rResult,line,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION;
@@ -952,145 +956,145 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::ADVANCED_FACE:
                         {
                         ProcessFace(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS1_PLACEMENT:
                         {
                         ProcessAxis(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS2_PLACEMENT_3D:
                         {
                         ProcessAxis(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE:
                         {
                         ProcessBSplineSurface(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE:
                         {
                         ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                         {
                         ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                         {
                         ProcessBSplineWithKnots(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::BOUNDED_SURFACE:
                         {
                         ProcessBoundedSurface(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::BREP_WITH_VOIDS:
                         {
                         ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::CARTESIAN_POINT:
                         {
                         ProcessPoint(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::CLOSED_SHELL:
                         {
                         ProcessShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::CIRCLE:
                         {
                         ProcessCircle(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::CONICAL_SURFACE:
                         {
                         ProcessCone(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
                         {
                         ProcessCylinder(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
                         {
                         ProcessDegenerateTorus(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::DIRECTION:
                         {
                         ProcessDirection(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_CURVE:
                         {
                         ProcessEdge(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_LOOP:
                         {
                         ProcessLoop(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::ELLIPSE:
                         {
                         ProcessEllipse(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_BOUND:
                         {
                         ProcessBound(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_OUTER_BOUND:
                         {
                         ProcessBound(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_SURFACE:
                         {
                         ProcessFace(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRIC_CURVE_SET:
                         {
                         ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
                         {
                         ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         STEPLineData STEPData2;
                         ProcessBody(rResult,line,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION;
@@ -1100,91 +1104,91 @@ void ProcessLine(SGM::Result                        &rResult,
                     case SGMInternal::STEPTags::LINE:
                         {
                         ProcessLine(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
                         {
                         ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                         {
                         ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::OPEN_SHELL:
                         {
                         ProcessShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL:
                         {
                         ProcessOrientedShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_EDGE:
                         {
                         ProcessCoedge(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::PLANE:
                         {
                         ProcessPlane(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
                         {
                         ProcessBody(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::SPHERICAL_SURFACE:
                         {
                         ProcessSphere(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                         {
                         ProcessExtrude(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                         {
                         ProcessRevolve(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::TOROIDAL_SURFACE:
                         {
                         ProcessTorus(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::TRIMMED_CURVE:
                         {
                         ProcessTrimmedCurve(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::VECTOR:
                         {
                         ProcessVector(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     case SGMInternal::STEPTags::VERTEX_POINT:
                         {
                         ProcessVertex(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        mSTEPData.emplace_hint(mSTEPData.end(), std::make_pair(nLineNumber,STEPData)); //mSTEPData[nLineNumber]=STEPData;
                         break;
                         }
                     default:
@@ -2199,7 +2203,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     {
     // Open the file.
 
-    FILE *pFile = fopen(FileName.c_str(),"rt");
+    FILE *pFile = fopen(FileName.c_str(),"r");
     if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
@@ -2222,42 +2226,41 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     // Read each line of the file.
     
     std::map<size_t,STEPLineData> mSTEPData;
-    std::string line;
-    while(ReadFileLine(pFile,line))
-        {
-        if(line.empty()==false)
-            {
-            ProcessLine(rResult,mSTEPTagMap,line,mSTEPData,aLog,Options);
-            }
-        line.clear();
-        }
 
-    // Create all the entites.
+//    std::string line;
+//    while(ReadFileLine(pFile,line))
+//        {
+//        if(line.empty()==false)
+//            {
+//            ProcessLine(rResult,mSTEPTagMap,line,mSTEPData,aLog,Options);
+//            }
+//        line.clear();
+//        }
+    char *pcBuffer = nullptr;
+    size_t sizeBuffer = 0;
+    ssize_t numCharBuffer;
+    int iDelimiter = ';';
+
+    while ((numCharBuffer = getdelim(&pcBuffer, &sizeBuffer, iDelimiter, pFile)) != -1)
+        {
+        //fwrite(pcBuffer, iNumCharRead, 1, stdout);
+        ProcessStepCommand(rResult,mSTEPTagMap,pcBuffer,(size_t)numCharBuffer,mSTEPData,aLog,Options);
+        }
+    free(pcBuffer);
+    fclose(pFile);
+
+
+    // Create all the entities.
 
     if(Options.m_bScan==false)
         {
         std::map<size_t,entity *> mEntityMap;
         CreateEntities(rResult,pThing,mSTEPData,mEntityMap,aEntities);
         }
-    fclose(pFile);
 
-    //TODO: Code for testing to be removed.
-#if 1
-    std::set<vertex *,EntityCompare> sVertices;
-    FindVertices(rResult,pThing,sVertices);
+    // create all the triangles/facets
 
-    std::set<face *,EntityCompare> sFaces;
-    FindFaces(rResult,pThing,sFaces);
-    std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
-    while(iter!=sFaces.end())
-        {
-        face *pFace=*iter;
-        //size_t ID=pFace->GetID();
-        //SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
-        pFace->GetTriangles(rResult);
-        ++iter;
-        }
-#endif
+    pThing->FindCachedData(rResult);
 
     if(Options.m_bHeal)
         {

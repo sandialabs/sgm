@@ -28,7 +28,7 @@ PointCurve::PointCurve(SGM::Result &rResult, const PointCurve &other) :
 PointCurve * PointCurve::Clone(SGM::Result &rResult) const
 { return new PointCurve(rResult, *this); }
 
-void PointCurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
+void PointCurve::Evaluate(double,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {
     if(Pos)
         {
@@ -44,7 +44,7 @@ void PointCurve::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vect
         }
     }
 
-double PointCurve::Inverse(SGM::Point3D const &Pos,
+double PointCurve::Inverse(SGM::Point3D const &,
                            SGM::Point3D       *ClosePos,
                            double       const *pGuess) const
     {

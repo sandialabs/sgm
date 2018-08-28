@@ -760,7 +760,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
                 }
             }
         }
-    fprintf(pOutputFile,"\n%ld Passed %ld Failed\n",nPassed,nFailed);
+    fprintf(pOutputFile,"\n%zd Passed %zd Failed\n",nPassed,nFailed);
     fclose(pOutputFile);
     }
 

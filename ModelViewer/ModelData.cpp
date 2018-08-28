@@ -450,7 +450,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     auto *body_item = new QTreeWidgetItem(parent);
     mMap[body_item] = BodyID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Body %ld", BodyID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Body %zd", BodyID.m_ID);
     body_item->setText(0, Data0);
 
     add_attributes_to_tree(body_item, BodyID);
@@ -463,7 +463,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     if (nVolumes > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%ld Volumes", nVolumes);
+        snprintf(Data, sizeof(Data), "%zd Volumes", nVolumes);
         body_item->setText(1, Data);
         }
     else if(nVolumes==1)
@@ -488,7 +488,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
         char Data0[100];
         if(nPoints>1)
             {
-            snprintf(Data0, sizeof(Data0), "%ld Points", nPoints);
+            snprintf(Data0, sizeof(Data0), "%zd Points", nPoints);
             }
         else
             {
@@ -502,7 +502,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
             {
             auto *pos_item = new QTreeWidgetItem(points_item);
             char Data1[100];
-            snprintf(Data1, sizeof(Data1), "Point %ld", Index1);
+            snprintf(Data1, sizeof(Data1), "Point %zd", Index1);
             pos_item->setText(0, Data1);
 
             char Data2[100];
@@ -520,7 +520,7 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     mMap[complex_item] = ComplexID;
 
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Complex %ld", ComplexID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Complex %zd", ComplexID.m_ID);
     complex_item->setText(0, Data0);
 
     add_attributes_to_tree(complex_item, ComplexID);
@@ -534,7 +534,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     auto *volume_item = new QTreeWidgetItem(parent);
     mMap[volume_item] = VolumeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Volume %ld", VolumeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Volume %zd", VolumeID.m_ID);
     volume_item->setText(0, Data0);
 
     add_attributes_to_tree(volume_item, VolumeID);
@@ -547,7 +547,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     if (nFaces > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%ld Faces", nFaces);
+        snprintf(Data, sizeof(Data), "%zd Faces", nFaces);
         volume_item->setText(1, Data);
         }
     else if(nFaces==1)
@@ -566,7 +566,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     if (nEdges > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%ld Edges", nEdges);
+        snprintf(Data, sizeof(Data), "%zd Edges", nEdges);
         volume_item->setText(1, Data);
         }
     else if(nEdges==1)
@@ -586,7 +586,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     auto *face_item = new QTreeWidgetItem(parent);
     mMap[face_item] = FaceID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Face %ld", FaceID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Face %zd", FaceID.m_ID);
     face_item->setText(0, Data0);
 
     add_attributes_to_tree(face_item, FaceID);
@@ -599,7 +599,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     if (nEdges > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%ld Edges", nEdges);
+        snprintf(Data, sizeof(Data), "%zd Edges", nEdges);
         face_item->setText(1, Data);
         }
     else if(nEdges==1)
@@ -636,7 +636,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     auto *edge_item = new QTreeWidgetItem(parent);
     mMap[edge_item] = EdgeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Edge %ld", EdgeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Edge %zd", EdgeID.m_ID);
     edge_item->setText(0, Data0);
 
     add_attributes_to_tree(edge_item, EdgeID);
@@ -652,7 +652,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     else
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%ld Vertices", sVertices.size());
+        snprintf(Data, sizeof(Data), "%zd Vertices", sVertices.size());
         edge_item->setText(1, Data);
         }
 
@@ -672,7 +672,7 @@ void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID
     auto *vertex_item = new QTreeWidgetItem(parent);
     mMap[vertex_item] = VertexID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Vertex %ld", VertexID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Vertex %zd", VertexID.m_ID);
     vertex_item->setText(0, Data0);
 
     add_attributes_to_tree(vertex_item, VertexID);
@@ -720,7 +720,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::PlaneType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Plane %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Plane %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -753,7 +753,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::CylinderType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Cylinder %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Cylinder %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -792,21 +792,21 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::ConeType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Cone %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Cone %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::SphereType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Sphere %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Sphere %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::TorusType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Torus %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Torus %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -887,42 +887,42 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::NUBSurfaceType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NUB Surface %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NUB Surface %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::NURBSurfaceType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NURB Surface %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NURB Surface %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::RevolveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Revolve %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Revolve %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::ExtrudeType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Extrude %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Extrude %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::OffsetType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Offset Surface %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Offset Surface %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         default:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Surface %ld", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Surface %zd", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             }
         case SGM::ThingType:
@@ -996,7 +996,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::LineType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Line %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Line %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
 
             char Data[100];
@@ -1019,7 +1019,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::CircleType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Circle %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Circle %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
 
             char Data[100];
@@ -1058,70 +1058,70 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::EllipseType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Ellipse %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Ellipse %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::ParabolaType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Parabola %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Parabola %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HyperbolaType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Hyperbola %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Hyperbola %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::NUBCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NUB Curve %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NUB Curve %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::NURBCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NURB Curve %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NURB Curve %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::PointCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Point Curve %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Point Curve %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HelixCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Helix %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Helix %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HermiteCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Hermite Curve %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Hermite Curve %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::TorusKnotCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Torus Knot %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Torus Knot %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         default:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Curve %ld", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Curve %zd", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
@@ -1134,7 +1134,7 @@ void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent, SGM::Attribute At
     auto attribute_item = new QTreeWidgetItem(parent);
     mMap[attribute_item] = AttributeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Attribute %ld", AttributeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Attribute %zd", AttributeID.m_ID);
     attribute_item->setText(0, Data0);
     std::string const &Name = SGM::GetAttributeName(dPtr->mResult, AttributeID);
     attribute_item->setText(1, Name.c_str());
@@ -1191,7 +1191,7 @@ void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity Enti
             else
                 {
                 char Data1[100];
-                snprintf(Data1, sizeof(Data1), "%ld Attributes", nAttributes);
+                snprintf(Data1, sizeof(Data1), "%zd Attributes", nAttributes);
                 owner_item->setText(1, Data1);
                 }
             auto iter = sAttributes.begin();

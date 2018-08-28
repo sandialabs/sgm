@@ -32,7 +32,7 @@ void WriteEntityList(FILE                                   *pFile,
     auto iter=sEntities->begin();
     while(iter!=sEntities->end())
         {
-        fprintf(pFile,"%ld",(*iter)->GetID());
+        fprintf(pFile,"%zd",(*iter)->GetID());
         ++iter;
         if(iter!=sEntities->end())
             {
@@ -180,7 +180,7 @@ void face::WriteSGM(SGM::Result                  &rResult,
         aSides.push_back((unsigned int)(m_mSideType.find(pEdge)->second));
         }
     WriteUnsignedInts(pFile,"Sides",m_aTriangles);
-    fprintf(pFile,"Surface %ld Flipped %s Sides %d;\n",m_pSurface->GetID(),m_bFlipped ? "T" : "F",m_nSides);
+    fprintf(pFile,"Surface %zd Flipped %s Sides %d;\n",m_pSurface->GetID(),m_bFlipped ? "T" : "F",m_nSides);
     }
 
 void edge::WriteSGM(SGM::Result                  &rResult,
@@ -189,7 +189,7 @@ void edge::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"Edge ");
     entity::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile,"Start %ld End %ld Curve %ld Domain (%#.15G,%#.15G);\n",
+    fprintf(pFile,"Start %zd End %zd Curve %zd Domain (%#.15G,%#.15G);\n",
         m_pStart->GetID(),m_pEnd->GetID(),m_pCurve->GetID(),m_Domain.m_dMin,m_Domain.m_dMax);
     }
 
@@ -390,7 +390,7 @@ void TorusKnot::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"TorusKnot ");
     curve::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile,"Center (%#.15G,%#.15G,%#.15G) Normal (%#.15G,%#.15G,%#.15G) XAxis (%#.15G,%#.15G,%#.15G) Minor %#.15G Major %#.15G A %ld B %ld;\n",
+    fprintf(pFile,"Center (%#.15G,%#.15G,%#.15G) Normal (%#.15G,%#.15G,%#.15G) XAxis (%#.15G,%#.15G,%#.15G) Minor %#.15G Major %#.15G A %zd B %zd;\n",
         m_Center.m_x,m_Center.m_y,m_Center.m_z,m_Normal.m_x,m_Normal.m_y,m_Normal.m_z,
         m_XAxis.m_x,m_XAxis.m_y,m_XAxis.m_z,m_dMinorRadius,m_dMajorRadius,m_nA,m_nB);
     }
@@ -497,7 +497,7 @@ void entity::WriteSGM(SGM::Result                  &/*rResult*/,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &/*Options*/) const
     {
-    fprintf(pFile,"ID %ld, ",m_ID);
+    fprintf(pFile,"ID %zd, ",m_ID);
     WriteBox(pFile,m_Box);
     WriteEntityList(pFile,"Owners",(std::set<entity *,EntityCompare> const *)&m_sOwners);
     WriteEntityList(pFile,"Attributes",(std::set<entity *,EntityCompare> const *)&m_sAttributes);

@@ -10,7 +10,7 @@
 #include <vector>
 #include <map>
 
-#define BOX_TREE_USE_MEMORY_POOL
+// #define BOX_TREE_USE_MEMORY_POOL // disable this if multithreaded
 
 namespace SGM {
 

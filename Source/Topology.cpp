@@ -604,11 +604,11 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
         SGM::Point3D Pos(0,0,0);
         if(pEdge->GetStart()==pVertex)
             {
-            SGM::Point3D Pos=pEdge->FindMidPoint(0.001);
+            Pos=pEdge->FindMidPoint(0.001);
             }
         if(pEdge->GetEnd()==pVertex)
             {
-            SGM::Point3D Pos=pEdge->FindMidPoint(0.999);
+            Pos=pEdge->FindMidPoint(0.999);
             }
         SGM::Vector3D Vec=Pos-VertexPos;
         double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);

@@ -399,8 +399,8 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
             std::vector<SGM::Point3D> aPoints=m_aPoints;
             std::vector<unsigned int> aSegments;
             Graph const &comp=aGraphs[Index1];
-            std::set<GraphEdge> const &sEdges=comp.GetEdges();
-            for(auto GEdge : sEdges)
+            std::set<GraphEdge> const &sEdges2=comp.GetEdges();
+            for(auto GEdge : sEdges2)
                 {
                 aSegments.push_back((unsigned int)(GEdge.m_nStart));
                 aSegments.push_back((unsigned int)(GEdge.m_nEnd));

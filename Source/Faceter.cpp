@@ -1,6 +1,7 @@
 #include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMInterval.h"
+#include "SGMPrimitives.h"
 #include "SGMResult.h"
 #include "SGMEnums.h"
 #include "SGMBoxTree.h"
@@ -20,6 +21,26 @@
 
 namespace SGMInternal
 {
+
+// Maintain a perishable Result that acts as owner of any temporary entity.
+// The entity objects get deleted in this object's destructor.
+// The entity objects have their own ID space.
+
+class TransientContext
+{
+public:
+
+    TransientContext() : rResult(SGM::CreateThing()) { }
+
+    ~TransientContext() { SGM::DeleteThing(rResult.GetThing()); }
+
+    SGM::Result & GetResult() { return rResult; }
+
+    thing * GetThing() { return rResult.GetThing(); }
+
+private:
+    SGM::Result rResult;
+};
 
 edge *FindEdge(SGM::Result &rResult,
                face  const *pFace,
@@ -723,6 +744,8 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                   std::vector<double>       const &aParams,
                   std::vector<double>             &aCrosses)
     {
+    TransientContext transient;
+
     bool bFound=false;
     if(pSurface->ClosedInU() || pSurface->ClosedInV())
         {
@@ -751,7 +774,7 @@ bool SplitAtSeams(SGM::Result                     &rResult,
             {
             SGM::Interval1D const &Domain=pSurface->GetDomain().m_UDomain;
             double dGap=Domain.Length()*0.5;
-            curve *pSeam=pSurface->UParamLine(rResult,Domain.m_dMin);
+            curve *pSeam=pSurface->UParamLine(transient.GetResult(),Domain.m_dMin);
             for(Index1=0;Index1<nParams;++Index1)
                 {
                 Node const &Node0=aNodes[Index1];
@@ -772,13 +795,12 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                         }
                     }
                 }
-            rResult.GetThing()->DeleteEntity(pSeam);
             }
         if(pSurface->ClosedInV())
             {
             SGM::Interval1D const &Domain=pSurface->GetDomain().m_VDomain;
             double dGap=Domain.Length()*0.5;
-            curve *pSeam=pSurface->VParamLine(rResult,Domain.m_dMin);
+            curve *pSeam=pSurface->VParamLine(transient.GetResult(),Domain.m_dMin);
             for(Index1=0;Index1<nParams;++Index1)
                 {
                 Node const &Node0=aNodes[Index1];
@@ -799,7 +821,6 @@ bool SplitAtSeams(SGM::Result                     &rResult,
                         }
                     }
                 }
-            rResult.GetThing()->DeleteEntity(pSeam);
             }
         }
     return bFound;
@@ -1289,6 +1310,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                             std::vector<std::vector<size_t> > &aaPolygons,
                             std::vector<size_t>               &aTriangles)
     {
+    TransientContext transient;
     surface const *pSurface=pFace->GetSurface();
     if(pSurface->ClosedInU())
         {
@@ -1302,17 +1324,15 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
             double dMinV=Domain.m_VDomain.m_dMin;
             double dMaxV=Domain.m_VDomain.m_dMax;
 
-            curve *pUSeam=pSurface->UParamLine(rResult,dMinU);
+            curve *pUSeam=pSurface->UParamLine(transient.GetResult(),dMinU);
             std::vector<SGM::Point3D> aUTemp3D;
             std::vector<double> aUParams;
             FacetCurve(pUSeam,Domain.m_UDomain,Options,aUTemp3D,aUParams);
-            rResult.GetThing()->DeleteEntity(pUSeam);
-            
-            curve *pVSeam=pSurface->VParamLine(rResult,dMinV);
+
+            curve *pVSeam=pSurface->VParamLine(transient.GetResult(),dMinV);
             std::vector<SGM::Point3D> aVTemp3D;
             std::vector<double> aVParams;
             FacetCurve(pVSeam,Domain.m_VDomain,Options,aVTemp3D,aVParams);
-            rResult.GetThing()->DeleteEntity(pVSeam);
 
             size_t nUTemp3D=aUTemp3D.size();
             size_t nVTemp3D=aVTemp3D.size();
@@ -1387,7 +1407,7 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
 
             // Find the seam points.
 
-            curve *pSeam=pSurface->UParamLine(rResult,dMinU);
+            curve *pSeam=pSurface->UParamLine(transient.GetResult(),dMinU);
             std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
             std::vector<double> aParams;
             FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D,aParams);
@@ -1413,7 +1433,6 @@ void CreateWholeSurfaceLoop(SGM::Result                       &rResult,
                 {
                 aSeamVs.push_back(pSeam->Inverse(aSeamPoints3D[Index1]));
                 }
-            rResult.GetThing()->DeleteEntity(pSeam);
             std::vector<size_t> aPolygon;
             aPolygon.reserve(nSeamPoints3D*2-2);
             aPoints2D.reserve(nSeamPoints3D*2-2);
