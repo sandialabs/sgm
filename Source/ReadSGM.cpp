@@ -463,13 +463,10 @@ void ReadVertex(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pVertex;
     } 
       
-void ReadAttribute(SGM::Result              &rResult,
-                   std::vector<std::string> &aArgs,
-                   std::map<size_t,SGMData> &mEntityMap)
+void ReadAttribute(SGM::Result              &,//rResult,
+                   std::vector<std::string> &,//aArgs,
+                   std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
        
 void ReadLine(SGM::Result              &rResult,
@@ -530,76 +527,52 @@ void ReadCircle(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCircle;
     } 
       
-void ReadEllipse(SGM::Result              &rResult,
-                 std::vector<std::string> &aArgs,
-                 std::map<size_t,SGMData> &mEntityMap)
+void ReadEllipse(SGM::Result              &,//rResult,
+                 std::vector<std::string> &,//aArgs,
+                 std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadParabola(SGM::Result              &rResult,
-                  std::vector<std::string> &aArgs,
-                  std::map<size_t,SGMData> &mEntityMap)
+void ReadParabola(SGM::Result              &,//rResult,
+                  std::vector<std::string> &,//aArgs,
+                  std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadHyperbola(SGM::Result              &rResult,
-                   std::vector<std::string> &aArgs,
-                   std::map<size_t,SGMData> &mEntityMap)
+void ReadHyperbola(SGM::Result              &,//rResult,
+                   std::vector<std::string> &,//aArgs,
+                   std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadNUBCurve(SGM::Result              &rResult,
-                  std::vector<std::string> &aArgs,
-                  std::map<size_t,SGMData> &mEntityMap)
+void ReadNUBCurve(SGM::Result              &,//rResult,
+                  std::vector<std::string> &,//aArgs,
+                  std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadNURBCurve(SGM::Result              &rResult,
-                   std::vector<std::string> &aArgs,
-                   std::map<size_t,SGMData> &mEntityMap)
+void ReadNURBCurve(SGM::Result              &,//rResult,
+                   std::vector<std::string> &,//aArgs,
+                   std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadPointCurve(SGM::Result              &rResult,
-                    std::vector<std::string> &aArgs,
-                    std::map<size_t,SGMData> &mEntityMap)
+void ReadPointCurve(SGM::Result              &,//rResult,
+                    std::vector<std::string> &,//aArgs,
+                    std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadHermite(SGM::Result              &rResult,
-                 std::vector<std::string> &aArgs,
-                 std::map<size_t,SGMData> &mEntityMap)
+void ReadHermite(SGM::Result              &,//rResult,
+                 std::vector<std::string> &,//aArgs,
+                 std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
       
-void ReadTorusKnot(SGM::Result              &rResult,
-                   std::vector<std::string> &aArgs,
-                   std::map<size_t,SGMData> &mEntityMap)
+void ReadTorusKnot(SGM::Result              &,//rResult,
+                   std::vector<std::string> &,//aArgs,
+                   std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
 void ReadPlane(SGM::Result              &rResult,
@@ -662,85 +635,58 @@ void ReadCylinder(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCylinder;
     } 
 
-void ReadCone(SGM::Result              &rResult,
-              std::vector<std::string> &aArgs,
-              std::map<size_t,SGMData> &mEntityMap)
+void ReadCone(SGM::Result              &,//rResult,
+              std::vector<std::string> &,//aArgs,
+              std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadSphere(SGM::Result              &rResult,
-                std::vector<std::string> &aArgs,
-                std::map<size_t,SGMData> &mEntityMap)
+void ReadSphere(SGM::Result              &,//rResult,
+                std::vector<std::string> &,//aArgs,
+                std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadTorus(SGM::Result              &rResult,
-               std::vector<std::string> &aArgs,
-               std::map<size_t,SGMData> &mEntityMap)
+void ReadTorus(SGM::Result              &,//rResult,
+               std::vector<std::string> &,//aArgs,
+               std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     }
 
-void ReadNUBSurface(SGM::Result              &rResult,
-                    std::vector<std::string> &aArgs,
-                    std::map<size_t,SGMData> &mEntityMap)
+void ReadNUBSurface(SGM::Result              &,//rResult,
+                    std::vector<std::string> &,//aArgs,
+                    std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadNURBSurface(SGM::Result              &rResult,
-                     std::vector<std::string> &aArgs,
-                     std::map<size_t,SGMData> &mEntityMap)
+void ReadNURBSurface(SGM::Result              &,//rResult,
+                     std::vector<std::string> &,//aArgs,
+                     std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadRevolve(SGM::Result              &rResult,
-                 std::vector<std::string> &aArgs,
-                 std::map<size_t,SGMData> &mEntityMap)
+void ReadRevolve(SGM::Result              &,//rResult,
+                 std::vector<std::string> &,//aArgs,
+                 std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadExtrude(SGM::Result              &rResult,
-                 std::vector<std::string> &aArgs,
-                 std::map<size_t,SGMData> &mEntityMap)
+void ReadExtrude(SGM::Result              &,//rResult,
+                 std::vector<std::string> &,//aArgs,
+                 std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadReference(SGM::Result              &rResult,
-                   std::vector<std::string> &aArgs,
-                   std::map<size_t,SGMData> &mEntityMap)
+void ReadReference(SGM::Result              &,//rResult,
+                   std::vector<std::string> &,//aArgs,
+                   std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
-void ReadAssembly(SGM::Result              &rResult,
-                  std::vector<std::string> &aArgs,
-                  std::map<size_t,SGMData> &mEntityMap)
+void ReadAssembly(SGM::Result              &,//rResult,
+                  std::vector<std::string> &,//aArgs,
+                  std::map<size_t,SGMData> &)//mEntityMap)
     {
-    rResult;
-    aArgs;
-    mEntityMap;
     } 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -833,29 +779,22 @@ void ReplaceEdgeIDs(edge                     *pEdge,
         }
     }
 
-void ReplaceCurveIDs(curve                    *pCurve,
-                     SGMData                  &rSGMData,
-                     std::map<size_t,SGMData> &mEntityMap)
+void ReplaceCurveIDs(curve                    *,//pCurve,
+                     SGMData                  &,//rSGMData,
+                     std::map<size_t,SGMData> &)//mEntityMap)
     {
-    pCurve;
-    rSGMData;
-    mEntityMap;
     }
 
-void ReplaceSurfaceIDs(surface                  *pSurface,
-                       SGMData                  &rSGMData,
-                       std::map<size_t,SGMData> &mEntityMap)
+void ReplaceSurfaceIDs(surface                  *,//pSurface,
+                       SGMData                  &,//rSGMData,
+                       std::map<size_t,SGMData> &)//mEntityMap)
     {
-    pSurface;
-    rSGMData;
-    mEntityMap;
     }
 
-void ReplaceIDs(SGM::Result              &rResult,
+void ReplaceIDs(SGM::Result              &,//rResult,
                 SGMData                  &rSGMData,
                 std::map<size_t,SGMData> &mEntityMap)
     {
-    rResult;
     entity *pEntity=rSGMData.pEntity;
     ReplaceOwnerIDs(pEntity,rSGMData.aOwners,mEntityMap);
     ReplaceAttributeIDs(pEntity,rSGMData.aAttributes,mEntityMap);

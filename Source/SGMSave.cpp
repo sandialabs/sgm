@@ -7,6 +7,8 @@
 #include "Surface.h"
 #include "Curve.h"
 
+#include <cstring>
+
 // Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))

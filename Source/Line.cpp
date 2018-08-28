@@ -98,4 +98,9 @@ void line::Transform(SGM::Transform3D const &Trans)
     m_Axis=Trans*m_Axis;
     }
 
+double line::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
+{
+    return Domain.Length();
+}
+
 }
