@@ -1375,12 +1375,12 @@ void GetAxis(STEPLineData            const &SLDA,
     }       
 
 void CreateEntities(SGM::Result                   &rResult,
-                    thing                         *,//pThing,
                     std::map<size_t,STEPLineData> &mSTEPData,
                     std::map<size_t,entity *>     &mEntityMap,
                     std::vector<entity *>         &aEntities)
     {
-    std::vector<size_t> aBodies,aVolumes,aFaces,aEdges,aVertices;
+    std::set<entity *> sEntities;
+    std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
     std::vector<body *> aSheetBodies;
     std::map<size_t,STEPLineData>::iterator DataIter=mSTEPData.begin();
     while(DataIter!=mSTEPData.end())
@@ -1775,7 +1775,6 @@ void CreateEntities(SGM::Result                   &rResult,
                 STEPLineData SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
                 SGM::Point3D Pos(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 mEntityMap[nID]=new vertex(rResult,Pos);
-                aVertices.push_back(nID);
                 break;
                 }
             default:break;
@@ -1791,7 +1790,7 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nBodyID=aBodies[Index1];
         body *pBody=(body *)mEntityMap[nBodyID];
-        aEntities.push_back(pBody);
+        sEntities.insert(pBody);
         
         // VolumeID(s) ..., TransformID, JunkID
 
@@ -1822,6 +1821,10 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nVolumeID=aVolumes[Index1];
         volume *pVolume=(volume *)mEntityMap[nVolumeID];
+        if(pVolume->IsTopLevel())
+            {
+            sEntities.insert(pVolume);
+            }
 
         // ShellID(s) ...
 
@@ -1849,8 +1852,11 @@ void CreateEntities(SGM::Result                   &rResult,
                         body *pBody=pVolume->GetBody();
                         rResult.GetThing()->DeleteEntity(pBody);
                         rResult.GetThing()->DeleteEntity(pVolume);
+                        sEntities.erase(pBody);
+                        sEntities.erase(pVolume);
                         vertex *pVertex=new vertex(rResult,SGM::Point3D(x,y,z));
                         mEntityMap[nVolumeID]=pVertex;
+                        sEntities.insert(pVertex);
                         }
                     else
                         {
@@ -1935,6 +1941,10 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nFaceID=aFaces[Index1];
         face *pFace=(face *)mEntityMap[nFaceID];
+        if(pFace->IsTopLevel())
+            {
+            sEntities.insert(pFace);
+            }
 
         // LoopID(s) ..., SurfaceID, bFlag
         
@@ -2038,9 +2048,9 @@ void CreateEntities(SGM::Result                   &rResult,
         {
         size_t nEdgeID=aEdges[Index1];
         edge *pEdge=(edge *)mEntityMap[nEdgeID];
-        if(pEdge->GetVolume()==nullptr && pEdge->GetFaces().empty())
+        if(pEdge->IsTopLevel())
             {
-            aEntities.push_back(pEdge);
+            sEntities.insert(pEdge);
             }
 
         // Start vertex ID, End vertex ID, Curve ID, bFlag
@@ -2120,16 +2130,9 @@ void CreateEntities(SGM::Result                   &rResult,
             }
         }
 
-    // Add top level vertices to the aEntities.
-
-    size_t nVertices=aVertices.size();
-    for(Index1=0;Index1<nVertices;++Index1)
+    for(auto pEntity : sEntities)
         {
-        vertex *pVertex=(vertex *)mEntityMap[aVertices[Index1]];
-        if(pVertex->IsTopLevel())
-            {
-            aEntities.push_back(pVertex);
-            }
+        aEntities.push_back(pEntity);
         }
     }
 
@@ -2254,7 +2257,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     if(Options.m_bScan==false)
         {
         std::map<size_t,entity *> mEntityMap;
-        CreateEntities(rResult,pThing,mSTEPData,mEntityMap,aEntities);
+        CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
         }
     fclose(pFile);
 
