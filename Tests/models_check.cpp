@@ -307,35 +307,35 @@ double square_root(double num) {
 //
 // test whether we can locate test/data subdirectory (in platform agnostic way)
 //
-//TEST(DataDirectoriesCheck, test_data_exists) {
-//    const FilePath data_dir(std::string(SGM_MODELS_DIRECTORY));
-//    ASSERT_TRUE(data_dir.DirectoryExists());
-//}
+TEST(DataDirectoriesCheck, test_data_exists) {
+    const FilePath data_dir(std::string(SGM_MODELS_DIRECTORY));
+    ASSERT_TRUE(data_dir.DirectoryExists());
+}
+
 //
-////
-//// test whether we can handle the list of our file extensions properly
-////
-//TEST(DataDirectoriesCheck, file_extensions)
-//{
-//    std::vector<std::string> names = {
-//            "testA.doc","testB.stp","testC.txt","testD","testE.STEP","testF.otl","testG.STP","testH.step"};
-//    ASSERT_FALSE(has_model_extension(names[0]));
+// test whether we can handle the list of our file extensions properly
 //
-//    filter_model_extension(names);
-//    ASSERT_EQ(names.size(),4);
-//    ASSERT_EQ(names[0],"testB.stp");
-//    ASSERT_EQ(names[1],"testE.STEP");
-//    ASSERT_EQ(names[2],"testG.STP");
-//    ASSERT_EQ(names[3],"testH.step");
-//    ASSERT_TRUE(has_model_extension(names[0]));
-//    ASSERT_TRUE(has_model_extension(names[1]));
-//    ASSERT_TRUE(has_model_extension(names[2]));
-//    ASSERT_TRUE(has_model_extension(names[3]));
-//    ASSERT_EQ(erase_model_extension(names[0]),"testB");
-//    ASSERT_EQ(erase_model_extension(names[1]),"testE");
-//    ASSERT_EQ(erase_model_extension(names[2]),"testG");
-//    ASSERT_EQ(erase_model_extension(names[3]),"testH");
-//}
+TEST(DataDirectoriesCheck, file_extensions)
+{
+    std::vector<std::string> names = {
+            "testA.doc","testB.stp","testC.txt","testD","testE.STEP","testF.otl","testG.STP","testH.step"};
+    ASSERT_FALSE(has_model_extension(names[0]));
+
+    filter_model_extension(names);
+    ASSERT_EQ(names.size(),4);
+    ASSERT_EQ(names[0],"testB.stp");
+    ASSERT_EQ(names[1],"testE.STEP");
+    ASSERT_EQ(names[2],"testG.STP");
+    ASSERT_EQ(names[3],"testH.step");
+    ASSERT_TRUE(has_model_extension(names[0]));
+    ASSERT_TRUE(has_model_extension(names[1]));
+    ASSERT_TRUE(has_model_extension(names[2]));
+    ASSERT_TRUE(has_model_extension(names[3]));
+    ASSERT_EQ(erase_model_extension(names[0]),"testB");
+    ASSERT_EQ(erase_model_extension(names[1]),"testE");
+    ASSERT_EQ(erase_model_extension(names[2]),"testG");
+    ASSERT_EQ(erase_model_extension(names[3]),"testH");
+}
 
 // import and check a single file
 TEST(DataDirectoriesCheck, import_check_single)
@@ -359,59 +359,58 @@ TEST(DataDirectoriesCheck, import_check_single)
 }
 
 
+
 //
-////
-//// test whether the Gtest exit function works properly
-////
-//TEST(ModelDeathTest, exit_code)
-//{
-//    EXPECT_EQ(0.0, square_root(0.0));
-//    EXPECT_EXIT(square_root(-22.0), ::testing::ExitedWithCode(255), "Error: Negative Input");
-//}
+// test whether the Gtest exit function works properly
 //
-//
-//// Test just a single file using our timeout wrapper, but it better not timeout
-//// or whole process will exit().
-//TEST(ModelDeathTest, import_check_timeout)
-//{
-//    std::cout << std::endl << std::flush;
-//    std::string base_dir(SGM_MODELS_DIRECTORY);
-//    std::string file_path = get_models_file_path("ball.stp");
-//    std::ofstream log_file;
-//    open_log_file(file_path, log_file);
-//    int status = import_check_timeout(file_path, log_file);
-//    log_file << "Success" << std::endl;
-//    log_file.close();
-//    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
-//}
-//
-//TEST(ModelDeathTest, sgm_models)
-//{
-//    std::string base_dir(SGM_MODELS_DIRECTORY);
-//
-//    std::vector<std::string> names = get_file_names_if(base_dir, has_model_extension);
-//#if PRSCOPY
-//    // Create a directory for the passed files.  PRS
-//    std::string passed_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Passed";
-//    CreateDirectory(passed_name.c_str(),nullptr);
-//
-//    // Create a directory for files that read in but do not check.  PRS
-//    std::string check_error_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Check Errors";
-//    CreateDirectory(check_error_name.c_str(),nullptr);
-//
-//    // Create a directory for files that timed out.  PRS
-//    std::string timed_out_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Timed Out";
-//    CreateDirectory(timed_out_name.c_str(),nullptr);
-//#endif
-//    for (const std::string& name : names)
-//        {
-//        std::string path_name = std::string(SGM_MODELS_DIRECTORY) + "/" + name;
-//        std::cout << "Checking " << path_name << std::endl << std::flush;
-//        printf("Checking %s\n",path_name.c_str());
-//        EXPECT_EXIT(import_check_log_process(path_name),
-//                    ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),
-//                    "Success");
-//        }
-//
-//    concatenate_log_files();
-//    }
+TEST(ModelDeathTest, exit_code)
+{
+    EXPECT_EQ(0.0, square_root(0.0));
+    EXPECT_EXIT(square_root(-22.0), ::testing::ExitedWithCode(255), "Error: Negative Input");
+}
+
+
+// Test just a single file using our timeout wrapper, but it better not timeout
+// or whole process will exit().
+TEST(ModelDeathTest, import_check_timeout)
+{
+    std::cout << std::endl << std::flush;
+    std::string base_dir(SGM_MODELS_DIRECTORY);
+    std::string file_path = get_models_file_path("ball.stp");
+    std::ofstream log_file;
+    open_log_file(file_path, log_file);
+    int status = import_check_timeout(file_path, log_file);
+    log_file << "Success" << std::endl;
+    log_file.close();
+    EXPECT_EQ(status, ModelsCheckResult::SUCCESS);
+}
+
+TEST(ModelDeathTest, sgm_models)
+{
+    std::string base_dir(SGM_MODELS_DIRECTORY);
+
+    std::vector<std::string> names = get_file_names_if(base_dir, has_model_extension);
+#if PRSCOPY
+    // Create a directory for the passed files.  PRS
+    std::string passed_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Passed";
+    CreateDirectory(passed_name.c_str(),nullptr);
+
+    // Create a directory for files that read in but do not check.  PRS
+    std::string check_error_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Check Errors";
+    CreateDirectory(check_error_name.c_str(),nullptr);
+
+    // Create a directory for files that timed out.  PRS
+    std::string timed_out_name = std::string(SGM_MODELS_DIRECTORY) + "/" + "Timed Out";
+    CreateDirectory(timed_out_name.c_str(),nullptr);
+#endif
+    for (const std::string& name : names)
+        {
+        std::string path_name = std::string(SGM_MODELS_DIRECTORY) + "/" + name;
+        printf("Checking %s\n",path_name.c_str());
+        EXPECT_EXIT(import_check_log_process(path_name),
+                    ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),
+                    "Success");
+        }
+
+    concatenate_log_files();
+    }

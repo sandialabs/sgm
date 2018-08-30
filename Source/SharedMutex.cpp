@@ -1,4 +1,4 @@
-
+#ifdef 0
 
 // Copyright Howard Hinnant 2007-2010. Distributed under the Boost
 // Software License, Version 1.0. (see http://www.boost.org/LICENSE_1_0.txt)
@@ -322,3 +322,5 @@ namespace SGM
     }
 
 }  // namespace SGM
+
+#endif

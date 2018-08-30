@@ -1,5 +1,4 @@
 #include "SGMResult.h"
-#include "SGMThreadPool.h"
 #include "SGMTransform.h"
 
 #include "EntityClasses.h"
@@ -8,6 +7,12 @@
 
 #include <algorithm>
 #include <set>
+
+#define SGM_MULTITHREADED
+
+#ifdef SGM_MULTITHREADED
+#include "SGMThreadPool.h"
+#endif
 
 void SGM::Result::SetResult(SGM::ResultType nType)
     {
@@ -249,14 +254,32 @@ namespace SGMInternal {
         return true;
     }
 
+    void thing::SetConcurrentActive() const
+    {
+        assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+        m_bIsConcurrentActive = true;
+    }
+
+    void thing::SetConcurrentInactive() const
+    {
+        assert(m_bIsConcurrentActive);
+        m_bIsConcurrentActive = false;
+    }
+
+#ifdef SGM_MULTITHREADED
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Cached Data Visitors
-//
-// Provide Visit() functions for types that have cached data.
-// They queue a job onto the ThreadPool workers and add the job to a list.
+// Multithreaded version of thing::FindCachedData
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+    //
+    // Cached Data Visitors
+    //
+    // Provide Visit() functions for types that have cached data.
+    // They queue a job onto the ThreadPool workers and add the job to a list.
+    //
 
     struct SurfaceDataVisitor : EntityVisitor
     {
@@ -319,13 +342,11 @@ namespace SGMInternal {
         }
     };
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Visit the all entities of a certain type in the given set using the
-// appropriate Visitor function above. Then wait on all the jobs to be
-// completed by the workers.
-//
-///////////////////////////////////////////////////////////////////////////////
+    //
+    // Visit the all entities of a certain type in the given set using the
+    // appropriate Visitor function above. Then wait on all the jobs to be
+    // completed by the workers.
+    //
 
     template<class SET, class VISITOR, class FUTURES>
     void TypedFindCachedData(SET &sTypes, VISITOR &visitor, FUTURES &futures)
@@ -340,12 +361,9 @@ namespace SGMInternal {
         futures.clear();
     }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Multithreaded compute of cached data for relevant entities.
-//
-///////////////////////////////////////////////////////////////////////////////
-
+    //
+    // Multithreaded compute of cached data for relevant entities.
+    //
     void thing::FindCachedData(SGM::Result &rResult) const
     {
         // may return 0 when not able to detect
@@ -376,21 +394,68 @@ namespace SGMInternal {
         GetFaces(sFaces, false); // TODO: maybe just iterate the thing->m_mAllEntities
         FaceDataVisitor faceDataVisitor(rResult, pool, futures);
 
-        TypedFindCachedData(sSurfaces, surfaceDataVisitor, futures);
+        TypedFindCachedData(sFaces, faceDataVisitor, futures);
 
         SetConcurrentInactive(); ///////////////////////////////////////////////
-    }
 
-    void thing::SetConcurrentActive() const
-    {
-        assert(!m_bIsConcurrentActive); // we should not be modifying in threads
-        m_bIsConcurrentActive = true;
-    }
+#else  // not SGM_MULTITHREADED
 
-    void thing::SetConcurrentInactive() const
+    struct SurfaceDataVisitor : EntityVisitor
     {
-        assert(m_bIsConcurrentActive);
-        m_bIsConcurrentActive = false;
+        void Visit(torus &s) override
+        { FindGeometryData(&s); }
+
+        void Visit(NUBsurface &s) override
+        { FindGeometryData(&s); }
+
+        void Visit(NURBsurface &s) override
+        { FindGeometryData(&s); }
+    };
+
+    struct EdgeDataVisitor : EntityVisitor
+    {
+        EdgeDataVisitor() = delete;
+
+        explicit EdgeDataVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
+
+        void Visit(edge &e) override
+        { FindEdgeData(*pResult, &e); }
+    };
+
+    struct FaceDataVisitor : EntityVisitor
+    {
+        FaceDataVisitor() = delete;
+
+        explicit FaceDataVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
+
+        void Visit(face &f) override
+        { FindFaceData(*pResult, &f); }
+    };
+
+    void thing::FindCachedData(SGM::Result &rResult) const
+    {
+        // edges
+        std::set<edge *, EntityCompare> sEdges;
+        GetEdges(sEdges, false);
+        EdgeDataVisitor edgeDataVisitor(rResult);
+        for (auto pEdge : sEdges)
+            pEdge->Accept(edgeDataVisitor);
+
+        // surfaces
+        std::set<surface *, EntityCompare> sSurfaces;
+        GetSurfaces(sSurfaces, false);
+        SurfaceDataVisitor surfaceDataVisitor;
+        for (auto pSurface : sSurfaces)
+            pSurface->Accept(surfaceDataVisitor);
+
+        // faces
+        std::set<face *, EntityCompare> sFaces;
+        GetFaces(sFaces, false);
+        FaceDataVisitor faceDataVisitor(rResult);
+        for (auto pFace : sFaces)
+            pFace->Accept(faceDataVisitor);
+
+#endif // SGM_MULTITHREADED
     }
 
 } // namespace SGMInternal
