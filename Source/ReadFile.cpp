@@ -1378,11 +1378,11 @@ void GetAxis(STEPLineData            const &SLDA,
     }       
 
 void CreateEntities(SGM::Result           &rResult,
-                    thing                 *,//pThing,
                     STEPLineDataMapType   &mSTEPData,
                     IDEntityMapType       &mEntityMap,
                     std::vector<entity *> &aEntities)
     {
+    std::set<entity *> sEntities;
     std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
     std::vector<body *> aSheetBodies;
     STEPLineDataMapType::iterator DataIter=mSTEPData.begin();
@@ -1793,7 +1793,7 @@ void CreateEntities(SGM::Result           &rResult,
         {
         size_t nBodyID=aBodies[Index1];
         body *pBody=(body *)mEntityMap[nBodyID];
-        aEntities.push_back(pBody);
+        sEntities.insert(pBody);
         
         // VolumeID(s) ..., TransformID, JunkID
 
@@ -1824,6 +1824,10 @@ void CreateEntities(SGM::Result           &rResult,
         {
         size_t nVolumeID=aVolumes[Index1];
         volume *pVolume=(volume *)mEntityMap[nVolumeID];
+        if(pVolume->IsTopLevel())
+            {
+            sEntities.insert(pVolume);
+            }
 
         // ShellID(s) ...
 
@@ -1851,8 +1855,11 @@ void CreateEntities(SGM::Result           &rResult,
                         body *pBody=pVolume->GetBody();
                         rResult.GetThing()->DeleteEntity(pBody);
                         rResult.GetThing()->DeleteEntity(pVolume);
+                        sEntities.erase(pBody);
+                        sEntities.erase(pVolume);
                         vertex *pVertex=new vertex(rResult,SGM::Point3D(x,y,z));
                         mEntityMap[nVolumeID]=pVertex;
+                        sEntities.insert(pVertex);
                         }
                     else
                         {
@@ -1937,6 +1944,10 @@ void CreateEntities(SGM::Result           &rResult,
         {
         size_t nFaceID=aFaces[Index1];
         face *pFace=(face *)mEntityMap[nFaceID];
+        if(pFace->IsTopLevel())
+            {
+            sEntities.insert(pFace);
+            }
 
         // LoopID(s) ..., SurfaceID, bFlag
         
@@ -2040,6 +2051,10 @@ void CreateEntities(SGM::Result           &rResult,
         {
         size_t nEdgeID=aEdges[Index1];
         edge *pEdge=(edge *)mEntityMap[nEdgeID];
+        if(pEdge->IsTopLevel())
+            {
+            sEntities.insert(pEdge);
+            }
 
         // Start vertex ID, End vertex ID, Curve ID, bFlag
 
@@ -2116,6 +2131,11 @@ void CreateEntities(SGM::Result           &rResult,
             pFace->SetSides(2);
             ++iter;
             }
+        }
+
+    for(auto pEntity : sEntities)
+        {
+        aEntities.push_back(pEntity);
         }
     }
 
@@ -2244,7 +2264,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     if(Options.m_bScan==false)
         {
         IDEntityMapType mEntityMap;
-        CreateEntities(rResult,pThing,mSTEPData,mEntityMap,aEntities);
+        CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
         }
 
     // create all the triangles/facets
@@ -2257,13 +2277,13 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         Heal(rResult,aEntities,Options);
         }
 
-    if(Options.m_bRemoveSeams)
+    if(Options.m_bMerge)
         {
         size_t nEntities=aEntities.size();
         size_t Index1;
         for(Index1=0;Index1<nEntities;++Index1)
             {
-            MergeOutSeams(rResult,aEntities[Index1]);
+            Merge(rResult,aEntities[Index1]);
             }
         }
 

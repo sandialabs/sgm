@@ -313,6 +313,11 @@ namespace SGM {
                 m_ZDomain.m_dMax < m_ZDomain.m_dMin);
     }
 
+    inline Point3D Interval3D::MidPoint(double dXFraction, double dYFraction, double dZFraction) const
+    {
+        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_XDomain.MidPoint(dYFraction),m_XDomain.MidPoint(dZFraction));
+    }
+
     inline Interval3D Interval3D::Extend(double tolerance) const
     {
         return {m_XDomain.m_dMin-tolerance, m_XDomain.m_dMax+tolerance,
@@ -669,6 +674,23 @@ namespace SGM {
         m_ZDomain.m_dMax=Pos1.m_z;
         return *this;
     }
+
+    inline bool Interval3D::OnBoundary(SGM::Point3D Pos, double dTol) const
+        {
+        if(SGM_ZERO<m_XDomain.Length() && m_XDomain.OnBoundary(Pos.m_x,dTol))
+            {
+            return true;
+            }
+        if(SGM_ZERO<m_YDomain.Length() && m_YDomain.OnBoundary(Pos.m_y,dTol))
+            {
+            return true;
+            }
+        if(SGM_ZERO<m_ZDomain.Length() && m_ZDomain.OnBoundary(Pos.m_z,dTol))
+            {
+            return true;
+            }
+        return false;
+        }
 
     inline bool Interval3D::operator&&(Interval3D const &domain) const
     {

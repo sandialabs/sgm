@@ -141,4 +141,39 @@ void circle::Transform(SGM::Transform3D const &Trans)
         m_dRadius*=dScale;
     }
 
+bool circle::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=m_CurveType)
+        {
+        return false;
+        }
+    circle const *pCurve2=(circle const *)pOther;
+    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_dRadius,pCurve2->m_dRadius,dTolerance,false)==false)
+        {
+        return false;
+        }
+    return true;
+    }
+
+double circle::FindLength(SGM::Interval1D const &Domain,double ) const //dTolerance) const
+    {
+    return Domain.Length()*m_dRadius;
+    }
+
 }

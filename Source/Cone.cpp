@@ -183,19 +183,18 @@ bool cone::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    cone const *pCone1=(cone const *)this;
     cone const *pCone2=(cone const *)pOther;
-    if(SGM::NearEqual(pCone1->m_dCosHalfAngle,pCone2->m_dCosHalfAngle,dTolerance,false)==false)
+    if(SGM::NearEqual(m_dCosHalfAngle,pCone2->m_dCosHalfAngle,dTolerance,false)==false)
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(pCone1->m_ZAxis%pCone2->m_ZAxis,1.0,dTolerance,false)==false)
+    else if(SGM::NearEqual(m_ZAxis%pCone2->m_ZAxis,1.0,dTolerance,false)==false)
         {
         bAnswer=false;
         }
     else
         {
-        SGM::Point3D const &Pos1=pCone1->FindApex();
+        SGM::Point3D const &Pos1=FindApex();
         SGM::Point3D const &Pos2=pCone2->FindApex();
         if(SGM::NearEqual(Pos1.Distance(Pos2),0.0,dTolerance,false)==false)
             {
@@ -206,10 +205,10 @@ bool cone::IsSame(surface const *pOther,double dTolerance) const
     }
 
 void cone::PrincipleCurvature(SGM::Point2D const &uv,
-                                 SGM::UnitVector3D  &Vec1,
-                                 SGM::UnitVector3D  &Vec2,
-                                 double             &k1,
-                                 double             &k2) const
+                              SGM::UnitVector3D  &Vec1,
+                              SGM::UnitVector3D  &Vec2,
+                              double             &k1,
+                              double             &k2) const
     {
     SGM::Vector3D dU,dV;
     SGM::Point3D Pos;
@@ -230,23 +229,25 @@ void cone::PrincipleCurvature(SGM::Point2D const &uv,
 
 void cone::Transform(SGM::Transform3D const &Trans)
     {
-        m_Origin = Trans * m_Origin;
-        m_XAxis = Trans * m_XAxis;
-        m_YAxis = Trans * m_YAxis;
-        m_ZAxis = Trans * m_ZAxis;
-        m_dRadius *= Trans.Scale();
+    m_Origin = Trans * m_Origin;
+    m_XAxis = Trans * m_XAxis;
+    m_YAxis = Trans * m_YAxis;
+    m_ZAxis = Trans * m_ZAxis;
+    m_dRadius *= Trans.Scale();
     }
 
-    curve *cone::UParamLine(SGM::Result &rResult, double dU) const
+curve *cone::UParamLine(SGM::Result &rResult, double dU) const
     {
-        SGM::Point3D Apex=FindApex();
-        SGM::Point3D UZero;
-        SGM::Point2D uv(dU,0.0);
-        Evaluate(uv,&UZero);
-        return new line(rResult,Apex,UZero-Apex);
+    SGM::Point3D Apex=FindApex();
+    SGM::Point3D UZero;
+    SGM::Point2D uv(dU,0.0);
+    Evaluate(uv,&UZero);
+    return new line(rResult,Apex,UZero-Apex);
     }
 
-    curve *cone::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
+curve *cone::VParamLine(SGM::Result &, double) const
+    { 
+    return nullptr; 
+    }
 
 }

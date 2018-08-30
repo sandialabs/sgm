@@ -37,17 +37,25 @@ namespace SGM
                                             SGM::Point2D const &Pos1,
                                             bool                bFilled);
 
+    SGM_EXPORT SGM::Complex CreateComplex(SGM::Result       &rResult,
+                                          SGM::Entity const &EntityID);
+
     // Find functions
 
-    SGM_EXPORT size_t FindComponents(SGM::Result               &rResult,
-                                     SGM::Complex const        &ComplexID,
-                                     std::vector<SGM::Complex> &aComponents);
+    SGM_EXPORT double FindAverageEdgeLength(SGM::Result        &rResult,
+                                            SGM::Complex const &ComplexID);
 
     SGM_EXPORT size_t FindGenus(SGM::Result        &rResult,
                                 SGM::Complex const &ComplexID);
     
     SGM_EXPORT SGM::Complex FindBoundary(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);
+
+    SGM_EXPORT bool IsLinear(SGM::Result        &rResult,
+                             SGM::Complex const &ComplexID);
+
+    SGM_EXPORT bool IsCycle(SGM::Result        &rResult,
+                            SGM::Complex const &ComplexID);
 
     // Splitting functions
 
@@ -75,11 +83,23 @@ namespace SGM
                                        SGM::Complex        const &SliceID,
                                        std::vector<SGM::Complex> &aComponents);
 
+    SGM_EXPORT size_t FindComponents(SGM::Result               &rResult,
+                                     SGM::Complex const        &ComplexID,
+                                     std::vector<SGM::Complex> &aComponents);
+
+    SGM_EXPORT size_t FindPlanarParts(SGM::Result               &rResult,
+                                      SGM::Complex const        &ComplexID,
+                                      std::vector<SGM::Complex> &aPlanarParts,
+                                      double                     dTolerance);
+
+    // Other complex functions.
+
     SGM_EXPORT SGM::Complex CoverComplex(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);
 
     SGM_EXPORT SGM::Complex MergeComplex(SGM::Result        &rResult,
-                                         SGM::Complex const &ComplexID);
+                                         SGM::Complex const &ComplexID,
+                                         double              dTolerance);
 
     SGM_EXPORT void ReduceToUsedPoints(SGM::Result  &rResult,
                                        SGM::Complex &ComplexID);

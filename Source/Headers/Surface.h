@@ -35,10 +35,6 @@ class surface : public entity
 
         surface *Clone(SGM::Result &rResult) const override = 0;
 
-        void WriteSGM(SGM::Result                  &rResult,
-                      FILE                         *pFile,
-                      SGM::TranslatorOptions const &Options) const override;
-
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
@@ -68,7 +64,7 @@ class surface : public entity
                                      SGM::Point3D       *ClosePos=nullptr,
                                      SGM::Point2D const *pGuess=nullptr) const = 0;
 
-        virtual bool IsSame(surface const *pOther,double dTolerance) const;
+        virtual bool IsSame(surface const *pOther,double dTolerance) const = 0;
 
         // Returns the principle curvature vectors and values at the given uv point.
 
@@ -204,6 +200,8 @@ class plane : public surface
 
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Origin;
@@ -215,6 +213,12 @@ class plane : public surface
 class cylinder : public surface
     {
     public:
+
+        cylinder(SGM::Result             &rResult,
+                 SGM::Point3D      const &Origin,
+                 SGM::UnitVector3D const &Axis,
+                 double                   dRadius,
+                 SGM::UnitVector3D const *XAxis=nullptr);
 
         cylinder(SGM::Result             &rResult,
                  SGM::Point3D      const &Bottom,
@@ -534,6 +538,8 @@ class NUBsurface: public surface
 
         size_t GetVParams() const {return m_nVParams;}
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
@@ -620,6 +626,8 @@ class NURBsurface: public surface
 
         size_t GetVParams() const {return m_nVParams;}
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<std::vector<SGM::Point4D> > m_aaControlPoints;
@@ -676,6 +684,8 @@ class revolve : public surface
 
         void SetCurve(curve *pCurve);
 
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
     public:
 
         curve             *m_pCurve;
@@ -727,6 +737,8 @@ class extrude : public surface
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         void SetCurve(curve *pCurve);
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
 
     public:
 

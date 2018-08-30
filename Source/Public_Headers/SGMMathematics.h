@@ -65,6 +65,9 @@ namespace SGM
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
+    SGM_EXPORT double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
+                                       SGM::Point3D              const &Pos);
+
     /////////////////////////////////////////////////////////////////////////
     //
     //  Polygon functions
@@ -119,7 +122,7 @@ namespace SGM
 
     // Returns true if D is inside the angle formed by A as the angle vertex
     // and B and C as its sides.  If D is found first, before C when going
-    // counter clockwise from B to D around C, or if D is on the ray AB or AC,
+    // counter clockwise from B to D around A, or if D is on the ray AB or AC,
     // then then true is returned. 
 
     SGM_EXPORT bool InAngle(Point2D const &A,

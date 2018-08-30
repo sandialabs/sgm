@@ -26,6 +26,24 @@ line::line(SGM::Result             &rResult,
     m_Domain.m_dMax=SGM_MAX;
     }
 
+bool line::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=m_CurveType)
+        {
+        return false;
+        }
+    line const *pLine2=(line const *)pOther;
+    if(SGM::NearEqual(m_Origin,pLine2->m_Origin,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_Axis,pLine2->m_Axis,dTolerance)==false)
+        {
+        return false;
+        }
+    return true;
+    }
+
 line::line(SGM::Result &rResult, line const &other):
         curve(rResult, other),
         m_Origin(other.m_Origin),
@@ -80,5 +98,9 @@ void line::Transform(SGM::Transform3D const &Trans)
     m_Axis=Trans*m_Axis;
     }
 
+double line::FindLength(SGM::Interval1D const &Domain,double ) const //dTolerance) const
+    {
+    return Domain.Length();
+    }
 
 }

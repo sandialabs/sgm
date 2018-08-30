@@ -564,7 +564,13 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         }
     else if (nFound == 2)
         {
-        if(aValues[0]<aValues[1])
+        if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
+            {
+            XVec = aVectors[0];
+            YVec = XVec.Orthogonal();
+            ZVec = XVec * YVec;
+            }
+        else if(aValues[0]<aValues[1])
             {
             XVec = aVectors[1];
             YVec = aVectors[0];
@@ -705,6 +711,21 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
         mMatchMap[(unsigned int)Index1]=(unsigned int)nWhere;
         }
     return true;
+    }
+
+double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
+                        SGM::Point3D              const &Pos1)
+    {
+    double dAnswer=std::numeric_limits<double>::max();
+    for(SGM::Point3D const &Pos2 : aPoints)
+        {
+        double dDistanceSquared=Pos1.DistanceSquared(Pos2);
+        if(dDistanceSquared<dAnswer)
+            {
+            dAnswer=dDistanceSquared;
+            }
+        }
+    return sqrt(dAnswer);
     }
 
 void FindLengths3D(std::vector<Point3D> const &aPoints,

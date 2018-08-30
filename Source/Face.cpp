@@ -385,21 +385,21 @@ bool face::PointInFace(SGM::Result        &rResult,
                 edge *pEdge1=aTestEdges[1];
                 SGM::EdgeSideType nSideType0=GetSideType(pEdge0);
                 SGM::EdgeSideType nSideType1=GetSideType(pEdge1);
-                SGM::Point2D uvC=EvaluateParamSpace(pEdge0,nSideType0,VertexPos);
-                SGM::Point2D uvA=uvC,uvB=uvC;
+                SGM::Point2D uvA=EvaluateParamSpace(pEdge0,nSideType0,VertexPos);
+                SGM::Point2D uvB=uvA,uvC=uvA;
 
                 if(nSideType0==SGM::FaceOnLeftType)
                     {
                     if(pEdge0->GetStart()==pVertex)
                         {
                         SGM::Vector3D StartDir=pEdge0->FindStartVector();
-                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
                         }
                     else
                         {
                         SGM::Vector3D EndDir=pEdge0->FindEndVector();
                         EndDir.Negate();
-                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
                         }
                     }
                 else if(nSideType0==SGM::FaceOnRightType)
@@ -407,13 +407,13 @@ bool face::PointInFace(SGM::Result        &rResult,
                     if(pEdge0->GetStart()==pVertex)
                         {
                         SGM::Vector3D StartDir=pEdge0->FindStartVector();
-                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
                         }
                     else
                         {
                         SGM::Vector3D EndDir=pEdge0->FindEndVector();
                         EndDir.Negate();
-                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
                         }
                     }
                 else
@@ -426,13 +426,13 @@ bool face::PointInFace(SGM::Result        &rResult,
                     if(pEdge1->GetStart()==pVertex)
                         {
                         SGM::Vector3D StartDir=pEdge1->FindStartVector();
-                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
                         }
                     else
                         {
                         SGM::Vector3D EndDir=pEdge1->FindEndVector();
                         EndDir.Negate();
-                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
                         }
                     }
                 else if(nSideType1==SGM::FaceOnRightType)
@@ -440,20 +440,27 @@ bool face::PointInFace(SGM::Result        &rResult,
                     if(pEdge1->GetStart()==pVertex)
                         {
                         SGM::Vector3D StartDir=pEdge1->FindStartVector();
-                        uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
+                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
                         }
                     else
                         {
                         SGM::Vector3D EndDir=pEdge1->FindEndVector();
                         EndDir.Negate();
-                        uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
                         }
                     }
                 else
                     {
                     throw;  // A case that has not been considered.
                     }
-                return InAngle(uvC,uvA,uvB,uv);
+                if (m_bFlipped)
+                    {
+                    return InAngle(uvA,uvC,uvB,uv);
+                    }
+                else
+                    {
+                    return InAngle(uvA,uvB,uvC,uv);
+                    }
                 }
             else
                 {
@@ -658,8 +665,8 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
 void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
     {
     m_sEdges.insert(pEdge);
-    pEdge->AddFace(this);
     m_mSideType[pEdge]=nEdgeType;
+    pEdge->AddFace(this);
     }
 
 void face::RemoveEdge(SGM::Result &rResult,

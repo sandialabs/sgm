@@ -228,6 +228,8 @@ namespace SGM {
 
         bool IsEmpty() const;
 
+        Point3D MidPoint(double dXFraction = 0.5, double dYFraction = 0.5, double dZFraction = 0.5) const;
+
         // Create a new box with the intervals in each direction stretched in the positive and negative directions by
         // a tolerance.
 
@@ -295,6 +297,11 @@ namespace SGM {
         bool operator&&(Interval3D const &) const;
 
         Interval3D operator*=(Transform3D const &Trans);
+
+        // Returns true if Pos is on the boundary of this interval within dTol.
+        // If the box is 2D then the 1D boundary is used.
+
+        bool OnBoundary(SGM::Point3D Pos, double dTol) const;
 
     public:
 

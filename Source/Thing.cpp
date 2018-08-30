@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <set>
 
-#define SGM_MULTITHREADED
+//#define SGM_MULTITHREADED
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"

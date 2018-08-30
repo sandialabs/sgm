@@ -49,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(file_open()));
   connect(mFileMenu, SIGNAL(recent_file(QString)),
           this, SLOT(file_open_recent(QString)));
+  connect(mFileMenu, SIGNAL(sgm()),
+          this, SLOT(file_sgm()));
   connect(mFileMenu, SIGNAL(step()),
           this, SLOT(file_step()));
   connect(mFileMenu, SIGNAL(stl()),
@@ -141,9 +143,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::file_open()
 {
-  QString type_filter = tr("Step files (%1)").arg("*.stp *.step");
+  QString type_filter = tr("SGM files (%1)").arg("*.sgm");
   type_filter += ";;" + tr("STL Files (%1)").arg("*.stl");
-  type_filter += ";;" + tr("All files");
+  type_filter += ";;" + tr("Step Files (%1)").arg("*.stp *.step");
+  type_filter += ";;" + tr("All files").arg("*.*");
 
   // Run the dialog
   QStringList files = QFileDialog::getOpenFileNames(
@@ -151,6 +154,14 @@ void MainWindow::file_open()
 
   for(const QString &f : files)
     file_open_recent(f);
+}
+
+void MainWindow::file_sgm()
+{
+  QString type_filter = tr("SGM files (%1)").arg("*.sgm");
+  QString SaveName=QFileDialog::getSaveFileName(this, tr("Output File"), "", type_filter);
+
+  mModel->sgm(SaveName);
 }
 
 void MainWindow::file_step()
@@ -378,7 +389,7 @@ void MainWindow::test_gtest()
 void MainWindow::primitive_block()
     {
     SGM::Point3D Pos0(0,0,0);
-    SGM::Point3D Pos1(2,4,9);
+    SGM::Point3D Pos1(1,4,9);
     mModel->create_block(Pos0,Pos1);
     }
 

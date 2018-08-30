@@ -760,7 +760,7 @@ void SGM::RunTestDirectory(SGM::Result       &rResult,
                 }
             }
         }
-    fprintf(pOutputFile,"\n%zd Passed %zd Failed\n",nPassed,nFailed);
+    fprintf(pOutputFile,"\n%zu Passed %zu Failed\n",nPassed,nFailed);
     fclose(pOutputFile);
     }
 
@@ -3360,6 +3360,33 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         SGM::Body BodyID2=SGM::CreateBlock(rResult,Pos0,Pos1);
         SGM::Transform3D Trans(SGM::Vector3D(20,0,0));
         SGM::TransformEntity(rResult,Trans,BodyID2);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==52)
+        {
+        // Test imprinting of points on a complex
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.push_back(SGM::Point3D(0,0,0));
+        aPoints.push_back(SGM::Point3D(10,0,0));
+        aPoints.push_back(SGM::Point3D(10,10,0));
+        std::vector<unsigned int> aSegments;
+        aSegments.push_back(0);
+        aSegments.push_back(1);
+        aSegments.push_back(1);
+        aSegments.push_back(2);
+
+        std::vector<SGM::Point3D> aNewPoints;
+        aNewPoints.push_back(SGM::Point3D(2,0,0));
+        aNewPoints.push_back(SGM::Point3D(7,0,0));
+        aNewPoints.push_back(SGM::Point3D(10,5,0));
+
+        SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
+        pComplex->SplitAtPoints(rResult,aNewPoints,SGM_MIN_TOL);
 
         return bAnswer;
         }

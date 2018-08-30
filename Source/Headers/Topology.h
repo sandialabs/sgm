@@ -119,8 +119,8 @@ void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
 void RemoveFace(SGM::Result &rResult,
                 face        *pFace);
 
-void MergeOutSeams(SGM::Result &rResult,
-                   entity      *pEntity);
+void Merge(SGM::Result &rResult,
+           entity      *pEntity);
 
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces);

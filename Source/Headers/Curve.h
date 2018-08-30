@@ -73,6 +73,8 @@ class curve : public entity
 
         bool IsTopLevel() const override;
 
+        void AddEdge(edge *pEdge);
+
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override = 0;
@@ -112,8 +114,6 @@ class curve : public entity
 
         double DerivativeMagnitude(double t);
 
-        void AddEdge(edge *pEdge);
-
         void RemoveEdge(edge *pEdge);
 
         std::set<edge *,EntityCompare> const &GetEdges() const;
@@ -127,6 +127,8 @@ class curve : public entity
         bool GetClosed() const;
 
         double NewtonsMethod(double dStart, SGM::Point3D const &Pos) const;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const = 0;
 
     protected:
 
@@ -172,6 +174,10 @@ class line : public curve
         SGM::Point3D const &GetOrigin() const {return m_Origin;}
         SGM::UnitVector3D const &GetAxis() const {return m_Axis;}
 
+        bool IsSame(curve const *pOther,double dTolerance) const override;
+
+        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Origin;
@@ -215,6 +221,10 @@ class circle : public curve
         SGM::UnitVector3D  const &GetXAxis()  const {return m_XAxis;}
         SGM::UnitVector3D  const &GetYAxis()  const {return m_YAxis;}
         double GetRadius() const {return m_dRadius;}
+
+        bool IsSame(curve const *pOther,double dTolerance) const override;
+
+        double FindLength(SGM::Interval1D const &Domain,double dTolerance) const override;
 
     public:
 
@@ -275,6 +285,8 @@ class NUBcurve: public curve
 
         int Continuity() const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         std::vector<SGM::Point3D> m_aControlPoints;
@@ -297,8 +309,6 @@ class NURBcurve: public curve
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         NURBcurve *Clone(SGM::Result &rResult) const override;
-
-        int Continuity() const override;
 
         void Evaluate(double         t,
                       SGM::Point3D  *Pos,
@@ -327,6 +337,13 @@ class NURBcurve: public curve
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
         std::vector<double> const &GetSeedParams() const;
+
+        // Returns the largest integer that the curve is Cn for.  If the curve
+        // is C infinity then std::numeric_limits<int>::max() is returned.
+
+        int Continuity() const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -366,6 +383,8 @@ class PointCurve: public curve
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D m_Pos;
@@ -404,6 +423,8 @@ class ellipse: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -449,6 +470,8 @@ class hyperbola: public curve
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -491,6 +514,8 @@ class parabola: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -541,6 +566,8 @@ class TorusKnot: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -597,6 +624,8 @@ class hermite: public curve
         // Concatenate / adds pEndHermite to the end of this.
 
         void Concatenate(hermite const *pEndHermite);
+
+        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 

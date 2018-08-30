@@ -60,6 +60,36 @@ void parabola::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector
         }
     }
 
+bool parabola::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=m_CurveType)
+        {
+        return false;
+        }
+    parabola const *pCurve2=(parabola const *)pOther;
+    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_dA,pCurve2->m_dA,dTolerance,false)==false)
+        {
+        return false;
+        }
+    return true;
+    }
+
 double parabola::Inverse(SGM::Point3D const &Pos,
                       SGM::Point3D       *ClosePos,
                       double       const *) const
@@ -104,6 +134,5 @@ void parabola::Transform(SGM::Transform3D const &Trans)
     if(double dScale=Trans.Scale())
         m_dA*=dScale;
     }
-
 
 }

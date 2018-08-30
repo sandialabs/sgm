@@ -733,6 +733,27 @@ complex *CreateComplex(SGM::Result                     &rResult,
     return new complex(rResult,aPoints,aSegments,aTriangles);
     }
 
+complex *CreateComplex(SGM::Result  &rResult,
+                       entity const *pEntity)
+    {
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pEntity,sFaces);
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned int> aTriangles;
+    for(face *pFace : sFaces)
+        {
+        std::vector<SGM::Point3D> const &aFacePoints=pFace->GetPoints3D(rResult);
+        unsigned int nOffset=(unsigned int)aPoints.size();
+        aPoints.insert(aPoints.end(),aFacePoints.begin(),aFacePoints.end());
+        std::vector<unsigned int> const &aFaceTriangles=pFace->GetTriangles(rResult);
+        for(auto nIndex : aFaceTriangles)
+            {
+            aTriangles.push_back(nIndex+nOffset);
+            }
+        }
+    return new complex(rResult,aPoints,aTriangles);
+    }
+
 body *CreateDisk(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
                  SGM::UnitVector3D const &Normal,

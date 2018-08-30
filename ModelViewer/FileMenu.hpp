@@ -23,6 +23,8 @@ signals:
 
     void stl();
 
+    void sgm();
+
     void exit();
 
 private slots:

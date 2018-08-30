@@ -34,6 +34,8 @@ public:
 
     bool open_file(const QString &filename);
 
+    void sgm(QString const &SaveName);
+
     void step(QString const &SaveName);
 
     void stl(QString const &SaveName);
@@ -131,6 +133,8 @@ public:
 
     void RemoveColor(SGM::Entity EntityID);
 
+    void CreateComplex(SGM::Entity EntityID);
+
     void Copy(SGM::Entity EntityID);
 
     void Cover(SGM::Entity EntityID);
@@ -138,6 +142,8 @@ public:
     void Merge(SGM::Entity EngityID);
 
     void FindComponents(SGM::Entity EntityID);
+
+    void FindPlanes(SGM::Entity EntityID);
 
     void Boundary(SGM::Entity EngityID);
 

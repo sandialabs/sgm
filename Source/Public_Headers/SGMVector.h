@@ -93,6 +93,10 @@ namespace SGM
 
         Point4D operator+=(Vector4D const &Vec);
 
+        double Distance(Point4D const &Pos) const;
+
+        double DistanceSquared(Point4D const &Pos) const;
+
         double m_x;
         double m_y;
         double m_z;
@@ -323,6 +327,8 @@ namespace SGM
     inline bool NearEqual(Point2D const &Pos1,Point2D const &Pos2,double dTolerance);
 
     inline bool NearEqual(Point3D const &Pos1,Point3D const &Pos2,double dTolerance);
+
+    inline bool NearEqual(Point4D const &Pos1,Point4D const &Pos2,double dTolerance);
 
     inline bool NearEqual(Vector3D const &Pos1,Vector3D const &Pos2,double dTolerance);
 

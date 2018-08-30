@@ -27,6 +27,28 @@ namespace SGMInternal
         SetCurve(pCurve);
     }
 
+bool revolve::IsSame(surface const *pOther,double dTolerance) const
+    {
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
+        return false;
+        }
+    revolve const *pRevolve2=(revolve const *)pOther;
+    if(SGM::NearEqual(m_Origin,pRevolve2->m_Origin,dTolerance)==false)
+        {
+        return false;
+        }
+    if(SGM::NearEqual(m_ZAxis,pRevolve2->m_ZAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    if(m_pCurve->IsSame(pRevolve2->m_pCurve,dTolerance)==false)
+        {
+        return false;
+        }
+    return true;
+    }
+
 revolve::~revolve()
     {
     if (m_pCurve)

@@ -136,6 +136,12 @@ void ModelData::step(QString const &SaveName)
     SGM::SaveSTEP(dPtr->mResult, SaveName.toUtf8().data(), SGM::Thing(), Options);
 }
 
+void ModelData::sgm(QString const &SaveName)
+{
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(dPtr->mResult, SaveName.toUtf8().data(), SGM::Thing(), Options);
+}
+
 void ModelData::stl(QString const &SaveName)
 {
     SGM::TranslatorOptions Options;
@@ -330,6 +336,11 @@ void ModelData::RemoveColor(SGM::Entity EntityID)
     SGM::RemoveColor(dPtr->mResult, EntityID);
 }
 
+void ModelData::CreateComplex(SGM::Entity EntityID)
+{
+    SGM::CreateComplex(dPtr->mResult, EntityID);
+}
+
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
@@ -343,7 +354,7 @@ void ModelData::Cover(SGM::Entity EntityID)
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
-    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_ZERO);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
@@ -351,6 +362,14 @@ void ModelData::FindComponents(SGM::Entity EntityID)
 {
     std::vector<SGM::Complex> aComponents;
     SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+}
+
+void ModelData::FindPlanes(SGM::Entity EntityID)
+{
+    std::vector<SGM::Complex> aPlanarParts;
+    double dTol=SGM::FindAverageEdgeLength(dPtr->mResult,SGM::Complex(EntityID.m_ID))*SGM_FIT;
+    SGM::FindPlanarParts(dPtr->mResult, SGM::Complex(EntityID.m_ID),aPlanarParts,dTol);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
@@ -450,7 +469,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     auto *body_item = new QTreeWidgetItem(parent);
     mMap[body_item] = BodyID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Body %zd", BodyID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Body %zu", BodyID.m_ID);
     body_item->setText(0, Data0);
 
     add_attributes_to_tree(body_item, BodyID);
@@ -463,7 +482,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
     if (nVolumes > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%zd Volumes", nVolumes);
+        snprintf(Data, sizeof(Data), "%zu Volumes", nVolumes);
         body_item->setText(1, Data);
         }
     else if(nVolumes==1)
@@ -488,7 +507,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
         char Data0[100];
         if(nPoints>1)
             {
-            snprintf(Data0, sizeof(Data0), "%zd Points", nPoints);
+            snprintf(Data0, sizeof(Data0), "%zu Points", nPoints);
             }
         else
             {
@@ -502,7 +521,7 @@ void ModelData::add_body_to_tree(QTreeWidgetItem *parent, SGM::Body BodyID)
             {
             auto *pos_item = new QTreeWidgetItem(points_item);
             char Data1[100];
-            snprintf(Data1, sizeof(Data1), "Point %zd", Index1);
+            snprintf(Data1, sizeof(Data1), "Point %zu", Index1);
             pos_item->setText(0, Data1);
 
             char Data2[100];
@@ -520,12 +539,40 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     mMap[complex_item] = ComplexID;
 
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Complex %zd", ComplexID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Complex %zu", ComplexID.m_ID);
     complex_item->setText(0, Data0);
+
+    std::vector<SGM::Point3D> const &aPoints=SGM::GetComplexPoints(dPtr->mResult,ComplexID);
+    std::vector<unsigned int> const &aSegments=GetComplexSegments(dPtr->mResult,ComplexID);
+    std::vector<unsigned int> const &aTriangles=GetComplexTriangles(dPtr->mResult,ComplexID);
+
+    auto *points_item = new QTreeWidgetItem(complex_item);
+    auto *segments_item = new QTreeWidgetItem(complex_item);
+    auto *triangles_item = new QTreeWidgetItem(complex_item);
+
+    snprintf(Data0, sizeof(Data0), "%ld", aPoints.size());
+    points_item->setText(0, "Points");
+    points_item->setText(1, Data0);
+    snprintf(Data0, sizeof(Data0), "%ld", aSegments.size());
+    segments_item->setText(0, "Segments");
+    segments_item->setText(1, Data0);
+    snprintf(Data0, sizeof(Data0), "%ld", aTriangles.size());
+    triangles_item->setText(0, "Triangles");
+    triangles_item->setText(1, Data0);
+
+    if(SGM::IsLinear(dPtr->mResult,ComplexID))
+        {
+        auto *linear_item = new QTreeWidgetItem(complex_item);
+        linear_item->setText(0, "Linear");
+        }
+    if(SGM::IsCycle(dPtr->mResult,ComplexID))
+        {
+        auto *cycle_item = new QTreeWidgetItem(complex_item);
+        cycle_item->setText(0, "Cycle");
+        }
 
     add_attributes_to_tree(complex_item, ComplexID);
     add_bounding_box_to_tree(complex_item, ComplexID);
-
 }
 
 void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID)
@@ -534,7 +581,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     auto *volume_item = new QTreeWidgetItem(parent);
     mMap[volume_item] = VolumeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Volume %zd", VolumeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Volume %zu", VolumeID.m_ID);
     volume_item->setText(0, Data0);
 
     add_attributes_to_tree(volume_item, VolumeID);
@@ -547,7 +594,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     if (nFaces > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%zd Faces", nFaces);
+        snprintf(Data, sizeof(Data), "%zu Faces", nFaces);
         volume_item->setText(1, Data);
         }
     else if(nFaces==1)
@@ -566,7 +613,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     if (nEdges > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%zd Edges", nEdges);
+        snprintf(Data, sizeof(Data), "%zu Edges", nEdges);
         volume_item->setText(1, Data);
         }
     else if(nEdges==1)
@@ -586,7 +633,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     auto *face_item = new QTreeWidgetItem(parent);
     mMap[face_item] = FaceID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Face %zd", FaceID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Face %zu", FaceID.m_ID);
     face_item->setText(0, Data0);
 
     add_attributes_to_tree(face_item, FaceID);
@@ -599,7 +646,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     if (nEdges > 1)
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%zd Edges", nEdges);
+        snprintf(Data, sizeof(Data), "%zu Edges", nEdges);
         face_item->setText(1, Data);
         }
     else if(nEdges==1)
@@ -636,7 +683,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     auto *edge_item = new QTreeWidgetItem(parent);
     mMap[edge_item] = EdgeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Edge %zd", EdgeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Edge %zu", EdgeID.m_ID);
     edge_item->setText(0, Data0);
 
     add_attributes_to_tree(edge_item, EdgeID);
@@ -652,7 +699,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     else
         {
         char Data[100];
-        snprintf(Data, sizeof(Data), "%zd Vertices", sVertices.size());
+        snprintf(Data, sizeof(Data), "%zu Vertices", sVertices.size());
         edge_item->setText(1, Data);
         }
 
@@ -672,7 +719,7 @@ void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID
     auto *vertex_item = new QTreeWidgetItem(parent);
     mMap[vertex_item] = VertexID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Vertex %zd", VertexID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Vertex %zu", VertexID.m_ID);
     vertex_item->setText(0, Data0);
 
     add_attributes_to_tree(vertex_item, VertexID);
@@ -720,7 +767,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::PlaneType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Plane %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Plane %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -753,7 +800,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::CylinderType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Cylinder %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Cylinder %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -764,7 +811,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
 
             auto *data_item1 = new QTreeWidgetItem(surface_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
-            data_item1->setText(0, "Origin");
+            data_item1->setText(0, "Center");
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
@@ -792,21 +839,21 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::ConeType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Cone %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Cone %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::SphereType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Sphere %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Sphere %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::TorusType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Torus %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Torus %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
             char Data[100];
@@ -818,7 +865,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
 
             auto *data_item1 = new QTreeWidgetItem(surface_item);
             snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
-            data_item1->setText(0, "Origin");
+            data_item1->setText(0, "Center");
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
@@ -887,42 +934,42 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
         case SGM::NUBSurfaceType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NUB Surface %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NUB Surface %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::NURBSurfaceType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NURB Surface %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NURB Surface %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::RevolveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Revolve %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Revolve %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::ExtrudeType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Extrude %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Extrude %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         case SGM::OffsetType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Offset Surface %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Offset Surface %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             break;
             }
         default:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Surface %zd", SurfaceID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Surface %zu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             }
         case SGM::ThingType:
@@ -996,7 +1043,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::LineType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Line %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Line %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
 
             char Data[100];
@@ -1019,7 +1066,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::CircleType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Circle %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Circle %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
 
             char Data[100];
@@ -1058,70 +1105,70 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
         case SGM::EllipseType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Ellipse %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Ellipse %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::ParabolaType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Parabola %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Parabola %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HyperbolaType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Hyperbola %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Hyperbola %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::NUBCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NUB Curve %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NUB Curve %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::NURBCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "NURB Curve %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "NURB Curve %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::PointCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Point Curve %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Point Curve %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HelixCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Helix %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Helix %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::HermiteCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Hermite Curve %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Hermite Curve %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         case SGM::TorusKnotCurveType:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Torus Knot %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Torus Knot %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
         default:
             {
             char Data0[100];
-            snprintf(Data0, sizeof(Data0), "Curve %zd", CurveID.m_ID);
+            snprintf(Data0, sizeof(Data0), "Curve %zu", CurveID.m_ID);
             curve_item->setText(0, Data0);
             break;
             }
@@ -1134,7 +1181,7 @@ void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent, SGM::Attribute At
     auto attribute_item = new QTreeWidgetItem(parent);
     mMap[attribute_item] = AttributeID;
     char Data0[100];
-    snprintf(Data0, sizeof(Data0), "Attribute %zd", AttributeID.m_ID);
+    snprintf(Data0, sizeof(Data0), "Attribute %zu", AttributeID.m_ID);
     attribute_item->setText(0, Data0);
     std::string const &Name = SGM::GetAttributeName(dPtr->mResult, AttributeID);
     attribute_item->setText(1, Name.c_str());
@@ -1191,7 +1238,7 @@ void ModelData::add_attributes_to_tree(QTreeWidgetItem *parent, SGM::Entity Enti
             else
                 {
                 char Data1[100];
-                snprintf(Data1, sizeof(Data1), "%zd Attributes", nAttributes);
+                snprintf(Data1, sizeof(Data1), "%zu Attributes", nAttributes);
                 owner_item->setText(1, Data1);
                 }
             auto iter = sAttributes.begin();
@@ -1376,13 +1423,27 @@ inline void update_bounds_points_uv(const std::vector<SGM::Point2D> &points, SGM
 
 void ModelData::get_edge_colors(const SGM::Edge &edge,
                                 std::vector<SGM::Vector3D> &edge_colors,
-                                std::vector<SGM::Entity> *) const
+                                std::vector<SGM::Entity> *aEnts) const
 {
     int nRed, nGreen, nBlue;
     SGM::Vector3D ColorVec = {dDefaultEdgeRed, dDefaultEdgeGreen, dDefaultEdgeBlue};
 
     if (SGM::GetColor(dPtr->mResult, edge, nRed, nGreen, nBlue))
+        {
         ColorVec = {nRed / 255.0, nGreen / 255.0, nBlue / 255.0};
+        }
+    if(aEnts)
+        {
+        size_t nEnts=aEnts->size();
+        size_t Index1;
+        for(Index1=0;Index1<nEnts;++Index1)
+            {
+            if(edge.m_ID==(*aEnts)[Index1].m_ID)
+                {
+                ColorVec = {1,0,0};
+                }
+            }
+        }
 
     std::vector<SGM::Point3D> const &edge_points =
             SGM::GetEdgePoints(dPtr->mResult, edge);
@@ -1428,13 +1489,26 @@ void ModelData::get_face_colors(const SGM::Face &face,
 
 void ModelData::get_complex_colors(const SGM::Complex &pComplex,
                                    std::vector<SGM::Vector3D> &complex_colors,
-                                   std::vector<SGM::Entity> *) const
+                                   std::vector<SGM::Entity> *aEnts) const
 {
     int nRed, nGreen, nBlue;
     SGM::Vector3D ColorVec = {dDefaultFaceRed, dDefaultFaceGreen, dDefaultFaceBlue};
 
     if (SGM::GetColor(dPtr->mResult, pComplex, nRed, nGreen, nBlue))
         ColorVec = {nRed / 255.0, nGreen / 255.0, nBlue / 255.0};
+
+    if(aEnts)
+        {
+        size_t nEnts=aEnts->size();
+        size_t Index1;
+        for(Index1=0;Index1<nEnts;++Index1)
+            {
+            if(pComplex.m_ID==(*aEnts)[Index1].m_ID)
+                {
+                ColorVec = {1,0,0};
+                }
+            }
+        }
 
     const std::vector<SGM::Point3D> &complex_points =
             SGM::GetComplexPoints(dPtr->mResult, pComplex);
@@ -1445,11 +1519,23 @@ void ModelData::get_complex_colors(const SGM::Complex &pComplex,
         complex_colors.push_back(ColorVec);
 }
 
-SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &vertex,
-                                          std::vector<SGM::Entity> *) const
+SGM::Vector3D ModelData::get_vertex_color(SGM::Vertex const &pVertex,
+                                          std::vector<SGM::Entity> *aEnts) const
 {
+    if(aEnts)
+        {
+        size_t nEnts=aEnts->size();
+        size_t Index1;
+        for(Index1=0;Index1<nEnts;++Index1)
+            {
+            if(pVertex.m_ID==(*aEnts)[Index1].m_ID)
+                {
+                return {1,0,0};
+                }
+            }
+        }
     int nRed, nGreen, nBlue;
-    if (SGM::GetColor(dPtr->mResult, vertex, nRed, nGreen, nBlue))
+    if (SGM::GetColor(dPtr->mResult, pVertex, nRed, nGreen, nBlue))
         return {nRed / 255.0, nGreen / 255.0, nBlue / 255.0};
     return {dDefaultEdgeRed, dDefaultEdgeGreen, dDefaultEdgeBlue};
 }
@@ -1532,7 +1618,7 @@ void ModelData::rebuild_graphics(bool                      bReset,
             std::vector<unsigned int> aTriangles;
             std::vector<SGM::Vector3D> aColors,aTriColors;
 
-            get_complex_colors(ComplexID, aColors,nullptr);
+            get_complex_colors(ComplexID, aColors, aEnts);
 
             size_t nTriangles=complex_triangles.size();
             aTriangles.reserve(nTriangles);
@@ -1579,7 +1665,7 @@ void ModelData::rebuild_graphics(bool                      bReset,
             std::vector<SGM::Point3D> const &edge_points =
                     SGM::GetEdgePoints(dPtr->mResult, edge);
             std::vector<SGM::Vector3D> edge_colors;
-            get_edge_colors(edge, edge_colors,nullptr);
+            get_edge_colors(edge, edge_colors,aEnts);
             dPtr->mGraphics->add_edge(edge_points, edge_colors);
             update_bounds_edge(dPtr->mResult, edge, dPtr->mGraphics);
             }
@@ -1590,7 +1676,7 @@ void ModelData::rebuild_graphics(bool                      bReset,
             const std::vector<unsigned int> &complex_segments=SGM::GetComplexSegments(dPtr->mResult, ComplexID);
             
             std::vector<SGM::Vector3D> aColors;
-            get_complex_colors(ComplexID, aColors,nullptr);
+            get_complex_colors(ComplexID, aColors,aEnts);
 
             size_t nSegments=complex_segments.size();
             size_t Index1;
@@ -1625,14 +1711,14 @@ void ModelData::rebuild_graphics(bool                      bReset,
         for (const SGM::Vertex &vertex : vertex_list)
             {
             SGM::Point3D const &Pos = SGM::GetPointOfVertex(dPtr->mResult, vertex);
-            dPtr->mGraphics->add_vertex(Pos, get_vertex_color(vertex,nullptr));
+            dPtr->mGraphics->add_vertex(Pos, get_vertex_color(vertex,aEnts));
             update_bounds_vertex(Pos, dPtr->mGraphics);
             }
 
         for (const SGM::Complex &ComplexID : complex_list)
             {
             std::vector<SGM::Vector3D> aColors;
-            get_complex_colors(ComplexID, aColors,nullptr);
+            get_complex_colors(ComplexID, aColors,aEnts);
 
             const std::vector<SGM::Point3D> &complex_points = SGM::GetComplexPoints(dPtr->mResult, ComplexID);
             

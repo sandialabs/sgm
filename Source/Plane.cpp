@@ -59,6 +59,25 @@ plane *plane::Clone(SGM::Result &rResult) const
     return new plane(rResult, *this);
     }
 
+bool plane::IsSame(surface const *pOther,double dTolerance) const
+    {
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
+        return false;
+        }
+    bool bAnswer=true;
+    plane const *pPlane2=(plane const *)pOther;
+    if(SGM::NearEqual(m_Origin,pPlane2->m_Origin,dTolerance)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(m_ZAxis,pPlane2->m_ZAxis,dTolerance)==false)
+        {
+        bAnswer=false;
+        }
+    return bAnswer;
+    }
+
 void plane::Evaluate(SGM::Point2D const &uv,
                      SGM::Point3D       *Pos,
                      SGM::Vector3D      *Du,

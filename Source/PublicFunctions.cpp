@@ -84,6 +84,36 @@ size_t SGM::FindComponents(SGM::Result               &rResult,
     return nComps;
     }
 
+size_t SGM::FindPlanarParts(SGM::Result               &rResult,
+                            SGM::Complex const        &ComplexID,
+                            std::vector<SGM::Complex> &aPlanarParts,
+                            double                     dTolerance)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    std::vector<SGMInternal::complex *> aParts=pComplex->SplitByPlanes(rResult,dTolerance);
+    size_t nParts=aParts.size();
+    for(auto pPart : aParts)
+        {
+        aPlanarParts.push_back(SGM::Complex(pPart->GetID()));
+        }
+    return nParts;
+    }
+
+bool SGM::IsLinear(SGM::Result        &rResult,
+                   SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    unsigned int nStart,nEnd;
+    return pComplex->IsLinear(nStart,nEnd);
+    }
+
+bool SGM::IsCycle(SGM::Result        &rResult,
+                  SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsCycle();
+    }
+
 SGM::Complex SGM::FindBoundary(SGM::Result        &rResult,
                                SGM::Complex const &ComplexID)
     {
@@ -121,6 +151,20 @@ size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
                              std::vector<SGM::Complex> &)//aComponents)
     {
     return 0;
+    }
+
+double SGM::FindAverageEdgeLength(SGM::Result        &rResult,
+                                  SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->FindAverageEdgeLength();
+    }
+
+SGM::Complex SGM::CreateComplex(SGM::Result       &rResult,
+                                SGM::Entity const &EntityID)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    return SGM::Complex(SGMInternal::CreateComplex(rResult,pEntity)->GetID());
     }
 
 SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
@@ -427,10 +471,11 @@ SGM::Complex SGM::CoverComplex(SGM::Result        &rResult,
     }
 
 SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
-                               SGM::Complex const &ComplexID)
+                               SGM::Complex const &ComplexID,
+                               double              dTolerance)
     {
     SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
-    SGMInternal::complex *pAnswer=pComplex->Merge(rResult);
+    SGMInternal::complex *pAnswer=pComplex->Merge(rResult,dTolerance);
     return SGM::Complex(pAnswer->GetID());
     }
 
@@ -1555,6 +1600,10 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
     else if(Extension=="stl")
         {
         SGMInternal::ReadSTLFile(rResult,FileName,pThing,aEnts,aLog,Options);
+        }
+    else if(Extension=="sgm")
+        {
+        SGMInternal::ReadSGMFile(rResult,FileName,aEnts,aLog,Options);
         }
     else
         {

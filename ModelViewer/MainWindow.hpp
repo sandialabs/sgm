@@ -38,6 +38,8 @@ private slots:
 
     void file_open_recent(const QString &filename);
 
+    void file_sgm();
+
     void file_step();
 
     void file_stl();

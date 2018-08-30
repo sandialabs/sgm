@@ -195,6 +195,37 @@ void hermite::Concatenate(hermite const *pEndHermite)
         m_bClosed=true;
         }
     }
+    
+bool hermite::IsSame(curve const *pOther,double dTolerance) const
+    {
+    if(pOther->GetCurveType()!=GetCurveType())
+        {
+        return false;
+        }
+    hermite const *pHermite=(hermite const *)pOther;
+    if(m_aParams.size()!=pHermite->m_aParams.size())
+        {
+        return false;
+        }
+    size_t Index1;
+    size_t nParams=m_aParams.size();
+    for(Index1=0;Index1<nParams;++Index1)
+        {
+        if(SGM::NearEqual(m_aParams[Index1],pHermite->m_aParams[Index1],dTolerance,false)==false)
+            {
+            return false;
+            }
+        if(SGM::NearEqual(m_aPoints[Index1],pHermite->m_aPoints[Index1],dTolerance)==false)
+            {
+            return false;
+            }
+        if(SGM::NearEqual(m_aTangents[Index1],pHermite->m_aTangents[Index1],dTolerance)==false)
+            {
+            return false;
+            }
+        }
+    return true;
+    }
 
 void hermite::Negate()
     {

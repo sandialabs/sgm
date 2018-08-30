@@ -13,8 +13,10 @@ void ReadDirectory(std::string        const &DirName,
 // Returns the data and time in the following format.
 // Year, Month, Day, Hour, Minute, Second
 // YYYY-MM-DDTHH:MM:SS
+// If bGMT is true then YYYY-MM-DD GMT HH:MM:SS
+// is returned.
 
-std::string GetDateAndTime();
+std::string GetDateAndTime(bool bGMT);
 
 // Returns the file name from a full path string.
 

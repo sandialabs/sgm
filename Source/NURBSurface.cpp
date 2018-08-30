@@ -299,6 +299,63 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
         }
     }
 
+bool NURBsurface::IsSame(surface const *pOther,double dTolerance) const
+    {
+    if(pOther->GetSurfaceType()!=m_SurfaceType)
+        {
+        return false;
+        }
+    NURBsurface const *pNURB2=(NURBsurface const *)pOther;
+    if(m_aUKnots.size()!=pNURB2->m_aUKnots.size())
+        {
+        return false;
+        }
+    if(m_aVKnots.size()!=pNURB2->m_aVKnots.size())
+        {
+        return false;
+        }
+    if(m_aaControlPoints.size()!=pNURB2->m_aaControlPoints.size())
+        {
+        return false;
+        }
+    if(m_aaControlPoints[0].size()!=pNURB2->m_aaControlPoints[0].size())
+        {
+        return false;
+        }
+    size_t Index1,Index2;
+    size_t nUKnots=m_aUKnots.size();
+    for(Index1=0;Index1<nUKnots;++Index1)
+        {
+        if(m_aUKnots[Index1]!=pNURB2->m_aUKnots[Index1])
+            {
+            return false;
+            }
+        }
+    size_t nVKnots=m_aVKnots.size();
+    for(Index1=0;Index1<nVKnots;++Index1)
+        {
+        if(m_aVKnots[Index1]!=pNURB2->m_aVKnots[Index1])
+            {
+            return false;
+            }
+        }
+    size_t nSize1=m_aaControlPoints.size();
+    size_t nSize2=m_aaControlPoints[0].size();
+    for(Index1=0;Index1<nSize1;++Index1)
+        {
+        std::vector<SGM::Point4D> const &aControlPoints1=m_aaControlPoints[Index1];
+        std::vector<SGM::Point4D> const &aControlPoints2=pNURB2->m_aaControlPoints[Index1];
+        for(Index2=0;Index2<nSize2;++Index2)
+            {
+            if(SGM::NearEqual(aControlPoints1[Index2],aControlPoints2[Index2],dTolerance)==false)
+                {
+                return false;
+                }
+            }
+        }
+    return true;
+    }
+
 SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
                                   SGM::Point3D       *ClosePos,
                                   SGM::Point2D const *pGuess) const

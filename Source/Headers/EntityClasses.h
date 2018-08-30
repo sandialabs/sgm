@@ -401,12 +401,14 @@ class body : public topology
 
         void AddPoint(SGM::Point3D const &Pos);
 
+        void SetPoints(std::vector<SGM::Point3D> const &aPoints);
+
         // Get methods
         
         std::set<volume *,EntityCompare> const &GetVolumes() const {return m_sVolumes;}
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
-        
+
         bool IsSheetBody(SGM::Result &rResult) const;
 
         bool IsWireBody(SGM::Result &rResult) const;
@@ -431,6 +433,10 @@ class complex : public topology
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                bool                             bFilled);  // Creates a filled or unfilled polygon.
 
         complex(SGM::Result                     &rResult,
                 std::vector<unsigned int> const &aSegments,
@@ -489,9 +495,30 @@ class complex : public topology
 
         void Transform(SGM::Transform3D const &Trans);
 
+        bool IsPlanar(SGM::Point3D      &Origin,
+                      SGM::UnitVector3D &Normal,
+                      double             dTolerance) const;
+
         complex *Cover(SGM::Result &rResult) const;
 
-        complex *Merge(SGM::Result &rResult) const;
+        complex *SplitByPlane(SGM::Result             &rResult,
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Normal,
+                              double                   dTolerance) const;
+
+        // Splits a one dimensional complex up into co-planar parts.
+
+        std::vector<complex *> SplitByPlanes(SGM::Result &rResult,double dTolerance) const;
+
+        // Closes a one dimensional complex off with the bounding rectangle.
+        // It is assumed that the complex to be closed off with is oriented 
+        // so that the face is to the left.  The function returns the cycles of
+        // this complex along with the closed off outer cycle.
+
+        std::vector<complex *> CloseWithBoundary(SGM::Result             &rResult,
+                                                 SGM::UnitVector3D const &UpVec) const;
+
+        complex *Merge(SGM::Result &rResult,double dTolerance) const;
 
         // Merges the given vector of complexes with this complex and returns
         // the answer.
@@ -511,9 +538,46 @@ class complex : public topology
 
         bool FindPolygon(std::vector<unsigned int> &aPolygon) const;
 
+        // Returns true if this complex is linear, and the indexes of the
+        // to end points.  If only one end segment is oriented going in and
+        // one oriented going out then nStart and nEnd are at the ends with
+        // orientation going in the directions of the segments.
+
+        bool IsLinear(unsigned int &nStart,
+                      unsigned int &nEnd) const;
+
+        bool IsConnected() const;
+
+        bool IsCycle() const;
+
         double FindLength() const;
 
         void ReduceToUsedPoints();
+
+        // Imprints aPoints onto the segments of this complex.  aWhere
+        // returns the index of each point in aPoints.  A point is added
+        // only if it is within dTolerance of this complex and a segment
+        // is split only if the split point is not within dTolerance of
+        // an existing point.  If a point is not in this complex and not
+        // within dTolerance of this complex, then 
+        // std::numeric_limits<unsigned int>::max() is returned in aWhere.
+
+        void ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
+                           std::vector<unsigned int>       &aWhere,
+                           double                           dTolerance);
+
+        // Splits the segments of this complex at the given points.
+
+        std::vector<complex *> SplitAtPoints(SGM::Result                     &rResult,
+                                             std::vector<SGM::Point3D> const &aPoints,
+                                             double                           dTolerance) const;
+
+        // Returns an oriented rectangle that goes counter clockwise with
+        // respect the given UpDirection.  If the coordinate algined bounding box
+        // is not two-dimensional, then nullptr is returned.
+
+        complex *CreateOrientedBoundingBox(SGM::Result             &rResult,
+                                           SGM::UnitVector3D const &UpDirection) const;
 
     private:
 
@@ -551,8 +615,6 @@ class volume : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        bool IsTopLevel() const override;
-
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -582,6 +644,8 @@ class volume : public topology
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::BoxTree const &GetFaceTree(SGM::Result &rResult) const;
+
+        bool IsTopLevel() const override;
 
         size_t FindShells(SGM::Result                    &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const;
@@ -623,8 +687,6 @@ class face : public topology
                    bool                      bChildren) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
-
-        bool IsTopLevel() const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -686,6 +748,8 @@ class face : public topology
         bool GetFlipped() const;
 
         int GetSides() const {return m_nSides;}
+
+        bool IsTopLevel() const override;
 
         // Find methods
 
@@ -754,8 +818,6 @@ class edge : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        bool IsTopLevel() const override;
-
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
@@ -776,6 +838,8 @@ class edge : public topology
 
         void SetDomain(SGM::Result           &rResult,
                        SGM::Interval1D const &Domain);
+
+        void FixDomain(SGM::Result &rResult);
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
@@ -802,6 +866,8 @@ class edge : public topology
         std::vector<double> const &GetParams(SGM::Result &rResult) const;
 
         double GetTolerance() const {return m_dTolerance;}
+
+        bool IsTopLevel() const override;
 
         // Other Methods
 
@@ -872,8 +938,6 @@ class vertex : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
-        bool IsTopLevel() const override;
-
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
@@ -889,6 +953,8 @@ class vertex : public topology
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
+
+        bool IsTopLevel() const override;
 
         void TransformData(SGM::Transform3D const &Trans);
 
