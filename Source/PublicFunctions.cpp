@@ -114,6 +114,13 @@ bool SGM::IsCycle(SGM::Result        &rResult,
     return pComplex->IsCycle();
     }
 
+bool SGM::IsOriented(SGM::Result        &rResult,
+                     SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsOriented();
+    }
+
 SGM::Complex SGM::FindBoundary(SGM::Result        &rResult,
                                SGM::Complex const &ComplexID)
     {

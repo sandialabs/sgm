@@ -9,6 +9,8 @@
 #include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMSegment.h"
+#include "SGMTransform.h"
+
 #include "Faceter.h"
 
 namespace SGMInternal
@@ -566,9 +568,31 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         {
         if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
             {
-            XVec = aVectors[0];
-            YVec = XVec.Orthogonal();
-            ZVec = XVec * YVec;
+            if (fabs(SumXX) < SGM_MIN_TOL)
+                {
+                XVec = SGM::UnitVector3D(0,1,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(1,0,0);
+                return true;
+                }
+            else if (fabs(SumYY) < SGM_MIN_TOL)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,0,1);
+                ZVec = SGM::UnitVector3D(0,-1,0);
+                return true;
+                }
+            else if (fabs(SumZZ) < SGM_MIN_TOL)
+                {
+                XVec = SGM::UnitVector3D(1,0,0);
+                YVec = SGM::UnitVector3D(0,1,0);
+                ZVec = SGM::UnitVector3D(0,0,1);
+                return true;
+                }
+            else
+                {
+                return false;
+                }
             }
         else if(aValues[0]<aValues[1])
             {
@@ -592,21 +616,21 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         }
     else if (nFound == 0)
         {
-        if (fabs(SumXX) < SGM_ZERO)
+        if (fabs(SumXX) < SGM_MIN_TOL)
             {
             XVec = SGM::UnitVector3D(0,1,0);
             YVec = SGM::UnitVector3D(0,0,1);
             ZVec = SGM::UnitVector3D(1,0,0);
             return true;
             }
-        else if (fabs(SumYY) < SGM_ZERO)
+        else if (fabs(SumYY) < SGM_MIN_TOL)
             {
             XVec = SGM::UnitVector3D(1,0,0);
             YVec = SGM::UnitVector3D(0,0,1);
             ZVec = SGM::UnitVector3D(0,-1,0);
             return true;
             }
-        else if (fabs(SumZZ) < SGM_ZERO)
+        else if (fabs(SumZZ) < SGM_MIN_TOL)
             {
             XVec = SGM::UnitVector3D(1,0,0);
             YVec = SGM::UnitVector3D(0,1,0);

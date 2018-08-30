@@ -194,12 +194,15 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    double dAvergeEdgeLength=FindAverageEdgeLength();
-    std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
-    SGM::Interval3D Box=GetBox(rResult);
+    complex *pBoundary=FindBoundary(rResult);
+    double dAvergeEdgeLength=pBoundary->FindAverageEdgeLength();
+    std::vector<complex *> aParts=pBoundary->SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
+    SGM::Interval3D Box=pBoundary->GetBox(rResult);
+    rResult.GetThing()->DeleteEntity(pBoundary);
     SGM::Point3D CM=Box.MidPoint();
     size_t nParts=aParts.size();
     size_t Index1;
+    std::vector<complex *> aCovers;
     for(Index1=0;Index1<nParts;++Index1)
         {
         complex *pPart=aParts[Index1];
@@ -212,23 +215,15 @@ complex *complex::Cover(SGM::Result &rResult) const
             ZVec.Negate();
             YVec=ZVec*XVec;
             }
-        //std::vector<complex *> aCycles=
-            CloseWithBoundary(rResult,ZVec);
+        std::vector<complex *> aCycles=pPart->CloseWithBoundary(rResult,ZVec);
+        rResult.GetThing()->DeleteEntity(pPart);
+        aCovers.push_back(CoverPlanarSet(rResult,aCycles));
+        for(auto pCycle : aCycles)
+            {
+            rResult.GetThing()->DeleteEntity(pCycle);
+            }
         }
-    return (complex *)this;
-
-    //SGM::UnitVector3D UpVec(0,1,0);
-    //std::vector<complex *> aCycles=CloseWithBoundary(rResult,UpVec);
-    //std::vector<SGM::Point2D> aPoints;
-    //std::vector<std::vector<unsigned int> > aaPolygons;
-    //unsigned int nCycles=(unsigned int )aCycles.size();
-    //aaPolygons.reserve(nCycles);
-    //unsigned int Index1;
-    //for(Index1=0;Index1<nCycles;++Index1)
-    //    {
-    //    
-    //    }
-    //return aCycles[0];
+    return aCovers[0];
 #if 0
     double dAvergeEdgeLength=FindAverageEdgeLength();
     std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
@@ -554,7 +549,6 @@ bool complex::IsCycle() const
             {
             ++aCounts[m_aSegments[Index1]];
             }
-        std::vector<unsigned int> aEnds;
         for(Index1=0;Index1<nSize;++Index1)
             {
             unsigned int nCount=aCounts[m_aSegments[Index1]];
@@ -566,6 +560,36 @@ bool complex::IsCycle() const
         return true;
         }
     return false;
+    }
+
+bool complex::IsOriented() const
+    {
+    if(m_aSegments.size())
+        {
+        unsigned int nSize=(unsigned int)m_aSegments.size();
+        unsigned int Index1;
+        std::vector<unsigned int> aCounts,aCountsIn,aCountsOut;
+        aCounts.assign(m_aPoints.size(),0);
+        aCountsIn.assign(m_aPoints.size(),0);
+        aCountsOut.assign(m_aPoints.size(),0);
+        for(Index1=0;Index1<nSize;Index1+=2)
+            {
+            ++aCounts[m_aSegments[Index1]];
+            ++aCountsIn[m_aSegments[Index1]];
+            ++aCounts[m_aSegments[Index1+1]];
+            ++aCountsOut[m_aSegments[Index1+1]];
+            }
+        for(Index1=0;Index1<nSize;++Index1)
+            {
+            unsigned int nWhere=m_aSegments[Index1];
+            unsigned int nCount=aCountsIn[nWhere];
+            if(nCount==2 && (aCountsIn[nWhere]!=1 || aCountsOut[nWhere]!=1))
+                {
+                return false;
+                }
+            }
+        }
+    return true;
     }
 
 std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
@@ -792,17 +816,17 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
         {
         if(UpDirection.m_x<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
             }
         return new complex(rResult,aPoints,false);
         }
@@ -810,17 +834,17 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
         {
         if(UpDirection.m_y<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
             }
         return new complex(rResult,aPoints,false);
         }
@@ -828,17 +852,17 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
         {
         if(UpDirection.m_z<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
             aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
             }
         return new complex(rResult,aPoints,false);
         }
@@ -924,37 +948,40 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
             aKeep.push_back(pComp);
             }
         }
-    complex *pRectangle=CreateOrientedBoundingBox(rResult,UpVec);
-    double dTolerance=FindAverageEdgeLength()*SGM_FIT;
-    std::vector<complex *> aBoundaryParts=pRectangle->SplitAtPoints(rResult,aBoundaryPoints,dTolerance);
-    rResult.GetThing()->DeleteEntity(pRectangle);
-    size_t nBoundaryParts=aBoundaryParts.size();
-    for(Index1=0;Index1<nBoundaryParts;++Index1)
+    if(aMerge.size())
         {
-        complex *pPart=aBoundaryParts[Index1];
-        unsigned int nStart,nEnd;
-        pPart->IsLinear(nStart,nEnd);
-        SGM::Point3D const &Pos=pPart->m_aPoints[nStart];
-        double dDistEnd=SGM::DistanceToPoints(aEnds,Pos);
-        double dDistStart=SGM::DistanceToPoints(aStarts,Pos);
-        if(dDistEnd<dDistStart)
+        complex *pRectangle=CreateOrientedBoundingBox(rResult,UpVec);
+        double dTolerance=FindAverageEdgeLength()*SGM_FIT;
+        std::vector<complex *> aBoundaryParts=pRectangle->SplitAtPoints(rResult,aBoundaryPoints,dTolerance);
+        rResult.GetThing()->DeleteEntity(pRectangle);
+        size_t nBoundaryParts=aBoundaryParts.size();
+        for(Index1=0;Index1<nBoundaryParts;++Index1)
             {
-            rResult.GetThing()->DeleteEntity(pPart);
+            complex *pPart=aBoundaryParts[Index1];
+            unsigned int nStart,nEnd;
+            pPart->IsLinear(nStart,nEnd);
+            SGM::Point3D const &Pos=pPart->m_aPoints[nStart];
+            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos);
+            double dDistStart=SGM::DistanceToPoints(aStarts,Pos);
+            if(dDistStart<dDistEnd)
+                {
+                rResult.GetThing()->DeleteEntity(pPart);
+                }
+            else
+                {
+                aMerge.push_back(pPart);
+                }
             }
-        else
+        std::vector<SGM::Point3D> aEmpty;
+        complex *pEmpty=new complex(rResult,aEmpty);
+        complex *pGroup=pEmpty->Merge(rResult,aMerge);
+        rResult.GetThing()->DeleteEntity(pEmpty);
+        aKeep.push_back(pGroup->Merge(rResult,SGM_ZERO));
+        rResult.GetThing()->DeleteEntity(pGroup);
+        for(auto pJunk : aMerge)
             {
-            aMerge.push_back(pPart);
+            rResult.GetThing()->DeleteEntity(pJunk);
             }
-        }
-    std::vector<SGM::Point3D> aEmpty;
-    complex *pEmpty=new complex(rResult,aEmpty);
-    complex *pGroup=pEmpty->Merge(rResult,aMerge);
-    rResult.GetThing()->DeleteEntity(pEmpty);
-    aKeep.push_back(pGroup->Merge(rResult,SGM_ZERO));
-    rResult.GetThing()->DeleteEntity(pGroup);
-    for(auto pJunk : aMerge)
-        {
-        rResult.GetThing()->DeleteEntity(pJunk);
         }
     return aKeep;
     }

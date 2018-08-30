@@ -570,6 +570,11 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
         auto *cycle_item = new QTreeWidgetItem(complex_item);
         cycle_item->setText(0, "Cycle");
         }
+    if(SGM::IsOriented(dPtr->mResult,ComplexID))
+        {
+        auto *oriented_item = new QTreeWidgetItem(complex_item);
+        oriented_item->setText(0, "Oriented");
+        }
 
     add_attributes_to_tree(complex_item, ComplexID);
     add_bounding_box_to_tree(complex_item, ComplexID);
