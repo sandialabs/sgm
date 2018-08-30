@@ -495,10 +495,6 @@ class complex : public topology
 
         void Transform(SGM::Transform3D const &Trans);
 
-        bool IsPlanar(SGM::Point3D      &Origin,
-                      SGM::UnitVector3D &Normal,
-                      double             dTolerance) const;
-
         complex *Cover(SGM::Result &rResult) const;
 
         complex *SplitByPlane(SGM::Result             &rResult,
@@ -535,6 +531,7 @@ class complex : public topology
         // FindPolygon returns false if this complex is not a polygon.
         // Otherwise the function fills in aPolygon to point the the points
         // in m_aPoints in order of the given segments.
+        // ONLY WORKS on oriented complexes.
 
         bool FindPolygon(std::vector<unsigned int> &aPolygon) const;
 
@@ -549,6 +546,12 @@ class complex : public topology
         bool IsConnected() const;
 
         bool IsCycle() const;
+        
+        bool IsPlanar(SGM::Point3D      &Origin,
+                      SGM::UnitVector3D &Normal,
+                      double             dTolerance) const;
+
+        bool IsOriented() const;
 
         double FindLength() const;
 
@@ -567,6 +570,7 @@ class complex : public topology
                            double                           dTolerance);
 
         // Splits the segments of this complex at the given points.
+        // This function retains orientation.
 
         std::vector<complex *> SplitAtPoints(SGM::Result                     &rResult,
                                              std::vector<SGM::Point3D> const &aPoints,

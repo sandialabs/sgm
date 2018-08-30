@@ -57,6 +57,9 @@ namespace SGM
     SGM_EXPORT bool IsCycle(SGM::Result        &rResult,
                             SGM::Complex const &ComplexID);
 
+    SGM_EXPORT bool IsOriented(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID);
+
     // Splitting functions
 
     SGM_EXPORT size_t SplitWithPlane(SGM::Result               &rResult,
