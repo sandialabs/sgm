@@ -707,6 +707,21 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     return true;
     }
 
+double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
+                        SGM::Point3D              const &Pos1)
+    {
+    double dAnswer=std::numeric_limits<double>::max();
+    for(SGM::Point3D const &Pos2 : aPoints)
+        {
+        double dDistanceSquared=Pos1.DistanceSquared(Pos2);
+        if(dDistanceSquared<dAnswer)
+            {
+            dAnswer=dDistanceSquared;
+            }
+        }
+    return sqrt(dAnswer);
+    }
+
 void FindLengths3D(std::vector<Point3D> const &aPoints,
                    std::vector<double> &aLengths,
                    bool bNormalize)

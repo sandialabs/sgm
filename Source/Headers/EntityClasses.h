@@ -348,6 +348,10 @@ class complex : public topology
                 std::vector<SGM::Point3D> const &aPoints);
 
         complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                bool                             bFilled);  // Creates a filled or unfilled polygon.
+
+        complex(SGM::Result                     &rResult,
                 std::vector<unsigned int> const &aSegments,
                 std::vector<SGM::Point3D> const &aPoints);
 
@@ -418,14 +422,13 @@ class complex : public topology
         std::vector<complex *> SplitByPlanes(SGM::Result &rResult,double dTolerance) const;
 
         // Closes a one dimensional complex off with the bounding rectangle.
-        // returns false if this complex is not planar and coordinate aligned.
         // It is assumed that the complex to be closed off with is oriented 
         // so that the face is to the left.  
 
-        bool CloseWithBoundary(SGM::Result             &rResult,
-                               SGM::UnitVector3D const &UpVec);
+        complex *CloseWithBoundary(SGM::Result             &rResult,
+                                   SGM::UnitVector3D const &UpVec) const;
 
-        complex *Merge(SGM::Result &rResult) const;
+        complex *Merge(SGM::Result &rResult,double dTolerance) const;
 
         // Merges the given vector of complexes with this complex and returns
         // the answer.
@@ -453,6 +456,10 @@ class complex : public topology
         bool IsLinear(unsigned int &nStart,
                       unsigned int &nEnd) const;
 
+        bool IsConnected() const;
+
+        bool IsCycle() const;
+
         double FindLength() const;
 
         void ReduceToUsedPoints();
@@ -472,12 +479,15 @@ class complex : public topology
         // Splits the segments of this complex at the given points.
 
         std::vector<complex *> SplitAtPoints(SGM::Result                     &rResult,
-                                             std::vector<SGM::Point3D> const &aPoints) const;
+                                             std::vector<SGM::Point3D> const &aPoints,
+                                             double                           dTolerance) const;
 
         // Returns an oriented rectangle that goes counter clockwise with
-        // respect the given UpDirection.
+        // respect the given UpDirection.  If the coordinate algined bounding box
+        // is not two-dimensional, then nullptr is returned.
 
-        complex *CreateOrientedBoundingBox(SGM::UnitVector3D const &UpDirection) const;
+        complex *CreateOrientedBoundingBox(SGM::Result             &rResult,
+                                           SGM::UnitVector3D const &UpDirection) const;
 
     private:
 

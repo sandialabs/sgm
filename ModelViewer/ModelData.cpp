@@ -349,12 +349,12 @@ void ModelData::Copy(SGM::Entity EntityID)
 void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
-    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    //SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
-    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_ZERO);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
@@ -362,6 +362,14 @@ void ModelData::FindComponents(SGM::Entity EntityID)
 {
     std::vector<SGM::Complex> aComponents;
     SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+}
+
+void ModelData::FindPlanes(SGM::Entity EntityID)
+{
+    std::vector<SGM::Complex> aPlanarParts;
+    double dTol=SGM::FindAverageEdgeLength(dPtr->mResult,SGM::Complex(EntityID.m_ID))*SGM_FIT;
+    SGM::FindPlanarParts(dPtr->mResult, SGM::Complex(EntityID.m_ID),aPlanarParts,dTol);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
@@ -534,9 +542,37 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     snprintf(Data0, sizeof(Data0), "Complex %ld", ComplexID.m_ID);
     complex_item->setText(0, Data0);
 
+    std::vector<SGM::Point3D> const &aPoints=SGM::GetComplexPoints(dPtr->mResult,ComplexID);
+    std::vector<unsigned int> const &aSegments=GetComplexSegments(dPtr->mResult,ComplexID);
+    std::vector<unsigned int> const &aTriangles=GetComplexTriangles(dPtr->mResult,ComplexID);
+
+    auto *points_item = new QTreeWidgetItem(complex_item);
+    auto *segments_item = new QTreeWidgetItem(complex_item);
+    auto *triangles_item = new QTreeWidgetItem(complex_item);
+
+    snprintf(Data0, sizeof(Data0), "%ld", aPoints.size());
+    points_item->setText(0, "Points");
+    points_item->setText(1, Data0);
+    snprintf(Data0, sizeof(Data0), "%ld", aSegments.size());
+    segments_item->setText(0, "Segments");
+    segments_item->setText(1, Data0);
+    snprintf(Data0, sizeof(Data0), "%ld", aTriangles.size());
+    triangles_item->setText(0, "Triangles");
+    triangles_item->setText(1, Data0);
+
+    if(SGM::IsLinear(dPtr->mResult,ComplexID))
+        {
+        auto *linear_item = new QTreeWidgetItem(complex_item);
+        linear_item->setText(0, "Linear");
+        }
+    if(SGM::IsCycle(dPtr->mResult,ComplexID))
+        {
+        auto *cycle_item = new QTreeWidgetItem(complex_item);
+        cycle_item->setText(0, "Cycle");
+        }
+
     add_attributes_to_tree(complex_item, ComplexID);
     add_bounding_box_to_tree(complex_item, ComplexID);
-
 }
 
 void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID)

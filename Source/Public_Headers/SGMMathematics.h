@@ -65,6 +65,9 @@ namespace SGM
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
+    SGM_EXPORT double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
+                                       SGM::Point3D              const &Pos);
+
     /////////////////////////////////////////////////////////////////////////
     //
     //  Polygon functions

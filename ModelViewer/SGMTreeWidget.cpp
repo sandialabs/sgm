@@ -76,6 +76,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     *option_boundary=nullptr,
                     *option_find_components=nullptr,
                     *option_merge=nullptr,
+                    *option_planar_split=nullptr,
                     *option_create_complex=nullptr;
 
             option_color = menu.addAction(tr("Set Color"));
@@ -98,6 +99,7 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 option_merge = menu.addAction(tr("Merge"));
                 option_boundary = menu.addAction(tr("Boundary"));
                 option_find_components = menu.addAction(tr("Split by Components"));
+                option_planar_split = menu.addAction(tr("Split by Planes"));
                 }
             option_rebuild = menu.addAction(tr("Rebuild Tree"));
 
@@ -169,6 +171,15 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     for(Index1=0;Index1<nEnts;++Index1)
                         {
                         mModel->FindComponents(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_planar_split)
+                    {
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->FindPlanes(aEnts[Index1]);
                         }
                     mModel->rebuild_tree();
                     mModel->rebuild_graphics();

@@ -208,6 +208,48 @@ namespace SGMInternal {
     {}
 
     inline complex::complex(SGM::Result                     &rResult,
+                            std::vector<SGM::Point3D> const &aPoints,
+                            bool                             bFilled) :
+    topology(rResult, SGM::EntityType::ComplexType),
+    m_aPoints(aPoints),
+    m_aSegments(),
+    m_aTriangles()
+    {
+    unsigned int nPoints=(unsigned int)aPoints.size();
+    m_aSegments.reserve(nPoints*2);
+    unsigned int Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        m_aSegments.push_back(Index1);
+        m_aSegments.push_back((Index1+1)%nPoints);
+        }
+    if(bFilled)
+        {
+        std::vector<unsigned int> aAdjacencies;
+        std::vector<unsigned int> aPolygon;
+        for(Index1=0;Index1<nPoints;++Index1)
+            {
+            aPolygon.push_back(Index1);
+            }
+        std::vector<std::vector<unsigned int> > aaPolygons;
+        aaPolygons.push_back(aPolygon);
+        SGM::UnitVector3D XAxis,YAxis,ZAxis;
+        SGM::Point3D Origin;
+        SGM::FindLeastSquarePlane(aPoints,Origin,XAxis,YAxis,ZAxis);
+        std::vector<SGM::Point2D> aPoints2D;
+        SGM::ProjectPointsToPlane(m_aPoints,Origin,XAxis,YAxis,ZAxis,aPoints2D);
+        if(SGM::PolygonArea(aPoints2D)<0)
+            {
+            for(Index1=0;Index1<nPoints;++Index1)
+                {
+                aPoints2D[Index1].m_u=-aPoints2D[Index1].m_u;
+                }
+            }
+        SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,m_aTriangles,aAdjacencies);
+        }
+    }
+
+    inline complex::complex(SGM::Result                     &rResult,
                      std::vector<unsigned int> const &aSegments,
                      std::vector<SGM::Point3D> const &aPoints) :
             topology(rResult, SGM::EntityType::ComplexType),

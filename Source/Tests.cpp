@@ -3386,7 +3386,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aNewPoints.push_back(SGM::Point3D(10,5,0));
 
         SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aSegments,aPoints);
-        pComplex->SplitAtPoints(rResult,aNewPoints);
+        pComplex->SplitAtPoints(rResult,aNewPoints,SGM_MIN_TOL);
 
         return bAnswer;
         }

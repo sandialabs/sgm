@@ -143,6 +143,8 @@ public:
 
     void FindComponents(SGM::Entity EntityID);
 
+    void FindPlanes(SGM::Entity EntityID);
+
     void Boundary(SGM::Entity EngityID);
 
     void Unhook(std::vector<SGM::Entity> &aEnts);

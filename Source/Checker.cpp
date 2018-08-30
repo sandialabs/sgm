@@ -100,6 +100,30 @@ bool complex::Check(SGM::Result              &,//rResult,
             }
         }
 
+    for(Index1=0;Index1<nSegments;Index1+=2)
+        {
+        if(m_aSegments[Index1]==m_aSegments[Index1+1])
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer, sizeof(Buffer), "Complex %ld has a degenerate segment at index %ld.\n",this->GetID(),Index1);
+            aCheckStrings.emplace_back(Buffer);
+            }
+        }
+
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        if( m_aTriangles[Index1]==m_aTriangles[Index1+1] ||
+            m_aTriangles[Index1]==m_aTriangles[Index1+2] ||
+            m_aTriangles[Index1+2]==m_aTriangles[Index1+1])
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer, sizeof(Buffer), "Complex %ld has a degenerate triangle at index %ld.\n",this->GetID(),Index1);
+            aCheckStrings.emplace_back(Buffer);
+            }
+        }
+
     return bAnswer;
     }
 
