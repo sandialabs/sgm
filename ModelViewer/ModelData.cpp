@@ -349,7 +349,7 @@ void ModelData::Copy(SGM::Entity EntityID)
 void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
-    //SGM::DeleteEntity(dPtr->mResult, EntityID);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
 }
 
 void ModelData::Merge(SGM::Entity EntityID)

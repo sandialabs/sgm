@@ -194,8 +194,41 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    SGM::UnitVector3D UpVec(0,1,0);
-    return ((complex *)this)->CloseWithBoundary(rResult,UpVec);
+    double dAvergeEdgeLength=FindAverageEdgeLength();
+    std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
+    SGM::Interval3D Box=GetBox(rResult);
+    SGM::Point3D CM=Box.MidPoint();
+    size_t nParts=aParts.size();
+    size_t Index1;
+    for(Index1=0;Index1<nParts;++Index1)
+        {
+        complex *pPart=aParts[Index1];
+        SGM::UnitVector3D XVec,YVec,ZVec;
+        SGM::Point3D Origin;
+        SGM::FindLeastSquarePlane(pPart->GetPoints(),Origin,XVec,YVec,ZVec);
+        SGM::Vector3D TestVec=pPart->GetPoints()[0]-CM;
+        if(TestVec%ZVec<0)
+            {
+            ZVec.Negate();
+            YVec=ZVec*XVec;
+            }
+        //std::vector<complex *> aCycles=
+            CloseWithBoundary(rResult,ZVec);
+        }
+    return (complex *)this;
+
+    //SGM::UnitVector3D UpVec(0,1,0);
+    //std::vector<complex *> aCycles=CloseWithBoundary(rResult,UpVec);
+    //std::vector<SGM::Point2D> aPoints;
+    //std::vector<std::vector<unsigned int> > aaPolygons;
+    //unsigned int nCycles=(unsigned int )aCycles.size();
+    //aaPolygons.reserve(nCycles);
+    //unsigned int Index1;
+    //for(Index1=0;Index1<nCycles;++Index1)
+    //    {
+    //    
+    //    }
+    //return aCycles[0];
 #if 0
     double dAvergeEdgeLength=FindAverageEdgeLength();
     std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
@@ -866,8 +899,8 @@ bool complex::IsLinear(unsigned int &nStart,
     return true;
     }
 
-complex *complex::CloseWithBoundary(SGM::Result             &rResult,
-                                    SGM::UnitVector3D const &UpVec) const
+std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResult,
+                                                  SGM::UnitVector3D const &UpVec) const
     {
     std::vector<complex *> aComponents=FindComponents(rResult);
     size_t nComponents=aComponents.size();
@@ -917,14 +950,13 @@ complex *complex::CloseWithBoundary(SGM::Result             &rResult,
     complex *pEmpty=new complex(rResult,aEmpty);
     complex *pGroup=pEmpty->Merge(rResult,aMerge);
     rResult.GetThing()->DeleteEntity(pEmpty);
-    complex *pOutside=pGroup->Merge(rResult,SGM_ZERO);
+    aKeep.push_back(pGroup->Merge(rResult,SGM_ZERO));
     rResult.GetThing()->DeleteEntity(pGroup);
-    complex *pAnswer=pOutside->Merge(rResult,aKeep);
     for(auto pJunk : aMerge)
         {
         rResult.GetThing()->DeleteEntity(pJunk);
         }
-    return pAnswer;
+    return aKeep;
     }
 
 } // End of SGMInternal namespace

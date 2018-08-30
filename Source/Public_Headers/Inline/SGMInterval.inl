@@ -313,6 +313,11 @@ namespace SGM {
                 m_ZDomain.m_dMax < m_ZDomain.m_dMin);
     }
 
+    inline Point3D Interval3D::MidPoint(double dXFraction, double dYFraction, double dZFraction) const
+    {
+        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_XDomain.MidPoint(dYFraction),m_XDomain.MidPoint(dZFraction));
+    }
+
     inline Interval3D Interval3D::Extend(double tolerance) const
     {
         return {m_XDomain.m_dMin-tolerance, m_XDomain.m_dMax+tolerance,

@@ -564,7 +564,13 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         }
     else if (nFound == 2)
         {
-        if(aValues[0]<aValues[1])
+        if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
+            {
+            XVec = aVectors[0];
+            YVec = XVec.Orthogonal();
+            ZVec = XVec * YVec;
+            }
+        else if(aValues[0]<aValues[1])
             {
             XVec = aVectors[1];
             YVec = aVectors[0];

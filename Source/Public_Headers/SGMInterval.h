@@ -228,6 +228,8 @@ namespace SGM {
 
         bool IsEmpty() const;
 
+        Point3D MidPoint(double dXFraction = 0.5, double dYFraction = 0.5, double dZFraction = 0.5) const;
+
         // Create a new box with the intervals in each direction stretched in the positive and negative directions by
         // a tolerance.
 

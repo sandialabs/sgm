@@ -423,10 +423,11 @@ class complex : public topology
 
         // Closes a one dimensional complex off with the bounding rectangle.
         // It is assumed that the complex to be closed off with is oriented 
-        // so that the face is to the left.  
+        // so that the face is to the left.  The function returns the cycles of
+        // this complex along with the closed off outer cycle.
 
-        complex *CloseWithBoundary(SGM::Result             &rResult,
-                                   SGM::UnitVector3D const &UpVec) const;
+        std::vector<complex *> CloseWithBoundary(SGM::Result             &rResult,
+                                                 SGM::UnitVector3D const &UpVec) const;
 
         complex *Merge(SGM::Result &rResult,double dTolerance) const;
 
