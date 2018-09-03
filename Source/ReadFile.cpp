@@ -7,6 +7,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"
+#include "ReadFile.h"
 #include "Surface.h"
 #include "STEP.h"
 #include "Curve.h"
@@ -17,527 +18,490 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
-#include <unordered_map>
+#include <fstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
 
-namespace SGMInternal
-{
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Types we use for parsing (internal to this module)
+// getdelim (POSIX function) implementation for Windows and MSVC
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class STEPLineData
+#ifdef _MSC_VER
+
+#ifndef _POSIX_SOURCE
+    typedef long ssize_t;
+#define SSIZE_MAX LONG_MAX
+#endif
+
+#define SGM_GETDELIM_GROWBY 128    // amount to grow line buffer by
+#define SGM_GETDELIM_MINLEN 4      // minimum line buffer size
+
+ssize_t _getdelim(char **__restrict__ lineptr, size_t *__restrict__ n, int delimiter, FILE *__restrict__ stream)
     {
-    public:
+    char *buf, *pos;
+    int c;
+    ssize_t bytes;
 
-        STEPLineData() : m_nType(0),m_aIDs(),m_aDoubles(),m_aInts(),m_bFlag(true) {}
-
-        STEPLineData(const STEPLineData &other) = default;
-
-        STEPLineData(STEPLineData &&other) :
-            m_nType(other.m_nType),
-            m_aIDs(std::move(other.m_aIDs)),
-            m_aDoubles(std::move(other.m_aDoubles)),
-            m_aInts(std::move(other.m_aInts)),
-            m_bFlag(other.m_bFlag) {}
-
-        size_t              m_nType;
-        std::vector<size_t> m_aIDs;
-        std::vector<double> m_aDoubles;
-        std::vector<int>    m_aInts;
-        bool                m_bFlag;
-    };
-
-typedef std::unordered_map<std::string,size_t> STEPTagMapType;
-typedef std::unordered_map<size_t,STEPLineData> STEPLineDataMapType;
-typedef std::unordered_map<size_t,entity *> IDEntityMapType;
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Parsing functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
-inline void FindIndices(std::string const &line,
-                        std::vector<size_t>      &aIndices)
-    {
-    char const *pString=line.c_str()+1;
-    while(*pString!=';')
+    if (lineptr == nullptr || n == nullptr)
         {
-        if(*pString=='#')
-            {
-            size_t nIndex;
-            sscanf(++pString,"%zu",&nIndex);
-            aIndices.push_back(nIndex);
-            }
-        else if(*pString=='*')
-            {
-            aIndices.push_back(0);
-            ++pString;
-            }
-        else
-            {
-            ++pString;
-            }
+        errno = EINVAL;
+        return -1;
         }
-    }
-
-inline void FindFlag(std::string const &line,
-                     bool              &bFlag)
-    {
-    char const *pString=line.c_str()+1;
-    while(*pString!=';')
+    if (stream == nullptr)
         {
-        if(*pString++=='.')
+        errno = EBADF;
+        return -1;
+        }
+
+    // resize (or allocate) the line buffer if necessary
+    buf = *lineptr;
+    if (buf == nullptr || *n < SGM_GETDELIM_MINLEN)
+        {
+        buf = (char*)realloc(*lineptr, SGM_GETDELIM_GROWBY);
+        if (buf == nullptr)
             {
-            if(*pString=='T')
+            return -1; // ENOMEM
+            }
+        *n = SGM_GETDELIM_GROWBY;
+        *lineptr = buf;
+        }
+
+    // read characters until delimiter is found, end of file is reached, or an error occurs.
+    bytes = 0;
+    pos = buf;
+    while ((c = getc(stream)) != EOF)
+        {
+        if (bytes + 1 >= SSIZE_MAX)
+            {
+            errno = EOVERFLOW;
+            return -1;
+            }
+        bytes++;
+        if (bytes >= *n - 1)
+            {
+            buf = (char*)realloc(*lineptr, *n + SGM_GETDELIM_GROWBY);
+            if (buf == nullptr)
                 {
-                bFlag=true;
-                return;
+                return -1; // ENOMEM
                 }
-            else if(*pString=='F')
-                {
-                bFlag=false;
-                return;
-                }
+            *n += SGM_GETDELIM_GROWBY;
+            pos = buf + bytes - 1;
+            *lineptr = buf;
             }
-        }
-    throw std::runtime_error("could not find T/F flag");
-    }
 
-inline void FindLastDouble(std::string   const &line,
-                           std::vector<double> &aData)
-    {
-    char const *pString=line.c_str()+1;
-    char const *pWhere = pString;
-    while(*pString != ';')
-        {
-        if(*pString++ == ',')
-            {
-            pWhere=pString;
-            }
-        }
-    double d;
-    sscanf(pWhere,"%lf",&d);
-    aData.push_back(d);
-    }
-
-inline void FindDoubles3(std::string   const &line,
-                         std::vector<double> &aData)
-    {
-    double xyz[3];
-    char const *pString=line.c_str();
-    size_t nPCount = 0;
-
-    while(*pString != ';')
-        {
-        if(*pString++ == '(')
-            {
-            if(++nPCount==2)
-                {
-                sscanf(pString,"%lf,%lf,%lf",&xyz[0],&xyz[1],&xyz[2]);
-                aData.insert(aData.end(),xyz, xyz+3);
-                return;
-                }
-            }
-        }
-    }
-
-inline void FindParameters(std::string   const &line,
-                           std::vector<double> &aData)
-    {
-    char const *pString=line.c_str()+1;
-    const char *pLocation = strstr(pString,"PARAMETER_VALUE");
-    if(pLocation != nullptr)
-        {
-        double dParam;
-        sscanf(pLocation+15,"(%lf",&dParam);
-        aData.push_back(dParam);
-        }
-    }
-
-size_t FindListArguments(std::string        const &line,
-                         std::vector<std::string> &aArgs)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nStart=0;
-    while(pString[nCount])
-        {
-        if(pString[nCount]==',' || pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        if(pString[nCount]==')')
+        *pos++ = (char) c;
+        if (c == delimiter)
             {
             break;
             }
-        ++nCount;
         }
-    return aArgs.size();
-    }
 
-size_t FindArgumentsAfter(std::string        const &line,
-                          std::vector<std::string> &aArgs,
-                          std::string        const &after)
-    {
-    std::string LineCopy=line;
-    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-
-    size_t nFound=LineCopy.find(after);
-    char const *pString=LineCopy.c_str();
-    size_t nStart=nFound+after.length();
-    size_t nCount=nStart;
-    while(pString[nCount])
+    if (ferror(stream) || (feof(stream) && (bytes == 0)))
         {
-        if(pString[nCount]==',' || pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        if(pString[nCount]==')')
-            {
-            break;
-            }
-        ++nCount;
-        }
-    return aArgs.size();
-    }
-
-
-size_t FindArgumentSetsAfter(std::string        const &line,
-                             std::vector<std::string> &aArgs,
-                             std::string        const &after)
-    {
-    std::string LineCopy=line;
-    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-
-    size_t nFound=LineCopy.find(after);
-    char const *pString=LineCopy.c_str();
-    size_t nStart=nFound+after.length();
-    size_t nCount=nStart;
-    bool bFirst=true;
-    while(pString[nCount])
-        {
-        if(pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            if(bFirst==false)
-                {
-                nStart++;
-                }
-            bFirst=false;
-            for(Index1=nStart+1;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        ++nCount;
-        }
-    return aArgs.size();
-    }
-
-void FindLists(std::string        const &line,
-               std::vector<std::string> &aLists)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-
-    // Find the first '('
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]=='(')
-            {
-            ++nCount;
-            break;
-            }
-        ++nCount;
+        return -1; // EOF, or an error from getc().
         }
 
-    // Find pairs of '(' and ')'.
-    size_t Index1;
-    bool bFound=true;
-    while(bFound)
-        {
-        bFound=false;
-        size_t nStart=0,nEnd=0;
-        while(pString[nCount]!=';')
-            {
-            if(pString[nCount]=='(')
-                {
-                ++nCount;
-                nStart=nCount;
-                break;
-                }
-            ++nCount;
-            }
-        while(pString[nCount]!=';')
-            {
-            if(pString[nCount]==')')
-                {
-                ++nCount;
-                nEnd=nCount;
-                break;
-                }
-            ++nCount;
-            }
-        if(nStart && nEnd)
-            {
-            bFound=true;
-            std::string sList;
-            for(Index1=nStart;Index1<nEnd;++Index1)
-                {
-                sList+=pString[Index1];
-                }
-            aLists.push_back(sList);
-            }
-        }
-
-    // Remove extra up front '('s
-
-    size_t nLists=aLists.size();
-    for(Index1=0;Index1<nLists;++Index1)
-        {
-        if(aLists[Index1].c_str()[0]=='(')
-            {
-            aLists[Index1]=std::string(aLists[Index1].c_str()+1);
-            }
-        }
+    *pos = '\0';
+    return bytes;
     }
+#endif // _MSC_VER
 
-void FindDoubleVector(std::string   const &line,
-                      std::vector<double> &aData)
+namespace SGMInternal {
+
+//    size_t FindListArguments(char const               *pString,
+//                                    std::vector<std::string> &aArgs)
+//    {
+//        size_t nCount=1;
+//        size_t nStart=0;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==',' || pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                for(Index1=nStart;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            if(pString[nCount]==')')
+//                {
+//                break;
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    size_t FindArgumentsAfter(char const              *pString,
+//                                     std::vector<std::string> &aArgs,
+//                                     std::string        const &after)
+//    {
+//        std::string LineCopy(pString);
+//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+//
+//        size_t nFound=LineCopy.find(after);
+//        pString=LineCopy.c_str();
+//        size_t nStart=nFound+after.length();
+//        size_t nCount=nStart;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==',' || pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                for(Index1=nStart;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            if(pString[nCount]==')')
+//                {
+//                break;
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    size_t FindArgumentSetsAfter(char const               *pString,
+//                                        std::vector<std::string> &aArgs,
+//                                        std::string        const &after)
+//    {
+//        std::string LineCopy(pString);
+//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+//
+//        size_t nFound=LineCopy.find(after);
+//        pString=LineCopy.c_str();
+//        size_t nStart=nFound+after.length();
+//        size_t nCount=nStart;
+//        bool bFirst=true;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                if(bFirst==false)
+//                    {
+//                    nStart++;
+//                    }
+//                bFirst=false;
+//                for(Index1=nStart+1;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    inline void FindLists(char const               *pString,
+//                          std::vector<std::string> &aLists)
+//    {
+//        size_t nCount=0;
+//
+//        // Find the first '('
+//        while(pString[nCount]!='\0')
+//            {
+//            if(pString[nCount]=='(')
+//                {
+//                ++nCount;
+//                break;
+//                }
+//            ++nCount;
+//            }
+//
+//        // Find pairs of '(' and ')'.
+//        size_t Index1;
+//        bool bFound=true;
+//        while(bFound)
+//            {
+//            bFound=false;
+//            size_t nStart=0,nEnd=0;
+//            while(pString[nCount]!='\0')
+//                {
+//                if(pString[nCount]=='(')
+//                    {
+//                    ++nCount;
+//                    nStart=nCount;
+//                    break;
+//                    }
+//                ++nCount;
+//                }
+//            while(pString[nCount]!='\0')
+//                {
+//                if(pString[nCount]==')')
+//                    {
+//                    ++nCount;
+//                    nEnd=nCount;
+//                    break;
+//                    }
+//                ++nCount;
+//                }
+//            if(nStart && nEnd)
+//                {
+//                bFound=true;
+//                std::string sList;
+//                for(Index1=nStart;Index1<nEnd;++Index1)
+//                    {
+//                    sList+=pString[Index1];
+//                    }
+//                aLists.push_back(sList);
+//                }
+//            }
+//
+//        // Remove extra up front '('s
+//
+//        size_t nLists=aLists.size();
+//        for(Index1=0;Index1<nLists;++Index1)
+//            {
+//            if(aLists[Index1].c_str()[0]=='(')
+//                {
+//                aLists[Index1]=std::string(aLists[Index1].c_str()+1);
+//                }
+//            }
+//    }
+
+inline void ProcessFace(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    std::vector<std::string> aArgs;
-    size_t nArgs=FindListArguments(line,aArgs);
-    size_t Index1;
-    for(Index1=0;Index1<nArgs;++Index1)
-        {
-        double dData;
-        sscanf(aArgs[Index1].c_str(),"%lf",&dData);
-        aData.push_back(dData);
-        }
+    // "#12 = ADVANCED_FACE ( 'NONE', ( #19088 ), #718, .T. ) "
+    const char * last = FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
+    last = FindIndex(last,STEPData.m_aIDs);
+    FindFlag(last,STEPData.m_bFlag);
     }
 
-void FindIntVector(std::string const &line,
-                   std::vector<int>  &aData)
+inline void ProcessAxis(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    std::vector<std::string> aArgs;
-    size_t nArgs=FindListArguments(line,aArgs);
-    size_t Index1;
-    for(Index1=0;Index1<nArgs;++Index1)
-        {
-        int nData;
-        sscanf(aArgs[Index1].c_str(),"%d",&nData);
-        aData.push_back(nData);
-        }
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-inline void ProcessFace(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessPoint(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
-inline void ProcessAxis(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessDirection(char const   *pLineAfterStepTag,
+                             STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
-inline void ProcessPoint(SGM::Result       &,//rResult,
-                         std::string const &line,
-                         STEPLineData      &STEPData)
-    {
-    FindDoubles3(line,STEPData.m_aDoubles);
-    }
-
-inline void ProcessDirection(SGM::Result       &,//rResult,
-                      std::string const &line,
-                      STEPLineData      &STEPData)
-    {
-    FindDoubles3(line,STEPData.m_aDoubles);
-    }
-
-inline void ProcessEdge(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessEdge(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
     // #509=EDGE_CURVE('',#605,#607,#608,.F.);
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-inline void ProcessTrimmedCurve(SGM::Result       &,//rResult,
-                         std::string const &line,
-                         STEPLineData      &STEPData)
+inline void ProcessTrimmedCurve(char const   *pLineAfterStepTag,
+                                STEPLineData &STEPData)
     {
     // #28=TRIMMED_CURVE('',#27,(PARAMETER_VALUE(0.000000000000000)),(PARAMETER_VALUE(5.19615242270663)),.T.,.UNSPECIFIED.);
-    
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
-    FindParameters(line,STEPData.m_aDoubles);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
+    const char *pos = FindParameters(pLineAfterStepTag,STEPData.m_aDoubles);
+    FindFlag(pos,STEPData.m_bFlag);
     }
 
-inline void ProcessLoop(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessLoop(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    if(STEPData.m_nType==SGMInternal::STEPTags::TRIMMED_CURVE)
-        {
-        FindParameters(line,STEPData.m_aDoubles);
-        }
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-inline void ProcessBound(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+inline void ProcessBound(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    const char *last = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    FindFlag(last,STEPData.m_bFlag);
     }
 
-inline void ProcessLine(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessLine(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-inline void ProcessBody(SGM::Result       &,//rResult,
-                        std::string const &line,
-                        STEPLineData      &STEPData)
+inline void ProcessBody(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessVolume(SGM::Result       &,//rResult,
-                   std::string const &line,
-                   STEPLineData      &STEPData)
+void ProcessVolume(char const   *pLineAfterStepTag,
+                   STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessShell(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+void ProcessShell(char const   *pLineAfterStepTag,
+                  STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessOrientedShell(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+void ProcessOrientedShell(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-inline void ProcessCoedge(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+inline void ProcessCoedge(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-inline void ProcessPlane(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+inline void ProcessPlane(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-inline void ProcessBSpline(SGM::Result       &,//rResult,
-                    std::string const &bspline,
-                    STEPLineData      &STEPData)
+inline void ProcessBSplineCurveWithKnots(char const *pLineAfterTag,
+                                         STEPLineData &STEPData)
+{
+    //#34749 = B_SPLINE_CURVE_WITH_KNOTS( '', 3,
+    // ( #49563, #49564, #49565, #49566, #49567, #49568, #49569, #49570, #49571, #49572, #49573, #49574, #49575,
+    //   #49576, #49577, #49578, #49579, #49580, #49581, #49582, #49583, #49584, #49585, #49586, #49587 ),
+    //   .UNSPECIFIED., .F., .F., ( 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 4 ),
+    // ( 0.000000000000000, 0.000131742362273840, 0.000164677952842297, 0.000197613543410754, 0.000263484724547680,
+    //   0.000395227086821539, 0.000526969449095398, 0.000592840630232327, 0.000625776220800793, 0.000658711811369259,
+    //   0.000790454173643115, 0.000922196535916971, 0.00105393889819083 ), .UNSPECIFIED. );
+
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    //    const char * pos = pLineAfterTag;
+    //    char * end;
+    //    size_t nDegree = std::strtol(pos, &end, 10);   // Degree (we don't store it in STEPData)
+    //    assert(errno != ERANGE);
+    //    pos = end;
+
+    const char *pos = SkipChar(pLineAfterTag, '(');
+    pos = SkipChar(pos, '(');
+    pos = FindIndicesGroup(pos,aIDs);                   // Control points
+
+    //size_t nControlPoints = aIDs.size();
+
+    // (ignoring flags .F. .F.)                         // Flags
+
+    // knot multiplicities <= control points
+    //aInts.reserve(nControlPoints);
+
+    pos = FindIntVector(pos,aInts);                    // knot multiplicity
+
+    // number of knot values = number of control points
+    //aDoubles.reserve(nControlPoints);
+
+    FindDoubleVector(pos,STEPData.m_aDoubles); // knots
+}
+
+inline void ProcessBSplineCurve(char const   *pLineAfterEquals,
+                                STEPLineData &STEPData)
     {
-    // #157=(B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
+    //#543=(BOUNDED_CURVE() B_SPLINE_CURVE(3,(#182950,#182951,#182952,#182953,#182954,#182955,#182956,
+    //      #182957,#182958,#182959,#182960,#182961,#182962,#182963),.UNSPECIFIED.,.F.,.F.)
+    //  B_SPLINE_CURVE_WITH_KNOTS((4,1,1,1,1,1,1,1,1,1,1,4),
+    //      (0.,0.148083127832011,
+    //  0.288705267272566,0.416253016970393,0.528378859872694,0.625953380871544,
+    //  0.710996785912498,0.785409369241285,0.851048103254228,0.910168684988158,
+    //  0.964273361367237,1.),.UNSPECIFIED.)
+    //  CURVE() GEOMETRIC_REPRESENTATION_ITEM()
+    //  RATIONAL_B_SPLINE_CURVE((1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695)) REPRESENTATION_ITEM(''));
+
+    // (B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
     // B_SPLINE_CURVE_WITH_KNOTS((4,4),(-6.28318530717959,-0.0),.UNSPECIFIED.)
     // RATIONAL_B_SPLINE_CURVE((1.0,0.804737854124365,0.804737854124365,1.0))
     // BOUNDED_CURVE()REPRESENTATION_ITEM('')GEOMETRIC_REPRESENTATION_ITEM()CURVE());
 
-    FindIndices(bspline,STEPData.m_aIDs);
-    std::vector<std::string> aLists;
-    FindLists(bspline,aLists);
-    FindIntVector(aLists[1],STEPData.m_aInts);
-    FindDoubleVector(aLists[2],STEPData.m_aDoubles);
-    if(strstr(bspline.c_str(),"RATIONAL_B_SPLINE_CURVE"))
-        {
-        FindDoubleVector(aLists[3],STEPData.m_aDoubles);
-        STEPData.m_bFlag=false;
-        }
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_CURVE",14);
+    pos = SkipChar(pos,'(');
+
+    //    char * end;
+    //    long nDegree = std::strtol(pos, &end, 10); // Degree (we don't store it in STEPData)
+    //    assert(errno != ERANGE);
+    //    pos = end;
+
+    pos = SkipChar(pos, '(');
+    pos = FindIndicesGroup(pos,aIDs);               // Control points
+
+    size_t nControlPoints = aIDs.size(); // nKnots - nDegree - 1; ?
+
+    // (ignoring flags .F. .F.)
+
+    pos = SkipWord(pos,"B_SPLINE_CURVE_WITH_KNOTS",25);
+    pos = SkipChar(pos,'(');
+
+    // aInts.reserve(aInts.size() + ?);
+
+    pos = FindIntVector(pos,aInts);                 // knot multiplicity
+
+    // aDoubles.reserve(aDoubles.size() + ?);
+
+    pos = FindDoubleVector(pos,aDoubles);           // knots
+    size_t nKnots = aDoubles.size();
+
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",25);
+    pos = SkipChar(pos,'(');
+
+    size_t nWeights = nControlPoints;
+    size_t nSize = aDoubles.size();
+    aDoubles.reserve(nSize + nWeights);
+
+    FindDoubleVector(pos,aDoubles);           // Weights
     }
 
-inline void ProcessCircle(SGM::Result       &,//rResult,
-                          std::string const &circle,
-                          STEPLineData      &STEPData)
+inline void ProcessCircle(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(circle,STEPData.m_aIDs);
-    FindLastDouble(circle,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessCone(SGM::Result       &,//rResult,
-                 std::string const &cone,
-                 STEPLineData      &STEPData)
+void ProcessCone(char const   *pLineAfterStepTag,
+                 STEPLineData &STEPData)
     {
     // #73=CONICAL_SURFACE('',#72,1.00000000000000,0.785398163397448);
-                
-    FindIndices(cone,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(cone,aArgs);
-    double dRadius,dHalfAngle;
-    sscanf(aArgs[2].c_str(),"%lf",&dRadius);
-    sscanf(aArgs[3].c_str(),"%lf",&dHalfAngle);
-    STEPData.m_aDoubles.push_back(dRadius);
-    STEPData.m_aDoubles.push_back(dHalfAngle);        
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // radius
+    FindDouble(pos, STEPData.m_aDoubles);       // half-angle
     }
 
-void ProcessEllipse(SGM::Result       &,//rResult,
-                    std::string const &ellipse,
-                    STEPLineData      &STEPData)
+void ProcessEllipse(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
     {
     // #6314=ELLIPSE('',#10514,0.553426824431198,0.2475);
-
-    FindIndices(ellipse,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(ellipse,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    FindDouble(pos, STEPData.m_aDoubles); // minor
     }
 
-void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
-                             std::string const &spline,
-                             STEPLineData      &STEPData)
+void ProcessBSplineSurfaceWithKnots(char const *pLineAfterStepTag,
+                                    STEPLineData &STEPData)
     {
     // #1879=B_SPLINE_SURFACE_WITH_KNOTS('',3,3,
     // ((#3246,#3247,#3248,#3249),(#3250,#3251,#3252,#3253),(#3254,#3255,#3256,#3257),(#3258,#3259,#3260,#3261),
@@ -548,169 +512,26 @@ void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
     // (-0.0125000000006658,0.0,0.1666666666667,0.3333333333333,0.5,0.6666666666667,0.8333333333333,1.0,1.0015535650659),
     // (-0.0124999999959784,1.0125000000066),.UNSPECIFIED.);
 
-    // UDegree, VDegree,
-    // Control Points
-    // Uknot multiplicity, Vknot multiplicity
-    // Uknots, VKnots
+    const char *pos = pLineAfterStepTag;
 
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
+    // TODO: do some vector.reserve() calls
 
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[1].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[2].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
+    pos = FindInt(pos,STEPData.m_aInts); // UDegree
+    pos = FindInt(pos,STEPData.m_aInts); // VDegree
 
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindArgumentsAfter(aArgs[aArgs.size()-5]+")",aArgs0,"(");
-    FindListArguments(aArgs[aArgs.size()-4]+")",aArgs1);
-    FindListArguments(aArgs[aArgs.size()-3]+")",aArgs2);
-    FindListArguments(aArgs[aArgs.size()-2]+")",aArgs3);
+    pos = SkipChar(pos, '(');
 
-    size_t Index1;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        }                                               // Uknot multiplicity
+    pos = FindIndicesAll(pos,STEPData.m_aIDs); // control points.
 
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        }                                               // Vknot multiplicity
+    pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
+    pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
 
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
+          FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
     }
 
-void ProcessBoundedSurface(SGM::Result       &,//rResult,
-                           std::string const &spline,
-                           STEPLineData      &STEPData)
-    {
-    // #218 =( BOUNDED_SURFACE ( )  B_SPLINE_SURFACE ( 3, 3, ( 
-    //  ( #441, #427, #443, #679 ),
-    //  ( #862, #1034, #432, #1018 ),
-    //  ( #350, #174, #272, #845 ),
-    //  ( #165, #764, #1020, #939 ) ),
-    //  .UNSPECIFIED., .F., .F., .T. ) 
-    //  B_SPLINE_SURFACE_WITH_KNOTS ( ( 4, 4 ),
-    //  ( 4, 4 ),
-    //  ( 0.0000000000000000000, 1.000000000000000000 ),
-    //  ( 0.0000000000000000000, 1.000000000000000000 ),
-    //  .UNSPECIFIED. ) 
-    //  GEOMETRIC_REPRESENTATION_ITEM ( )  RATIONAL_B_SPLINE_SURFACE ( (
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000) ) ) 
-    //  REPRESENTATION_ITEM ( '' )  SURFACE ( )  );
-    
-    // UDegree, VDegree,
-    // Control Points
-    // Uknot multiplicity, Vknot multiplicity
-    // Uknots, VKnots,
-    // Weights
-
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
-
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[0].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[1].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindListArguments(aArgs[0]+')',aArgs0);
-    FindListArguments(aArgs[1]+')',aArgs1);
-    FindListArguments(aArgs[2]+')',aArgs2);
-    FindListArguments(aArgs[3]+')',aArgs3);
-    size_t Index1,Index2;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nUKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nUKnots+=nMultiplicity;
-        }                                               // Uknot multiplicity
-
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nVKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nVKnots+=nMultiplicity;
-        }                                               // Vknot multiplicity
-
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"RATIONAL_B_SPLINE_SURFACE((");
-    size_t nUControlPoints=nUKnots-nUDegree-1;
-    size_t nVControlPoints=nVKnots-nVDegree-1;
-    for(Index1=0;Index1<nUControlPoints;++Index1)
-        {
-        std::vector<std::string> aArgsSub;
-        FindListArguments(aArgs[Index1]+')',aArgsSub);
-        for(Index2=0;Index2<nVControlPoints;++Index2)
-            {
-            double dWeight;
-            sscanf(aArgsSub[Index2].c_str(),"%lf",&dWeight);  
-            STEPData.m_aDoubles.push_back(dWeight);
-            }
-        }                                               // The weights.
-    }
-
-void ProcessBSplineSurface(SGM::Result       &,//rResult,
-                           std::string const &spline,
-                           STEPLineData      &STEPData)
+void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the first = sign
+                           STEPLineData &STEPData)
     {
     // #767=(B_SPLINE_SURFACE(3,3,
     // ((#2090,#2091,#2092,#2093),(#2094,#2095,#2096,#2097),(#2098,#2099,#2100,#2101),(#2102,#2103,#2104,#2105)),.UNSPECIFIED.,.F.,.F.,.F.)
@@ -726,468 +547,473 @@ void ProcessBSplineSurface(SGM::Result       &,//rResult,
     // Uknot multiplicity, Vknot multiplicity
     // Uknots, VKnots,
     // Weights
-                
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
 
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[0].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[1].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
+    int nUDegree, nVDegree;
+    unsigned long nUKnots, nVKnots;
 
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindListArguments(aArgs[0]+')',aArgs0);
-    FindListArguments(aArgs[1]+')',aArgs1);
-    FindListArguments(aArgs[2]+')',aArgs2);
-    FindListArguments(aArgs[3]+')',aArgs3);
-    size_t Index1,Index2;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nUKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_SURFACE",16);
+    pos = SkipChar(pos,'(');
+
+    aInts.reserve(2);
+
+    pos = AppendInt(pos,aInts); // UDegree
+    nUDegree = aInts.back();
+    assert(nUDegree > 0);
+
+    pos = FindInt(pos,aInts);   // VDegree
+    nVDegree = aInts.back();
+    assert(nVDegree > 0);
+
+    aIDs.reserve((size_t)(nUDegree+1)*(nVDegree+1));
+
+    pos = SkipChar(pos,'(');
+
+    pos = FindIndicesAll(pos,aIDs); // Control points
+
+    // (ignoring flags .F. .F. .F.)
+
+    pos = SkipWord(pos,"B_SPLINE_SURFACE_WITH_KNOTS",27);
+    pos = SkipChar(pos,'(');
+
+    // TODO: set aside room for U,V knot multiplicities
+    // aInts.reserve(aInts.size() + ?);
+
+    pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
+    pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
+
+    // TODO: set aside room for U,V knot values
+    // aDoubles.reserve(aDoubles.size() + ?);
+
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
+    nUKnots = STEPData.m_aDoubles.size();
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
+    nVKnots = STEPData.m_aDoubles.size() - nUKnots;
+
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_SURFACE",25);
+    pos = SkipChar(pos,'(');
+    pos = SkipChar(pos,'(');
+
+    size_t nUControlPoints = (size_t)nUKnots - nUDegree - 1;
+    size_t nVControlPoints = (size_t)nVKnots - nVDegree - 1;
+    assert(nUControlPoints > 0);
+    assert(nVControlPoints > 0);
+
+    size_t nWeights = nUControlPoints * nVControlPoints;    // Weights
+    size_t nSize = aDoubles.size();
+    aDoubles.reserve(nSize + nWeights);
+    for (size_t i = 0; i < nUControlPoints; ++i)
         {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nUKnots+=nMultiplicity;
-        }                                               // Uknot multiplicity
-
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nVKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nVKnots+=nMultiplicity;
-        }                                               // Vknot multiplicity
-
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"RATIONAL_B_SPLINE_SURFACE((");
-    size_t nUControlPoints=nUKnots-nUDegree-1;
-    size_t nVControlPoints=nVKnots-nVDegree-1;
-    for(Index1=0;Index1<nUControlPoints;++Index1)
-        {
-        std::vector<std::string> aArgsSub;
-        FindListArguments(aArgs[Index1]+')',aArgsSub);
-        for(Index2=0;Index2<nVControlPoints;++Index2)
-            {
-            double dWeight;
-            sscanf(aArgsSub[Index2].c_str(),"%lf",&dWeight);  
-            STEPData.m_aDoubles.push_back(dWeight);
-            }
-        }                                               // The weights.
+        pos = FindDoubleVector(pos,aDoubles);
+        assert((aDoubles.size() - nSize) == nVControlPoints);
+        nSize = aDoubles.size();
+        }
     }
 
-void ProcessCylinder(SGM::Result       &,//rResult,
-                     std::string const &cylinder,
-                     STEPLineData      &STEPData)
+    void ProcessBoundedSurface(char const   *pLineAfterEquals,
+                               STEPLineData &STEPData)
     {
-    FindIndices(cylinder,STEPData.m_aIDs);
-    FindLastDouble(cylinder,STEPData.m_aDoubles);
+    // #218 =( BOUNDED_SURFACE ( )  B_SPLINE_SURFACE ( 3, 3, (
+    //  ( #441, #427, #443, #679 ),
+    //  ( #862, #1034, #432, #1018 ),
+    //  ( #350, #174, #272, #845 ),
+    //  ( #165, #764, #1020, #939 ) ),
+    //  .UNSPECIFIED., .F., .F., .T. )
+    //  B_SPLINE_SURFACE_WITH_KNOTS ( ( 4, 4 ),
+    //  ( 4, 4 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  .UNSPECIFIED. )
+    //  GEOMETRIC_REPRESENTATION_ITEM ( )  RATIONAL_B_SPLINE_SURFACE ( (
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000) ) )
+    //  REPRESENTATION_ITEM ( '' )  SURFACE ( )  );
+
+    const char *pos = SkipWord(pLineAfterEquals,"BOUNDED_SURFACE",15);
+
+    ProcessBSplineSurface(pos,STEPData);
     }
 
-void ProcessSphere(SGM::Result       &,//rResult,
-                   std::string const &sphere,
-                   STEPLineData      &STEPData)
+void ProcessCylinder(char const   *pLineAfterStepTag,
+                     STEPLineData &STEPData)
     {
-    FindIndices(sphere,STEPData.m_aIDs);
-    FindLastDouble(sphere,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessRevolve(SGM::Result       &,//rResult,
-                    std::string const &revolve,
-                    STEPLineData      &STEPData)
+void ProcessSphere(char const   *pLineAfterStepTag,
+                   STEPLineData &STEPData)
     {
-    FindIndices(revolve,STEPData.m_aIDs);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessTorus(SGM::Result       &,//rResult,
-                    std::string const &torus,
-                    STEPLineData      &STEPData)
+void ProcessRevolve(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
+    {
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
+    }
+
+void ProcessTorus(char const   *pLineAfterStepTag,
+                  STEPLineData &STEPData)
     {
     // #85=TOROIDAL_SURFACE('',#158,8.0,0.5);
-
-    FindIndices(torus,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(torus,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char *pos = FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    FindDouble(pos, STEPData.m_aDoubles);       // minor
     }
 
-void ProcessExtrude(SGM::Result       &,//rResult,
-                    std::string const &extrude,
-                    STEPLineData      &STEPData)
+void ProcessExtrude(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
     {
     // #1166=SURFACE_OF_LINEAR_EXTRUSION('',#2532,#2533);
-
-    FindIndices(extrude,STEPData.m_aIDs);
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessDegenerateTorus(SGM::Result       &,//rResult,
-                            std::string const &torus,
-                            STEPLineData      &STEPData)
+void ProcessDegenerateTorus(char const   *pLineAfterStepTag,
+                            STEPLineData &STEPData)
     {
     // #112=DEGENERATE_TOROIDAL_SURFACE('',#111,9.02000000000000,20.0000000000000,.T.);
-
-    FindIndices(torus,STEPData.m_aIDs);
-    FindFlag(torus,STEPData.m_bFlag);
-    std::vector<std::string> aArgs;
-    FindListArguments(torus,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    pos = FindDouble(pos, STEPData.m_aDoubles); // minor
+    FindFlag(pos,STEPData.m_bFlag);
     }
 
-inline void ProcessVector(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+inline void ProcessVector(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindLastDouble(line,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-inline void ProcessVertex(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+inline void ProcessVertex(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessBodyTransform(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+inline void ProcessBodyTransform(char const   *pLineAfterStepTag,
+                                 STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-// return pointer to string one past the end of the STEP tag
-char* FindStepTag(char *pLine, std::string &sTag)
+// find a STEP tag
+// return pointer to string one past the end of first STEP tag
+
+inline const char * FindStepTag(const char *pString, std::string &sTag)
     {
-    static const char SPACE_PAREN_CTRL[] = " (\n\t\r\f\v\b\a";
-    char * token = strtok(pLine,SPACE_PAREN_CTRL);
-    sTag = token;
-    pLine = strchr(pLine,'\0') + 1; // skip to one past what the strtok consumed
-    if (sTag.empty()) // try again if we did not find a token before first parenthesis
+    static const char WHITE_SPACE[] = " \n\r\t";
+    static const char WHITE_SPACE_PAREN[] = " (\n\r\t";
+
+    // skip to first non-white space
+    pString += std::strspn(pString, WHITE_SPACE);
+
+    // stop at the first parentheses or whitespace
+    size_t end = std::strcspn(pString, WHITE_SPACE_PAREN);
+
+    if (end > 0)
         {
-        token = strtok(pLine,SPACE_PAREN_CTRL);
-        sTag = token;
-        pLine = strchr(pLine,'\0') + 1;
+        sTag.assign(pString, end);
+        return (pString + end);
         }
-    return pLine; // position after strtok consumed
+
+    // try again if we did not find a token before a parenthesis
+    ++pString;
+    pString += std::strspn(pString, WHITE_SPACE);
+    end = std::strcspn(pString, WHITE_SPACE_PAREN);
+    if (end < 1)
+        throw std::runtime_error(pString);
+    sTag.assign(pString, end);
+
+    return pString + end; // position after the first token
     }
 
 void ProcessStepCommand(SGM::Result              &rResult,
                         STEPTagMapType const     &mSTEPTagMap,
-                        char                     *pLine,
+                        const char               *pLine,
                         STEPLineDataMapType      &mSTEPData,
                         std::vector<std::string> &aLog,
-                        SGM::TranslatorOptions   const &Options)
+                        SGM::TranslatorOptions   const &Options,
+                        STEPLineData             &STEPData,
+                        std::string              &sTag)
     {
+    static const char WHITE_SPACE[] = " \n\r\t";
+
     // skip leading whitespace/control characters
-    pLine += strspn(pLine," \f\n\r\t\v");
+    pLine += strspn(pLine,WHITE_SPACE);
 
-    if(pLine[0] == '#')
+    if(pLine[0] == '#') // we found a line with a STEP Line number and a tag
         {
-
-        // C++ string for further processing below
-        std::string line(pLine);
-
         // Find the line number.
         size_t nLineNumber;
-        ++pLine; // skip past # sign
-        sscanf(pLine,"%zu",&nLineNumber);
+        const char *pLineAfterLineNumber = ReadIndex(pLine + 1, &nLineNumber);
 
         // skip past the equals sign
-        pLine = strchr(pLine,'=') + 1;
+        const char * pLineAfterEquals = SkipChar(pLineAfterLineNumber, '=');
 
-        // Find the STEP tag string and shift the pointer forward past it
-        std::string sTag;
-        pLine = FindStepTag(pLine,sTag);
+        // Find the STEP tag string
+        const char * pLineAfterStepTag = FindStepTag(pLineAfterEquals, sTag);
 
-        // Process the data.
+        // Process the Tag and fill STEPData.
 
-        STEPLineData STEPData;
-        STEPTagMapType::const_iterator MapIter=mSTEPTagMap.find(sTag);
+        auto MapIter=mSTEPTagMap.find(sTag);
         if(MapIter!=mSTEPTagMap.end())
             {
             STEPData.m_nType=MapIter->second;
-            if(Options.m_bScan==false)
+            if(!Options.m_bScan)
                 {
                 switch(STEPData.m_nType)
                     {
                     case SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         STEPLineData STEPData2;
-                        ProcessBody(rResult,line,STEPData2);
+                        ProcessBody(pLineAfterStepTag,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION;
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData2));
+                        mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
                     case SGMInternal::STEPTags::ADVANCED_FACE:
                         {
-                        ProcessFace(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessFace(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS1_PLACEMENT:
                         {
-                        ProcessAxis(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessAxis(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS2_PLACEMENT_3D:
                         {
-                        ProcessAxis(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessAxis(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE:
                         {
-                        ProcessBSplineSurface(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBSplineSurface(pLineAfterEquals,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE:
                         {
-                        ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBSplineCurve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                         {
-                        ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBSplineCurveWithKnots(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                         {
-                        ProcessBSplineWithKnots(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBSplineSurfaceWithKnots(pLineAfterStepTag, STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::BOUNDED_SURFACE:
                         {
-                        ProcessBoundedSurface(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBoundedSurface(pLineAfterEquals,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::BREP_WITH_VOIDS:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CARTESIAN_POINT:
                         {
-                        ProcessPoint(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessPoint(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CLOSED_SHELL:
                         {
-                        ProcessShell(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CIRCLE:
                         {
-                        ProcessCircle(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessCircle(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CONICAL_SURFACE:
                         {
-                        ProcessCone(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessCone(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
                         {
-                        ProcessCylinder(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessCylinder(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
                         {
-                        ProcessDegenerateTorus(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessDegenerateTorus(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::DIRECTION:
                         {
-                        ProcessDirection(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessDirection(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_CURVE:
                         {
-                        ProcessEdge(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessEdge(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_LOOP:
                         {
-                        ProcessLoop(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessLoop(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ELLIPSE:
                         {
-                        ProcessEllipse(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessEllipse(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_BOUND:
                         {
-                        ProcessBound(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBound(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_OUTER_BOUND:
                         {
-                        ProcessBound(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBound(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_SURFACE:
                         {
-                        ProcessFace(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessFace(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRIC_CURVE_SET:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         STEPLineData STEPData2;
-                        ProcessBody(rResult,line,STEPData2);
+                        ProcessBody(pLineAfterStepTag,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION;
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData2));
+                        mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
                     case SGMInternal::STEPTags::LINE:
                         {
-                        ProcessLine(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessLine(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::OPEN_SHELL:
                         {
-                        ProcessShell(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL:
                         {
-                        ProcessOrientedShell(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessOrientedShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_EDGE:
                         {
-                        ProcessCoedge(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessCoedge(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::PLANE:
                         {
-                        ProcessPlane(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessPlane(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
                         {
-                        ProcessBody(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessBody(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SPHERICAL_SURFACE:
                         {
-                        ProcessSphere(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessSphere(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                         {
-                        ProcessExtrude(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessExtrude(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                         {
-                        ProcessRevolve(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessRevolve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::TOROIDAL_SURFACE:
                         {
-                        ProcessTorus(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessTorus(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::TRIMMED_CURVE:
                         {
-                        ProcessTrimmedCurve(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessTrimmedCurve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::VECTOR:
                         {
-                        ProcessVector(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessVector(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::VERTEX_POINT:
                         {
-                        ProcessVertex(rResult,line,STEPData);
-                        mSTEPData.emplace(nLineNumber,std::move(STEPData));
+                        ProcessVertex(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     default:
@@ -1197,7 +1023,7 @@ void ProcessStepCommand(SGM::Result              &rResult,
                     }
                 }
             }
-        else if(sTag.empty()==false)
+        else if(!sTag.empty())
             {
             rResult.SetResult(SGM::ResultType::ResultTypeUnknownType);
             std::string LogString="Unknown Type "+sTag;
@@ -1587,7 +1413,7 @@ void CreateEntities(SGM::Result           &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 double dHalfAngle=DataIter->second.m_aDoubles[1];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
                 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1601,7 +1427,7 @@ void CreateEntities(SGM::Result           &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1616,7 +1442,7 @@ void CreateEntities(SGM::Result           &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=DataIter->second.m_bFlag;
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1668,10 +1494,10 @@ void CreateEntities(SGM::Result           &rResult,
                 {
                 size_t nPos=DataIter->second.m_aIDs[0];
                 size_t nVec=DataIter->second.m_aIDs[1];
-                STEPLineData SLDP=mSTEPData[nPos];
-                STEPLineData SLDV=mSTEPData[nVec];
+                STEPLineData const &SLDP=mSTEPData[nPos];
+                STEPLineData const &SLDV=mSTEPData[nVec];
                 size_t nDir=SLDV.m_aIDs[0];
-                STEPLineData SLDD=mSTEPData[nDir];
+                STEPLineData const &SLDD=mSTEPData[nDir];
                 SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D Axis(SLDD.m_aDoubles[0],SLDD.m_aDoubles[1],SLDD.m_aDoubles[2]);
                 mEntityMap[nID]=new line(rResult,Origin,Axis);
@@ -1694,7 +1520,7 @@ void CreateEntities(SGM::Result           &rResult,
             case SGMInternal::STEPTags::PLANE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Origin;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1714,7 +1540,7 @@ void CreateEntities(SGM::Result           &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1727,10 +1553,10 @@ void CreateEntities(SGM::Result           &rResult,
             case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                 {
                 size_t nVector=DataIter->second.m_aIDs[1];
-                STEPLineData SLDVector=mSTEPData[nVector];
+                STEPLineData const &SLDVector=mSTEPData[nVector];
                 size_t nDirection=SLDVector.m_aIDs[0];
                 double dScale=SLDVector.m_aDoubles[0];
-                STEPLineData SLDDirection=mSTEPData[nDirection];
+                STEPLineData const &SLDDirection=mSTEPData[nDirection];
                 SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
                 if(dScale<0)
                     {
@@ -1742,11 +1568,11 @@ void CreateEntities(SGM::Result           &rResult,
             case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[1];
-                STEPLineData SLDAxis=mSTEPData[nAxis];
+                STEPLineData const &SLDAxis=mSTEPData[nAxis];
                 size_t nPoint=SLDAxis.m_aIDs[0];
                 size_t nDirection=SLDAxis.m_aIDs[1];
-                STEPLineData SLDPoint=mSTEPData[nPoint];
-                STEPLineData SLDDirection=mSTEPData[nDirection];
+                STEPLineData const &SLDPoint=mSTEPData[nPoint];
+                STEPLineData const &SLDDirection=mSTEPData[nDirection];
                 SGM::Point3D Pos(SLDPoint.m_aDoubles[0],SLDPoint.m_aDoubles[1],SLDPoint.m_aDoubles[2]);
                 SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
                 mEntityMap[nID]=new revolve(rResult,Pos,ZAxis,nullptr);
@@ -1758,7 +1584,7 @@ void CreateEntities(SGM::Result           &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=true;
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1775,7 +1601,7 @@ void CreateEntities(SGM::Result           &rResult,
                 }
             case SGMInternal::STEPTags::VERTEX_POINT:
                 {
-                STEPLineData SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
+                STEPLineData const &SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
                 SGM::Point3D Pos(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 mEntityMap[nID]=new vertex(rResult,Pos);
                 break;
@@ -2171,13 +1997,15 @@ void SplitFile(FILE              *pFile,
         if(sFileLine.front()=='#')
             {
             std::string sTag;
-            char *pData=const_cast<char*>(sFileLine.c_str());
-            FindStepTag(pData,sTag);
+            char *pLine=const_cast<char*>(sFileLine.c_str());
+            const char * pLineAfterStepTag = FindStepTag(pLine, sTag);
+            if (sTag.empty())
+                throw std::runtime_error(sFileLine);
             if(sBadTags.find(sTag)==sBadTags.end())
                 {
                 size_t nLineNumber;
-                sscanf(pData+1,"%zu",&nLineNumber);
-                FindIndices(sFileLine,aIDs);
+                sscanf(pLine+1,"%zu",&nLineNumber);
+                FindIndicesAll(pLineAfterStepTag,aIDs);
                 aIDMap[nLineNumber]=aIDs;
                 }
             }
@@ -2213,6 +2041,8 @@ void SplitFile(FILE              *pFile,
     a*=1;
     }
 
+#define SGM_READ_MAX_LINE_LENGTH 8192 // in characters
+
 size_t ReadStepFile(SGM::Result                  &rResult,
                     std::string            const &FileName,
                     thing                        *pThing,
@@ -2221,9 +2051,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
                     SGM::TranslatorOptions const &Options)
     {
     // Open the file.
-
-    FILE *pFile = fopen(FileName.c_str(),"r");
-    if(pFile==nullptr)
+    std::ifstream inputFileStream(FileName, std::ifstream::in);
+    if (inputFileStream.bad())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return 0;
@@ -2231,33 +2060,56 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     // Split the file.
 
-    if(Options.m_bSplitFile)
-        {
-        SplitFile(pFile,FileName);
-        return 0;
-        }
+    //TODO: make SPlitFile work with std::ifstream
+    //    if(Options.m_bSplitFile)
+    //        {
+    //        SplitFile(pFile,FileName);
+    //        return 0;
+    //        }
 
     // Set up the STEP Tag map
 
     STEPTagMapType mSTEPTagMap;
     CreateSTEPTagMap(mSTEPTagMap);
 
-    // Read each line of the file.
+    // Set up a STEPData object and the map from ID to STEPData
     
     STEPLineDataMapType mSTEPData;
 
-    char *pcBuffer = nullptr;
-    size_t sizeBuffer = 0;
-    ssize_t numCharBuffer;
-    int iDelimiter = ';';
+    STEPLineData STEPData;
+    STEPData.m_aIDs.reserve(256);
+    STEPData.m_aDoubles.reserve(32);
+    STEPData.m_aInts.reserve(32);
 
-    while ((numCharBuffer = getdelim(&pcBuffer, &sizeBuffer, iDelimiter, pFile)) != -1)
+    // setup Line buffer string and Tag buffer string
+
+    std::string sLine, sTag;
+    sLine.reserve(4096);
+    sTag.reserve(128);
+
+    while (std::getline(inputFileStream,sLine,';'))
         {
-        ProcessStepCommand(rResult,mSTEPTagMap,pcBuffer,mSTEPData,aLog,Options);
+        ProcessStepCommand(rResult,mSTEPTagMap,sLine.c_str(),mSTEPData,aLog,Options,STEPData,sTag);
+        STEPData.clear();
         }
-    free(pcBuffer);
-    fclose(pFile);
+    inputFileStream.close();
 
+#if 0
+    // output max STEPLineData capacity are we seeing in a file
+    size_t max_ids = 0;
+    size_t max_doubles = 0;
+    size_t max_ints = 0;
+    for (auto const& entry : mSTEPData)
+        {
+        STEPLineData const & pSTEPData = entry.second;
+        max_ids = std::max(max_ids, pSTEPData.m_aIDs.capacity());
+        max_doubles = std::max(max_doubles, pSTEPData.m_aDoubles.capacity());
+        max_ints = std::max(max_ints, pSTEPData.m_aInts.capacity());
+        }
+        std::cout << "max mSTEPData m_aIDS capacity = " << max_ids << std::endl;
+        std::cout << "max mSTEPData m_aDoubles capacity = " << max_doubles << std::endl;
+        std::cout << "max mSTEPData m_aInts capacity = " << max_ints << std::endl;
+#endif
 
     // Create all the entities.
 
@@ -2267,7 +2119,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
         }
 
-    // create all the triangles/facets
+    // create all the triangles/facets/boxes
 
     pThing->FindCachedData(rResult);
 

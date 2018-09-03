@@ -166,4 +166,7 @@ void ReadDirectory(std::string        const &DirName,
 #   error No available implementation for ReadDirectory()
 #endif
     }
-}
+
+} // namespace SGMInternal
+
+

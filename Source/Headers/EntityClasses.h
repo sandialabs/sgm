@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <unordered_set>
 #include <utility>
 #include <mutex>
 
@@ -227,29 +228,26 @@ class thing : public entity
 
         size_t GetMaxID() const;
 
-        size_t GetTopLevelEntities(std::vector<entity *> &aEntities) const;
-        
-        size_t GetBodies(std::set<body *,EntityCompare> &sBodies,bool bTopLevel) const;
+        std::vector<entity *> GetTopLevelEntities() const;
 
-        size_t GetVolumes(std::set<volume *,EntityCompare> &sVolumes,bool bTopLevel) const;
+        std::unordered_set<body *> GetBodies(bool bTopLevel=false) const;
 
-        size_t GetFaces(std::set<face *,EntityCompare> &sFaces,bool bTopLevel) const;
+        std::unordered_set<volume *> GetVolumes(bool bTopLevel=false) const;
 
-        size_t GetEdges(std::set<edge *,EntityCompare> &sEdges,bool bTopLevel) const;
+        std::unordered_set<face *> GetFaces(bool bTopLevel=false) const;
 
-        size_t GetVertices(std::set<vertex *,EntityCompare> &sVertices,bool bTopLevel) const;
+        std::unordered_set<edge *> GetEdges(bool bTopLevel=false) const;
 
-        size_t GetComplexes(std::set<complex *,EntityCompare> &sComplexes,bool bTopLevel) const;
+        std::unordered_set<vertex *> GetVertices(bool bTopLevel=false) const;
 
-        size_t GetSurfaces(std::set<surface *,EntityCompare> &sSurfaces,bool bTopLevel) const;
+        std::unordered_set<complex *> GetComplexes(bool bTopLevel=false) const;
 
-        size_t GetCurves(std::set<curve *,EntityCompare> &sCurves,bool bTopLevel) const;
+        std::unordered_set<surface *> GetSurfaces(bool bTopLevel=false) const;
 
-        size_t GetAttributes(std::set<attribute *,EntityCompare> &sAttribute,bool bTopLevel) const;
+        std::unordered_set<curve *> GetCurves(bool bTopLevel=false) const;
 
-        template <class ENTITY_TYPE, class ENTITY_SET>
-        size_t GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const;
-        
+        std::unordered_set<attribute *> GetAttributes(bool bTopLevel=false) const;
+
         // Find methods
         
         entity *FindEntity(size_t ID) const;
@@ -262,6 +260,9 @@ class thing : public entity
 
     private:
 
+        template <class ENTITY_TYPE, class ENTITY_SET>
+        size_t GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel=false) const;
+        
         std::map<size_t,entity* > m_mAllEntities;
         size_t                    m_nNextID;
         mutable bool              m_bIsConcurrentActive; // for debugging, true if inside multi-threaded block

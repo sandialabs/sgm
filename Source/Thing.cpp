@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <set>
 
-//#define SGM_MULTITHREADED
+#define SGM_MULTITHREADED
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -185,74 +185,87 @@ namespace SGMInternal {
         return pAnswer;
     }
 
-    size_t thing::GetTopLevelEntities(std::vector<entity *> &aEntities) const
+    std::vector<entity *> thing::GetTopLevelEntities() const
     {
+        std::vector<entity *> aTopLevelEntities;
         for (auto &entry : m_mAllEntities)
             {
             // include any top level entity, including attribute, curve, surface
             entity *pEntity = entry.second;
             if (pEntity->IsTopLevel())
-                aEntities.push_back(pEntity);
+                aTopLevelEntities.push_back(pEntity);
             }
-        return aEntities.size();
+        return aTopLevelEntities;
     }
 
-// get a set of a specific type of entity
+    std::unordered_set<body *> thing::GetBodies(bool bTopLevel) const
+    {
+        std::unordered_set<body *> sBodies;
+        GetEntities(SGM::EntityType::BodyType, sBodies, bTopLevel);
+        return sBodies;
+    }
 
-    size_t thing::GetBodies(std::set<body *, EntityCompare> &sBodies, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::BodyType, sBodies, bTopLevel); }
+    std::unordered_set<attribute *> thing::GetAttributes(bool bTopLevel) const
+    {
+        std::unordered_set<attribute *> sAttribute;
+        GetEntities(SGM::EntityType::AttributeType, sAttribute, bTopLevel);
+        return sAttribute;
+    }
 
-    size_t thing::GetVolumes(std::set<volume *, EntityCompare> &sVolumes, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::VolumeType, sVolumes, bTopLevel); }
+    std::unordered_set<curve *> thing::GetCurves(bool bTopLevel) const
+    {
+        std::unordered_set<curve *> sCurves;
+        GetEntities(SGM::EntityType::CurveType, sCurves, bTopLevel);
+        return sCurves;
+    }
 
-    size_t thing::GetFaces(std::set<face *, EntityCompare> &sFaces, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::FaceType, sFaces, bTopLevel); }
+    std::unordered_set<complex *> thing::GetComplexes(bool bTopLevel) const
+    {
+        std::unordered_set<complex *> sComplexes;
+        GetEntities(SGM::EntityType::ComplexType, sComplexes, bTopLevel);
+        return sComplexes;
+    }
 
-    size_t thing::GetEdges(std::set<edge *, EntityCompare> &sEdges, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::EdgeType, sEdges, bTopLevel); }
+    std::unordered_set<face *> thing::GetFaces(bool bTopLevel) const
+    {
+        std::unordered_set<face *> sFaces;
+        GetEntities(SGM::EntityType::FaceType, sFaces, bTopLevel);
+        return sFaces;
+    }
 
-    size_t thing::GetVertices(std::set<vertex *, EntityCompare> &sVertices, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::VertexType, sVertices, bTopLevel); }
+    std::unordered_set<edge *> thing::GetEdges(bool bTopLevel) const
+    {
+        std::unordered_set<edge *> sEdges;
+        GetEntities(SGM::EntityType::EdgeType, sEdges, bTopLevel);
+        return sEdges;
+    }
 
-    size_t thing::GetSurfaces(std::set<surface *, EntityCompare> &sSurfaces, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::SurfaceType, sSurfaces, bTopLevel); }
+    std::unordered_set<surface *> thing::GetSurfaces(bool bTopLevel) const
+    {
+        std::unordered_set<surface *> sSurfaces;
+        GetEntities(SGM::EntityType::SurfaceType, sSurfaces, bTopLevel);
+        return sSurfaces;
+    }
 
-    size_t thing::GetAttributes(std::set<attribute *, EntityCompare> &sAttribute, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::AttributeType, sAttribute, bTopLevel); }
+    std::unordered_set<vertex *> thing::GetVertices(bool bTopLevel) const
+    {
+        std::unordered_set<vertex *> sVertices;
+        GetEntities(SGM::EntityType::VertexType, sVertices, bTopLevel);
+        return sVertices;
+    }
 
-    size_t thing::GetCurves(std::set<curve *, EntityCompare> &sCurves, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::CurveType, sCurves, bTopLevel); }
-
-    size_t thing::GetComplexes(std::set<complex *, EntityCompare> &sComplexes, bool bTopLevel) const
-    { return GetEntities(SGM::EntityType::ComplexType, sComplexes, bTopLevel); }
+    std::unordered_set<volume *> thing::GetVolumes(bool bTopLevel) const
+    {
+        std::unordered_set<volume *> sVolumes;
+        GetEntities(SGM::EntityType::VolumeType, sVolumes, bTopLevel);
+        return sVolumes;
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Helper functions for that force cached data to be computed
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-    // works for both curves and surfaces of different types
-    // as long as they have the member functions
-    template<class GEOMETRY>
-    bool FindGeometryData(GEOMETRY *g)
-    {
-        g->GetSeedParams();
-        g->GetSeedPoints();
-        return true;
-    }
-
-    bool FindEdgeData(SGM::Result &rResult, edge *e)
-    {
-        e->GetFacets(rResult);
-        return true;
-    }
-
-    bool FindFaceData(SGM::Result &rResult, face *f)
-    {
-        f->GetPoints3D(rResult);
-        return true;
-    }
 
     void thing::SetConcurrentActive() const
     {
@@ -266,13 +279,93 @@ namespace SGMInternal {
         m_bIsConcurrentActive = false;
     }
 
-#ifdef SGM_MULTITHREADED
+    // works for both curves and surfaces of different types
+    // as long as they have the member functions
+    template<class GEOMETRY>
+    bool FindGeometryPointsData(GEOMETRY *g)
+    {
+        g->GetSeedParams();
+        g->GetSeedPoints();
+        return true;
+    }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Multithreaded version of thing::FindCachedData
-//
-///////////////////////////////////////////////////////////////////////////////
+    bool FindEdgePointsData(SGM::Result &rResult, edge *e)
+    {
+        e->GetFacets(rResult);
+        return true;
+    }
+
+    bool FindFacePointsData(SGM::Result &rResult, face *f)
+    {
+        f->GetPoints3D(rResult);
+        return true;
+    }
+
+    bool FindEntityBoxData(SGM::Result &rResult, entity *e)
+    {
+        e->GetBox(rResult);
+        return true;
+    }
+
+    //
+    // Serial Cached Data Visitors
+    //
+    // Provide Visit() functions for types that have cached data.
+
+    struct SerialSurfacePointsVisitor : EntityVisitor
+    {
+        inline void Visit(torus &s) override
+        { FindGeometryPointsData(&s); }
+
+        inline void Visit(NUBsurface &s) override
+        { FindGeometryPointsData(&s); }
+
+        inline void Visit(NURBsurface &s) override
+        { FindGeometryPointsData(&s); }
+    };
+
+    struct SerialEdgePointsVisitor : EntityVisitor
+    {
+        SerialEdgePointsVisitor() = delete;
+
+        explicit SerialEdgePointsVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
+
+        inline void Visit(edge &e) override
+        { FindEdgePointsData(*pResult, &e); }
+    };
+
+    struct SerialFacePointsVisitor : EntityVisitor
+    {
+        SerialFacePointsVisitor() = delete;
+
+        explicit SerialFacePointsVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
+
+        inline void Visit(face &f) override
+        { FindFacePointsData(*pResult, &f); }
+    };
+
+    //
+    // Serial Cached Data Points (non-multithreaded)
+    //
+    template <class SET, class VISITOR>
+    inline void SerialFindPointsData(SET const &sTypes, VISITOR &typeDataVisitor)
+    {
+        for (auto pType : sTypes)
+            pType->Accept(typeDataVisitor);
+    }
+
+    //
+    // Serial Find Box Data (non-multithreaded)
+    //
+
+    template<class SET>
+    inline void SerialFindBoxData(SGM::Result &rResult, SET const &sTypes)
+    {
+        for (auto pEntity : sTypes)
+            FindEntityBoxData(rResult,pEntity);
+    }
+
+#ifdef SGM_MULTITHREADED
 
     //
     // Cached Data Visitors
@@ -281,65 +374,58 @@ namespace SGMInternal {
     // They queue a job onto the ThreadPool workers and add the job to a list.
     //
 
-    struct SurfaceDataVisitor : EntityVisitor
+    //    struct ConcurrentSurfacePointsVisitor : EntityVisitor
+    //    {
+    //        SGM::ThreadPool *pThreadPool;
+    //        std::vector<std::future<bool>> *pFutures;
+    //
+    //        ConcurrentSurfacePointsVisitor() = delete;
+    //
+    //        ConcurrentSurfacePointsVisitor(SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
+    //                EntityVisitor(), pThreadPool(&pool), pFutures(&futures) {}
+    //
+    //        void Visit(torus &s) override
+    //        { pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryPointsData<torus>, &s))); }
+    //
+    //        void Visit(NUBsurface &s) override
+    //        { pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryPointsData<NUBsurface>, &s))); }
+    //
+    //        void Visit(NURBsurface &s) override
+    //        { pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryPointsData<NURBsurface>, &s))); }
+    //    };
+    //
+    //    struct ConcurrentEdgePointsVisitor : EntityVisitor
+    //    {
+    //        SGM::ThreadPool *pThreadPool;
+    //        std::vector<std::future<bool>> *pFutures;
+    //
+    //        ConcurrentEdgePointsVisitor() = delete;
+    //
+    //        explicit ConcurrentEdgePointsVisitor(SGM::Result &rResult, SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
+    //                EntityVisitor(rResult), pThreadPool(&pool), pFutures(&futures)
+    //        {}
+    //
+    //        void Visit(edge &e) override
+    //        {
+    //            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindEdgePointsData, *pResult, &e)));
+    //        }
+    //    };
+
+    struct ConcurrentFacePointsVisitor : EntityVisitor
     {
         SGM::ThreadPool *pThreadPool;
         std::vector<std::future<bool>> *pFutures;
 
-        SurfaceDataVisitor() = delete;
+        ConcurrentFacePointsVisitor() = delete;
 
-        SurfaceDataVisitor(SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
-                EntityVisitor(), pThreadPool(&pool), pFutures(&futures)
-        {}
-
-        void Visit(torus &s) override
-        {
-            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryData<torus>, &s)));
-        }
-
-        void Visit(NUBsurface &s) override
-        {
-            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryData<NUBsurface>, &s)));
-        }
-
-        void Visit(NURBsurface &s) override
-        {
-            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryData<NURBsurface>, &s)));
-        }
-    };
-
-    struct EdgeDataVisitor : EntityVisitor
-    {
-        SGM::ThreadPool *pThreadPool;
-        std::vector<std::future<bool>> *pFutures;
-
-        EdgeDataVisitor() = delete;
-
-        explicit EdgeDataVisitor(SGM::Result &rResult, SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
+        explicit ConcurrentFacePointsVisitor(SGM::Result &rResult,
+                                             SGM::ThreadPool &pool,
+                                             std::vector<std::future<bool>> &futures) :
                 EntityVisitor(rResult), pThreadPool(&pool), pFutures(&futures)
         {}
 
-        void Visit(edge &e) override
-        {
-            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindEdgeData, *pResult, &e)));
-        }
-    };
-
-    struct FaceDataVisitor : EntityVisitor
-    {
-        SGM::ThreadPool *pThreadPool;
-        std::vector<std::future<bool>> *pFutures;
-
-        FaceDataVisitor() = delete;
-
-        explicit FaceDataVisitor(SGM::Result &rResult, SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
-                EntityVisitor(rResult), pThreadPool(&pool), pFutures(&futures)
-        {}
-
-        void Visit(face &f) override
-        {
-            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindFaceData, *pResult, &f)));
-        }
+        inline void Visit(face &f) override
+        { pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindFacePointsData, *pResult, &f))); }
     };
 
     //
@@ -349,10 +435,31 @@ namespace SGMInternal {
     //
 
     template<class SET, class VISITOR, class FUTURES>
-    void TypedFindCachedData(SET &sTypes, VISITOR &visitor, FUTURES &futures)
+    inline void QueueFindPointsData(SET const &sTypes, VISITOR &visitor, FUTURES &futures)
     {
         for (auto pType : sTypes)
             pType->Accept(visitor);
+    }
+
+    //
+    // multi-threaded find box data for a set of entities
+    //
+    template<class SET>
+    inline void QueueFindBoxData(SGM::Result &rResult,
+                          SET const &sTypes,
+                          SGM::ThreadPool &threadPool,
+                          std::vector<std::future<bool>> &futures)
+    {
+        for (auto pEntity : sTypes)
+            futures.emplace_back(threadPool.enqueue(std::bind(FindEntityBoxData,rResult,pEntity)));
+    }
+
+    //
+    // Wait for jobs to finish in the Pool
+    //
+    template <class FUTURES>
+    inline void WaitForCachedDataJobs(FUTURES &futures)
+    {
         for (auto &&future: futures)
             {
             future.wait();
@@ -361,101 +468,78 @@ namespace SGMInternal {
         futures.clear();
     }
 
+#endif // SGM_MULTITHREADED
+
     //
-    // Multithreaded compute of cached data for relevant entities.
+    // Compute of cached data for relevant entities.
     //
     void thing::FindCachedData(SGM::Result &rResult) const
     {
+
+        // The edge and surface point data, like surface.GetSeedPoints and edge.GetPoints,
+        // are fast enough that multithreading is too much overhead.
+        // Do these serially.
+
+        // edges points data
+        auto sEdges = GetEdges();
+        SerialEdgePointsVisitor edgeDataVisitor(rResult);
+        SerialFindPointsData(sEdges, edgeDataVisitor);
+
+        // surfaces points data
+        SerialSurfacePointsVisitor surfaceDataVisitor;
+        SerialFindPointsData(GetSurfaces(), surfaceDataVisitor);
+
+        // edges box data
+        SerialFindBoxData(rResult, sEdges);
+
+#ifdef SGM_MULTITHREADED //////////////////////////////////////////////////////
+
+        SetConcurrentActive();
+
         // may return 0 when not able to detect
         unsigned concurrentThreadsSupported = std::thread::hardware_concurrency();
-        concurrentThreadsSupported = std::max((unsigned)4,concurrentThreadsSupported);
-
-        SetConcurrentActive(); ////////////////////////////////////////////////
+        concurrentThreadsSupported = std::max((unsigned) 4, concurrentThreadsSupported);
 
         SGM::ThreadPool pool(concurrentThreadsSupported);
         std::vector<std::future<bool>> futures;
 
-        // edges
-        std::set<edge *, EntityCompare> sEdges;
-        GetEdges(sEdges, false); // TODO: maybe just iterate the thing->m_mAllEntities
-        EdgeDataVisitor edgeDataVisitor(rResult, pool, futures);
+        // faces points data
+        auto sFaces = GetFaces();
+        ConcurrentFacePointsVisitor faceDataVisitor(rResult, pool, futures);
+        QueueFindPointsData(sFaces, faceDataVisitor, futures);
+        WaitForCachedDataJobs(futures);
 
-        TypedFindCachedData(sEdges, edgeDataVisitor, futures);
+        // complexes box data
+        QueueFindBoxData(rResult, GetComplexes(), pool, futures);
+        WaitForCachedDataJobs(futures);
 
-        // surfaces
-        std::set<surface *, EntityCompare> sSurfaces;
-        GetSurfaces(sSurfaces, false); // TODO: maybe just iterate the thing->m_mAllEntities
-        SurfaceDataVisitor surfaceDataVisitor(pool, futures);
+        // faces box data
+        QueueFindBoxData(rResult, sFaces, pool, futures);
+        WaitForCachedDataJobs(futures);
 
-        TypedFindCachedData(sSurfaces, surfaceDataVisitor, futures);
+        SetConcurrentInactive();
 
-        // faces
-        std::set<face *, EntityCompare> sFaces;
-        GetFaces(sFaces, false); // TODO: maybe just iterate the thing->m_mAllEntities
-        FaceDataVisitor faceDataVisitor(rResult, pool, futures);
+#else  // NOT SGM_MULTITHREADED ///////////////////////////////////////////////
 
-        TypedFindCachedData(sFaces, faceDataVisitor, futures);
+        // faces points data
+        auto sFaces = GetFaces();
+        SerialFacePointsVisitor faceDataVisitor(rResult);
+        SerialFindPointData(sFaces, faceDataVisitor);
 
-        SetConcurrentInactive(); ///////////////////////////////////////////////
+        // complex boxes
+        SerialFindBoxData(rResult, GetComplexes());
 
-#else  // not SGM_MULTITHREADED
+        // face boxes
+        SerialFindBoxData(rResult, sFaces);
 
-    struct SurfaceDataVisitor : EntityVisitor
-    {
-        void Visit(torus &s) override
-        { FindGeometryData(&s); }
+#endif // SGM_MULTITHREADED ///////////////////////////////////////////////////
 
-        void Visit(NUBsurface &s) override
-        { FindGeometryData(&s); }
+        // volumes box data
+        SerialFindBoxData(rResult, GetVolumes());
 
-        void Visit(NURBsurface &s) override
-        { FindGeometryData(&s); }
-    };
+        // bodies box data
+        SerialFindBoxData(rResult, GetBodies());
 
-    struct EdgeDataVisitor : EntityVisitor
-    {
-        EdgeDataVisitor() = delete;
-
-        explicit EdgeDataVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
-
-        void Visit(edge &e) override
-        { FindEdgeData(*pResult, &e); }
-    };
-
-    struct FaceDataVisitor : EntityVisitor
-    {
-        FaceDataVisitor() = delete;
-
-        explicit FaceDataVisitor(SGM::Result &rResult) : EntityVisitor(rResult) {}
-
-        void Visit(face &f) override
-        { FindFaceData(*pResult, &f); }
-    };
-
-    void thing::FindCachedData(SGM::Result &rResult) const
-    {
-        // edges
-        std::set<edge *, EntityCompare> sEdges;
-        GetEdges(sEdges, false);
-        EdgeDataVisitor edgeDataVisitor(rResult);
-        for (auto pEdge : sEdges)
-            pEdge->Accept(edgeDataVisitor);
-
-        // surfaces
-        std::set<surface *, EntityCompare> sSurfaces;
-        GetSurfaces(sSurfaces, false);
-        SurfaceDataVisitor surfaceDataVisitor;
-        for (auto pSurface : sSurfaces)
-            pSurface->Accept(surfaceDataVisitor);
-
-        // faces
-        std::set<face *, EntityCompare> sFaces;
-        GetFaces(sFaces, false);
-        FaceDataVisitor faceDataVisitor(rResult);
-        for (auto pFace : sFaces)
-            pFace->Accept(faceDataVisitor);
-
-#endif // SGM_MULTITHREADED
-    }
+    } // thing::FindCachedData()
 
 } // namespace SGMInternal
