@@ -7,8 +7,9 @@
 
 #include <algorithm>
 #include <set>
+#include <iostream>
 
-#define SGM_MULTITHREADED
+//#define SGM_MULTITHREADED
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -394,22 +395,23 @@ namespace SGMInternal {
     //        { pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindGeometryPointsData<NURBsurface>, &s))); }
     //    };
     //
-    //    struct ConcurrentEdgePointsVisitor : EntityVisitor
-    //    {
-    //        SGM::ThreadPool *pThreadPool;
-    //        std::vector<std::future<bool>> *pFutures;
-    //
-    //        ConcurrentEdgePointsVisitor() = delete;
-    //
-    //        explicit ConcurrentEdgePointsVisitor(SGM::Result &rResult, SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
-    //                EntityVisitor(rResult), pThreadPool(&pool), pFutures(&futures)
-    //        {}
-    //
-    //        void Visit(edge &e) override
-    //        {
-    //            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindEdgePointsData, *pResult, &e)));
-    //        }
-    //    };
+
+    struct ConcurrentEdgePointsVisitor : EntityVisitor
+    {
+        SGM::ThreadPool *pThreadPool;
+        std::vector<std::future<bool>> *pFutures;
+
+        ConcurrentEdgePointsVisitor() = delete;
+
+        explicit ConcurrentEdgePointsVisitor(SGM::Result &rResult, SGM::ThreadPool &pool, std::vector<std::future<bool>> &futures) :
+                EntityVisitor(rResult), pThreadPool(&pool), pFutures(&futures)
+        {}
+
+        void Visit(edge &e) override
+        {
+            pFutures->emplace_back(pThreadPool->enqueue(std::bind(FindEdgePointsData, *pResult, &e)));
+        }
+    };
 
     struct ConcurrentFacePointsVisitor : EntityVisitor
     {
@@ -476,22 +478,6 @@ namespace SGMInternal {
     void thing::FindCachedData(SGM::Result &rResult) const
     {
 
-        // The edge and surface point data, like surface.GetSeedPoints and edge.GetPoints,
-        // are fast enough that multithreading is too much overhead.
-        // Do these serially.
-
-        // edges points data
-        auto sEdges = GetEdges();
-        SerialEdgePointsVisitor edgeDataVisitor(rResult);
-        SerialFindPointsData(sEdges, edgeDataVisitor);
-
-        // surfaces points data
-        SerialSurfacePointsVisitor surfaceDataVisitor;
-        SerialFindPointsData(GetSurfaces(), surfaceDataVisitor);
-
-        // edges box data
-        SerialFindBoxData(rResult, sEdges);
-
 #ifdef SGM_MULTITHREADED //////////////////////////////////////////////////////
 
         SetConcurrentActive();
@@ -502,6 +488,19 @@ namespace SGMInternal {
 
         SGM::ThreadPool pool(concurrentThreadsSupported);
         std::vector<std::future<bool>> futures;
+
+        // edges points data
+        auto sEdges = GetEdges();
+        ConcurrentEdgePointsVisitor edgeDataVisitor(rResult, pool, futures);
+        QueueFindPointsData(sEdges, edgeDataVisitor, futures);
+        WaitForCachedDataJobs(futures);
+
+        // surfaces points data
+        SerialSurfacePointsVisitor surfaceDataVisitor;
+        SerialFindPointsData(GetSurfaces(), surfaceDataVisitor);
+
+        // edges box data
+        SerialFindBoxData(rResult, sEdges);
 
         // faces points data
         auto sFaces = GetFaces();
@@ -521,10 +520,22 @@ namespace SGMInternal {
 
 #else  // NOT SGM_MULTITHREADED ///////////////////////////////////////////////
 
+        // edges points data
+        auto sEdges = GetEdges();
+        SerialEdgePointsVisitor edgeDataVisitor(rResult);
+        SerialFindPointsData(sEdges, edgeDataVisitor);
+
+        // surfaces points data
+        SerialSurfacePointsVisitor surfaceDataVisitor;
+        SerialFindPointsData(GetSurfaces(), surfaceDataVisitor);
+
+        // edges box data
+        SerialFindBoxData(rResult, sEdges);
+
         // faces points data
         auto sFaces = GetFaces();
         SerialFacePointsVisitor faceDataVisitor(rResult);
-        SerialFindPointData(sFaces, faceDataVisitor);
+        SerialFindPointsData(sFaces, faceDataVisitor);
 
         // complex boxes
         SerialFindBoxData(rResult, GetComplexes());

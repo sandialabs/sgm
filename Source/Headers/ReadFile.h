@@ -21,18 +21,8 @@ class STEPLineData
 public:
 
     // TODO: add a single m_Double and m_ID member data for many Types
-    STEPLineData() : m_nType(0), m_aIDs(), m_aDoubles(), m_aInts(), m_bFlag(true)
+    STEPLineData() : m_nType(0), m_aIDs(), m_aDoubles(), m_aInts(), m_aSizes(), m_bFlag(true)
     {}
-
-//    STEPLineData(const STEPLineData &other) = default;
-//
-//    STEPLineData(STEPLineData &&other) :
-//            m_nType(other.m_nType),
-//            m_aIDs(std::move(other.m_aIDs)),
-//            m_aDoubles(std::move(other.m_aDoubles)),
-//            m_aInts(std::move(other.m_aInts)),
-//            m_bFlag(other.m_bFlag)
-//    {}
 
     void clear()
     {
@@ -41,6 +31,7 @@ public:
         m_aIDs.clear();
         m_aDoubles.clear();
         m_aInts.clear();
+        m_aSizes.clear();
         m_bFlag = true;
     }
 
@@ -48,6 +39,7 @@ public:
     std::vector <size_t> m_aIDs;
     std::vector<double> m_aDoubles;
     std::vector<int> m_aInts;
+    std::vector<unsigned> m_aSizes;
     bool m_bFlag;
 };
 
@@ -77,7 +69,7 @@ inline const char* SkipChar(char const *pos, int character)
 
 inline const char* SkipWord(char const *pos, char const *word, size_t length)
     {
-    std::strstr(pos,word);
+    pos = std::strstr(pos,word);
     assert(pos != nullptr);
     return (pos+length);
     }
@@ -87,7 +79,7 @@ inline const char* SkipWord(char const *pos, char const *word, size_t length)
 
 inline const char* FindWord(char const *pos, char const *word, size_t length)
     {
-    std::strstr(pos,word);
+    pos = std::strstr(pos,word);
     if (pos != nullptr)
         return (pos+length);
     return nullptr;
@@ -181,6 +173,60 @@ inline const char* FindIndicesGroup(char const          *pLineAfterStepTag,
         }
     throw std::runtime_error(pLineAfterStepTag);
     }
+
+// a two dimensional array of indices '#' that start and end with double parenthesis
+// return the position after the closing parenthesis
+
+// ((#3246,#3247),(#3250,#3251),(#3254,#3255),(#3286,#3287)),
+
+inline const char* FindIndicesMatrix(char const          *pos,
+                                     std::vector<size_t> &aIndices,
+                                     size_t              *nRows,
+                                     size_t              *nColumns)
+{
+    static const char NEXT_ROW[] = ",)";
+    static const char NEXT_COL[] = "#)";
+
+    size_t nColumnCount = 0;
+    *nRows = 0;
+    *nColumns = 0;
+
+    pos = SkipChar(pos,'(');
+
+    while (pos != nullptr)              // START outer loop
+        {
+        pos = SkipChar(pos,'(');
+        pos = std::strpbrk(pos, NEXT_COL);
+        while (pos != nullptr)          // START inner loop
+            {
+            if (*pos == '#')
+                {
+                pos = AppendIndex(++pos,aIndices);
+                ++nColumnCount;
+                }
+            else if (*pos == ')')
+                {
+                ++pos;
+                if (*nColumns == 0)
+                    *nColumns = nColumnCount;
+                else if (*nColumns != nColumnCount)
+                    throw std::runtime_error("different number of columns in indices matrix");
+                break;
+                }
+            pos = strpbrk(pos, NEXT_COL);
+            }
+        pos = std::strpbrk(pos, NEXT_ROW);
+        nColumnCount = 0;
+        ++*nRows;
+        assert(pos != nullptr);
+        if (*pos == ',')
+            continue;
+        else if (*pos == ')')
+            return ++pos;
+        }
+    throw std::runtime_error("unable to end indices matrix");
+}
+
 
 // find all indices '#' or '*' on the string no matter how arranged between (#,(#)), all the way to end of string
 // return one past the position of the last number found

@@ -513,21 +513,25 @@ void ProcessBSplineSurfaceWithKnots(char const *pLineAfterStepTag,
     // (-0.0124999999959784,1.0125000000066),.UNSPECIFIED.);
 
     const char *pos = pLineAfterStepTag;
+    size_t nRows, nColumns;
 
-    // TODO: do some vector.reserve() calls
+    pos = FindInt(pos,STEPData.m_aInts);                // UDegree
+    pos = FindInt(pos,STEPData.m_aInts);                // VDegree
 
-    pos = FindInt(pos,STEPData.m_aInts); // UDegree
-    pos = FindInt(pos,STEPData.m_aInts); // VDegree
+    pos = FindIndicesMatrix(pos,STEPData.m_aIDs,&nRows,&nColumns); // control points.
 
-    pos = SkipChar(pos, '(');
+    pos = FindIntVector(pos,STEPData.m_aInts);          // Uknot multiplicity
 
-    pos = FindIndicesAll(pos,STEPData.m_aIDs); // control points.
+    unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
+    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
 
-    pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
-    pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
+    pos = FindIntVector(pos,STEPData.m_aInts);          // Vknot multiplicity
 
-    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
-          FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
+    unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
+    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
+
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles);    // Uknots
+    FindDoubleVector(pos,STEPData.m_aDoubles);          // Vknots
     }
 
 void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the first = sign
@@ -549,7 +553,6 @@ void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the f
     // Weights
 
     int nUDegree, nVDegree;
-    unsigned long nUKnots, nVKnots;
 
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
@@ -557,8 +560,6 @@ void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the f
 
     const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_SURFACE",16);
     pos = SkipChar(pos,'(');
-
-    aInts.reserve(2);
 
     pos = AppendInt(pos,aInts); // UDegree
     nUDegree = aInts.back();
@@ -568,48 +569,35 @@ void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the f
     nVDegree = aInts.back();
     assert(nVDegree > 0);
 
-    aIDs.reserve((size_t)(nUDegree+1)*(nVDegree+1));
+    size_t nRows, nColumns;
 
-    pos = SkipChar(pos,'(');
-
-    pos = FindIndicesAll(pos,aIDs); // Control points
+    pos = FindIndicesMatrix(pos,aIDs,&nRows,&nColumns);
 
     // (ignoring flags .F. .F. .F.)
 
     pos = SkipWord(pos,"B_SPLINE_SURFACE_WITH_KNOTS",27);
     pos = SkipChar(pos,'(');
 
-    // TODO: set aside room for U,V knot multiplicities
-    // aInts.reserve(aInts.size() + ?);
-
     pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
+
+    unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
+    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
+
     pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
 
-    // TODO: set aside room for U,V knot values
-    // aDoubles.reserve(aDoubles.size() + ?);
+    unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
+    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
 
     pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
-    nUKnots = STEPData.m_aDoubles.size();
     pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
-    nVKnots = STEPData.m_aDoubles.size() - nUKnots;
 
     pos = SkipWord(pos,"RATIONAL_B_SPLINE_SURFACE",25);
     pos = SkipChar(pos,'(');
     pos = SkipChar(pos,'(');
 
-    size_t nUControlPoints = (size_t)nUKnots - nUDegree - 1;
-    size_t nVControlPoints = (size_t)nVKnots - nVDegree - 1;
-    assert(nUControlPoints > 0);
-    assert(nVControlPoints > 0);
-
-    size_t nWeights = nUControlPoints * nVControlPoints;    // Weights
-    size_t nSize = aDoubles.size();
-    aDoubles.reserve(nSize + nWeights);
-    for (size_t i = 0; i < nUControlPoints; ++i)
+    for (size_t i = 0; i < nRows; ++i)
         {
         pos = FindDoubleVector(pos,aDoubles);
-        assert((aDoubles.size() - nSize) == nVControlPoints);
-        nSize = aDoubles.size();
         }
     }
 
@@ -1281,14 +1269,15 @@ void CreateEntities(SGM::Result           &rResult,
                     }
                 break;
                 }
+            case SGMInternal::STEPTags::BOUNDED_SURFACE:
             case SGMInternal::STEPTags::B_SPLINE_SURFACE:
                 {
                 std::vector<std::vector<SGM::Point4D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
                 int nDegreeU=DataIter->second.m_aInts[0];
                 int nDegreeV=DataIter->second.m_aInts[1];
-                int nUKnots=DataIter->second.m_aInts[2];
-                size_t nCount=3;
+                size_t nCount=2;
+                unsigned nUKnots=DataIter->second.m_aSizes[0];
                 size_t nDoubleCount=0;
                 size_t Index1,Index2;
                 for(Index1=0;Index1<nUKnots;++Index1)
@@ -1302,8 +1291,7 @@ void CreateEntities(SGM::Result           &rResult,
                     ++nCount;
                     ++nDoubleCount;
                     }
-                int nVKnots=DataIter->second.m_aInts[nCount];
-                ++nCount;
+                unsigned nVKnots=DataIter->second.m_aSizes[1];
                 for(Index1=0;Index1<nVKnots;++Index1)
                     {
                     int nMultiplicity=DataIter->second.m_aInts[nCount];
@@ -1337,15 +1325,14 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
-            case SGMInternal::STEPTags::BOUNDED_SURFACE:
             case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                 {
                 std::vector<std::vector<SGM::Point3D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
                 int nDegreeU=DataIter->second.m_aInts[0];
                 int nDegreeV=DataIter->second.m_aInts[1];
-                int nUKnots=DataIter->second.m_aInts[2];
-                size_t nCount=3;
+                size_t nCount=2;
+                unsigned nUKnots=DataIter->second.m_aSizes[0];
                 size_t Index1,Index2;
                 for(Index1=0;Index1<nUKnots;++Index1)
                     {
@@ -1357,8 +1344,7 @@ void CreateEntities(SGM::Result           &rResult,
                         }
                     ++nCount;
                     }
-                int nVKnots=DataIter->second.m_aInts[nCount];
-                ++nCount;
+                unsigned nVKnots=DataIter->second.m_aSizes[1];
                 for(Index1=0;Index1<nVKnots;++Index1)
                     {
                     int nMultiplicity=DataIter->second.m_aInts[nCount];
@@ -2080,6 +2066,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     STEPData.m_aIDs.reserve(256);
     STEPData.m_aDoubles.reserve(32);
     STEPData.m_aInts.reserve(32);
+    STEPData.m_aSizes.reserve(2);
 
     // setup Line buffer string and Tag buffer string
 
@@ -2099,16 +2086,19 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     size_t max_ids = 0;
     size_t max_doubles = 0;
     size_t max_ints = 0;
+    size_t max_sizes = 0;
     for (auto const& entry : mSTEPData)
         {
         STEPLineData const & pSTEPData = entry.second;
         max_ids = std::max(max_ids, pSTEPData.m_aIDs.capacity());
         max_doubles = std::max(max_doubles, pSTEPData.m_aDoubles.capacity());
         max_ints = std::max(max_ints, pSTEPData.m_aInts.capacity());
+        max_sizes = std::max(max_sizes, pSTEPData.m_aSizes.capacity());
         }
         std::cout << "max mSTEPData m_aIDS capacity = " << max_ids << std::endl;
         std::cout << "max mSTEPData m_aDoubles capacity = " << max_doubles << std::endl;
         std::cout << "max mSTEPData m_aInts capacity = " << max_ints << std::endl;
+        std::cout << "max mSTEPData m_aSizes capacity = " << max_sizes << std::endl;
 #endif
 
     // Create all the entities.
