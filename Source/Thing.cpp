@@ -9,7 +9,7 @@
 #include <set>
 #include <iostream>
 
-//#define SGM_MULTITHREADED
+#define SGM_MULTITHREADED
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -437,7 +437,7 @@ namespace SGMInternal {
     //
 
     template<class SET, class VISITOR, class FUTURES>
-    inline void QueueFindPointsData(SET const &sTypes, VISITOR &visitor, FUTURES &futures)
+    inline void QueueFindPointsData(SET const &sTypes, VISITOR &visitor, FUTURES &)
     {
         for (auto pType : sTypes)
             pType->Accept(visitor);

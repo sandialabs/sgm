@@ -28,7 +28,7 @@ add_definitions(-DSGM_MODELS_DIRECTORY=\"${SGM_MODELS_DIRECTORY}\")
 set(SGM_MODELS_OUO_DIRECTORY "${CMAKE_SOURCE_DIR}/../sgm-models-ouo")
 add_definitions(-DSGM_MODELS_OUO_DIRECTORY=\"${SGM_MODELS_OUO_DIRECTORY}\")
 
-add_compile_definitions(_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
 
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)
