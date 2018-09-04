@@ -140,6 +140,14 @@ double NURBcurve::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
+std::vector<double> NURBcurve::SpecialFacetParams() const
+    {
+    std::vector<int> aMultiplicity;
+    std::vector<double> aUniqueKnots;
+    FindMultiplicity(aMultiplicity,aUniqueKnots);
+    return aUniqueKnots;
+    }
+
 void NURBcurve::Transform(SGM::Transform3D const &Trans)
     {
     for (auto & Pos4D : m_aControlPoints)

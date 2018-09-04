@@ -638,6 +638,16 @@ void FacetCurve(curve               const *pCurve,
                 pCurve->Evaluate(d2,&Pos2);
                 lNodes.emplace_back(d2,Pos2);
                 }
+            std::vector<double> aKnots=pCurve->SpecialFacetParams();
+            for(double dt : aKnots)
+                {
+                if(Domain.InInterior(dt,SGM_FIT))
+                    {
+                    SGM::Point3D Pos2;
+                    pCurve->Evaluate(dt,&Pos2);
+                    lNodes.emplace_back(dt,Pos2);
+                    }
+                }
             lNodes.emplace_back(d1,Pos1);
             double dAngle=SGM_PI-Options.m_dEdgeAngleTol;
             double dCos=cos(dAngle);
@@ -3449,37 +3459,85 @@ bool AddGrid(SGM::Result                    &rResult,
              std::vector<unsigned int>      &aTriangles,
              std::vector<unsigned int>      &aAdjacencies)
     {
-    surface const *pSurface=pFace->GetSurface();
-    if(pSurface->GetSurfaceType()==SGM::TorusType)
+    SGM::EntityType nSurfaceType=pFace->GetSurface()->GetSurfaceType();
+    switch(nSurfaceType)
         {
-        SGM::Interval2D Box(aPoints2D);
-        size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
-        size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
-        double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
-        std::vector<SGM::Point2D> aInsertPoints;
-        aInsertPoints.reserve(nU*nV);
-        size_t Index1,Index2;
-        for(Index1=0;Index1<nU;++Index1)
+        case SGM::TorusType:
             {
-            double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
-            for(Index2=0;Index2<nV;++Index2)
+            // Add a grid based on the facet angle tolerance.
+
+            SGM::Interval2D Box(aPoints2D);
+            size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+            size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+            double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
+            std::vector<SGM::Point2D> aInsertPoints;
+            aInsertPoints.reserve(nU*nV);
+            size_t Index1,Index2;
+            for(Index1=0;Index1<nU;++Index1)
                 {
-                double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
-                SGM::Point2D uv(u,v);
-                aInsertPoints.push_back(uv);
+                double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
+                for(Index2=0;Index2<nV;++Index2)
+                    {
+                    double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
+                    SGM::Point2D uv(u,v);
+                    aInsertPoints.push_back(uv);
+                    }
                 }
+            OrderPoints(aInsertPoints,Box.MidPoint());
+            InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
+            aAdjacencies.clear();
+            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+            DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+            InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
+            aAdjacencies.clear();
+            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+            return true;
             }
-        OrderPoints(aInsertPoints,Box.MidPoint());
-        InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
-        aAdjacencies.clear();
-        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-        DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
-        InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
-        aAdjacencies.clear();
-        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-        return true;
+            /*
+        case SGM::NURBSurfaceType:
+            {
+            // Add a grid based on the unquie knot grid.
+
+            NURBsurface *pNURB=(NURBsurface *)pFace->GetSurface();
+            std::vector<int> aMultiplicityU,aMultiplicityV;
+            std::vector<double> aUniqueKnotsU,aUniqueKnotsV;
+            pNURB->FindUMultiplicity(aMultiplicityU,aUniqueKnotsU);
+            pNURB->FindVMultiplicity(aMultiplicityV,aUniqueKnotsV);
+
+
+            SGM::Interval2D Box(aPoints2D);
+            size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+            size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+            double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
+            std::vector<SGM::Point2D> aInsertPoints;
+            aInsertPoints.reserve(nU*nV);
+            size_t Index1,Index2;
+            for(Index1=0;Index1<nU;++Index1)
+                {
+                double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
+                for(Index2=0;Index2<nV;++Index2)
+                    {
+                    double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
+                    SGM::Point2D uv(u,v);
+                    aInsertPoints.push_back(uv);
+                    }
+                }
+            OrderPoints(aInsertPoints,Box.MidPoint());
+            InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
+            aAdjacencies.clear();
+            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+            DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+            InsertPoints(rResult,pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
+            aAdjacencies.clear();
+            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+            return true;
+            }
+            */
+        default:
+            {
+            return false;
+            }
         }
-    return false;
     }
 
 #if 0

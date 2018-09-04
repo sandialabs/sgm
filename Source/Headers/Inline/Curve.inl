@@ -28,6 +28,12 @@ namespace SGMInternal {
     inline void curve::Negate()
     { throw std::logic_error("curve subclass did not override Negate()."); }
 
+    inline std::vector<double> curve::SpecialFacetParams() const
+    {
+        std::vector<double> aAnswer;
+        return aAnswer;
+    }
+
     inline void curve::AddEdge(edge *pEdge)
     { m_sEdges.insert(pEdge); };
 

@@ -477,12 +477,29 @@ SGM::Complex SGM::CoverComplex(SGM::Result        &rResult,
     return SGM::Complex(pAnswer->GetID());
     }
 
-SGM::Complex SGM::MergeComplex(SGM::Result        &rResult,
-                               SGM::Complex const &ComplexID,
-                               double              dTolerance)
+SGM::Complex SGM::MergePoints(SGM::Result        &rResult,
+                              SGM::Complex const &ComplexID,
+                              double              dTolerance)
     {
     SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
     SGMInternal::complex *pAnswer=pComplex->Merge(rResult,dTolerance);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+SGM::Complex SGM::MergeComplexes(SGM::Result                     &rResult,
+                                 std::vector<SGM::Complex> const &aComplexIDs)
+    {
+    std::vector<SGMInternal::complex *> aComplexes;
+    size_t nComplexes=aComplexIDs.size();
+    aComplexes.reserve(nComplexes-1);
+    size_t Index1;
+    for(Index1=0;Index1<nComplexes;++Index1)
+        {
+        aComplexes.push_back((SGMInternal::complex *)(rResult.GetThing()->FindEntity(aComplexIDs[Index1].m_ID)));
+        }
+    SGMInternal::complex *pComplex=aComplexes.back();
+    aComplexes.pop_back();
+    SGMInternal::complex *pAnswer=pComplex->Merge(rResult,aComplexes);
     return SGM::Complex(pAnswer->GetID());
     }
 

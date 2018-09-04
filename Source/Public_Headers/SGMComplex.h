@@ -100,9 +100,12 @@ namespace SGM
     SGM_EXPORT SGM::Complex CoverComplex(SGM::Result        &rResult,
                                          SGM::Complex const &ComplexID);
 
-    SGM_EXPORT SGM::Complex MergeComplex(SGM::Result        &rResult,
-                                         SGM::Complex const &ComplexID,
-                                         double              dTolerance);
+    SGM_EXPORT SGM::Complex MergePoints(SGM::Result        &rResult,
+                                        SGM::Complex const &ComplexID,
+                                        double              dTolerance);
+
+    SGM_EXPORT SGM::Complex MergeComplexes(SGM::Result                     &rResult,
+                                           std::vector<SGM::Complex> const &aComplexIDs);
 
     SGM_EXPORT void ReduceToUsedPoints(SGM::Result  &rResult,
                                        SGM::Complex &ComplexID);

@@ -35,6 +35,26 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
         m_bClosedU=true;
         }
 
+    SGM::Point3D Pos4,Pos5;
+    Evaluate(m_Domain.MidPoint(0,0),&Pos4);
+    Evaluate(m_Domain.MidPoint(1,1),&Pos5);
+    if(SGM::NearEqual(Pos0,Pos4,SGM_MIN_TOL))
+        {
+        m_bSingularLowV=true;
+        }
+    if(SGM::NearEqual(Pos1,Pos5,SGM_MIN_TOL))
+        {
+        m_bSingularHighV=true;
+        }
+    if(SGM::NearEqual(Pos2,Pos4,SGM_MIN_TOL))
+        {
+        m_bSingularLowU=true;
+        }
+    if(SGM::NearEqual(Pos3,Pos5,SGM_MIN_TOL))
+        {
+        m_bSingularHighU=true;
+        }
+
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
