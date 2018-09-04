@@ -489,11 +489,14 @@ namespace SGMInternal {
         SGM::ThreadPool pool(concurrentThreadsSupported);
         std::vector<std::future<bool>> futures;
 
-        // edges points data
+        // edges points data (concurrent does not pay off for smaller files)
+//        auto sEdges = GetEdges();
+//        ConcurrentEdgePointsVisitor edgeDataVisitor(rResult, pool, futures);
+//        QueueFindPointsData(sEdges, edgeDataVisitor, futures);
+//        WaitForCachedDataJobs(futures);
         auto sEdges = GetEdges();
-        ConcurrentEdgePointsVisitor edgeDataVisitor(rResult, pool, futures);
-        QueueFindPointsData(sEdges, edgeDataVisitor, futures);
-        WaitForCachedDataJobs(futures);
+        SerialEdgePointsVisitor edgeDataVisitor(rResult);
+        SerialFindPointsData(sEdges, edgeDataVisitor);
 
         // surfaces points data
         SerialSurfacePointsVisitor surfaceDataVisitor;
@@ -512,7 +515,7 @@ namespace SGMInternal {
         QueueFindBoxData(rResult, GetComplexes(), pool, futures);
         WaitForCachedDataJobs(futures);
 
-        // faces box data
+        // faces box data
         QueueFindBoxData(rResult, sFaces, pool, futures);
         WaitForCachedDataJobs(futures);
 

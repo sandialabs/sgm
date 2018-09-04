@@ -341,14 +341,20 @@ TEST(DataDirectoriesCheck, file_extensions)
 TEST(DataDirectoriesCheck, import_check_single)
 {
     std::cout << std::endl << std::flush;
-    //std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
     //std::string file_path = get_models_file_path("Default.stp");
     //std::string file_path = get_models_file_path("1 Blade1-A3.STEP");
     //std::string file_path = get_models_file_path("pencil 15.STEP");
     //std::string file_path = get_models_file_path("knuckle.stp");
     //std::string file_path = get_models_file_path("Large Files/Part1.STEP"); // reads but FindCachedData hangs
+    //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
     //std::string file_path = get_models_file_path("Large Files/Globe 01 (Solid).stp"); // hangs in facet face
-    std::string file_path = get_models_file_path("Grand Piano 2.STEP");
+    //std::string file_path = get_models_file_path("Large Files/Globe (1).stp");
+    //std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
+    //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
+    std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
+    //std::string file_path = get_models_file_path("Pencil.STEP");
+    //std::string file_path = get_models_file_path("Working On/Chair.step");
+
 
     std::ofstream log_file;
 
