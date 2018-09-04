@@ -20,39 +20,39 @@ namespace SGM
     /////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
-                                         SGM::Point3D                    &Origin,
-                                         SGM::UnitVector3D               &XVec,
-                                         SGM::UnitVector3D               &YVec,
-                                         SGM::UnitVector3D               &ZVec);
+                                         Point3D                    &Origin,
+                                         UnitVector3D               &XVec,
+                                         UnitVector3D               &YVec,
+                                         UnitVector3D               &ZVec);
 
-    SGM_EXPORT bool FindLeastSquareLine3D(std::vector<SGM::Point3D> const &aPoints,
-                                          SGM::Point3D                    &Origin,
-                                          SGM::UnitVector3D               &Axis);
+    SGM_EXPORT bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
+                                          Point3D                    &Origin,
+                                          UnitVector3D               &Axis);
 
     // ProjectPointsToPlane will project the given vector of 3D points 
     // to the given plane resulting in a vector of 2D points.  The function
     // returns the maximum distance that the given points are from the plane.
 
-    SGM_EXPORT double ProjectPointsToPlane(std::vector<SGM::Point3D> const &aPoints3D,
-                                           SGM::Point3D              const &Origin,
-                                           SGM::UnitVector3D         const &XVec,
-                                           SGM::UnitVector3D         const &YVec,
-                                           SGM::UnitVector3D         const &ZVec,
-                                           std::vector<SGM::Point2D>       &aPoints2D);
+    SGM_EXPORT double ProjectPointsToPlane(std::vector<Point3D> const &aPoints3D,
+                                           Point3D              const &Origin,
+                                           UnitVector3D         const &XVec,
+                                           UnitVector3D         const &YVec,
+                                           UnitVector3D         const &ZVec,
+                                           std::vector<Point2D>       &aPoints2D);
 
-    SGM_EXPORT bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints3D,
-                                      double                           dTolerance,
-                                      SGM::Point3D                    *Origin = nullptr,
-                                      SGM::UnitVector3D               *Normal = nullptr);
+    SGM_EXPORT bool ArePointsCoplanar(std::vector<Point3D> const &aPoints3D,
+                                      double                      dTolerance,
+                                      Point3D                    *Origin = nullptr,
+                                      UnitVector3D               *Normal = nullptr);
 
-    SGM_EXPORT Point2D FindCenterOfMass2D(std::vector<SGM::Point2D> const &aPoints);
+    SGM_EXPORT Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints);
     
-    SGM_EXPORT Point3D FindCenterOfMass3D(std::vector<SGM::Point3D> const &aPoints);
+    SGM_EXPORT Point3D FindCenterOfMass3D(std::vector<Point3D> const &aPoints);
     
     // Returns the cumulative cord lengths between the given vector of points.
     // If bNormalize=true, then the lengths are scales to go from zero to one.
 
-    SGM_EXPORT void FindLengths3D(std::vector<SGM::Point3D> const &aPoints,
+    SGM_EXPORT void FindLengths3D(std::vector<Point3D> const &aPoints,
                                   std::vector<double>             &aLengths,
                                   bool                             bNormalize=false);
 
@@ -60,8 +60,8 @@ namespace SGM
     // within the given tolerance, and it returns a map that maps vector aPoints1,
     // to vector aPoints2.
 
-    SGM_EXPORT bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
-                                  std::vector<SGM::Point3D>     const &aPoints2,
+    SGM_EXPORT bool DoPointsMatch(std::vector<Point3D>     const &aPoints1,
+                                  std::vector<Point3D>     const &aPoints2,
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
@@ -82,16 +82,16 @@ namespace SGM
     // Counter clockwise polygons return positive areas.  Clockwise polygons
     // return negative areas.
 
-    SGM_EXPORT double PolygonArea(std::vector<SGM::Point2D> const &aPolygon);
+    SGM_EXPORT double PolygonArea(std::vector<Point2D> const &aPolygon);
 
-    SGM_EXPORT size_t FindConcavePoints(std::vector<SGM::Point2D> const &aPolygon,
+    SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
                                         std::vector<size_t>             &aConcavePoints);
 
     // If the given point is only the polygon then the returned answer may
     // be either true or false.
 
-    SGM_EXPORT bool PointInPolygon(SGM::Point2D              const &Pos,
-                                   std::vector<SGM::Point2D> const &aPolygon);
+    SGM_EXPORT bool PointInPolygon(Point2D              const &Pos,
+                                   std::vector<Point2D> const &aPolygon);
 
     // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
@@ -101,8 +101,8 @@ namespace SGM
     // If the clockwise polygons are not contained inside a counter clockwise
     // polygon then false is returned with an error of 
 
-    SGM_EXPORT bool TriangulatePolygon(SGM::Result                                   &rResult,
-                                       std::vector<SGM::Point2D>               const &aPoints,
+    SGM_EXPORT bool TriangulatePolygon(Result                                   &rResult,
+                                       std::vector<Point2D>               const &aPoints,
                                        std::vector<std::vector<unsigned int> > const &aaPolygons,
                                        std::vector<unsigned int>                     &aTriangles,
                                        std::vector<unsigned int>                     &aAdjacencies);
@@ -115,20 +115,20 @@ namespace SGM
 
     // Returns true if D is inside the triangle (A,B,C)
 
-    SGM_EXPORT bool InTriangle(SGM::Point2D const &A,
-                               SGM::Point2D const &B,
-                               SGM::Point2D const &C,
-                               SGM::Point2D const &D);
+    SGM_EXPORT bool InTriangle(Point2D const &A,
+                               Point2D const &B,
+                               Point2D const &C,
+                               Point2D const &D);
 
     // Returns true if D is inside the angle formed by A as the angle vertex
     // and B and C as its sides.  If D is found first, before C when going
     // counter clockwise from B to D around A, or if D is on the ray AB or AC,
     // then then true is returned. 
 
-    SGM_EXPORT bool InAngle(SGM::Point2D const &A,
-                            SGM::Point2D const &B,
-                            SGM::Point2D const &C,
-                            SGM::Point2D const &D);
+    SGM_EXPORT bool InAngle(Point2D const &A,
+                            Point2D const &B,
+                            Point2D const &C,
+                            Point2D const &D);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
@@ -158,7 +158,7 @@ namespace SGM
 
     // Returns the length of the longest edges of the given triangles. 
 
-    SGM_EXPORT double FindMaxEdgeLength(std::vector<SGM::Point3D> const &aPoints,
+    SGM_EXPORT double FindMaxEdgeLength(std::vector<Point3D> const &aPoints,
                                         std::vector<unsigned int> const &aTriangles);
 
     // Returns the boundary edges of the given triangles.  Boundary edges are
@@ -178,11 +178,11 @@ namespace SGM
     // center, normal and radius of a circle that contains the three points
     // is returned.
     
-    SGM_EXPORT bool FindCircle(SGM::Point3D const &Pos0,
-                               SGM::Point3D const &Pos1,
-                               SGM::Point3D const &Pos2,
-                               SGM::Point3D       &Center,
-                               SGM::UnitVector3D  &Normal,
+    SGM_EXPORT bool FindCircle(Point3D const &Pos0,
+                               Point3D const &Pos1,
+                               Point3D const &Pos2,
+                               Point3D       &Center,
+                               UnitVector3D  &Normal,
                                double             &dRadius);
     
     // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
@@ -190,10 +190,10 @@ namespace SGM
     // The returned value of dDet can be used to tell if we are in a close
     // call situation, in which case a value close to zero will be returned.
 
-    SGM_EXPORT bool InCircumcircle(SGM::Point2D const &A,
-                                   SGM::Point2D const &B,
-                                   SGM::Point2D const &C,
-                                   SGM::Point2D const &D,
+    SGM_EXPORT bool InCircumcircle(Point2D const &A,
+                                   Point2D const &B,
+                                   Point2D const &C,
+                                   Point2D const &D,
                                    double             &dDet);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -398,7 +398,7 @@ namespace SGM
     // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
     // same x coordinate, then false will be returned.
 
-    SGM_EXPORT bool PolynomialFit(std::vector<SGM::Point2D> aPoints,
+    SGM_EXPORT bool PolynomialFit(std::vector<Point2D> aPoints,
                                   std::vector<double>       aCoefficients);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -507,15 +507,15 @@ namespace SGM
                             Vec      &dDFXY,
                             Vec      &dDFYY)
         {
-        dDFX=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[3][2],aMatrix[4][2],dx);
-        dDFY=SGM::FirstDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][3],aMatrix[2][4],dy);
-        dDFXX=SGM::SecondDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[2][2],aMatrix[3][2],aMatrix[4][2],dx);
-        Vec dfx0=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][0],aMatrix[1][0],aMatrix[3][0],aMatrix[4][0],dx);
-        Vec dfx1=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][1],aMatrix[1][1],aMatrix[3][1],aMatrix[4][1],dx);
-        Vec dfx3=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][3],aMatrix[1][3],aMatrix[3][3],aMatrix[4][3],dx);
-        Vec dfx4=SGM::FirstDerivative<Pos,Vec>(aMatrix[0][4],aMatrix[1][4],aMatrix[3][4],aMatrix[4][4],dx);
-        dDFXY=SGM::FirstDerivative<Pos,Vec>(Pos(dfx0),Pos(dfx1),Pos(dfx3),Pos(dfx4),dy);
-        dDFYY=SGM::SecondDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][2],aMatrix[2][3],aMatrix[2][4],dy);
+        dDFX=FirstDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[3][2],aMatrix[4][2],dx);
+        dDFY=FirstDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][3],aMatrix[2][4],dy);
+        dDFXX=SecondDerivative<Pos,Vec>(aMatrix[0][2],aMatrix[1][2],aMatrix[2][2],aMatrix[3][2],aMatrix[4][2],dx);
+        Vec dfx0=FirstDerivative<Pos,Vec>(aMatrix[0][0],aMatrix[1][0],aMatrix[3][0],aMatrix[4][0],dx);
+        Vec dfx1=FirstDerivative<Pos,Vec>(aMatrix[0][1],aMatrix[1][1],aMatrix[3][1],aMatrix[4][1],dx);
+        Vec dfx3=FirstDerivative<Pos,Vec>(aMatrix[0][3],aMatrix[1][3],aMatrix[3][3],aMatrix[4][3],dx);
+        Vec dfx4=FirstDerivative<Pos,Vec>(aMatrix[0][4],aMatrix[1][4],aMatrix[3][4],aMatrix[4][4],dx);
+        dDFXY=FirstDerivative<Pos,Vec>(Pos(dfx0),Pos(dfx1),Pos(dfx3),Pos(dfx4),dy);
+        dDFYY=SecondDerivative<Pos,Vec>(aMatrix[2][0],aMatrix[2][1],aMatrix[2][2],aMatrix[2][3],aMatrix[2][4],dy);
         }
 
     // Returns the definite integral of the given function, f, from a to b.  
@@ -524,7 +524,7 @@ namespace SGM
     // function to return a value for x.
 
     double Integrate1D(double f(double x,void const *pData),
-                       SGM::Interval1D        const &Domain,
+                       Interval1D        const &Domain,
                        void                   const *pData=nullptr,
                        double                        dTolerance=SGM_ZERO);
 
@@ -533,8 +533,8 @@ namespace SGM
     // The void * passed into f is optional data that may be used be the 
     // function to return a value for uv.
 
-    double Integrate2D(double f(SGM::Point2D const &uv,void const *pData),
-                       SGM::Interval2D                      const &Domain,
+    double Integrate2D(double f(Point2D const &uv,void const *pData),
+                       Interval2D                      const &Domain,
                        void                                 const *pData=nullptr,
                        double                                      dTolerance=SGM_ZERO);
 
@@ -543,10 +543,10 @@ namespace SGM
     // The void * passed into f is optional data that may be used be the 
     // function to return a value for uv.
 
-    double IntegrateTriangle(double f(SGM::Point2D const &uv,void const *pData),
-                             SGM::Point2D                         const &PosA,
-                             SGM::Point2D                         const &PosB,
-                             SGM::Point2D                         const &PosC,
+    double IntegrateTriangle(double f(Point2D const &uv,void const *pData),
+                             Point2D                         const &PosA,
+                             Point2D                         const &PosB,
+                             Point2D                         const &PosC,
                              void                                 const *pData=nullptr,
                              double                                      dTolerance=SGM_ZERO);
     

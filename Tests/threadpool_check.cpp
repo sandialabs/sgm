@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
 
-#include "ThreadPool.h"
+#include "SGMThreadPool.h"
 
 TEST(threadpool_check, future_lambda)
 {

@@ -33,7 +33,8 @@ void FindBodies(SGM::Result                    &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)(pEntity))->GetBodies(sBodies,bTopLevel);
+        auto sThingBodies = ((thing *)(pEntity))->GetBodies(bTopLevel);
+        sBodies.insert(sThingBodies.begin(),sThingBodies.end());
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -125,7 +126,8 @@ void FindVolumes(SGM::Result        &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetVolumes(sVolumes,bTopLevel);
+        auto sThingVolumes = ((thing *)pEntity)->GetVolumes(bTopLevel);
+        sVolumes.insert(sThingVolumes.begin(), sThingVolumes.end());
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -212,7 +214,8 @@ void FindAttributes(SGM::Result                         &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetAttributes(sAttributes,bTopLevel);
+        auto sThingAttributes = ((thing *)pEntity)->GetAttributes(bTopLevel);
+        sAttributes.insert(sThingAttributes.begin(), sThingAttributes.end());
         }
     else
         {
@@ -242,7 +245,8 @@ void FindFaces(SGM::Result                    &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetFaces(sFaces,bTopLevel);
+        auto sThingFaces = ((thing *)pEntity)->GetFaces(bTopLevel);
+        sFaces.insert(sThingFaces.begin(),sThingFaces.end());
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -307,7 +311,8 @@ void FindEdges(SGM::Result      &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)(pEntity))->GetEdges(sEdges,bTopLevel);
+        auto sThingEdges = ((thing *)(pEntity))->GetEdges(bTopLevel);
+        sEdges.insert(sThingEdges.begin(), sThingEdges.end());
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -414,7 +419,8 @@ void FindVertices(SGM::Result        &,//rResult,
     SGM::EntityType Type=pEntity->GetType();
     if(Type==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetVertices(sVertices,bTopLevel);
+        auto sThingVertices = ((thing *)pEntity)->GetVertices(bTopLevel);
+        sVertices.insert(sThingVertices.begin(),sThingVertices.end());
         }
     else if(Type==SGM::EntityType::BodyType)
         {
@@ -604,11 +610,11 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
         SGM::Point3D Pos(0,0,0);
         if(pEdge->GetStart()==pVertex)
             {
-            SGM::Point3D Pos=pEdge->FindMidPoint(0.001);
+            Pos=pEdge->FindMidPoint(0.001);
             }
         if(pEdge->GetEnd()==pVertex)
             {
-            SGM::Point3D Pos=pEdge->FindMidPoint(0.999);
+            Pos=pEdge->FindMidPoint(0.999);
             }
         SGM::Vector3D Vec=Pos-VertexPos;
         double dAngle=SGM::SAFEatan2(Vec%YAxis,Vec%XAxis);
@@ -847,7 +853,8 @@ void FindComplexes(SGM::Result                       &,//rResult,
         {
         case SGM::ThingType:
             {
-            ((thing *)pEntity)->GetComplexes(sComplexes,bTopLevel);
+            auto sThingComplexes = ((thing *)pEntity)->GetComplexes(bTopLevel);
+            sComplexes.insert(sThingComplexes.begin(),sThingComplexes.end());
             break;
             }
         case SGM::ComplexType:
@@ -867,7 +874,8 @@ void FindSurfaces(SGM::Result                       &rResult,
     {
     if(pEntity->GetType()==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetSurfaces(sSurfaces,bTopLevel);
+        auto sThingSurfaces = ((thing *)pEntity)->GetSurfaces(bTopLevel);
+        sSurfaces.insert(sThingSurfaces.begin(),sThingSurfaces.end());
         return;
         }
     std::set<face *,EntityCompare> sFaces;
@@ -887,7 +895,8 @@ void FindCurves(SGM::Result                     &rResult,
     {
     if(pEntity->GetType()==SGM::EntityType::ThingType)
         {
-        ((thing *)pEntity)->GetCurves(sCurves,bTopLevel);
+        auto sThingCurves = ((thing *)pEntity)->GetCurves(bTopLevel);
+        sCurves.insert(sThingCurves.begin(),sThingCurves.end());
         return;
         }
     std::set<edge *,EntityCompare> sEdges;

@@ -54,7 +54,7 @@ bool body::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Volume %ld of Body %ld does not point to its body.\n",pVolume->GetID(),this->GetID());
+            snprintf(Buffer, sizeof(Buffer), "Volume %zu of Body %zu does not point to its body.\n",pVolume->GetID(),this->GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -84,7 +84,7 @@ bool complex::Check(SGM::Result              &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %ld has out of bounds segment indexes.\n",this->GetID());
+            snprintf(Buffer, sizeof(Buffer), "Complex %zu has out of bounds segment indexes.\n",this->GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -95,7 +95,7 @@ bool complex::Check(SGM::Result              &,//rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %ld has out of bounds triangle indexes.\n",this->GetID());
+            snprintf(Buffer, sizeof(Buffer), "Complex %zu has out of bounds triangle indexes.\n",this->GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -142,7 +142,7 @@ bool volume::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Face %ld of Volume %ld does not point to its volume.\n",pFace->GetID(),this->GetID());
+            snprintf(Buffer,sizeof(Buffer),"Face %zu of Volume %zu does not point to its volume.\n",pFace->GetID(),this->GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -172,7 +172,7 @@ bool face::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Edge %ld of face %ld does not point to its face.\n",pEdge->GetID(),this->GetID());
+            snprintf(Buffer,sizeof(Buffer),"Edge %zu of face %zu does not point to its face.\n",pEdge->GetID(),this->GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -219,7 +219,7 @@ bool face::Check(SGM::Result              &rResult,
                 {
                 bAnswer=false;
                 char Buffer[1000];
-                snprintf(Buffer,sizeof(Buffer),"Vertices of Edge %ld of Face %ld does not match its neighbors.\n",pEdge->GetID(),this->GetID());
+                snprintf(Buffer,sizeof(Buffer),"Vertices of Edge %zu of Face %zu does not match its neighbors.\n",pEdge->GetID(),this->GetID());
                 aCheckStrings.emplace_back(Buffer);
                 }
             }
@@ -274,14 +274,14 @@ bool face::Check(SGM::Result              &rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Facets of Face %ld differ from surface normal by %lf.\n",this->GetID(),dMaxAngle);
+        snprintf(Buffer,sizeof(Buffer),"Facets of Face %zu differ from surface normal by %lf.\n",this->GetID(),dMaxAngle);
         aCheckStrings.emplace_back(Buffer);
         }
     if(nTriangles==0)
         {
         bAnswer=false;
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Face %ld does not have facets.\n",this->GetID());
+        snprintf(Buffer,sizeof(Buffer),"Face %zu does not have facets.\n",this->GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 
@@ -309,7 +309,7 @@ bool edge::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"The start Vertex %ld of Edge %ld does not point back to the edge\n",m_pStart->GetID(),GetID());
+            snprintf(Buffer,sizeof(Buffer),"The start Vertex %zu of Edge %zu does not point back to the edge\n",m_pStart->GetID(),GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -317,7 +317,7 @@ bool edge::Check(SGM::Result              &rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have a start vertex\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Edge %zu does not have a start vertex\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
     if(m_pEnd)
@@ -327,7 +327,7 @@ bool edge::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"The end Vertex %ld of Edge %ld does not point back to the edge\n",m_pEnd->GetID(),GetID());
+            snprintf(Buffer,sizeof(Buffer),"The end Vertex %zu of Edge %zu does not point back to the edge\n",m_pEnd->GetID(),GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -335,7 +335,7 @@ bool edge::Check(SGM::Result              &rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Edge %ld does not have an end vertex\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Edge %zu does not have an end vertex\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 
@@ -353,7 +353,7 @@ bool edge::Check(SGM::Result              &rResult,
             {
             bAnswer=false;
             char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Edge %ld has the same orientation of both faces.\n",GetID());
+            snprintf(Buffer,sizeof(Buffer),"Edge %zu has the same orientation of both faces.\n",GetID());
             aCheckStrings.emplace_back(Buffer);
             }
         }
@@ -378,7 +378,7 @@ bool vertex::Check(SGM::Result              &,//rResult,
         {
         bAnswer=false;
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Vertex %ld does not point to an edge\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Vertex %zu does not point to an edge\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 
@@ -395,7 +395,7 @@ bool curve::Check(SGM::Result              &,//rResult,
     if(!bAnswer)
         {
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Curve %ld does not pass derivative and inverse checks.\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Curve %zu does not pass derivative and inverse checks.\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 
@@ -419,7 +419,7 @@ bool surface::Check(SGM::Result              &rResult,
     if(!bAnswer)
         {
         char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Surface %ld does not pass derivative and inverse checks.\n",GetID());
+        snprintf(Buffer,sizeof(Buffer),"Surface %zu does not pass derivative and inverse checks.\n",GetID());
         aCheckStrings.emplace_back(Buffer);
         }
 

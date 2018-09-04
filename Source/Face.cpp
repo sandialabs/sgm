@@ -62,7 +62,7 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
 
 bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
     {
-    if(entity::GetColor(nRed,nGreen,nBlue)==true)
+    if(entity::GetColor(nRed, nGreen, nBlue))
         {
         return true;
         }
@@ -609,6 +609,7 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return dVolume;
     }
 
+//TODO: would it pay off to cache the aaLoops and aaFlipped?
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const

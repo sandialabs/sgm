@@ -26,6 +26,8 @@ class surface : public entity
 
         ~surface() override = default;
 
+        void Accept(EntityVisitor &v) override = 0;
+
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
@@ -35,16 +37,15 @@ class surface : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override
-        { return m_Box; } // default box is max extent
+        SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
 
-        bool IsTopLevel() const override {return m_sFaces.empty() && m_sOwners.empty();}
+        bool IsTopLevel() const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
-        void ResetBox(SGM::Result &) const override { /* do nothing */ }
+        void ResetBox(SGM::Result &) const override;
 
-        void TransformBox(SGM::Result &, SGM::Transform3D const &) override { /* do nothing */ }
+        void TransformBox(SGM::Result &, SGM::Transform3D const &) override;
 
         //
         // surface virtual members
@@ -89,34 +90,34 @@ class surface : public entity
 
         virtual int VContinuity() const;
 
-        void AddFace(face *pFace) { m_sFaces.insert(pFace); };
+        void AddFace(face *pFace);
 
-        void RemoveFace(face *pFace) { m_sFaces.erase(pFace); };
+        void RemoveFace(face *pFace);
 
-        std::set<face *,EntityCompare> const &GetFaces() const {return m_sFaces;}
+        std::set<face *,EntityCompare> const &GetFaces() const;
 
-        SGM::EntityType GetSurfaceType() const {return m_SurfaceType;}
+        SGM::EntityType GetSurfaceType() const;
 
         // Returns the curvature in the given direction at the given uv point.
 
         double DirectionalCurvature(SGM::Point2D      const &uv,
                                     SGM::UnitVector3D const &Direction) const;
 
-        bool ClosedInU() const {return m_bClosedU;}
+        bool ClosedInU() const;
 
-        bool ClosedInV() const {return m_bClosedV;}
+        bool ClosedInV() const;
 
-        bool SingularLowU() const {return m_bSingularLowU;}
+        bool SingularLowU() const;
 
-        bool SingularHighU() const {return m_bSingularHighU;}
+        bool SingularHighU() const;
 
-        bool SingularLowV() const {return m_bSingularLowV;}
+        bool SingularLowV() const;
 
-        bool SingularHighV() const {return m_bSingularHighV;}
+        bool SingularHighV() const;
 
         bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
-        SGM::Interval2D const &GetDomain() const {return m_Domain;}
+        SGM::Interval2D const &GetDomain() const;
 
         double FindAreaOfParametricTriangle(SGM::Result        &rResult,
                                             SGM::Point2D const &PosA,
@@ -165,6 +166,8 @@ class plane : public surface
         plane(SGM::Result &rResult, plane const &other);
 
         ~plane() override = default;
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         plane *Clone(SGM::Result &rResult) const override;
 
@@ -227,6 +230,8 @@ class cylinder : public surface
 
         ~cylinder() override = default;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         cylinder *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -284,6 +289,8 @@ class cone : public surface
         cone(SGM::Result &rResult, cone const &other);
 
         ~cone() override = default;
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         cone *Clone(SGM::Result &rResult) const override;
 
@@ -347,6 +354,8 @@ class sphere : public surface
 
         ~sphere() override = default;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         sphere *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -404,6 +413,8 @@ class torus : public surface
         torus(SGM::Result &rResult, torus const &other);
 
         ~torus() override = default;
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         torus* Clone(SGM::Result &rResult) const override;
 
@@ -465,6 +476,8 @@ class NUBsurface: public surface
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
         ~NUBsurface() override = default;
+
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
         NUBsurface* Clone(SGM::Result &rResult) const override;
 
@@ -552,6 +565,8 @@ class NURBsurface: public surface
 
         ~NURBsurface() override = default;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         NURBsurface* Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -638,6 +653,8 @@ class revolve : public surface
 
         ~revolve() override;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         revolve* Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -690,6 +707,8 @@ class extrude : public surface
 
         ~extrude() override;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
         extrude* Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -732,5 +751,7 @@ bool TestSurface(SGM::Result                &rResult,
                  SGMInternal::surface const *pSurface,
                  SGM::Point2D         const &uv1);
 }
+
+#include "Inline/Surface.inl"
 
 #endif // SURFACE_H

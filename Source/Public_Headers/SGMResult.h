@@ -28,13 +28,13 @@ class Result
                 m_bLog(false)
         {}
 
-        SGM_EXPORT void SetResult(SGM::ResultType nType);
+        SGM_EXPORT void SetResult(ResultType nType);
 
         SGM_EXPORT void SetMessage(std::string const &sMessage) { m_sMessage += sMessage; }
 
         SGM_EXPORT void ClearMessage() { m_sMessage.clear(); m_nType = ResultType::ResultTypeOK; }
 
-        SGM_EXPORT SGM::ResultType GetResult() const {return m_nType;}
+        SGM_EXPORT ResultType GetResult() const {return m_nType;}
 
         SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
 
@@ -44,22 +44,22 @@ class Result
 
         SGM_EXPORT bool GetLog() const {return m_bLog;}
 
-        SGM_EXPORT std::vector<SGM::Entity> const &GetLogEntities() const {return m_aLog;}
+        SGM_EXPORT std::vector<Entity> const &GetLogEntities() const {return m_aLog;}
 
-        SGM_EXPORT std::vector<SGM::LogType> const &GetLogEntries() const {return m_aLogEntries;}
+        SGM_EXPORT std::vector<LogType> const &GetLogEntries() const {return m_aLogEntries;}
 
         SGM_EXPORT void ClearLog() {m_aLog.clear(); m_aLogEntries.clear();}
 
-        SGM_EXPORT void AddLog(SGM::Entity const &EntityID,SGM::LogType nLogEntry) {m_aLog.push_back(EntityID);m_aLogEntries.push_back(nLogEntry);}
+        SGM_EXPORT void AddLog(Entity const &EntityID,LogType nLogEntry) {m_aLog.push_back(EntityID);m_aLogEntries.push_back(nLogEntry);}
 
     private:
 
-        SGM::ResultType           m_nType;
-        std::string               m_sMessage;
-        SGMInternal::thing       *m_pThing;
-        bool                      m_bLog;
-        std::vector<SGM::Entity>  m_aLog;
-        std::vector<SGM::LogType> m_aLogEntries;
+        ResultType           m_nType;
+        std::string          m_sMessage;
+        SGMInternal::thing  *m_pThing;
+        bool                 m_bLog;
+        std::vector<Entity>  m_aLog;
+        std::vector<LogType> m_aLogEntries;
 };
 
 } // End of SGM namespace

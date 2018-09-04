@@ -254,7 +254,7 @@ int import_check_timeout(std::string const &file_path, std::ofstream & log_file)
 void import_check_log_process(std::string const &file_path)
 {
     std::chrono::steady_clock::time_point start;
-    std::chrono::steady_clock::time_point::duration sum;
+    //std::chrono::steady_clock::time_point::duration sum;
 
     std::ofstream log_file;
     open_log_file(file_path, log_file);
@@ -341,7 +341,21 @@ TEST(DataDirectoriesCheck, file_extensions)
 TEST(DataDirectoriesCheck, import_check_single)
 {
     std::cout << std::endl << std::flush;
-    std::string file_path = get_models_file_path("_ASSY, SCORPION REV 01 2.STEP");
+    //std::string file_path = get_models_file_path("Default.stp");
+    //std::string file_path = get_models_file_path("1 Blade1-A3.STEP");
+    //std::string file_path = get_models_file_path("pencil 15.STEP");
+    //std::string file_path = get_models_file_path("knuckle.stp");
+    //std::string file_path = get_models_file_path("Large Files/Part1.STEP"); // reads but FindCachedData hangs
+    //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
+    //std::string file_path = get_models_file_path("Large Files/Globe 01 (Solid).stp"); // hangs in facet face
+    //std::string file_path = get_models_file_path("Large Files/Globe (1).stp");
+    //std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
+    //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
+    std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
+    //std::string file_path = get_models_file_path("Pencil.STEP");
+    //std::string file_path = get_models_file_path("Working On/Chair.step");
+
+
     std::ofstream log_file;
 
     open_log_file(file_path, log_file);
@@ -352,10 +366,12 @@ TEST(DataDirectoriesCheck, import_check_single)
     int status = import_file(file_path, result, log_file);
     EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
 
-    if (status == ModelsCheckResult::SUCCESS)
-        status = check_file(file_path, result, log_file);
-    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
+//    if (status == ModelsCheckResult::SUCCESS)
+//        status = check_file(file_path, result, log_file);
+//    EXPECT_EQ(status,ModelsCheckResult::SUCCESS);
 }
+
+
 
 //
 // test whether the Gtest exit function works properly
@@ -403,7 +419,6 @@ TEST(ModelDeathTest, sgm_models)
     for (const std::string& name : names)
         {
         std::string path_name = std::string(SGM_MODELS_DIRECTORY) + "/" + name;
-        std::cout << "Checking " << path_name << std::endl << std::flush;
         printf("Checking %s\n",path_name.c_str());
         EXPECT_EXIT(import_check_log_process(path_name),
                     ::testing::ExitedWithCode(ModelsCheckResult::SUCCESS),

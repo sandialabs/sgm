@@ -42,7 +42,7 @@ PointCurve::PointCurve(SGM::Result &rResult, const PointCurve &other) :
 PointCurve * PointCurve::Clone(SGM::Result &rResult) const
 { return new PointCurve(rResult, *this); }
 
-void PointCurve::Evaluate(double ,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
+void PointCurve::Evaluate(double,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *D2) const
     {
     if(Pos)
         {

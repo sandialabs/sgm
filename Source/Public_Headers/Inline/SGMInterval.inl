@@ -17,8 +17,8 @@ namespace SGM {
 
     inline Interval1D const &Interval1D::operator+=(Interval1D const &domain)
     {
-        m_dMin = std::min(m_dMin, domain.m_dMin);
-        m_dMax = std::max(m_dMax, domain.m_dMax);
+        m_dMin = (std::min)(m_dMin, domain.m_dMin);
+        m_dMax = (std::max)(m_dMax, domain.m_dMax);
         return *this;
     }
 
@@ -31,8 +31,8 @@ namespace SGM {
             }
         else if (domain.m_dMin <= domain.m_dMax) // The given domain is not empty.
             {
-            m_dMin = std::max(m_dMin, domain.m_dMin);
-            m_dMax = std::min(m_dMax, domain.m_dMax);
+            m_dMin = (std::max)(m_dMin, domain.m_dMin);
+            m_dMax = (std::min)(m_dMax, domain.m_dMax);
             }
         return *this;
     }
@@ -43,7 +43,7 @@ namespace SGM {
             {
             return false; // One interval is empty so the answer is false.
             }
-        return std::max(m_dMin, domain.m_dMin) <= std::min(m_dMax, domain.m_dMax);
+        return (std::max)(m_dMin, domain.m_dMin) <= (std::min)(m_dMax, domain.m_dMax);
     }
 
     inline bool Interval1D::InInterval(double Pos, double dTol) const
@@ -75,7 +75,7 @@ namespace SGM {
 
     inline double Interval1D::IntersectingLength(const Interval1D &other) const
     {
-        double length = std::min(m_dMax, other.m_dMax) - std::max(m_dMin, other.m_dMin);
+        double length = (std::min)(m_dMax, other.m_dMax) - (std::max)(m_dMin, other.m_dMin);
         if (length > 0.0)
             return length;
         else
@@ -113,8 +113,8 @@ namespace SGM {
 ///////////////////////////////////////////////////////////////////////////////
 
     inline Interval2D::Interval2D(Point2D const &Min, Point2D const &Max) :
-            m_UDomain(std::min(Min.m_u, Max.m_u), std::max(Min.m_u, Max.m_u)),
-            m_VDomain(std::min(Min.m_v, Max.m_v), std::max(Min.m_v, Max.m_v))
+            m_UDomain((std::min)(Min.m_u, Max.m_u), (std::max)(Min.m_u, Max.m_u)),
+            m_VDomain((std::min)(Min.m_v, Max.m_v), (std::max)(Min.m_v, Max.m_v))
     {}
 
     inline Interval2D::Interval2D(Interval1D const &u_domain, Interval1D const &v_domain) :
@@ -187,10 +187,10 @@ namespace SGM {
 
     inline Interval2D const &Interval2D::operator+=(Interval2D const &domain)
     {
-        m_UDomain.m_dMin = std::min(m_UDomain.m_dMin, domain.m_UDomain.m_dMin);
-        m_UDomain.m_dMax = std::max(m_UDomain.m_dMax, domain.m_UDomain.m_dMax);
-        m_VDomain.m_dMin = std::min(m_VDomain.m_dMin, domain.m_VDomain.m_dMin);
-        m_VDomain.m_dMax = std::max(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
+        m_UDomain.m_dMin = (std::min)(m_UDomain.m_dMin, domain.m_UDomain.m_dMin);
+        m_UDomain.m_dMax = (std::max)(m_UDomain.m_dMax, domain.m_UDomain.m_dMax);
+        m_VDomain.m_dMin = (std::min)(m_VDomain.m_dMin, domain.m_VDomain.m_dMin);
+        m_VDomain.m_dMax = (std::max)(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
         return *this;
     }
 
@@ -203,10 +203,10 @@ namespace SGM {
             }
         else if (domain.m_UDomain.m_dMin <= domain.m_UDomain.m_dMax) // The given domain is not empty.
             {
-            m_UDomain.m_dMin = std::max(m_UDomain.m_dMin, domain.m_UDomain.m_dMin);
-            m_UDomain.m_dMax = std::min(m_UDomain.m_dMax, domain.m_UDomain.m_dMax);
-            m_VDomain.m_dMin = std::max(m_VDomain.m_dMin, domain.m_VDomain.m_dMin);
-            m_VDomain.m_dMax = std::min(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
+            m_UDomain.m_dMin = (std::max)(m_UDomain.m_dMin, domain.m_UDomain.m_dMin);
+            m_UDomain.m_dMax = (std::min)(m_UDomain.m_dMax, domain.m_UDomain.m_dMax);
+            m_VDomain.m_dMin = (std::max)(m_VDomain.m_dMin, domain.m_VDomain.m_dMin);
+            m_VDomain.m_dMax = (std::min)(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
             }
         return *this;
     }
@@ -217,10 +217,10 @@ namespace SGM {
             {
             return false; // One interval is empty so the answer is false.
             }
-        return std::max(m_UDomain.m_dMin, domain.m_UDomain.m_dMin) <=
-               std::min(m_UDomain.m_dMax, domain.m_UDomain.m_dMax) &&
-               std::max(m_VDomain.m_dMin, domain.m_VDomain.m_dMin) <=
-               std::min(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
+        return (std::max)(m_UDomain.m_dMin, domain.m_UDomain.m_dMin) <=
+               (std::min)(m_UDomain.m_dMax, domain.m_UDomain.m_dMax) &&
+               (std::max)(m_VDomain.m_dMin, domain.m_VDomain.m_dMin) <=
+               (std::min)(m_VDomain.m_dMax, domain.m_VDomain.m_dMax);
     }
 
     inline Point2D Interval2D::LowerLeft() const
@@ -255,9 +255,9 @@ namespace SGM {
 ///////////////////////////////////////////////////////////////////////////////
 
     inline Interval3D::Interval3D(Point3D const &Min, Point3D const &Max) :
-            m_XDomain(std::min(Min.m_x, Max.m_x), std::max(Min.m_x, Max.m_x)),
-            m_YDomain(std::min(Min.m_y, Max.m_y), std::max(Min.m_y, Max.m_y)),
-            m_ZDomain(std::min(Min.m_z, Max.m_z), std::max(Min.m_z, Max.m_z))
+            m_XDomain((std::min)(Min.m_x, Max.m_x), (std::max)(Min.m_x, Max.m_x)),
+            m_YDomain((std::min)(Min.m_y, Max.m_y), (std::max)(Min.m_y, Max.m_y)),
+            m_ZDomain((std::min)(Min.m_z, Max.m_z), (std::max)(Min.m_z, Max.m_z))
     {}
 
     inline Interval3D::Interval3D(Point3D const &Pos, double tol) :
@@ -484,7 +484,7 @@ namespace SGM {
             may_intersect = bigger.IntersectsLineImpl(ray, t_min, t_max);
             }
         // interval [t_min,t_max] must intersect interval [0,length]
-        return (may_intersect && (std::max(0.0,t_min) <= std::min(length,t_max)));
+        return (may_intersect && ((std::max)(0.0,t_min) <= (std::min)(length,t_max)));
     }
 
     inline bool Interval3D::IntersectsLineImpl(Ray3D const& ray, double& t_min, double& t_max) const {
@@ -707,12 +707,12 @@ namespace SGM {
             {
             return false; // One interval is empty so the answer is false.
             }
-        return std::max(m_XDomain.m_dMin, domain.m_XDomain.m_dMin) <=
-               std::min(m_XDomain.m_dMax, domain.m_XDomain.m_dMax) &&
-               std::max(m_YDomain.m_dMin, domain.m_YDomain.m_dMin) <=
-               std::min(m_YDomain.m_dMax, domain.m_YDomain.m_dMax) &&
-               std::max(m_ZDomain.m_dMin, domain.m_ZDomain.m_dMin) <=
-               std::min(m_ZDomain.m_dMax, domain.m_ZDomain.m_dMax);
+        return (std::max)(m_XDomain.m_dMin, domain.m_XDomain.m_dMin) <=
+               (std::min)(m_XDomain.m_dMax, domain.m_XDomain.m_dMax) &&
+               (std::max)(m_YDomain.m_dMin, domain.m_YDomain.m_dMin) <=
+               (std::min)(m_YDomain.m_dMax, domain.m_YDomain.m_dMax) &&
+               (std::max)(m_ZDomain.m_dMin, domain.m_ZDomain.m_dMin) <=
+               (std::min)(m_ZDomain.m_dMax, domain.m_ZDomain.m_dMax);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -723,30 +723,30 @@ namespace SGM {
 
     inline const Interval1D Merge(Interval1D const &a, Interval1D const &b)
     {
-        return {std::min(a.m_dMin, b.m_dMin), std::max(b.m_dMax, b.m_dMax)};
+        return {(std::min)(a.m_dMin, b.m_dMin), (std::max)(b.m_dMax, b.m_dMax)};
     }
 
     inline const Interval2D Merge(Interval2D const &a, Interval2D const &b)
     {
-        return {std::min(a.m_UDomain.m_dMin, b.m_UDomain.m_dMin), std::max(b.m_UDomain.m_dMax, b.m_UDomain.m_dMax),
-                std::min(a.m_VDomain.m_dMin, b.m_VDomain.m_dMin), std::max(b.m_VDomain.m_dMax, b.m_VDomain.m_dMax)};
+        return {(std::min)(a.m_UDomain.m_dMin, b.m_UDomain.m_dMin), (std::max)(b.m_UDomain.m_dMax, b.m_UDomain.m_dMax),
+                (std::min)(a.m_VDomain.m_dMin, b.m_VDomain.m_dMin), (std::max)(b.m_VDomain.m_dMax, b.m_VDomain.m_dMax)};
     }
 
     inline const Interval3D Merge(Interval3D const & a, Interval3D const & b)
     {
-        return {std::min(a.m_XDomain.m_dMin, b.m_XDomain.m_dMin), std::max(b.m_XDomain.m_dMax, b.m_XDomain.m_dMax),
-                std::min(a.m_YDomain.m_dMin, b.m_YDomain.m_dMin), std::max(b.m_YDomain.m_dMax, b.m_YDomain.m_dMax),
-                std::min(a.m_ZDomain.m_dMin, b.m_ZDomain.m_dMin), std::max(b.m_ZDomain.m_dMax, b.m_ZDomain.m_dMax)};
+        return {(std::min)(a.m_XDomain.m_dMin, b.m_XDomain.m_dMin), (std::max)(b.m_XDomain.m_dMax, b.m_XDomain.m_dMax),
+                (std::min)(a.m_YDomain.m_dMin, b.m_YDomain.m_dMin), (std::max)(b.m_YDomain.m_dMax, b.m_YDomain.m_dMax),
+                (std::min)(a.m_ZDomain.m_dMin, b.m_ZDomain.m_dMin), (std::max)(b.m_ZDomain.m_dMax, b.m_ZDomain.m_dMax)};
     }
 
     inline const Interval3D Merge(const Interval3D& a, const Point3D& b)
     {
-        return {std::min(a.m_XDomain.m_dMin, b.m_x),
-                std::max(a.m_XDomain.m_dMax, b.m_x),
-                std::min(a.m_YDomain.m_dMin, b.m_y),
-                std::max(a.m_YDomain.m_dMax, b.m_y),
-                std::min(a.m_ZDomain.m_dMin, b.m_z),
-                std::max(a.m_ZDomain.m_dMax, b.m_z)};
+        return {(std::min)(a.m_XDomain.m_dMin, b.m_x),
+                (std::max)(a.m_XDomain.m_dMax, b.m_x),
+                (std::min)(a.m_YDomain.m_dMin, b.m_y),
+                (std::max)(a.m_YDomain.m_dMax, b.m_y),
+                (std::min)(a.m_ZDomain.m_dMin, b.m_z),
+                (std::max)(a.m_ZDomain.m_dMax, b.m_z)};
     }
 
 } // namespace SGM

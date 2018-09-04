@@ -516,7 +516,7 @@ namespace SGM {
             double dAverage=fabs(d1+d2)*0.5;
             if(dAverage<SGM_ZERO)
                 {
-                dAverage=std::max(fabs(d1),fabs(d2));
+                dAverage=(std::max)(fabs(d1),fabs(d2));
                 if(dAverage<SGM_ZERO)
                     {
                     return true;

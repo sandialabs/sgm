@@ -7,6 +7,7 @@
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "FileFunctions.h"
+#include "ReadFile.h"
 #include "Surface.h"
 #include "STEP.h"
 #include "Curve.h"
@@ -16,522 +17,491 @@
 #include <utility>
 #include <string>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
 
-namespace SGMInternal
-{
-size_t FindIndices(std::string   const &line,
-                   std::vector<size_t> &aIndices)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]=='#')
-            {
-            int nIndex;
-            sscanf(pString+nCount+1,"%d",&nIndex);
-            aIndices.push_back(nIndex);
-            }
-        if(pString[nCount]=='*')
-            {
-            aIndices.push_back(0);
-            }
-        ++nCount;
-        }
-    return aIndices.size();
-    }
 
-void FindFlag(std::string const &line,
-              bool              &bFlag)
+///////////////////////////////////////////////////////////////////////////////
+//
+// getdelim (POSIX function) implementation for Windows and MSVC
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _MSC_VER
+
+#ifndef _POSIX_SOURCE
+    typedef long ssize_t;
+#define SSIZE_MAX LONG_MAX
+#endif
+
+#define SGM_GETDELIM_GROWBY 128    // amount to grow line buffer by
+#define SGM_GETDELIM_MINLEN 4      // minimum line buffer size
+
+ssize_t _getdelim(char **__restrict__ lineptr, size_t *__restrict__ n, int delimiter, FILE *__restrict__ stream)
     {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    while(pString[nCount]!=';')
+    char *buf, *pos;
+    int c;
+    ssize_t bytes;
+
+    if (lineptr == nullptr || n == nullptr)
         {
-        if(pString[nCount]=='.')
+        errno = EINVAL;
+        return -1;
+        }
+    if (stream == nullptr)
+        {
+        errno = EBADF;
+        return -1;
+        }
+
+    // resize (or allocate) the line buffer if necessary
+    buf = *lineptr;
+    if (buf == nullptr || *n < SGM_GETDELIM_MINLEN)
+        {
+        buf = (char*)realloc(*lineptr, SGM_GETDELIM_GROWBY);
+        if (buf == nullptr)
             {
-            if(pString[nCount+1]=='T')
+            return -1; // ENOMEM
+            }
+        *n = SGM_GETDELIM_GROWBY;
+        *lineptr = buf;
+        }
+
+    // read characters until delimiter is found, end of file is reached, or an error occurs.
+    bytes = 0;
+    pos = buf;
+    while ((c = getc(stream)) != EOF)
+        {
+        if (bytes + 1 >= SSIZE_MAX)
+            {
+            errno = EOVERFLOW;
+            return -1;
+            }
+        bytes++;
+        if (bytes >= *n - 1)
+            {
+            buf = (char*)realloc(*lineptr, *n + SGM_GETDELIM_GROWBY);
+            if (buf == nullptr)
                 {
-                bFlag=true;
-                return;
+                return -1; // ENOMEM
                 }
-            else if(pString[nCount+1]=='F')
-                {
-                bFlag=false;
-                return;
-                }
+            *n += SGM_GETDELIM_GROWBY;
+            pos = buf + bytes - 1;
+            *lineptr = buf;
             }
-        ++nCount;
-        }
-    throw;
-    }
 
-void FindLastDouble(std::string   const &line,
-                    std::vector<double> &aData)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nWhere=0;
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]==',')
-            {
-            nWhere=nCount+1;
-            }
-        ++nCount;
-        }
-    double d;
-    sscanf(pString+nWhere,"%lf",&d);
-    aData.push_back(d);
-    }
-
-void FindDoubles3(std::string   const &line,
-                  std::vector<double> &aData)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nPCount=0;
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]=='(')
-            {
-            ++nPCount;
-            }
-        if(nPCount==2)
-            {
-            double x,y,z;
-            sscanf(pString+nCount+1,"%lf,%lf,%lf",&x,&y,&z);
-            aData.push_back(x);
-            aData.push_back(y);
-            aData.push_back(z);
-            return;
-            }
-        ++nCount;
-        }
-    }
-
-void FindParameters(std::string   const &line,
-                    std::vector<double> &aData)
-    {
-    char const LookFor[16]="PARAMETER_VALUE";
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nPCount=0;
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]==LookFor[nPCount])
-            {
-            ++nPCount;
-            }
-        else
-            {
-            nPCount=0;
-            }
-        if(nPCount==15)
-            {
-            double dParam;
-            sscanf(pString+nCount+1,"(%lf",&dParam);
-            aData.push_back(dParam);
-            }
-        ++nCount;
-        }
-    }
-
-size_t FindListArguments(std::string        const &line,
-                         std::vector<std::string> &aArgs)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-    size_t nStart=0;
-    while(pString[nCount])
-        {
-        if(pString[nCount]==',' || pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        if(pString[nCount]==')')
+        *pos++ = (char) c;
+        if (c == delimiter)
             {
             break;
             }
-        ++nCount;
         }
-    return aArgs.size();
-    }
 
-size_t FindArgumentsAfter(std::string        const &line,
-                          std::vector<std::string> &aArgs,
-                          std::string        const &after)
-    {
-    std::string LineCopy=line;
-    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-
-    size_t nFound=LineCopy.find(after);
-    char const *pString=LineCopy.c_str();
-    size_t nStart=nFound+after.length();
-    size_t nCount=nStart;
-    while(pString[nCount])
+    if (ferror(stream) || (feof(stream) && (bytes == 0)))
         {
-        if(pString[nCount]==',' || pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        if(pString[nCount]==')')
-            {
-            break;
-            }
-        ++nCount;
-        }
-    return aArgs.size();
-    }
-
-
-size_t FindArgumentSetsAfter(std::string        const &line,
-                             std::vector<std::string> &aArgs,
-                             std::string        const &after)
-    {
-    std::string LineCopy=line;
-    LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-
-    size_t nFound=LineCopy.find(after);
-    char const *pString=LineCopy.c_str();
-    size_t nStart=nFound+after.length();
-    size_t nCount=nStart;
-    bool bFirst=true;
-    while(pString[nCount])
-        {
-        if(pString[nCount]==')')
-            {
-            size_t Index1;
-            std::string Arg;
-            if(bFirst==false)
-                {
-                nStart++;
-                }
-            bFirst=false;
-            for(Index1=nStart+1;Index1<nCount;++Index1)
-                {
-                Arg+=pString[Index1];
-                }
-            nStart=nCount+1;
-            aArgs.push_back(Arg);
-            }
-        ++nCount;
-        }
-    return aArgs.size();
-    }
-
-void FindLists(std::string        const &line,
-               std::vector<std::string> &aLists)
-    {
-    char const *pString=line.c_str();
-    size_t nCount=1;
-
-    // Find the first '('
-    while(pString[nCount]!=';')
-        {
-        if(pString[nCount]=='(')
-            {
-            ++nCount;
-            break;
-            }
-        ++nCount;
+        return -1; // EOF, or an error from getc().
         }
 
-    // Find pairs of '(' and ')'.
-    size_t Index1;
-    bool bFound=true;
-    while(bFound)
-        {
-        bFound=false;
-        size_t nStart=0,nEnd=0;
-        while(pString[nCount]!=';')
-            {
-            if(pString[nCount]=='(')
-                {
-                ++nCount;
-                nStart=nCount;
-                break;
-                }
-            ++nCount;
-            }
-        while(pString[nCount]!=';')
-            {
-            if(pString[nCount]==')')
-                {
-                ++nCount;
-                nEnd=nCount;
-                break;
-                }
-            ++nCount;
-            }
-        if(nStart && nEnd)
-            {
-            bFound=true;
-            std::string sList;
-            for(Index1=nStart;Index1<nEnd;++Index1)
-                {
-                sList+=pString[Index1];
-                }
-            aLists.push_back(sList);
-            }
-        }
+    *pos = '\0';
+    return bytes;
+    }
+#endif // _MSC_VER
 
-    // Remove extra up front '('s
+namespace SGMInternal {
 
-    size_t nLists=aLists.size();
-    for(Index1=0;Index1<nLists;++Index1)
-        {
-        if(aLists[Index1].c_str()[0]=='(')
-            {
-            aLists[Index1]=std::string(aLists[Index1].c_str()+1);
-            }
-        }
+//    size_t FindListArguments(char const               *pString,
+//                                    std::vector<std::string> &aArgs)
+//    {
+//        size_t nCount=1;
+//        size_t nStart=0;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==',' || pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                for(Index1=nStart;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            if(pString[nCount]==')')
+//                {
+//                break;
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    size_t FindArgumentsAfter(char const              *pString,
+//                                     std::vector<std::string> &aArgs,
+//                                     std::string        const &after)
+//    {
+//        std::string LineCopy(pString);
+//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+//
+//        size_t nFound=LineCopy.find(after);
+//        pString=LineCopy.c_str();
+//        size_t nStart=nFound+after.length();
+//        size_t nCount=nStart;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==',' || pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                for(Index1=nStart;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            if(pString[nCount]==')')
+//                {
+//                break;
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    size_t FindArgumentSetsAfter(char const               *pString,
+//                                        std::vector<std::string> &aArgs,
+//                                        std::string        const &after)
+//    {
+//        std::string LineCopy(pString);
+//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
+//
+//        size_t nFound=LineCopy.find(after);
+//        pString=LineCopy.c_str();
+//        size_t nStart=nFound+after.length();
+//        size_t nCount=nStart;
+//        bool bFirst=true;
+//        while(pString[nCount])
+//            {
+//            if(pString[nCount]==')')
+//                {
+//                size_t Index1;
+//                std::string Arg;
+//                if(bFirst==false)
+//                    {
+//                    nStart++;
+//                    }
+//                bFirst=false;
+//                for(Index1=nStart+1;Index1<nCount;++Index1)
+//                    {
+//                    Arg+=pString[Index1];
+//                    }
+//                nStart=nCount+1;
+//                aArgs.push_back(Arg);
+//                }
+//            ++nCount;
+//            }
+//        return aArgs.size();
+//    }
+//
+//    inline void FindLists(char const               *pString,
+//                          std::vector<std::string> &aLists)
+//    {
+//        size_t nCount=0;
+//
+//        // Find the first '('
+//        while(pString[nCount]!='\0')
+//            {
+//            if(pString[nCount]=='(')
+//                {
+//                ++nCount;
+//                break;
+//                }
+//            ++nCount;
+//            }
+//
+//        // Find pairs of '(' and ')'.
+//        size_t Index1;
+//        bool bFound=true;
+//        while(bFound)
+//            {
+//            bFound=false;
+//            size_t nStart=0,nEnd=0;
+//            while(pString[nCount]!='\0')
+//                {
+//                if(pString[nCount]=='(')
+//                    {
+//                    ++nCount;
+//                    nStart=nCount;
+//                    break;
+//                    }
+//                ++nCount;
+//                }
+//            while(pString[nCount]!='\0')
+//                {
+//                if(pString[nCount]==')')
+//                    {
+//                    ++nCount;
+//                    nEnd=nCount;
+//                    break;
+//                    }
+//                ++nCount;
+//                }
+//            if(nStart && nEnd)
+//                {
+//                bFound=true;
+//                std::string sList;
+//                for(Index1=nStart;Index1<nEnd;++Index1)
+//                    {
+//                    sList+=pString[Index1];
+//                    }
+//                aLists.push_back(sList);
+//                }
+//            }
+//
+//        // Remove extra up front '('s
+//
+//        size_t nLists=aLists.size();
+//        for(Index1=0;Index1<nLists;++Index1)
+//            {
+//            if(aLists[Index1].c_str()[0]=='(')
+//                {
+//                aLists[Index1]=std::string(aLists[Index1].c_str()+1);
+//                }
+//            }
+//    }
+
+inline void ProcessFace(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
+    {
+    // "#12 = ADVANCED_FACE ( 'NONE', ( #19088 ), #718, .T. ) "
+    const char * last = FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
+    last = FindIndex(last,STEPData.m_aIDs);
+    FindFlag(last,STEPData.m_bFlag);
     }
 
-void FindDoubleVector(std::string   const &line,
-                      std::vector<double> &aData)
+inline void ProcessAxis(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    std::vector<std::string> aArgs;
-    size_t nArgs=FindListArguments(line,aArgs);
-    size_t Index1;
-    for(Index1=0;Index1<nArgs;++Index1)
-        {
-        double dData;
-        sscanf(aArgs[Index1].c_str(),"%lf",&dData);
-        aData.push_back(dData);
-        }
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void FindIntVector(std::string const &line,
-                   std::vector<int>  &aData)
+inline void ProcessPoint(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    std::vector<std::string> aArgs;
-    size_t nArgs=FindListArguments(line,aArgs);
-    size_t Index1;
-    for(Index1=0;Index1<nArgs;++Index1)
-        {
-        int nData;
-        sscanf(aArgs[Index1].c_str(),"%d",&nData);
-        aData.push_back(nData);
-        }
+    FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
-class STEPLineData
+inline void ProcessDirection(char const   *pLineAfterStepTag,
+                             STEPLineData &STEPData)
     {
-    public:
-
-        STEPLineData():m_nType(0),m_aIDs(0),m_bFlag(true) {}
-
-        size_t              m_nType;
-        std::vector<size_t> m_aIDs;
-        std::vector<double> m_aDoubles;
-        std::vector<int>    m_aInts;
-        bool                m_bFlag;
-    };
-
-void ProcessFace(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
-    {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
-void ProcessAxis(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
-    {
-    FindIndices(line,STEPData.m_aIDs);
-    }
-
-void ProcessPoint(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
-    {
-    FindDoubles3(line,STEPData.m_aDoubles);
-    }
-
-void ProcessDirection(SGM::Result       &,//rResult,
-                      std::string const &line,
-                      STEPLineData      &STEPData)
-    {
-    FindDoubles3(line,STEPData.m_aDoubles);
-    }
-
-void ProcessEdge(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
+inline void ProcessEdge(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
     // #509=EDGE_CURVE('',#605,#607,#608,.F.);
-    
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-void ProcessTrimmedCurve(SGM::Result       &,//rResult,
-                         std::string const &line,
-                         STEPLineData      &STEPData)
+inline void ProcessTrimmedCurve(char const   *pLineAfterStepTag,
+                                STEPLineData &STEPData)
     {
     // #28=TRIMMED_CURVE('',#27,(PARAMETER_VALUE(0.000000000000000)),(PARAMETER_VALUE(5.19615242270663)),.T.,.UNSPECIFIED.);
-    
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
-    FindParameters(line,STEPData.m_aDoubles);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
+    const char *pos = FindParameters(pLineAfterStepTag,STEPData.m_aDoubles);
+    FindFlag(pos,STEPData.m_bFlag);
     }
 
-void ProcessLoop(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
+inline void ProcessLoop(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    if(STEPData.m_nType==SGMInternal::STEPTags::TRIMMED_CURVE)
-        {
-        FindParameters(line,STEPData.m_aDoubles);
-        }
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessBound(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+inline void ProcessBound(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    const char *last = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    FindFlag(last,STEPData.m_bFlag);
     }
 
-void ProcessLine(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
+inline void ProcessLine(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessBody(SGM::Result       &,//rResult,
-                 std::string const &line,
-                 STEPLineData      &STEPData)
+inline void ProcessBody(char const   *pLineAfterStepTag,
+                        STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessVolume(SGM::Result       &,//rResult,
-                   std::string const &line,
-                   STEPLineData      &STEPData)
+void ProcessVolume(char const   *pLineAfterStepTag,
+                   STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessShell(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+void ProcessShell(char const   *pLineAfterStepTag,
+                  STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessOrientedShell(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+void ProcessOrientedShell(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-void ProcessCoedge(SGM::Result       &,//rResult,
-                   std::string const &line,
-                   STEPLineData      &STEPData)
+inline void ProcessCoedge(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindFlag(line,STEPData.m_bFlag);
+    FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
-void ProcessPlane(SGM::Result       &,//rResult,
-                  std::string const &line,
-                  STEPLineData      &STEPData)
+inline void ProcessPlane(char const   *pLineAfterStepTag,
+                         STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessBSpline(SGM::Result       &,//rResult,
-                    std::string const &bspline,
-                    STEPLineData      &STEPData)
+inline void ProcessBSplineCurveWithKnots(char const *pLineAfterTag,
+                                         STEPLineData &STEPData)
+{
+    //#34749 = B_SPLINE_CURVE_WITH_KNOTS( '', 3,
+    // ( #49563, #49564, #49565, #49566, #49567, #49568, #49569, #49570, #49571, #49572, #49573, #49574, #49575,
+    //   #49576, #49577, #49578, #49579, #49580, #49581, #49582, #49583, #49584, #49585, #49586, #49587 ),
+    //   .UNSPECIFIED., .F., .F., ( 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 4 ),
+    // ( 0.000000000000000, 0.000131742362273840, 0.000164677952842297, 0.000197613543410754, 0.000263484724547680,
+    //   0.000395227086821539, 0.000526969449095398, 0.000592840630232327, 0.000625776220800793, 0.000658711811369259,
+    //   0.000790454173643115, 0.000922196535916971, 0.00105393889819083 ), .UNSPECIFIED. );
+
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    //    const char * pos = pLineAfterTag;
+    //    char * end;
+    //    size_t nDegree = std::strtol(pos, &end, 10);   // Degree (we don't store it in STEPData)
+    //    assert(errno != ERANGE);
+    //    pos = end;
+
+    const char *pos = SkipChar(pLineAfterTag, '(');
+    pos = SkipChar(pos, '(');
+    pos = FindIndicesGroup(pos,aIDs);                   // Control points
+
+    //size_t nControlPoints = aIDs.size();
+
+    // (ignoring flags .F. .F.)                         // Flags
+
+    // knot multiplicities <= control points
+    //aInts.reserve(nControlPoints);
+
+    pos = FindIntVector(pos,aInts);                    // knot multiplicity
+
+    // number of knot values = number of control points
+    //aDoubles.reserve(nControlPoints);
+
+    FindDoubleVector(pos,STEPData.m_aDoubles); // knots
+}
+
+inline void ProcessBSplineCurve(char const   *pLineAfterEquals,
+                                STEPLineData &STEPData)
     {
-    // #157=(B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
+    //#543=(BOUNDED_CURVE() B_SPLINE_CURVE(3,(#182950,#182951,#182952,#182953,#182954,#182955,#182956,
+    //      #182957,#182958,#182959,#182960,#182961,#182962,#182963),.UNSPECIFIED.,.F.,.F.)
+    //  B_SPLINE_CURVE_WITH_KNOTS((4,1,1,1,1,1,1,1,1,1,1,4),
+    //      (0.,0.148083127832011,
+    //  0.288705267272566,0.416253016970393,0.528378859872694,0.625953380871544,
+    //  0.710996785912498,0.785409369241285,0.851048103254228,0.910168684988158,
+    //  0.964273361367237,1.),.UNSPECIFIED.)
+    //  CURVE() GEOMETRIC_REPRESENTATION_ITEM()
+    //  RATIONAL_B_SPLINE_CURVE((1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,1.15755099961695,
+    //      1.15755099961695)) REPRESENTATION_ITEM(''));
+
+    // (B_SPLINE_CURVE(3,(#176,#177,#178,#179),.UNSPECIFIED.,.F.,.F.)
     // B_SPLINE_CURVE_WITH_KNOTS((4,4),(-6.28318530717959,-0.0),.UNSPECIFIED.)
     // RATIONAL_B_SPLINE_CURVE((1.0,0.804737854124365,0.804737854124365,1.0))
     // BOUNDED_CURVE()REPRESENTATION_ITEM('')GEOMETRIC_REPRESENTATION_ITEM()CURVE());
 
-    FindIndices(bspline,STEPData.m_aIDs);
-    std::vector<std::string> aLists;
-    FindLists(bspline,aLists);
-    FindIntVector(aLists[1],STEPData.m_aInts);
-    FindDoubleVector(aLists[2],STEPData.m_aDoubles);
-    if(strstr(bspline.c_str(),"RATIONAL_B_SPLINE_CURVE"))
-        {
-        FindDoubleVector(aLists[3],STEPData.m_aDoubles);
-        STEPData.m_bFlag=false;
-        }
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_CURVE",14);
+    pos = SkipChar(pos,'(');
+
+    //    char * end;
+    //    long nDegree = std::strtol(pos, &end, 10); // Degree (we don't store it in STEPData)
+    //    assert(errno != ERANGE);
+    //    pos = end;
+
+    pos = SkipChar(pos, '(');
+    pos = FindIndicesGroup(pos,aIDs);               // Control points
+
+    size_t nControlPoints = aIDs.size(); // nKnots - nDegree - 1; ?
+
+    // (ignoring flags .F. .F.)
+
+    pos = SkipWord(pos,"B_SPLINE_CURVE_WITH_KNOTS",25);
+    pos = SkipChar(pos,'(');
+
+    // aInts.reserve(aInts.size() + ?);
+
+    pos = FindIntVector(pos,aInts);                 // knot multiplicity
+
+    // aDoubles.reserve(aDoubles.size() + ?);
+
+    pos = FindDoubleVector(pos,aDoubles);           // knots
+    size_t nKnots = aDoubles.size();
+
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",25);
+    pos = SkipChar(pos,'(');
+
+    size_t nWeights = nControlPoints;
+    size_t nSize = aDoubles.size();
+    aDoubles.reserve(nSize + nWeights);
+
+    FindDoubleVector(pos,aDoubles);           // Weights
     }
 
-void ProcessCircle(SGM::Result       &,//rResult,
-                   std::string const &circle,
-                   STEPLineData      &STEPData)
+inline void ProcessCircle(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(circle,STEPData.m_aIDs);
-    FindLastDouble(circle,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessCone(SGM::Result       &,//rResult,
-                 std::string const &cone,
-                 STEPLineData      &STEPData)
+void ProcessCone(char const   *pLineAfterStepTag,
+                 STEPLineData &STEPData)
     {
     // #73=CONICAL_SURFACE('',#72,1.00000000000000,0.785398163397448);
-                
-    FindIndices(cone,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(cone,aArgs);
-    double dRadius,dHalfAngle;
-    sscanf(aArgs[2].c_str(),"%lf",&dRadius);
-    sscanf(aArgs[3].c_str(),"%lf",&dHalfAngle);
-    STEPData.m_aDoubles.push_back(dRadius);
-    STEPData.m_aDoubles.push_back(dHalfAngle);        
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // radius
+    FindDouble(pos, STEPData.m_aDoubles);       // half-angle
     }
 
-void ProcessEllipse(SGM::Result       &,//rResult,
-                    std::string const &ellipse,
-                    STEPLineData      &STEPData)
+void ProcessEllipse(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
     {
     // #6314=ELLIPSE('',#10514,0.553426824431198,0.2475);
-
-    FindIndices(ellipse,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(ellipse,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    FindDouble(pos, STEPData.m_aDoubles); // minor
     }
 
-void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
-                             std::string const &spline,
-                             STEPLineData      &STEPData)
+void ProcessBSplineSurfaceWithKnots(char const *pLineAfterStepTag,
+                                    STEPLineData &STEPData)
     {
     // #1879=B_SPLINE_SURFACE_WITH_KNOTS('',3,3,
     // ((#3246,#3247,#3248,#3249),(#3250,#3251,#3252,#3253),(#3254,#3255,#3256,#3257),(#3258,#3259,#3260,#3261),
@@ -542,169 +512,30 @@ void ProcessBSplineWithKnots(SGM::Result       &,//rResult,
     // (-0.0125000000006658,0.0,0.1666666666667,0.3333333333333,0.5,0.6666666666667,0.8333333333333,1.0,1.0015535650659),
     // (-0.0124999999959784,1.0125000000066),.UNSPECIFIED.);
 
-    // UDegree, VDegree,
-    // Control Points
-    // Uknot multiplicity, Vknot multiplicity
-    // Uknots, VKnots
+    const char *pos = pLineAfterStepTag;
+    size_t nRows, nColumns;
 
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
+    pos = FindInt(pos,STEPData.m_aInts);                // UDegree
+    pos = FindInt(pos,STEPData.m_aInts);                // VDegree
 
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[1].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[2].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
+    pos = FindIndicesMatrix(pos,STEPData.m_aIDs,&nRows,&nColumns); // control points.
 
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindArgumentsAfter(aArgs[aArgs.size()-5]+")",aArgs0,"(");
-    FindListArguments(aArgs[aArgs.size()-4]+")",aArgs1);
-    FindListArguments(aArgs[aArgs.size()-3]+")",aArgs2);
-    FindListArguments(aArgs[aArgs.size()-2]+")",aArgs3);
+    pos = FindIntVector(pos,STEPData.m_aInts);          // Uknot multiplicity
 
-    size_t Index1;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        }                                               // Uknot multiplicity
+    unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
+    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
 
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        }                                               // Vknot multiplicity
+    pos = FindIntVector(pos,STEPData.m_aInts);          // Vknot multiplicity
 
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
+    unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
+    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
 
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles);    // Uknots
+    FindDoubleVector(pos,STEPData.m_aDoubles);          // Vknots
     }
 
-void ProcessBoundedSurface(SGM::Result       &,//rResult,
-                           std::string const &spline,
-                           STEPLineData      &STEPData)
-    {
-    // #218 =( BOUNDED_SURFACE ( )  B_SPLINE_SURFACE ( 3, 3, ( 
-    //  ( #441, #427, #443, #679 ),
-    //  ( #862, #1034, #432, #1018 ),
-    //  ( #350, #174, #272, #845 ),
-    //  ( #165, #764, #1020, #939 ) ),
-    //  .UNSPECIFIED., .F., .F., .T. ) 
-    //  B_SPLINE_SURFACE_WITH_KNOTS ( ( 4, 4 ),
-    //  ( 4, 4 ),
-    //  ( 0.0000000000000000000, 1.000000000000000000 ),
-    //  ( 0.0000000000000000000, 1.000000000000000000 ),
-    //  .UNSPECIFIED. ) 
-    //  GEOMETRIC_REPRESENTATION_ITEM ( )  RATIONAL_B_SPLINE_SURFACE ( (
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
-    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000) ) ) 
-    //  REPRESENTATION_ITEM ( '' )  SURFACE ( )  );
-    
-    // UDegree, VDegree,
-    // Control Points
-    // Uknot multiplicity, Vknot multiplicity
-    // Uknots, VKnots,
-    // Weights
-
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
-
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[0].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[1].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindListArguments(aArgs[0]+')',aArgs0);
-    FindListArguments(aArgs[1]+')',aArgs1);
-    FindListArguments(aArgs[2]+')',aArgs2);
-    FindListArguments(aArgs[3]+')',aArgs3);
-    size_t Index1,Index2;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nUKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nUKnots+=nMultiplicity;
-        }                                               // Uknot multiplicity
-
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nVKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nVKnots+=nMultiplicity;
-        }                                               // Vknot multiplicity
-
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"RATIONAL_B_SPLINE_SURFACE((");
-    size_t nUControlPoints=nUKnots-nUDegree-1;
-    size_t nVControlPoints=nVKnots-nVDegree-1;
-    for(Index1=0;Index1<nUControlPoints;++Index1)
-        {
-        std::vector<std::string> aArgsSub;
-        FindListArguments(aArgs[Index1]+')',aArgsSub);
-        for(Index2=0;Index2<nVControlPoints;++Index2)
-            {
-            double dWeight;
-            sscanf(aArgsSub[Index2].c_str(),"%lf",&dWeight);  
-            STEPData.m_aDoubles.push_back(dWeight);
-            }
-        }                                               // The weights.
-    }
-
-void ProcessBSplineSurface(SGM::Result       &,//rResult,
-                           std::string const &spline,
-                           STEPLineData      &STEPData)
+void ProcessBSplineSurface(char const   *pLineAfterEquals,  // note: after the first = sign
+                           STEPLineData &STEPData)
     {
     // #767=(B_SPLINE_SURFACE(3,3,
     // ((#2090,#2091,#2092,#2093),(#2094,#2095,#2096,#2097),(#2098,#2099,#2100,#2101),(#2102,#2103,#2104,#2105)),.UNSPECIFIED.,.F.,.F.,.F.)
@@ -720,471 +551,457 @@ void ProcessBSplineSurface(SGM::Result       &,//rResult,
     // Uknot multiplicity, Vknot multiplicity
     // Uknots, VKnots,
     // Weights
-                
-    FindIndices(spline,STEPData.m_aIDs);                  // Finds all the control points.
 
-    std::vector<std::string> aArgs;
-    FindArgumentsAfter(spline,aArgs,"B_SPLINE_SURFACE(");
-    int nUDegree,nVDegree;
-    sscanf(aArgs[0].c_str(),"%d",&nUDegree);        
-    sscanf(aArgs[1].c_str(),"%d",&nVDegree);
-    STEPData.m_aInts.push_back(nUDegree);
-    STEPData.m_aInts.push_back(nVDegree);               // Finds the degrees.
+    int nUDegree, nVDegree;
 
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"B_SPLINE_SURFACE_WITH_KNOTS(");
-    std::vector<std::string> aArgs0,aArgs1,aArgs2,aArgs3;
-    FindListArguments(aArgs[0]+')',aArgs0);
-    FindListArguments(aArgs[1]+')',aArgs1);
-    FindListArguments(aArgs[2]+')',aArgs2);
-    FindListArguments(aArgs[3]+')',aArgs3);
-    size_t Index1,Index2;
-    size_t nSize=aArgs0.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nUKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+
+    const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_SURFACE",16);
+    pos = SkipChar(pos,'(');
+
+    pos = AppendInt(pos,aInts); // UDegree
+    nUDegree = aInts.back();
+    assert(nUDegree > 0);
+
+    pos = FindInt(pos,aInts);   // VDegree
+    nVDegree = aInts.back();
+    assert(nVDegree > 0);
+
+    size_t nRows, nColumns;
+
+    pos = FindIndicesMatrix(pos,aIDs,&nRows,&nColumns);
+
+    // (ignoring flags .F. .F. .F.)
+
+    pos = SkipWord(pos,"B_SPLINE_SURFACE_WITH_KNOTS",27);
+    pos = SkipChar(pos,'(');
+
+    pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
+
+    unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
+    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
+
+    pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
+
+    unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
+    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
+
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
+    pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
+
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_SURFACE",25);
+    pos = SkipChar(pos,'(');
+    pos = SkipChar(pos,'(');
+
+    for (size_t i = 0; i < nRows; ++i)
         {
-        int nMultiplicity;
-        sscanf(aArgs0[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nUKnots+=nMultiplicity;
-        }                                               // Uknot multiplicity
-
-    nSize=aArgs1.size();
-    STEPData.m_aInts.push_back((int)nSize);
-    size_t nVKnots=0;
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        int nMultiplicity;
-        sscanf(aArgs1[Index1].c_str(),"%d",&nMultiplicity);  
-        STEPData.m_aInts.push_back(nMultiplicity);
-        nVKnots+=nMultiplicity;
-        }                                               // Vknot multiplicity
-
-    nSize=aArgs2.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs2[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    nSize=aArgs3.size();
-    for(Index1=0;Index1<nSize;++Index1)
-        {
-        double dKnot;
-        sscanf(aArgs3[Index1].c_str(),"%lf",&dKnot);  
-        STEPData.m_aDoubles.push_back(dKnot);
-        }                                               // UKnots.
-
-    aArgs.clear();
-    FindArgumentSetsAfter(spline,aArgs,"RATIONAL_B_SPLINE_SURFACE((");
-    size_t nUControlPoints=nUKnots-nUDegree-1;
-    size_t nVControlPoints=nVKnots-nVDegree-1;
-    for(Index1=0;Index1<nUControlPoints;++Index1)
-        {
-        std::vector<std::string> aArgsSub;
-        FindListArguments(aArgs[Index1]+')',aArgsSub);
-        for(Index2=0;Index2<nVControlPoints;++Index2)
-            {
-            double dWeight;
-            sscanf(aArgsSub[Index2].c_str(),"%lf",&dWeight);  
-            STEPData.m_aDoubles.push_back(dWeight);
-            }
-        }                                               // The weights.
+        pos = FindDoubleVector(pos,aDoubles);
+        }
     }
 
-void ProcessCylinder(SGM::Result       &,//rResult,
-                     std::string const &cylinder,
-                     STEPLineData      &STEPData)
+    void ProcessBoundedSurface(char const   *pLineAfterEquals,
+                               STEPLineData &STEPData)
     {
-    FindIndices(cylinder,STEPData.m_aIDs);
-    FindLastDouble(cylinder,STEPData.m_aDoubles);
+    // #218 =( BOUNDED_SURFACE ( )  B_SPLINE_SURFACE ( 3, 3, (
+    //  ( #441, #427, #443, #679 ),
+    //  ( #862, #1034, #432, #1018 ),
+    //  ( #350, #174, #272, #845 ),
+    //  ( #165, #764, #1020, #939 ) ),
+    //  .UNSPECIFIED., .F., .F., .T. )
+    //  B_SPLINE_SURFACE_WITH_KNOTS ( ( 4, 4 ),
+    //  ( 4, 4 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  ( 0.0000000000000000000, 1.000000000000000000 ),
+    //  .UNSPECIFIED. )
+    //  GEOMETRIC_REPRESENTATION_ITEM ( )  RATIONAL_B_SPLINE_SURFACE ( (
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000),
+    //  ( 1.000000000000000000, 0.3333333333333334300, 0.3333333333333334300, 1.000000000000000000) ) )
+    //  REPRESENTATION_ITEM ( '' )  SURFACE ( )  );
+
+    const char *pos = SkipWord(pLineAfterEquals,"BOUNDED_SURFACE",15);
+
+    ProcessBSplineSurface(pos,STEPData);
     }
 
-void ProcessSphere(SGM::Result       &,//rResult,
-                   std::string const &sphere,
-                   STEPLineData      &STEPData)
+void ProcessCylinder(char const   *pLineAfterStepTag,
+                     STEPLineData &STEPData)
     {
-    FindIndices(sphere,STEPData.m_aIDs);
-    FindLastDouble(sphere,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessRevolve(SGM::Result       &,//rResult,
-                    std::string const &revolve,
-                    STEPLineData      &STEPData)
+void ProcessSphere(char const   *pLineAfterStepTag,
+                   STEPLineData &STEPData)
     {
-    FindIndices(revolve,STEPData.m_aIDs);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessTorus(SGM::Result       &,//rResult,
-                    std::string const &torus,
-                    STEPLineData      &STEPData)
+void ProcessRevolve(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
+    {
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
+    }
+
+void ProcessTorus(char const   *pLineAfterStepTag,
+                  STEPLineData &STEPData)
     {
     // #85=TOROIDAL_SURFACE('',#158,8.0,0.5);
-
-    FindIndices(torus,STEPData.m_aIDs);
-    std::vector<std::string> aArgs;
-    FindListArguments(torus,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char *pos = FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    FindDouble(pos, STEPData.m_aDoubles);       // minor
     }
 
-void ProcessExtrude(SGM::Result       &,//rResult,
-                    std::string const &extrude,
-                    STEPLineData      &STEPData)
+void ProcessExtrude(char const   *pLineAfterStepTag,
+                    STEPLineData &STEPData)
     {
     // #1166=SURFACE_OF_LINEAR_EXTRUSION('',#2532,#2533);
-
-    FindIndices(extrude,STEPData.m_aIDs);
+    FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessDegenerateTorus(SGM::Result       &,//rResult,
-                            std::string const &torus,
-                            STEPLineData      &STEPData)
+void ProcessDegenerateTorus(char const   *pLineAfterStepTag,
+                            STEPLineData &STEPData)
     {
     // #112=DEGENERATE_TOROIDAL_SURFACE('',#111,9.02000000000000,20.0000000000000,.T.);
-
-    FindIndices(torus,STEPData.m_aIDs);
-    FindFlag(torus,STEPData.m_bFlag);
-    std::vector<std::string> aArgs;
-    FindListArguments(torus,aArgs);
-    double dMajor,dMinor;
-    sscanf(aArgs[2].c_str(),"%lf",&dMajor);
-    sscanf(aArgs[3].c_str(),"%lf",&dMinor);
-    STEPData.m_aDoubles.push_back(dMajor);
-    STEPData.m_aDoubles.push_back(dMinor);
+    const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
+    pos = FindDouble(pos, STEPData.m_aDoubles); // major
+    pos = FindDouble(pos, STEPData.m_aDoubles); // minor
+    FindFlag(pos,STEPData.m_bFlag);
     }
 
-void ProcessVector(SGM::Result       &,//rResult,
-                   std::string const &line,
-                   STEPLineData      &STEPData)
+inline void ProcessVector(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
-    FindLastDouble(line,STEPData.m_aDoubles);
+    FindIndexAndDouble(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_aDoubles);
     }
 
-void ProcessVertex(SGM::Result       &,//rResult,
-                   std::string const &line,
-                   STEPLineData      &STEPData)
+inline void ProcessVertex(char const   *pLineAfterStepTag,
+                          STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void ProcessBodyTransform(SGM::Result       &,//rResult,
-                          std::string const &line,
-                          STEPLineData      &STEPData)
+inline void ProcessBodyTransform(char const   *pLineAfterStepTag,
+                                 STEPLineData &STEPData)
     {
-    FindIndices(line,STEPData.m_aIDs);
+    FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
-void FindStepTag(std::string const &line,
-                 std::string       &sTag)
+// find a STEP tag
+// return pointer to string one past the end of first STEP tag
+
+inline const char * FindStepTag(const char *pString, std::string &sTag)
     {
-    size_t nCount=2;
-    char const *pData=line.c_str();
-    while(pData[nCount++]!='=');
-    while(pData[nCount++]!='(')
+    static const char WHITE_SPACE[] = " \n\r\t";
+    static const char WHITE_SPACE_PAREN[] = " (\n\r\t";
+
+    // skip to first non-white space
+    pString += std::strspn(pString, WHITE_SPACE);
+
+    // stop at the first parentheses or whitespace
+    size_t end = std::strcspn(pString, WHITE_SPACE_PAREN);
+
+    if (end > 0)
         {
-        char cData=pData[nCount-1];
-        if(cData>32)
-            {
-            sTag+=cData;
-            }
+        sTag.assign(pString, end);
+        return (pString + end);
         }
-    if(sTag.empty())
-        {
-        while(pData[nCount++]!='(')
-            {
-            char cData=pData[nCount-1];
-            if(cData>32)
-                {
-                sTag+=cData;
-                }
-            }
-        }
+
+    // try again if we did not find a token before a parenthesis
+    ++pString;
+    pString += std::strspn(pString, WHITE_SPACE);
+    end = std::strcspn(pString, WHITE_SPACE_PAREN);
+    if (end < 1)
+        throw std::runtime_error(pString);
+    sTag.assign(pString, end);
+
+    return pString + end; // position after the first token
     }
 
-void ProcessLine(SGM::Result                        &rResult,
-                 std::map<std::string,size_t> const &mSTEPTagMap,
-                 std::string                  const &line,
-                 std::map<size_t,STEPLineData>      &mSTEPData,
-                 std::vector<std::string>           &aLog,
-                 SGM::TranslatorOptions       const &Options)
+void ProcessStepCommand(SGM::Result              &rResult,
+                        STEPTagMapType const     &mSTEPTagMap,
+                        const char               *pLine,
+                        STEPLineDataMapType      &mSTEPData,
+                        std::vector<std::string> &aLog,
+                        SGM::TranslatorOptions   const &Options,
+                        STEPLineData             &STEPData,
+                        std::string              &sTag)
     {
-    if(line.front()=='#')
+    static const char WHITE_SPACE[] = " \n\r\t";
+
+    // skip leading whitespace/control characters
+    pLine += strspn(pLine,WHITE_SPACE);
+
+    if(pLine[0] == '#') // we found a line with a STEP Line number and a tag
         {
         // Find the line number.
+        size_t nLineNumber;
+        const char *pLineAfterLineNumber = ReadIndex(pLine + 1, &nLineNumber);
 
-        char const *pData=line.c_str();
-        int nLineNumber;
-        sscanf(pData+1,"%d",&nLineNumber);
+        // skip past the equals sign
+        const char * pLineAfterEquals = SkipChar(pLineAfterLineNumber, '=');
 
-        // Find the STEP tag string.
+        // Find the STEP tag string
+        const char * pLineAfterStepTag = FindStepTag(pLineAfterEquals, sTag);
 
-        std::string sTag;
-        FindStepTag(line,sTag);
+        // Process the Tag and fill STEPData.
 
-        // Process the data.
-
-        STEPLineData STEPData;
-        std::map<std::string,size_t>::const_iterator MapIter=mSTEPTagMap.find(sTag);
+        auto MapIter=mSTEPTagMap.find(sTag);
         if(MapIter!=mSTEPTagMap.end())
             {
             STEPData.m_nType=MapIter->second;
-            if(Options.m_bScan==false)
+            if(!Options.m_bScan)
                 {
                 switch(STEPData.m_nType)
                     {
                     case SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         STEPLineData STEPData2;
-                        ProcessBody(rResult,line,STEPData2);
+                        ProcessBody(pLineAfterStepTag,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION;
-                        mSTEPData[nLineNumber]=STEPData2;
+                        mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
                     case SGMInternal::STEPTags::ADVANCED_FACE:
                         {
-                        ProcessFace(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessFace(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS1_PLACEMENT:
                         {
-                        ProcessAxis(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessAxis(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::AXIS2_PLACEMENT_3D:
                         {
-                        ProcessAxis(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessAxis(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE:
                         {
-                        ProcessBSplineSurface(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBSplineSurface(pLineAfterEquals,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE:
                         {
-                        ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBSplineCurve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                         {
-                        ProcessBSpline(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBSplineCurveWithKnots(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                         {
-                        ProcessBSplineWithKnots(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBSplineSurfaceWithKnots(pLineAfterStepTag, STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::BOUNDED_SURFACE:
                         {
-                        ProcessBoundedSurface(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBoundedSurface(pLineAfterEquals,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::BREP_WITH_VOIDS:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CARTESIAN_POINT:
                         {
-                        ProcessPoint(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessPoint(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CLOSED_SHELL:
                         {
-                        ProcessShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CIRCLE:
                         {
-                        ProcessCircle(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessCircle(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CONICAL_SURFACE:
                         {
-                        ProcessCone(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessCone(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
                         {
-                        ProcessCylinder(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessCylinder(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
                         {
-                        ProcessDegenerateTorus(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessDegenerateTorus(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::DIRECTION:
                         {
-                        ProcessDirection(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessDirection(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_CURVE:
                         {
-                        ProcessEdge(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessEdge(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::EDGE_LOOP:
                         {
-                        ProcessLoop(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessLoop(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ELLIPSE:
                         {
-                        ProcessEllipse(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessEllipse(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_BOUND:
                         {
-                        ProcessBound(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBound(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_OUTER_BOUND:
                         {
-                        ProcessBound(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBound(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::FACE_SURFACE:
                         {
-                        ProcessFace(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessFace(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRIC_CURVE_SET:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         STEPLineData STEPData2;
-                        ProcessBody(rResult,line,STEPData2);
+                        ProcessBody(pLineAfterStepTag,STEPData2);
                         STEPData2.m_nType=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION;
-                        mSTEPData[nLineNumber]=STEPData2;
+                        mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
                     case SGMInternal::STEPTags::LINE:
                         {
-                        ProcessLine(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessLine(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
                         {
-                        ProcessVolume(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessVolume(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                         {
-                        ProcessBodyTransform(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBodyTransform(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::OPEN_SHELL:
                         {
-                        ProcessShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL:
                         {
-                        ProcessOrientedShell(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessOrientedShell(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::ORIENTED_EDGE:
                         {
-                        ProcessCoedge(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessCoedge(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::PLANE:
                         {
-                        ProcessPlane(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessPlane(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
                         {
-                        ProcessBody(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessBody(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SPHERICAL_SURFACE:
                         {
-                        ProcessSphere(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessSphere(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                         {
-                        ProcessExtrude(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessExtrude(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                         {
-                        ProcessRevolve(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessRevolve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::TOROIDAL_SURFACE:
                         {
-                        ProcessTorus(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessTorus(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::TRIMMED_CURVE:
                         {
-                        ProcessTrimmedCurve(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessTrimmedCurve(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::VECTOR:
                         {
-                        ProcessVector(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessVector(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     case SGMInternal::STEPTags::VERTEX_POINT:
                         {
-                        ProcessVertex(rResult,line,STEPData);
-                        mSTEPData[nLineNumber]=STEPData;
+                        ProcessVertex(pLineAfterStepTag,STEPData);
+                        mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
                     default:
@@ -1194,7 +1011,7 @@ void ProcessLine(SGM::Result                        &rResult,
                     }
                 }
             }
-        else if(sTag.empty()==false)
+        else if(!sTag.empty())
             {
             rResult.SetResult(SGM::ResultType::ResultTypeUnknownType);
             std::string LogString="Unknown Type "+sTag;
@@ -1203,145 +1020,145 @@ void ProcessLine(SGM::Result                        &rResult,
         }
     }
 
-void CreateSTEPTagMap(std::map<std::string,size_t> &mSTEPTagMap)
+void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
     {
-    mSTEPTagMap[std::string("ADVANCED_BREP_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("ADVANCED_FACE")]=SGMInternal::STEPTags::ADVANCED_FACE;
-    mSTEPTagMap[std::string("APPLICATION_CONTEXT")]=SGMInternal::STEPTags::APPLICATION_CONTEXT;
-    mSTEPTagMap[std::string("APPLICATION_PROTOCOL_DEFINITION")]=SGMInternal::STEPTags::APPLICATION_PROTOCOL_DEFINITION;
-    mSTEPTagMap[std::string("APPLIED_DATE_AND_TIME_ASSIGNMENT")]=SGMInternal::STEPTags::APPLIED_DATE_AND_TIME_ASSIGNMENT;
-    mSTEPTagMap[std::string("APPLIED_GROUP_ASSIGNMENT")]=SGMInternal::STEPTags::APPLIED_GROUP_ASSIGNMENT;
-    mSTEPTagMap[std::string("APPROVAL")]=SGMInternal::STEPTags::APPROVAL;
-    mSTEPTagMap[std::string("APPROVAL_DATE_TIME")]=SGMInternal::STEPTags::APPROVAL_DATE_TIME;
-    mSTEPTagMap[std::string("APPROVAL_PERSON_ORGANIZATION")]=SGMInternal::STEPTags::APPROVAL_PERSON_ORGANIZATION;
-    mSTEPTagMap[std::string("APPROVAL_ROLE")]=SGMInternal::STEPTags::APPROVAL_ROLE;
-    mSTEPTagMap[std::string("APPROVAL_STATUS")]=SGMInternal::STEPTags::APPROVAL_STATUS;
-    mSTEPTagMap[std::string("AXIS1_PLACEMENT")]=SGMInternal::STEPTags::AXIS1_PLACEMENT;
-    mSTEPTagMap[std::string("AXIS2_PLACEMENT_3D")]=SGMInternal::STEPTags::AXIS2_PLACEMENT_3D;
-    mSTEPTagMap[std::string("B_SPLINE_SURFACE")]=SGMInternal::STEPTags::B_SPLINE_SURFACE;
-    mSTEPTagMap[std::string("B_SPLINE_CURVE")]=SGMInternal::STEPTags::B_SPLINE_CURVE;
-    mSTEPTagMap[std::string("B_SPLINE_CURVE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS;
-    mSTEPTagMap[std::string("B_SPLINE_SURFACE_WITH_KNOTS")]=SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS;
-    mSTEPTagMap[std::string("BOUNDED_SURFACE")]=SGMInternal::STEPTags::BOUNDED_SURFACE;
-    mSTEPTagMap[std::string("BREP_WITH_VOIDS")]=SGMInternal::STEPTags::BREP_WITH_VOIDS;
-    mSTEPTagMap[std::string("CALENDAR_DATE")]=SGMInternal::STEPTags::CALENDAR_DATE;
-    mSTEPTagMap[std::string("CAMERA_MODEL_D3")]=SGMInternal::STEPTags::CAMERA_MODEL_D3;
-    mSTEPTagMap[std::string("CARTESIAN_POINT")]=SGMInternal::STEPTags::CARTESIAN_POINT;
-    mSTEPTagMap[std::string("CC_DESIGN_APPROVAL")]=SGMInternal::STEPTags::CC_DESIGN_APPROVAL;
-    mSTEPTagMap[std::string("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT")]=SGMInternal::STEPTags::CC_DESIGN_DATE_AND_TIME_ASSIGNMENT;
-    mSTEPTagMap[std::string("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT")]=SGMInternal::STEPTags::CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT;
-    mSTEPTagMap[std::string("CC_DESIGN_SECURITY_CLASSIFICATION")]=SGMInternal::STEPTags::CC_DESIGN_SECURITY_CLASSIFICATION;
-    mSTEPTagMap[std::string("CIRCLE")]=SGMInternal::STEPTags::CIRCLE;
-    mSTEPTagMap[std::string("CLOSED_SHELL")]=SGMInternal::STEPTags::CLOSED_SHELL;
-    mSTEPTagMap[std::string("COLOUR_RGB")]=SGMInternal::STEPTags::COLOUR_RGB;
-    mSTEPTagMap[std::string("COORDINATED_UNIVERSAL_TIME_OFFSET")]=SGMInternal::STEPTags::COORDINATED_UNIVERSAL_TIME_OFFSET;
-    mSTEPTagMap[std::string("COMPOSITE_CURVE")]=SGMInternal::STEPTags::COMPOSITE_CURVE;
-    mSTEPTagMap[std::string("COMPOSITE_CURVE_SEGMENT")]=SGMInternal::STEPTags::COMPOSITE_CURVE_SEGMENT;
-    mSTEPTagMap[std::string("CONICAL_SURFACE")]=SGMInternal::STEPTags::CONICAL_SURFACE;
-    mSTEPTagMap[std::string("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM")]=SGMInternal::STEPTags::CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM;
-    mSTEPTagMap[std::string("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("CONVERSION_BASED_UNIT")]=SGMInternal::STEPTags::CONVERSION_BASED_UNIT;
-    mSTEPTagMap[std::string("CURVE_STYLE")]=SGMInternal::STEPTags::CURVE_STYLE;
-    mSTEPTagMap[std::string("CYLINDRICAL_SURFACE")]=SGMInternal::STEPTags::CYLINDRICAL_SURFACE;
-    mSTEPTagMap[std::string("DATE_AND_TIME")]=SGMInternal::STEPTags::DATE_AND_TIME;
-    mSTEPTagMap[std::string("DATE_TIME_ROLE")]=SGMInternal::STEPTags::DATE_TIME_ROLE;
-    mSTEPTagMap[std::string("DEGENERATE_TOROIDAL_SURFACE")]=SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE;
-    mSTEPTagMap[std::string("DERIVED_UNIT")]=SGMInternal::STEPTags::DERIVED_UNIT;
-    mSTEPTagMap[std::string("DERIVED_UNIT_ELEMENT")]=SGMInternal::STEPTags::DERIVED_UNIT_ELEMENT;
-    mSTEPTagMap[std::string("DESCRIPTIVE_REPRESENTATION_ITEM")]=SGMInternal::STEPTags::DESCRIPTIVE_REPRESENTATION_ITEM;
-    mSTEPTagMap[std::string("DESIGN_CONTEXT")]=SGMInternal::STEPTags::DESIGN_CONTEXT;
-    mSTEPTagMap[std::string("DIMENSIONAL_EXPONENTS")]=SGMInternal::STEPTags::DIMENSIONAL_EXPONENTS;
-    mSTEPTagMap[std::string("DIRECTION")]=SGMInternal::STEPTags::DIRECTION;
-    mSTEPTagMap[std::string("DRAUGHTING_MODEL")]=SGMInternal::STEPTags::DRAUGHTING_MODEL;
-    mSTEPTagMap[std::string("DRAUGHTING_PRE_DEFINED_COLOUR")]=SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_COLOUR;
-    mSTEPTagMap[std::string("DRAUGHTING_PRE_DEFINED_CURVE_FONT")]=SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_CURVE_FONT;
-    mSTEPTagMap[std::string("EDGE_CURVE")]=SGMInternal::STEPTags::EDGE_CURVE;
-    mSTEPTagMap[std::string("EDGE_LOOP")]=SGMInternal::STEPTags::EDGE_LOOP;
-    mSTEPTagMap[std::string("ELLIPSE")]=SGMInternal::STEPTags::ELLIPSE;
-    mSTEPTagMap[std::string("FACE_BOUND")]=SGMInternal::STEPTags::FACE_BOUND;
-    mSTEPTagMap[std::string("FACE_OUTER_BOUND")]=SGMInternal::STEPTags::FACE_OUTER_BOUND;
-    mSTEPTagMap[std::string("FACE_SURFACE")]=SGMInternal::STEPTags::FACE_SURFACE;
-    mSTEPTagMap[std::string("FILL_AREA_STYLE")]=SGMInternal::STEPTags::FILL_AREA_STYLE;
-    mSTEPTagMap[std::string("FILL_AREA_STYLE_COLOUR")]=SGMInternal::STEPTags::FILL_AREA_STYLE_COLOUR;
-    mSTEPTagMap[std::string("GEOMETRIC_CURVE_SET")]=SGMInternal::STEPTags::GEOMETRIC_CURVE_SET;
-    mSTEPTagMap[std::string("GEOMETRIC_REPRESENTATION_CONTEXT")]=SGMInternal::STEPTags::GEOMETRIC_REPRESENTATION_CONTEXT;
-    mSTEPTagMap[std::string("GEOMETRIC_SET")]=SGMInternal::STEPTags::GEOMETRIC_SET;
-    mSTEPTagMap[std::string("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("GROUP")]=SGMInternal::STEPTags::GROUP;
-    mSTEPTagMap[std::string("ITEM_DEFINED_TRANSFORMATION")]=SGMInternal::STEPTags::ITEM_DEFINED_TRANSFORMATION;
-    mSTEPTagMap[std::string("LENGTH_MEASURE_WITH_UNIT")]=SGMInternal::STEPTags::LENGTH_MEASURE_WITH_UNIT;
-    mSTEPTagMap[std::string("LENGTH_UNIT")]=SGMInternal::STEPTags::LENGTH_UNIT;
-    mSTEPTagMap[std::string("LINE")]=SGMInternal::STEPTags::LINE;
-    mSTEPTagMap[std::string("LOCAL_TIME")]=SGMInternal::STEPTags::LOCAL_TIME;
-    mSTEPTagMap[std::string("MANIFOLD_SOLID_BREP")]=SGMInternal::STEPTags::MANIFOLD_SOLID_BREP;
-    mSTEPTagMap[std::string("MANIFOLD_SURFACE_SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("MAPPED_ITEM")]=SGMInternal::STEPTags::MAPPED_ITEM;
-    mSTEPTagMap[std::string("MASS_UNIT")]=SGMInternal::STEPTags::MASS_UNIT;
-    mSTEPTagMap[std::string("MEASURE_REPRESENTATION_ITEM")]=SGMInternal::STEPTags::MEASURE_REPRESENTATION_ITEM;
-    mSTEPTagMap[std::string("MECHANICAL_CONTEXT")]=SGMInternal::STEPTags::MECHANICAL_CONTEXT;
-    mSTEPTagMap[std::string("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION")]=SGMInternal::STEPTags::MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION;
-    mSTEPTagMap[std::string("NAMED_UNIT")]=SGMInternal::STEPTags::NAMED_UNIT;
-    mSTEPTagMap[std::string("NEXT_ASSEMBLY_USAGE_OCCURRENCE")]=SGMInternal::STEPTags::NEXT_ASSEMBLY_USAGE_OCCURRENCE;
-    mSTEPTagMap[std::string("OPEN_SHELL")]=SGMInternal::STEPTags::OPEN_SHELL;
-    mSTEPTagMap[std::string("ORIENTED_CLOSED_SHELL")]=SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL;
-    mSTEPTagMap[std::string("ORIENTED_EDGE")]=SGMInternal::STEPTags::ORIENTED_EDGE;
-    mSTEPTagMap[std::string("ORGANIZATION")]=SGMInternal::STEPTags::ORGANIZATION;
-    mSTEPTagMap[std::string("OVER_RIDING_STYLED_ITEM")]=SGMInternal::STEPTags::OVER_RIDING_STYLED_ITEM;
-    mSTEPTagMap[std::string("PERSON")]=SGMInternal::STEPTags::PERSON;
-    mSTEPTagMap[std::string("PERSON_AND_ORGANIZATION")]=SGMInternal::STEPTags::PERSON_AND_ORGANIZATION;
-    mSTEPTagMap[std::string("PERSON_AND_ORGANIZATION_ROLE")]=SGMInternal::STEPTags::PERSON_AND_ORGANIZATION_ROLE;
-    mSTEPTagMap[std::string("PERSONAL_ADDRESS")]=SGMInternal::STEPTags::PERSONAL_ADDRESS;
-    mSTEPTagMap[std::string("PLANAR_BOX")]=SGMInternal::STEPTags::PLANAR_BOX;
-    mSTEPTagMap[std::string("PLANE")]=SGMInternal::STEPTags::PLANE;
-    mSTEPTagMap[std::string("PLANE_ANGLE_MEASURE_WITH_UNIT")]=SGMInternal::STEPTags::PLANE_ANGLE_MEASURE_WITH_UNIT;
-    mSTEPTagMap[std::string("POINT_STYLE")]=SGMInternal::STEPTags::POINT_STYLE;
-    mSTEPTagMap[std::string("PRESENTATION_LAYER_ASSIGNMENT")]=SGMInternal::STEPTags::PRESENTATION_LAYER_ASSIGNMENT;
-    mSTEPTagMap[std::string("PRESENTATION_STYLE_ASSIGNMENT")]=SGMInternal::STEPTags::PRESENTATION_STYLE_ASSIGNMENT;
-    mSTEPTagMap[std::string("PRE_DEFINED_POINT_MARKER_SYMBOL")]=SGMInternal::STEPTags::PRE_DEFINED_POINT_MARKER_SYMBOL;
-    mSTEPTagMap[std::string("PRODUCT")]=SGMInternal::STEPTags::PRODUCT;
-    mSTEPTagMap[std::string("PRODUCT_CATEGORY")]=SGMInternal::STEPTags::PRODUCT_CATEGORY;
-    mSTEPTagMap[std::string("PRODUCT_CATEGORY_RELATIONSHIP")]=SGMInternal::STEPTags::PRODUCT_CATEGORY_RELATIONSHIP;
-    mSTEPTagMap[std::string("PRODUCT_CONTEXT")]=SGMInternal::STEPTags::PRODUCT_CONTEXT;
-    mSTEPTagMap[std::string("PRODUCT_DEFINITION")]=SGMInternal::STEPTags::PRODUCT_DEFINITION;
-    mSTEPTagMap[std::string("PRODUCT_DEFINITION_CONTEXT")]=SGMInternal::STEPTags::PRODUCT_DEFINITION_CONTEXT;
-    mSTEPTagMap[std::string("PRODUCT_DEFINITION_FORMATION")]=SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION;
-    mSTEPTagMap[std::string("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE")]=SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE;
-    mSTEPTagMap[std::string("PRODUCT_DEFINITION_SHAPE")]=SGMInternal::STEPTags::PRODUCT_DEFINITION_SHAPE;
-    mSTEPTagMap[std::string("PRODUCT_RELATED_PRODUCT_CATEGORY")]=SGMInternal::STEPTags::PRODUCT_RELATED_PRODUCT_CATEGORY;
-    mSTEPTagMap[std::string("PROPERTY_DEFINITION")]=SGMInternal::STEPTags::PROPERTY_DEFINITION;
-    mSTEPTagMap[std::string("PROPERTY_DEFINITION_REPRESENTATION")]=SGMInternal::STEPTags::PROPERTY_DEFINITION_REPRESENTATION;
-    mSTEPTagMap[std::string("QUASI_UNIFORM_CURVE")]=SGMInternal::STEPTags::QUASI_UNIFORM_CURVE;
-    mSTEPTagMap[std::string("QUASI_UNIFORM_SURFACE")]=SGMInternal::STEPTags::QUASI_UNIFORM_SURFACE;
-    mSTEPTagMap[std::string("REPRESENTATION")]=SGMInternal::STEPTags::REPRESENTATION;
-    mSTEPTagMap[std::string("REPRESENTATION_MAP")]=SGMInternal::STEPTags::REPRESENTATION_MAP;
-    mSTEPTagMap[std::string("REPRESENTATION_RELATIONSHIP")]=SGMInternal::STEPTags::REPRESENTATION_RELATIONSHIP;
-    mSTEPTagMap[std::string("SECURITY_CLASSIFICATION")]=SGMInternal::STEPTags::SECURITY_CLASSIFICATION;
-    mSTEPTagMap[std::string("SECURITY_CLASSIFICATION_LEVEL")]=SGMInternal::STEPTags::SECURITY_CLASSIFICATION_LEVEL;
-    mSTEPTagMap[std::string("SHAPE_DEFINITION_REPRESENTATION")]=SGMInternal::STEPTags::SHAPE_DEFINITION_REPRESENTATION;
-    mSTEPTagMap[std::string("SHAPE_REPRESENTATION")]=SGMInternal::STEPTags::SHAPE_REPRESENTATION;
-    mSTEPTagMap[std::string("SHAPE_REPRESENTATION_RELATIONSHIP")]=SGMInternal::STEPTags::SHAPE_REPRESENTATION_RELATIONSHIP;
-    mSTEPTagMap[std::string("SHELL_BASED_SURFACE_MODEL")]=SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL;
-    mSTEPTagMap[std::string("SPHERICAL_SURFACE")]=SGMInternal::STEPTags::SPHERICAL_SURFACE;
-    mSTEPTagMap[std::string("STYLED_ITEM")]=SGMInternal::STEPTags::STYLED_ITEM;
-    mSTEPTagMap[std::string("SURFACE_CURVE")]=SGMInternal::STEPTags::SURFACE_CURVE;
-    mSTEPTagMap[std::string("SURFACE_OF_LINEAR_EXTRUSION")]=SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION;
-    mSTEPTagMap[std::string("SURFACE_OF_REVOLUTION")]=SGMInternal::STEPTags::SURFACE_OF_REVOLUTION;
-    mSTEPTagMap[std::string("SURFACE_SIDE_STYLE")]=SGMInternal::STEPTags::SURFACE_SIDE_STYLE;
-    mSTEPTagMap[std::string("SURFACE_STYLE_FILL_AREA")]=SGMInternal::STEPTags::SURFACE_STYLE_FILL_AREA;
-    mSTEPTagMap[std::string("SURFACE_STYLE_USAGE")]=SGMInternal::STEPTags::SURFACE_STYLE_USAGE;
-    mSTEPTagMap[std::string("TOROIDAL_SURFACE")]=SGMInternal::STEPTags::TOROIDAL_SURFACE;
-    mSTEPTagMap[std::string("TRIMMED_CURVE")]=SGMInternal::STEPTags::TRIMMED_CURVE;
-    mSTEPTagMap[std::string("UNCERTAINTY_MEASURE_WITH_UNIT")]=SGMInternal::STEPTags::UNCERTAINTY_MEASURE_WITH_UNIT;
-    mSTEPTagMap[std::string("VALUE_REPRESENTATION_ITEM")]=SGMInternal::STEPTags::VALUE_REPRESENTATION_ITEM;
-    mSTEPTagMap[std::string("VECTOR")]=SGMInternal::STEPTags::VECTOR;
-    mSTEPTagMap[std::string("VERTEX_LOOP")]=SGMInternal::STEPTags::VERTEX_LOOP;
-    mSTEPTagMap[std::string("VERTEX_POINT")]=SGMInternal::STEPTags::VERTEX_POINT;
-    mSTEPTagMap[std::string("VIEW_VOLUME")]=SGMInternal::STEPTags::VIEW_VOLUME;
+    mSTEPTagMap.emplace("ADVANCED_BREP_SHAPE_REPRESENTATION",SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("ADVANCED_FACE",SGMInternal::STEPTags::ADVANCED_FACE);
+    mSTEPTagMap.emplace("APPLICATION_CONTEXT",SGMInternal::STEPTags::APPLICATION_CONTEXT);
+    mSTEPTagMap.emplace("APPLICATION_PROTOCOL_DEFINITION",SGMInternal::STEPTags::APPLICATION_PROTOCOL_DEFINITION);
+    mSTEPTagMap.emplace("APPLIED_DATE_AND_TIME_ASSIGNMENT",SGMInternal::STEPTags::APPLIED_DATE_AND_TIME_ASSIGNMENT);
+    mSTEPTagMap.emplace("APPLIED_GROUP_ASSIGNMENT",SGMInternal::STEPTags::APPLIED_GROUP_ASSIGNMENT);
+    mSTEPTagMap.emplace("APPROVAL",SGMInternal::STEPTags::APPROVAL);
+    mSTEPTagMap.emplace("APPROVAL_DATE_TIME",SGMInternal::STEPTags::APPROVAL_DATE_TIME);
+    mSTEPTagMap.emplace("APPROVAL_PERSON_ORGANIZATION",SGMInternal::STEPTags::APPROVAL_PERSON_ORGANIZATION);
+    mSTEPTagMap.emplace("APPROVAL_ROLE",SGMInternal::STEPTags::APPROVAL_ROLE);
+    mSTEPTagMap.emplace("APPROVAL_STATUS",SGMInternal::STEPTags::APPROVAL_STATUS);
+    mSTEPTagMap.emplace("AXIS1_PLACEMENT",SGMInternal::STEPTags::AXIS1_PLACEMENT);
+    mSTEPTagMap.emplace("AXIS2_PLACEMENT_3D",SGMInternal::STEPTags::AXIS2_PLACEMENT_3D);
+    mSTEPTagMap.emplace("B_SPLINE_SURFACE",SGMInternal::STEPTags::B_SPLINE_SURFACE);
+    mSTEPTagMap.emplace("B_SPLINE_CURVE",SGMInternal::STEPTags::B_SPLINE_CURVE);
+    mSTEPTagMap.emplace("B_SPLINE_CURVE_WITH_KNOTS",SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
+    mSTEPTagMap.emplace("B_SPLINE_SURFACE_WITH_KNOTS",SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS);
+    mSTEPTagMap.emplace("BOUNDED_SURFACE",SGMInternal::STEPTags::BOUNDED_SURFACE);
+    mSTEPTagMap.emplace("BREP_WITH_VOIDS",SGMInternal::STEPTags::BREP_WITH_VOIDS);
+    mSTEPTagMap.emplace("CALENDAR_DATE",SGMInternal::STEPTags::CALENDAR_DATE);
+    mSTEPTagMap.emplace("CAMERA_MODEL_D3",SGMInternal::STEPTags::CAMERA_MODEL_D3);
+    mSTEPTagMap.emplace("CARTESIAN_POINT",SGMInternal::STEPTags::CARTESIAN_POINT);
+    mSTEPTagMap.emplace("CC_DESIGN_APPROVAL",SGMInternal::STEPTags::CC_DESIGN_APPROVAL);
+    mSTEPTagMap.emplace("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",SGMInternal::STEPTags::CC_DESIGN_DATE_AND_TIME_ASSIGNMENT);
+    mSTEPTagMap.emplace("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",SGMInternal::STEPTags::CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT);
+    mSTEPTagMap.emplace("CC_DESIGN_SECURITY_CLASSIFICATION",SGMInternal::STEPTags::CC_DESIGN_SECURITY_CLASSIFICATION);
+    mSTEPTagMap.emplace("CIRCLE",SGMInternal::STEPTags::CIRCLE);
+    mSTEPTagMap.emplace("CLOSED_SHELL",SGMInternal::STEPTags::CLOSED_SHELL);
+    mSTEPTagMap.emplace("COLOUR_RGB",SGMInternal::STEPTags::COLOUR_RGB);
+    mSTEPTagMap.emplace("COORDINATED_UNIVERSAL_TIME_OFFSET",SGMInternal::STEPTags::COORDINATED_UNIVERSAL_TIME_OFFSET);
+    mSTEPTagMap.emplace("COMPOSITE_CURVE",SGMInternal::STEPTags::COMPOSITE_CURVE);
+    mSTEPTagMap.emplace("COMPOSITE_CURVE_SEGMENT",SGMInternal::STEPTags::COMPOSITE_CURVE_SEGMENT);
+    mSTEPTagMap.emplace("CONICAL_SURFACE",SGMInternal::STEPTags::CONICAL_SURFACE);
+    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",SGMInternal::STEPTags::CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM);
+    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",SGMInternal::STEPTags::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("CONVERSION_BASED_UNIT",SGMInternal::STEPTags::CONVERSION_BASED_UNIT);
+    mSTEPTagMap.emplace("CURVE_STYLE",SGMInternal::STEPTags::CURVE_STYLE);
+    mSTEPTagMap.emplace("CYLINDRICAL_SURFACE",SGMInternal::STEPTags::CYLINDRICAL_SURFACE);
+    mSTEPTagMap.emplace("DATE_AND_TIME",SGMInternal::STEPTags::DATE_AND_TIME);
+    mSTEPTagMap.emplace("DATE_TIME_ROLE",SGMInternal::STEPTags::DATE_TIME_ROLE);
+    mSTEPTagMap.emplace("DEGENERATE_TOROIDAL_SURFACE",SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE);
+    mSTEPTagMap.emplace("DERIVED_UNIT",SGMInternal::STEPTags::DERIVED_UNIT);
+    mSTEPTagMap.emplace("DERIVED_UNIT_ELEMENT",SGMInternal::STEPTags::DERIVED_UNIT_ELEMENT);
+    mSTEPTagMap.emplace("DESCRIPTIVE_REPRESENTATION_ITEM",SGMInternal::STEPTags::DESCRIPTIVE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("DESIGN_CONTEXT",SGMInternal::STEPTags::DESIGN_CONTEXT);
+    mSTEPTagMap.emplace("DIMENSIONAL_EXPONENTS",SGMInternal::STEPTags::DIMENSIONAL_EXPONENTS);
+    mSTEPTagMap.emplace("DIRECTION",SGMInternal::STEPTags::DIRECTION);
+    mSTEPTagMap.emplace("DRAUGHTING_MODEL",SGMInternal::STEPTags::DRAUGHTING_MODEL);
+    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_COLOUR",SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_COLOUR);
+    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_CURVE_FONT",SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_CURVE_FONT);
+    mSTEPTagMap.emplace("EDGE_CURVE",SGMInternal::STEPTags::EDGE_CURVE);
+    mSTEPTagMap.emplace("EDGE_LOOP",SGMInternal::STEPTags::EDGE_LOOP);
+    mSTEPTagMap.emplace("ELLIPSE",SGMInternal::STEPTags::ELLIPSE);
+    mSTEPTagMap.emplace("FACE_BOUND",SGMInternal::STEPTags::FACE_BOUND);
+    mSTEPTagMap.emplace("FACE_OUTER_BOUND",SGMInternal::STEPTags::FACE_OUTER_BOUND);
+    mSTEPTagMap.emplace("FACE_SURFACE",SGMInternal::STEPTags::FACE_SURFACE);
+    mSTEPTagMap.emplace("FILL_AREA_STYLE",SGMInternal::STEPTags::FILL_AREA_STYLE);
+    mSTEPTagMap.emplace("FILL_AREA_STYLE_COLOUR",SGMInternal::STEPTags::FILL_AREA_STYLE_COLOUR);
+    mSTEPTagMap.emplace("GEOMETRIC_CURVE_SET",SGMInternal::STEPTags::GEOMETRIC_CURVE_SET);
+    mSTEPTagMap.emplace("GEOMETRIC_REPRESENTATION_CONTEXT",SGMInternal::STEPTags::GEOMETRIC_REPRESENTATION_CONTEXT);
+    mSTEPTagMap.emplace("GEOMETRIC_SET",SGMInternal::STEPTags::GEOMETRIC_SET);
+    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("GROUP",SGMInternal::STEPTags::GROUP);
+    mSTEPTagMap.emplace("ITEM_DEFINED_TRANSFORMATION",SGMInternal::STEPTags::ITEM_DEFINED_TRANSFORMATION);
+    mSTEPTagMap.emplace("LENGTH_MEASURE_WITH_UNIT",SGMInternal::STEPTags::LENGTH_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("LENGTH_UNIT",SGMInternal::STEPTags::LENGTH_UNIT);
+    mSTEPTagMap.emplace("LINE",SGMInternal::STEPTags::LINE);
+    mSTEPTagMap.emplace("LOCAL_TIME",SGMInternal::STEPTags::LOCAL_TIME);
+    mSTEPTagMap.emplace("MANIFOLD_SOLID_BREP",SGMInternal::STEPTags::MANIFOLD_SOLID_BREP);
+    mSTEPTagMap.emplace("MANIFOLD_SURFACE_SHAPE_REPRESENTATION",SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("MAPPED_ITEM",SGMInternal::STEPTags::MAPPED_ITEM);
+    mSTEPTagMap.emplace("MASS_UNIT",SGMInternal::STEPTags::MASS_UNIT);
+    mSTEPTagMap.emplace("MEASURE_REPRESENTATION_ITEM",SGMInternal::STEPTags::MEASURE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("MECHANICAL_CONTEXT",SGMInternal::STEPTags::MECHANICAL_CONTEXT);
+    mSTEPTagMap.emplace("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",SGMInternal::STEPTags::MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION);
+    mSTEPTagMap.emplace("NAMED_UNIT",SGMInternal::STEPTags::NAMED_UNIT);
+    mSTEPTagMap.emplace("NEXT_ASSEMBLY_USAGE_OCCURRENCE",SGMInternal::STEPTags::NEXT_ASSEMBLY_USAGE_OCCURRENCE);
+    mSTEPTagMap.emplace("OPEN_SHELL",SGMInternal::STEPTags::OPEN_SHELL);
+    mSTEPTagMap.emplace("ORIENTED_CLOSED_SHELL",SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL);
+    mSTEPTagMap.emplace("ORIENTED_EDGE",SGMInternal::STEPTags::ORIENTED_EDGE);
+    mSTEPTagMap.emplace("ORGANIZATION",SGMInternal::STEPTags::ORGANIZATION);
+    mSTEPTagMap.emplace("OVER_RIDING_STYLED_ITEM",SGMInternal::STEPTags::OVER_RIDING_STYLED_ITEM);
+    mSTEPTagMap.emplace("PERSON",SGMInternal::STEPTags::PERSON);
+    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION",SGMInternal::STEPTags::PERSON_AND_ORGANIZATION);
+    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION_ROLE",SGMInternal::STEPTags::PERSON_AND_ORGANIZATION_ROLE);
+    mSTEPTagMap.emplace("PERSONAL_ADDRESS",SGMInternal::STEPTags::PERSONAL_ADDRESS);
+    mSTEPTagMap.emplace("PLANAR_BOX",SGMInternal::STEPTags::PLANAR_BOX);
+    mSTEPTagMap.emplace("PLANE",SGMInternal::STEPTags::PLANE);
+    mSTEPTagMap.emplace("PLANE_ANGLE_MEASURE_WITH_UNIT",SGMInternal::STEPTags::PLANE_ANGLE_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("POINT_STYLE",SGMInternal::STEPTags::POINT_STYLE);
+    mSTEPTagMap.emplace("PRESENTATION_LAYER_ASSIGNMENT",SGMInternal::STEPTags::PRESENTATION_LAYER_ASSIGNMENT);
+    mSTEPTagMap.emplace("PRESENTATION_STYLE_ASSIGNMENT",SGMInternal::STEPTags::PRESENTATION_STYLE_ASSIGNMENT);
+    mSTEPTagMap.emplace("PRE_DEFINED_POINT_MARKER_SYMBOL",SGMInternal::STEPTags::PRE_DEFINED_POINT_MARKER_SYMBOL);
+    mSTEPTagMap.emplace("PRODUCT",SGMInternal::STEPTags::PRODUCT);
+    mSTEPTagMap.emplace("PRODUCT_CATEGORY",SGMInternal::STEPTags::PRODUCT_CATEGORY);
+    mSTEPTagMap.emplace("PRODUCT_CATEGORY_RELATIONSHIP",SGMInternal::STEPTags::PRODUCT_CATEGORY_RELATIONSHIP);
+    mSTEPTagMap.emplace("PRODUCT_CONTEXT",SGMInternal::STEPTags::PRODUCT_CONTEXT);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION",SGMInternal::STEPTags::PRODUCT_DEFINITION);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_CONTEXT",SGMInternal::STEPTags::PRODUCT_DEFINITION_CONTEXT);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION",SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_SHAPE",SGMInternal::STEPTags::PRODUCT_DEFINITION_SHAPE);
+    mSTEPTagMap.emplace("PRODUCT_RELATED_PRODUCT_CATEGORY",SGMInternal::STEPTags::PRODUCT_RELATED_PRODUCT_CATEGORY);
+    mSTEPTagMap.emplace("PROPERTY_DEFINITION",SGMInternal::STEPTags::PROPERTY_DEFINITION);
+    mSTEPTagMap.emplace("PROPERTY_DEFINITION_REPRESENTATION",SGMInternal::STEPTags::PROPERTY_DEFINITION_REPRESENTATION);
+    mSTEPTagMap.emplace("QUASI_UNIFORM_CURVE",SGMInternal::STEPTags::QUASI_UNIFORM_CURVE);
+    mSTEPTagMap.emplace("QUASI_UNIFORM_SURFACE",SGMInternal::STEPTags::QUASI_UNIFORM_SURFACE);
+    mSTEPTagMap.emplace("REPRESENTATION",SGMInternal::STEPTags::REPRESENTATION);
+    mSTEPTagMap.emplace("REPRESENTATION_MAP",SGMInternal::STEPTags::REPRESENTATION_MAP);
+    mSTEPTagMap.emplace("REPRESENTATION_RELATIONSHIP",SGMInternal::STEPTags::REPRESENTATION_RELATIONSHIP);
+    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION",SGMInternal::STEPTags::SECURITY_CLASSIFICATION);
+    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION_LEVEL",SGMInternal::STEPTags::SECURITY_CLASSIFICATION_LEVEL);
+    mSTEPTagMap.emplace("SHAPE_DEFINITION_REPRESENTATION",SGMInternal::STEPTags::SHAPE_DEFINITION_REPRESENTATION);
+    mSTEPTagMap.emplace("SHAPE_REPRESENTATION",SGMInternal::STEPTags::SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("SHAPE_REPRESENTATION_RELATIONSHIP",SGMInternal::STEPTags::SHAPE_REPRESENTATION_RELATIONSHIP);
+    mSTEPTagMap.emplace("SHELL_BASED_SURFACE_MODEL",SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL);
+    mSTEPTagMap.emplace("SPHERICAL_SURFACE",SGMInternal::STEPTags::SPHERICAL_SURFACE);
+    mSTEPTagMap.emplace("STYLED_ITEM",SGMInternal::STEPTags::STYLED_ITEM);
+    mSTEPTagMap.emplace("SURFACE_CURVE",SGMInternal::STEPTags::SURFACE_CURVE);
+    mSTEPTagMap.emplace("SURFACE_OF_LINEAR_EXTRUSION",SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION);
+    mSTEPTagMap.emplace("SURFACE_OF_REVOLUTION",SGMInternal::STEPTags::SURFACE_OF_REVOLUTION);
+    mSTEPTagMap.emplace("SURFACE_SIDE_STYLE",SGMInternal::STEPTags::SURFACE_SIDE_STYLE);
+    mSTEPTagMap.emplace("SURFACE_STYLE_FILL_AREA",SGMInternal::STEPTags::SURFACE_STYLE_FILL_AREA);
+    mSTEPTagMap.emplace("SURFACE_STYLE_USAGE",SGMInternal::STEPTags::SURFACE_STYLE_USAGE);
+    mSTEPTagMap.emplace("TOROIDAL_SURFACE",SGMInternal::STEPTags::TOROIDAL_SURFACE);
+    mSTEPTagMap.emplace("TRIMMED_CURVE",SGMInternal::STEPTags::TRIMMED_CURVE);
+    mSTEPTagMap.emplace("UNCERTAINTY_MEASURE_WITH_UNIT",SGMInternal::STEPTags::UNCERTAINTY_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("VALUE_REPRESENTATION_ITEM",SGMInternal::STEPTags::VALUE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("VECTOR",SGMInternal::STEPTags::VECTOR);
+    mSTEPTagMap.emplace("VERTEX_LOOP",SGMInternal::STEPTags::VERTEX_LOOP);
+    mSTEPTagMap.emplace("VERTEX_POINT",SGMInternal::STEPTags::VERTEX_POINT);
+    mSTEPTagMap.emplace("VIEW_VOLUME",SGMInternal::STEPTags::VIEW_VOLUME);
     }
 
 void GetAxis(STEPLineData            const &SLDA,
-             std::map<size_t,STEPLineData> &mSTEPData,
+             STEPLineDataMapType &mSTEPData,
              SGM::Point3D                  &Center,
              SGM::UnitVector3D             &ZAxis,
              SGM::UnitVector3D             &XAxis)
@@ -1374,15 +1191,15 @@ void GetAxis(STEPLineData            const &SLDA,
         }
     }       
 
-void CreateEntities(SGM::Result                   &rResult,
-                    std::map<size_t,STEPLineData> &mSTEPData,
-                    std::map<size_t,entity *>     &mEntityMap,
-                    std::vector<entity *>         &aEntities)
+void CreateEntities(SGM::Result           &rResult,
+                    STEPLineDataMapType   &mSTEPData,
+                    IDEntityMapType       &mEntityMap,
+                    std::vector<entity *> &aEntities)
     {
     std::set<entity *> sEntities;
     std::vector<size_t> aBodies,aVolumes,aFaces,aEdges;
     std::vector<body *> aSheetBodies;
-    std::map<size_t,STEPLineData>::iterator DataIter=mSTEPData.begin();
+    STEPLineDataMapType::iterator DataIter=mSTEPData.begin();
     while(DataIter!=mSTEPData.end())
         {
         size_t nID=DataIter->first;
@@ -1452,14 +1269,15 @@ void CreateEntities(SGM::Result                   &rResult,
                     }
                 break;
                 }
+            case SGMInternal::STEPTags::BOUNDED_SURFACE:
             case SGMInternal::STEPTags::B_SPLINE_SURFACE:
                 {
                 std::vector<std::vector<SGM::Point4D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
                 int nDegreeU=DataIter->second.m_aInts[0];
                 int nDegreeV=DataIter->second.m_aInts[1];
-                int nUKnots=DataIter->second.m_aInts[2];
-                size_t nCount=3;
+                size_t nCount=2;
+                unsigned nUKnots=DataIter->second.m_aSizes[0];
                 size_t nDoubleCount=0;
                 size_t Index1,Index2;
                 for(Index1=0;Index1<nUKnots;++Index1)
@@ -1473,8 +1291,7 @@ void CreateEntities(SGM::Result                   &rResult,
                     ++nCount;
                     ++nDoubleCount;
                     }
-                int nVKnots=DataIter->second.m_aInts[nCount];
-                ++nCount;
+                unsigned nVKnots=DataIter->second.m_aSizes[1];
                 for(Index1=0;Index1<nVKnots;++Index1)
                     {
                     int nMultiplicity=DataIter->second.m_aInts[nCount];
@@ -1508,15 +1325,14 @@ void CreateEntities(SGM::Result                   &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
-            case SGMInternal::STEPTags::BOUNDED_SURFACE:
             case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                 {
                 std::vector<std::vector<SGM::Point3D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
                 int nDegreeU=DataIter->second.m_aInts[0];
                 int nDegreeV=DataIter->second.m_aInts[1];
-                int nUKnots=DataIter->second.m_aInts[2];
-                size_t nCount=3;
+                size_t nCount=2;
+                unsigned nUKnots=DataIter->second.m_aSizes[0];
                 size_t Index1,Index2;
                 for(Index1=0;Index1<nUKnots;++Index1)
                     {
@@ -1528,8 +1344,7 @@ void CreateEntities(SGM::Result                   &rResult,
                         }
                     ++nCount;
                     }
-                int nVKnots=DataIter->second.m_aInts[nCount];
-                ++nCount;
+                unsigned nVKnots=DataIter->second.m_aSizes[1];
                 for(Index1=0;Index1<nVKnots;++Index1)
                     {
                     int nMultiplicity=DataIter->second.m_aInts[nCount];
@@ -1584,7 +1399,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
                 double dHalfAngle=DataIter->second.m_aDoubles[1];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
                 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1598,7 +1413,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1613,7 +1428,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=DataIter->second.m_bFlag;
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1665,10 +1480,10 @@ void CreateEntities(SGM::Result                   &rResult,
                 {
                 size_t nPos=DataIter->second.m_aIDs[0];
                 size_t nVec=DataIter->second.m_aIDs[1];
-                STEPLineData SLDP=mSTEPData[nPos];
-                STEPLineData SLDV=mSTEPData[nVec];
+                STEPLineData const &SLDP=mSTEPData[nPos];
+                STEPLineData const &SLDV=mSTEPData[nVec];
                 size_t nDir=SLDV.m_aIDs[0];
-                STEPLineData SLDD=mSTEPData[nDir];
+                STEPLineData const &SLDD=mSTEPData[nDir];
                 SGM::Point3D Origin(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 SGM::UnitVector3D Axis(SLDD.m_aDoubles[0],SLDD.m_aDoubles[1],SLDD.m_aDoubles[2]);
                 mEntityMap[nID]=new line(rResult,Origin,Axis);
@@ -1691,7 +1506,7 @@ void CreateEntities(SGM::Result                   &rResult,
             case SGMInternal::STEPTags::PLANE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Origin;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1711,7 +1526,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1724,10 +1539,10 @@ void CreateEntities(SGM::Result                   &rResult,
             case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                 {
                 size_t nVector=DataIter->second.m_aIDs[1];
-                STEPLineData SLDVector=mSTEPData[nVector];
+                STEPLineData const &SLDVector=mSTEPData[nVector];
                 size_t nDirection=SLDVector.m_aIDs[0];
                 double dScale=SLDVector.m_aDoubles[0];
-                STEPLineData SLDDirection=mSTEPData[nDirection];
+                STEPLineData const &SLDDirection=mSTEPData[nDirection];
                 SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
                 if(dScale<0)
                     {
@@ -1739,11 +1554,11 @@ void CreateEntities(SGM::Result                   &rResult,
             case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[1];
-                STEPLineData SLDAxis=mSTEPData[nAxis];
+                STEPLineData const &SLDAxis=mSTEPData[nAxis];
                 size_t nPoint=SLDAxis.m_aIDs[0];
                 size_t nDirection=SLDAxis.m_aIDs[1];
-                STEPLineData SLDPoint=mSTEPData[nPoint];
-                STEPLineData SLDDirection=mSTEPData[nDirection];
+                STEPLineData const &SLDPoint=mSTEPData[nPoint];
+                STEPLineData const &SLDDirection=mSTEPData[nDirection];
                 SGM::Point3D Pos(SLDPoint.m_aDoubles[0],SLDPoint.m_aDoubles[1],SLDPoint.m_aDoubles[2]);
                 SGM::UnitVector3D ZAxis(SLDDirection.m_aDoubles[0],SLDDirection.m_aDoubles[1],SLDDirection.m_aDoubles[2]);
                 mEntityMap[nID]=new revolve(rResult,Pos,ZAxis,nullptr);
@@ -1755,7 +1570,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 double dMajor=DataIter->second.m_aDoubles[0];
                 double dMinor=DataIter->second.m_aDoubles[1];
                 bool bApple=true;
-                STEPLineData SLDA=mSTEPData[nAxis];
+                STEPLineData const &SLDA=mSTEPData[nAxis];
 
                 SGM::Point3D Center;
                 SGM::UnitVector3D ZAxis,XAxis;
@@ -1772,7 +1587,7 @@ void CreateEntities(SGM::Result                   &rResult,
                 }
             case SGMInternal::STEPTags::VERTEX_POINT:
                 {
-                STEPLineData SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
+                STEPLineData const &SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
                 SGM::Point3D Pos(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
                 mEntityMap[nID]=new vertex(rResult,Pos);
                 break;
@@ -1794,7 +1609,7 @@ void CreateEntities(SGM::Result                   &rResult,
         
         // VolumeID(s) ..., TransformID, JunkID
 
-        std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nBodyID);
+        STEPLineDataMapType::iterator SLD=mSTEPData.find(nBodyID);
         std::vector<size_t> const &aIDs=SLD->second.m_aIDs;
         size_t nID=aIDs.size();;
 
@@ -1835,7 +1650,7 @@ void CreateEntities(SGM::Result                   &rResult,
             {
             // FaceID(s) ...
 
-            std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(aIDs[Index2]);
+            STEPLineDataMapType::iterator SLD=mSTEPData.find(aIDs[Index2]);
             size_t nType=SLD->second.m_nType;
             if(nVolumeType==SGMInternal::STEPTags::GEOMETRIC_CURVE_SET)
                 {
@@ -1912,7 +1727,7 @@ void CreateEntities(SGM::Result                   &rResult,
                     // #2094=ORIENTED_CLOSED_SHELL('',*,#2093,.F.);
 
                     size_t nShellID=aSubIDs[1];
-                    std::map<size_t,STEPLineData>::iterator SLD2=mSTEPData.find(nShellID);
+                    STEPLineDataMapType::iterator SLD2=mSTEPData.find(nShellID);
                     aSubIDs=SLD2->second.m_aIDs;
                     if(SLD2->second.m_bFlag==false)
                         {
@@ -1948,7 +1763,7 @@ void CreateEntities(SGM::Result                   &rResult,
 
         // LoopID(s) ..., SurfaceID, bFlag
         
-        std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nFaceID);
+        STEPLineDataMapType::iterator SLD=mSTEPData.find(nFaceID);
         if(SLD->second.m_bFlag==false)
             {
             pFace->SetFlipped(true);
@@ -1962,7 +1777,7 @@ void CreateEntities(SGM::Result                   &rResult,
             case SGM::RevolveType:
                 {
                 revolve *pRevolve = (revolve *)pSurface;
-                std::map<size_t,STEPLineData>::iterator SLDRevolve=mSTEPData.find(nSurfaceID);
+                STEPLineDataMapType::iterator SLDRevolve=mSTEPData.find(nSurfaceID);
                 curve *pCurve = (curve *)mEntityMap[SLDRevolve->second.m_aIDs.front()];
                 pRevolve->SetCurve(pCurve);
                 break;
@@ -1970,7 +1785,7 @@ void CreateEntities(SGM::Result                   &rResult,
             case SGM::ExtrudeType:
                 {
                 extrude *pExtrude = (extrude *)pSurface;
-                std::map<size_t,STEPLineData>::iterator SLDExtrude=mSTEPData.find(nSurfaceID);
+                STEPLineDataMapType::iterator SLDExtrude=mSTEPData.find(nSurfaceID);
                 curve *pCurve = (curve *)mEntityMap[SLDExtrude->second.m_aIDs.front()];
                 pExtrude->SetCurve(pCurve);
                 break;
@@ -1983,20 +1798,20 @@ void CreateEntities(SGM::Result                   &rResult,
         size_t nBounds=aBoundIDs.size()-1;
         for(Index2=0;Index2<nBounds;++Index2)
             {
-            std::map<size_t,STEPLineData>::iterator SLD2=mSTEPData.find(aBoundIDs[Index2]);
+            STEPLineDataMapType::iterator SLD2=mSTEPData.find(aBoundIDs[Index2]);
             bool bLoopFlag=SLD2->second.m_bFlag;
             std::vector<size_t> const &aLoopIDs=SLD2->second.m_aIDs;
             size_t nLoopIDs=aLoopIDs.size();
             for(Index3=0;Index3<nLoopIDs;++Index3)
                 {
-                std::map<size_t,STEPLineData>::iterator SLD3=mSTEPData.find(aLoopIDs[Index3]);
+                STEPLineDataMapType::iterator SLD3=mSTEPData.find(aLoopIDs[Index3]);
                 std::vector<size_t> const &aCoedgeIDs=SLD3->second.m_aIDs;
                 size_t nCoedgeIDs=aCoedgeIDs.size();
                 std::set<size_t> sEdgeIDs,sDoubleSided;
                 for(Index4=0;Index4<nCoedgeIDs;++Index4)
                     {
                     size_t nCoedgeID=aCoedgeIDs[Index4];
-                    std::map<size_t,STEPLineData>::iterator SLD4=mSTEPData.find(nCoedgeID);
+                    STEPLineDataMapType::iterator SLD4=mSTEPData.find(nCoedgeID);
                     size_t nEdgeID=SLD4->second.m_aIDs[2];
                     if(sEdgeIDs.find(nEdgeID)!=sEdgeIDs.end())
                         {
@@ -2007,14 +1822,14 @@ void CreateEntities(SGM::Result                   &rResult,
                 for(Index4=0;Index4<nCoedgeIDs;++Index4)
                     {
                     size_t nCoedgeID=aCoedgeIDs[Index4];
-                    std::map<size_t,STEPLineData>::iterator SLD4=mSTEPData.find(nCoedgeID);
+                    STEPLineDataMapType::iterator SLD4=mSTEPData.find(nCoedgeID);
                     size_t nEdgeID=SLD4->second.m_aIDs[2];
                     SGM::EdgeSideType nEdgeSide=SGM::FaceOnBothSidesType;
                     edge *pEdge=(edge *)mEntityMap[nEdgeID];
                     if(sDoubleSided.find(nEdgeID)==sDoubleSided.end())
                         {
                         bool bCoedgeFlag=SLD4->second.m_bFlag;
-                        std::map<size_t,STEPLineData>::iterator SLD5=mSTEPData.find(nEdgeID);
+                        STEPLineDataMapType::iterator SLD5=mSTEPData.find(nEdgeID);
                         bool bEdgeFlag=SLD5->second.m_bFlag;
                         nEdgeSide=SGM::FaceOnLeftType; 
                         size_t nCount=0;
@@ -2055,7 +1870,7 @@ void CreateEntities(SGM::Result                   &rResult,
 
         // Start vertex ID, End vertex ID, Curve ID, bFlag
 
-        std::map<size_t,STEPLineData>::iterator SLD=mSTEPData.find(nEdgeID);
+        STEPLineDataMapType::iterator SLD=mSTEPData.find(nEdgeID);
         if(SLD->second.m_aIDs.size()==3) // EDGE_CURVE case
             {
             size_t nStartID=SLD->second.m_aIDs[0];
@@ -2168,13 +1983,15 @@ void SplitFile(FILE              *pFile,
         if(sFileLine.front()=='#')
             {
             std::string sTag;
-            FindStepTag(sFileLine,sTag);
+            char *pLine=const_cast<char*>(sFileLine.c_str());
+            const char * pLineAfterStepTag = FindStepTag(pLine, sTag);
+            if (sTag.empty())
+                throw std::runtime_error(sFileLine);
             if(sBadTags.find(sTag)==sBadTags.end())
                 {
-                char const *pData=sFileLine.c_str();
-                int nLineNumber;
-                sscanf(pData+1,"%d",&nLineNumber);
-                FindIndices(sFileLine,aIDs);
+                size_t nLineNumber;
+                sscanf(pLine+1,"%zu",&nLineNumber);
+                FindIndicesAll(pLineAfterStepTag,aIDs);
                 aIDMap[nLineNumber]=aIDs;
                 }
             }
@@ -2210,6 +2027,8 @@ void SplitFile(FILE              *pFile,
     a*=1;
     }
 
+#define SGM_READ_MAX_LINE_LENGTH 8192 // in characters
+
 size_t ReadStepFile(SGM::Result                  &rResult,
                     std::string            const &FileName,
                     thing                        *pThing,
@@ -2218,9 +2037,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
                     SGM::TranslatorOptions const &Options)
     {
     // Open the file.
-
-    FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==nullptr)
+    std::ifstream inputFileStream(FileName, std::ifstream::in);
+    if (inputFileStream.bad())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
         return 0;
@@ -2228,56 +2046,72 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     // Split the file.
 
-    if(Options.m_bSplitFile)
-        {
-        SplitFile(pFile,FileName);
-        return 0;
-        }
+    //TODO: make SPlitFile work with std::ifstream
+    //    if(Options.m_bSplitFile)
+    //        {
+    //        SplitFile(pFile,FileName);
+    //        return 0;
+    //        }
 
     // Set up the STEP Tag map
 
-    std::map<std::string,size_t> mSTEPTagMap;
+    STEPTagMapType mSTEPTagMap;
     CreateSTEPTagMap(mSTEPTagMap);
 
-    // Read each line of the file.
+    // Set up a STEPData object and the map from ID to STEPData
     
-    std::map<size_t,STEPLineData> mSTEPData;
-    std::string line;
-    while(ReadFileLine(pFile,line))
-        {
-        if(line.empty()==false)
-            {
-            ProcessLine(rResult,mSTEPTagMap,line,mSTEPData,aLog,Options);
-            }
-        line.clear();
-        }
+    STEPLineDataMapType mSTEPData;
 
-    // Create all the entites.
+    STEPLineData STEPData;
+    STEPData.m_aIDs.reserve(256);
+    STEPData.m_aDoubles.reserve(32);
+    STEPData.m_aInts.reserve(32);
+    STEPData.m_aSizes.reserve(2);
+
+    // setup Line buffer string and Tag buffer string
+
+    std::string sLine, sTag;
+    sLine.reserve(4096);
+    sTag.reserve(128);
+
+    while (std::getline(inputFileStream,sLine,';'))
+        {
+        ProcessStepCommand(rResult,mSTEPTagMap,sLine.c_str(),mSTEPData,aLog,Options,STEPData,sTag);
+        STEPData.clear();
+        }
+    inputFileStream.close();
+
+#if 0
+    // output max STEPLineData capacity are we seeing in a file
+    size_t max_ids = 0;
+    size_t max_doubles = 0;
+    size_t max_ints = 0;
+    size_t max_sizes = 0;
+    for (auto const& entry : mSTEPData)
+        {
+        STEPLineData const & pSTEPData = entry.second;
+        max_ids = std::max(max_ids, pSTEPData.m_aIDs.capacity());
+        max_doubles = std::max(max_doubles, pSTEPData.m_aDoubles.capacity());
+        max_ints = std::max(max_ints, pSTEPData.m_aInts.capacity());
+        max_sizes = std::max(max_sizes, pSTEPData.m_aSizes.capacity());
+        }
+        std::cout << "max mSTEPData m_aIDS capacity = " << max_ids << std::endl;
+        std::cout << "max mSTEPData m_aDoubles capacity = " << max_doubles << std::endl;
+        std::cout << "max mSTEPData m_aInts capacity = " << max_ints << std::endl;
+        std::cout << "max mSTEPData m_aSizes capacity = " << max_sizes << std::endl;
+#endif
+
+    // Create all the entities.
 
     if(Options.m_bScan==false)
         {
-        std::map<size_t,entity *> mEntityMap;
+        IDEntityMapType mEntityMap;
         CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
         }
-    fclose(pFile);
 
-    //TODO: Code for testing to be removed.
-#if 1
-    std::set<vertex *,EntityCompare> sVertices;
-    FindVertices(rResult,pThing,sVertices);
+    // create all the triangles/facets/boxes
 
-    std::set<face *,EntityCompare> sFaces;
-    FindFaces(rResult,pThing,sFaces);
-    std::set<face *,EntityCompare>::iterator iter=sFaces.begin();
-    while(iter!=sFaces.end())
-        {
-        face *pFace=*iter;
-        //size_t ID=pFace->GetID();
-        //SGM::EntityType nType=pFace->GetSurface()->GetSurfaceType();
-        pFace->GetTriangles(rResult);
-        ++iter;
-        }
-#endif
+    pThing->FindCachedData(rResult);
 
     if(Options.m_bHeal)
         {

@@ -14,18 +14,18 @@ namespace SGMInternal {
     { return ent1->GetID() < ent2->GetID(); }
 
     inline entity::entity(SGM::Result &rResult,SGM::EntityType nType) :
-            m_ID(rResult.GetThing()->GetNextID()),
+            m_ID(0),
             m_Type(nType),
             m_Box()
-    { rResult.GetThing()->AddToMap(m_ID,this); }
+    { m_ID = rResult.GetThing()->AddToMap(this); }
 
     inline entity::entity(SGM::Result &rResult, entity const &other) :
-            m_ID(rResult.GetThing()->GetNextID()),
+            m_ID(),
             m_Type(other.m_Type),
             m_sOwners(other.m_sOwners),
             m_sAttributes(other.m_sAttributes),
             m_Box()
-    { rResult.GetThing()->AddToMap(m_ID,this); }
+    { m_ID = rResult.GetThing()->AddToMap(this); }
 
     inline size_t entity::GetID() const
     { return m_ID; }
@@ -66,14 +66,15 @@ namespace SGMInternal {
 
     inline thing::thing() :
             entity(),
-            m_nNextID(1)
+            m_nNextID(1),
+            m_bIsConcurrentActive(false)
     {}
+
+    inline void thing::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline bool thing::IsTopLevel() const
     { return true; }
-
-    inline void thing::AddToMap(size_t nID,entity *pEntity)
-    { m_mAllEntities[nID] = pEntity; }
 
     inline void thing::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented"); }
@@ -81,20 +82,22 @@ namespace SGMInternal {
     inline void thing::ResetBox(SGM::Result &) const
     { m_Box.Reset(); }
 
-    inline void thing::DeleteEntity(entity *pEntity)
-    { m_mAllEntities.erase(pEntity->GetID()); delete pEntity; }
+    inline size_t thing::GetMaxID() const
+    { return m_nNextID; }
 
     template <typename ENTITY_TYPE, typename ENTITY_SET>
     inline size_t thing::GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const
     {
         typedef typename ENTITY_SET::value_type SpecificEntityPointerType;
-        for (auto iter: m_mAllEntities)
-            {
-            entity* pEntity = iter.second;
-            if (pEntity->GetType() == type)
-                if (!bTopLevel || pEntity->IsTopLevel())
-                    sEntities.insert(reinterpret_cast<SpecificEntityPointerType>(pEntity));
-            }
+        {
+            for (auto &iter: m_mAllEntities)
+                {
+                entity *pEntity = iter.second;
+                if (pEntity->GetType() == type)
+                    if (!bTopLevel || pEntity->IsTopLevel())
+                        sEntities.insert(reinterpret_cast<SpecificEntityPointerType>(pEntity));
+                }
+        }
         return sEntities.size();
     }
 
@@ -125,6 +128,9 @@ namespace SGMInternal {
             topology(rResult,other)
     {}
 
+    inline void assembly::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
+
     inline assembly *assembly::Clone(SGM::Result &rResult) const
     { return new assembly(rResult,*this); }
 
@@ -148,6 +154,9 @@ namespace SGMInternal {
     inline reference::reference(SGM::Result &rResult, reference const &other) : 
             topology(rResult, other) 
     {}
+
+    inline void reference::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline reference *reference::Clone(SGM::Result &rResult) const
     { return new reference(rResult,*this); }
@@ -174,6 +183,9 @@ namespace SGMInternal {
             m_sVolumes(other.m_sVolumes),
             m_aPoints(other.m_aPoints)
     {}
+
+    inline void body::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline body *body::Clone(SGM::Result &rResult) const
     { return new body(rResult,*this); }
@@ -277,6 +289,9 @@ namespace SGMInternal {
             m_aTriangles(aTriangles)
     {}
 
+    inline void complex::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
+
     inline complex *complex::Clone(SGM::Result &rResult) const
     { return new complex(rResult, *this); }
 
@@ -302,6 +317,9 @@ namespace SGMInternal {
             m_pBody(other.m_pBody),
             m_FaceTree(other.m_FaceTree)
     {}
+
+    inline void volume::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline volume *volume::Clone(SGM::Result &rResult) const
     { return new volume(rResult, *this); }
@@ -337,6 +355,9 @@ namespace SGMInternal {
             m_mSeamType(other.m_mSeamType)
     {}
 
+    inline void face::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
+
     inline face *face::Clone(SGM::Result &rResult) const
     { return new face(rResult, *this); }
 
@@ -365,7 +386,10 @@ namespace SGMInternal {
             m_Domain(other.m_Domain),
             m_dTolerance(other.m_dTolerance)
     {}
-            
+
+    inline void edge::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
+
     inline edge *edge::Clone(SGM::Result &rResult) const
     { return new edge(rResult, *this); }
     
@@ -386,6 +410,9 @@ namespace SGMInternal {
             m_Pos(other.m_Pos),
             m_sEdges(other.m_sEdges)
     {}
+
+    inline void vertex::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline vertex *vertex::Clone(SGM::Result &rResult) const
     { return new vertex(rResult, *this); }
@@ -413,6 +440,9 @@ namespace SGMInternal {
             m_Name(other.m_Name),
             m_AttributeType(other.m_AttributeType)
     {}
+
+    inline void attribute::Accept(EntityVisitor &v)
+    { v.Visit(*this); }
 
     inline attribute *attribute::Clone(SGM::Result &rResult) const
     { return new attribute(rResult, *this); }
