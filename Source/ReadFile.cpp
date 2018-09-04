@@ -1990,7 +1990,7 @@ void SplitFile(FILE              *pFile,
             if(sBadTags.find(sTag)==sBadTags.end())
                 {
                 size_t nLineNumber;
-                sscanf(pLine+1,"%zu",&nLineNumber);
+                ReadIndex(pLine+1, &nLineNumber);
                 FindIndicesAll(pLineAfterStepTag,aIDs);
                 aIDMap[nLineNumber]=aIDs;
                 }
