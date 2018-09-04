@@ -159,9 +159,13 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     }
                 else if(result == option_merge)
                     {
-                    for(Index1=0;Index1<nEnts;++Index1)
+                    if(nEnts==1)
                         {
-                        mModel->Merge(aEnts[Index1]);
+                        mModel->Merge(aEnts[0]);
+                        }
+                    else
+                        {
+                        mModel->MergeComplexes(aEnts);
                         }
                     mModel->rebuild_tree();
                     mModel->rebuild_graphics();

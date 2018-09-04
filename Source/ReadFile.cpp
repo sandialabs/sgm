@@ -25,256 +25,7 @@
 __pragma(warning(disable: 4996 ))
 #endif
 
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// getdelim (POSIX function) implementation for Windows and MSVC
-//
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _MSC_VER
-
-#ifndef _POSIX_SOURCE
-    typedef long ssize_t;
-#define SSIZE_MAX LONG_MAX
-#endif
-
-#define SGM_GETDELIM_GROWBY 128    // amount to grow line buffer by
-#define SGM_GETDELIM_MINLEN 4      // minimum line buffer size
-
-ssize_t _getdelim(char **__restrict__ lineptr, size_t *__restrict__ n, int delimiter, FILE *__restrict__ stream)
-    {
-    char *buf, *pos;
-    int c;
-    ssize_t bytes;
-
-    if (lineptr == nullptr || n == nullptr)
-        {
-        errno = EINVAL;
-        return -1;
-        }
-    if (stream == nullptr)
-        {
-        errno = EBADF;
-        return -1;
-        }
-
-    // resize (or allocate) the line buffer if necessary
-    buf = *lineptr;
-    if (buf == nullptr || *n < SGM_GETDELIM_MINLEN)
-        {
-        buf = (char*)realloc(*lineptr, SGM_GETDELIM_GROWBY);
-        if (buf == nullptr)
-            {
-            return -1; // ENOMEM
-            }
-        *n = SGM_GETDELIM_GROWBY;
-        *lineptr = buf;
-        }
-
-    // read characters until delimiter is found, end of file is reached, or an error occurs.
-    bytes = 0;
-    pos = buf;
-    while ((c = getc(stream)) != EOF)
-        {
-        if (bytes + 1 >= SSIZE_MAX)
-            {
-            errno = EOVERFLOW;
-            return -1;
-            }
-        bytes++;
-        if (bytes >= *n - 1)
-            {
-            buf = (char*)realloc(*lineptr, *n + SGM_GETDELIM_GROWBY);
-            if (buf == nullptr)
-                {
-                return -1; // ENOMEM
-                }
-            *n += SGM_GETDELIM_GROWBY;
-            pos = buf + bytes - 1;
-            *lineptr = buf;
-            }
-
-        *pos++ = (char) c;
-        if (c == delimiter)
-            {
-            break;
-            }
-        }
-
-    if (ferror(stream) || (feof(stream) && (bytes == 0)))
-        {
-        return -1; // EOF, or an error from getc().
-        }
-
-    *pos = '\0';
-    return bytes;
-    }
-#endif // _MSC_VER
-
 namespace SGMInternal {
-
-//    size_t FindListArguments(char const               *pString,
-//                                    std::vector<std::string> &aArgs)
-//    {
-//        size_t nCount=1;
-//        size_t nStart=0;
-//        while(pString[nCount])
-//            {
-//            if(pString[nCount]==',' || pString[nCount]==')')
-//                {
-//                size_t Index1;
-//                std::string Arg;
-//                for(Index1=nStart;Index1<nCount;++Index1)
-//                    {
-//                    Arg+=pString[Index1];
-//                    }
-//                nStart=nCount+1;
-//                aArgs.push_back(Arg);
-//                }
-//            if(pString[nCount]==')')
-//                {
-//                break;
-//                }
-//            ++nCount;
-//            }
-//        return aArgs.size();
-//    }
-//
-//    size_t FindArgumentsAfter(char const              *pString,
-//                                     std::vector<std::string> &aArgs,
-//                                     std::string        const &after)
-//    {
-//        std::string LineCopy(pString);
-//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-//
-//        size_t nFound=LineCopy.find(after);
-//        pString=LineCopy.c_str();
-//        size_t nStart=nFound+after.length();
-//        size_t nCount=nStart;
-//        while(pString[nCount])
-//            {
-//            if(pString[nCount]==',' || pString[nCount]==')')
-//                {
-//                size_t Index1;
-//                std::string Arg;
-//                for(Index1=nStart;Index1<nCount;++Index1)
-//                    {
-//                    Arg+=pString[Index1];
-//                    }
-//                nStart=nCount+1;
-//                aArgs.push_back(Arg);
-//                }
-//            if(pString[nCount]==')')
-//                {
-//                break;
-//                }
-//            ++nCount;
-//            }
-//        return aArgs.size();
-//    }
-//
-//    size_t FindArgumentSetsAfter(char const               *pString,
-//                                        std::vector<std::string> &aArgs,
-//                                        std::string        const &after)
-//    {
-//        std::string LineCopy(pString);
-//        LineCopy.erase(remove_if(LineCopy.begin(), LineCopy.end(), isspace), LineCopy.end());
-//
-//        size_t nFound=LineCopy.find(after);
-//        pString=LineCopy.c_str();
-//        size_t nStart=nFound+after.length();
-//        size_t nCount=nStart;
-//        bool bFirst=true;
-//        while(pString[nCount])
-//            {
-//            if(pString[nCount]==')')
-//                {
-//                size_t Index1;
-//                std::string Arg;
-//                if(bFirst==false)
-//                    {
-//                    nStart++;
-//                    }
-//                bFirst=false;
-//                for(Index1=nStart+1;Index1<nCount;++Index1)
-//                    {
-//                    Arg+=pString[Index1];
-//                    }
-//                nStart=nCount+1;
-//                aArgs.push_back(Arg);
-//                }
-//            ++nCount;
-//            }
-//        return aArgs.size();
-//    }
-//
-//    inline void FindLists(char const               *pString,
-//                          std::vector<std::string> &aLists)
-//    {
-//        size_t nCount=0;
-//
-//        // Find the first '('
-//        while(pString[nCount]!='\0')
-//            {
-//            if(pString[nCount]=='(')
-//                {
-//                ++nCount;
-//                break;
-//                }
-//            ++nCount;
-//            }
-//
-//        // Find pairs of '(' and ')'.
-//        size_t Index1;
-//        bool bFound=true;
-//        while(bFound)
-//            {
-//            bFound=false;
-//            size_t nStart=0,nEnd=0;
-//            while(pString[nCount]!='\0')
-//                {
-//                if(pString[nCount]=='(')
-//                    {
-//                    ++nCount;
-//                    nStart=nCount;
-//                    break;
-//                    }
-//                ++nCount;
-//                }
-//            while(pString[nCount]!='\0')
-//                {
-//                if(pString[nCount]==')')
-//                    {
-//                    ++nCount;
-//                    nEnd=nCount;
-//                    break;
-//                    }
-//                ++nCount;
-//                }
-//            if(nStart && nEnd)
-//                {
-//                bFound=true;
-//                std::string sList;
-//                for(Index1=nStart;Index1<nEnd;++Index1)
-//                    {
-//                    sList+=pString[Index1];
-//                    }
-//                aLists.push_back(sList);
-//                }
-//            }
-//
-//        // Remove extra up front '('s
-//
-//        size_t nLists=aLists.size();
-//        for(Index1=0;Index1<nLists;++Index1)
-//            {
-//            if(aLists[Index1].c_str()[0]=='(')
-//                {
-//                aLists[Index1]=std::string(aLists[Index1].c_str()+1);
-//                }
-//            }
-//    }
 
 inline void ProcessFace(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
@@ -386,7 +137,6 @@ inline void ProcessBSplineCurveWithKnots(char const *pLineAfterTag,
     //   0.000790454173643115, 0.000922196535916971, 0.00105393889819083 ), .UNSPECIFIED. );
 
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
-    std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
 
     //    const char * pos = pLineAfterTag;
@@ -464,7 +214,6 @@ inline void ProcessBSplineCurve(char const   *pLineAfterEquals,
     // aDoubles.reserve(aDoubles.size() + ?);
 
     pos = FindDoubleVector(pos,aDoubles);           // knots
-    size_t nKnots = aDoubles.size();
 
     pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",25);
     pos = SkipChar(pos,'(');
@@ -792,7 +541,7 @@ void ProcessStepCommand(SGM::Result              &rResult,
                         }
                     case SGMInternal::STEPTags::B_SPLINE_CURVE:
                         {
-                        ProcessBSplineCurve(pLineAfterStepTag,STEPData);
+                        ProcessBSplineCurve(pLineAfterEquals,STEPData);
                         mSTEPData.emplace(nLineNumber,STEPData);
                         break;
                         }
@@ -1992,7 +1741,7 @@ void SplitFile(FILE              *pFile,
                 size_t nLineNumber;
                 ReadIndex(pLine+1, &nLineNumber);
                 FindIndicesAll(pLineAfterStepTag,aIDs);
-                aIDMap[nLineNumber]=aIDs;
+                aIDMap[(int)nLineNumber]=aIDs;
                 }
             }
         sFileLine.clear();

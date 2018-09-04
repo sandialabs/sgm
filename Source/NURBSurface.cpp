@@ -35,6 +35,26 @@ NURBsurface::NURBsurface(SGM::Result                                   &rResult,
         m_bClosedU=true;
         }
 
+    SGM::Point3D Pos4,Pos5;
+    Evaluate(m_Domain.MidPoint(0,0),&Pos4);
+    Evaluate(m_Domain.MidPoint(1,1),&Pos5);
+    if(SGM::NearEqual(Pos0,Pos4,SGM_MIN_TOL))
+        {
+        m_bSingularLowV=true;
+        }
+    if(SGM::NearEqual(Pos1,Pos5,SGM_MIN_TOL))
+        {
+        m_bSingularHighV=true;
+        }
+    if(SGM::NearEqual(Pos2,Pos4,SGM_MIN_TOL))
+        {
+        m_bSingularLowU=true;
+        }
+    if(SGM::NearEqual(Pos3,Pos5,SGM_MIN_TOL))
+        {
+        m_bSingularHighU=true;
+        }
+
     curve *pUCurve=UParamLine(rResult,m_Domain.m_UDomain.MidPoint(0.25));
     curve *pVCurve=VParamLine(rResult,m_Domain.m_VDomain.MidPoint(0.25));
     FacetOptions Options;
@@ -297,6 +317,54 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
         {
         *Dvv=values[0][2];
         }
+    }
+
+size_t NURBsurface::FindUMultiplicity(std::vector<int>    &aMultiplicity,
+                                      std::vector<double> &aUniqueKnots) const
+    {
+    size_t nKnots=m_aUKnots.size();
+    size_t Index1;
+    double dLastKnot=std::numeric_limits<double>::max();
+    for(Index1=0;Index1<nKnots;++Index1)
+        {
+        double dKnot=m_aUKnots[Index1];
+        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
+            {
+            aUniqueKnots.push_back(dKnot);
+            aMultiplicity.push_back(1);
+            }
+        else
+            {
+            size_t nSize=aMultiplicity.size();
+            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
+            }
+        dLastKnot = dKnot;
+        }
+    return aMultiplicity.size();
+    }
+
+size_t NURBsurface::FindVMultiplicity(std::vector<int>    &aMultiplicity,
+                                      std::vector<double> &aUniqueKnots) const
+    {
+    size_t nKnots=m_aVKnots.size();
+    size_t Index1;
+    double dLastKnot=std::numeric_limits<double>::max();
+    for(Index1=0;Index1<nKnots;++Index1)
+        {
+        double dKnot=m_aVKnots[Index1];
+        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
+            {
+            aUniqueKnots.push_back(dKnot);
+            aMultiplicity.push_back(1);
+            }
+        else
+            {
+            size_t nSize=aMultiplicity.size();
+            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
+            }
+        dLastKnot = dKnot;
+        }
+    return aMultiplicity.size();
     }
 
 bool NURBsurface::IsSame(surface const *pOther,double dTolerance) const

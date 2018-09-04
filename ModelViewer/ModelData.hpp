@@ -139,7 +139,9 @@ public:
 
     void Cover(SGM::Entity EntityID);
 
-    void Merge(SGM::Entity EngityID);
+    void Merge(SGM::Entity EntityID);
+
+    void MergeComplexes(std::vector<SGM::Entity> aEntityIDs);
 
     void FindComponents(SGM::Entity EntityID);
 

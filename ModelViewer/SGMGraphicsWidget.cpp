@@ -11,7 +11,7 @@
 using QtOpenGL = QOpenGLFunctions_3_2_Core;
 
 // Convenience function to get Qt's OpenGL interface.
-static QtOpenGL *get_opengl()
+QtOpenGL *get_opengl()
 {
     return QOpenGLContext::currentContext()->versionFunctions<QtOpenGL>();
 }
@@ -753,6 +753,9 @@ void SGMGraphicsWidget::add_face(const std::vector<SGM::Point3D> &points,
     buffer<GLuint> &index_buffer = face_data.temp_index_buffer();
     buffer<GLfloat> &data_buffer = face_data.temp_data_buffer();
 
+    std::vector<unsigned int> aTemp;
+    aTemp.insert(aTemp.end(),index_buffer.begin(),index_buffer.end());
+
     // Setup indices for the triangles
     if (offset == 0)
         {
@@ -885,7 +888,7 @@ void SGMGraphicsWidget::add_edge(const std::vector<SGM::Point3D> &points,
         }
 }
 
-void SGMGraphicsWidget::add_vertex(SGM::Point3D const &Pos,
+void SGMGraphicsWidget::add_vertex(SGM::Point3D  const &Pos,
                                    SGM::Vector3D const &ColorVec)
 {
     OpenGLData &vertex_data = dPtr->vertex_data;
@@ -1051,7 +1054,7 @@ void SGMGraphicsWidget::initializeGL()
     GLuint color_attribute = dPtr->shaders.color_attribute(opengl);
 
     // Setup vertex data
-    dPtr->vertex_data.set_color(1.0, 0.0, 0.0);
+    dPtr->vertex_data.set_color(0.0, 0.0, 0.0);
     dPtr->vertex_data.set_render_mode(GL_POINTS);
     dPtr->vertex_data.init(opengl);
     dPtr->vertex_data.set_float_attribute(opengl, position_attribute, 3, 6, 0);
@@ -1160,7 +1163,7 @@ void SGMGraphicsWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void SGMGraphicsWidget::wheelEvent(QWheelEvent *event)
 {
-    float increment = 0.02f;
+    float increment = 0.01f;
     if (event->angleDelta().y() < 0)
         dPtr->camera.increment_zoom(-increment);
     else

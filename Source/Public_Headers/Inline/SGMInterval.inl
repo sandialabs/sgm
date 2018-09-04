@@ -64,6 +64,15 @@ namespace SGM {
         return std::abs(Pos - m_dMax) < dTol || std::abs(Pos - m_dMin) < dTol;
     }
 
+    inline bool Interval1D::InInterior(double Pos, double dTol) const
+        {
+        if(m_dMax<m_dMin)
+            {
+            return false;
+            }
+        return m_dMin+dTol<=Pos && Pos<=m_dMax-dTol;
+        }
+
     inline double Interval1D::IntersectingLength(const Interval1D &other) const
     {
         double length = (std::min)(m_dMax, other.m_dMax) - (std::max)(m_dMin, other.m_dMin);

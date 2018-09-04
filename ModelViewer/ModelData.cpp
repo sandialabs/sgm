@@ -354,8 +354,24 @@ void ModelData::Cover(SGM::Entity EntityID)
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
-    SGM::MergeComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_ZERO);
+    SGM::MergePoints(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_ZERO);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+}
+
+void ModelData::MergeComplexes(std::vector<SGM::Entity> aEntityIDs)
+{
+    std::vector<SGM::Complex> aComplexes;
+    size_t nComplexes=aEntityIDs.size();
+    aComplexes.reserve(nComplexes);
+    for(auto EntID : aEntityIDs)
+        {
+        aComplexes.push_back(SGM::Complex(EntID.m_ID));
+        }
+    SGM::MergeComplexes(dPtr->mResult, aComplexes);
+    for(auto EntID : aEntityIDs)
+        {
+        SGM::DeleteEntity(dPtr->mResult, EntID);
+        }
 }
 
 void ModelData::FindComponents(SGM::Entity EntityID)
@@ -1704,14 +1720,8 @@ void ModelData::rebuild_graphics(bool                      bReset,
 
     if (mvertex_mode)
         {
-        
         std::set<SGM::Vertex> vertex_list;
         SGM::FindVertices(dPtr->mResult, SGM::Thing(), vertex_list);
-
-        if(vertex_list.size())
-            {
-            update_bounds_edge(dPtr->mResult, SGM::Edge(0), dPtr->mGraphics);
-            }
 
         for (const SGM::Vertex &vertex : vertex_list)
             {

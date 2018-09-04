@@ -75,6 +75,8 @@ namespace SGM {
 
         bool OnBoundary(double Pos, double dTol) const;
 
+        bool InInterior(double Pos, double dTol) const;
+
         // Unites this interval with the given interval.
 
         Interval1D const &operator+=(Interval1D const &);

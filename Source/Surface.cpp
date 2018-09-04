@@ -136,8 +136,24 @@ SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
         dDot=(Pos-SurfPos)%Norm;
         SGM::Point3D ProjectPos=Pos-Norm*dDot;
         SGM::Vector3D S=ProjectPos-SurfPos;
-        DeltaU=(S%DU)/DU.MagnitudeSquared();
-        DeltaV=(S%DV)/DV.MagnitudeSquared();
+        double dUMag=DU.MagnitudeSquared();
+        double dVMag=DV.MagnitudeSquared();
+        if(SGM_ZERO<dUMag)
+            {
+            DeltaU=(S%DU)/DU.MagnitudeSquared();
+            }
+        else
+            {
+            DeltaU=0.0;
+            }
+        if(SGM_ZERO<dVMag)
+            {
+            DeltaV=(S%DV)/DV.MagnitudeSquared();
+            }
+        else
+            {
+            DeltaV=0.0;
+            }
         Answer.m_u+=DeltaU;
         Answer.m_v+=DeltaV;
         SnapToDomain(Answer);

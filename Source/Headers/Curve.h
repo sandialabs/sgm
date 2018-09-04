@@ -110,6 +110,14 @@ class curve : public entity
 
         virtual void Transform(SGM::Transform3D const &Trans) = 0;
 
+        virtual std::vector<double> SpecialFacetParams() const;
+
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Other methods of curve
+        //
+        ///////////////////////////////////////////////////////////////////////
+
         SGM::Vector3D Curvature(double t) const;
 
         double DerivativeMagnitude(double t);
@@ -324,6 +332,8 @@ class NURBcurve: public curve
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        std::vector<double> SpecialFacetParams() const override;
 
         size_t GetDegree() const {return (m_aKnots.size()-m_aControlPoints.size()-1);}
 
