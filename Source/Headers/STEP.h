@@ -27,6 +27,7 @@ class entity;
         B_SPLINE_CURVE_WITH_KNOTS,
         B_SPLINE_SURFACE,
         B_SPLINE_SURFACE_WITH_KNOTS,
+        BOUNDED_CURVE,
         BOUNDED_SURFACE,
         BREP_WITH_VOIDS,
         CALENDAR_DATE,

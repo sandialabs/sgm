@@ -41,6 +41,8 @@ public:
     std::vector<double> m_aDoubles;
     std::vector<int> m_aInts;
     std::vector<unsigned> m_aSizes;
+    double m_aVector[3];
+    double m_dValue;
     bool m_bFlag;
 };
 
@@ -338,18 +340,33 @@ inline const char * FindIndexAndDouble(char const *pos,
     return FindDouble(FindIndex(pos, aIndices), aDoubles);
     }
 
-inline void FindDoubleVector3(char const *pos,
+inline void FindDoubleVector3(char const * pos,
                               std::vector<double> &aData)
     {
+    // " ( 'NONE',  ( 81.01848140189099500, 21.68962376674730000, -3.860665940705227900 ) ) "
     // This is the most heavily called Find function;
-    // collapsing makes it a little faster.
-    AppendDouble(SkipChar(
-        AppendDouble(SkipChar(
-            AppendDouble(SkipChar(SkipChar(pos,'('),
-                '('),aData),
-            ','),aData),
-        ','),aData);
+    char * end;
+    aData.push_back(std::strtod(SkipChar(SkipChar(pos,'('),'('), &end));
+    assert(errno != ERANGE);
+    aData.push_back(std::strtod(SkipChar(end,','), &end));
+    assert(errno != ERANGE);
+    aData.push_back(std::strtod(SkipChar(end,','), nullptr));
+    assert(errno != ERANGE);
     }
+
+inline void FindVector(char const * pos,
+                       double *vec)
+{
+    // " ( 'NONE',  ( 81.01848140189099500, 21.68962376674730000, -3.860665940705227900 ) ) "
+    // This is the most heavily called Find function;
+    char * end;
+    vec[0] = std::strtod(SkipChar(SkipChar(pos,'('),'('), &end);
+    assert(errno != ERANGE);
+    vec[1] = std::strtod(SkipChar(end,','), &end);
+    assert(errno != ERANGE);
+    vec[2] = std::strtod(SkipChar(end,','), nullptr);
+    assert(errno != ERANGE);
+}
 
 // find all double PARAMETER_VALUE(x.xxx) on the string
 // return position one after the last double value, i.e. the close parenthesis
@@ -383,7 +400,7 @@ inline const char* FindParameters(char const   *pLineAfterStepTag,
 inline const char* FindDoubleVector(char const   *pos,
                              std::vector<double> &aData)
     {
-    const char separator[] = ",)";
+    static const char separator[] = ",)";
 
     pos = SkipChar(pos, '(');
     pos = AppendDouble(pos,aData);
@@ -412,7 +429,7 @@ inline const char* FindDoubleVector(char const   *pos,
 inline const char* FindIntVector(char const   *pos,
                           std::vector<int> &aInts)
     {
-    const char separator[] = ",)";
+    static const char separator[] = ",)";
 
     pos = SkipChar(pos, '(');
     pos = AppendInt(pos,aInts);
