@@ -186,7 +186,6 @@ inline void ProcessBSplineCurve(char const   *pLineAfterTag,
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
 
-    //const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_CURVE",14);
     const char *pos = SkipChar(pLineAfterTag,'(');
 
     //    char * end;
@@ -212,7 +211,7 @@ inline void ProcessBSplineCurve(char const   *pLineAfterTag,
 
     pos = FindDoubleVector(pos,aDoubles);           // knots
 
-    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",25);
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",23);
     pos = SkipChar(pos,'(');
 
     size_t nWeights = nControlPoints;
@@ -315,7 +314,6 @@ void ProcessBSplineSurface(char const   *pLineAfterTag,
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
 
-    //const char *pos = SkipWord(pLineAfterEquals,"B_SPLINE_SURFACE",16);
     const char *pos = SkipChar(pLineAfterTag,'(');
 
     pos = AppendInt(pos,aInts); // UDegree
@@ -1921,6 +1919,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
     if(pFile==nullptr)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage("Could not open " + FileName);
         return 0;
         }
 
