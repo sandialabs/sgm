@@ -526,6 +526,26 @@ void SGM::FindBodies(SGM::Result         &rResult,
         }
     }
 
+SGM::Body SGM::FindBody(SGM::Result       &rResult,
+                        SGM::Entity const &EntityID)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::body *,SGMInternal::EntityCompare> sBodies;
+    FindBodies(rResult,pEntity,sBodies,false);
+    auto iter=sBodies.begin();
+    return SGM::Body((*iter)->GetID());
+    }
+
+SGM::Volume SGM::FindVolume(SGM::Result       &rResult,
+                            SGM::Entity const &EntityID)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::volume *,SGMInternal::EntityCompare> sVolume;
+    FindVolumes(rResult,pEntity,sVolume,false);
+    auto iter=sVolume.begin();
+    return SGM::Volume((*iter)->GetID());
+    }
+
 void SGM::FindComplexes(SGM::Result            &rResult,
                         SGM::Entity      const &EntityID,
                         std::set<SGM::Complex> &sComplexes,

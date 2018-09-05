@@ -1488,13 +1488,16 @@ void ModelData::get_face_colors(const SGM::Face &face,
         }
     if(aEnts)
         {
+        SGM::Body body=SGM::FindBody(dPtr->mResult,face);
+        SGM::Volume volume=SGM::FindVolume(dPtr->mResult,face);
         size_t nEnts=aEnts->size();
         size_t Index1;
         for(Index1=0;Index1<nEnts;++Index1)
             {
-            if(face.m_ID==(*aEnts)[Index1].m_ID)
+            if(face.m_ID==(*aEnts)[Index1].m_ID || body.m_ID==(*aEnts)[Index1].m_ID || volume.m_ID==(*aEnts)[Index1].m_ID)
                 {
                 ColorVec = {1,0,0};
+                break;
                 }
             }
         }
