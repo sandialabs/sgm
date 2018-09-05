@@ -6,12 +6,38 @@
 #include "MainWindow.hpp"
 #include "SGMGraphicsWidget.hpp"
 
+#include "SGMPrimitives.h"
+#include "SGMTranslators.h"
+#include "SGMComplex.h"
+
 void RunFromCommandLine(int argc, char **argv)
     {
     std::string Arg1(argv[1]);
     if(Arg1=="-Cover" || Arg1=="-cover")
         {
         fprintf(stdout,"This is a test\n");
+
+        SGMInternal::thing *pThing=SGM::CreateThing();
+        SGM::Result rResult(pThing);
+        std::string Arg3(argv[3]);
+        std::vector<SGM::Entity> aEntities;
+        std::vector<std::string> aLog;
+        SGM::TranslatorOptions Options;
+        Options.m_bMerge=true;
+        SGM::ReadFile(rResult,Arg3,aEntities,aLog,Options);
+        std::vector<SGM::Complex> *aComplexes=(std::vector<SGM::Complex> *)&aEntities;
+        SGM::Complex ComplexID=aComplexes->front();
+        if(aComplexes->size()>1)
+            {
+            ComplexID=SGM::MergeComplexes(rResult,*aComplexes);
+            }
+        SGM::Complex CoverID=SGM::CoverComplex(rResult,ComplexID);
+        std::vector<SGM::Complex> aParts;
+        aParts.push_back(ComplexID);
+        aParts.push_back(CoverID);
+        SGM::MergeComplexes(rResult,aParts);
+        std::string Arg4(argv[4]);
+        SGM::SaveSTL(rResult,Arg4,SGM::Thing(),Options);
         }
     else if(Arg1=="-h" || Arg1=="-help" || Arg1=="-H" || Arg1=="-Help")
         {
@@ -50,7 +76,6 @@ int main(int argc, char **argv)
     //new_font.setWeight( int ** ); //your option
     app.setFont( new_font );     // Run the application
 #endif
-
 
     return QApplication::exec();
     }

@@ -515,7 +515,11 @@ class complex : public topology
         std::vector<complex *> CloseWithBoundary(SGM::Result             &rResult,
                                                  SGM::UnitVector3D const &UpVec) const;
 
-        complex *Merge(SGM::Result &rResult,double dTolerance) const;
+        // Makes the triangles of a complex share points that are within 
+        // dTolerance distance to each other.  If dTolerance is 0.0, then 
+        // 0.001 of the average facet edge length is used.
+
+        complex *Merge(SGM::Result &rResult,double dTolerance=0.0) const;
 
         // Merges the given vector of complexes with this complex and returns
         // the answer.

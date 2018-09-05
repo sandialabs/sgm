@@ -637,6 +637,11 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
 
 complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     {
+    if(dTolerance==0.0)
+        {
+        dTolerance=FindAverageEdgeLength()*SGM_FIT;
+        }
+
     // Find duplicate points.
 
     SGM::BoxTree BTree;

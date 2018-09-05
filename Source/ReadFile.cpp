@@ -1886,7 +1886,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                    thing                        *,//pThing,
                    std::vector<entity *>        &aEntities,
                    std::vector<std::string>     &,//aLog,
-                   SGM::TranslatorOptions const &)//Options)
+                   SGM::TranslatorOptions const &Options)
     {
     // Open the file.
 
@@ -1942,6 +1942,21 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
         aEntities.push_back(pComplex);
         }
     fclose(pFile);
+
+    if(Options.m_bMerge)
+        {
+        size_t nEntities=aEntities.size();
+        std::vector<entity *> aNewEnts;
+        aNewEnts.reserve(nEntities);
+        size_t Index1;
+        for(Index1=0;Index1<nEntities;++Index1)
+            {
+            complex *pComplex=(complex *)aEntities[Index1];
+            complex *pMergedComplex=pComplex->Merge(rResult,0.0);
+            aNewEnts.push_back(pMergedComplex);
+            }
+        aEntities=aNewEnts;
+        }
     return aEntities.size();
     }
 

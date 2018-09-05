@@ -2259,7 +2259,7 @@ bool PointOnNodes(SGM::Point3D      const &Pos,
 void FindSingularitiesValues(SGM::Result               &rResult,
                              SGM::Point3D        const &Pos,
                              face                const *pFace,
-                             bool                       bUValues,
+                             bool                       bVValues,
                              std::map<entity *,double> &mValues)
     {
     std::vector<std::vector<edge *> > aaLoops;
@@ -2290,13 +2290,13 @@ void FindSingularitiesValues(SGM::Result               &rResult,
                 SGM::Point3D CPos;
                 pEdge->GetCurve()->Evaluate(dParam,&CPos);
                 SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,CPos);
-                if(bUValues)
+                if(bVValues)
                     {
-                    mValues[pEdge]=uv.m_u;
+                    mValues[pEdge]=uv.m_v;
                     }
                 else
                     {
-                    mValues[pEdge]=uv.m_v;
+                    mValues[pEdge]=uv.m_u;
                     }
                 }
             }
@@ -2379,7 +2379,7 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
 
             size_t nNodeB=aNodes.size();
             Node NodeB;
-            NodeB.m_Entity=aNodes[nNode].m_Entity;
+            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
             NodeB.m_nNext=aNodes[nNode].m_nNext;
             NodeB.m_nPrevious=nNode;
             NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
@@ -2423,22 +2423,23 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         else if(bPointOnNodes)
             {
             std::map<entity *,double> mValues;
-            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
+            FindSingularitiesValues(rResult,Pos,pFace,true,mValues);
 
             size_t nNodeB=aNodes.size();
             Node NodeB;
-            NodeB.m_Entity=aNodes[nNode].m_Entity;
-            NodeB.m_nNext=aNodes[nNode].m_nNext;
-            NodeB.m_nPrevious=nNode;
-            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
-            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
+            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
+            NodeB.m_nNext=nNode;
+            NodeB.m_nPrevious=aNodes[nNode].m_nPrevious;
+            NodeB.m_uv.m_u=aNodes[nNode].m_uv.m_u;
+            NodeB.m_uv.m_v=mValues[NodeB.m_Entity];
             NodeB.m_Pos=Pos;
             aNodes.push_back(NodeB);
 
-            aNodes[nNode].m_nNext=nNodeB;
-            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
+            aNodes[aNodes[nNode].m_nPrevious].m_nNext=nNodeB;
+            aNodes[nNode].m_nPrevious=nNodeB;
+            aNodes[nNodeB].m_uv.m_v=mValues[aNodes[nNode].m_Entity];
 
-            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
+            Refine(pFace,dCosRefine,aNodes,nNodeB,nNode);
             }
         }
     if(pSurface->SingularLowV())
