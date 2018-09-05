@@ -212,7 +212,7 @@ inline void ProcessBSplineCurve(char const   *pLineAfterTag,
 
     pos = FindDoubleVector(pos,aDoubles);           // knots
 
-    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",25);
+    pos = SkipWord(pos,"RATIONAL_B_SPLINE_CURVE",23);
     pos = SkipChar(pos,'(');
 
     size_t nWeights = nControlPoints;
