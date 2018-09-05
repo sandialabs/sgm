@@ -23,6 +23,9 @@ namespace SGM
                                std::set<SGM::Body> &sBodies,
                                bool                 bTopLevel=false);
 
+    SGM_EXPORT SGM::Body FindBody(SGM::Result       &rResult,
+                                  SGM::Entity const &EntityID);
+
     SGM_EXPORT void FindComplexes(SGM::Result            &rResult,
                                   SGM::Entity      const &EntityID,
                                   std::set<SGM::Complex> &sComplexes,
@@ -32,6 +35,9 @@ namespace SGM
                                 SGM::Entity     const &EntityID,
                                 std::set<SGM::Volume> &sVolumes,
                                 bool                   bTopLevel=false);
+
+    SGM_EXPORT SGM::Volume FindVolume(SGM::Result       &rResult,
+                                      SGM::Entity const &EntityID);
 
     SGM_EXPORT void FindFaces(SGM::Result         &rResult,
                               SGM::Entity   const &EntityID,
