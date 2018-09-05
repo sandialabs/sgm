@@ -1885,8 +1885,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
 
     // create all the triangles/facets/boxes
-    std::cerr << "exit(1) in " << __FILE__ << ' ' << __LINE__ << std::endl;
-    exit(1);
+//    std::cerr << "exit(1) in " << __FILE__ << ' ' << __LINE__ << std::endl;
+  //  exit(1);
     pThing->FindCachedData(rResult);
 
     if(Options.m_bHeal)

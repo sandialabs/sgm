@@ -77,7 +77,7 @@ private:
           float ambient_strength = 0.6;
           vec3 light_dir_norm = normalize(light_direction);
           vec3 norm = normalize(vertex_normal);
-          float diffuse_strength = 0.4*max(dot(norm, light_dir_norm), 0.0);
+          float diffuse_strength = 0.4*max(abs(dot(norm, light_dir_norm)), 0.0);
 
           outColor = vec4((ambient_strength + diffuse_strength)*vertex_color, 1.0);
         }
