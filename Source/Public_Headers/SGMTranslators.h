@@ -24,8 +24,6 @@ namespace SGM
                 m_b2D(false),
                 m_bSingleVolume(false),
                 m_bVerbose(false),
-                //m_bMerge(true),
-                //m_bHeal(true)
                 m_bMerge(false),
                 m_bHeal(false),
                 m_bSplitFile(false)
@@ -59,12 +57,12 @@ namespace SGM
                                    // Default is false.
                                    // Used in SGM write.
 
-            bool m_bMerge;         // Merge faces and edges when reading.
-                                   // Default is true,
-                                   // Used in STEP read.
+            bool m_bMerge;         // Default is false,
+                                   // For STEP faces and edges are merged
+                                   // For STL the triangles are merged in each complex.
 
             bool m_bHeal;          // Runs the healer on the part.
-                                   // Default is true,
+                                   // Default is false,
                                    // Used in STEP read.
 
             bool m_bSplitFile;     // Split the file into smaller parts.
