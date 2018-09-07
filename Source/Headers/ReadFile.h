@@ -21,35 +21,31 @@ class STEPLineData
 {
 public:
 
-    // TODO: add a single m_Double and m_ID member data for many Types
-    STEPLineData() : m_nType(0), m_aIDs(), m_aDoubles(), m_aInts(), m_aSizes(), m_bFlag(true)
+    STEPLineData() = default;
+
+    explicit STEPLineData(size_t Type) :
+        m_nType(Type), m_aIDs(), m_aDoubles(), m_aInts(), m_aSizes(), m_bFlag(true)
     {}
 
-    void clear()
-    {
-        // reset it to match exactly the default constructor
-        m_nType = 0;
-        m_aIDs.clear();
-        m_aDoubles.clear();
-        m_aInts.clear();
-        m_aSizes.clear();
-        m_bFlag = true;
-    }
+    ~STEPLineData() = default;
 
     size_t m_nType;
     std::vector <size_t> m_aIDs;
     std::vector<double> m_aDoubles;
     std::vector<int> m_aInts;
     std::vector<unsigned> m_aSizes;
-    double m_aVector[3];
-    double m_dValue;
     bool m_bFlag;
+};
+
+class STEPCommand
+{
+    std::pair<std::string, size_t> tag;
+    STEPLineData STEPdata;
 };
 
 typedef std::unordered_map <std::string, size_t> STEPTagMapType;
 typedef std::unordered_map <size_t, STEPLineData> STEPLineDataMapType;
 typedef std::unordered_map<size_t, entity *> IDEntityMapType;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //

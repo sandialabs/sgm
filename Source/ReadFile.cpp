@@ -21,9 +21,12 @@
 #include <fstream>
 #include <iostream>
 
+
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
+
+//#define SGM_PROFILE_READER
 
 namespace SGMInternal {
 
@@ -31,6 +34,7 @@ inline void ProcessFace(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
     // "#12 = ADVANCED_FACE ( 'NONE', ( #19088 ), #718, .T. ) "
+    STEPData.m_aIDs.reserve(128);
     const char * last = FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     last = FindIndex(last,STEPData.m_aIDs);
     FindFlag(last,STEPData.m_bFlag);
@@ -39,18 +43,21 @@ inline void ProcessFace(char const   *pLineAfterStepTag,
 inline void ProcessAxis(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(3);
     FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
 inline void ProcessPoint(char const   *pLineAfterStepTag,
                          STEPLineData &STEPData)
     {
+    STEPData.m_aDoubles.reserve(3);
     FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
 inline void ProcessDirection(char const   *pLineAfterStepTag,
                              STEPLineData &STEPData)
     {
+    STEPData.m_aDoubles.reserve(3);
     FindDoubleVector3(pLineAfterStepTag, STEPData.m_aDoubles);
     }
 
@@ -58,6 +65,7 @@ inline void ProcessEdge(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
     // #509=EDGE_CURVE('',#605,#607,#608,.F.);
+    STEPData.m_aIDs.reserve(3);
     FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
@@ -65,6 +73,9 @@ inline void ProcessTrimmedCurve(char const   *pLineAfterStepTag,
                                 STEPLineData &STEPData)
     {
     // #28=TRIMMED_CURVE('',#27,(PARAMETER_VALUE(0.000000000000000)),(PARAMETER_VALUE(5.19615242270663)),.T.,.UNSPECIFIED.);
+    // #601822=TRIMMED_CURVE('',#601820,(PARAMETER_VALUE(0.0),#601817),(PARAMETER_VALUE(1.0),#601821),.T.,.PARAMETER.);
+    STEPData.m_aIDs.reserve(3);
+    STEPData.m_aDoubles.reserve(2);
     FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     const char *pos = FindParameters(pLineAfterStepTag,STEPData.m_aDoubles);
     FindFlag(pos,STEPData.m_bFlag);
@@ -73,6 +84,7 @@ inline void ProcessTrimmedCurve(char const   *pLineAfterStepTag,
 inline void ProcessLoop(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(16); // guess covers most cases
     FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
@@ -86,36 +98,42 @@ inline void ProcessBound(char const   *pLineAfterStepTag,
 inline void ProcessLine(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(2);
     FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
 inline void ProcessBody(char const   *pLineAfterStepTag,
                         STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(3); // minimum
     FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
 void ProcessVolume(char const   *pLineAfterStepTag,
                    STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(8); // average
     FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
 void ProcessShell(char const   *pLineAfterStepTag,
                   STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(32); // average
     FindIndicesAll(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
 void ProcessOrientedShell(char const   *pLineAfterStepTag,
                           STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(2);
     FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
 inline void ProcessCoedge(char const   *pLineAfterStepTag,
                           STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(3);
     FindIndicesAndFlag(pLineAfterStepTag,STEPData.m_aIDs,STEPData.m_bFlag);
     }
 
@@ -136,8 +154,15 @@ inline void ProcessBSplineCurveWithKnots(char const *pLineAfterTag,
     //   0.000395227086821539, 0.000526969449095398, 0.000592840630232327, 0.000625776220800793, 0.000658711811369259,
     //   0.000790454173643115, 0.000922196535916971, 0.00105393889819083 ), .UNSPECIFIED. );
 
+
+
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
     std::vector<int> &aInts = STEPData.m_aInts;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+
+    aIDs.reserve(2048); // covers most cases
+    aInts.reserve(128);
+    aDoubles.reserve(512);
 
     //    const char * pos = pLineAfterTag;
     //    char * end;
@@ -185,6 +210,10 @@ inline void ProcessBSplineCurve(char const   *pLineAfterTag,
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
+
+    aIDs.reserve(2048); // covers most cases
+    aDoubles.reserve(512);
+    aInts.reserve(128);
 
     const char *pos = SkipChar(pLineAfterTag,'(');
 
@@ -249,6 +278,7 @@ void ProcessEllipse(char const   *pLineAfterStepTag,
                     STEPLineData &STEPData)
     {
     // #6314=ELLIPSE('',#10514,0.553426824431198,0.2475);
+    STEPData.m_aDoubles.reserve(2);
     const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     pos = FindDouble(pos, STEPData.m_aDoubles); // major
     FindDouble(pos, STEPData.m_aDoubles); // minor
@@ -266,26 +296,36 @@ void ProcessBSplineSurfaceWithKnots(char const *pLineAfterStepTag,
     // (-0.0125000000006658,0.0,0.1666666666667,0.3333333333333,0.5,0.6666666666667,0.8333333333333,1.0,1.0015535650659),
     // (-0.0124999999959784,1.0125000000066),.UNSPECIFIED.);
 
+    std::vector<size_t> &aIDs = STEPData.m_aIDs;
+    std::vector<double> &aDoubles = STEPData.m_aDoubles;
+    std::vector<int> &aInts = STEPData.m_aInts;
+    std::vector<unsigned int> &aSizes = STEPData.m_aSizes;
+
+    aIDs.reserve(2048); // covers most cases
+    aDoubles.reserve(512);
+    aInts.reserve(128);
+    aSizes.reserve(2);
+
     const char *pos = pLineAfterStepTag;
     size_t nRows, nColumns;
 
-    pos = FindInt(pos,STEPData.m_aInts);                // UDegree
-    pos = FindInt(pos,STEPData.m_aInts);                // VDegree
+    pos = FindInt(pos,aInts);                // UDegree
+    pos = FindInt(pos,aInts);                // VDegree
 
-    pos = FindIndicesMatrix(pos,STEPData.m_aIDs,&nRows,&nColumns); // control points.
+    pos = FindIndicesMatrix(pos,aIDs,&nRows,&nColumns); // control points.
 
-    pos = FindIntVector(pos,STEPData.m_aInts);          // Uknot multiplicity
+    pos = FindIntVector(pos,aInts);          // Uknot multiplicity
 
-    unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
-    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
+    unsigned nUKnots = (unsigned)aInts.size() - 2;
+    aSizes.push_back(nUKnots);               // nUKnots
 
-    pos = FindIntVector(pos,STEPData.m_aInts);          // Vknot multiplicity
+    pos = FindIntVector(pos,aInts);          // Vknot multiplicity
 
-    unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
-    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
+    unsigned nVKnots = (unsigned)aInts.size() - nUKnots - 2;
+    aSizes.push_back(nVKnots);               // nUKnots
 
-    pos = FindDoubleVector(pos,STEPData.m_aDoubles);    // Uknots
-    FindDoubleVector(pos,STEPData.m_aDoubles);          // Vknots
+    pos = FindDoubleVector(pos,aDoubles);    // Uknots
+    FindDoubleVector(pos,aDoubles);          // Vknots
 
     STEPData.m_bFlag = true; // we are a NUB surface (no weights)
     }
@@ -313,6 +353,12 @@ void ProcessBSplineSurface(char const   *pLineAfterTag,
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
+    std::vector<unsigned int> &aSizes = STEPData.m_aSizes;
+
+    aIDs.reserve(2048); // covers most cases
+    aDoubles.reserve(512);
+    aInts.reserve(128);
+    aSizes.reserve(2);
 
     const char *pos = SkipChar(pLineAfterTag,'(');
 
@@ -336,12 +382,12 @@ void ProcessBSplineSurface(char const   *pLineAfterTag,
     pos = FindIntVector(pos,STEPData.m_aInts); // Uknot multiplicity
 
     unsigned nUKnots = (unsigned)STEPData.m_aInts.size() - 2;
-    STEPData.m_aSizes.push_back(nUKnots);               // nUKnots
+    aSizes.push_back(nUKnots);               // nUKnots
 
     pos = FindIntVector(pos,STEPData.m_aInts); // Vknot multiplicity
 
     unsigned nVKnots = (unsigned)STEPData.m_aInts.size() - nUKnots - 2;
-    STEPData.m_aSizes.push_back(nVKnots);               // nUKnots
+    aSizes.push_back(nVKnots);               // nUKnots
 
     pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Uknots
     pos = FindDoubleVector(pos,STEPData.m_aDoubles); // Vknots
@@ -399,6 +445,7 @@ void ProcessSphere(char const   *pLineAfterStepTag,
 void ProcessRevolve(char const   *pLineAfterStepTag,
                     STEPLineData &STEPData)
     {
+    STEPData.m_aIDs.reserve(2);
     FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
@@ -406,6 +453,7 @@ void ProcessTorus(char const   *pLineAfterStepTag,
                   STEPLineData &STEPData)
     {
     // #85=TOROIDAL_SURFACE('',#158,8.0,0.5);
+    STEPData.m_aDoubles.reserve(2);
     const char *pos = FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
     pos = FindDouble(pos, STEPData.m_aDoubles); // major
     FindDouble(pos, STEPData.m_aDoubles);       // minor
@@ -415,6 +463,7 @@ void ProcessExtrude(char const   *pLineAfterStepTag,
                     STEPLineData &STEPData)
     {
     // #1166=SURFACE_OF_LINEAR_EXTRUSION('',#2532,#2533);
+    STEPData.m_aIDs.reserve(2);
     FindIndicesGroup(pLineAfterStepTag,STEPData.m_aIDs);
     }
 
@@ -422,6 +471,7 @@ void ProcessDegenerateTorus(char const   *pLineAfterStepTag,
                             STEPLineData &STEPData)
     {
     // #112=DEGENERATE_TOROIDAL_SURFACE('',#111,9.02000000000000,20.0000000000000,.T.);
+    STEPData.m_aDoubles.reserve(2);
     const char * pos = FindIndex(pLineAfterStepTag,STEPData.m_aIDs);
     pos = FindDouble(pos, STEPData.m_aDoubles); // major
     pos = FindDouble(pos, STEPData.m_aDoubles); // minor
@@ -485,12 +535,6 @@ void ProcessStepCommand(SGM::Result              &rResult,
                         SGM::TranslatorOptions   const &Options,
                         std::string              &sTag)
     {
-    STEPLineData STEPData;
-    STEPData.m_aIDs.reserve(1024);    // some sizes seen from medium to large STEP files
-    STEPData.m_aDoubles.reserve(256);
-    STEPData.m_aInts.reserve(64);
-    STEPData.m_aSizes.reserve(2);
-
     static const char WHITE_SPACE[] = " \n\r\t";
 
     // skip leading whitespace/control characters
@@ -513,261 +557,299 @@ void ProcessStepCommand(SGM::Result              &rResult,
         auto MapIter=mSTEPTagMap.find(sTag);
         if(MapIter!=mSTEPTagMap.end())
             {
-            STEPData.m_nType=MapIter->second;
             if(!Options.m_bScan)
                 {
-                switch(STEPData.m_nType)
+                switch(MapIter->second) 
                     {
-                    case SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
+                    case STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
                         {
+                        STEPLineData STEPData(STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION);
                         ProcessBodyTransform(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
-                        STEPLineData STEPData2;
+                        STEPLineData STEPData2(STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION);
                         ProcessBody(pLineAfterStepTag,STEPData2);
-                        STEPData2.m_nType=SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION;
                         mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
-                    case SGMInternal::STEPTags::ADVANCED_FACE:
+                    case STEPTags::ADVANCED_FACE:
                         {
+                        STEPLineData STEPData(STEPTags::ADVANCED_FACE);
                         ProcessFace(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::AXIS1_PLACEMENT:
+                    case STEPTags::AXIS1_PLACEMENT:
                         {
+                        STEPLineData STEPData(STEPTags::AXIS1_PLACEMENT);
                         ProcessAxis(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::AXIS2_PLACEMENT_3D:
+                    case STEPTags::AXIS2_PLACEMENT_3D:
                         {
+                        STEPLineData STEPData(STEPTags::AXIS2_PLACEMENT_3D);
                         ProcessAxis(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::B_SPLINE_CURVE:
+                    case STEPTags::B_SPLINE_CURVE:
                         {
+                        STEPLineData STEPData(STEPTags::B_SPLINE_CURVE);
                         ProcessBSplineCurve(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
+                    case STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                         {
+                        STEPLineData STEPData(STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
                         ProcessBSplineCurveWithKnots(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::BOUNDED_CURVE:
+                    case STEPTags::BOUNDED_CURVE:
                         {
+                        STEPLineData STEPData(STEPTags::BOUNDED_CURVE);
                         ProcessBoundedCurve(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::B_SPLINE_SURFACE:
+                    case STEPTags::B_SPLINE_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::B_SPLINE_SURFACE);
                         ProcessBSplineSurface(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
+                    case STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                         {
+                        STEPLineData STEPData(STEPTags::B_SPLINE_SURFACE_WITH_KNOTS);
                         ProcessBSplineSurfaceWithKnots(pLineAfterStepTag, STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::BOUNDED_SURFACE:
+                    case STEPTags::BOUNDED_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::BOUNDED_SURFACE);
                         ProcessBoundedSurface(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::BREP_WITH_VOIDS:
+                    case STEPTags::BREP_WITH_VOIDS:
                         {
+                        STEPLineData STEPData(STEPTags::BREP_WITH_VOIDS);
                         ProcessVolume(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::CARTESIAN_POINT:
+                    case STEPTags::CARTESIAN_POINT:
                         {
+                        STEPLineData STEPData(STEPTags::CARTESIAN_POINT);
                         ProcessPoint(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::CLOSED_SHELL:
+                    case STEPTags::CLOSED_SHELL:
                         {
+                        STEPLineData STEPData(STEPTags::CLOSED_SHELL);
                         ProcessShell(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::CIRCLE:
+                    case STEPTags::CIRCLE:
                         {
+                        STEPLineData STEPData(STEPTags::CIRCLE);
                         ProcessCircle(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::CONICAL_SURFACE:
+                    case STEPTags::CONICAL_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::CONICAL_SURFACE);
                         ProcessCone(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
+                    case STEPTags::CYLINDRICAL_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::CYLINDRICAL_SURFACE);
                         ProcessCylinder(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
+                    case STEPTags::DEGENERATE_TOROIDAL_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::DEGENERATE_TOROIDAL_SURFACE);
                         ProcessDegenerateTorus(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::DIRECTION:
+                    case STEPTags::DIRECTION:
                         {
+                        STEPLineData STEPData(STEPTags::DIRECTION);
                         ProcessDirection(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::EDGE_CURVE:
+                    case STEPTags::EDGE_CURVE:
                         {
+                        STEPLineData STEPData(STEPTags::EDGE_CURVE);
                         ProcessEdge(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::EDGE_LOOP:
+                    case STEPTags::EDGE_LOOP:
                         {
+                        STEPLineData STEPData(STEPTags::EDGE_LOOP);
                         ProcessLoop(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::ELLIPSE:
+                    case STEPTags::ELLIPSE:
                         {
+                        STEPLineData STEPData(STEPTags::ELLIPSE);
                         ProcessEllipse(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::FACE_BOUND:
+                    case STEPTags::FACE_BOUND:
                         {
+                        STEPLineData STEPData(STEPTags::FACE_BOUND);
                         ProcessBound(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::FACE_OUTER_BOUND:
+                    case STEPTags::FACE_OUTER_BOUND:
                         {
+                        STEPLineData STEPData(STEPTags::FACE_OUTER_BOUND);
                         ProcessBound(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::FACE_SURFACE:
+                    case STEPTags::FACE_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::FACE_SURFACE);
                         ProcessFace(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::GEOMETRIC_CURVE_SET:
+                    case STEPTags::GEOMETRIC_CURVE_SET:
                         {
+                        STEPLineData STEPData(STEPTags::GEOMETRIC_CURVE_SET);
                         ProcessVolume(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
+                    case STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
                         {
+                        STEPLineData STEPData(STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION);
                         ProcessBodyTransform(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
-                        STEPLineData STEPData2;
+                        STEPLineData STEPData2(STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION);
                         ProcessBody(pLineAfterStepTag,STEPData2);
-                        STEPData2.m_nType=SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION;
                         mSTEPData.emplace(nLineNumber,STEPData2);
                         break;
                         }
-                    case SGMInternal::STEPTags::LINE:
+                    case STEPTags::LINE:
                         {
+                        STEPLineData STEPData(STEPTags::LINE);
                         ProcessLine(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
+                    case STEPTags::MANIFOLD_SOLID_BREP:
                         {
+                        STEPLineData STEPData(STEPTags::MANIFOLD_SOLID_BREP);
                         ProcessVolume(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
+                    case STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                         {
+                        STEPLineData STEPData(STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION);
                         ProcessBodyTransform(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::OPEN_SHELL:
+                    case STEPTags::OPEN_SHELL:
                         {
+                        STEPLineData STEPData(STEPTags::OPEN_SHELL);
                         ProcessShell(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL:
+                    case STEPTags::ORIENTED_CLOSED_SHELL:
                         {
+                        STEPLineData STEPData(STEPTags::ORIENTED_CLOSED_SHELL);
                         ProcessOrientedShell(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::ORIENTED_EDGE:
+                    case STEPTags::ORIENTED_EDGE:
                         {
+                        STEPLineData STEPData(STEPTags::ORIENTED_EDGE);
                         ProcessCoedge(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::PLANE:
+                    case STEPTags::PLANE:
                         {
+                        STEPLineData STEPData(STEPTags::PLANE);
                         ProcessPlane(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
+                    case STEPTags::SHELL_BASED_SURFACE_MODEL:
                         {
+                        STEPLineData STEPData(STEPTags::SHELL_BASED_SURFACE_MODEL);
                         ProcessBody(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::SPHERICAL_SURFACE:
+                    case STEPTags::SPHERICAL_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::SPHERICAL_SURFACE);
                         ProcessSphere(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
+                    case STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                         {
+                        STEPLineData STEPData(STEPTags::SURFACE_OF_LINEAR_EXTRUSION);
                         ProcessExtrude(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
+                    case STEPTags::SURFACE_OF_REVOLUTION:
                         {
+                        STEPLineData STEPData(STEPTags::SURFACE_OF_REVOLUTION);
                         ProcessRevolve(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::TOROIDAL_SURFACE:
+                    case STEPTags::TOROIDAL_SURFACE:
                         {
+                        STEPLineData STEPData(STEPTags::TOROIDAL_SURFACE);
                         ProcessTorus(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::TRIMMED_CURVE:
+                    case STEPTags::TRIMMED_CURVE:
                         {
+                        STEPLineData STEPData(STEPTags::TRIMMED_CURVE);
                         ProcessTrimmedCurve(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::VECTOR:
+                    case STEPTags::VECTOR:
                         {
+                        STEPLineData STEPData(STEPTags::VECTOR);
                         ProcessVector(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
                         }
-                    case SGMInternal::STEPTags::VERTEX_POINT:
+                    case STEPTags::VERTEX_POINT:
                         {
+                        STEPLineData STEPData(STEPTags::VERTEX_POINT);
                         ProcessVertex(pLineAfterStepTag,STEPData);
                         mSTEPData.emplace(nLineNumber,std::move(STEPData));
                         break;
@@ -790,144 +872,144 @@ void ProcessStepCommand(SGM::Result              &rResult,
 
 void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
     {
-    mSTEPTagMap.emplace("ADVANCED_BREP_SHAPE_REPRESENTATION",SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("ADVANCED_FACE",SGMInternal::STEPTags::ADVANCED_FACE);
-    mSTEPTagMap.emplace("APPLICATION_CONTEXT",SGMInternal::STEPTags::APPLICATION_CONTEXT);
-    mSTEPTagMap.emplace("APPLICATION_PROTOCOL_DEFINITION",SGMInternal::STEPTags::APPLICATION_PROTOCOL_DEFINITION);
-    mSTEPTagMap.emplace("APPLIED_DATE_AND_TIME_ASSIGNMENT",SGMInternal::STEPTags::APPLIED_DATE_AND_TIME_ASSIGNMENT);
-    mSTEPTagMap.emplace("APPLIED_GROUP_ASSIGNMENT",SGMInternal::STEPTags::APPLIED_GROUP_ASSIGNMENT);
-    mSTEPTagMap.emplace("APPROVAL",SGMInternal::STEPTags::APPROVAL);
-    mSTEPTagMap.emplace("APPROVAL_DATE_TIME",SGMInternal::STEPTags::APPROVAL_DATE_TIME);
-    mSTEPTagMap.emplace("APPROVAL_PERSON_ORGANIZATION",SGMInternal::STEPTags::APPROVAL_PERSON_ORGANIZATION);
-    mSTEPTagMap.emplace("APPROVAL_ROLE",SGMInternal::STEPTags::APPROVAL_ROLE);
-    mSTEPTagMap.emplace("APPROVAL_STATUS",SGMInternal::STEPTags::APPROVAL_STATUS);
-    mSTEPTagMap.emplace("AXIS1_PLACEMENT",SGMInternal::STEPTags::AXIS1_PLACEMENT);
-    mSTEPTagMap.emplace("AXIS2_PLACEMENT_3D",SGMInternal::STEPTags::AXIS2_PLACEMENT_3D);
-    mSTEPTagMap.emplace("B_SPLINE_SURFACE",SGMInternal::STEPTags::B_SPLINE_SURFACE);
-    mSTEPTagMap.emplace("B_SPLINE_CURVE",SGMInternal::STEPTags::B_SPLINE_CURVE);
-    mSTEPTagMap.emplace("B_SPLINE_CURVE_WITH_KNOTS",SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
-    mSTEPTagMap.emplace("B_SPLINE_SURFACE_WITH_KNOTS",SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS);
-    mSTEPTagMap.emplace("BOUNDED_CURVE",SGMInternal::STEPTags::BOUNDED_CURVE);
-    mSTEPTagMap.emplace("BOUNDED_SURFACE",SGMInternal::STEPTags::BOUNDED_SURFACE);
-    mSTEPTagMap.emplace("BREP_WITH_VOIDS",SGMInternal::STEPTags::BREP_WITH_VOIDS);
-    mSTEPTagMap.emplace("CALENDAR_DATE",SGMInternal::STEPTags::CALENDAR_DATE);
-    mSTEPTagMap.emplace("CAMERA_MODEL_D3",SGMInternal::STEPTags::CAMERA_MODEL_D3);
-    mSTEPTagMap.emplace("CARTESIAN_POINT",SGMInternal::STEPTags::CARTESIAN_POINT);
-    mSTEPTagMap.emplace("CC_DESIGN_APPROVAL",SGMInternal::STEPTags::CC_DESIGN_APPROVAL);
-    mSTEPTagMap.emplace("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",SGMInternal::STEPTags::CC_DESIGN_DATE_AND_TIME_ASSIGNMENT);
-    mSTEPTagMap.emplace("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",SGMInternal::STEPTags::CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT);
-    mSTEPTagMap.emplace("CC_DESIGN_SECURITY_CLASSIFICATION",SGMInternal::STEPTags::CC_DESIGN_SECURITY_CLASSIFICATION);
-    mSTEPTagMap.emplace("CIRCLE",SGMInternal::STEPTags::CIRCLE);
-    mSTEPTagMap.emplace("CLOSED_SHELL",SGMInternal::STEPTags::CLOSED_SHELL);
-    mSTEPTagMap.emplace("COLOUR_RGB",SGMInternal::STEPTags::COLOUR_RGB);
-    mSTEPTagMap.emplace("COORDINATED_UNIVERSAL_TIME_OFFSET",SGMInternal::STEPTags::COORDINATED_UNIVERSAL_TIME_OFFSET);
-    mSTEPTagMap.emplace("COMPOSITE_CURVE",SGMInternal::STEPTags::COMPOSITE_CURVE);
-    mSTEPTagMap.emplace("COMPOSITE_CURVE_SEGMENT",SGMInternal::STEPTags::COMPOSITE_CURVE_SEGMENT);
-    mSTEPTagMap.emplace("CONICAL_SURFACE",SGMInternal::STEPTags::CONICAL_SURFACE);
-    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",SGMInternal::STEPTags::CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM);
-    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",SGMInternal::STEPTags::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("CONVERSION_BASED_UNIT",SGMInternal::STEPTags::CONVERSION_BASED_UNIT);
-    mSTEPTagMap.emplace("CURVE_STYLE",SGMInternal::STEPTags::CURVE_STYLE);
-    mSTEPTagMap.emplace("CYLINDRICAL_SURFACE",SGMInternal::STEPTags::CYLINDRICAL_SURFACE);
-    mSTEPTagMap.emplace("DATE_AND_TIME",SGMInternal::STEPTags::DATE_AND_TIME);
-    mSTEPTagMap.emplace("DATE_TIME_ROLE",SGMInternal::STEPTags::DATE_TIME_ROLE);
-    mSTEPTagMap.emplace("DEGENERATE_TOROIDAL_SURFACE",SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE);
-    mSTEPTagMap.emplace("DERIVED_UNIT",SGMInternal::STEPTags::DERIVED_UNIT);
-    mSTEPTagMap.emplace("DERIVED_UNIT_ELEMENT",SGMInternal::STEPTags::DERIVED_UNIT_ELEMENT);
-    mSTEPTagMap.emplace("DESCRIPTIVE_REPRESENTATION_ITEM",SGMInternal::STEPTags::DESCRIPTIVE_REPRESENTATION_ITEM);
-    mSTEPTagMap.emplace("DESIGN_CONTEXT",SGMInternal::STEPTags::DESIGN_CONTEXT);
-    mSTEPTagMap.emplace("DIMENSIONAL_EXPONENTS",SGMInternal::STEPTags::DIMENSIONAL_EXPONENTS);
-    mSTEPTagMap.emplace("DIRECTION",SGMInternal::STEPTags::DIRECTION);
-    mSTEPTagMap.emplace("DRAUGHTING_MODEL",SGMInternal::STEPTags::DRAUGHTING_MODEL);
-    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_COLOUR",SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_COLOUR);
-    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_CURVE_FONT",SGMInternal::STEPTags::DRAUGHTING_PRE_DEFINED_CURVE_FONT);
-    mSTEPTagMap.emplace("EDGE_CURVE",SGMInternal::STEPTags::EDGE_CURVE);
-    mSTEPTagMap.emplace("EDGE_LOOP",SGMInternal::STEPTags::EDGE_LOOP);
-    mSTEPTagMap.emplace("ELLIPSE",SGMInternal::STEPTags::ELLIPSE);
-    mSTEPTagMap.emplace("FACE_BOUND",SGMInternal::STEPTags::FACE_BOUND);
-    mSTEPTagMap.emplace("FACE_OUTER_BOUND",SGMInternal::STEPTags::FACE_OUTER_BOUND);
-    mSTEPTagMap.emplace("FACE_SURFACE",SGMInternal::STEPTags::FACE_SURFACE);
-    mSTEPTagMap.emplace("FILL_AREA_STYLE",SGMInternal::STEPTags::FILL_AREA_STYLE);
-    mSTEPTagMap.emplace("FILL_AREA_STYLE_COLOUR",SGMInternal::STEPTags::FILL_AREA_STYLE_COLOUR);
-    mSTEPTagMap.emplace("GEOMETRIC_CURVE_SET",SGMInternal::STEPTags::GEOMETRIC_CURVE_SET);
-    mSTEPTagMap.emplace("GEOMETRIC_REPRESENTATION_CONTEXT",SGMInternal::STEPTags::GEOMETRIC_REPRESENTATION_CONTEXT);
-    mSTEPTagMap.emplace("GEOMETRIC_SET",SGMInternal::STEPTags::GEOMETRIC_SET);
-    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("GROUP",SGMInternal::STEPTags::GROUP);
-    mSTEPTagMap.emplace("ITEM_DEFINED_TRANSFORMATION",SGMInternal::STEPTags::ITEM_DEFINED_TRANSFORMATION);
-    mSTEPTagMap.emplace("LENGTH_MEASURE_WITH_UNIT",SGMInternal::STEPTags::LENGTH_MEASURE_WITH_UNIT);
-    mSTEPTagMap.emplace("LENGTH_UNIT",SGMInternal::STEPTags::LENGTH_UNIT);
-    mSTEPTagMap.emplace("LINE",SGMInternal::STEPTags::LINE);
-    mSTEPTagMap.emplace("LOCAL_TIME",SGMInternal::STEPTags::LOCAL_TIME);
-    mSTEPTagMap.emplace("MANIFOLD_SOLID_BREP",SGMInternal::STEPTags::MANIFOLD_SOLID_BREP);
-    mSTEPTagMap.emplace("MANIFOLD_SURFACE_SHAPE_REPRESENTATION",SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("MAPPED_ITEM",SGMInternal::STEPTags::MAPPED_ITEM);
-    mSTEPTagMap.emplace("MASS_UNIT",SGMInternal::STEPTags::MASS_UNIT);
-    mSTEPTagMap.emplace("MEASURE_REPRESENTATION_ITEM",SGMInternal::STEPTags::MEASURE_REPRESENTATION_ITEM);
-    mSTEPTagMap.emplace("MECHANICAL_CONTEXT",SGMInternal::STEPTags::MECHANICAL_CONTEXT);
-    mSTEPTagMap.emplace("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",SGMInternal::STEPTags::MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION);
-    mSTEPTagMap.emplace("NAMED_UNIT",SGMInternal::STEPTags::NAMED_UNIT);
-    mSTEPTagMap.emplace("NEXT_ASSEMBLY_USAGE_OCCURRENCE",SGMInternal::STEPTags::NEXT_ASSEMBLY_USAGE_OCCURRENCE);
-    mSTEPTagMap.emplace("OPEN_SHELL",SGMInternal::STEPTags::OPEN_SHELL);
-    mSTEPTagMap.emplace("ORIENTED_CLOSED_SHELL",SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL);
-    mSTEPTagMap.emplace("ORIENTED_EDGE",SGMInternal::STEPTags::ORIENTED_EDGE);
-    mSTEPTagMap.emplace("ORGANIZATION",SGMInternal::STEPTags::ORGANIZATION);
-    mSTEPTagMap.emplace("OVER_RIDING_STYLED_ITEM",SGMInternal::STEPTags::OVER_RIDING_STYLED_ITEM);
-    mSTEPTagMap.emplace("PERSON",SGMInternal::STEPTags::PERSON);
-    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION",SGMInternal::STEPTags::PERSON_AND_ORGANIZATION);
-    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION_ROLE",SGMInternal::STEPTags::PERSON_AND_ORGANIZATION_ROLE);
-    mSTEPTagMap.emplace("PERSONAL_ADDRESS",SGMInternal::STEPTags::PERSONAL_ADDRESS);
-    mSTEPTagMap.emplace("PLANAR_BOX",SGMInternal::STEPTags::PLANAR_BOX);
-    mSTEPTagMap.emplace("PLANE",SGMInternal::STEPTags::PLANE);
-    mSTEPTagMap.emplace("PLANE_ANGLE_MEASURE_WITH_UNIT",SGMInternal::STEPTags::PLANE_ANGLE_MEASURE_WITH_UNIT);
-    mSTEPTagMap.emplace("POINT_STYLE",SGMInternal::STEPTags::POINT_STYLE);
-    mSTEPTagMap.emplace("PRESENTATION_LAYER_ASSIGNMENT",SGMInternal::STEPTags::PRESENTATION_LAYER_ASSIGNMENT);
-    mSTEPTagMap.emplace("PRESENTATION_STYLE_ASSIGNMENT",SGMInternal::STEPTags::PRESENTATION_STYLE_ASSIGNMENT);
-    mSTEPTagMap.emplace("PRE_DEFINED_POINT_MARKER_SYMBOL",SGMInternal::STEPTags::PRE_DEFINED_POINT_MARKER_SYMBOL);
-    mSTEPTagMap.emplace("PRODUCT",SGMInternal::STEPTags::PRODUCT);
-    mSTEPTagMap.emplace("PRODUCT_CATEGORY",SGMInternal::STEPTags::PRODUCT_CATEGORY);
-    mSTEPTagMap.emplace("PRODUCT_CATEGORY_RELATIONSHIP",SGMInternal::STEPTags::PRODUCT_CATEGORY_RELATIONSHIP);
-    mSTEPTagMap.emplace("PRODUCT_CONTEXT",SGMInternal::STEPTags::PRODUCT_CONTEXT);
-    mSTEPTagMap.emplace("PRODUCT_DEFINITION",SGMInternal::STEPTags::PRODUCT_DEFINITION);
-    mSTEPTagMap.emplace("PRODUCT_DEFINITION_CONTEXT",SGMInternal::STEPTags::PRODUCT_DEFINITION_CONTEXT);
-    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION",SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION);
-    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",SGMInternal::STEPTags::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE);
-    mSTEPTagMap.emplace("PRODUCT_DEFINITION_SHAPE",SGMInternal::STEPTags::PRODUCT_DEFINITION_SHAPE);
-    mSTEPTagMap.emplace("PRODUCT_RELATED_PRODUCT_CATEGORY",SGMInternal::STEPTags::PRODUCT_RELATED_PRODUCT_CATEGORY);
-    mSTEPTagMap.emplace("PROPERTY_DEFINITION",SGMInternal::STEPTags::PROPERTY_DEFINITION);
-    mSTEPTagMap.emplace("PROPERTY_DEFINITION_REPRESENTATION",SGMInternal::STEPTags::PROPERTY_DEFINITION_REPRESENTATION);
-    mSTEPTagMap.emplace("QUASI_UNIFORM_CURVE",SGMInternal::STEPTags::QUASI_UNIFORM_CURVE);
-    mSTEPTagMap.emplace("QUASI_UNIFORM_SURFACE",SGMInternal::STEPTags::QUASI_UNIFORM_SURFACE);
-    mSTEPTagMap.emplace("REPRESENTATION",SGMInternal::STEPTags::REPRESENTATION);
-    mSTEPTagMap.emplace("REPRESENTATION_MAP",SGMInternal::STEPTags::REPRESENTATION_MAP);
-    mSTEPTagMap.emplace("REPRESENTATION_RELATIONSHIP",SGMInternal::STEPTags::REPRESENTATION_RELATIONSHIP);
-    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION",SGMInternal::STEPTags::SECURITY_CLASSIFICATION);
-    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION_LEVEL",SGMInternal::STEPTags::SECURITY_CLASSIFICATION_LEVEL);
-    mSTEPTagMap.emplace("SHAPE_DEFINITION_REPRESENTATION",SGMInternal::STEPTags::SHAPE_DEFINITION_REPRESENTATION);
-    mSTEPTagMap.emplace("SHAPE_REPRESENTATION",SGMInternal::STEPTags::SHAPE_REPRESENTATION);
-    mSTEPTagMap.emplace("SHAPE_REPRESENTATION_RELATIONSHIP",SGMInternal::STEPTags::SHAPE_REPRESENTATION_RELATIONSHIP);
-    mSTEPTagMap.emplace("SHELL_BASED_SURFACE_MODEL",SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL);
-    mSTEPTagMap.emplace("SPHERICAL_SURFACE",SGMInternal::STEPTags::SPHERICAL_SURFACE);
-    mSTEPTagMap.emplace("STYLED_ITEM",SGMInternal::STEPTags::STYLED_ITEM);
-    mSTEPTagMap.emplace("SURFACE_CURVE",SGMInternal::STEPTags::SURFACE_CURVE);
-    mSTEPTagMap.emplace("SURFACE_OF_LINEAR_EXTRUSION",SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION);
-    mSTEPTagMap.emplace("SURFACE_OF_REVOLUTION",SGMInternal::STEPTags::SURFACE_OF_REVOLUTION);
-    mSTEPTagMap.emplace("SURFACE_SIDE_STYLE",SGMInternal::STEPTags::SURFACE_SIDE_STYLE);
-    mSTEPTagMap.emplace("SURFACE_STYLE_FILL_AREA",SGMInternal::STEPTags::SURFACE_STYLE_FILL_AREA);
-    mSTEPTagMap.emplace("SURFACE_STYLE_USAGE",SGMInternal::STEPTags::SURFACE_STYLE_USAGE);
-    mSTEPTagMap.emplace("TOROIDAL_SURFACE",SGMInternal::STEPTags::TOROIDAL_SURFACE);
-    mSTEPTagMap.emplace("TRIMMED_CURVE",SGMInternal::STEPTags::TRIMMED_CURVE);
-    mSTEPTagMap.emplace("UNCERTAINTY_MEASURE_WITH_UNIT",SGMInternal::STEPTags::UNCERTAINTY_MEASURE_WITH_UNIT);
-    mSTEPTagMap.emplace("VALUE_REPRESENTATION_ITEM",SGMInternal::STEPTags::VALUE_REPRESENTATION_ITEM);
-    mSTEPTagMap.emplace("VECTOR",SGMInternal::STEPTags::VECTOR);
-    mSTEPTagMap.emplace("VERTEX_LOOP",SGMInternal::STEPTags::VERTEX_LOOP);
-    mSTEPTagMap.emplace("VERTEX_POINT",SGMInternal::STEPTags::VERTEX_POINT);
-    mSTEPTagMap.emplace("VIEW_VOLUME",SGMInternal::STEPTags::VIEW_VOLUME);
+    mSTEPTagMap.emplace("ADVANCED_BREP_SHAPE_REPRESENTATION",STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("ADVANCED_FACE",STEPTags::ADVANCED_FACE);
+    mSTEPTagMap.emplace("APPLICATION_CONTEXT",STEPTags::APPLICATION_CONTEXT);
+    mSTEPTagMap.emplace("APPLICATION_PROTOCOL_DEFINITION",STEPTags::APPLICATION_PROTOCOL_DEFINITION);
+    mSTEPTagMap.emplace("APPLIED_DATE_AND_TIME_ASSIGNMENT",STEPTags::APPLIED_DATE_AND_TIME_ASSIGNMENT);
+    mSTEPTagMap.emplace("APPLIED_GROUP_ASSIGNMENT",STEPTags::APPLIED_GROUP_ASSIGNMENT);
+    mSTEPTagMap.emplace("APPROVAL",STEPTags::APPROVAL);
+    mSTEPTagMap.emplace("APPROVAL_DATE_TIME",STEPTags::APPROVAL_DATE_TIME);
+    mSTEPTagMap.emplace("APPROVAL_PERSON_ORGANIZATION",STEPTags::APPROVAL_PERSON_ORGANIZATION);
+    mSTEPTagMap.emplace("APPROVAL_ROLE",STEPTags::APPROVAL_ROLE);
+    mSTEPTagMap.emplace("APPROVAL_STATUS",STEPTags::APPROVAL_STATUS);
+    mSTEPTagMap.emplace("AXIS1_PLACEMENT",STEPTags::AXIS1_PLACEMENT);
+    mSTEPTagMap.emplace("AXIS2_PLACEMENT_3D",STEPTags::AXIS2_PLACEMENT_3D);
+    mSTEPTagMap.emplace("B_SPLINE_SURFACE",STEPTags::B_SPLINE_SURFACE);
+    mSTEPTagMap.emplace("B_SPLINE_CURVE",STEPTags::B_SPLINE_CURVE);
+    mSTEPTagMap.emplace("B_SPLINE_CURVE_WITH_KNOTS",STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
+    mSTEPTagMap.emplace("B_SPLINE_SURFACE_WITH_KNOTS",STEPTags::B_SPLINE_SURFACE_WITH_KNOTS);
+    mSTEPTagMap.emplace("BOUNDED_CURVE",STEPTags::BOUNDED_CURVE);
+    mSTEPTagMap.emplace("BOUNDED_SURFACE",STEPTags::BOUNDED_SURFACE);
+    mSTEPTagMap.emplace("BREP_WITH_VOIDS",STEPTags::BREP_WITH_VOIDS);
+    mSTEPTagMap.emplace("CALENDAR_DATE",STEPTags::CALENDAR_DATE);
+    mSTEPTagMap.emplace("CAMERA_MODEL_D3",STEPTags::CAMERA_MODEL_D3);
+    mSTEPTagMap.emplace("CARTESIAN_POINT",STEPTags::CARTESIAN_POINT);
+    mSTEPTagMap.emplace("CC_DESIGN_APPROVAL",STEPTags::CC_DESIGN_APPROVAL);
+    mSTEPTagMap.emplace("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",STEPTags::CC_DESIGN_DATE_AND_TIME_ASSIGNMENT);
+    mSTEPTagMap.emplace("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",STEPTags::CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT);
+    mSTEPTagMap.emplace("CC_DESIGN_SECURITY_CLASSIFICATION",STEPTags::CC_DESIGN_SECURITY_CLASSIFICATION);
+    mSTEPTagMap.emplace("CIRCLE",STEPTags::CIRCLE);
+    mSTEPTagMap.emplace("CLOSED_SHELL",STEPTags::CLOSED_SHELL);
+    mSTEPTagMap.emplace("COLOUR_RGB",STEPTags::COLOUR_RGB);
+    mSTEPTagMap.emplace("COORDINATED_UNIVERSAL_TIME_OFFSET",STEPTags::COORDINATED_UNIVERSAL_TIME_OFFSET);
+    mSTEPTagMap.emplace("COMPOSITE_CURVE",STEPTags::COMPOSITE_CURVE);
+    mSTEPTagMap.emplace("COMPOSITE_CURVE_SEGMENT",STEPTags::COMPOSITE_CURVE_SEGMENT);
+    mSTEPTagMap.emplace("CONICAL_SURFACE",STEPTags::CONICAL_SURFACE);
+    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",STEPTags::CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM);
+    mSTEPTagMap.emplace("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",STEPTags::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("CONVERSION_BASED_UNIT",STEPTags::CONVERSION_BASED_UNIT);
+    mSTEPTagMap.emplace("CURVE_STYLE",STEPTags::CURVE_STYLE);
+    mSTEPTagMap.emplace("CYLINDRICAL_SURFACE",STEPTags::CYLINDRICAL_SURFACE);
+    mSTEPTagMap.emplace("DATE_AND_TIME",STEPTags::DATE_AND_TIME);
+    mSTEPTagMap.emplace("DATE_TIME_ROLE",STEPTags::DATE_TIME_ROLE);
+    mSTEPTagMap.emplace("DEGENERATE_TOROIDAL_SURFACE",STEPTags::DEGENERATE_TOROIDAL_SURFACE);
+    mSTEPTagMap.emplace("DERIVED_UNIT",STEPTags::DERIVED_UNIT);
+    mSTEPTagMap.emplace("DERIVED_UNIT_ELEMENT",STEPTags::DERIVED_UNIT_ELEMENT);
+    mSTEPTagMap.emplace("DESCRIPTIVE_REPRESENTATION_ITEM",STEPTags::DESCRIPTIVE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("DESIGN_CONTEXT",STEPTags::DESIGN_CONTEXT);
+    mSTEPTagMap.emplace("DIMENSIONAL_EXPONENTS",STEPTags::DIMENSIONAL_EXPONENTS);
+    mSTEPTagMap.emplace("DIRECTION",STEPTags::DIRECTION);
+    mSTEPTagMap.emplace("DRAUGHTING_MODEL",STEPTags::DRAUGHTING_MODEL);
+    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_COLOUR",STEPTags::DRAUGHTING_PRE_DEFINED_COLOUR);
+    mSTEPTagMap.emplace("DRAUGHTING_PRE_DEFINED_CURVE_FONT",STEPTags::DRAUGHTING_PRE_DEFINED_CURVE_FONT);
+    mSTEPTagMap.emplace("EDGE_CURVE",STEPTags::EDGE_CURVE);
+    mSTEPTagMap.emplace("EDGE_LOOP",STEPTags::EDGE_LOOP);
+    mSTEPTagMap.emplace("ELLIPSE",STEPTags::ELLIPSE);
+    mSTEPTagMap.emplace("FACE_BOUND",STEPTags::FACE_BOUND);
+    mSTEPTagMap.emplace("FACE_OUTER_BOUND",STEPTags::FACE_OUTER_BOUND);
+    mSTEPTagMap.emplace("FACE_SURFACE",STEPTags::FACE_SURFACE);
+    mSTEPTagMap.emplace("FILL_AREA_STYLE",STEPTags::FILL_AREA_STYLE);
+    mSTEPTagMap.emplace("FILL_AREA_STYLE_COLOUR",STEPTags::FILL_AREA_STYLE_COLOUR);
+    mSTEPTagMap.emplace("GEOMETRIC_CURVE_SET",STEPTags::GEOMETRIC_CURVE_SET);
+    mSTEPTagMap.emplace("GEOMETRIC_REPRESENTATION_CONTEXT",STEPTags::GEOMETRIC_REPRESENTATION_CONTEXT);
+    mSTEPTagMap.emplace("GEOMETRIC_SET",STEPTags::GEOMETRIC_SET);
+    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",STEPTags::GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("GROUP",STEPTags::GROUP);
+    mSTEPTagMap.emplace("ITEM_DEFINED_TRANSFORMATION",STEPTags::ITEM_DEFINED_TRANSFORMATION);
+    mSTEPTagMap.emplace("LENGTH_MEASURE_WITH_UNIT",STEPTags::LENGTH_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("LENGTH_UNIT",STEPTags::LENGTH_UNIT);
+    mSTEPTagMap.emplace("LINE",STEPTags::LINE);
+    mSTEPTagMap.emplace("LOCAL_TIME",STEPTags::LOCAL_TIME);
+    mSTEPTagMap.emplace("MANIFOLD_SOLID_BREP",STEPTags::MANIFOLD_SOLID_BREP);
+    mSTEPTagMap.emplace("MANIFOLD_SURFACE_SHAPE_REPRESENTATION",STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("MAPPED_ITEM",STEPTags::MAPPED_ITEM);
+    mSTEPTagMap.emplace("MASS_UNIT",STEPTags::MASS_UNIT);
+    mSTEPTagMap.emplace("MEASURE_REPRESENTATION_ITEM",STEPTags::MEASURE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("MECHANICAL_CONTEXT",STEPTags::MECHANICAL_CONTEXT);
+    mSTEPTagMap.emplace("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",STEPTags::MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION);
+    mSTEPTagMap.emplace("NAMED_UNIT",STEPTags::NAMED_UNIT);
+    mSTEPTagMap.emplace("NEXT_ASSEMBLY_USAGE_OCCURRENCE",STEPTags::NEXT_ASSEMBLY_USAGE_OCCURRENCE);
+    mSTEPTagMap.emplace("OPEN_SHELL",STEPTags::OPEN_SHELL);
+    mSTEPTagMap.emplace("ORIENTED_CLOSED_SHELL",STEPTags::ORIENTED_CLOSED_SHELL);
+    mSTEPTagMap.emplace("ORIENTED_EDGE",STEPTags::ORIENTED_EDGE);
+    mSTEPTagMap.emplace("ORGANIZATION",STEPTags::ORGANIZATION);
+    mSTEPTagMap.emplace("OVER_RIDING_STYLED_ITEM",STEPTags::OVER_RIDING_STYLED_ITEM);
+    mSTEPTagMap.emplace("PERSON",STEPTags::PERSON);
+    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION",STEPTags::PERSON_AND_ORGANIZATION);
+    mSTEPTagMap.emplace("PERSON_AND_ORGANIZATION_ROLE",STEPTags::PERSON_AND_ORGANIZATION_ROLE);
+    mSTEPTagMap.emplace("PERSONAL_ADDRESS",STEPTags::PERSONAL_ADDRESS);
+    mSTEPTagMap.emplace("PLANAR_BOX",STEPTags::PLANAR_BOX);
+    mSTEPTagMap.emplace("PLANE",STEPTags::PLANE);
+    mSTEPTagMap.emplace("PLANE_ANGLE_MEASURE_WITH_UNIT",STEPTags::PLANE_ANGLE_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("POINT_STYLE",STEPTags::POINT_STYLE);
+    mSTEPTagMap.emplace("PRESENTATION_LAYER_ASSIGNMENT",STEPTags::PRESENTATION_LAYER_ASSIGNMENT);
+    mSTEPTagMap.emplace("PRESENTATION_STYLE_ASSIGNMENT",STEPTags::PRESENTATION_STYLE_ASSIGNMENT);
+    mSTEPTagMap.emplace("PRE_DEFINED_POINT_MARKER_SYMBOL",STEPTags::PRE_DEFINED_POINT_MARKER_SYMBOL);
+    mSTEPTagMap.emplace("PRODUCT",STEPTags::PRODUCT);
+    mSTEPTagMap.emplace("PRODUCT_CATEGORY",STEPTags::PRODUCT_CATEGORY);
+    mSTEPTagMap.emplace("PRODUCT_CATEGORY_RELATIONSHIP",STEPTags::PRODUCT_CATEGORY_RELATIONSHIP);
+    mSTEPTagMap.emplace("PRODUCT_CONTEXT",STEPTags::PRODUCT_CONTEXT);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION",STEPTags::PRODUCT_DEFINITION);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_CONTEXT",STEPTags::PRODUCT_DEFINITION_CONTEXT);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION",STEPTags::PRODUCT_DEFINITION_FORMATION);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",STEPTags::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE);
+    mSTEPTagMap.emplace("PRODUCT_DEFINITION_SHAPE",STEPTags::PRODUCT_DEFINITION_SHAPE);
+    mSTEPTagMap.emplace("PRODUCT_RELATED_PRODUCT_CATEGORY",STEPTags::PRODUCT_RELATED_PRODUCT_CATEGORY);
+    mSTEPTagMap.emplace("PROPERTY_DEFINITION",STEPTags::PROPERTY_DEFINITION);
+    mSTEPTagMap.emplace("PROPERTY_DEFINITION_REPRESENTATION",STEPTags::PROPERTY_DEFINITION_REPRESENTATION);
+    mSTEPTagMap.emplace("QUASI_UNIFORM_CURVE",STEPTags::QUASI_UNIFORM_CURVE);
+    mSTEPTagMap.emplace("QUASI_UNIFORM_SURFACE",STEPTags::QUASI_UNIFORM_SURFACE);
+    mSTEPTagMap.emplace("REPRESENTATION",STEPTags::REPRESENTATION);
+    mSTEPTagMap.emplace("REPRESENTATION_MAP",STEPTags::REPRESENTATION_MAP);
+    mSTEPTagMap.emplace("REPRESENTATION_RELATIONSHIP",STEPTags::REPRESENTATION_RELATIONSHIP);
+    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION",STEPTags::SECURITY_CLASSIFICATION);
+    mSTEPTagMap.emplace("SECURITY_CLASSIFICATION_LEVEL",STEPTags::SECURITY_CLASSIFICATION_LEVEL);
+    mSTEPTagMap.emplace("SHAPE_DEFINITION_REPRESENTATION",STEPTags::SHAPE_DEFINITION_REPRESENTATION);
+    mSTEPTagMap.emplace("SHAPE_REPRESENTATION",STEPTags::SHAPE_REPRESENTATION);
+    mSTEPTagMap.emplace("SHAPE_REPRESENTATION_RELATIONSHIP",STEPTags::SHAPE_REPRESENTATION_RELATIONSHIP);
+    mSTEPTagMap.emplace("SHELL_BASED_SURFACE_MODEL",STEPTags::SHELL_BASED_SURFACE_MODEL);
+    mSTEPTagMap.emplace("SPHERICAL_SURFACE",STEPTags::SPHERICAL_SURFACE);
+    mSTEPTagMap.emplace("STYLED_ITEM",STEPTags::STYLED_ITEM);
+    mSTEPTagMap.emplace("SURFACE_CURVE",STEPTags::SURFACE_CURVE);
+    mSTEPTagMap.emplace("SURFACE_OF_LINEAR_EXTRUSION",STEPTags::SURFACE_OF_LINEAR_EXTRUSION);
+    mSTEPTagMap.emplace("SURFACE_OF_REVOLUTION",STEPTags::SURFACE_OF_REVOLUTION);
+    mSTEPTagMap.emplace("SURFACE_SIDE_STYLE",STEPTags::SURFACE_SIDE_STYLE);
+    mSTEPTagMap.emplace("SURFACE_STYLE_FILL_AREA",STEPTags::SURFACE_STYLE_FILL_AREA);
+    mSTEPTagMap.emplace("SURFACE_STYLE_USAGE",STEPTags::SURFACE_STYLE_USAGE);
+    mSTEPTagMap.emplace("TOROIDAL_SURFACE",STEPTags::TOROIDAL_SURFACE);
+    mSTEPTagMap.emplace("TRIMMED_CURVE",STEPTags::TRIMMED_CURVE);
+    mSTEPTagMap.emplace("UNCERTAINTY_MEASURE_WITH_UNIT",STEPTags::UNCERTAINTY_MEASURE_WITH_UNIT);
+    mSTEPTagMap.emplace("VALUE_REPRESENTATION_ITEM",STEPTags::VALUE_REPRESENTATION_ITEM);
+    mSTEPTagMap.emplace("VECTOR",STEPTags::VECTOR);
+    mSTEPTagMap.emplace("VERTEX_LOOP",STEPTags::VERTEX_LOOP);
+    mSTEPTagMap.emplace("VERTEX_POINT",STEPTags::VERTEX_POINT);
+    mSTEPTagMap.emplace("VIEW_VOLUME",STEPTags::VIEW_VOLUME);
     }
 
 void GetAxis(STEPLineData            const &SLDA,
-             STEPLineDataMapType &mSTEPData,
+             STEPLineDataMapType     const &mSTEPData,
              SGM::Point3D                  &Center,
              SGM::UnitVector3D             &ZAxis,
              SGM::UnitVector3D             &XAxis)
@@ -937,9 +1019,9 @@ void GetAxis(STEPLineData            const &SLDA,
         size_t nID0=SLDA.m_aIDs[0];
         size_t nID1=SLDA.m_aIDs[1];
         size_t nID2=SLDA.m_aIDs[2];
-        STEPLineData const &SLDP=mSTEPData[nID0];
-        STEPLineData const &SLDN=mSTEPData[nID1];
-        STEPLineData const &SLDX=mSTEPData[nID2];
+        STEPLineData const &SLDP=mSTEPData.at(nID0);
+        STEPLineData const &SLDN=mSTEPData.at(nID1);
+        STEPLineData const &SLDX=mSTEPData.at(nID2);
         Center=SGM::Point3D(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
         ZAxis=SGM::UnitVector3D(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
         XAxis=SGM::UnitVector3D(SLDX.m_aDoubles[0],SLDX.m_aDoubles[1],SLDX.m_aDoubles[2]);
@@ -948,8 +1030,8 @@ void GetAxis(STEPLineData            const &SLDA,
         {
         size_t nID0=SLDA.m_aIDs[0];
         size_t nID1=SLDA.m_aIDs[1];
-        STEPLineData const &SLDP=mSTEPData[nID0];
-        STEPLineData const &SLDN=mSTEPData[nID1];
+        STEPLineData const &SLDP=mSTEPData.at(nID0);
+        STEPLineData const &SLDN=mSTEPData.at(nID1);
         Center=SGM::Point3D(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
         ZAxis=SGM::UnitVector3D(SLDN.m_aDoubles[0],SLDN.m_aDoubles[1],SLDN.m_aDoubles[2]);
         XAxis=ZAxis.Orthogonal();
@@ -974,21 +1056,21 @@ void CreateEntities(SGM::Result           &rResult,
         size_t nID=DataIter->first;
         switch(DataIter->second.m_nType)
             {
-            case SGMInternal::STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
+            case STEPTags::ADVANCED_BREP_SHAPE_REPRESENTATION:
                 {
                 mEntityMap[nID]=new body(rResult);
                 aBodies.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::ADVANCED_FACE:
+            case STEPTags::ADVANCED_FACE:
                 {
                 mEntityMap[nID]=new face(rResult);
                 aFaces.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::BOUNDED_CURVE:
-            case SGMInternal::STEPTags::B_SPLINE_CURVE:
-            case SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
+            case STEPTags::BOUNDED_CURVE:
+            case STEPTags::B_SPLINE_CURVE:
+            case STEPTags::B_SPLINE_CURVE_WITH_KNOTS:
                 {
                 size_t nPoints=DataIter->second.m_aIDs.size();
                 size_t nKnots=DataIter->second.m_aInts.size();
@@ -1017,8 +1099,8 @@ void CreateEntities(SGM::Result           &rResult,
                 if(DataIter->second.m_bFlag==false)
                     {
                     // process with Weights
-                    assert(DataIter->second.m_nType == SGMInternal::STEPTags::BOUNDED_CURVE ||
-                           DataIter->second.m_nType == SGMInternal::STEPTags::B_SPLINE_CURVE );
+                    assert(DataIter->second.m_nType == STEPTags::BOUNDED_CURVE ||
+                           DataIter->second.m_nType == STEPTags::B_SPLINE_CURVE );
 
                     std::vector<SGM::Point4D> aControlPoints4D;
                     aControlPoints4D.reserve(nPoints);
@@ -1034,14 +1116,14 @@ void CreateEntities(SGM::Result           &rResult,
                 else
                     {
                     // no Weights
-                    assert(SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
+                    assert(STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
                     curve *pCurve=new NUBcurve(rResult,aControlPoints,aKnots);
                     mEntityMap[nID]=pCurve;
                     }
                 break;
                 }
-            case SGMInternal::STEPTags::BOUNDED_SURFACE:
-            case SGMInternal::STEPTags::B_SPLINE_SURFACE:
+            case STEPTags::BOUNDED_SURFACE:
+            case STEPTags::B_SPLINE_SURFACE:
                 {
                 std::vector<std::vector<SGM::Point4D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
@@ -1096,7 +1178,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
-            case SGMInternal::STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
+            case STEPTags::B_SPLINE_SURFACE_WITH_KNOTS:
                 {
                 std::vector<std::vector<SGM::Point3D> > aaControlPoints;
                 std::vector<double> aUKnots,aVKnots;
@@ -1146,13 +1228,13 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=pSurf;
                 break;
                 }
-            case SGMInternal::STEPTags::BREP_WITH_VOIDS:
+            case STEPTags::BREP_WITH_VOIDS:
                 {
                 mEntityMap[nID]=new volume(rResult);
                 aVolumes.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::CIRCLE:
+            case STEPTags::CIRCLE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
@@ -1165,7 +1247,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new circle(rResult,Center,ZAxis,dRadius,&XAxis);
                 break;    
                 }
-            case SGMInternal::STEPTags::CONICAL_SURFACE:
+            case STEPTags::CONICAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
@@ -1180,7 +1262,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new cone(rResult,Center,ZAxis,dRadius,dHalfAngle,&XAxis);
                 break;
                 }
-            case SGMInternal::STEPTags::CYLINDRICAL_SURFACE:
+            case STEPTags::CYLINDRICAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
@@ -1193,7 +1275,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new cylinder(rResult,Center-ZAxis,Center+ZAxis,dRadius,&XAxis);
                 break;    
                 }
-            case SGMInternal::STEPTags::DEGENERATE_TOROIDAL_SURFACE:
+            case STEPTags::DEGENERATE_TOROIDAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dMajor=DataIter->second.m_aDoubles[0];
@@ -1208,13 +1290,13 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
-            case SGMInternal::STEPTags::EDGE_CURVE:
+            case STEPTags::EDGE_CURVE:
                 {
                 mEntityMap[nID]=new edge(rResult);
                 aEdges.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::ELLIPSE:
+            case STEPTags::ELLIPSE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dMajor=DataIter->second.m_aDoubles[0];
@@ -1229,25 +1311,25 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new ellipse(rResult,Center,XAxis,YAxis,dMajor,dMinor);
                 break;    
                 }
-            case SGMInternal::STEPTags::FACE_SURFACE:
+            case STEPTags::FACE_SURFACE:
                 {
                 mEntityMap[nID]=new face(rResult);
                 aFaces.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::GEOMETRIC_CURVE_SET:
+            case STEPTags::GEOMETRIC_CURVE_SET:
                 {
                 mEntityMap[nID]=new volume(rResult);
                 aVolumes.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
+            case STEPTags::GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION:
                 {
                 mEntityMap[nID]=new body(rResult);
                 aBodies.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::LINE:
+            case STEPTags::LINE:
                 {
                 size_t nPos=DataIter->second.m_aIDs[0];
                 size_t nVec=DataIter->second.m_aIDs[1];
@@ -1260,13 +1342,13 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new line(rResult,Origin,Axis);
                 break;
                 }
-            case SGMInternal::STEPTags::MANIFOLD_SOLID_BREP:
+            case STEPTags::MANIFOLD_SOLID_BREP:
                 {
                 mEntityMap[nID]=new volume(rResult);
                 aVolumes.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
+            case STEPTags::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
                 {
                 body *pBody=new body(rResult);
                 aSheetBodies.push_back(pBody);
@@ -1274,7 +1356,7 @@ void CreateEntities(SGM::Result           &rResult,
                 aBodies.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::PLANE:
+            case STEPTags::PLANE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 STEPLineData const &SLDA=mSTEPData[nAxis];
@@ -1287,13 +1369,13 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new plane(rResult,Origin,XAxis,YAxis,ZAxis);
                 break;
                 }
-            case SGMInternal::STEPTags::SHELL_BASED_SURFACE_MODEL:
+            case STEPTags::SHELL_BASED_SURFACE_MODEL:
                 {
                 mEntityMap[nID]=new volume(rResult);
                 aVolumes.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::SPHERICAL_SURFACE:
+            case STEPTags::SPHERICAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dRadius=DataIter->second.m_aDoubles[0];
@@ -1307,7 +1389,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
                 break;    
                 }
-            case SGMInternal::STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
+            case STEPTags::SURFACE_OF_LINEAR_EXTRUSION:
                 {
                 size_t nVector=DataIter->second.m_aIDs[1];
                 STEPLineData const &SLDVector=mSTEPData[nVector];
@@ -1322,7 +1404,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new extrude(rResult,ZAxis,nullptr);
                 break;
                 }
-            case SGMInternal::STEPTags::SURFACE_OF_REVOLUTION:
+            case STEPTags::SURFACE_OF_REVOLUTION:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[1];
                 STEPLineData const &SLDAxis=mSTEPData[nAxis];
@@ -1335,7 +1417,7 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new revolve(rResult,Pos,ZAxis,nullptr);
                 break;
                 }
-            case SGMInternal::STEPTags::TOROIDAL_SURFACE:
+            case STEPTags::TOROIDAL_SURFACE:
                 {
                 size_t nAxis=DataIter->second.m_aIDs[0];
                 double dMajor=DataIter->second.m_aDoubles[0];
@@ -1350,13 +1432,13 @@ void CreateEntities(SGM::Result           &rResult,
                 mEntityMap[nID]=new torus(rResult,Center,ZAxis,dMinor,dMajor,bApple,&XAxis);
                 break;
                 }
-            case SGMInternal::STEPTags::TRIMMED_CURVE:
+            case STEPTags::TRIMMED_CURVE:
                 {
                 mEntityMap[nID]=new edge(rResult);
                 aEdges.push_back(nID);
                 break;
                 }
-            case SGMInternal::STEPTags::VERTEX_POINT:
+            case STEPTags::VERTEX_POINT:
                 {
                 STEPLineData const &SLDP=mSTEPData[DataIter->second.m_aIDs[0]];
                 SGM::Point3D Pos(SLDP.m_aDoubles[0],SLDP.m_aDoubles[1],SLDP.m_aDoubles[2]);
@@ -1423,7 +1505,7 @@ void CreateEntities(SGM::Result           &rResult,
 
             STEPLineDataMapType::iterator SLD=mSTEPData.find(aIDs[Index2]);
             size_t nType=SLD->second.m_nType;
-            if(nVolumeType==SGMInternal::STEPTags::GEOMETRIC_CURVE_SET)
+            if(nVolumeType==STEPTags::GEOMETRIC_CURVE_SET)
                 {
                 curve *pCurve=(curve *)mEntityMap[aIDs[Index2]];
                 if(pCurve==nullptr)
@@ -1476,7 +1558,7 @@ void CreateEntities(SGM::Result           &rResult,
                         }
                     }
                 }
-            else if(nType==SGMInternal::STEPTags::TRIMMED_CURVE)
+            else if(nType==STEPTags::TRIMMED_CURVE)
                 {
                 for(Index3=0;Index3<nShells;++Index3)
                     {
@@ -1489,11 +1571,11 @@ void CreateEntities(SGM::Result           &rResult,
                 std::vector<size_t> aSubIDs=SLD->second.m_aIDs;
                 int nSides=1;
                 bool bFlip=false;
-                if(nType==SGMInternal::STEPTags::OPEN_SHELL)
+                if(nType==STEPTags::OPEN_SHELL)
                     {
                     nSides=2;
                     }
-                else if(nType==SGMInternal::STEPTags::ORIENTED_CLOSED_SHELL)
+                else if(nType==STEPTags::ORIENTED_CLOSED_SHELL)
                     {
                     // #2094=ORIENTED_CLOSED_SHELL('',*,#2093,.F.);
 
@@ -1829,49 +1911,51 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     STEPTagMapType mSTEPTagMap;
     CreateSTEPTagMap(mSTEPTagMap);
 
-    // Set up a STEPData object and the map from ID to STEPData
+    // Set up a map from Line #ID -> STEPLineData
     
     STEPLineDataMapType mSTEPData;
 
-    STEPLineData STEPData;
-    STEPData.m_aIDs.reserve(1024);
-    STEPData.m_aDoubles.reserve(256);
-    STEPData.m_aInts.reserve(64);
-    STEPData.m_aSizes.reserve(2);
+    // Set up string buffers for Line and Tag.
 
-    // setup Line buffer string and Tag buffer string
+    std::string sLine;
+    sLine.reserve(8*4096 - 32); // default to a multiple of memory page size (N*4096)
+    std::string sTag;
+    sTag.reserve(256 - 32);
 
-    std::string sLine, sTag;
-    sLine.reserve(8*1024);
-    sTag.reserve(128);
+    // make vector of STEPLine objects
+    // STEPLine is a (sLine, sTag, STEPLineData)
+
+    // read N lines push_back STEPLine onto vector
+
+    // enqueue job with STEPLine vector
+
 
     while (std::getline(inputFileStream,sLine,';'))
         {
         ProcessStepCommand(rResult,mSTEPTagMap,sLine.c_str(),mSTEPData,aLog,Options,sTag);
-        STEPData.clear();
         }
     inputFileStream.close();
 
-#if 1
+#ifdef SGM_PROFILE_READER
     // output max STEPLineData capacity are we seeing in a file
+    std::cout << "sLine size = " << sLine.capacity() << std::endl;
+    std::cout << "sTag size = " << sTag.capacity() << std::endl;
     size_t max_ids = 0;
     size_t max_doubles = 0;
     size_t max_ints = 0;
-    size_t max_sizes = 0;
     for (auto const& entry : mSTEPData)
         {
         STEPLineData const & pSTEPData = entry.second;
-        max_ids = std::max(max_ids, pSTEPData.m_aIDs.capacity());
-        max_doubles = std::max(max_doubles, pSTEPData.m_aDoubles.capacity());
-        max_ints = std::max(max_ints, pSTEPData.m_aInts.capacity());
-        max_sizes = std::max(max_sizes, pSTEPData.m_aSizes.capacity());
+        size_t num_ids = pSTEPData.m_aIDs.size();
+        max_ids = std::max(max_ids, num_ids);
+        size_t num_doubles = pSTEPData.m_aDoubles.size();
+        max_doubles = std::max(max_doubles, num_doubles);
+        size_t num_ints = pSTEPData.m_aInts.size();
+        max_ints = std::max(max_ints, num_ints);
         }
-        std::cout << "sLine capacity = " << sLine.capacity() << std::endl;
-        std::cout << "sTag capacity = " << sTag.capacity() << std::endl;
-        std::cout << "max mSTEPData m_aIDS capacity = " << max_ids << std::endl;
-        std::cout << "max mSTEPData m_aDoubles capacity = " << max_doubles << std::endl;
-        std::cout << "max mSTEPData m_aInts capacity = " << max_ints << std::endl;
-        std::cout << "max mSTEPData m_aSizes capacity = " << max_sizes << std::endl;
+        std::cout << "max mSTEPData m_aIDS size = " << max_ids << std::endl;
+        std::cout << "max mSTEPData m_aDoubles size = " << max_doubles << std::endl;
+        std::cout << "max mSTEPData m_aInts size = " << max_ints << std::endl;
 #endif
 
     // Create all the entities.
@@ -1882,10 +1966,10 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
         }
 
-    // create all the triangles/facets/boxes
-//    std::cerr << "exit(1) in " << __FILE__ << ' ' << __LINE__ << std::endl;
-  //  exit(1);
-    pThing->FindCachedData(rResult);
+#ifdef SGM_PROFILE_READER
+    std::cerr << "SGM_PROFILE_READER return at " << __FILE__ << '(' << __LINE__ << ')' << std::endl;
+    return aEntities.size();
+#endif // SGM_PROFILE_READER
 
     if(Options.m_bHeal)
         {
@@ -1902,6 +1986,9 @@ size_t ReadStepFile(SGM::Result                  &rResult,
             Merge(rResult,aEntities[Index1]);
             }
         }
+
+    // create all the triangles/facets/boxes
+    pThing->FindCachedData(rResult);
 
     return aEntities.size();
     }

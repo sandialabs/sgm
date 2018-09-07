@@ -347,20 +347,23 @@ TEST(DataDirectoriesCheck, import_check_single)
     //std::string file_path = get_models_file_path("knuckle.stp");
 
     //std::string file_path = get_models_file_path("Large Files/Part1.STEP"); // reads but FindCachedData hangs
+    //std::string file_path = get_models_file_path("Large Files/47M Anchor Handling TUG-STEP.STEP");
+    //std::string file_path = get_models_file_path("Large Files/T-34.STEP"); // read but no FindCachedData
 
     //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
     //std::string file_path = get_models_file_path("Large Files/Globe 01 (Solid).stp"); // hangs in FindCachedData facet face
     //std::string file_path = get_models_file_path("Large Files/Globe (1).stp");
     //std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
-    //std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
+    std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
     //std::string file_path = get_models_file_path("Pencil.STEP");
-    //std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
     //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
     //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
-    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_full_model_volume1.stp");
-    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_TSLhousingGeom.stp");
     //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_glom4/0016-_Bspring.stp");
-    std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
+    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
+    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_ZGeom.stp"); // hangs in FindCachedData facet face
+    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_TSLhousingGeom.stp");
+    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_full_model_volume1.stp");
+    //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_full_model_volume1x64.stp");
 
     std::ofstream log_file;
 

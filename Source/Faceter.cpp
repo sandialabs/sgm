@@ -836,14 +836,24 @@ bool SplitAtSeams(SGM::Result                     & ,
     return bFound;
     }
 
-void SplitFacet(curve                          const *pCurve,
+bool SplitFacet(curve                          const *pCurve,
                 surface                        const *pSurface,
                 std::list<FacetNodeNormal>::iterator &NodeA,
                 std::list<FacetNodeNormal>::iterator &NodeB,
                 std::list<FacetNodeNormal>           &lNodes)
     {
+    int u_cont = pSurface->UContinuity();
+    int v_cont = pSurface->VContinuity();
     double dParamA=NodeA->m_dParam;
     double dParamB=NodeB->m_dParam;
+
+    if (u_cont < 1 || v_cont < 1)
+        {
+        if ((dParamB - dParamA) < SGM_FIT)
+            {
+            return false;
+            }
+        }
     double dParamC=(dParamA+dParamB)*0.5;
     SGM::Point3D Pos;
     pCurve->Evaluate(dParamC,&Pos);
@@ -853,6 +863,7 @@ void SplitFacet(curve                          const *pCurve,
     lNodes.insert(NodeB,NodeC);
     NodeB=NodeA;
     ++NodeB;
+    return true;
     }
 
 void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
@@ -907,17 +918,26 @@ void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
         lNodes.push_back(Node);
         }
 
-    bool bSplit=false;
+    bool bSplit = false;
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
     std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
     std::list<FacetNodeNormal>::iterator LastIter=iter;
     ++iter;
     while(iter!=lNodes.end())
         {
-        if(iter->m_bSingular==false && LastIter->m_bSingular==false && iter->m_Norm%LastIter->m_Norm<dDotTol)
+        double dotProd = iter->m_Norm%LastIter->m_Norm;
+        if(iter->m_bSingular==false && LastIter->m_bSingular==false && dotProd<dDotTol)
             {
-            SplitFacet(pCurve,pSurface,LastIter,iter,lNodes);
-            bSplit=true;
+            bool bSplitThisTime = SplitFacet(pCurve,pSurface,LastIter,iter,lNodes);
+            if (bSplitThisTime == false)
+                {
+                ++LastIter;
+                ++iter;
+                }
+            else
+                {
+                bSplit = true;
+                }
             }
         else
             {
@@ -2973,7 +2993,7 @@ void RefineTriangles(double                          dScale,
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
     bool bSplit=true;
     size_t nCount=0;
-    while(bSplit && !sEdgeData.empty())
+    while(bSplit && !sEdgeData.empty() && nCount < 10000) // TODO: we should fix so we don't have this limit
         {
         EdgeValue EV=*(sEdgeData.begin());
         if(EV.m_dDot<dDotTol)
