@@ -2786,26 +2786,26 @@ void SplitEdge(EdgeValue                                       const &EV,
                double                                                 dScale,
                std::vector<SGM::Point3D>                             &aPoints3D,
                std::vector<SGM::UnitVector3D>                        &aNormals,
-               std::vector<unsigned int>                             &aTriangles,
-               std::vector<unsigned int>                             &aAdjacencies,
+               std::vector<unsigned>                             &aTriangles,
+               std::vector<unsigned>                             &aAdjacencies,
                std::set<EdgeValue>                                   &sEdgeData,
-               std::map<std::pair<unsigned int,unsigned int>,double> &mEdgeData)
+               std::map<std::pair<unsigned,unsigned>,double> &mEdgeData)
     {
     // Add the new point
 
     surface const *pSurface=pFace->GetSurface();
-    unsigned int nT0=EV.m_nTriangle;
-    unsigned int nEdge=EV.m_nEdge;
-    unsigned int a=aTriangles[nT0+nEdge];
-    unsigned int b=aTriangles[nT0+(nEdge+1)%3];
-    unsigned int c=aTriangles[nT0+(nEdge+2)%3];
+    unsigned nT0=EV.m_nTriangle;
+    unsigned nEdge=EV.m_nEdge;
+    unsigned a=aTriangles[nT0+nEdge];
+    unsigned b=aTriangles[nT0+(nEdge+1)%3];
+    unsigned c=aTriangles[nT0+(nEdge+2)%3];
     SGM::Point2D const &uv0=aPoints2D[a];
     SGM::Point2D const &uv1=aPoints2D[b];
     SGM::Point2D Miduv=SGM::MidPoint(uv0,uv1);
     SGM::Point3D Pos;
     SGM::UnitVector3D Norm;
     pSurface->Evaluate(Miduv,&Pos,nullptr,nullptr,&Norm);
-    unsigned int m=(unsigned int)aPoints2D.size();
+    unsigned m=(unsigned)aPoints2D.size();
     aPoints2D.push_back(Miduv);
     SGM::Point2D ScaledMidUV(Miduv.m_u,Miduv.m_v*dScale);
     aScaled2D.push_back(ScaledMidUV);
@@ -2814,11 +2814,11 @@ void SplitEdge(EdgeValue                                       const &EV,
 
     // Find the adjacent triangle information
     
-    unsigned int nT1=aAdjacencies[nT0+nEdge];
-    unsigned int n0=aTriangles[nT1];
-    unsigned int n1=aTriangles[nT1+1];
-    unsigned int n2=aTriangles[nT1+2];
-    unsigned int d,nA2,nA3;
+    unsigned nT1=aAdjacencies[nT0+nEdge];
+    unsigned n0=aTriangles[nT1];
+    unsigned n1=aTriangles[nT1+1];
+    unsigned n2=aTriangles[nT1+2];
+    unsigned d,nA2,nA3;
     if(n0!=a && n0!=b)
         {
         d=n0;
@@ -2848,20 +2848,20 @@ void SplitEdge(EdgeValue                                       const &EV,
     aTriangles[nT1+1]=b;
     aTriangles[nT1+2]=c;
 
-    unsigned int nT2=(unsigned int)aTriangles.size();
+    unsigned nT2=(unsigned)aTriangles.size();
     aTriangles.push_back(m);
     aTriangles.push_back(a);
     aTriangles.push_back(d);
 
-    unsigned int nT3=(unsigned int)aTriangles.size();
+    unsigned nT3=(unsigned)aTriangles.size();
     aTriangles.push_back(b);
     aTriangles.push_back(m);
     aTriangles.push_back(d);
 
     // Fix adjacencies
 
-    unsigned int nA0=aAdjacencies[nT0+(nEdge+1)%3];
-    unsigned int nA1=aAdjacencies[nT0+(nEdge+2)%3];
+    unsigned nA0=aAdjacencies[nT0+(nEdge+1)%3];
+    unsigned nA1=aAdjacencies[nT0+(nEdge+2)%3];
 
     aAdjacencies[nT0]=nT2;
     aAdjacencies[nT0+1]=nT1;
@@ -2886,64 +2886,64 @@ void SplitEdge(EdgeValue                                       const &EV,
 
     // Fix edge data.
 
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,nEdge)],nT0,nEdge));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT0,(nEdge+2)%3)],nT0,(nEdge+2)%3));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,0)],nT1,0));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,1)],nT1,1));
-    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned int,unsigned int>(nT1,2)],nT1,2));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT0,nEdge)],nT0,nEdge));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT0,(nEdge+1)%3)],nT0,(nEdge+1)%3));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT0,(nEdge+2)%3)],nT0,(nEdge+2)%3));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT1,0)],nT1,0));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT1,1)],nT1,1));
+    sEdgeData.erase(EdgeValue(mEdgeData[std::pair<unsigned,unsigned>(nT1,2)],nT1,2));
 
-    if(aAdjacencies[nT0+0]!=std::numeric_limits<unsigned int>::max())
+    if(aAdjacencies[nT0+0]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,m);
         sEdgeData.insert(EdgeValue(dVal,nT0,0));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT0,0)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT0,0)]=dVal;
         }
-    if(aAdjacencies[nT3+0]!=std::numeric_limits<unsigned int>::max())
+    if(aAdjacencies[nT3+0]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,m);
         sEdgeData.insert(EdgeValue(dVal,nT3,0));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT3,0)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT3,0)]=dVal;
         }
-    if(aAdjacencies[nT1+2]!=std::numeric_limits<unsigned int>::max())
+    if(aAdjacencies[nT1+2]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,c,m);
         sEdgeData.insert(EdgeValue(dVal,nT1,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT1,2)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT1,2)]=dVal;
         }
-    if(aAdjacencies[nT2+2]!=std::numeric_limits<unsigned int>::max())
+    if(aAdjacencies[nT2+2]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,m);
         sEdgeData.insert(EdgeValue(dVal,nT2,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT2,2)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT2,2)]=dVal;
         }
 
-    if(c<a && aAdjacencies[nT0+2]!=std::numeric_limits<unsigned int>::max())
+    if(c<a && aAdjacencies[nT0+2]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,c);
         sEdgeData.insert(EdgeValue(dVal,nT0,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT0,2)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT0,2)]=dVal;
         }
-    if(b<c && aAdjacencies[nT1+1]!=std::numeric_limits<unsigned int>::max())
+    if(b<c && aAdjacencies[nT1+1]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,b,c);
         sEdgeData.insert(EdgeValue(dVal,nT1,1));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT1,1)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT1,1)]=dVal;
         }
-    if(a<d  && aAdjacencies[nT2+1]!=std::numeric_limits<unsigned int>::max())
+    if(a<d  && aAdjacencies[nT2+1]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,a,d);
         sEdgeData.insert(EdgeValue(dVal,nT2,1));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT2,1)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT2,1)]=dVal;
         }
-    if(d<b && aAdjacencies[nT3+2]!=std::numeric_limits<unsigned int>::max())
+    if(d<b && aAdjacencies[nT3+2]!=std::numeric_limits<unsigned>::max())
         {
         double dVal=FindNormalDiff(false,pSurface,aNormals,aPoints2D,d,b);;
         sEdgeData.insert(EdgeValue(dVal,nT3,2));
-        mEdgeData[std::pair<unsigned int,unsigned int>(nT3,2)]=dVal;
+        mEdgeData[std::pair<unsigned,unsigned>(nT3,2)]=dVal;
         }
 
-    std::set<unsigned int> sSearchTris;
+    std::set<unsigned> sSearchTris;
     sSearchTris.insert(nT0);
     sSearchTris.insert(nT1);
     sSearchTris.insert(nT2);

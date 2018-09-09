@@ -353,6 +353,7 @@ TEST(DataDirectoriesCheck, import_check_single)
     //std::string file_path = get_models_file_path("Grand Piano 2.STEP");
     //std::string file_path = get_models_file_path("Large Files/Globe 01 (Solid).stp"); // hangs in FindCachedData facet face
     //std::string file_path = get_models_file_path("Large Files/Globe (1).stp");
+    //std::string file_path = get_models_file_path("Large Files/USSnathonjames01assem.STEP");
     //std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
     std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
     //std::string file_path = get_models_file_path("Pencil.STEP");

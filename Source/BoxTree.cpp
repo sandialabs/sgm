@@ -7,13 +7,13 @@
 namespace SGM {
 
     const size_t BoxTree::REINSERT_CHILDREN = 2;    // in the range 1 < m <= MIN_CHILDREN
-    const size_t BoxTree::MIN_CHILDREN = 8;         // in the range 2 <= m < M
+    const size_t BoxTree::MIN_CHILDREN = 4;         // in the range 2 <= m < M
     const size_t BoxTree::MAX_CHILDREN = 16;        // in the range MIN_CHILDREN*2 <= m < M
     const size_t BoxTree::RESERVE_CHILDREN = 12;    // in the range 2 <= m < M
     const size_t BoxTree::CHOOSE_SUBTREE = 16;
     const size_t BoxTree::MEMORY_POOL_BYTES = 4096; // chunk size of a multiple of 4096 may be best
 
-#if defined(BOX_TREE_USE_MEMORY_POOL)
+#if defined(BOX_TREE_USE_MEMORY_POOL) // cannot use if we are inside multithreaded code
     // minor note: if these throw an exception they cannot be caught (static initialization)
     std::unique_ptr<MemoryPool<BoxTree::Leaf>> BoxTree::Leaf::m_MemoryPool(
             new MemoryPool<BoxTree::Leaf>(MEMORY_POOL_BYTES / sizeof(BoxTree::Leaf)));

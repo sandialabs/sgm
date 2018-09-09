@@ -8,7 +8,7 @@ namespace SGMInternal
 {
 class entity;
 
-    enum STEPTags
+    enum class STEPTag: unsigned int
         {
         ADVANCED_BREP_SHAPE_REPRESENTATION,
         ADVANCED_FACE,
@@ -143,7 +143,8 @@ class entity;
         VECTOR,
         VERTEX_LOOP,
         VERTEX_POINT,
-        VIEW_VOLUME
+        VIEW_VOLUME,
+        NULL_NONE_INVALID
         };
 
 void SaveSTEP(SGM::Result                  &rResult,

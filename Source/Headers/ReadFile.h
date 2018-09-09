@@ -1,11 +1,21 @@
 #ifndef SGM_READFILE_H
 #define SGM_READFILE_H
 
+#include "STEP.h"
+
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <unordered_map>
 #include <vector>
+
+#if !defined( _MSC_VER ) || _MSC_VER >= 1900
+#define NOEXCEPT noexcept
+#define NOEXCEPT_ARGS(ARGS) noexcept((ARGS))
+#else
+#define NOEXCEPT
+#define NOEXCEPT_ARGS(ARGS)
+#endif
 
 namespace SGMInternal {
 
@@ -17,34 +27,97 @@ class entity;
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class STEPLineData
-{
-public:
+// Holds data arrays read from a step line:
+//  - enum STEPTag
+//  - array of #IDs
+//  - array of doubles
+//  - array of ints
+//  - array of unsigned
 
-    STEPLineData() = default;
-
-    explicit STEPLineData(size_t Type) :
-        m_nType(Type), m_aIDs(), m_aDoubles(), m_aInts(), m_aSizes(), m_bFlag(true)
+struct STEPLineData
+    {
+    STEPLineData() :
+            m_nSTEPTag(STEPTag::NULL_NONE_INVALID),
+            m_aIDs(),
+            m_aDoubles(),
+            m_aInts(),
+            m_aSizes(),
+            m_bFlag(true)
     {}
+
+    explicit STEPLineData(STEPTag nSTEPTag) :
+            m_nSTEPTag(nSTEPTag),
+            m_aIDs(),
+            m_aDoubles(),
+            m_aInts(),
+            m_aSizes(),
+            m_bFlag(true)
+    {}
+
+    STEPLineData(STEPLineData const &) = default;
+
+    STEPLineData(STEPLineData&&) = default;
+
+    STEPLineData& operator=(STEPLineData &&) = default;
+
+    STEPLineData& operator=(const STEPLineData&) = default;
 
     ~STEPLineData() = default;
 
-    size_t m_nType;
+    void clear()
+        {
+            m_nSTEPTag = STEPTag::NULL_NONE_INVALID;
+            m_aIDs.clear();
+            m_aDoubles.clear();
+            m_aInts.clear();
+            m_aSizes.clear();
+            m_bFlag=true;
+        }
+
+    STEPTag m_nSTEPTag;
     std::vector <size_t> m_aIDs;
     std::vector<double> m_aDoubles;
     std::vector<int> m_aInts;
     std::vector<unsigned> m_aSizes;
     bool m_bFlag;
-};
+    };
 
-class STEPCommand
+// A line number (#ID), a string Tag, and a STEPLineData object.
+
+struct STEPLine
 {
-    std::pair<std::string, size_t> tag;
-    STEPLineData STEPdata;
+    STEPLine() = default;
+
+    explicit STEPLine(STEPTag nSTEPTag) :
+            m_nLineNumber(0),
+            m_sTag(),
+            m_STEPLineData(nSTEPTag)
+    { m_sTag.reserve(256 - 32); }
+
+    STEPLine(const STEPLine &) = default;
+
+    STEPLine(STEPLine&&) = default;
+
+    STEPLine& operator=(STEPLine &&) = default;
+
+    STEPLine& operator=(const STEPLine& other) = default;
+
+    ~STEPLine() = default;
+
+    void clear()
+        {
+            m_nLineNumber = 0;
+            m_sTag.clear();
+            m_STEPLineData.clear();
+        }
+
+    size_t m_nLineNumber;
+    std::string m_sTag;
+    STEPLineData m_STEPLineData;
 };
 
-typedef std::unordered_map <std::string, size_t> STEPTagMapType;
-typedef std::unordered_map <size_t, STEPLineData> STEPLineDataMapType;
+typedef std::unordered_map<std::string, STEPTag> STEPTagMapType;
+typedef std::unordered_map<size_t, STEPLineData> STEPLineDataMapType;
 typedef std::unordered_map<size_t, entity *> IDEntityMapType;
 
 ///////////////////////////////////////////////////////////////////////////////
