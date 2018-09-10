@@ -998,19 +998,28 @@ namespace SGMInternal {
             }
     }
 
-    void CreateEntities(SGM::Result &rResult,
-                        STEPLineDataMapType &mSTEPData,
-                        IDEntityMapType &mEntityMap,
-                        std::vector<entity *> &aEntities)
+void CreateEntities(SGM::Result &rResult,
+                    size_t maxSTEPLineNumber,
+                    STEPLineDataMapType &mSTEPData,
+                    std::vector<entity *> &aEntities)
     {
+        IDEntityMapType mEntityMap;
         std::set<entity *> sEntities;
         std::vector<size_t> aBodies, aVolumes, aFaces, aEdges;
         std::vector<body *> aSheetBodies;
-        auto DataIter = mSTEPData.begin();
-        while (DataIter != mSTEPData.end())
+
+        // always create entities in a specific order by STEP #ID line number, from 1 to maxSTEPLineNumber
+
+        for (size_t nID = 1; nID <= maxSTEPLineNumber; ++nID)
             {
-            size_t nID = DataIter->first;
-            switch (DataIter->second.m_nSTEPTag)
+            auto DataIter = mSTEPData.find(nID);
+            if (DataIter == mSTEPData.end())
+                {
+                continue; // skip a STEP #ID that is not used
+                }
+            STEPLineData &stepLineData = DataIter->second;
+            
+            switch (stepLineData.m_nSTEPTag)
                 {
                 case STEPTag::ADVANCED_BREP_SHAPE_REPRESENTATION:
                     {
@@ -1028,14 +1037,14 @@ namespace SGMInternal {
                 case STEPTag::B_SPLINE_CURVE:
                 case STEPTag::B_SPLINE_CURVE_WITH_KNOTS:
                     {
-                    size_t nPoints = DataIter->second.m_aIDs.size();
-                    size_t nKnots = DataIter->second.m_aInts.size();
+                    size_t nPoints = stepLineData.m_aIDs.size();
+                    size_t nKnots = stepLineData.m_aInts.size();
                     std::vector<SGM::Point3D> aControlPoints;
                     aControlPoints.reserve(nPoints);
                     size_t Index1, Index2;
                     for (Index1 = 0; Index1 < nPoints; ++Index1)
                         {
-                        size_t nPointID = DataIter->second.m_aIDs[Index1];
+                        size_t nPointID = stepLineData.m_aIDs[Index1];
                         STEPLineData const &SLD = mSTEPData[nPointID];
                         SGM::Point3D Pos(SLD.m_aDoubles[0], SLD.m_aDoubles[1], SLD.m_aDoubles[2]);
                         aControlPoints.push_back(Pos);
@@ -1045,18 +1054,18 @@ namespace SGMInternal {
                     for (Index1 = 0; Index1 < nKnots; ++Index1)
                         {
                         ++nKnotCount;
-                        double dKnot = DataIter->second.m_aDoubles[Index1];
-                        unsigned int nMultiplicity = DataIter->second.m_aInts[Index1];
+                        double dKnot = stepLineData.m_aDoubles[Index1];
+                        unsigned int nMultiplicity = stepLineData.m_aInts[Index1];
                         for (Index2 = 0; Index2 < nMultiplicity; ++Index2)
                             {
                             aKnots.push_back(dKnot);
                             }
                         }
-                    if (DataIter->second.m_bFlag == false)
+                    if (stepLineData.m_bFlag == false)
                         {
                         // process with Weights
-                        assert(DataIter->second.m_nSTEPTag == STEPTag::BOUNDED_CURVE ||
-                               DataIter->second.m_nSTEPTag == STEPTag::B_SPLINE_CURVE);
+                        assert(stepLineData.m_nSTEPTag == STEPTag::BOUNDED_CURVE ||
+                               stepLineData.m_nSTEPTag == STEPTag::B_SPLINE_CURVE);
 
                         std::vector<SGM::Point4D> aControlPoints4D;
                         aControlPoints4D.reserve(nPoints);
@@ -1064,7 +1073,7 @@ namespace SGMInternal {
                             {
                             SGM::Point3D const &Pos = aControlPoints[Index1];
                             SGM::Point4D Pos4D(Pos.m_x, Pos.m_y, Pos.m_z,
-                                               DataIter->second.m_aDoubles[Index1 + nKnotCount]);
+                                               stepLineData.m_aDoubles[Index1 + nKnotCount]);
                             aControlPoints4D.push_back(Pos4D);
                             }
                         curve *pCurve = new NURBcurve(rResult, aControlPoints4D, aKnots);
@@ -1073,7 +1082,7 @@ namespace SGMInternal {
                     else
                         {
                         // no Weights
-                        assert(DataIter->second.m_nSTEPTag == STEPTag::B_SPLINE_CURVE_WITH_KNOTS);
+                        assert(stepLineData.m_nSTEPTag == STEPTag::B_SPLINE_CURVE_WITH_KNOTS);
                         curve *pCurve = new NUBcurve(rResult, aControlPoints, aKnots);
                         mEntityMap[nID] = pCurve;
                         }
@@ -1084,16 +1093,16 @@ namespace SGMInternal {
                     {
                     std::vector<std::vector<SGM::Point4D> > aaControlPoints;
                     std::vector<double> aUKnots, aVKnots;
-                    int nDegreeU = DataIter->second.m_aInts[0];
-                    int nDegreeV = DataIter->second.m_aInts[1];
+                    int nDegreeU = stepLineData.m_aInts[0];
+                    int nDegreeV = stepLineData.m_aInts[1];
                     size_t nCount = 2;
-                    unsigned nUKnots = DataIter->second.m_aSizes[0];
+                    unsigned nUKnots = stepLineData.m_aSizes[0];
                     size_t nDoubleCount = 0;
                     size_t Index1, Index2;
                     for (Index1 = 0; Index1 < nUKnots; ++Index1)
                         {
-                        int nMultiplicity = DataIter->second.m_aInts[nCount];
-                        double dKnot = DataIter->second.m_aDoubles[Index1];
+                        int nMultiplicity = stepLineData.m_aInts[nCount];
+                        double dKnot = stepLineData.m_aDoubles[Index1];
                         for (Index2 = 0; Index2 < nMultiplicity; ++Index2)
                             {
                             aUKnots.push_back(dKnot);
@@ -1101,11 +1110,11 @@ namespace SGMInternal {
                         ++nCount;
                         ++nDoubleCount;
                         }
-                    unsigned nVKnots = DataIter->second.m_aSizes[1];
+                    unsigned nVKnots = stepLineData.m_aSizes[1];
                     for (Index1 = 0; Index1 < nVKnots; ++Index1)
                         {
-                        int nMultiplicity = DataIter->second.m_aInts[nCount];
-                        double dKnot = DataIter->second.m_aDoubles[Index1 + nUKnots];
+                        int nMultiplicity = stepLineData.m_aInts[nCount];
+                        double dKnot = stepLineData.m_aDoubles[Index1 + nUKnots];
                         for (Index2 = 0; Index2 < nMultiplicity; ++Index2)
                             {
                             aVKnots.push_back(dKnot);
@@ -1121,9 +1130,9 @@ namespace SGMInternal {
                         std::vector<SGM::Point4D> aControlPoints;
                         for (Index2 = 0; Index2 < nVControlPoints; ++Index2)
                             {
-                            double dWeight = DataIter->second.m_aDoubles[nDoubleCount];
+                            double dWeight = stepLineData.m_aDoubles[nDoubleCount];
                             ++nDoubleCount;
-                            size_t nPointID = DataIter->second.m_aIDs[nIDCount];
+                            size_t nPointID = stepLineData.m_aIDs[nIDCount];
                             ++nIDCount;
                             STEPLineData const &SLD = mSTEPData[nPointID];
                             SGM::Point4D Pos(SLD.m_aDoubles[0], SLD.m_aDoubles[1], SLD.m_aDoubles[2], dWeight);
@@ -1139,26 +1148,26 @@ namespace SGMInternal {
                     {
                     std::vector<std::vector<SGM::Point3D> > aaControlPoints;
                     std::vector<double> aUKnots, aVKnots;
-                    int nDegreeU = DataIter->second.m_aInts[0];
-                    int nDegreeV = DataIter->second.m_aInts[1];
+                    int nDegreeU = stepLineData.m_aInts[0];
+                    int nDegreeV = stepLineData.m_aInts[1];
                     size_t nCount = 2;
-                    unsigned nUKnots = DataIter->second.m_aSizes[0];
+                    unsigned nUKnots = stepLineData.m_aSizes[0];
                     size_t Index1, Index2;
                     for (Index1 = 0; Index1 < nUKnots; ++Index1)
                         {
-                        int nMultiplicity = DataIter->second.m_aInts[nCount];
-                        double dKnot = DataIter->second.m_aDoubles[Index1];
+                        int nMultiplicity = stepLineData.m_aInts[nCount];
+                        double dKnot = stepLineData.m_aDoubles[Index1];
                         for (Index2 = 0; Index2 < nMultiplicity; ++Index2)
                             {
                             aUKnots.push_back(dKnot);
                             }
                         ++nCount;
                         }
-                    unsigned nVKnots = DataIter->second.m_aSizes[1];
+                    unsigned nVKnots = stepLineData.m_aSizes[1];
                     for (Index1 = 0; Index1 < nVKnots; ++Index1)
                         {
-                        int nMultiplicity = DataIter->second.m_aInts[nCount];
-                        double dKnot = DataIter->second.m_aDoubles[Index1 + nUKnots];
+                        int nMultiplicity = stepLineData.m_aInts[nCount];
+                        double dKnot = stepLineData.m_aDoubles[Index1 + nUKnots];
                         for (Index2 = 0; Index2 < nMultiplicity; ++Index2)
                             {
                             aVKnots.push_back(dKnot);
@@ -1173,7 +1182,7 @@ namespace SGMInternal {
                         std::vector<SGM::Point3D> aControlPoints;
                         for (Index2 = 0; Index2 < nVControlPoints; ++Index2)
                             {
-                            size_t nPointID = DataIter->second.m_aIDs[nIDCount];
+                            size_t nPointID = stepLineData.m_aIDs[nIDCount];
                             ++nIDCount;
                             STEPLineData const &SLD = mSTEPData[nPointID];
                             SGM::Point3D Pos(SLD.m_aDoubles[0], SLD.m_aDoubles[1], SLD.m_aDoubles[2]);
@@ -1193,8 +1202,8 @@ namespace SGMInternal {
                     }
                 case STEPTag::CIRCLE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dRadius = DataIter->second.m_aDoubles[0];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dRadius = stepLineData.m_aDoubles[0];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1206,9 +1215,9 @@ namespace SGMInternal {
                     }
                 case STEPTag::CONICAL_SURFACE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dRadius = DataIter->second.m_aDoubles[0];
-                    double dHalfAngle = DataIter->second.m_aDoubles[1];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dRadius = stepLineData.m_aDoubles[0];
+                    double dHalfAngle = stepLineData.m_aDoubles[1];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1221,8 +1230,8 @@ namespace SGMInternal {
                     }
                 case STEPTag::CYLINDRICAL_SURFACE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dRadius = DataIter->second.m_aDoubles[0];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dRadius = stepLineData.m_aDoubles[0];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1234,10 +1243,10 @@ namespace SGMInternal {
                     }
                 case STEPTag::DEGENERATE_TOROIDAL_SURFACE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dMajor = DataIter->second.m_aDoubles[0];
-                    double dMinor = DataIter->second.m_aDoubles[1];
-                    bool bApple = DataIter->second.m_bFlag;
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dMajor = stepLineData.m_aDoubles[0];
+                    double dMinor = stepLineData.m_aDoubles[1];
+                    bool bApple = stepLineData.m_bFlag;
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1255,9 +1264,9 @@ namespace SGMInternal {
                     }
                 case STEPTag::ELLIPSE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dMajor = DataIter->second.m_aDoubles[0];
-                    double dMinor = DataIter->second.m_aDoubles[1];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dMajor = stepLineData.m_aDoubles[0];
+                    double dMinor = stepLineData.m_aDoubles[1];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1288,8 +1297,8 @@ namespace SGMInternal {
                     }
                 case STEPTag::LINE:
                     {
-                    size_t nPos = DataIter->second.m_aIDs[0];
-                    size_t nVec = DataIter->second.m_aIDs[1];
+                    size_t nPos = stepLineData.m_aIDs[0];
+                    size_t nVec = stepLineData.m_aIDs[1];
                     STEPLineData const &SLDP = mSTEPData[nPos];
                     STEPLineData const &SLDV = mSTEPData[nVec];
                     size_t nDir = SLDV.m_aIDs[0];
@@ -1315,7 +1324,7 @@ namespace SGMInternal {
                     }
                 case STEPTag::PLANE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
+                    size_t nAxis = stepLineData.m_aIDs[0];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Origin;
@@ -1334,8 +1343,8 @@ namespace SGMInternal {
                     }
                 case STEPTag::SPHERICAL_SURFACE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dRadius = DataIter->second.m_aDoubles[0];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dRadius = stepLineData.m_aDoubles[0];
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
                     SGM::Point3D Center;
@@ -1348,7 +1357,7 @@ namespace SGMInternal {
                     }
                 case STEPTag::SURFACE_OF_LINEAR_EXTRUSION:
                     {
-                    size_t nVector = DataIter->second.m_aIDs[1];
+                    size_t nVector = stepLineData.m_aIDs[1];
                     STEPLineData const &SLDVector = mSTEPData[nVector];
                     size_t nDirection = SLDVector.m_aIDs[0];
                     double dScale = SLDVector.m_aDoubles[0];
@@ -1364,7 +1373,7 @@ namespace SGMInternal {
                     }
                 case STEPTag::SURFACE_OF_REVOLUTION:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[1];
+                    size_t nAxis = stepLineData.m_aIDs[1];
                     STEPLineData const &SLDAxis = mSTEPData[nAxis];
                     size_t nPoint = SLDAxis.m_aIDs[0];
                     size_t nDirection = SLDAxis.m_aIDs[1];
@@ -1378,9 +1387,9 @@ namespace SGMInternal {
                     }
                 case STEPTag::TOROIDAL_SURFACE:
                     {
-                    size_t nAxis = DataIter->second.m_aIDs[0];
-                    double dMajor = DataIter->second.m_aDoubles[0];
-                    double dMinor = DataIter->second.m_aDoubles[1];
+                    size_t nAxis = stepLineData.m_aIDs[0];
+                    double dMajor = stepLineData.m_aDoubles[0];
+                    double dMinor = stepLineData.m_aDoubles[1];
                     bool bApple = true;
                     STEPLineData const &SLDA = mSTEPData[nAxis];
 
@@ -1399,7 +1408,7 @@ namespace SGMInternal {
                     }
                 case STEPTag::VERTEX_POINT:
                     {
-                    STEPLineData const &SLDP = mSTEPData[DataIter->second.m_aIDs[0]];
+                    STEPLineData const &SLDP = mSTEPData[stepLineData.m_aIDs[0]];
                     SGM::Point3D Pos(SLDP.m_aDoubles[0], SLDP.m_aDoubles[1], SLDP.m_aDoubles[2]);
                     mEntityMap[nID] = new vertex(rResult, Pos);
                     break;
@@ -1407,7 +1416,6 @@ namespace SGMInternal {
                 default:
                     break;
                 }
-            ++DataIter;
             }
 
         // Connect the volumes to their bodies
@@ -1867,7 +1875,9 @@ STEPLineChunk ParseSTEPStreamChunk(STEPTagMapType const &mSTEPTagMap,
     return aSTEPLineChunk;
     }
 
-inline void PushSTEPLineIntoMap(SGM::Result &rResult,
+// Return the STEP Line number, unless the line is not a STEP Line or the tag is unrecognized then return 0.
+
+inline size_t PushSTEPLineIntoMap(SGM::Result &rResult,
                                 std::vector<std::string> &aLog,
                                 STEPLine &stepLine,
                                 STEPLineDataMapType &mSTEPData)
@@ -1877,16 +1887,18 @@ inline void PushSTEPLineIntoMap(SGM::Result &rResult,
 
     if (stepLine.m_nLineNumber == 0)
         {
-        return;
+        return 0;
         }
     else if (stepLine.m_STEPLineData.m_nSTEPTag == STEPTag::NULL_NONE_INVALID)
         {
         rResult.SetResult(SGM::ResultType::ResultTypeUnknownType);
         aLog.push_back("Unknown STEP Tag " + stepLine.m_sTag);
+        return 0;
         }
     else
         {
         mSTEPData.emplace(stepLine.m_nLineNumber, std::move(stepLine.m_STEPLineData));
+        return stepLine.m_nLineNumber;
         }
     }
 
@@ -1991,11 +2003,16 @@ void QueueParseChunks(std::ifstream &inputFileStream,
         }
 }
 
-void SyncParseChunks(SGM::Result &rResult,
-                     std::vector<std::string> &aLog,
-                     std::vector<std::future<STEPLineChunk>> &futures,
-                     STEPLineDataMapType &mSTEPData)
+// return value is the max STEPLineNumber seen in these chunks
+
+size_t SyncParseChunks(SGM::Result &rResult,
+                       std::vector<std::string> &aLog,
+                       std::vector<std::future<STEPLineChunk>> &futures,
+                       STEPLineDataMapType &mSTEPData)
 {
+    size_t maxSTEPLineNumber = 0;
+    size_t nSTEPLineNumber;
+
     // sync up results and put the results in the map of (lineNumber -> STEPLineData)
     for (auto &&future: futures)
         {
@@ -2010,20 +2027,25 @@ void SyncParseChunks(SGM::Result &rResult,
             if (pSTEPLine->m_nLineNumber == std::numeric_limits<size_t>::max())
                 {
                 assert(pSTEPLine->m_sTag == "END OF FILE");
-                return;
+                return 0;
                 }
 
             // put copy of the result into the map
-            PushSTEPLineIntoMap(rResult, aLog, *pSTEPLine, mSTEPData);
+            nSTEPLineNumber = PushSTEPLineIntoMap(rResult, aLog, *pSTEPLine, mSTEPData);
+            maxSTEPLineNumber = std::max(maxSTEPLineNumber,nSTEPLineNumber);
 
             // reset the structure for use again
             pSTEPLine->clear();
             }
         }
     futures.clear(); // ready to queue other jobs on the futures
+
+    return maxSTEPLineNumber;
 }
 
-void ParseSTEPStreamConcurrent(SGM::Result &rResult,
+// return value is the max STEPLineNumber (#ID)
+
+size_t ParseSTEPStreamConcurrent(SGM::Result &rResult,
                                SGM::TranslatorOptions const &Options,
                                std::vector<std::string> &aLog,
                                std::ifstream &inputFileStream,
@@ -2046,6 +2068,9 @@ void ParseSTEPStreamConcurrent(SGM::Result &rResult,
     // array of jobs (chunks), each result returned in a future object
     std::vector<std::future<STEPLineChunk>> futures;
 
+    size_t maxSTEPLineNumber = 0;
+    size_t maxChunkSTEPLineNumber;
+
     // until the stream reaches end-of-file or fails
     while (inputFileStream.good())
         {
@@ -2059,24 +2084,34 @@ void ParseSTEPStreamConcurrent(SGM::Result &rResult,
                          futures);
 
         // wait for jobs (chunks) to complete, copy results (#ID->STEPLineData) to the map, clear futures
-        SyncParseChunks(rResult, aLog, futures, mSTEPData);
+        maxChunkSTEPLineNumber = SyncParseChunks(rResult, aLog, futures, mSTEPData);
+
+        maxSTEPLineNumber = std::max(maxSTEPLineNumber,maxChunkSTEPLineNumber);
         }
 
     // free up all chunks of line (string) and STEPLine
     DestroyParseChunks(NUM_CHUNKS, CHUNK_SIZE, aChunkLines, aChunkSTEPLines);
+
+    return maxSTEPLineNumber;
     }
 
-void ParseSTEPStreamSerial(SGM::Result &rResult,
-                           SGM::TranslatorOptions const &Options,
-                           std::vector<std::string> &aLog,
-                           std::ifstream &inputFileStream,
-                           STEPTagMapType const &mSTEPTagMap,
-                           STEPLineDataMapType &mSTEPData)
+// Given a input file stream, get a map of (#ID->STEPLineData)
+// Return value is the maximum STEP line number (#ID) in the map
+
+size_t ParseSTEPStreamSerial(SGM::Result &rResult,
+                             SGM::TranslatorOptions const &Options,
+                             std::vector<std::string> &aLog,
+                             std::ifstream &inputFileStream,
+                             STEPTagMapType const &mSTEPTagMap,
+                             STEPLineDataMapType &mSTEPData)
     {
     // Set up string buffers for Line and Tag.
 
     std::string sLine;
     sLine.reserve(8 * 4096 - 32); // default to a multiple of memory page size (N*4096)
+
+    size_t maxSTEPLineNumber = 0;
+    size_t nSTEPLineNumber;
 
     while (std::getline(inputFileStream, sLine, ';'))
         {
@@ -2087,8 +2122,11 @@ void ParseSTEPStreamSerial(SGM::Result &rResult,
 
         ProcessSTEPLine(mSTEPTagMap, sLine, stepLine, Options.m_bScan);
 
-        PushSTEPLineIntoMap(rResult, aLog, stepLine, mSTEPData);
+        nSTEPLineNumber = PushSTEPLineIntoMap(rResult, aLog, stepLine, mSTEPData);
+
+        maxSTEPLineNumber = std::max(maxSTEPLineNumber,nSTEPLineNumber);
         }
+    return maxSTEPLineNumber;
     }
 
 size_t ReadStepFile(SGM::Result                  &rResult,
@@ -2126,13 +2164,9 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     mSTEPData.reserve(8*4096); // enough for medium sized STEP file
 
     // consume lines and push back (line,STEPLineData) into map
+    size_t maxSTEPLineNumber;
 
-    ParseSTEPStreamSerial(rResult,//ParseSTEPStreamConcurrent(rResult,//
-                          Options,
-                          aLog,
-                          inputFileStream,
-                          mSTEPTagMap,
-                          mSTEPData);
+    maxSTEPLineNumber = ParseSTEPStreamSerial(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
 
     inputFileStream.close();
 
@@ -2140,8 +2174,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     if(!Options.m_bScan)
         {
-        IDEntityMapType mEntityMap;
-        CreateEntities(rResult,mSTEPData,mEntityMap,aEntities);
+        CreateEntities(rResult,maxSTEPLineNumber,mSTEPData,aEntities);
         }
 
 #ifdef SGM_PROFILE_READER
