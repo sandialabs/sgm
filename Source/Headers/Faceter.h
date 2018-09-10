@@ -94,6 +94,36 @@ void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
                   std::vector<SGM::Point2D>       &aPoints,
                   std::vector<unsigned int>       &aTriangles);
 
+
+SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
+                            std::vector<unsigned int> &aTriangles,
+                            size_t                     nTri);
+
+void SplitTriangleUpdateTree(SGM::Point2D        const &D,
+                             std::vector<SGM::Point2D> &aPoints,
+                             std::vector<unsigned int> &aTriangles,
+                             size_t                     nHitTri,
+                             std::vector<size_t> const &aTris,
+                             SGM::BoxTree              &Tree);
+
+void SplitEdgeUpdateTree(SGM::Point2D        const &D,
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         size_t                     nOther,
+                         size_t                     nEdge2,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree);
+
+void SplitEdgeUpdateTree(SGM::Point2D        const &D,
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree);
+
 }
 
 #endif // FACETER_H

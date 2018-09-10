@@ -51,7 +51,7 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
                 // Use all the points.
                 auto aPoints = GetPoints3D(rResult);
                 auto aTriangles = GetTriangles(rResult);
-                double dMaxLength = SGM::FindMaxEdgeLength(aPoints,aTriangles);
+                double dMaxLength = SGM::FindMaxEdgeLength3D(aPoints,aTriangles);
                 m_Box = SGM::Interval3D(aPoints);
                 m_Box=m_Box.Extend(sqrt(dMaxLength)*FACET_HALF_TANGENT_OF_FACET_FACE_ANGLE);
                 }

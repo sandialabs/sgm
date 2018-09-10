@@ -237,14 +237,11 @@ namespace SGMInternal {
         }
     if(bFilled)
         {
-        std::vector<unsigned int> aAdjacencies;
         std::vector<unsigned int> aPolygon;
         for(Index1=0;Index1<nPoints;++Index1)
             {
             aPolygon.push_back(Index1);
             }
-        std::vector<std::vector<unsigned int> > aaPolygons;
-        aaPolygons.push_back(aPolygon);
         SGM::UnitVector3D XAxis,YAxis,ZAxis;
         SGM::Point3D Origin;
         SGM::FindLeastSquarePlane(aPoints,Origin,XAxis,YAxis,ZAxis);
@@ -257,7 +254,7 @@ namespace SGMInternal {
                 aPoints2D[Index1].m_u=-aPoints2D[Index1].m_u;
                 }
             }
-        SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,m_aTriangles,aAdjacencies);
+        SGM::TriangulatePolygon(rResult,aPoints2D,aPolygon,m_aTriangles);
         }
     }
 

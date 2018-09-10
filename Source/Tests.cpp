@@ -3391,6 +3391,140 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+    if(nTestNumber==53)
+        {
+        // Test grid creation and polygon imprinting.
+
+        bool bAnswer=true;
+
+        std::vector<double> aValues;
+        aValues.push_back(0);
+        aValues.push_back(1);
+        aValues.push_back(2);
+        aValues.push_back(3);
+        std::vector<SGM::Point2D> aPoints2D;
+        std::vector<SGM::Point3D> aPoints3D;
+        std::vector<unsigned int> aTriangles,aSegments;
+
+        SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
+
+        std::vector<SGM::Point3D> aGridPoints3D;
+        for(auto Pos : aPoints2D)
+            {
+            aGridPoints3D.push_back(SGM::Point3D(Pos.m_u,Pos.m_v,0.0));
+            }
+        //new SGMInternal::complex(rResult,aGridPoints3D,aTriangles);
+
+        std::vector<SGM::Point2D> aPolyPoints2D;
+        std::vector<SGM::Point3D> aPolyPoints3D;
+        SGM::Interval1D Domain(0,SGM_TWO_PI);
+        size_t Index1,nPoints=12;
+        double dRadius=1.5;
+        for(Index1=0;Index1<nPoints;++Index1)
+            {
+            double t=Domain.MidPoint(Index1/(double)nPoints);
+            double x=cos(t)*dRadius+1.5;
+            double y=sin(t)*dRadius+1.5;
+            aPolyPoints2D.push_back(SGM::Point2D(x,y));
+            aPolyPoints3D.push_back(SGM::Point3D(x,y,0));
+            aSegments.push_back((unsigned int)Index1);
+            aSegments.push_back((unsigned int)((Index1+1)%nPoints));
+            }
+        //new SGMInternal::complex(rResult,aSegments,aPolyPoints3D);
+
+        std::vector<unsigned int> aPolygonIndices;
+        SGM::InsertPolygon(rResult,aPolyPoints2D,aPoints2D,aTriangles,aPolygonIndices);
+        for(auto Pos : aPoints2D)
+            {
+            aPoints3D.push_back(SGM::Point3D(Pos.m_u,Pos.m_v,0.0));
+            }
+        new SGMInternal::complex(rResult,aPoints3D,aTriangles);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==54)
+        {
+        // Test grid creation and polygon imprinting.
+
+        bool bAnswer=true;
+
+        std::vector<double> aValues;
+        aValues.push_back(0);
+        aValues.push_back(1);
+        aValues.push_back(2);
+        aValues.push_back(3);
+        std::vector<SGM::Point2D> aPoints2D;
+        std::vector<unsigned int> aTriangles,aSegments;
+
+        SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
+
+        std::vector<SGM::Point3D> aGridPoints3D;
+        for(auto Pos : aPoints2D)
+            {
+            aGridPoints3D.push_back(SGM::Point3D(Pos.m_u,Pos.m_v,0.0));
+            }
+        
+        // Point (1,1,0) is at index 5.
+        
+        std::vector<unsigned int> aRemovedOrChanged,aReplacedTriangles;
+        SGM::RemovePointFromTriangles(rResult,5,aPoints2D,aTriangles,aRemovedOrChanged,aReplacedTriangles);
+        new SGMInternal::complex(rResult,aGridPoints3D,aTriangles);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==55)
+        {
+        // Test grid creation and polygon imprinting.
+
+        bool bAnswer=true;
+
+        std::vector<double> aValues;
+        aValues.push_back(0);
+        aValues.push_back(1);
+        aValues.push_back(2);
+        aValues.push_back(3);
+        std::vector<SGM::Point2D> aPoints2D;
+        std::vector<unsigned int> aTriangles,aSegments;
+
+        SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
+
+        std::vector<SGM::Point2D> aPolyPoints2D;
+        std::vector<SGM::Point3D> aPolyPoints3D;
+        
+        aPolyPoints2D.push_back(SGM::Point2D(0,0));
+        aPolyPoints3D.push_back(SGM::Point3D(0,0,0));
+        aPolyPoints2D.push_back(SGM::Point2D(3,0));
+        aPolyPoints3D.push_back(SGM::Point3D(3,0,0));
+        aPolyPoints2D.push_back(SGM::Point2D(3,3));
+        aPolyPoints3D.push_back(SGM::Point3D(3,3,0));
+        //aPolyPoints2D.push_back(SGM::Point2D(0,3));
+        //aPolyPoints3D.push_back(SGM::Point3D(0,3,0));
+        aSegments.push_back(0);
+        aSegments.push_back(1);
+        aSegments.push_back(1);
+        aSegments.push_back(2);
+        aSegments.push_back(2);
+        //aSegments.push_back(3);
+        //aSegments.push_back(3);
+        aSegments.push_back(0);
+        
+        //new SGMInternal::complex(rResult,aSegments,aPolyPoints3D);
+
+        std::vector<unsigned int> aPolygonIndices;
+        SGM::InsertPolygon(rResult,aPolyPoints2D,aPoints2D,aTriangles,aPolygonIndices);
+        std::vector<SGM::Point3D> aPoints3D;
+        for(auto Pos : aPoints2D)
+            {
+            aPoints3D.push_back(SGM::Point3D(Pos.m_u,Pos.m_v,0.0));
+            }
+        SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints3D,aTriangles);
+        pComplex->ReduceToUsedPoints();
+
+        return bAnswer;
+        }
+
     return false;
     }
 

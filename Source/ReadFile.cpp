@@ -1018,7 +1018,7 @@ void CreateEntities(SGM::Result           &rResult,
                     }
                 if(DataIter->second.m_bFlag==false)
                     {
-                    // process with Weights
+                    // Process with weights
                     assert(DataIter->second.m_nType == SGMInternal::STEPTags::BOUNDED_CURVE ||
                            DataIter->second.m_nType == SGMInternal::STEPTags::B_SPLINE_CURVE );
 
@@ -1035,7 +1035,7 @@ void CreateEntities(SGM::Result           &rResult,
                     }
                 else
                     {
-                    // no Weights
+                    // No weights
                     assert(SGMInternal::STEPTags::B_SPLINE_CURVE_WITH_KNOTS);
                     curve *pCurve=new NUBcurve(rResult,aControlPoints,aKnots);
                     mEntityMap[nID]=pCurve;
@@ -1854,7 +1854,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
     inputFileStream.close();
 
-#if 1
+#if 0
     // output max STEPLineData capacity are we seeing in a file
     size_t max_ids = 0;
     size_t max_doubles = 0;

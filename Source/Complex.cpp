@@ -149,7 +149,7 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     // Cover the holes.
 
     std::vector<unsigned int> aTriangles,aAdjacencies;
-    TriangulatePolygon(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+    TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     return new complex(rResult,aPoints3D,aTriangles);
     }
 
@@ -564,10 +564,54 @@ bool complex::IsCycle() const
 
 bool complex::IsOriented() const
     {
+    unsigned int Index1;
+    if(m_aTriangles.size())
+        {
+        std::vector<unsigned int> aAdjacences;
+        size_t nTriangles=SGM::FindAdjacences2D(m_aTriangles,aAdjacences);
+        for(Index1=0;Index1<nTriangles;Index1+=3)
+            {
+            unsigned int a=m_aTriangles[Index1];
+            unsigned int b=m_aTriangles[Index1+1];
+            unsigned int c=m_aTriangles[Index1+2];
+            unsigned int T0=aAdjacences[Index1];
+            unsigned int T1=aAdjacences[Index1+1];
+            unsigned int T2=aAdjacences[Index1+2];
+            if(T0<std::numeric_limits<unsigned int>::max())
+                {
+                unsigned int a1=aAdjacences[T0];
+                unsigned int b1=aAdjacences[T0+1];
+                unsigned int c1=aAdjacences[T0+2];
+                if((a1==a && c1==b) || (c1==a && b1==b) || (b1==a && a1==b))
+                    {
+                    return false;
+                    }
+                }
+            if(T1<std::numeric_limits<unsigned int>::max())
+                {
+                unsigned int a1=aAdjacences[T1];
+                unsigned int b1=aAdjacences[T1+1];
+                unsigned int c1=aAdjacences[T1+2];
+                if((a1==b && c1==c) || (c1==b && b1==c) || (b1==b && a1==c))
+                    {
+                    return false;
+                    }
+                }
+            if(T2<std::numeric_limits<unsigned int>::max())
+                {
+                unsigned int a1=aAdjacences[T2];
+                unsigned int b1=aAdjacences[T2+1];
+                unsigned int c1=aAdjacences[T2+2];
+                if((a1==c && c1==a) || (c1==c && b1==a) || (b1==c && a1==a))
+                    {
+                    return false;
+                    }
+                }
+            }
+        }
     if(m_aSegments.size())
         {
         unsigned int nSize=(unsigned int)m_aSegments.size();
-        unsigned int Index1;
         std::vector<unsigned int> aCounts,aCountsIn,aCountsOut;
         aCounts.assign(m_aPoints.size(),0);
         aCountsIn.assign(m_aPoints.size(),0);

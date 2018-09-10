@@ -793,10 +793,10 @@ class face : public topology
         int                                 m_nSides;
 
         mutable std::vector<SGM::Point3D>          m_aPoints3D;
+        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
+        mutable std::vector<unsigned int>          m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::vector<entity *>              m_aEntities;
-        mutable std::vector<unsigned int>          m_aTriangles;
-        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
 

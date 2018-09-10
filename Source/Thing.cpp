@@ -43,11 +43,11 @@ namespace SGMInternal {
             }
     }
 
-    bool thing::Check(SGM::Result &rResult,
-                      SGM::CheckOptions const &Options,
+    bool thing::Check(SGM::Result              &rResult,
+                      SGM::CheckOptions  const &Options,
                       std::vector<std::string> &aCheckStrings,
-                      bool bChildren) const
-    {
+                      bool                      bChildren) const
+        {
         // TODO: are we doing this right, should we check IsTopLevel()?
         // TODO: should we use a ThreadPool?
         // TODO: this mutex is locked for a long time, maybe get set of entities first, then check
@@ -58,13 +58,15 @@ namespace SGMInternal {
         for (auto const &iter : m_mAllEntities)
             {
             if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
+                {
                 bAnswer = false;
+                }
             }
         return bAnswer;
-    }
+        }
 
     SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
-    {
+        {
         if (m_Box.IsEmpty())
             {
             // TODO: this mutex is locked for a long time, maybe get set of entities first, then stretch
@@ -84,15 +86,17 @@ namespace SGMInternal {
                     type == SGM::ComplexType)
                     {
                     if (pEntity->IsTopLevel())
+                        {
                         m_Box.Stretch(pEntity->GetBox(rResult));
+                        }
                     }
                 }
             }
         return m_Box;
-    }
+        }
 
     void thing::SeverOwners(entity *pEntity)
-    {
+        {
         switch (pEntity->GetType())
             {
             case SGM::EdgeType:
@@ -151,116 +155,126 @@ namespace SGMInternal {
                 break;
                 }
             }
-    }
+        }
 
     size_t thing::AddToMap(entity *pEntity)
-    {
-        assert(!m_bIsConcurrentActive); // we should not be modifying in threads
-        m_nNextID++;
-        m_mAllEntities[m_nNextID] = pEntity;
-        return m_nNextID;
-    }
+        {
+        if(this)
+            {
+            assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+            m_nNextID++;
+            m_mAllEntities[m_nNextID] = pEntity;
+            return m_nNextID;
+            }
+        return 0;
+        }
 
     void thing::DeleteEntity(entity *pEntity)
-    {
+        {
         assert(!m_bIsConcurrentActive); // we should not be modifying in threads
         m_mAllEntities.erase(pEntity->GetID());
         delete pEntity;
-    }
+        }
 
     void thing::TransformBox(SGM::Result &, SGM::Transform3D const &transform3D)
-    {
+        {
         if (!transform3D.IsScaleAndTranslate())
+            {
             m_Box.Reset();
+            }
         else
+            {
             m_Box *= transform3D;
-    }
+            }
+        }
 
     entity *thing::FindEntity(size_t ID) const
-    {
+        {
         if (ID == 0) return const_cast<thing *>(this);
         entity *pAnswer = nullptr;
         auto iter = m_mAllEntities.find(ID);
         if (iter != m_mAllEntities.end())
             pAnswer = iter->second;
         return pAnswer;
-    }
+        }
 
     std::vector<entity *> thing::GetTopLevelEntities() const
-    {
+        {
         std::vector<entity *> aTopLevelEntities;
         for (auto &entry : m_mAllEntities)
             {
             // include any top level entity, including attribute, curve, surface
             entity *pEntity = entry.second;
             if (pEntity->IsTopLevel())
+                {
                 aTopLevelEntities.push_back(pEntity);
+                }
             }
         return aTopLevelEntities;
-    }
+        }
 
     std::unordered_set<body *> thing::GetBodies(bool bTopLevel) const
-    {
+        {
         std::unordered_set<body *> sBodies;
         GetEntities(SGM::EntityType::BodyType, sBodies, bTopLevel);
         return sBodies;
-    }
+        }
 
     std::unordered_set<attribute *> thing::GetAttributes(bool bTopLevel) const
-    {
+        {
         std::unordered_set<attribute *> sAttribute;
         GetEntities(SGM::EntityType::AttributeType, sAttribute, bTopLevel);
         return sAttribute;
-    }
+        }
 
     std::unordered_set<curve *> thing::GetCurves(bool bTopLevel) const
-    {
+        {
         std::unordered_set<curve *> sCurves;
         GetEntities(SGM::EntityType::CurveType, sCurves, bTopLevel);
         return sCurves;
-    }
+        }
 
     std::unordered_set<complex *> thing::GetComplexes(bool bTopLevel) const
-    {
+        {
         std::unordered_set<complex *> sComplexes;
         GetEntities(SGM::EntityType::ComplexType, sComplexes, bTopLevel);
         return sComplexes;
-    }
+        }
 
     std::unordered_set<face *> thing::GetFaces(bool bTopLevel) const
-    {
+        {
         std::unordered_set<face *> sFaces;
         GetEntities(SGM::EntityType::FaceType, sFaces, bTopLevel);
         return sFaces;
-    }
+        }
 
     std::unordered_set<edge *> thing::GetEdges(bool bTopLevel) const
-    {
+        {
         std::unordered_set<edge *> sEdges;
         GetEntities(SGM::EntityType::EdgeType, sEdges, bTopLevel);
         return sEdges;
-    }
+        }
 
     std::unordered_set<surface *> thing::GetSurfaces(bool bTopLevel) const
-    {
+        {
         std::unordered_set<surface *> sSurfaces;
         GetEntities(SGM::EntityType::SurfaceType, sSurfaces, bTopLevel);
         return sSurfaces;
-    }
+        }
 
     std::unordered_set<vertex *> thing::GetVertices(bool bTopLevel) const
-    {
+        {
         std::unordered_set<vertex *> sVertices;
         GetEntities(SGM::EntityType::VertexType, sVertices, bTopLevel);
         return sVertices;
-    }
+        }
 
     std::unordered_set<volume *> thing::GetVolumes(bool bTopLevel) const
-    {
+        {
         std::unordered_set<volume *> sVolumes;
         GetEntities(SGM::EntityType::VolumeType, sVolumes, bTopLevel);
         return sVolumes;
-    }
+        }
 
 ///////////////////////////////////////////////////////////////////////////////
 //

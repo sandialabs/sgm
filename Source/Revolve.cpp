@@ -236,12 +236,19 @@ void revolve::Transform(SGM::Transform3D const &Trans)
 
 curve *revolve::UParamLine(SGM::Result &rResult, double) const
     {
+    //TODO: Note that this is not using the u param values.
     curve *pParam=m_pCurve->Clone(rResult);
     return pParam;
     }
 
-curve *revolve::VParamLine(SGM::Result &, double) const
-    { throw std::logic_error("Derived class of surface must override VParamLine()"); }
+curve *revolve::VParamLine(SGM::Result &rResult, double dV) const
+    { 
+    SGM::Point3D Pos;
+    m_pCurve->Evaluate(dV,&Pos);
+    SGM::Point3D Center=m_Origin+m_ZAxis*((Pos-Center)%m_ZAxis);
+    double dRadius=Pos.Distance(Center);
+    return new circle(rResult,Center,m_ZAxis,dRadius,&m_XAxis);
+    }
 
 void revolve::SetCurve(curve *pCurve)
     {

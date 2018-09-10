@@ -295,6 +295,8 @@ class NUBcurve: public curve
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
+        std::vector<double> SpecialFacetParams() const override;
+
     public:
 
         std::vector<SGM::Point3D> m_aControlPoints;
@@ -579,6 +581,10 @@ class TorusKnot: public curve
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<double> const &GetSeedParams() const;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -589,6 +595,9 @@ class TorusKnot: public curve
         double            m_dMajorRadius;
         size_t            m_nA;
         size_t            m_nB;
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<double>       m_aSeedParams;
     };
 
 class hermite: public curve
