@@ -128,6 +128,10 @@ SGM_EXPORT double CurveInverse(SGM::Result        &rResult,
                                SGM::Point3D       *pClosePos=nullptr,
                                double       const *pGuess=nullptr);
 
+SGM_EXPORT SGM::Vector3D CurveCurvature(SGM::Result        &rResult,
+                                        SGM::Curve   const &CurveID,
+                                        double              t);
+
 SGM_EXPORT void EvaluateSurface(SGM::Result             &rResult,
                                 SGM::Surface      const &SurfaceID,
                                 SGM::Point2D      const &uv,

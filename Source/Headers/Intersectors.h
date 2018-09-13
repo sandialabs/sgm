@@ -285,6 +285,28 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes);
 
+size_t IntersectLineAndParabola(SGM::Point3D                 const &LineOrigin,
+                                SGM::UnitVector3D            const &LineAxis,
+                                SGM::Interval1D              const &LineDomain,
+                                SGM::Point3D                 const &ParabolaCenter,
+                                SGM::UnitVector3D            const &ParabolaXAxis,
+                                SGM::UnitVector3D            const &ParabolaYAxis,
+                                double                              ParabolaA,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
+
+size_t IntersectCoplanarLineAndParabola(SGM::Point3D                 const &LineOrigin,
+                                        SGM::UnitVector3D            const &LineAxis,
+                                        SGM::Interval1D              const &LineDomain,
+                                        SGM::Point3D                 const &ParabolaCenter,
+                                        SGM::UnitVector3D            const &ParabolaXAxis,
+                                        SGM::UnitVector3D            const &ParabolaYAxis,
+                                        double                              ParabolaA,
+                                        double                              dTolerance,
+                                        std::vector<SGM::Point3D>          &aPoints,
+                                        std::vector<SGM::IntersectionType> &aTypes);
+
 size_t IntersectLineAndNUBCurve(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 SGM::Interval1D              const &Domain,
@@ -480,6 +502,16 @@ size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
 //  Specific Parabola Surface Intersectors.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+size_t IntersectParabolaAndPlane(SGM::Point3D                 const &Center,
+                                 SGM::UnitVector3D            const &XAxis,
+                                 SGM::UnitVector3D            const &YAxis,
+                                 double                             dA,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNormal,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes);
 
 size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
                                  SGM::Point3D                 const &PlaneOrigin,

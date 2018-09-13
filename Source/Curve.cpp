@@ -251,4 +251,78 @@ double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
     return SGM::Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
     }
 
+//
+// parabola functions
+//
+void ParabolaEvaluate(SGM::Point3D     const &Center,
+                      SGM::UnitVector3D const &XAxis,
+                      SGM::UnitVector3D const &YAxis,
+                      double dA,
+                      double t,
+                      SGM::Point3D *Pos,
+                      SGM::Vector3D *D1,
+                      SGM::Vector3D *D2)
+    {
+    double y=dA*t*t;
+
+    if(Pos)
+        {
+        Pos->m_x=Center.m_x+XAxis.m_x*t+YAxis.m_x*y;
+        Pos->m_y=Center.m_y+XAxis.m_y*t+YAxis.m_y*y;
+        Pos->m_z=Center.m_z+XAxis.m_z*t+YAxis.m_z*y;
+        }
+    if(D1)
+        {
+        double dy=2.0*dA*t;
+        D1->m_x=XAxis.m_x+YAxis.m_x*dy;
+        D1->m_y=XAxis.m_y+YAxis.m_y*dy;
+        D1->m_z=XAxis.m_z+YAxis.m_z*dy;
+        }
+    if(D2)
+        {
+        double ddy=2.0*dA;
+        D2->m_x=YAxis.m_x*ddy;
+        D2->m_y=YAxis.m_y*ddy;
+        D2->m_z=YAxis.m_z*ddy;
+        }
+    }
+
+double ParabolaInverse(SGM::Point3D      const &Center,
+                       SGM::UnitVector3D const &XAxis,
+                       SGM::UnitVector3D const &YAxis,
+                       double dA,
+                       SGM::Point3D      const &Pos,
+                       SGM::Point3D            *ClosePos,
+                       double            const *)
+    {
+    SGM::Vector3D Vec=Pos-Center;
+    double Px=XAxis%Vec;
+    double Py=YAxis%Vec;
+    double a=4*dA*dA;
+    double b=0.0;
+    double c=2.0-4.0*dA*Py;
+    double d=-2.0*Px;
+    std::vector<double> aRoots;
+    size_t nRoots=SGM::Cubic(a,b,c,d,aRoots);
+    double dAnswer=0.0;
+    double dMin=std::numeric_limits<double>::max();
+    size_t Index1;
+    for(Index1=0;Index1<nRoots;++Index1)
+        {
+        double t=aRoots[Index1];
+        SGM::Point3D CPos;
+        ParabolaEvaluate(Center, XAxis, YAxis, dA, t, &CPos);
+        double dDist=CPos.DistanceSquared(Pos);
+        if(dDist<dMin)
+            {
+            dMin=dDist;
+            dAnswer=t;
+            if(ClosePos)
+                {
+                *ClosePos=CPos;
+                }
+            }
+        }
+    return dAnswer;
+    }
 }

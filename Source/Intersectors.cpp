@@ -492,20 +492,24 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
 
     SGM::Point3D Pos0=Origin+Axis*Domain.m_dMin;
     SGM::Point3D Pos1=Origin+Axis*Domain.m_dMax;
-    SGM::Point3D PosMid=Origin+Axis*Domain.MidPoint();
     double dDist0=(Pos0-PlaneOrigin)%PlaneNorm;
     double dDist1=(Pos1-PlaneOrigin)%PlaneNorm;
-    double dDistMid=(PosMid-PlaneOrigin)%PlaneNorm;
-    if(fabs(dDist0)<dTolerance && fabs(dDist1)<dTolerance && fabs(dDistMid)<dTolerance)
+    if (fabs(Axis%PlaneNorm)<dTolerance) // line and plane are parallel
         {
-        aPoints.push_back(Pos0);
-        aPoints.push_back(Pos1);
-        aTypes.push_back(SGM::IntersectionType::CoincidentType);
-        aTypes.push_back(SGM::IntersectionType::CoincidentType);
-        return 2;
+        double dDist = (Origin-PlaneOrigin)%PlaneNorm;
+        if(fabs(dDist)<dTolerance)
+            {
+            aPoints.push_back(Pos0);
+            aPoints.push_back(Pos1);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            return 2;
+            }
+        else
+            {
+            return 0;
+            }
         }
-    if (fabs(Axis%PlaneNorm)<dTolerance)
-      return 0;
     if(dDist0*dDist1<0)
         {
         double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.m_x+
@@ -605,6 +609,128 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
     return IntersectLineAndCircle(Origin,Axis,Domain,Center,Normal,dRadius,dTolerance,aPoints,aTypes);
     }
 
+size_t IntersectCoplanarLineAndParabola(SGM::Point3D                 const &LineOrigin,
+                                        SGM::UnitVector3D            const &LineAxis,
+                                        SGM::Interval1D              const &,//LineDomain,
+                                        SGM::Point3D                 const &ParabolaCenter,
+                                        SGM::UnitVector3D            const &ParabolaXAxis,
+                                        SGM::UnitVector3D            const &ParabolaYAxis,
+                                        double                              ParabolaA,
+                                        double                              dTolerance,
+                                        std::vector<SGM::Point3D>          &aPoints,
+                                        std::vector<SGM::IntersectionType> &aTypes)
+    {
+    std::vector<SGM::Point3D> aPoints2;
+    std::vector<SGM::IntersectionType> aTypes2;
+    SGM::UnitVector3D ParabolaNormal = ParabolaXAxis*ParabolaYAxis;
+    SGM::Point3D const &Center=ParabolaCenter;
+
+    double a=ParabolaA;
+    SGM::UnitVector3D XVec=ParabolaXAxis;
+    SGM::UnitVector3D YVec=ParabolaYAxis;
+    SGM::Vector3D Vec=LineOrigin-Center;
+    SGM::Point2D Origin2D(Vec%XVec,Vec%YVec);
+    SGM::Vector3D Vec2=(LineOrigin+LineAxis)-Center;
+    SGM::Point2D Pos2D(Vec2%XVec,Vec2%YVec);
+    SGM::UnitVector2D Axis2D=Pos2D-Origin2D;
+
+    // Using y=a*x^2
+    // x=Origin2D.m_u+Axis2D.m_u*t=c+d*t
+    // y=Origin2D.m_v+Axis2D.m_v*t=e+f*t
+
+    double c=Origin2D.m_u;
+    double e=Origin2D.m_v;
+    double d=Axis2D.m_u;
+    double f=Axis2D.m_v;
+
+    // a*(c+d*t)^2-(e+f*t)=0
+    // (a*c^2-e) + (2*a*c*d-f)*t + (a*d^2)*t^2
+
+    double A=a*d*d;
+    double B=2.0*a*c*d-f;
+    double C=a*c*c-e;
+
+    std::vector<double> aRoots;
+    size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
+    size_t Index1;
+    for(Index1=0;Index1<nRoots;++Index1)
+        {
+        SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
+        SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
+        SGM::Point3D ClosePos;
+        double dParabolaT = ParabolaInverse(Center, XVec, YVec, ParabolaA, Pos3D, &ClosePos);
+        if(Pos3D.DistanceSquared(ClosePos)<dTolerance*dTolerance)
+            {
+            aPoints.push_back(Pos3D);
+            if(nRoots==1)
+                {
+                SGM::Vector3D D1;
+                ParabolaEvaluate(Center,XVec,YVec,ParabolaA,dParabolaT,nullptr,&D1);
+                SGM::UnitVector3D UD1=D1;
+                if(SGM::NearEqual(fabs(UD1%LineAxis),1.0,dTolerance,false))
+                    {
+                    aTypes.push_back(SGM::IntersectionType::TangentType);
+                    }
+                else
+                    {
+                    aTypes.push_back(SGM::IntersectionType::PointType);
+                    }
+                }
+            else
+                {
+                aTypes.push_back(SGM::IntersectionType::PointType);
+                }
+            }
+        }
+    if(nRoots==0)
+        {
+        SGM::Point2D Pos=Origin2D-Axis2D*(B/(2.0*A));
+        SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
+        SGM::Point3D CPos;
+        ParabolaInverse(Center,XVec,YVec,ParabolaA,Pos3D,&CPos);
+        if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
+            {
+            aPoints.push_back(Pos3D);
+            aTypes.push_back(SGM::IntersectionType::TangentType);
+            }
+        }
+    return aPoints.size();
+    }
+
+size_t IntersectLineAndParabola(SGM::Point3D                 const &LineOrigin,
+                                SGM::UnitVector3D            const &LineAxis,
+                                SGM::Interval1D              const &LineDomain,
+                                SGM::Point3D                 const &ParabolaCenter,
+                                SGM::UnitVector3D            const &ParabolaXAxis,
+                                SGM::UnitVector3D            const &ParabolaYAxis,
+                                double                              ParabolaA,
+                                double                              dTolerance,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes)
+    {
+    std::vector<SGM::Point3D> aPoints2;
+    std::vector<SGM::IntersectionType> aTypes2;
+    SGM::UnitVector3D ParabolaNormal = ParabolaXAxis*ParabolaYAxis;
+    IntersectLineAndPlane(LineOrigin,LineAxis,LineDomain,ParabolaCenter,ParabolaNormal,dTolerance,aPoints2,aTypes2);
+    if(aPoints2.size()==2)
+        {
+        return IntersectCoplanarLineAndParabola(LineOrigin, LineAxis, LineDomain,
+                                                ParabolaCenter, ParabolaXAxis, ParabolaYAxis, ParabolaA,
+                                                dTolerance, aPoints, aTypes);
+        }
+    else if(aPoints2.size()==1)
+        {
+        SGM::Point3D Pos;
+        ParabolaInverse(ParabolaCenter,ParabolaXAxis,ParabolaYAxis,ParabolaA,aPoints2[0],&Pos);
+        if(Pos.DistanceSquared(aPoints2[0])<dTolerance*dTolerance)
+            {
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::PointType);
+            }
+        }
+    return aPoints.size();
+    }
+
 size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 SGM::Interval1D              const &Domain,
@@ -613,93 +739,9 @@ size_t IntersectLineAndParabola(SGM::Point3D                 const &Origin,
                                 std::vector<SGM::Point3D>          &aPoints,
                                 std::vector<SGM::IntersectionType> &aTypes)
     {
-    std::vector<SGM::Point3D> aPoints2;
-    std::vector<SGM::IntersectionType> aTypes2;
-    IntersectLineAndPlane(Origin,Axis,Domain,pParabola->m_Center,pParabola->m_Normal,dTolerance,aPoints2,aTypes2);
-    if(aPoints2.size()==2)
-        {
-        SGM::Point3D const &Center=pParabola->m_Center;
-        double a=pParabola->m_dA;
-        SGM::UnitVector3D XVec=pParabola->m_XAxis;
-        SGM::UnitVector3D YVec=pParabola->m_YAxis;
-        SGM::Vector3D Vec=Origin-Center;
-        SGM::Point2D Origin2D(Vec%XVec,Vec%YVec);
-        SGM::Vector3D Vec2=(Origin+Axis)-Center;
-        SGM::Point2D Pos2D(Vec2%XVec,Vec2%YVec);
-        SGM::UnitVector2D Axis2D=Pos2D-Origin2D;
-
-        // Using y=a*x^2
-        // x=Origin2D.m_u+Axis2D.m_u*t=c+d*t
-        // y=Origin2D.m_v+Axis2D.m_v*t=e+f*t
-
-        double c=Origin2D.m_u;
-        double e=Origin2D.m_v;
-        double d=Axis2D.m_u;
-        double f=Axis2D.m_v;
-
-        // a*(c+d*t)^2-(e+f*t)=0
-        // (a*c^2-e) + (2*a*c*d-f)*t + (a*d^2)*t^2
-
-        double A=a*d*d;
-        double B=2.0*a*c*d-f;
-        double C=a*c*c-e;
-
-        std::vector<double> aRoots;
-        size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
-        size_t Index1;
-        for(Index1=0;Index1<nRoots;++Index1)
-            {
-            SGM::Point2D Pos=Origin2D+Axis2D*aRoots[Index1];
-            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
-            SGM::Point3D CPos;
-            double t=pParabola->Inverse(Pos3D,&CPos);
-            if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
-                {
-                aPoints.push_back(Center+Pos.m_u*XVec+Pos.m_v*YVec);
-                if(nRoots==1)
-                    {
-                    SGM::Vector3D D1;
-                    pParabola->Evaluate(t,nullptr,&D1);
-                    SGM::UnitVector3D UD1=D1;
-                    if(SGM::NearEqual(fabs(UD1%Axis),1.0,dTolerance,false))
-                        {
-                        aTypes.push_back(SGM::IntersectionType::TangentType);
-                        }
-                    else
-                        {
-                        aTypes.push_back(SGM::IntersectionType::PointType);
-                        }
-                    }
-                else
-                    {
-                    aTypes.push_back(SGM::IntersectionType::PointType);
-                    }
-                }
-            }
-        if(nRoots==0)
-            {
-            SGM::Point2D Pos=Origin2D-Axis2D*(B/(2.0*A));
-            SGM::Point3D Pos3D=Center+Pos.m_u*XVec+Pos.m_v*YVec;
-            SGM::Point3D CPos;
-            pParabola->Inverse(Pos3D,&CPos);
-            if(Pos3D.DistanceSquared(CPos)<dTolerance*dTolerance)
-                {
-                aPoints.push_back(Pos3D);
-                aTypes.push_back(SGM::IntersectionType::TangentType);
-                }
-            }
-        }
-    else if(aPoints2.size()==1)
-        {
-        SGM::Point3D Pos;
-        pParabola->Inverse(aPoints2[0],&Pos);
-        if(Pos.DistanceSquared(aPoints2[0])<dTolerance*dTolerance)
-            {
-            aPoints.push_back(Pos);
-            aTypes.push_back(SGM::IntersectionType::PointType);
-            }
-        }
-    return aPoints.size();
+    return IntersectLineAndParabola(Origin, Axis, Domain,
+                                    pParabola->m_Center, pParabola->m_XAxis, pParabola->m_YAxis, pParabola->m_dA,
+                                    dTolerance, aPoints, aTypes);
     }
 
 size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
@@ -2913,9 +2955,9 @@ void FindCurvePlaneIntersections(curve                                  const *p
         {
 #if 0 // project back and forth
             // project point to NUBCurve
-            double dNUBt=pCurve->Inverse(Pos);
+            double dCurvet=pCurve->Inverse(Pos);
             SGM::Point3D CPos;
-            pCurve->Evaluate(dNUBt,&CPos);
+            pCurve->Evaluate(dCurvet,&CPos);
 
             // project point to plane
             Pos = CPos + ((PlaneOrigin - CPos) % PlaneNorm) * PlaneNorm;
@@ -2927,12 +2969,12 @@ void FindCurvePlaneIntersections(curve                                  const *p
             //    Pos=Temp;
             //}
 #endif
-#if 1 // newton
+#if 0 // newton
             // project point to NUBCurve and get the tangent
-            double dNUBt=pCurve->Inverse(Pos);
+            double dCurvet=pCurve->Inverse(Pos);
             SGM::Point3D CPos;
             SGM::Vector3D LocalTan;
-            pCurve->Evaluate(dNUBt,&CPos,&LocalTan);
+            pCurve->Evaluate(dCurvet,&CPos,&LocalTan);
 
             SGM::UnitVector3D uLocalTan(LocalTan);
             double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
@@ -2950,15 +2992,91 @@ void FindCurvePlaneIntersections(curve                                  const *p
                 dDist=Pos.Distance(CPos);
             }
 #endif
+#if 1 // tangent parabola
+            double dCurveT=pCurve->Inverse(Pos);
+            SGM::Point3D CPos;
+            SGM::Vector3D LocalTan;
+            pCurve->Evaluate(dCurveT, &CPos, &LocalTan);
+            SGM::Vector3D Curvature = pCurve->Curvature(dCurveT);
+            double dA = Curvature.Magnitude() * 0.5;
+
+            if (Curvature.Magnitude() > SGM_FIT)
+            {
+                std::vector<SGM::Point3D> aParabolaPoints;
+                std::vector<SGM::IntersectionType> aParabolaTypes;
+                IntersectParabolaAndPlane(CPos, LocalTan, Curvature, dA, PlaneOrigin, PlaneNorm, dTolerance, aParabolaPoints, aParabolaTypes);
+
+                if (aParabolaPoints.size() == 2)
+                {
+                    if ( (aParabolaTypes[0] == SGM::IntersectionType::CoincidentType) &&
+                         (aParabolaTypes[1] == SGM::IntersectionType::CoincidentType) )
+                    {
+                        // if parabola and plane are coincident
+                        Pos = CPos; 
+                    }
+                    else
+                    {
+                        double dDS1 = CPos.DistanceSquared(aParabolaPoints[0]);
+                        double dDS2 = CPos.DistanceSquared(aParabolaPoints[1]);
+                        if (dDS1 <= dDS2)
+                          Pos = aParabolaPoints[0];
+                        else
+                          Pos = aParabolaPoints[1];
+                    }
+                }
+                else if (aParabolaPoints.size() == 1)
+                {
+                    Pos = aParabolaPoints[0];
+                }
+                else if (aParabolaPoints.size() == 0)
+                {
+                    // check the distance of the point to the plane
+                    double Dist = (CPos - PlaneOrigin) % PlaneNorm;
+                    if (fabs(Dist) < dTolerance)
+                    {
+                        double dCurveT=pCurve->Inverse(Pos);
+                        aRefinedPoints.emplace_back(dCurveT,Pos);
+                    }
+                    break;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            else
+            {
+                // parabola is a line so fall back to Newton
+                SGM::UnitVector3D uLocalTan(LocalTan);
+                double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
+                SGM::Point3D Temp = CPos + dT * uLocalTan;
+                double dDist=Temp.Distance(CPos);
+                if(dDist<dOldDist)
+                {
+                    Pos=Temp;
+                }
+                else
+                {
+                    // Newton led us astray.  Just project to plane.
+                    double Dist=(CPos-PlaneOrigin)%PlaneNorm;
+                    Pos=CPos - Dist*PlaneNorm;
+                }
+            }
+            double dDist=Pos.Distance(CPos);
+#endif
             if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
             {
                 if (dDist<dTolerance)
-                    aRefinedPoints.emplace_back(dNUBt,Pos);
+                {
+                    double dCurveT=pCurve->Inverse(Pos);
+                    aRefinedPoints.emplace_back(dCurveT,Pos);
+                }
                 break;
             }
             if(nCount==nCountLimit-1 && dDist<dTolerance)
             {
-                aRefinedPoints.emplace_back(dNUBt,Pos);
+                double dCurveT=pCurve->Inverse(Pos);
+                aRefinedPoints.emplace_back(dCurveT,Pos);
                 break;
             }
             dOldDist=dDist;
@@ -3138,24 +3256,27 @@ size_t IntersectEllipseAndPlane(ellipse                      const *pEllipse,
     return aPoints.size();
 }
 
-size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
+size_t IntersectParabolaAndPlane(SGM::Point3D                 const &Center,
+                                 SGM::UnitVector3D            const &XAxis,
+                                 SGM::UnitVector3D            const &YAxis,
+                                 double                             dA,
                                  SGM::Point3D                 const &PlaneOrigin,
                                  SGM::UnitVector3D            const &PlaneNormal,
                                  double                              dTolerance,
                                  std::vector<SGM::Point3D>          &aPoints,
                                  std::vector<SGM::IntersectionType> &aTypes)
 {
-    if(SGM::NearEqual(fabs(pParabola->m_Normal%PlaneNormal),1.0,SGM_MIN_TOL,false))
+    SGM::UnitVector3D ParabolaNormal = XAxis*YAxis;
+    if(SGM::NearEqual(fabs((ParabolaNormal)%PlaneNormal),1.0,SGM_MIN_TOL,false))
         {
-        if(fabs((pParabola->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
+        if(fabs((Center-PlaneOrigin)%PlaneNormal)<dTolerance)
             {
-            SGM::UnitVector3D XAxis=pParabola->m_Normal.Orthogonal();
-
+            // for coincident plane, return ends as a coincident
             SGM::Point3D Pos;
-            pParabola->Evaluate(pParabola->GetDomain().m_dMin, &Pos);
+            ParabolaEvaluate(Center, XAxis, YAxis, dA, SGM_INTERVAL_NEG_MIN, &Pos);
             aPoints.push_back(Pos);
             aTypes.push_back(SGM::IntersectionType::CoincidentType);
-            pParabola->Evaluate(pParabola->GetDomain().m_dMax, &Pos);
+            ParabolaEvaluate(Center, XAxis, YAxis, dA, SGM_INTERVAL_POS_MAX, &Pos);
             aPoints.push_back(Pos);
             aTypes.push_back(SGM::IntersectionType::CoincidentType);
             }
@@ -3164,9 +3285,38 @@ size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
         {
         SGM::Point3D LineOrigin;
         SGM::UnitVector3D LineDirection;
-        IntersectNonParallelPlanes(pParabola->m_Center,pParabola->m_Normal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
-        IntersectLineAndParabola(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),pParabola,dTolerance,aPoints,aTypes);
+        IntersectNonParallelPlanes(Center,ParabolaNormal,PlaneOrigin,PlaneNormal,LineOrigin,LineDirection);
+        IntersectCoplanarLineAndParabola(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),
+                                         Center,XAxis,YAxis,dA,dTolerance,aPoints,aTypes);
         }
+    return aPoints.size();
+}
+
+size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNormal,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes)
+{
+    IntersectParabolaAndPlane(pParabola->m_Center, pParabola->m_XAxis, pParabola->m_YAxis, pParabola->m_dA,
+                              PlaneOrigin, PlaneNormal, dTolerance, aPoints, aTypes);
+    if ((2 == aPoints.size()) &&
+        (SGM::IntersectionType::CoincidentType == aTypes[0]) && (SGM::IntersectionType::CoincidentType == aTypes[1]))
+    {
+        if(pParabola->GetDomain().IsBounded())
+        {
+            aPoints.clear();
+            aTypes.clear();
+            SGM::Point3D Pos;
+            pParabola->Evaluate(pParabola->GetDomain().m_dMin, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            pParabola->Evaluate(pParabola->GetDomain().m_dMax, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+        }
+    }
     return aPoints.size();
 }
 

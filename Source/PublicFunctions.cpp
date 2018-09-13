@@ -989,6 +989,15 @@ double SGM::CurveInverse(SGM::Result        &rResult,
     return pCurve->Inverse(Pos,pClosePos,pGuess);
     }
 
+SGM::Vector3D SGM::CurveCurvature(SGM::Result        &rResult,
+                                  SGM::Curve   const &CurveID,
+                                  double              t)
+{
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::curve *pCurve=(SGMInternal::curve *)(pThing->FindEntity(CurveID.m_ID));
+    return pCurve->Curvature(t);
+}
+
 void SGM::EvaluateSurface(SGM::Result             &rResult,
                           SGM::Surface      const &SurfaceID,
                           SGM::Point2D      const &uv,
