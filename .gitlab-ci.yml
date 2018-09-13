@@ -1,0 +1,9 @@
+sgm:
+  script:
+    - cd sgm
+    - mkdir build
+    - cd build
+    - module load sparc-dev/gcc
+    - cmake -DBUILD_SHARED_LIBS=OFF -DBUILD_MODEL_VIEWER=OFF ../
+    - make -j16
+    - ./bin/sgm_tests

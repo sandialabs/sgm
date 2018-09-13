@@ -36,7 +36,7 @@ class Result
 
         SGM_EXPORT ResultType GetResult() const {return m_nType;}
 
-        SGM_EXPORT std::string const &GetMessage() const {return m_sMessage;}
+        SGM_EXPORT std::string const &Message() const {return m_sMessage;}
 
         SGM_EXPORT SGMInternal::thing *GetThing() const {return m_pThing;}
 

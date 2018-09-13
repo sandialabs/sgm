@@ -17,33 +17,6 @@
 namespace SGMInternal
 {
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  The check list for adding a new curve type.
-//
-//  Derive a class from curve.
-//  Add a type to SGM::EntityType.
-//  Add a constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Add a copy constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Override the Clone method of entity.
-//  Override pure virtual methods of curve.
-//
-//  Additional functions that check the curve type.
-//
-//  Add to the function FacetCurve.
-//  Add to the function IntersectCurveAndSurface.
-//  Add to the function IntersectLineAndCurve.
-//  Add to the function IntersectCircleAndCurve.
-//  Add to the function IntersectCurves.
-//  Add to the function FindClosestPointOnEdge.
-//  Add to the function OutputCurve.
-//  Add to the function WriteCurves in STEP.cpp.
-//  Add to the function DeleteEntity in Thing.cpp
-//
-//////////////////////////////////////////////////////////////////////////////
-
 class curve : public entity
     {
     public:

@@ -1553,7 +1553,7 @@ size_t SGM::FindCloseEdges(SGM::Result            &rResult,
         SGM::Point3D ClosestPoint;
         SGMInternal::entity *pCloseEntity;
         SGMInternal::edge *pEdge=*iter;
-        SGMInternal::FindClosestPointOnEdge(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
+        SGMInternal::FindClosestPointOnEdge3D(rResult,Point,pEdge,ClosestPoint,pCloseEntity);
         if(Point.DistanceSquared(ClosestPoint)<dTol)
             {
             aEdges.emplace_back(pEdge->GetID());

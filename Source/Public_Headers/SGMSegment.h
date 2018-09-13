@@ -28,6 +28,10 @@ namespace SGM {
         bool Intersect(Segment2D const &Seg,
                        Point2D         &Pos) const;
 
+        // Returns true if the segments overlap at more than one point.
+
+        bool Overlap(Segment2D const &Seg) const;
+
         // Returns true, and the point of intersection, if this
         // segment and the given ray intersect.
 

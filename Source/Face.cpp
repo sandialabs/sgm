@@ -276,7 +276,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         edge *pEdge=*iter;
         entity *pTempEnt=nullptr;
-        FindClosestPointOnEdge(rResult,Pos,pEdge,TPos,pTempEnt);
+        FindClosestPointOnEdge3D(rResult,Pos,pEdge,TPos,pTempEnt);
         double dTempDist=Pos.DistanceSquared(TPos);
         if(dTempDist<dDist)
             {

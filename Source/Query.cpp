@@ -10,11 +10,12 @@
 
 namespace SGMInternal
 {
-void FindClosestPointOnEdge(SGM::Result        &,//rResult,
-                            SGM::Point3D const &Point,
-                            edge         const *pEdge,
-                            SGM::Point3D       &ClosestPoint,
-                            entity            *&pCloseEntity)
+
+void FindClosestPointOnEdge3D(SGM::Result        &,//rResult,
+                              SGM::Point3D const &Point,
+                              edge         const *pEdge,
+                              SGM::Point3D       &ClosestPoint,
+                              entity            *&pCloseEntity)
     {
     curve const *pCurve=pEdge->GetCurve();
     double t=pCurve->Inverse(Point,&ClosestPoint);
@@ -207,7 +208,7 @@ void FindClosestPointOnEntity(SGM::Result        &rResult,
             }
         case SGM::EdgeType:
             {
-            FindClosestPointOnEdge(rResult,Point,(edge const *)pEntity,ClosestPoint,pCloseEntity);
+            FindClosestPointOnEdge3D(rResult,Point,(edge const *)pEntity,ClosestPoint,pCloseEntity);
             break;
             }
         case SGM::VertexType:

@@ -153,29 +153,32 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
     
     for(Index1=0;Index1<=nUDerivatives;++Index1)
         {
+        auto aUBasisFunctions1 = aaUBasisFunctions[Index1];
         for(Index2=0;Index2<=nVDegree;++Index2)
             {
             SGM::Point4D & T = temp[Index2];
             T={0.0,0.0,0.0,0.0};
+            size_t nVStart2 = nVStart+Index2;
             for(Index3=0;Index3<=nUDegree;++Index3)
                 {
-                SGM::Point4D const &ControlPos=m_aaControlPoints[nUStart+Index3][nVStart+Index2];
-                double dBasis=ControlPos.m_w*aaUBasisFunctions[Index1][Index3];
-                temp[Index2].m_x+=dBasis*ControlPos.m_x;
-                temp[Index2].m_y+=dBasis*ControlPos.m_y;
-                temp[Index2].m_z+=dBasis*ControlPos.m_z;
-                temp[Index2].m_w+=dBasis;
+                SGM::Point4D const &ControlPos=m_aaControlPoints[nUStart+Index3][nVStart2];
+                double dBasis=ControlPos.m_w*aUBasisFunctions1[Index3];
+                T.m_x+=dBasis*ControlPos.m_x;
+                T.m_y+=dBasis*ControlPos.m_y;
+                T.m_z+=dBasis*ControlPos.m_z;
+                T.m_w+=dBasis;
                 }
             }
 
         for(Index2=0;Index2<=nVDerivatives;++Index2)
             {
+            auto aVBasisFunctions2 = aaVBasisFunctions[Index2];
             SGM::Point4D & S = SKL[Index1][Index2];
             S={0.0,0.0,0.0,0.0};
             for(Index3=0;Index3<=nVDegree;++Index3)
                 {
                 SGM::Point4D & T = temp[Index3];
-                double dBasis=aaVBasisFunctions[Index2][Index3];
+                double dBasis=aVBasisFunctions2[Index3];
                 S.m_x+=dBasis*T.m_x;
                 S.m_y+=dBasis*T.m_y;
                 S.m_z+=dBasis*T.m_z;

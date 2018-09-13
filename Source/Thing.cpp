@@ -9,7 +9,7 @@
 #include <set>
 #include <iostream>
 
-#define SGM_MULTITHREADED
+//#define SGM_MULTITHREADED
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -365,8 +365,15 @@ namespace SGMInternal {
     template <class SET, class VISITOR>
     inline void SerialFindPointsData(SET const &sTypes, VISITOR &typeDataVisitor)
     {
+        //size_t i = 0;
+        //size_t n = sTypes.size();
         for (auto pType : sTypes)
+            {
             pType->Accept(typeDataVisitor);
+            //++i;
+            //std::cerr << "SerialFindPointsData " << i << "/" << n << '\n';
+            }
+
     }
 
     //

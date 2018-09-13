@@ -30,6 +30,9 @@ add_definitions(-DSGM_MODELS_OUO_DIRECTORY=\"${SGM_MODELS_OUO_DIRECTORY}\")
 
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
 
+# use the version number from the CMake project in the compile
+add_definitions(-DSGM_PRODUCT_VERSION=${SGM_VERSION}) # not a quoted string, like a float literal
+
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)
   # add the library

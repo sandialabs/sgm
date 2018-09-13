@@ -5,11 +5,11 @@
 #include "EntityClasses.h"
 namespace SGMInternal
 {
-void FindClosestPointOnEdge(SGM::Result        &rResult,
-                            SGM::Point3D const &Point,
-                            edge         const *pEdge,
-                            SGM::Point3D       &ClosestPoint,
-                            entity            *&pCloseEntity);
+void FindClosestPointOnEdge3D(SGM::Result        &rResult,
+                              SGM::Point3D const &Point,
+                              edge         const *pEdge,
+                              SGM::Point3D       &ClosestPoint,
+                              entity            *&pCloseEntity);
 
 void FindClosestPointOnEntity(SGM::Result        &rResult,
                               SGM::Point3D const &Point,

@@ -97,6 +97,13 @@ namespace SGM
     SGM_EXPORT bool PointInPolygon(Point2D              const &Pos,
                                    std::vector<Point2D> const &aPolygon);
 
+    // Returns the distances to the given polygon from the given point. 
+    // In other words the smallest distance to one of the defining line 
+    // segments of the polygon.
+
+    SGM_EXPORT double DistanceToPolygon(Point2D              const &Pos,
+                                        std::vector<Point2D> const &aPolygon);
+
     // Returns true if the given point is inside the first polygon and outside the others,
     // If the given point is on one of the the polygon, then the returned answer may
     // be either true or false.
@@ -237,8 +244,9 @@ namespace SGM
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
     // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
     // function will remove the outside triangles if bRemoveOutsideTriangles is true.
+    // False is returned if the polygon could not be inserted.
 
-    SGM_EXPORT void InsertPolygon(SGM::Result                &rResult,
+    SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
                                   std::vector<Point2D>       &aPoints2D,
                                   std::vector<unsigned int>  &aTriangles,
@@ -264,17 +272,13 @@ namespace SGM
     // vector aPoints2D but removed from aTriangles. Returns false is the point cannot
     // be removed.  The function also returns the indices of the triangles that were
     // removed or changed, and the point indices of the triangels that were replaced.
-    // By using aRemovedOrChanged and aReplacedTriangles it is posible to update a box
-    // tree of the triangles and by using a tree find the triangles to consider in 
-    // n*log(n) time if more than one point is to be removed.
 
     SGM_EXPORT bool RemovePointFromTriangles(SGM::Result               &rResult,
                                              unsigned int               nRemoveIndex,
                                              std::vector<Point2D>      &aPoints2D,
                                              std::vector<unsigned int> &aTriangles,
                                              std::vector<unsigned int> &aRemovedOrChanged,
-                                             std::vector<unsigned int> &aReplacedTriangles,
-                                             std::vector<unsigned int> *aConsider=nullptr);
+                                             std::vector<unsigned int> &aReplacedTriangles);
 
     // Given a vector of triangles on a given vector of points along with a vector of polygons
     // that have been imprinted into the triangles RemoveOutsideTriangles removes the triangles
