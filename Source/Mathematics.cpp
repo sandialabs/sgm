@@ -1406,6 +1406,10 @@ void ForceEdge(Result                                          &rResult,
     std::vector<unsigned int> aPoly1,aPoly2,aTris1,aTris2;
     CutPolygon(aPolygon,nStart,nEnd,aPoly1);
     CutPolygon(aPolygon,nEnd,nStart,aPoly2);
+    if(aPoly1.empty() || aPoly2.empty())
+        {
+        return;
+        }
     TriangulatePolygon(rResult,aPoints2D,aPoly1,aTris1);
     TriangulatePolygon(rResult,aPoints2D,aPoly2,aTris2);
     aTris1.insert(aTris1.end(),aTris2.begin(),aTris2.end());
