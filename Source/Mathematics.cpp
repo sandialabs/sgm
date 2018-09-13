@@ -13,6 +13,7 @@
 
 #include "Faceter.h"
 #include "Graph.h"
+#include "Surface.h"
 
 namespace SGMInternal
 {
@@ -1553,16 +1554,39 @@ bool RemovePointFromTriangles(SGM::Result               &rResult,
     return true;
     }
 
+void AddPointAndNormal(SGMInternal::surface const *pSurface,
+                       Point2D              const &uv,
+                       std::vector<Point3D>       *pPoints3D,
+                       std::vector<UnitVector3D>  *pNormals)
+    {
+    if(pSurface)
+        {
+        Point3D Pos;
+        UnitVector3D Norm;
+        pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
+        pPoints3D->push_back(Pos);
+        pNormals->push_back(Norm);
+        }
+    }
+
 bool InsertPolygon(Result                     &rResult,
                    std::vector<Point2D> const &aPolygon,
                    std::vector<Point2D>       &aPoints2D,
                    std::vector<unsigned int>  &aTriangles,
                    std::vector<unsigned int>  &aPolygonIndices,
-                   bool                        bRemoveOutsideTriangles)
+                   SGM::Surface               *pSurfaceID,
+                   std::vector<Point3D>       *pPoints3D,
+                   std::vector<UnitVector3D>  *pNormals)
     {
     double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
     double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
     double dTol=std::max(std::min(dMinEdgeLength,dMinPolygonEdge)*SGM_FIT,SGM_MIN_TOL);
+
+    SGMInternal::surface *pSurface=nullptr;
+    if(pSurfaceID)
+        {
+        pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(pSurfaceID->m_ID);
+        }
 
     // Create a tree of the facets.
 
@@ -1651,6 +1675,7 @@ bool InsertPolygon(Result                     &rResult,
             else if(InTriangle(A,B,C,D))
                 {
                 aPolygonIndices.push_back((unsigned int)aPoints2D.size());
+                AddPointAndNormal(pSurface,D,pPoints3D,pNormals);
                 SGMInternal::SplitTriangleUpdateTree(D,aPoints2D,aTriangles,nHitTri,aTris,Tree);
                 bFound=true;
                 break;
@@ -1661,11 +1686,13 @@ bool InsertPolygon(Result                     &rResult,
             if(aEdges.size()==2)
                 {
                 aPolygonIndices.push_back((unsigned int)aPoints2D.size());
+                AddPointAndNormal(pSurface,D,pPoints3D,pNormals);
                 SGMInternal::SplitEdgeUpdateTree(D,aPoints2D,aTriangles,aFacetTris[0],aEdges[0],aFacetTris[1],aEdges[1],aTris,Tree);
                 }
             else if(aEdges.size()==1)
                 {
                 aPolygonIndices.push_back((unsigned int)aPoints2D.size());
+                AddPointAndNormal(pSurface,D,pPoints3D,pNormals);
                 SGMInternal::SplitEdgeUpdateTree(D,aPoints2D,aTriangles,aFacetTris[0],aEdges[0],aTris,Tree);
                 }
             else
@@ -1677,7 +1704,7 @@ bool InsertPolygon(Result                     &rResult,
 
     std::vector<unsigned int> aAdjacencies;
     SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-    SGMInternal::DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+    SGMInternal::DelaunayFlips(aPoints2D,aTriangles,aAdjacencies,pPoints3D,pNormals);
 
     // Force polygon edges to be in the triangles.
 
@@ -1705,35 +1732,10 @@ bool InsertPolygon(Result                     &rResult,
             ForceEdge(rResult,aTriangles,aPoints2D,a,b,sEdges,Tree,aTris);
             if(sEdges.find({a,b})==sEdges.end())
                 {
-                // WaS Unable to force and edge into the triangles.
+                // Was Unable to force and edge into the triangles.
                 return false;
                 }
             }
-        }
-
-    // Remove outside triangles.
-
-    if(bRemoveOutsideTriangles)
-        {
-        std::vector<unsigned int> aInside;
-        nTriangles=aTriangles.size();
-        for(Index1=0;Index1<nTriangles;Index1+=3)
-            {
-            unsigned int a=aTriangles[Index1]; 
-            unsigned int b=aTriangles[Index1+1]; 
-            unsigned int c=aTriangles[Index1+2]; 
-            SGM::Point2D const &A=aPoints2D[a];
-            SGM::Point2D const &B=aPoints2D[b];
-            SGM::Point2D const &C=aPoints2D[c];
-            SGM::Point2D CM=CenterOfMass(A,B,C);
-            if(PointInPolygon(CM,aPolygon))
-                {
-                aInside.push_back(a);
-                aInside.push_back(b);
-                aInside.push_back(c);
-                }
-            }
-        aTriangles=aInside;
         }
 
     return true;
@@ -2159,7 +2161,9 @@ bool PointInPolygonGroup(Point2D                                 const &Pos,
     }
 
 void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
-                        std::vector<unsigned int> &aTriangles)
+                        std::vector<unsigned int> &aTriangles,
+                        std::vector<Point3D>      *pPoints3D,
+                        std::vector<UnitVector3D> *pNormals)
     {
     std::set<unsigned int> sUsed;
     std::map<unsigned int,unsigned int> mMap;
@@ -2169,16 +2173,33 @@ void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
         {
         sUsed.insert(aTriangles[Index1]);
         }
-    std::vector<Point2D> aNewPoints;
-    aNewPoints.reserve(sUsed.size());
+    std::vector<Point2D> aNewPoints2D;
+    std::vector<Point3D> aNewPoints3D;
+    std::vector<UnitVector3D> aNewNormals;
+    aNewPoints2D.reserve(sUsed.size());
+    if(pPoints3D)
+        {
+        pPoints3D->reserve(sUsed.size());
+        pNormals->reserve(sUsed.size());
+        }
     unsigned int nCount=0;
     for(auto nWhere : sUsed)
         {
         mMap[nWhere]=nCount;
-        aNewPoints.push_back(aPoints2D[nWhere]);
+        aNewPoints2D.push_back(aPoints2D[nWhere]);
+        if(pPoints3D)
+            {
+            aNewPoints3D.push_back((*pPoints3D)[nWhere]);
+            aNewNormals.push_back((*pNormals)[nWhere]);
+            }
         ++nCount;
         }
-    aPoints2D=aNewPoints;
+    aPoints2D=aNewPoints2D;
+    if(pPoints3D)
+        {
+        *pPoints3D=aNewPoints3D;
+        *pNormals=aNewNormals;
+        }
     for(Index1=0;Index1<nTriangles;++Index1)
         {
         aTriangles[Index1]=mMap[aTriangles[Index1]];
@@ -2187,7 +2208,9 @@ void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
 
 bool RemoveOutsideTriangles(std::vector<std::vector<unsigned int> > const &aaPolygons,
                             std::vector<Point2D>                          &aPoints2D,
-                            std::vector<unsigned int>                     &aTriangles)
+                            std::vector<unsigned int>                     &aTriangles,
+                            std::vector<Point3D>                          *pPoints3D,
+                            std::vector<UnitVector3D>                     *pNormals)
     {
     std::vector<std::vector<std::vector<unsigned int> > > aaaPolygons;
     if(GroupPolygons(aaPolygons,aPoints2D,aaaPolygons)==false)
@@ -2225,7 +2248,7 @@ bool RemoveOutsideTriangles(std::vector<std::vector<unsigned int> > const &aaPol
             }
         }
     aTriangles=aNewTriangles;
-    ReduceToUsedPoints(aPoints2D,aTriangles);
+    ReduceToUsedPoints(aPoints2D,aTriangles,pPoints3D,pNormals);
     return true;
     }
 

@@ -6,11 +6,13 @@
 #include <map>
 
 #include "sgm_export.h"
+
 #include "SGMConstants.h"
 #include "SGMVector.h"
 #include "SGMInterval.h"
 #include "SGMResult.h"
 #include "SGMSegment.h"
+#include "SGMEntityClasses.h"
 
 namespace SGM
     {
@@ -243,15 +245,17 @@ namespace SGM
     // Inserts a polygon into the given triangles and remove triangles that are outside
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
     // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
-    // function will remove the outside triangles if bRemoveOutsideTriangles is true.
-    // False is returned if the polygon could not be inserted.
+    // function will update a vector of 3D points and normals if the starting ones are
+    // passed to the function along with their surface.
 
     SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
                                   std::vector<Point2D>       &aPoints2D,
                                   std::vector<unsigned int>  &aTriangles,
                                   std::vector<unsigned int>  &aPolygonIndices,
-                                  bool                        bRemoveOutsideTriangles=false);
+                                  SGM::Surface               *pSurfaceID=nullptr,
+                                  std::vector<Point3D>       *pPoints3D=nullptr,
+                                  std::vector<UnitVector3D>  *pNormals=nullptr);
 
     // Returns true if the intersection of triangle {A,B,C} and the given segment
     // consists of more than one point.
@@ -283,17 +287,22 @@ namespace SGM
     // Given a vector of triangles on a given vector of points along with a vector of polygons
     // that have been imprinted into the triangles RemoveOutsideTriangles removes the triangles
     // that are outside of the given polygons.  The function returns false if the given polygons 
-    // are not well nested.  In addition, the aPoints2D is reduced to only the used points.
+    // are not well nested.  In addition, aPoints2D, and optionaly pPoints3D and pNormals are
+    // reduced to only the used points.
 
     SGM_EXPORT bool RemoveOutsideTriangles(std::vector<std::vector<unsigned int> > const &aaPolygons,
                                            std::vector<Point2D>                          &aPoints2D,
-                                           std::vector<unsigned int>                     &aTriangles);
+                                           std::vector<unsigned int>                     &aTriangles,
+                                           std::vector<Point3D>                          *pPoints3D=nullptr,
+                                           std::vector<UnitVector3D>                     *pNormals=nullptr);
 
     // Resets the indices in aTriangles and reduces the vector aPoints2D to only contain the 
-    // points used the the given triangles.
+    // points used the the given triangles.  Optionaly pPoints3D and pNormals are also reduced.
 
-    SGM_EXPORT void ReduceToUsedPoints(std::vector<Point2D>       &aPoints2D,
-                                       std::vector<unsigned int>  &aTriangles);
+    SGM_EXPORT void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
+                                       std::vector<unsigned int> &aTriangles,
+                                       std::vector<Point3D>      *pPoints3D,
+                                       std::vector<UnitVector3D> *pNormals);
 
     ///////////////////////////////////////////////////////////////////////////
     //

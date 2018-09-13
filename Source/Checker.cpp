@@ -261,7 +261,7 @@ bool face::Check(SGM::Result              &rResult,
         double dDotA=Norm%aNormals[a];
         double dDotB=Norm%aNormals[b];
         double dDotC=Norm%aNormals[c];
-        double dTol=0.43633231299858239423092269212215; // 25 degrees
+        double dTol=0.90630778703664996324255265675432; // cos(25) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
 

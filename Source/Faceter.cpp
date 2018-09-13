@@ -6,6 +6,7 @@
 #include "SGMEnums.h"
 #include "SGMBoxTree.h"
 #include "SGMSegment.h"
+#include "SGMEntityClasses.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -313,11 +314,50 @@ bool TestTriangle(SGM::Point2D const &A,
     return 0<dTest;
     }
 
-bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<unsigned int>       &aTriangles,
-                   std::vector<unsigned int>       &aAdjacencies,
-                   unsigned int                     nTri,
-                   unsigned int                     nEdge)
+bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
+                  std::vector<SGM::UnitVector3D> const &aNormals,
+                  unsigned int                          a0,
+                  unsigned int                          b0,
+                  unsigned int                          c0,
+                  unsigned int                          a1,
+                  unsigned int                          b1,
+                  unsigned int                          c1)
+    {
+    SGM::Point3D const &A0=aPoints3D[a0];
+    SGM::Point3D const &B0=aPoints3D[b0];
+    SGM::Point3D const &C0=aPoints3D[c0];
+    SGM::Point3D const &A1=aPoints3D[a1];
+    SGM::Point3D const &B1=aPoints3D[b1];
+    SGM::Point3D const &C1=aPoints3D[c1];
+    SGM::UnitVector3D const NA0=aNormals[a0];
+    SGM::UnitVector3D const NB0=aNormals[b0];
+    SGM::UnitVector3D const NC0=aNormals[c0];
+    SGM::UnitVector3D const NA1=aNormals[a1];
+    SGM::UnitVector3D const NB1=aNormals[b1];
+    SGM::UnitVector3D const NC1=aNormals[c1];
+    SGM::UnitVector3D T0Norm=(B0-A0)*(C0-A0);
+    SGM::UnitVector3D T1Norm=(B1-A1)*(C1-A1);
+    double dDot0=NA0%T0Norm;
+    double dDot1=NB0%T0Norm;
+    double dDot2=NC0%T0Norm;
+    double dDot3=NA1%T1Norm;
+    double dDot4=NB1%T1Norm;
+    double dDot5=NC1%T1Norm;
+    double dTol=0.90630778703664996324255265675432; // cos(25) degrees
+    if(dDot0<dTol || dDot1<dTol || dDot2<dTol || dDot3<dTol || dDot4<dTol || dDot5<dTol)
+        {
+        return false;
+        }
+    return true;
+    }
+
+bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
+                   std::vector<unsigned int>            &aTriangles,
+                   std::vector<unsigned int>            &aAdjacencies,
+                   unsigned int                          nTri,
+                   unsigned int                          nEdge,
+                   std::vector<SGM::Point3D>      const *pPoints3D,
+                   std::vector<SGM::UnitVector3D> const *pNormals)
     {
     unsigned int a=aTriangles[nTri];
     unsigned int b=aTriangles[nTri+1];
@@ -349,10 +389,10 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
         nTA=aAdjacencies[nT+1];
         nTB=aAdjacencies[nT+2];
         }
-    SGM::Point2D const &A=aPoints[a];
-    SGM::Point2D const &B=aPoints[b];
-    SGM::Point2D const &C=aPoints[c];
-    SGM::Point2D const &G=aPoints[g];
+    SGM::Point2D const &A=aPoints2D[a];
+    SGM::Point2D const &B=aPoints2D[b];
+    SGM::Point2D const &C=aPoints2D[c];
+    SGM::Point2D const &G=aPoints2D[g];
     double dDet;
     SGM::InCircumcircle(A,B,C,G,dDet);
     bool bFlip=false;
@@ -395,6 +435,13 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
         unsigned int nT2=aAdjacencies[nTri+2];
         if(nEdge==0)
             {
+            if(pPoints3D)
+                {
+                if(AreNormalsOK(*pPoints3D,*pNormals,g,c,a,g,b,c)==false)
+                    {
+                    return false;
+                    }
+                }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=c;
             aTriangles[nTri+2]=a;
@@ -411,6 +458,13 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
             }
         else if(nEdge==1)
             {
+            if(pPoints3D)
+                {
+                if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,c,a)==false)
+                    {
+                    return false;
+                    }
+                }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=a;
             aTriangles[nTri+2]=b;
@@ -427,6 +481,13 @@ bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
             }
         else
             {
+            if(pPoints3D)
+                {
+                if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,b,c)==false)
+                    {
+                    return false;
+                    }
+                }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=a;
             aTriangles[nTri+2]=b;
@@ -473,9 +534,11 @@ void FindScales(surface                   const *pSurface,
         }
     }
 
-void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<unsigned int>       &aTriangles,
-                   std::vector<unsigned int>       &aAdjacencies)
+void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
+                   std::vector<unsigned int>            &aTriangles,
+                   std::vector<unsigned int>            &aAdjacencies,
+                   std::vector<SGM::Point3D>      const *pPoints3D,
+                   std::vector<SGM::UnitVector3D> const *pNormals)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
@@ -485,15 +548,15 @@ void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
         bFlipped=false;
         for(Index1=0;Index1<(unsigned int)nTriangles;Index1+=3)
             {
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,0))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,0,pPoints3D,pNormals))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,1))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,1,pPoints3D,pNormals))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints,aTriangles,aAdjacencies,Index1,2))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,2,pPoints3D,pNormals))
                 {
                 bFlipped=true;
                 }
@@ -3327,20 +3390,20 @@ void SplitEdgeUpdateTree(SGM::Point2D        const &D,
     Tree.Insert(pNew2,New2Box);
     }
 
-void SplitEdgeUpdateTree(SGM::Point2D        const &D,
-                         std::vector<SGM::Point2D> &aPoints,
-                         std::vector<unsigned int> &aTriangles,
-                         size_t                     nHitTri,
-                         size_t                     nEdge1,
-                         std::vector<size_t> const &aTris,
-                         SGM::BoxTree              &Tree)
+void SplitEdgeUpdateTree(SGM::Point2D             const &D,
+                         std::vector<SGM::Point2D>      &aPoints2D,
+                         std::vector<unsigned int>      &aTriangles,
+                         size_t                          nHitTri,
+                         size_t                          nEdge1,
+                         std::vector<size_t>      const &aTris,
+                         SGM::BoxTree                   &Tree)
     {
     unsigned int a1=aTriangles[nHitTri];
     unsigned int b1=aTriangles[nHitTri+1];
     unsigned int c1=aTriangles[nHitTri+2];
 
-    unsigned int d=(unsigned int)aPoints.size();
-    aPoints.push_back(D);
+    unsigned int d=(unsigned int)aPoints2D.size();
+    aPoints2D.push_back(D);
 
     unsigned int A1,B1,C1;
     if(nEdge1==0)
@@ -3374,8 +3437,8 @@ void SplitEdgeUpdateTree(SGM::Point2D        const &D,
     aTriangles.push_back(d);
     aTriangles.push_back(B1);
 
-    SGM::Interval3D Tri1Box=TriangleBox(aPoints,aTriangles,nHitTri);
-    SGM::Interval3D New1Box=TriangleBox(aPoints,aTriangles,nNew1);
+    SGM::Interval3D Tri1Box=TriangleBox(aPoints2D,aTriangles,nHitTri);
+    SGM::Interval3D New1Box=TriangleBox(aPoints2D,aTriangles,nNew1);
 
     // Update the tree.
     // Take nHitTri out of the tree.
@@ -3390,7 +3453,7 @@ void SplitEdgeUpdateTree(SGM::Point2D        const &D,
     }
 
 void SplitTriangleUpdateTree(SGM::Point2D        const &D,
-                             std::vector<SGM::Point2D> &aPoints,
+                             std::vector<SGM::Point2D> &aPoints2D,
                              std::vector<unsigned int> &aTriangles,
                              size_t                     nHitTri,
                              std::vector<size_t> const &aTris,
@@ -3401,8 +3464,8 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     unsigned int b=aTriangles[nHitTri+1];
     unsigned int c=aTriangles[nHitTri+2];
 
-    unsigned int d=(unsigned int)aPoints.size();
-    aPoints.push_back(D);
+    unsigned int d=(unsigned int)aPoints2D.size();
+    aPoints2D.push_back(D);
 
     // Make triangles (a,b,d), (b,c,d), (c,a,d)
 
@@ -3422,9 +3485,9 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     aTriangles.push_back(a);
     aTriangles.push_back(d);
 
-    SGM::Interval3D Tri1Box=TriangleBox(aPoints,aTriangles,nHitTri);
-    SGM::Interval3D New1Box=TriangleBox(aPoints,aTriangles,nNew1);
-    SGM::Interval3D New2Box=TriangleBox(aPoints,aTriangles,nNew2);
+    SGM::Interval3D Tri1Box=TriangleBox(aPoints2D,aTriangles,nHitTri);
+    SGM::Interval3D New1Box=TriangleBox(aPoints2D,aTriangles,nNew1);
+    SGM::Interval3D New2Box=TriangleBox(aPoints2D,aTriangles,nNew2);
 
     // Update the tree.
     // Take nHitTri out of the tree.
@@ -3777,6 +3840,8 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
                     std::vector<SGM::Point2D>               const &aPolygonPoints,
                     std::vector<std::vector<unsigned int> >       &aaPolygons,
                     std::vector<SGM::Point2D>                     &aPoints2D,
+                    std::vector<SGM::Point3D>                     &aPoints3D,
+                    std::vector<SGM::UnitVector3D>                &aNormals,
                     std::vector<unsigned int>                     &aTriangles)
     {
     std::vector<double> aUValues,aVValues;
@@ -3801,15 +3866,18 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
     size_t Index1;
 
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
+    FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
     
     size_t nPolygons=aaPolygons.size();
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),aPoints2D,aTriangles,aPolygonIndices);
+        SGM::Surface SurfID(pFace->GetSurface()->GetID());
+        SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals);
         aaPolygons[Index1]=aPolygonIndices;
         }
-    RemoveOutsideTriangles(aaPolygons,aPoints2D,aTriangles);
+    RemoveOutsideTriangles(aaPolygons,aPoints2D,aTriangles,&aPoints3D,&aNormals);
     }
     
 void FacetFace(SGM::Result                    &rResult,
@@ -3888,10 +3956,10 @@ void FacetFace(SGM::Result                    &rResult,
             // Knot grid needed.
 
             std::vector<SGM::Point2D> aGridUVs;
-            ParamCurveGrid(rResult,pFace,Options,aPoints2D,aaPolygons,aGridUVs,aTriangles);
-            aPoints2D=aGridUVs;
             aPoints3D.clear();
-            FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
+            ParamCurveGrid(rResult,pFace,Options,aPoints2D,aaPolygons,aGridUVs,aPoints3D,aNormals,aTriangles);
+            aPoints2D=aGridUVs;
+            //FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
             break;
             }
         default:
