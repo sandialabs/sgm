@@ -111,6 +111,13 @@ TEST(models_ouo_check, import_check_OUO_glom4_0006_Bangle)
     expect_import_ouo_check_success(file_name);
 }
 
+TEST(models_ouo_check, import_check_OUO_Cone_definition)
+{
+    const char* file_name = "OUO_glom4/OUO_Cone_definition.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_ouo_check_success(file_name);
+}
+
 TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: segfault interrupt
 {
     const char* file_name = "OUO_glom4/0007-_Bflange.stp";
@@ -195,7 +202,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: se
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0019_Bhinkey_A)
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
