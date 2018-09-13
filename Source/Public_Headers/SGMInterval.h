@@ -62,6 +62,12 @@ namespace SGM {
         bool IsEmpty() const
         { return m_dMax < m_dMin; }
 
+        bool IsBounded() const
+        {
+            return ( (SGM_INTERVAL_NEG_MIN > m_dMin) &&
+                     (SGM_INTERVAL_POS_MAX < m_dMax) );
+        }
+
         double MidPoint(double dFraction = 0.5) const
         { return m_dMin * (1 - dFraction) + m_dMax * dFraction; }
 

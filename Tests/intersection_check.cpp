@@ -440,6 +440,32 @@ TEST(intersection_check, intersect_parabola_and_plane)
     if (aTypes.size() > 0)
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
+
+    SGM::Point3D Center2(0.0,-1.0, -1.0);
+    SGM::UnitVector3D XAxis2(0.62457719407916179, 0.78096307763952644, 0.0);
+    SGM::UnitVector3D YAxis2(0.0, 0.0, -1.0);
+    double dA2 = 0.63263978149317612;
+    SGM::Curve ParabolaID2 = SGM::CreateParabola(rResult, Center2, XAxis2, YAxis2, dA2);
+
+    //SGM::Interval1D Domain(-10.0, 10.0);
+    //SGM::CreateEdge(rResult, ParabolaID2, &Domain);
+
+    SGM::Point3D PlaneOrigin2(10.0, 0.0, -1.0);
+    SGM::UnitVector3D PlaneNorm2(0.0, 0.0, 1.0);
+
+    //SGM::CreateDisk(rResult, PlaneOrigin2, PlaneNorm2, 10.0);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndPlane(rResult, ParabolaID2, PlaneOrigin2, PlaneNorm2, aPoints, aTypes, dTolerance);
+
+    EXPECT_EQ(aPoints.size(), 1);
+    EXPECT_EQ(aTypes.size(), 1);
+    if (aPoints.size() > 0)
+        EXPECT_TRUE(SGM::NearEqual(Center2, aPoints[0], dTolerance));
+    if (aTypes.size() > 0)
+        EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -895,7 +921,7 @@ TEST(intersection_check, DISABLED_intersect_nonplanar_NUBcurve_and_plane)
     std::vector<SGM::Point3D> aInterpolate;
     aInterpolate.reserve(6);
 
-    aInterpolate.emplace_back(-2,3.5,0.5);
+    aInterpolate.emplace_back(-2,3.01,0.01);
     aInterpolate.emplace_back(-1,4,0);
     aInterpolate.emplace_back(0,5,0);
     aInterpolate.emplace_back(1,6,0);
@@ -928,6 +954,7 @@ TEST(intersection_check, DISABLED_intersect_nonplanar_NUBcurve_and_plane)
     aInterpolate.emplace_back(2,0,-3);
 
     SGM::Curve NUBcurveID2 = SGM::CreateNUBCurve(rResult, aInterpolate);
+    //SGM::CreateEdge(rResult, NUBcurveID2);
 
     PlaneOrigin = SGM::Point3D(10,0,-1);
     PlaneNormal = SGM::UnitVector3D(0,0,1);
@@ -945,9 +972,20 @@ TEST(intersection_check, DISABLED_intersect_nonplanar_NUBcurve_and_plane)
 
     // single intersection point
     SGM::Point3D CurvePos;
-    SGM::EvaluateCurve(rResult, NUBcurveID2, 0.3, &CurvePos);
+    SGM::Vector3D CurveTangent;
+    SGM::EvaluateCurve(rResult, NUBcurveID2, 0.3, &CurvePos, &CurveTangent);
+    SGM::Vector3D Curvature = SGM::CurveCurvature(rResult, NUBcurveID2, 0.3);
+    double dA = Curvature.Magnitude() * 0.5;
+
+    SGM::Curve ParabolaID = SGM::CreateParabola(rResult, CurvePos, CurveTangent, Curvature, dA);
+    //SGM::Interval1D Domain(-5,5);
+    //SGM::CreateEdge(rResult, ParabolaID, &Domain);
+
+
     PlaneOrigin = SGM::Point3D(CurvePos.m_x,0,0);
     PlaneNormal = SGM::UnitVector3D(-1,0,0);
+
+    //SGM::CreateDisk(rResult, PlaneOrigin, PlaneNormal, 5.0);
 
     aPoints.clear();
     aTypes.clear();
@@ -1024,6 +1062,8 @@ TEST(intersection_check, DISABLED_intersect_nonplanar_NUBcurve_and_plane)
     aInterpolate.emplace_back(10 ,2,21);
     aInterpolate.emplace_back(15 ,3,20.8);
     SGM::Curve NUBcurveID4 = SGM::CreateNUBCurve(rResult, aInterpolate);
+
+    //SGM::CreateEdge(rResult, NUBcurveID4);
 
     SGM::EvaluateCurve(rResult, NUBcurveID4, 0.5, &CurvePos, &CurveD1, &CurveD2);
     PlaneOrigin = CurvePos + CurveD1;
@@ -1381,11 +1421,11 @@ TEST(intersection_check, intersect_line_and_cylinder)
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     SGM::Curve LineID = SGM::CreateLine(rResult, Origin, Axis);
-    SGM::Interval1D LineInterval(0.0, 10.0); 
-    SGM::CreateEdge(rResult, LineID, &LineInterval);
+    //SGM::Interval1D LineInterval(0.0, 10.0); 
+    //SGM::CreateEdge(rResult, LineID, &LineInterval);
 
     SGM::Curve PointCurveID = SGM::CreatePointCurve(rResult, aPoints[0]);
-    SGM::CreateEdge(rResult, PointCurveID);
+    //SGM::CreateEdge(rResult, PointCurveID);
 
     SGMTesting::ReleaseTestThing(pThing); 
 }

@@ -654,6 +654,24 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
                      double                     t,
                      std::vector<double> const &aKnots);
 
+// parabola functions
+void ParabolaEvaluate(SGM::Point3D      const &Center,
+                      SGM::UnitVector3D const &XAxis,
+                      SGM::UnitVector3D const &YAxis,
+                      double                   dA,
+                      double                   t,
+                      SGM::Point3D            *Pos = nullptr,
+                      SGM::Vector3D           *D1 = nullptr,
+                      SGM::Vector3D           *D2 = nullptr);
+
+double ParabolaInverse(SGM::Point3D      const &Center,
+                       SGM::UnitVector3D const &XAxis,
+                       SGM::UnitVector3D const &YAxis,
+                       double dA,
+                       SGM::Point3D      const &Pos,
+                       SGM::Point3D            *ClosePos,
+                       double            const *guess = nullptr);
+
 } // End SGMInternal namespace
 
 #include "Inline/Curve.inl"
