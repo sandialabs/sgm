@@ -14,6 +14,7 @@
 #include "SGMInterrogate.h"
 #include "SGMTranslators.h"
 #include "SGMAttribute.h"
+#include "SGMModify.h"
 
 #include "Primitive.h"
 #include "EntityClasses.h"
@@ -27,6 +28,7 @@
 #include "Faceter.h"
 #include "Surface.h"
 #include "Interrogate.h"
+#include "Modify.h"
 
 #include <algorithm>
 
@@ -927,7 +929,15 @@ SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::curve *pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
-    SGMInternal::edge *pEdge=CreateEdge(rResult,pCurve,pDomain);
+    SGMInternal::edge *pEdge=SGMInternal::CreateEdge(rResult,pCurve,pDomain);
+    return {pEdge->GetID()};
+    }
+
+SGM::Edge SGM::CreateLinearEdge(SGM::Result        &rResult,
+                                SGM::Point3D const &StartPos,
+                                SGM::Point3D const &EndPos)
+    {
+    SGMInternal::edge *pEdge=SGMInternal::CreateEdge(rResult,StartPos,EndPos);
     return {pEdge->GetID()};
     }
 
@@ -1514,7 +1524,7 @@ SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
         pNewEdge->SetEnd(pNewEnd);
         pNewEdge->SetCurve(pNewCurve);
         pNewEdge->SetDomain(rResult,Domain);
-        pFace->AddEdge(pNewEdge,SGM::FaceOnLeftType);
+        pFace->AddEdge(rResult,pNewEdge,SGM::FaceOnLeftType);
         }
 
     // Create the plane.
@@ -1745,6 +1755,31 @@ double SGM::FindVolume(SGM::Result       &rResult,
         dAnswer=((SGMInternal::volume *)pEntity)->FindVolume(rResult,bApproximate);
         }
     return dAnswer;
+    }
+
+std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
+                                              SGM::Edge   &EdgeID,
+                                              SGM::Face   &FaceID)
+    {
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    std::vector<SGMInternal::face *> aFaces=SGMInternal::ImprintEdgeOnFace(rResult,pEdge,pFace);
+    std::vector<SGM::Face> aAnswer;
+    aAnswer.reserve(aFaces.size());
+    for(auto pFace : aFaces)
+        {
+        aAnswer.push_back(SGM::Face(pFace->GetID()));
+        }
+    return aAnswer;
+    }
+
+void SGM::UniteBodies(SGM::Result &rResult,
+                      SGM::Body   &ReturnedBodyID,
+                      SGM::Body   &DeletedBodyID)
+    {
+    SGMInternal::body *pReturnedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(ReturnedBodyID.m_ID);
+    SGMInternal::body *pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
+    SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
     }
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)

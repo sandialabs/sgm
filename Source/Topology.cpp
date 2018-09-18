@@ -1,11 +1,11 @@
 #include "SGMVector.h"
 #include "SGMTransform.h"
+#include "SGMModify.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
 #include "Intersectors.h"
-
 
 #include <limits>
 #include <algorithm>
@@ -49,9 +49,13 @@ void FindBodies(SGM::Result                    &,//rResult,
         }
     else if(Type==SGM::EntityType::FaceType)
         {
-        if(body *pBody=((face *)(pEntity))->GetVolume()->GetBody())
+        volume *pVolume=((face *)pEntity)->GetVolume();
+        if(pVolume)
             {
-            sBodies.insert(pBody);
+            if(body *pBody=pVolume->GetBody())
+                {
+                sBodies.insert(pBody);
+                }
             }
         }
     else if(Type==SGM::EntityType::EdgeType)
@@ -636,6 +640,13 @@ edge *NextOutEdgeFrom(face                const *pFace,
                       size_t                     nStart)
     {
     size_t nEdges=aEdges.size();
+
+    // Special case rounding the tip of a isolated vertex on a double sided edge.
+    if(nEdges==1 && pFace->GetSideType(aEdges[0])==SGM::FaceOnBothSidesType)
+        {
+        return aEdges[0];
+        }
+
     size_t Index1;
     for(Index1=1;Index1<nEdges;++Index1)
         {
@@ -726,12 +737,28 @@ void OrderLoopEdges(SGM::Result                          &rResult,
         {
         return;
         }
+    else if(nSize==1)
+        {
+        edge *pEdge=*(sEdges.begin());
+        aEdges.push_back(pEdge);
+        aFlips.push_back(pFace->GetSideType(pEdge));
+        return;
+        }
+
+    size_t nDoubles=0;
+    for(edge *pEdge : sEdges)
+        {
+        if(pFace->GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+            {
+            ++nDoubles;
+            }
+        }
     std::vector<edge *> aTempEdges;
     std::vector<SGM::EdgeSideType> aTempFlips;
-    aTempEdges.reserve(nSize);
-    aTempFlips.reserve(nSize);
-    aEdges.reserve(nSize);
-    aFlips.reserve(nSize);
+    aTempEdges.reserve(nSize+nDoubles);
+    aTempFlips.reserve(nSize+nDoubles);
+    aEdges.reserve(nSize+nDoubles);
+    aFlips.reserve(nSize+nDoubles);
 
     edge *pStartEdge=*(sEdges.begin());
     aTempEdges.push_back(pStartEdge);
@@ -791,7 +818,12 @@ void OrderLoopEdges(SGM::Result                          &rResult,
             {
             pVertex=pNextEdge->GetStart();
             }
+
         pNextEdge=FindNextEdge(rResult,pFace,pNextEdge,pVertex);
+        if(pNextEdge==nullptr)
+            {
+            break;
+            }
         nNextType=pFace->GetSideType(pNextEdge);
         if(nNextType==SGM::FaceOnBothSidesType)
             {
@@ -1177,7 +1209,7 @@ void MergeFaces(SGM::Result &rResult,
         edge *pEdge=*EdgeIter;
         SGM::EdgeSideType nType=pFace2->GetSideType(pEdge);
         pFace2->RemoveEdge(rResult,pEdge);
-        pFace1->AddEdge(pEdge,nType);
+        pFace1->AddEdge(rResult,pEdge,nType);
         ++EdgeIter;
         }
 

@@ -2569,13 +2569,27 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
                       std::vector<SGM::Point2D>               &aPoints2D,
                       std::vector<SGM::Point3D>               &aPoints3D,
                       std::vector<entity *>                   &aEntities,
-                      std::vector<std::vector<unsigned int> > &aaPolygons)
+                      std::vector<std::vector<unsigned int> > &aaPolygons,
+                      edge                                    *pInputEdge)
     {
     // Find all the needed face information.
 
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
-    size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+    size_t nLoops=1;
+    if(pInputEdge==nullptr)
+        {
+        nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+        }
+    else
+        {
+        std::vector<edge *> aLoop;
+        aLoop.push_back(pInputEdge);
+        aaLoops.push_back(aLoop);
+        std::vector<SGM::EdgeSideType> aSides;
+        aSides.push_back(pFace->GetSideType(pInputEdge));
+        aaEdgeSideTypes.push_back(aSides);
+        }
 
     bool bFlip=pFace->GetFlipped();
     std::set<vertex *,EntityCompare> sVertices;
@@ -3116,7 +3130,8 @@ double ScaledUVs(face                      const *pFace,
     {
     surface const *pSurface=pFace->GetSurface();
     SGM::Vector3D DU,DV;
-    SGM::Point2D uv=pSurface->GetDomain().MidPoint();
+    SGM::Interval2D Box=SGM::Interval2D(aPoints2D);
+    SGM::Point2D uv=Box.MidPoint();
     pSurface->Evaluate(uv,nullptr,&DU,&DV);
     
     double dUk=std::max(SGM_FIT,fabs(pSurface->DirectionalCurvature(uv,DU)));
@@ -3778,6 +3793,8 @@ bool AngleGrid(SGM::Result                                   &rResult,
                std::vector<SGM::Point2D>                     &aPoints2D,
                std::vector<unsigned int>                     &aTriangles)
     {
+    // Create the base grid.
+
     std::vector<double> aUValues,aVValues;
     SGM::Interval2D Box(aPolygonPoints);
     size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL)*2;
@@ -3799,7 +3816,10 @@ bool AngleGrid(SGM::Result                                   &rResult,
         {
         aVValues.push_back(Box.m_VDomain.MidPoint(((double)Index1)/nV));
         }
+    double dMinGrid=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
+
+    // Scale the base grid.
 
     std::vector<SGM::Point2D> aScaled;
     double dScale=ScaledUVs2(Box.m_UDomain.Length()/(nU-1.0),Box.m_VDomain.Length()/(nV-1.0),aPoints2D,aScaled);
@@ -3811,6 +3831,8 @@ bool AngleGrid(SGM::Result                                   &rResult,
         aScaledPolygonPoints.push_back(uv);
         }
 
+    // Insert the polygons.
+
     size_t nPolygons=aaPolygons.size();
     for(Index1=0;Index1<nPolygons;++Index1)
         {
@@ -3821,7 +3843,9 @@ bool AngleGrid(SGM::Result                                   &rResult,
             }
         aaPolygons[Index1]=aPolygonIndices;
         }
-    RemoveOutsideTriangles(aaPolygons,aScaled,aTriangles);
+    RemoveOutsideTriangles(rResult,aaPolygons,aScaled,aTriangles,dMinGrid*0.5);
+
+    // Since points were removed and added reset aPoints2D from aScaled.
 
     aPoints2D.clear();
     aPoints2D.reserve(aScaled.size());
@@ -3877,9 +3901,9 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
             aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals);
         aaPolygons[Index1]=aPolygonIndices;
         }
-    RemoveOutsideTriangles(aaPolygons,aPoints2D,aTriangles,&aPoints3D,&aNormals);
+    RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,SGM_FIT,&aPoints3D,&aNormals);
     }
-    
+   
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -3889,8 +3913,8 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles,
                std::vector<entity *>          &aEntities)
     {
-    std::vector<std::vector<unsigned int> > aaPolygons;
     std::vector<unsigned int> aAdjacencies;
+    std::vector<std::vector<unsigned int> > aaPolygons;
     FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons);
 
     switch(pFace->GetSurface()->GetSurfaceType())
@@ -3959,7 +3983,6 @@ void FacetFace(SGM::Result                    &rResult,
             aPoints3D.clear();
             ParamCurveGrid(rResult,pFace,Options,aPoints2D,aaPolygons,aGridUVs,aPoints3D,aNormals,aTriangles);
             aPoints2D=aGridUVs;
-            //FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
             break;
             }
         default:

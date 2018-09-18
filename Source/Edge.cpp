@@ -304,6 +304,11 @@ SGM::Point3D const &edge::FindStartPoint() const
     return m_pStart->GetPoint();
     }
 
+bool edge::IsDegenerate() const
+    {
+    return m_pCurve->GetCurveType()==SGM::PointCurveType;
+    }
+
 SGM::Point3D const &edge::FindEndPoint() const
     {
     return m_pEnd->GetPoint();

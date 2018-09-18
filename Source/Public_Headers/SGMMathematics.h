@@ -74,6 +74,12 @@ namespace SGM
     SGM_EXPORT void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
                                        double                     dTolerance);
 
+    // Optionaly a box may be given that the points must be in also.
+
+    SGM_EXPORT void RemoveDuplicates3D(std::vector<SGM::Point3D> &aPoints,
+                                       double                     dTolerance,
+                                       SGM::Interval3D     const *Box=nullptr);
+
     /////////////////////////////////////////////////////////////////////////
     //
     //  Polygon functions
@@ -89,6 +95,8 @@ namespace SGM
     // return negative areas.
 
     SGM_EXPORT double PolygonArea(std::vector<Point2D> const &aPolygon);
+
+    // Returns the indices of of all the points that form concave angles.
 
     SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
                                         std::vector<size_t>        &aConcavePoints);
@@ -117,7 +125,13 @@ namespace SGM
     // Coverts a polygon from a vector of indices to a vector of points.
 
     std::vector<SGM::Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
-                                               std::vector<unsigned int> const &aPolygons);
+                                               std::vector<unsigned int> const &aPolygon);
+
+    // Merges the indices of close points, within dTolerance, in aPolygon.
+
+    std::vector<unsigned int> MergePolygon(std::vector<Point2D>      const &aPoints2D,
+                                           std::vector<unsigned int> const &aPolygon,
+                                           double                           dTolerance);
 
     // Returns the length of the smallest edge of the given polygon.
 
@@ -185,6 +199,13 @@ namespace SGM
     SGM_EXPORT Point2D CenterOfMass(Point2D const &A,
                                     Point2D const &B,
                                     Point2D const &C);
+
+    // Returns the area of the triangle ABC as positive if ABC are counter 
+    // clockwise else it returns a negative area of triangle ABC.
+
+    SGM_EXPORT double SignedArea(Point2D const &A,
+                                 Point2D const &B,
+                                 Point2D const &C);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
@@ -288,11 +309,14 @@ namespace SGM
     // that have been imprinted into the triangles RemoveOutsideTriangles removes the triangles
     // that are outside of the given polygons.  The function returns false if the given polygons 
     // are not well nested.  In addition, aPoints2D, and optionaly pPoints3D and pNormals are
-    // reduced to only the used points.
+    // reduced to only the used points.  Moreover, it dMinDist is not zero, then interior points
+    // that are within dMinDist of the boundary are also removed. 
 
-    SGM_EXPORT bool RemoveOutsideTriangles(std::vector<std::vector<unsigned int> > const &aaPolygons,
+    SGM_EXPORT bool RemoveOutsideTriangles(SGM::Result                                   &rResult,
+                                           std::vector<std::vector<unsigned int> > const &aaPolygons,
                                            std::vector<Point2D>                          &aPoints2D,
                                            std::vector<unsigned int>                     &aTriangles,
+                                           double                                         dMinDist=0.0,
                                            std::vector<Point3D>                          *pPoints3D=nullptr,
                                            std::vector<UnitVector3D>                     *pNormals=nullptr);
 

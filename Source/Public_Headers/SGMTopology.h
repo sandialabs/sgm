@@ -98,17 +98,6 @@ namespace SGM
     SGM_EXPORT bool IsFaceFlipped(SGM::Result     &rResult,
                                   SGM::Face const &FaceID);
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  Topology Modification Functions.
-//
-//////////////////////////////////////////////////////////////////////////////
-
-    SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
-
-    SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,
-                                     std::vector<SGM::Face> &aFaces);
-
     } // End of SGM namespace
 
 #endif // SGM_TOPOLOGY_CLASSES_H

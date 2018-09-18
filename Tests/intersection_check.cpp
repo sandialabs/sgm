@@ -1,14 +1,12 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
-//#include <Intersectors.h>
 
 #include "SGMVector.h"
 #include "SGMPrimitives.h"
 #include "SGMGeometry.h"
 #include "SGMIntersector.h"
 #include "SGMSegment.h"
-//#include "Surface.h"
 
 #include "test_utility.h"
 

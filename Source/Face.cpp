@@ -609,7 +609,11 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return dVolume;
     }
 
-//TODO: would it pay off to cache the aaLoops and aaFlipped?
+//TODO: would it pay off to cache the aaLoops and aaFlipped?  No PRS.  
+// If cached they will have to be maintained, which is the whole point
+// of not having loops and coedges in SGM.  Moreover, it is only found
+// once hence caching will not help make things go faster.
+
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
@@ -663,11 +667,14 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     return nLoops;
     }
 
-void face::AddEdge(edge *pEdge,SGM::EdgeSideType nEdgeType)
+void face::AddEdge(SGM::Result       &rResult,
+                   edge              *pEdge,
+                   SGM::EdgeSideType nEdgeType)
     {
     m_sEdges.insert(pEdge);
     m_mSideType[pEdge]=nEdgeType;
     pEdge->AddFace(this);
+    ClearFacets(rResult);
     }
 
 void face::RemoveEdge(SGM::Result &rResult,

@@ -711,7 +711,9 @@ class face : public topology
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
+        void AddEdge(SGM::Result       &rResult,
+                     edge              *pEdge,
+                     SGM::EdgeSideType nEdgeType);
 
         void RemoveEdge(SGM::Result &rResult,
                         edge        *pEdge);
@@ -877,6 +879,10 @@ class edge : public topology
         double GetTolerance() const {return m_dTolerance;}
 
         bool IsTopLevel() const override;
+
+        bool IsClosed() const { return m_pStart==nullptr || m_pStart==m_pEnd;}
+
+        bool IsDegenerate() const;
 
         // Other Methods
 

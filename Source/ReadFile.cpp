@@ -998,9 +998,9 @@ namespace SGMInternal {
             }
     }
 
-void CreateEntities(SGM::Result &rResult,
-                    size_t maxSTEPLineNumber,
-                    STEPLineDataMapType &mSTEPData,
+void CreateEntities(SGM::Result           &rResult,
+                    size_t                 maxSTEPLineNumber,
+                    STEPLineDataMapType   &mSTEPData,
                     std::vector<entity *> &aEntities)
     {
         IDEntityMapType mEntityMap;
@@ -1671,7 +1671,7 @@ void CreateEntities(SGM::Result &rResult,
                                 nEdgeSide = SGM::FaceOnRightType;
                                 }
                             }
-                        pFace->AddEdge(pEdge, nEdgeSide);
+                        pFace->AddEdge(rResult,pEdge, nEdgeSide);
                         }
                     }
                 }

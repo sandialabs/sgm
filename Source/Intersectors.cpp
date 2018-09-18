@@ -1914,7 +1914,11 @@ size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
         double dR1=pCircle1->m_dRadius;
         double dR2=pCircle2->m_dRadius;
         double dDist=Center1.Distance(Center2);
-        if(SGM::NearEqual(dR1+dR2,dDist,dTolerance,false))
+        if(dDist+dR1+dTolerance<dR2 || dDist+dR2+dTolerance<dR1)
+            {
+            // One circle lies inside the other.
+            }
+        else if(SGM::NearEqual(dR1+dR2,dDist,dTolerance,false))
             {
             double dB=(dR1*dR1-dR2*dR2)/(2*dDist);
             SGM::UnitVector3D Norm=Center1-Center2;

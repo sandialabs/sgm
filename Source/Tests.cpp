@@ -14,6 +14,7 @@
 #include "SGMDisplay.h"
 #include "SGMMeasure.h"
 #include "SGMEntityFunctions.h"
+#include "SGMModify.h"
 
 #include "FileFunctions.h"
 #include "EntityClasses.h"
@@ -2719,8 +2720,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pBody->AddVolume(pVolume);
         pVolume->AddFace(pRevolveFace);
 
-        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
-        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
 
         pRevolveFace->SetSurface(pRevolve);
         pRevolveFace->SetSides(2);
@@ -2800,8 +2801,8 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pBody->AddVolume(pVolume);
         pVolume->AddFace(pRevolveFace);
 
-        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
-        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
 
         pRevolveFace->SetSurface(pRevolve);
         pRevolveFace->SetSides(2);
@@ -2898,10 +2899,10 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         pBody->AddVolume(pVolume);
         pVolume->AddFace(pRevolveFace);
 
-        pRevolveFace->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
-        pRevolveFace->AddEdge(pEdgeTop,SGM::FaceOnRightType);
-        pRevolveFace->AddEdge(pEdgeRight,SGM::FaceOnLeftType);
-        pRevolveFace->AddEdge(pEdgeLeft,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
+        pRevolveFace->AddEdge(rResult,pEdgeRight,SGM::FaceOnLeftType);
+        pRevolveFace->AddEdge(rResult,pEdgeLeft,SGM::FaceOnRightType);
 
         pRevolveFace->SetSurface(pRevolve);
         pRevolveFace->SetSides(2);
@@ -3521,6 +3522,100 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
         SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints3D,aTriangles);
         pComplex->ReduceToUsedPoints();
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==56)
+        {
+        // Boolean of two disks Peninsula
+
+        bool bAnswer=true;
+
+        SGM::Point3D Center0(0,0,0),Center1(0,1.0,0);
+        SGM::UnitVector3D Normal0(0,0,1),Normal1(1,0,0);
+        SGM::Body DiskID0=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
+        SGM::Body DiskID1=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
+
+        SGM::UniteBodies(rResult,DiskID0,DiskID1);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==57)
+        {
+        // Boolean of two disks Splitter and Island
+
+        bool bAnswer=true;
+
+        SGM::Point3D Center0(0,0,0),Center1(0,0.5,0);
+        SGM::UnitVector3D Normal0(0,0,1),Normal1(0,1,0);
+        SGM::Body DiskID0=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
+        SGM::Body DiskID1=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
+
+        SGM::UniteBodies(rResult,DiskID0,DiskID1);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==58)
+        {
+        // Imprinting an attol edge on a face,
+        // then imprinting a bridge edge on a face.
+
+        bool bAnswer=true;
+
+        SGM::Point3D Center(0,0,0);
+        SGM::UnitVector3D Normal(0,0,1);
+        SGM::Body DiskID=SGM::CreateDisk(rResult,Center,Normal,1.0);
+        SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Normal,0.5);
+        SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,DiskID,sFaces);
+        SGM::Face FaceID=*(sFaces.begin());
+        std::vector<SGM::Face> aFaces=SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+        SGM::Point3D StartPos(0.5,0,0),EndPos(1.0,0,0);
+        SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,StartPos,EndPos);
+        SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
+
+        return bAnswer;
+        }
+
+    if(nTestNumber==59)
+        {
+        // Testing polygon trianglulation.
+
+        bool bAnswer=true;
+
+        std::vector<SGM::Point2D> aPoints2D;
+        aPoints2D.push_back(SGM::Point2D(2 , 0));
+        aPoints2D.push_back(SGM::Point2D(1 , 0));
+        aPoints2D.push_back(SGM::Point2D(0 ,-1));
+        aPoints2D.push_back(SGM::Point2D(-1, 0));
+        aPoints2D.push_back(SGM::Point2D(0 , 1));
+        aPoints2D.push_back(SGM::Point2D(1 , 0));
+        aPoints2D.push_back(SGM::Point2D(2 , 0));
+        aPoints2D.push_back(SGM::Point2D(0 , 2));
+        aPoints2D.push_back(SGM::Point2D(-2, 0));
+        aPoints2D.push_back(SGM::Point2D(0 ,-2));
+
+        std::vector<SGM::Point3D> aPoints3D;
+        aPoints3D.push_back(SGM::Point3D(2 , 0, 0));
+        aPoints3D.push_back(SGM::Point3D(1 , 0, 0));
+        aPoints3D.push_back(SGM::Point3D(0 ,-1, 0));
+        aPoints3D.push_back(SGM::Point3D(-1, 0, 0));
+        aPoints3D.push_back(SGM::Point3D(0 , 1, 0));
+        aPoints3D.push_back(SGM::Point3D(1 , 0, 0));
+        aPoints3D.push_back(SGM::Point3D(2 , 0, 0));
+        aPoints3D.push_back(SGM::Point3D(0 , 2, 0));
+        aPoints3D.push_back(SGM::Point3D(-2, 0, 0));
+        aPoints3D.push_back(SGM::Point3D(0 ,-2, 0));
+
+        std::vector<unsigned int> aTriangles,aSegments;
+        std::vector<unsigned int> aPolygon={0,1,2,3,4,5,6,7,8,9};
+        SGM::TriangulatePolygon(rResult,aPoints2D,aPolygon,aTriangles);
+        SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
 
         return bAnswer;
         }

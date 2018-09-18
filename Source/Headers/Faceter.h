@@ -58,7 +58,9 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
                       FacetOptions                      const &Options,
                       std::vector<SGM::Point2D>               &aPoints2D,
                       std::vector<SGM::Point3D>               &aPoints3D,
-                      std::vector<std::vector<unsigned int> > &aaPolygons);
+                      std::vector<entity *>                   &aEntities,
+                      std::vector<std::vector<unsigned int> > &aaPolygons,
+                      edge                                    *pInputEdge=nullptr);
 
 bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,
