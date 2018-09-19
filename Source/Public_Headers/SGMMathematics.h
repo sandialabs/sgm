@@ -710,6 +710,17 @@ namespace SGM
                              void                                 const *pData=nullptr,
                              double                                      dTolerance=SGM_ZERO);
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Polyhedra
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Icosahedron
+
+    SGM_EXPORT void CreateIcosahedron(double                     dCircumscribedRadius,
+                                      std::vector<SGM::Point3D> &aPoints,
+                                      std::vector<unsigned int> &aTriangles);
     } // End of SGM namespace
 
 #endif // SGM_MATHEMATICS_H

@@ -3540,4 +3540,32 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
         return aaGenerations.size();
     }
 
+    void SGM::CreateIcosahedron(double                     dRadius,
+                                std::vector<SGM::Point3D> &aPoints,
+                                std::vector<unsigned int> &aTriangles)
+        {
+        // (  0,+-1,+-R)
+        // (+-1,+-R,  0)
+        // (+-R,  0,+-1)
+        // 
+        // gr=(1+sqrt(5))/2 = 1.6180339887498948482045868343656
+
+        double dOne=dRadius/SGM_GOLDEN_RATIO;
+
+        aPoints={{0, dOne, dRadius},  
+                 {0,-dOne, dRadius},  
+                 {0, dOne,-dRadius},  
+                 {0,-dOne,-dRadius},  
+                 { dOne, dRadius,0},  
+                 {-dOne, dRadius,0},  
+                 { dOne,-dRadius,0},  
+                 {-dOne,-dRadius,0},  
+                 { dRadius,0, dOne},  
+                 { dRadius,0,-dOne},  
+                 {-dRadius,0, dOne},  
+                 {-dRadius,0,-dOne}}; 
+
+        aTriangles={0,8,1,10,0,1,0,5,4,0,4,8,1,8,6,1,7,10,1,6,7,0,10,5,10,11,5,10,7,11,8,4,9,8,9,6,2,4,5,2,5,11,2,9,4,3,7,6,3,6,9,3,11,7,2,11,3,2,3,9};
+        }
+
 } // namespace SGM
