@@ -5,14 +5,23 @@
 
 namespace SGMInternal
 {
-NUBcurve::NUBcurve(SGM::Result                     &rResult,
+    NUBcurve::NUBcurve(SGM::Result                 &rResult,
                    std::vector<SGM::Point3D> const &aControlPoints,
                    std::vector<double>       const &aKnots):
     curve(rResult,SGM::NUBCurveType),m_aControlPoints(aControlPoints),m_aKnots(aKnots)
+    { Initialize(); }
+
+    NUBcurve::NUBcurve(SGM::Result            &rResult,
+                   std::vector<SGM::Point3D> &&aControlPoints,
+                   std::vector<double>       &&aKnots):
+    curve(rResult,SGM::NUBCurveType),m_aControlPoints(std::move(aControlPoints)),m_aKnots(std::move(aKnots))
+    { Initialize(); }
+
+void NUBcurve::Initialize()
     {
     m_Domain.m_dMin=m_aKnots.front();
     m_Domain.m_dMax=m_aKnots.back();
-    m_bClosed = SGM::NearEqual(aControlPoints.front(),aControlPoints.back(),SGM_MIN_TOL);
+    m_bClosed = SGM::NearEqual(m_aControlPoints.front(),m_aControlPoints.back(),SGM_MIN_TOL);
     }
 
 NUBcurve::NUBcurve(SGM::Result &rResult, NUBcurve const &other):

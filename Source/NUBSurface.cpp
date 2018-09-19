@@ -8,16 +8,19 @@
 
 namespace SGMInternal
 {
-NUBsurface::NUBsurface(SGM::Result                                   &rResult,
-                       std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
-                       std::vector<double>                     const &aUKnots,
-                       std::vector<double>                     const &aVKnots):
-    surface(rResult,SGM::NUBSurfaceType),m_aaControlPoints(aControlPoints),m_aUKnots(aUKnots),m_aVKnots(aVKnots)
+NUBsurface::NUBsurface(SGM::Result                             &rResult,
+                       std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
+                       std::vector<double>                    &&aUKnots,
+                       std::vector<double>                    &&aVKnots):
+        surface(rResult,SGM::NUBSurfaceType),
+        m_aaControlPoints(std::move(aControlPoints)),
+        m_aUKnots(std::move(aUKnots)),
+        m_aVKnots(std::move(aVKnots))
     {
-    m_Domain.m_UDomain.m_dMin=aUKnots.front();
-    m_Domain.m_UDomain.m_dMax=aUKnots.back();
-    m_Domain.m_VDomain.m_dMin=aVKnots.front();
-    m_Domain.m_VDomain.m_dMax=aVKnots.back();
+    m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
+    m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
+    m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
+    m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
 
     SGM::Point3D Pos0,Pos1,Pos2,Pos3;
     Evaluate(m_Domain.MidPoint(0.5,0),&Pos0);
@@ -359,7 +362,7 @@ curve *NUBsurface::UParamLine(SGM::Result &rResult, double dU) const
                                         SGM::Vector3D(aaControlPoints[nSpanIndex-nUDegree+Index2][Index1]);
                 }
             }
-        curve *pCurve=new NUBcurve(rResult,aControlPoints,GetVKnots());
+        curve *pCurve=new NUBcurve(rResult,std::move(aControlPoints),std::vector<double>(GetVKnots()));
         return pCurve;
         }
     }
@@ -405,7 +408,7 @@ curve *NUBsurface::VParamLine(SGM::Result &rResult, double dV) const
                                         SGM::Vector3D(aaControlPoints[Index1][nSpanIndex-nUDegree+Index2]);
                 }
             }
-        return new NUBcurve(rResult,aControlPoints,GetUKnots());
+        return new NUBcurve(rResult,std::move(aControlPoints),std::vector<double>(GetUKnots()));
         }
     }
 

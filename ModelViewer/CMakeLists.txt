@@ -80,3 +80,6 @@ else()
 endif()
 file(GENERATE OUTPUT ${QT_CONF_OUTDIR}/qt.conf CONTENT "[Paths]\nPrefix = ${_qt_dir}")
 
+install(FILES ${QT_CONF_OUTDIR}/qt.conf
+        DESTINATION bin COMPONENT Runtime)
+

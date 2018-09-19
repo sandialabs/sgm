@@ -580,10 +580,10 @@ void FacetCurve(curve               const *pCurve,
                 double dAngleFraction=dArcLength/Options.m_dMaxLength;
                 dAngle=std::min(dAngle,dDomainLength*dAngleFraction);
                 }
-            if(Options.m_dCordHight)
+            if(Options.m_dCordHeight)
                 {
                 // CordAngle = 2*acos(1-CordHight/Radius)
-                dAngle=std::min(dAngle,2.0*acos(1.0-Options.m_dCordHight/dRadius));
+                dAngle=std::min(dAngle,2.0*acos(1.0-Options.m_dCordHeight/dRadius));
                 }
             size_t nPoints=std::min((size_t)(1.0000001+dDomainLength/dAngle),Options.m_nMaxFacets);
             if(nPoints<3)
@@ -618,10 +618,10 @@ void FacetCurve(curve               const *pCurve,
                 double dAngleFraction=dArcLength/Options.m_dMaxLength;
                 dAngle=std::min(dAngle,dDomainLength*dAngleFraction);
                 }
-            if(Options.m_dCordHight)
+            if(Options.m_dCordHeight)
                 {
                 // CordAngle = 2*acos(1-CordHight/Radius)
-                dAngle=std::min(dAngle,2.0*acos(1.0-Options.m_dCordHight/dRadius));
+                dAngle=std::min(dAngle,2.0*acos(1.0-Options.m_dCordHeight/dRadius));
                 }
             size_t nPoints=std::min((size_t)(1.0000001+dDomainLength/dAngle),Options.m_nMaxFacets);
             if(nPoints<3)

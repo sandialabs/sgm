@@ -10,16 +10,19 @@
 
 namespace SGMInternal
 {
-NURBsurface::NURBsurface(SGM::Result                                   &rResult,
-                         std::vector<std::vector<SGM::Point4D> > const &aControlPoints,
-                         std::vector<double>                     const &aUKnots,
-                         std::vector<double>                     const &aVKnots):
-    surface(rResult,SGM::NURBSurfaceType),m_aaControlPoints(aControlPoints),m_aUKnots(aUKnots),m_aVKnots(aVKnots)
+NURBsurface::NURBsurface(SGM::Result                             &rResult,
+                         std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
+                         std::vector<double>                    &&aUKnots,
+                         std::vector<double>                    &&aVKnots):
+        surface(rResult,SGM::NURBSurfaceType),
+        m_aaControlPoints(std::move(aControlPoints)),
+        m_aUKnots(std::move(aUKnots)),
+        m_aVKnots(std::move(aVKnots))
     {
-    m_Domain.m_UDomain.m_dMin=aUKnots.front();
-    m_Domain.m_UDomain.m_dMax=aUKnots.back();
-    m_Domain.m_VDomain.m_dMin=aVKnots.front();
-    m_Domain.m_VDomain.m_dMax=aVKnots.back();
+    m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
+    m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
+    m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
+    m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
 
     SGM::Point3D Pos0,Pos1,Pos2,Pos3;
     Evaluate(m_Domain.MidPoint(0.5,0),&Pos0);
@@ -102,13 +105,13 @@ NURBsurface* NURBsurface::Clone(SGM::Result &rResult) const
 { return new NURBsurface(rResult, *this); }
 
 void NURBsurface::Evaluate(SGM::Point2D const &uv,
-                           SGM::Point3D       * __restrict__ Pos,
-                           SGM::Vector3D      * __restrict__ Du,
-                           SGM::Vector3D      * __restrict__ Dv,
-                           SGM::UnitVector3D  * __restrict__ Norm,
-                           SGM::Vector3D      * __restrict__ Duu,
-                           SGM::Vector3D      * __restrict__ Duv,
-                           SGM::Vector3D      * __restrict__ Dvv) const
+                           SGM::Point3D       * Pos,
+                           SGM::Vector3D      * Du,
+                           SGM::Vector3D      * Dv,
+                           SGM::UnitVector3D  * Norm,
+                           SGM::Vector3D      * Duu,
+                           SGM::Vector3D      * Duv,
+                           SGM::Vector3D      * Dvv) const
     {
     // From "The NURBs Book" Algorithm A3.6.
 
@@ -531,7 +534,7 @@ curve *NURBsurface::UParamLine(SGM::Result &rResult, double dU) const
             double dRWeight=1.0/Pos.m_w;
             aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
             }
-        curve *pParamCurve=new NURBcurve(rResult,aControlPoints,GetVKnots());
+        curve *pParamCurve=new NURBcurve(rResult,std::move(aControlPoints),std::vector<double>(GetVKnots()));
         return pParamCurve;
         }
     }
@@ -581,7 +584,7 @@ curve *NURBsurface::VParamLine(SGM::Result &rResult, double dV) const
             double dRWeight=1.0/Pos.m_w;
             aControlPoints[Index1]=SGM::Point4D(Pos.m_x*dRWeight,Pos.m_y*dRWeight,Pos.m_z*dRWeight,Pos.m_w);
             }
-        return new NURBcurve(rResult,aControlPoints,GetUKnots());
+        return new NURBcurve(rResult,std::move(aControlPoints),std::vector<double>(GetUKnots()));
         }
     }
 

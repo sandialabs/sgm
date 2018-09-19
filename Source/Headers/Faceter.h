@@ -20,14 +20,14 @@ class FacetOptions
             m_dEdgeAngleTol(FACET_EDGE_ANGLE_TOLERANCE), //  5 degrees.
             //m_dEdgeAngleTol(0.17453292519943295769236907684886),
             m_dMaxLength(0),
-            m_dCordHight(0),
+            m_dCordHeight(0),
             m_nMaxFacets(10000),
             m_bParametric(false) {}
 
         double m_dFaceAngleTol;
         double m_dEdgeAngleTol;
         double m_dMaxLength;
-        double m_dCordHight;
+        double m_dCordHeight;
         size_t m_nMaxFacets;
         bool   m_bParametric;
     };

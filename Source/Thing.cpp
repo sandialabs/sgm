@@ -9,8 +9,6 @@
 #include <set>
 #include <iostream>
 
-//#define SGM_MULTITHREADED
-
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
 #endif
@@ -49,8 +47,7 @@ namespace SGMInternal {
                       bool bChildren) const
     {
         // TODO: are we doing this right, should we check IsTopLevel()?
-        // TODO: should we use a ThreadPool?
-        // TODO: this mutex is locked for a long time, maybe get set of entities first, then check
+        // TODO: should we use a ThreadPool for checking?
         // thing *always* checks at least top level children,
         // and passing bChildren=true will check further down hierarchy
         bool bAnswer = true;
@@ -67,8 +64,6 @@ namespace SGMInternal {
     {
         if (m_Box.IsEmpty())
             {
-            // TODO: this mutex is locked for a long time, maybe get set of entities first, then stretch
-            // TODO: should we use a ThreadPool?
             // stretch box around every bounded entity that is top level
             
             for (auto const &iter : m_mAllEntities)
@@ -522,7 +517,7 @@ namespace SGMInternal {
         QueueFindBoxData(rResult, GetComplexes(), pool, futures);
         WaitForCachedDataJobs(futures);
 
-        // faces box data
+        // faces box data
         QueueFindBoxData(rResult, sFaces, pool, futures);
         WaitForCachedDataJobs(futures);
 

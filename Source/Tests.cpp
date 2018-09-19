@@ -1628,7 +1628,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
         aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
         aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
-        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
+        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,std::move(aaPoints),std::move(aUKnots),std::move(aVKnots));
 
         bool bAnswer=SGMInternal::TestSurface(rResult,pNUB,SGM::Point2D(0.3,0.2));
         
@@ -2180,7 +2180,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
         aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
         aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
-        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,aaPoints,aUKnots,aVKnots);
+        SGMInternal::NUBsurface *pNUB=new SGMInternal::NUBsurface(rResult,std::move(aaPoints),std::move(aUKnots),std::move(aVKnots));
 
         // Test with a line that hits the saddle point.
 
@@ -3053,7 +3053,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         aVKnots.push_back(SGM_TWO_PI);
         aVKnots.push_back(SGM_TWO_PI);
 
-        SGMInternal::NURBsurface *pNURB=new SGMInternal::NURBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
+        SGMInternal::NURBsurface *pNURB=new SGMInternal::NURBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
         bool bAnswer=SGMInternal::TestSurface(rResult,pNURB,SGM::Point2D(0.245,0.678));
 
         SGM::Point3D Pos0,Pos1,Pos2;
