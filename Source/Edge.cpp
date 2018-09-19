@@ -362,11 +362,11 @@ void edge::SnapToDomain(double &t,double dTol) const
             }
         else
             {
-            while(t<m_Domain.m_dMin)
+            while(t+dTol<m_Domain.m_dMin)
                 {
                 t+=CurveDomain.Length();
                 }
-            while(m_Domain.m_dMax<t)
+            while(m_Domain.m_dMax+dTol<t)
                 {
                 t-=CurveDomain.Length();
                 }

@@ -49,7 +49,7 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name) // TODO: 
 }
 
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_TSLhousingGeom) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) // TODO: segfault interrupt
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
