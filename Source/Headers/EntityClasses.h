@@ -1,12 +1,12 @@
 #ifndef SGM_INTERNAL_ENTITY_CLASSES_H
 #define SGM_INTERNAL_ENTITY_CLASSES_H
 
+#include <numeric>
 #include <map>
 #include <set>
-#include <vector>
 #include <unordered_set>
 #include <utility>
-#include <mutex>
+#include <vector>
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
@@ -174,9 +174,13 @@ protected:
 
     // Only to be called from the thing constructor.
 
-    entity() : m_ID(0), m_Type(SGM::ThingType), m_Box(), m_sOwners(), m_sAttributes() {}
+    entity();
 
     void RemoveAllOwners();
+
+private:
+
+    size_t IDFromThing(SGM::Result &rResult);
 };
 
 class thing : public entity
@@ -711,7 +715,9 @@ class face : public topology
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        void AddEdge(edge *pEdge,SGM::EdgeSideType bFaceType);
+        void AddEdge(SGM::Result       &rResult,
+                     edge              *pEdge,
+                     SGM::EdgeSideType nEdgeType);
 
         void RemoveEdge(SGM::Result &rResult,
                         edge        *pEdge);
@@ -793,10 +799,10 @@ class face : public topology
         int                                 m_nSides;
 
         mutable std::vector<SGM::Point3D>          m_aPoints3D;
+        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
+        mutable std::vector<unsigned int>          m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::vector<entity *>              m_aEntities;
-        mutable std::vector<unsigned int>          m_aTriangles;
-        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
 
@@ -877,6 +883,10 @@ class edge : public topology
         double GetTolerance() const {return m_dTolerance;}
 
         bool IsTopLevel() const override;
+
+        bool IsClosed() const { return m_pStart==nullptr || m_pStart==m_pEnd;}
+
+        bool IsDegenerate() const;
 
         // Other Methods
 

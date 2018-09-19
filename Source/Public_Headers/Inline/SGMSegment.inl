@@ -31,6 +31,48 @@ namespace SGM {
             }
         }
 
+    inline bool Segment2D::Overlap(Segment2D const &Seg) const
+    {
+        UnitVector2D Vec1=m_End-m_Start;
+        UnitVector2D Vec2=Seg.m_End-Seg.m_Start;
+        if(1.0-fabs(Vec1%Vec2)<SGM_MIN_TOL)
+            {
+            // First check to see if m_Start is on the line of Seg.
+
+            Vector2D Vec=m_Start-Seg.m_Start;
+            double dDist=Vec%Vec2;
+            Point2D Pos=Seg.m_Start+Vec2*dDist;
+            if(SGM_ZERO<Pos.DistanceSquared(m_Start))
+                {
+                return false;
+                }
+
+            double d1=(Seg.m_Start-m_Start)%Vec1;
+            double d2=(Seg.m_End-m_Start)%Vec1;
+            double dLength1=Length();
+            if(SGM_MIN_TOL<d1 && d1<dLength1-SGM_MIN_TOL)
+                {
+                return true;
+                }
+            if(SGM_MIN_TOL<d2 && d2<dLength1-SGM_MIN_TOL)
+                {
+                return true;
+                }
+            double d3=(m_Start-Seg.m_Start)%Vec2;
+            double d4=(m_End-Seg.m_Start)%Vec2;
+            double dLength2=Seg.Length();
+            if(SGM_MIN_TOL<d3 && d3<dLength2-SGM_MIN_TOL)
+                {
+                return true;
+                }
+            if(SGM_MIN_TOL<d4 && d4<dLength2-SGM_MIN_TOL)
+                {
+                return true;
+                }
+            }
+        return false;
+    }
+
     inline bool Segment2D::Intersect(Segment2D const &Seg,
                                      Point2D         &Pos) const
     {
@@ -56,11 +98,23 @@ namespace SGM {
             }
         else
             {
-            double t = e / c;
-            Pos = m_Start;
-            if (t < 0 || 1 < t)
+            // First check to see if m_Start is on the line of Seg.
+            
+            UnitVector2D SegAxis=v;
+            double dDist=w%SegAxis;
+            Point2D TestPos=Seg.m_Start+dDist*SegAxis;
+            if(SGM_ZERO<TestPos.DistanceSquared(m_Start))
                 {
                 bAnswer = false;
+                }
+            else
+                {
+                double t = e / c;
+                Pos = m_Start;
+                if (t < 0 || 1 < t)
+                    {
+                    bAnswer = false;
+                    }
                 }
             }
         return bAnswer;

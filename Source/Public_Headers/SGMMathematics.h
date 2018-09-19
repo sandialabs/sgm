@@ -6,10 +6,13 @@
 #include <map>
 
 #include "sgm_export.h"
+
 #include "SGMConstants.h"
 #include "SGMVector.h"
 #include "SGMInterval.h"
 #include "SGMResult.h"
+#include "SGMSegment.h"
+#include "SGMEntityClasses.h"
 
 namespace SGM
     {
@@ -20,10 +23,10 @@ namespace SGM
     /////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
-                                         Point3D                    &Origin,
-                                         UnitVector3D               &XVec,
-                                         UnitVector3D               &YVec,
-                                         UnitVector3D               &ZVec);
+                                         Point3D                         &Origin,
+                                         UnitVector3D                    &XVec,
+                                         UnitVector3D                    &YVec,
+                                         UnitVector3D                    &ZVec);
 
     SGM_EXPORT bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
                                           Point3D                    &Origin,
@@ -53,20 +56,29 @@ namespace SGM
     // If bNormalize=true, then the lengths are scales to go from zero to one.
 
     SGM_EXPORT void FindLengths3D(std::vector<Point3D> const &aPoints,
-                                  std::vector<double>             &aLengths,
-                                  bool                             bNormalize=false);
+                                  std::vector<double>        &aLengths,
+                                  bool                        bNormalize=false);
 
     // DoPointsMatch returns true if aPoints1 and aPoints2 contain the same points
     // within the given tolerance, and it returns a map that maps vector aPoints1,
     // to vector aPoints2.
 
-    SGM_EXPORT bool DoPointsMatch(std::vector<Point3D>     const &aPoints1,
-                                  std::vector<Point3D>     const &aPoints2,
+    SGM_EXPORT bool DoPointsMatch(std::vector<Point3D>          const &aPoints1,
+                                  std::vector<Point3D>          const &aPoints2,
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
     SGM_EXPORT double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
                                        SGM::Point3D              const &Pos);
+
+    SGM_EXPORT void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
+                                       double                     dTolerance);
+
+    // Optionaly a box may be given that the points must be in also.
+
+    SGM_EXPORT void RemoveDuplicates3D(std::vector<SGM::Point3D> &aPoints,
+                                       double                     dTolerance,
+                                       SGM::Interval3D     const *Box=nullptr);
 
     /////////////////////////////////////////////////////////////////////////
     //
@@ -84,14 +96,46 @@ namespace SGM
 
     SGM_EXPORT double PolygonArea(std::vector<Point2D> const &aPolygon);
 
-    SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
-                                        std::vector<size_t>             &aConcavePoints);
+    // Returns the indices of of all the points that form concave angles.
 
-    // If the given point is only the polygon then the returned answer may
+    SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
+                                        std::vector<size_t>        &aConcavePoints);
+
+    // If the given point is on the polygon, then the returned answer may
     // be either true or false.
 
     SGM_EXPORT bool PointInPolygon(Point2D              const &Pos,
                                    std::vector<Point2D> const &aPolygon);
+
+    // Returns the distances to the given polygon from the given point. 
+    // In other words the smallest distance to one of the defining line 
+    // segments of the polygon.
+
+    SGM_EXPORT double DistanceToPolygon(Point2D              const &Pos,
+                                        std::vector<Point2D> const &aPolygon);
+
+    // Returns true if the given point is inside the first polygon and outside the others,
+    // If the given point is on one of the the polygon, then the returned answer may
+    // be either true or false.
+
+    SGM_EXPORT bool PointInPolygonGroup(Point2D                                 const &Pos,
+                                        std::vector<Point2D>                    const &aPoints2D,
+                                        std::vector<std::vector<unsigned int> > const &aaPolygons);
+
+    // Coverts a polygon from a vector of indices to a vector of points.
+
+    std::vector<SGM::Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
+                                               std::vector<unsigned int> const &aPolygon);
+
+    // Merges the indices of close points, within dTolerance, in aPolygon.
+
+    std::vector<unsigned int> MergePolygon(std::vector<Point2D>      const &aPoints2D,
+                                           std::vector<unsigned int> const &aPolygon,
+                                           double                           dTolerance);
+
+    // Returns the length of the smallest edge of the given polygon.
+
+    SGM_EXPORT double SmallestPolygonEdge(std::vector<Point2D> const &aPolygon);
 
     // Returns a vector of triangles, indexed into aPoints for the given
     // polygons.  The first polygon is assumed to be the outside polygon and
@@ -101,11 +145,33 @@ namespace SGM
     // If the clockwise polygons are not contained inside a counter clockwise
     // polygon then false is returned with an error of 
 
-    SGM_EXPORT bool TriangulatePolygon(Result                                   &rResult,
-                                       std::vector<Point2D>               const &aPoints,
-                                       std::vector<std::vector<unsigned int> > const &aaPolygons,
-                                       std::vector<unsigned int>                     &aTriangles,
-                                       std::vector<unsigned int>                     &aAdjacencies);
+    SGM_EXPORT bool TriangulatePolygonWithHoles(Result                                        &rResult,
+                                                std::vector<Point2D>                    const &aPoints2D,
+                                                std::vector<std::vector<unsigned int> > const &aaPolygons,
+                                                std::vector<unsigned int>                     &aTriangles,
+                                                std::vector<unsigned int>                     &aAdjacencies);
+
+    // Same as TriangulatePolygonWithHoles but works on only one polygon.
+
+    SGM_EXPORT bool TriangulatePolygon(Result                          &rResult,
+                                       std::vector<Point2D>      const &aPoints2D,
+                                       std::vector<unsigned int> const &aPolygon,
+                                       std::vector<unsigned int>       &aTriangles);
+
+    // Returns true and a polygon of the form (a,b,c,d,...) if the given segments
+    // of the form (a0,b0,a1,b1,a2,b2,...) form a cylic graph.
+
+    SGM_EXPORT bool FindPolygon(std::vector<unsigned int> const &aSegments,
+                                std::vector<unsigned int>       &aPolygon);
+
+    // Given a vector of points along with a vector of polygons on the given points divide the polygons into
+    // nested groups of polygons where each first polygon is an outside polygon and the following polygons are
+    // inside the first polygon in the group.  If the polygons do not form well nested groups, then false is 
+    // returned.
+
+    SGM_EXPORT bool GroupPolygons(std::vector<std::vector<unsigned int> >         const &aaPolygons,
+                                  std::vector<Point2D>                            const &aPoints2D,
+                                  std::vector<std::vector<std::vector<unsigned int> > > &aaaPolygons);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -129,6 +195,17 @@ namespace SGM
                             Point2D const &B,
                             Point2D const &C,
                             Point2D const &D);
+
+    SGM_EXPORT Point2D CenterOfMass(Point2D const &A,
+                                    Point2D const &B,
+                                    Point2D const &C);
+
+    // Returns the area of the triangle ABC as positive if ABC are counter 
+    // clockwise else it returns a negative area of triangle ABC.
+
+    SGM_EXPORT double SignedArea(Point2D const &A,
+                                 Point2D const &B,
+                                 Point2D const &C);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
     // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
@@ -156,10 +233,21 @@ namespace SGM
     SGM_EXPORT size_t FindAdjacences1D(std::vector<unsigned int> const &aSegments,
                                        std::vector<unsigned int>       &aAdjacences);
 
-    // Returns the length of the longest edges of the given triangles. 
+    // Returns the length of the longest edge of the given triangles. 
 
-    SGM_EXPORT double FindMaxEdgeLength(std::vector<Point3D> const &aPoints,
-                                        std::vector<unsigned int> const &aTriangles);
+    SGM_EXPORT double FindMaxEdgeLength3D(std::vector<Point3D>      const &aPoints3D,
+                                          std::vector<unsigned int> const &aTriangles);
+
+    SGM_EXPORT double FindMaxEdgeLength2D(std::vector<Point2D>      const &aPoints2D,
+                                          std::vector<unsigned int> const &aTriangles);
+
+    // Returns the length of the shortest edge of the given triangles. 
+
+    SGM_EXPORT double FindMinEdgeLength3D(std::vector<Point3D>      const &aPoints3D,
+                                          std::vector<unsigned int> const &aTriangles);
+
+    SGM_EXPORT double FindMinEdgeLength2D(std::vector<Point2D>      const &aPoints2D,
+                                          std::vector<unsigned int> const &aTriangles);
 
     // Returns the boundary edges of the given triangles.  Boundary edges are
     // edges that belong to only one triangle. The direction of the triangle's edge
@@ -167,6 +255,78 @@ namespace SGM
 
     SGM_EXPORT void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
                                       std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges);
+
+    // Creates a vector of points and triangles for a grid of u and v values.
+
+    SGM_EXPORT void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
+                                            std::vector<double> const &aVValues,
+                                            std::vector<Point2D>      &aPoints2D,
+                                            std::vector<unsigned int> &aTriangles);
+
+    // Inserts a polygon into the given triangles and remove triangles that are outside
+    // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
+    // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
+    // function will update a vector of 3D points and normals if the starting ones are
+    // passed to the function along with their surface.
+
+    SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
+                                  std::vector<Point2D> const &aPolygon,
+                                  std::vector<Point2D>       &aPoints2D,
+                                  std::vector<unsigned int>  &aTriangles,
+                                  std::vector<unsigned int>  &aPolygonIndices,
+                                  SGM::Surface               *pSurfaceID=nullptr,
+                                  std::vector<Point3D>       *pPoints3D=nullptr,
+                                  std::vector<UnitVector3D>  *pNormals=nullptr);
+
+    // Returns true if the intersection of triangle {A,B,C} and the given segment
+    // consists of more than one point.
+
+    SGM_EXPORT bool SegmentCrossesTriangle(Segment2D const &Seg,
+                                           Point2D   const &A,
+                                           Point2D   const &B,
+                                           Point2D   const &C);
+
+    // Given a vector of triangle indices of the form (a0,b0,c0,a1,b1,c1,...) find 
+    // the boundary as a vector of segment indices of the form (a0,b0,a1,b1,a2,b2,...).
+
+    SGM_EXPORT void FindBoundary(std::vector<unsigned int> const &aTriangles,
+                                 std::vector<unsigned int>       &aBoundary);
+
+    // Removes the given point index from the given triangles.  Optionaly a vector of
+    // triangles to be considered may be given.  Note that the point is left in the 
+    // vector aPoints2D but removed from aTriangles. Returns false is the point cannot
+    // be removed.  The function also returns the indices of the triangles that were
+    // removed or changed, and the point indices of the triangels that were replaced.
+
+    SGM_EXPORT bool RemovePointFromTriangles(SGM::Result               &rResult,
+                                             unsigned int               nRemoveIndex,
+                                             std::vector<Point2D>      &aPoints2D,
+                                             std::vector<unsigned int> &aTriangles,
+                                             std::vector<unsigned int> &aRemovedOrChanged,
+                                             std::vector<unsigned int> &aReplacedTriangles);
+
+    // Given a vector of triangles on a given vector of points along with a vector of polygons
+    // that have been imprinted into the triangles RemoveOutsideTriangles removes the triangles
+    // that are outside of the given polygons.  The function returns false if the given polygons 
+    // are not well nested.  In addition, aPoints2D, and optionaly pPoints3D and pNormals are
+    // reduced to only the used points.  Moreover, it dMinDist is not zero, then interior points
+    // that are within dMinDist of the boundary are also removed. 
+
+    SGM_EXPORT bool RemoveOutsideTriangles(SGM::Result                                   &rResult,
+                                           std::vector<std::vector<unsigned int> > const &aaPolygons,
+                                           std::vector<Point2D>                          &aPoints2D,
+                                           std::vector<unsigned int>                     &aTriangles,
+                                           double                                         dMinDist=0.0,
+                                           std::vector<Point3D>                          *pPoints3D=nullptr,
+                                           std::vector<UnitVector3D>                     *pNormals=nullptr);
+
+    // Resets the indices in aTriangles and reduces the vector aPoints2D to only contain the 
+    // points used the the given triangles.  Optionaly pPoints3D and pNormals are also reduced.
+
+    SGM_EXPORT void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
+                                       std::vector<unsigned int> &aTriangles,
+                                       std::vector<Point3D>      *pPoints3D,
+                                       std::vector<UnitVector3D> *pNormals);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -183,18 +343,18 @@ namespace SGM
                                Point3D const &Pos2,
                                Point3D       &Center,
                                UnitVector3D  &Normal,
-                               double             &dRadius);
+                               double        &dRadius);
     
     // Returns true if D is inside the Circumcircle of the triangle (A,B,C).
     // it is assumed that A, B, and C are in counter clockwise order. 
-    // The returned value of dDet can be used to tell if we are in a close
+    // The returned value of dDeterminate can be used to tell if we are in a close
     // call situation, in which case a value close to zero will be returned.
 
     SGM_EXPORT bool InCircumcircle(Point2D const &A,
                                    Point2D const &B,
                                    Point2D const &C,
                                    Point2D const &D,
-                                   double             &dDet);
+                                   double        &dDeterminate);
 
     ///////////////////////////////////////////////////////////////////////////
     //

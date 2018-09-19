@@ -17,33 +17,6 @@
 namespace SGMInternal
 {
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  The check list for adding a new curve type.
-//
-//  Derive a class from curve.
-//  Add a type to SGM::EntityType.
-//  Add a constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Add a copy constructor.
-//      Set m_CurveType, m_Domain and m_Closed.
-//  Override the Clone method of entity.
-//  Override pure virtual methods of curve.
-//
-//  Additional functions that check the curve type.
-//
-//  Add to the function FacetCurve.
-//  Add to the function IntersectCurveAndSurface.
-//  Add to the function IntersectLineAndCurve.
-//  Add to the function IntersectCircleAndCurve.
-//  Add to the function IntersectCurves.
-//  Add to the function FindClosestPointOnEdge.
-//  Add to the function OutputCurve.
-//  Add to the function WriteCurves in STEP.cpp.
-//  Add to the function DeleteEntity in Thing.cpp
-//
-//////////////////////////////////////////////////////////////////////////////
-
 class curve : public entity
     {
     public:
@@ -298,6 +271,8 @@ class NUBcurve: public curve
         int Continuity() const override;
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+
+        std::vector<double> SpecialFacetParams() const override;
 
     public:
 
@@ -592,6 +567,10 @@ class TorusKnot: public curve
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        std::vector<double> const &GetSeedParams() const;
+
     public:
 
         SGM::Point3D      m_Center;
@@ -602,6 +581,9 @@ class TorusKnot: public curve
         double            m_dMajorRadius;
         size_t            m_nA;
         size_t            m_nB;
+
+        mutable std::vector<SGM::Point3D> m_aSeedPoints;
+        mutable std::vector<double>       m_aSeedParams;
     };
 
 class hermite: public curve
@@ -684,6 +666,24 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
                      size_t                     nDegree,
                      double                     t,
                      std::vector<double> const &aKnots);
+
+// parabola functions
+void ParabolaEvaluate(SGM::Point3D      const &Center,
+                      SGM::UnitVector3D const &XAxis,
+                      SGM::UnitVector3D const &YAxis,
+                      double                   dA,
+                      double                   t,
+                      SGM::Point3D            *Pos = nullptr,
+                      SGM::Vector3D           *D1 = nullptr,
+                      SGM::Vector3D           *D2 = nullptr);
+
+double ParabolaInverse(SGM::Point3D      const &Center,
+                       SGM::UnitVector3D const &XAxis,
+                       SGM::UnitVector3D const &YAxis,
+                       double dA,
+                       SGM::Point3D      const &Pos,
+                       SGM::Point3D            *ClosePos,
+                       double            const *guess = nullptr);
 
 } // End SGMInternal namespace
 

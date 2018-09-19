@@ -13,19 +13,45 @@ namespace SGMInternal {
     inline bool EntityCompare::operator()(entity* const& ent1, entity* const& ent2) const
     { return ent1->GetID() < ent2->GetID(); }
 
-    inline entity::entity(SGM::Result &rResult,SGM::EntityType nType) :
+    inline entity::entity() :
             m_ID(0),
+            m_Type(SGM::ThingType),
+            m_Box(),
+            m_sOwners(),
+            m_sAttributes()
+        {}
+
+    inline entity::entity(SGM::Result &rResult,SGM::EntityType nType) :
+            m_ID(IDFromThing(rResult)),
             m_Type(nType),
-            m_Box()
-    { m_ID = rResult.GetThing()->AddToMap(this); }
+            m_Box(),
+            m_sOwners(),
+            m_sAttributes()
+        {}
 
     inline entity::entity(SGM::Result &rResult, entity const &other) :
-            m_ID(),
+            m_ID(IDFromThing(rResult)),
             m_Type(other.m_Type),
+            m_Box(),
             m_sOwners(other.m_sOwners),
-            m_sAttributes(other.m_sAttributes),
-            m_Box()
-    { m_ID = rResult.GetThing()->AddToMap(this); }
+            m_sAttributes(other.m_sAttributes)
+    {}
+
+    inline size_t entity::IDFromThing(SGM::Result &rResult)
+        {
+        thing* pThing = rResult.GetThing();
+        if (pThing)
+            {
+            // get the next ID from thing
+            return pThing->AddToMap(this);
+            }
+        else
+            {
+            // Note: when using a temporary Result the thing pointer is null
+            // in that case, use arbitrary ID number.
+            return std::numeric_limits<size_t>::max();
+            }
+        }
 
     inline size_t entity::GetID() const
     { return m_ID; }
@@ -237,14 +263,11 @@ namespace SGMInternal {
         }
     if(bFilled)
         {
-        std::vector<unsigned int> aAdjacencies;
         std::vector<unsigned int> aPolygon;
         for(Index1=0;Index1<nPoints;++Index1)
             {
             aPolygon.push_back(Index1);
             }
-        std::vector<std::vector<unsigned int> > aaPolygons;
-        aaPolygons.push_back(aPolygon);
         SGM::UnitVector3D XAxis,YAxis,ZAxis;
         SGM::Point3D Origin;
         SGM::FindLeastSquarePlane(aPoints,Origin,XAxis,YAxis,ZAxis);
@@ -257,7 +280,7 @@ namespace SGMInternal {
                 aPoints2D[Index1].m_u=-aPoints2D[Index1].m_u;
                 }
             }
-        SGM::TriangulatePolygon(rResult,aPoints2D,aaPolygons,m_aTriangles,aAdjacencies);
+        SGM::TriangulatePolygon(rResult,aPoints2D,aPolygon,m_aTriangles);
         }
     }
 

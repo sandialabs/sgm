@@ -1,10 +1,13 @@
 #include "SGMVector.h"
 #include "SGMTranslators.h"
+#include "SGMModify.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Surface.h"
 #include "Curve.h"
 #include "FileFunctions.h"
+
 #include <string>
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -762,7 +765,7 @@ void SaveSTEP(SGM::Result                  &rResult,
         }
 
     // Add a vertex to any closed Edges
-    ImprintVerticesOnClosedEdges(rResult);
+    SGM::ImprintVerticesOnClosedEdges(rResult);
 
     // Write out the header
 

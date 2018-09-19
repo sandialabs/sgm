@@ -744,7 +744,8 @@ void ReplaceVolumeIDs(volume                   *pVolume,
         }
     }
 
-void ReplaceFaceIDs(face                     *pFace,
+void ReplaceFaceIDs(SGM::Result              &rResult,
+                    face                     *pFace,
                     SGMData                  &rSGMData,
                     std::map<size_t,SGMData> &mEntityMap)
     {
@@ -755,7 +756,7 @@ void ReplaceFaceIDs(face                     *pFace,
         size_t nID=rSGMData.aIDs1[Index1];
         edge *pEdge=(edge *)mEntityMap[nID].pEntity;
         SGM::EdgeSideType nType=(SGM::EdgeSideType)rSGMData.aIDs2[Index1];
-        pFace->AddEdge(pEdge,nType);
+        pFace->AddEdge(rResult,pEdge,nType);
         }
     surface *pSurface=(surface *)mEntityMap[rSGMData.aIDs3[0]].pEntity;
     pFace->SetSurface(pSurface);
@@ -791,7 +792,7 @@ void ReplaceSurfaceIDs(surface                  *,//pSurface,
     {
     }
 
-void ReplaceIDs(SGM::Result              &,//rResult,
+void ReplaceIDs(SGM::Result              &rResult,
                 SGMData                  &rSGMData,
                 std::map<size_t,SGMData> &mEntityMap)
     {
@@ -812,7 +813,7 @@ void ReplaceIDs(SGM::Result              &,//rResult,
             }
         case SGM::FaceType:
             {
-            ReplaceFaceIDs((face *)pEntity,rSGMData,mEntityMap);
+            ReplaceFaceIDs(rResult,(face *)pEntity,rSGMData,mEntityMap);
             break;
             }
         case SGM::EdgeType:

@@ -1,7 +1,9 @@
 #include "SGMVector.h"
 #include "SGMTransform.h"
+
 #include "EntityClasses.h"
 #include "Curve.h"
+#include "Faceter.h"
 
 namespace SGMInternal
 {
@@ -81,73 +83,56 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         }
     }
 
+std::vector<SGM::Point3D> const &TorusKnot::GetSeedPoints() const
+    {
+    if(m_aSeedPoints.empty())
+        {
+        FacetOptions Options;
+        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
+        }
+    return m_aSeedPoints;
+    }
+
+std::vector<double> const &TorusKnot::GetSeedParams() const
+    {
+    if(m_aSeedPoints.empty())
+        {
+        FacetOptions Options;
+        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
+        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
+        }
+    return m_aSeedParams;
+    }
+
 double TorusKnot::Inverse(SGM::Point3D const &Pos,
                           SGM::Point3D       *ClosePos,
                           double       const *pGuess) const
     {
-    double dBestT=0;
+    double dParam=0;
     if(pGuess)
         {
-        dBestT=*pGuess;
+        dParam=*pGuess;
         }
     else
         {
-        SGM::UnitVector3D const &ZAxis  =m_Normal;
-
-        // Find the u value.
-
-        double x=Pos.m_x-m_Center.m_x;
-        double y=Pos.m_y-m_Center.m_y;
-        double z=Pos.m_z-m_Center.m_z;
-
-        double dUx=x*m_XAxis.m_x+y*m_XAxis.m_y+z*m_XAxis.m_z;
-        double dUy=x*m_YAxis.m_x+y*m_YAxis.m_y+z*m_YAxis.m_z;
-        double du=SGM::SAFEatan2(dUy,dUx);
-
+        std::vector<SGM::Point3D> const &aPoints=GetSeedPoints();
+        std::vector<double> const &aParams=GetSeedParams();
+        double dMin=std::numeric_limits<double>::max();
         size_t Index1;
-        std::vector<double> aStarts;
-        double t=du/m_nA;
-        aStarts.push_back(t);
-        for(Index1=0;Index1<m_nA;++Index1)
+        size_t nPoints=aPoints.size();
+        for(Index1=0;Index1<nPoints;++Index1)
             {
-            t+=SGM_TWO_PI;
-            aStarts.push_back(t);
-            }
-        t=du/m_nB;
-        aStarts.push_back(t);
-        for(Index1=0;Index1<m_nB;++Index1)
-            {
-            t+=SGM_TWO_PI;
-            aStarts.push_back(t);
-            }
-
-        double dBestDist=std::numeric_limits<double>::max();
-        size_t nStarts=aStarts.size();
-        for(Index1=0;Index1<nStarts;++Index1)
-            {
-            double dT=aStarts[Index1];
-            double dX=m_dMajorRadius*cos(m_nA*dT);
-            double dY=m_dMajorRadius*sin(m_nA*dT);
-            double dZ=-m_dMinorRadius*sin(m_nB*dT);
-            SGM::Point3D TPos=m_Center+m_XAxis*dX+m_YAxis*dY+ZAxis*dZ;
-            double dDist=TPos.DistanceSquared(Pos);
-            if(dDist<dBestDist)
+            SGM::Point3D const &TestPos=aPoints[Index1];
+            double dDist=TestPos.DistanceSquared(Pos);
+            if(dDist<dMin)
                 {
-                dBestDist=dDist;
-                dBestT=dT;
+                dMin=dDist;
+                dParam=aParams[Index1];
                 }
             }
         }
-    double dAnswer=NewtonsMethod(dBestT,Pos);
-    if(dBestT<-SGM_ZERO)
-        {
-        dBestT+=SGM_TWO_PI;
-        }
-    if(SGM_TWO_PI+SGM_ZERO<dBestT)
-        {
-        dBestT-=SGM_TWO_PI;
-        }
-
+    double dAnswer=NewtonsMethod(dParam,Pos);
     if(ClosePos)
         {
         Evaluate(dAnswer,ClosePos);

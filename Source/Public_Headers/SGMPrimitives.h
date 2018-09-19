@@ -97,6 +97,10 @@ SGM_EXPORT SGM::Edge CreateEdge(SGM::Result           &rResult,
                                 SGM::Curve            &CurveID,
                                 SGM::Interval1D const *pDomain=nullptr);
 
+SGM_EXPORT SGM::Edge CreateLinearEdge(SGM::Result        &rResult,
+                                      SGM::Point3D const &StartPos,
+                                      SGM::Point3D const &EndPos);
+
 SGM_EXPORT SGM::Body CreateWireBody(SGM::Result               &rResult,
                                     std::set<SGM::Edge> const &sEdges);
 

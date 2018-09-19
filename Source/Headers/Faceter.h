@@ -58,21 +58,27 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
                       FacetOptions                      const &Options,
                       std::vector<SGM::Point2D>               &aPoints2D,
                       std::vector<SGM::Point3D>               &aPoints3D,
-                      std::vector<std::vector<unsigned int> > &aaPolygons);
+                      std::vector<entity *>                   &aEntities,
+                      std::vector<std::vector<unsigned int> > &aaPolygons,
+                      edge                                    *pInputEdge=nullptr);
 
-bool FlipTriangles(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<unsigned int>       &aTriangles,
-                   std::vector<unsigned int>       &aAdjacencies,
-                   unsigned int                     nTri,
-                   unsigned int                     nEdge);
+bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
+                   std::vector<unsigned int>            &aTriangles,
+                   std::vector<unsigned int>            &aAdjacencies,
+                   unsigned int                          nTri,
+                   unsigned int                          nEdge,
+                   std::vector<SGM::Point3D>      const *pPoints3D=nullptr,
+                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr);
 
 void FixBackPointers(unsigned int                     nTri,
                      std::vector<unsigned int> const &aTriangles,
                      std::vector<unsigned int>       &aAdjacencies);
 
-void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
-                   std::vector<unsigned int>       &aTriangles,
-                   std::vector<unsigned int>       &aAdjacencies);
+void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
+                   std::vector<unsigned int>            &aTriangles,
+                   std::vector<unsigned int>            &aAdjacencies,
+                   std::vector<SGM::Point3D>      const *pPoint3D=nullptr,
+                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr);
 
 
 //  Devides all triangles into four triangles in the following way;
@@ -93,6 +99,36 @@ void SubdivideFacets(SGM::Result               &rResult,
 void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
                   std::vector<SGM::Point2D>       &aPoints,
                   std::vector<unsigned int>       &aTriangles);
+
+
+SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
+                            std::vector<unsigned int> &aTriangles,
+                            size_t                     nTri);
+
+void SplitTriangleUpdateTree(SGM::Point2D        const &D,
+                             std::vector<SGM::Point2D> &aPoints,
+                             std::vector<unsigned int> &aTriangles,
+                             size_t                     nHitTri,
+                             std::vector<size_t> const &aTris,
+                             SGM::BoxTree              &Tree);
+
+void SplitEdgeUpdateTree(SGM::Point2D        const &D,
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         size_t                     nOther,
+                         size_t                     nEdge2,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree);
+
+void SplitEdgeUpdateTree(SGM::Point2D        const &D,
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree);
 
 }
 

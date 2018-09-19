@@ -304,6 +304,11 @@ SGM::Point3D const &edge::FindStartPoint() const
     return m_pStart->GetPoint();
     }
 
+bool edge::IsDegenerate() const
+    {
+    return m_pCurve->GetCurveType()==SGM::PointCurveType;
+    }
+
 SGM::Point3D const &edge::FindEndPoint() const
     {
     return m_pEnd->GetPoint();
@@ -357,11 +362,11 @@ void edge::SnapToDomain(double &t,double dTol) const
             }
         else
             {
-            while(t<m_Domain.m_dMin)
+            while(t+dTol<m_Domain.m_dMin)
                 {
                 t+=CurveDomain.Length();
                 }
-            while(m_Domain.m_dMax<t)
+            while(m_Domain.m_dMax+dTol<t)
                 {
                 t-=CurveDomain.Length();
                 }

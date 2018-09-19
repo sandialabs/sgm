@@ -82,7 +82,7 @@ void CoverSTL(int argc, char **argv)
     auto resultType = rResult.GetResult();
     if (resultType != SGM::ResultTypeOK)
         {
-        std::cerr << rResult.GetMessage() << std::endl;
+        std::cerr << rResult.Message() << std::endl;
         exit(1);
         }
     std::vector<SGM::Complex> aParts;
@@ -117,11 +117,11 @@ bool RunFromCommandLine(int argc, char **argv)
         return false;
         }
 
-    // there are options present
+    // Are there options present.
     if (0 == strncmp(argv[1], "-", 1))
         {
-        // is it help or version?
-        for (unsigned i = 1; i < argc; ++i)
+        // Is it help or version?
+        for (int i = 1; i < argc; ++i)
             {
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
                 {
@@ -138,7 +138,7 @@ bool RunFromCommandLine(int argc, char **argv)
                 }
             }
 
-        // is the first one cover?
+        // Is the first one cover?
         if (strcmp(argv[1], "--cover") == 0 || strcmp(argv[1], "-c") == 0)
             {
             CoverSTL(argc, argv);

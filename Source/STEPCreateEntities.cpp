@@ -538,7 +538,8 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
         }
     }
 
-void ConnectEdgesAndSurfacesToFaces(STEPLineDataMapType const &mSTEPData,
+void ConnectEdgesAndSurfacesToFaces(SGM::Result               &rResult,
+                                    STEPLineDataMapType const &mSTEPData,
                                     IDEntityMapType     const &mIDToEntityMap,
                                     std::set<entity *>        &sEntities,
                                     std::vector<size_t> const &aEdges,
@@ -644,7 +645,7 @@ void ConnectEdgesAndSurfacesToFaces(STEPLineDataMapType const &mSTEPData,
                             nEdgeSide = SGM::FaceOnRightType;
                             }
                         }
-                    pFace->AddEdge(pEdge, nEdgeSide);
+                    pFace->AddEdge(rResult, pEdge, nEdgeSide);
                     }
                 }
             }
@@ -936,7 +937,7 @@ void CreateEntities(SGM::Result &rResult,
 
     ConnectFacesAndEdgesToVolumes(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges,aVolumes);
 
-    ConnectEdgesAndSurfacesToFaces(mSTEPData,mIDToEntityMap,sEntities,aEdges,aFaces);
+    ConnectEdgesAndSurfacesToFaces(rResult,mSTEPData,mIDToEntityMap,sEntities,aEdges,aFaces);
 
     ConnectCurvesAndVerticesToEdges(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges);
 

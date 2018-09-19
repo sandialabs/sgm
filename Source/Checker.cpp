@@ -59,6 +59,14 @@ bool body::Check(SGM::Result              &rResult,
             }
         }
 
+    if(m_sVolumes.empty() && m_aPoints.empty())
+        {
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer, sizeof(Buffer), "Body %lu is empty.\n",this->GetID());
+        aCheckStrings.emplace_back(Buffer);
+        }
+
     // Check all children.
 
     if (bChildren)
@@ -261,11 +269,10 @@ bool face::Check(SGM::Result              &rResult,
         double dDotA=Norm%aNormals[a];
         double dDotB=Norm%aNormals[b];
         double dDotC=Norm%aNormals[c];
-        double dTol=0.43633231299858239423092269212215; // 25 degrees
+        double dTol=0.70710678118654752440084436210485; // cos(45) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
-
-            /*
+#if 0
             line *pLine1=new line(rResult,A,B);
             SGM::Interval1D Domain1(0.0,A.Distance(B));
             line *pLine2=new line(rResult,B,C);
@@ -275,7 +282,7 @@ bool face::Check(SGM::Result              &rResult,
             CreateEdge(rResult,pLine1,&Domain1);
             CreateEdge(rResult,pLine2,&Domain2);
             CreateEdge(rResult,pLine3,&Domain3);
-            */
+#endif
             dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
             dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
             dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
@@ -324,7 +331,7 @@ bool edge::Check(SGM::Result              &rResult,
             aCheckStrings.emplace_back(Buffer);
             }
         }
-    else if(!m_pCurve->GetClosed())
+    else if(!m_pCurve->GetClosed() || m_pEnd)
         {
         bAnswer=false;
         char Buffer[1000];
@@ -342,7 +349,7 @@ bool edge::Check(SGM::Result              &rResult,
             aCheckStrings.emplace_back(Buffer);
             }
         }
-    else if(!m_pCurve->GetClosed())
+    else if(!m_pCurve->GetClosed() || m_pStart)
         {
         bAnswer=false;
         char Buffer[1000];
@@ -360,13 +367,28 @@ bool edge::Check(SGM::Result              &rResult,
         face *pFace2=*FaceIter;
         SGM::EdgeSideType bFlipped1=pFace1->GetSideType(this);
         SGM::EdgeSideType bFlipped2=pFace2->GetSideType(this);
-        if(bFlipped1==bFlipped2)
+        if(bFlipped1==bFlipped2 && bFlipped1!=SGM::EdgeSideType::FaceOnBothSidesType)
             {
             bAnswer=false;
             char Buffer[1000];
             snprintf(Buffer,sizeof(Buffer),"Edge %lu has the same orientation of both faces.\n",GetID());
             aCheckStrings.emplace_back(Buffer);
             }
+        }
+
+    // Check to see if the edge is in only one volume.
+
+    std::set<volume *> sVolumes;
+    for(auto pFace : m_sFaces)
+        {
+        sVolumes.insert(pFace->GetVolume());
+        }
+    if(sVolumes.size()>1)
+        {
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Edge %lu belongs to more than one volume.\n",GetID());
+        aCheckStrings.emplace_back(Buffer);
         }
 
     // Check all children.

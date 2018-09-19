@@ -150,10 +150,9 @@ namespace SGMInternal {
 
     size_t thing::AddToMap(entity *pEntity)
     {
-        assert(!m_bIsConcurrentActive); // we should not be modifying in threads
-        m_nNextID++;
-        m_mAllEntities[m_nNextID] = pEntity;
-        return m_nNextID;
+    assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+    m_mAllEntities[m_nNextID] = pEntity;
+    return m_nNextID++;
     }
 
     void thing::DeleteEntity(entity *pEntity)

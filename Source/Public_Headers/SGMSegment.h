@@ -18,22 +18,26 @@ namespace SGM {
 
         Segment2D() = default;
 
-        Segment2D(Point2D const &Start, Point2D const &End) :
-                m_Start(Start), m_End(End)
-        {}
+        Segment2D(Point2D const &Start, 
+                  Point2D const &End) :
+            m_Start(Start), m_End(End) {}
 
         // Returns true, and the point of intersection, if this
         // segment and the given segment intersect.
 
         bool Intersect(Segment2D const &Seg,
-                       Point2D &Pos) const;
+                       Point2D         &Pos) const;
+
+        // Returns true if the segments overlap at more than one point.
+
+        bool Overlap(Segment2D const &Seg) const;
 
         // Returns true, and the point of intersection, if this
         // segment and the given ray intersect.
 
-        bool Intersect(Point2D const &RayOrigin,
+        bool Intersect(Point2D      const &RayOrigin,
                        UnitVector3D const &RayDirection,
-                       Point2D &Pos) const;
+                       Point2D            &Pos) const;
 
         // Returns the length of this segment squared, which is
         // faster than finding length.

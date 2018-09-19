@@ -159,15 +159,15 @@ body *CreateCylinder(SGM::Result        &rResult,
         plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis);
         plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis);
 
-        pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
-        pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
+        pBottom->AddEdge(rResult,pEdgeBottom,SGM::FaceOnLeftType);
+        pTop->AddEdge(rResult,pEdgeTop,SGM::FaceOnLeftType);
 
         pBottom->SetSurface(pPlaneBottom);
         pTop->SetSurface(pPlaneTop);
         }
 
-    pSide->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
-    pSide->AddEdge(pEdgeTop,SGM::FaceOnRightType);
+    pSide->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+    pSide->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
     pSide->SetSurface(pCylinder);
 
     pEdgeBottom->SetCurve(pCircleBottom);
@@ -218,10 +218,10 @@ body *CreateCone(SGM::Result        &rResult,
     pVolume->AddFace(pSide);
     pVolume->AddFace(pTop);
 
-    pBottom->AddEdge(pEdgeBottom,SGM::FaceOnLeftType);
-    pSide->AddEdge(pEdgeBottom,SGM::FaceOnRightType);
-    pSide->AddEdge(pEdgeTop,SGM::FaceOnRightType);
-    pTop->AddEdge(pEdgeTop,SGM::FaceOnLeftType);
+    pBottom->AddEdge(rResult,pEdgeBottom,SGM::FaceOnLeftType);
+    pSide->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+    pSide->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
+    pTop->AddEdge(rResult,pEdgeTop,SGM::FaceOnLeftType);
 
     pBottom->SetSurface(pPlaneBottom);
     pSide->SetSurface(pCone);
@@ -289,10 +289,10 @@ body *CreateBlock(SGM::Result        &rResult,
 
         pVolume->AddFace(pFace0123);
 
-        pFace0123->AddEdge(pEdge01,SGM::FaceOnLeftType);
-        pFace0123->AddEdge(pEdge12,SGM::FaceOnLeftType);
-        pFace0123->AddEdge(pEdge23,SGM::FaceOnLeftType);
-        pFace0123->AddEdge(pEdge30,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge01,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge12,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge23,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge30,SGM::FaceOnLeftType);
 
         pEdge01->SetStart(pVertex0);
         pEdge12->SetStart(pVertex1);
@@ -386,35 +386,35 @@ body *CreateBlock(SGM::Result        &rResult,
         pVolume->AddFace(pFace0473);
         pVolume->AddFace(pFace4567);
 
-        pFace0321->AddEdge(pEdge03,SGM::FaceOnLeftType);
-        pFace0321->AddEdge(pEdge23,SGM::FaceOnRightType); 
-        pFace0321->AddEdge(pEdge12,SGM::FaceOnRightType);
-        pFace0321->AddEdge(pEdge01,SGM::FaceOnRightType);
+        pFace0321->AddEdge(rResult,pEdge03,SGM::FaceOnLeftType);
+        pFace0321->AddEdge(rResult,pEdge23,SGM::FaceOnRightType); 
+        pFace0321->AddEdge(rResult,pEdge12,SGM::FaceOnRightType);
+        pFace0321->AddEdge(rResult,pEdge01,SGM::FaceOnRightType);
 
-        pFace0154->AddEdge(pEdge01,SGM::FaceOnLeftType);
-        pFace0154->AddEdge(pEdge15,SGM::FaceOnLeftType);
-        pFace0154->AddEdge(pEdge45,SGM::FaceOnRightType); 
-        pFace0154->AddEdge(pEdge04,SGM::FaceOnRightType);
+        pFace0154->AddEdge(rResult,pEdge01,SGM::FaceOnLeftType);
+        pFace0154->AddEdge(rResult,pEdge15,SGM::FaceOnLeftType);
+        pFace0154->AddEdge(rResult,pEdge45,SGM::FaceOnRightType); 
+        pFace0154->AddEdge(rResult,pEdge04,SGM::FaceOnRightType);
 
-        pFace1265->AddEdge(pEdge12,SGM::FaceOnLeftType);
-        pFace1265->AddEdge(pEdge26,SGM::FaceOnLeftType);
-        pFace1265->AddEdge(pEdge56,SGM::FaceOnRightType); 
-        pFace1265->AddEdge(pEdge15,SGM::FaceOnRightType);
+        pFace1265->AddEdge(rResult,pEdge12,SGM::FaceOnLeftType);
+        pFace1265->AddEdge(rResult,pEdge26,SGM::FaceOnLeftType);
+        pFace1265->AddEdge(rResult,pEdge56,SGM::FaceOnRightType); 
+        pFace1265->AddEdge(rResult,pEdge15,SGM::FaceOnRightType);
 
-        pFace2376->AddEdge(pEdge23,SGM::FaceOnLeftType);
-        pFace2376->AddEdge(pEdge37,SGM::FaceOnLeftType);
-        pFace2376->AddEdge(pEdge67,SGM::FaceOnRightType); 
-        pFace2376->AddEdge(pEdge26,SGM::FaceOnRightType);
+        pFace2376->AddEdge(rResult,pEdge23,SGM::FaceOnLeftType);
+        pFace2376->AddEdge(rResult,pEdge37,SGM::FaceOnLeftType);
+        pFace2376->AddEdge(rResult,pEdge67,SGM::FaceOnRightType); 
+        pFace2376->AddEdge(rResult,pEdge26,SGM::FaceOnRightType);
 
-        pFace0473->AddEdge(pEdge04,SGM::FaceOnLeftType);
-        pFace0473->AddEdge(pEdge47,SGM::FaceOnLeftType);
-        pFace0473->AddEdge(pEdge37,SGM::FaceOnRightType); 
-        pFace0473->AddEdge(pEdge03,SGM::FaceOnRightType);
+        pFace0473->AddEdge(rResult,pEdge04,SGM::FaceOnLeftType);
+        pFace0473->AddEdge(rResult,pEdge47,SGM::FaceOnLeftType);
+        pFace0473->AddEdge(rResult,pEdge37,SGM::FaceOnRightType); 
+        pFace0473->AddEdge(rResult,pEdge03,SGM::FaceOnRightType);
 
-        pFace4567->AddEdge(pEdge45,SGM::FaceOnLeftType);
-        pFace4567->AddEdge(pEdge56,SGM::FaceOnLeftType);
-        pFace4567->AddEdge(pEdge67,SGM::FaceOnLeftType);
-        pFace4567->AddEdge(pEdge47,SGM::FaceOnRightType); 
+        pFace4567->AddEdge(rResult,pEdge45,SGM::FaceOnLeftType);
+        pFace4567->AddEdge(rResult,pEdge56,SGM::FaceOnLeftType);
+        pFace4567->AddEdge(rResult,pEdge67,SGM::FaceOnLeftType);
+        pFace4567->AddEdge(rResult,pEdge47,SGM::FaceOnRightType); 
 
         pEdge01->SetStart(pVertex0);
         pEdge12->SetStart(pVertex1);
@@ -770,14 +770,15 @@ body *CreateDisk(SGM::Result             &rResult,
     pFace->SetSurface(pSurface);
     curve *pCurve=new circle(rResult,Center,Normal,dRadius,&XAxis);
     edge *pEdge=SGMInternal::CreateEdge(rResult,pCurve,nullptr);
-    pFace->AddEdge(pEdge,SGM::FaceOnLeftType);
+    pFace->AddEdge(rResult,pEdge,SGM::FaceOnLeftType);
+    pFace->SetSides(2);
     return pBody;
     }
 
-body *CreateSheetBody(SGM::Result                       &rResult,
-                      surface                           *pSurface,
-                      std::vector<edge *> &aEdges,
-                      std::vector<SGM::EdgeSideType>    &aTypes)
+body *CreateSheetBody(SGM::Result                    &rResult,
+                      surface                        *pSurface,
+                      std::vector<edge *>            &aEdges,
+                      std::vector<SGM::EdgeSideType> &aTypes)
     {
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
@@ -796,7 +797,7 @@ body *CreateSheetBody(SGM::Result                       &rResult,
             // More code needs to be added to merge vertices.
             throw;
             }
-        pFace->AddEdge(pEdge,aTypes[Index1]);
+        pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
         }
 
     return pBody;
@@ -844,8 +845,8 @@ body *CreateRevolve(SGM::Result             &rResult,
 
     pVolume->AddFace(pFace);
 
-    pFace->AddEdge(pEdgeStart,SGM::FaceOnRightType);
-    pFace->AddEdge(pEdgeEnd,SGM::FaceOnRightType);
+    pFace->AddEdge(rResult,pEdgeStart,SGM::FaceOnRightType);
+    pFace->AddEdge(rResult,pEdgeEnd,SGM::FaceOnRightType);
 
     pFace->SetSurface(pRevolve);
     pFace->SetSides(2);

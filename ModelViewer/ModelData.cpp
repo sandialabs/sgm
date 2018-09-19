@@ -12,6 +12,7 @@
 #include "SGMVector.h"
 #include "SGMComplex.h"
 #include "SGMMeasure.h"
+#include "SGMModify.h"
 
 #include "SGMGraphicsWidget.hpp"
 #include "SGMTreeWidget.hpp"

@@ -7,7 +7,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// import and OUO model and EXPECT ResultTypeOK
+// Import and OUO model and EXPECT ResultTypeOK
 void expect_import_ouo_success(std::string const &file_name, SGM::Result &rResult)
 {
     std::vector<SGM::Entity> entities;
@@ -38,8 +38,8 @@ void expect_check_success(SGM::Result &rResult)
 }
 
 
-// import a file from OUO directory and check all entities
-void expect_import_ouo_check_success(std::string const &ouo_file_name) // TODO: check fails
+// Import a file from OUO directory and check all entities
+void expect_import_ouo_check_success(std::string const &ouo_file_name)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -49,7 +49,7 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name) // TODO: 
 }
 
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_TSLhousingGeom) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) 
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
@@ -107,6 +107,13 @@ TEST(models_ouo_check, import_check_OUO_glom4_0005_BSump2)
 TEST(models_ouo_check, import_check_OUO_glom4_0006_Bangle)
 {
     const char* file_name = "OUO_glom4/0006-_Bangle.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_ouo_check_success(file_name);
+}
+
+TEST(models_ouo_check, import_check_OUO_Cone_definition)
+{
+    const char* file_name = "OUO_glom4/OUO_Cone_definition.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
@@ -195,7 +202,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: se
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0019_Bhinkey_A)
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);

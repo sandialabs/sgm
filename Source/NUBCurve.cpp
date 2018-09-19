@@ -37,6 +37,14 @@ NUBcurve *NUBcurve::Clone(SGM::Result &rResult) const
     return new NUBcurve(rResult, *this);
     }
 
+std::vector<double> NUBcurve::SpecialFacetParams() const
+    {
+    std::vector<int> aMultiplicity;
+    std::vector<double> aUniqueKnots;
+    FindMultiplicity(aMultiplicity,aUniqueKnots);
+    return aUniqueKnots;
+    }
+
 inline void NUBEvaluateBasis(std::vector<SGM::Point3D> const &aControlPoints,
                           double const                    *aBasis,
                           size_t                           nStart,
