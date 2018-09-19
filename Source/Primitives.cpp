@@ -641,7 +641,7 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         SGM::Point3D Pos(aaXMatrix[Index1].back(),aaYMatrix[Index1].back(),aaZMatrix[Index1].back());
         aControlPoints.push_back(Pos);
         }
-    NUBcurve *pAnswer=new NUBcurve(rResult,aControlPoints,aKnots);
+    NUBcurve *pAnswer=new NUBcurve(rResult,std::move(aControlPoints),std::move(aKnots));
 
     SGM::Point3D CPos;
     pAnswer->Inverse(aPoints[1],&CPos);
@@ -722,7 +722,7 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
             }
         }
 
-    return new NUBcurve(rResult,aControlPoints,aKnots);
+    return new NUBcurve(rResult,std::move(aControlPoints),std::move(aKnots));
     }
 
 complex *CreateComplex(SGM::Result                     &rResult,

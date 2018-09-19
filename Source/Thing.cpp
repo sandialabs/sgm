@@ -9,8 +9,6 @@
 #include <set>
 #include <iostream>
 
-//#define SGM_MULTITHREADED
-
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
 #endif
@@ -43,35 +41,36 @@ namespace SGMInternal {
             }
     }
 
-    bool thing::Check(SGM::Result              &rResult,
-                      SGM::CheckOptions  const &Options,
+    bool thing::Check(SGM::Result &rResult,
+                      SGM::CheckOptions const &Options,
                       std::vector<std::string> &aCheckStrings,
-                      bool                      bChildren) const
-        {
-        // Passing bChildren=true will check further down hierarchy.
+                      bool bChildren) const
+    {
+        // TODO: are we doing this right, should we check IsTopLevel()?
+        // TODO: should we use a ThreadPool for checking?
+        // thing *always* checks at least top level children,
+        // and passing bChildren=true will check further down hierarchy
         bool bAnswer = true;
         
         for (auto const &iter : m_mAllEntities)
             {
             if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
-                {
                 bAnswer = false;
-                }
             }
         return bAnswer;
-        }
+    }
 
     SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
-        {
+    {
         if (m_Box.IsEmpty())
             {
-            // Stretch box around every bounded entity that is top level
+            // stretch box around every bounded entity that is top level
             
             for (auto const &iter : m_mAllEntities)
                 {
                 entity *pEntity = iter.second;
                 auto type = pEntity->GetType();
-                // If bounded entity
+                // if bounded entity
                 if (type == SGM::BodyType ||
                     type == SGM::VolumeType ||
                     type == SGM::FaceType ||
@@ -80,17 +79,15 @@ namespace SGMInternal {
                     type == SGM::ComplexType)
                     {
                     if (pEntity->IsTopLevel())
-                        {
                         m_Box.Stretch(pEntity->GetBox(rResult));
-                        }
                     }
                 }
             }
         return m_Box;
-        }
+    }
 
     void thing::SeverOwners(entity *pEntity)
-        {
+    {
         switch (pEntity->GetType())
             {
             case SGM::EdgeType:
@@ -149,125 +146,115 @@ namespace SGMInternal {
                 break;
                 }
             }
-        }
+    }
 
     size_t thing::AddToMap(entity *pEntity)
-        {
-        if(this)
-            {
-            assert(!m_bIsConcurrentActive); // we should not be modifying in threads
-            m_mAllEntities[m_nNextID] = pEntity;
-            return m_nNextID++;
-            }
-        return 0;
-        }
+    {
+    assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+    m_mAllEntities[m_nNextID] = pEntity;
+    return m_nNextID++;
+    }
 
     void thing::DeleteEntity(entity *pEntity)
-        {
+    {
         assert(!m_bIsConcurrentActive); // we should not be modifying in threads
         m_mAllEntities.erase(pEntity->GetID());
         delete pEntity;
-        }
+    }
 
     void thing::TransformBox(SGM::Result &, SGM::Transform3D const &transform3D)
-        {
+    {
         if (!transform3D.IsScaleAndTranslate())
-            {
             m_Box.Reset();
-            }
         else
-            {
             m_Box *= transform3D;
-            }
-        }
+    }
 
     entity *thing::FindEntity(size_t ID) const
-        {
+    {
         if (ID == 0) return const_cast<thing *>(this);
         entity *pAnswer = nullptr;
         auto iter = m_mAllEntities.find(ID);
         if (iter != m_mAllEntities.end())
             pAnswer = iter->second;
         return pAnswer;
-        }
+    }
 
     std::vector<entity *> thing::GetTopLevelEntities() const
-        {
+    {
         std::vector<entity *> aTopLevelEntities;
         for (auto &entry : m_mAllEntities)
             {
             // include any top level entity, including attribute, curve, surface
             entity *pEntity = entry.second;
             if (pEntity->IsTopLevel())
-                {
                 aTopLevelEntities.push_back(pEntity);
-                }
             }
         return aTopLevelEntities;
-        }
+    }
 
     std::unordered_set<body *> thing::GetBodies(bool bTopLevel) const
-        {
+    {
         std::unordered_set<body *> sBodies;
         GetEntities(SGM::EntityType::BodyType, sBodies, bTopLevel);
         return sBodies;
-        }
+    }
 
     std::unordered_set<attribute *> thing::GetAttributes(bool bTopLevel) const
-        {
+    {
         std::unordered_set<attribute *> sAttribute;
         GetEntities(SGM::EntityType::AttributeType, sAttribute, bTopLevel);
         return sAttribute;
-        }
+    }
 
     std::unordered_set<curve *> thing::GetCurves(bool bTopLevel) const
-        {
+    {
         std::unordered_set<curve *> sCurves;
         GetEntities(SGM::EntityType::CurveType, sCurves, bTopLevel);
         return sCurves;
-        }
+    }
 
     std::unordered_set<complex *> thing::GetComplexes(bool bTopLevel) const
-        {
+    {
         std::unordered_set<complex *> sComplexes;
         GetEntities(SGM::EntityType::ComplexType, sComplexes, bTopLevel);
         return sComplexes;
-        }
+    }
 
     std::unordered_set<face *> thing::GetFaces(bool bTopLevel) const
-        {
+    {
         std::unordered_set<face *> sFaces;
         GetEntities(SGM::EntityType::FaceType, sFaces, bTopLevel);
         return sFaces;
-        }
+    }
 
     std::unordered_set<edge *> thing::GetEdges(bool bTopLevel) const
-        {
+    {
         std::unordered_set<edge *> sEdges;
         GetEntities(SGM::EntityType::EdgeType, sEdges, bTopLevel);
         return sEdges;
-        }
+    }
 
     std::unordered_set<surface *> thing::GetSurfaces(bool bTopLevel) const
-        {
+    {
         std::unordered_set<surface *> sSurfaces;
         GetEntities(SGM::EntityType::SurfaceType, sSurfaces, bTopLevel);
         return sSurfaces;
-        }
+    }
 
     std::unordered_set<vertex *> thing::GetVertices(bool bTopLevel) const
-        {
+    {
         std::unordered_set<vertex *> sVertices;
         GetEntities(SGM::EntityType::VertexType, sVertices, bTopLevel);
         return sVertices;
-        }
+    }
 
     std::unordered_set<volume *> thing::GetVolumes(bool bTopLevel) const
-        {
+    {
         std::unordered_set<volume *> sVolumes;
         GetEntities(SGM::EntityType::VolumeType, sVolumes, bTopLevel);
         return sVolumes;
-        }
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -529,7 +516,7 @@ namespace SGMInternal {
         QueueFindBoxData(rResult, GetComplexes(), pool, futures);
         WaitForCachedDataJobs(futures);
 
-        // faces box data
+        // faces box data
         QueueFindBoxData(rResult, sFaces, pool, futures);
         WaitForCachedDataJobs(futures);
 

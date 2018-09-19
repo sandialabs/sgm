@@ -5,8 +5,9 @@ IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   MESSAGE(FATAL_ERROR "Running cmake in the source directory is not supported.\nPlease delete CMakeCache.txt file and run cmake in a separate directory but pointing it to this source directory.")
 ENDIF()
 
-
 project(SGM VERSION 1.0 LANGUAGES NONE)
+
+cmake_policy(SET CMP0048 NEW)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/SGMFunctions.cmake)
 sgm_project_setup()
@@ -72,6 +73,12 @@ add_subdirectory(Tests/lib/googletest-release-1.8.0)
 option(BUILD_MODEL_VIEWER "Build the Qt based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
   add_subdirectory(ModelViewer)
+endif()
+
+option(BUILD_MULTITHREADED "Build SGM with multithreaded capabilities." OFF)
+if(BUILD_MULTITHREADED)
+  find_package(Threads)
+  add_definitions(-DSGM_MULTITHREADED)
 endif()
 
 # installation for all projects

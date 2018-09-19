@@ -468,10 +468,10 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                                  &rResult,
-                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
-                   std::vector<double>                     const &aUKnots,
-                   std::vector<double>                     const &aVKnots);
+        NUBsurface(SGM::Result                             &rResult,
+                   std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
+                   std::vector<double>                    &&aUKnots,
+                   std::vector<double>                    &&aVKnots);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
@@ -556,10 +556,10 @@ class NURBsurface: public surface
     {
     public:
 
-        NURBsurface(SGM::Result                                   &rResult,
-                    std::vector<std::vector<SGM::Point4D> > const &aControlPoints,
-                    std::vector<double>                     const &aUKnots,
-                    std::vector<double>                     const &aVKnots);
+        NURBsurface(SGM::Result                            &rResult,
+                    std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
+                    std::vector<double>                    &&aUKnots,
+                    std::vector<double>                    &&aVKnots);
 
         NURBsurface(SGM::Result &rResult, NURBsurface const &other);
 
@@ -745,6 +745,21 @@ class extrude : public surface
         curve             *m_pCurve;
         SGM::Point3D       m_Origin;
         SGM::UnitVector3D  m_vAxis;
+    };
+
+
+class offset : public surface
+    {
+    public:
+
+        offset (SGM::Result & rResult,
+                double value,
+                surface *pSurface);
+
+        offset(SGM::Result &rResult, extrude const &other);
+
+        ~offset() override;
+
     };
 
 bool TestSurface(SGM::Result                &rResult,

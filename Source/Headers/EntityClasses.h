@@ -1,12 +1,12 @@
 #ifndef SGM_INTERNAL_ENTITY_CLASSES_H
 #define SGM_INTERNAL_ENTITY_CLASSES_H
 
+#include <numeric>
 #include <map>
 #include <set>
-#include <vector>
 #include <unordered_set>
 #include <utility>
-#include <mutex>
+#include <vector>
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
@@ -174,9 +174,13 @@ protected:
 
     // Only to be called from the thing constructor.
 
-    entity() : m_ID(0), m_Type(SGM::ThingType), m_Box(), m_sOwners(), m_sAttributes() {}
+    entity();
 
     void RemoveAllOwners();
+
+private:
+
+    size_t IDFromThing(SGM::Result &rResult);
 };
 
 class thing : public entity

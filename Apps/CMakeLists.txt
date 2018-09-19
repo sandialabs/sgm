@@ -4,7 +4,7 @@ set (1516_APP_SOURCE 1516_App.cpp)
 # create the SGM library with sources and headers
 add_executable(RunTests ${RUN_TEST_SOURCE})
 target_include_directories(RunTests PRIVATE ../Source/Public_Headers)
-target_link_libraries(RunTests PRIVATE SGM)
+target_link_libraries(RunTests PRIVATE SGM ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(SGM_Cover ${1516_APP_SOURCE})
 target_include_directories(SGM_Cover PRIVATE ../Source/Public_Headers)

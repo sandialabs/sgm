@@ -245,7 +245,7 @@ curve *revolve::VParamLine(SGM::Result &rResult, double dV) const
     { 
     SGM::Point3D Pos;
     m_pCurve->Evaluate(dV,&Pos);
-    SGM::Point3D Center=m_Origin+m_ZAxis*((Pos-Center)%m_ZAxis);
+    SGM::Point3D Center=m_Origin+m_ZAxis*((Pos-m_Origin)%m_ZAxis);
     double dRadius=Pos.Distance(Center);
     return new circle(rResult,Center,m_ZAxis,dRadius,&m_XAxis);
     }

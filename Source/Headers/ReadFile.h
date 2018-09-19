@@ -56,7 +56,34 @@ struct STEPLineData
 
     STEPLineData(STEPLineData const &) = default;
 
+    STEPLineData(STEPLineData&& other):
+            m_nSTEPTag(other.m_nSTEPTag),
+            m_aIDs(std::move(other.m_aIDs)),
+            m_aDoubles(std::move(other.m_aDoubles)),
+            m_aInts(std::move(other.m_aInts)),
+            m_aSizes(std::move(other.m_aSizes)),
+            m_bFlag(other.m_bFlag)
+        {
+            other.m_nSTEPTag = STEPTag::NULL_NONE_INVALID;
+            other.m_bFlag = true;
+        }
+
     STEPLineData& operator=(const STEPLineData&) = default;
+
+    STEPLineData& operator=(STEPLineData && other) NOEXCEPT
+        {
+        if (&other == this)
+            return *this;
+        m_nSTEPTag = other.m_nSTEPTag;
+        other.m_nSTEPTag = STEPTag::NULL_NONE_INVALID;
+        m_aIDs = std::move(other.m_aIDs);
+        m_aDoubles = std::move(other.m_aDoubles);
+        m_aInts = std::move(m_aInts);
+        m_aSizes = std::move(other.m_aSizes);
+        m_bFlag = other.m_bFlag;
+        other.m_bFlag = true;
+        return *this;
+        }
 
     ~STEPLineData() = default;
 
@@ -81,8 +108,13 @@ struct STEPLineData
 // A line number (#ID), a string Tag, and a STEPLineData object.
 
 struct STEPLine
-{
-    STEPLine() = default;
+    {
+    STEPLine() :
+            m_nLineNumber(0),
+            m_sTag(),
+            m_STEPLineData(STEPTag::NULL_NONE_INVALID)
+    {}
+
 
     explicit STEPLine(STEPTag nSTEPTag) :
             m_nLineNumber(0),
@@ -92,7 +124,24 @@ struct STEPLine
 
     STEPLine(const STEPLine &) = default;
 
+    STEPLine(STEPLine&& other) NOEXCEPT :
+        m_nLineNumber(other.m_nLineNumber), m_sTag(std::move(other.m_sTag)), m_STEPLineData(std::move(other.m_STEPLineData))
+        {
+            other.m_nLineNumber = 0;
+        }
+
     STEPLine& operator=(const STEPLine& other) = default;
+
+    STEPLine& operator=(STEPLine && other) NOEXCEPT
+        {
+        if (&other == this)
+			return *this;
+        m_nLineNumber = other.m_nLineNumber;
+        other.m_nLineNumber = 0;
+        m_sTag = std::move(other.m_sTag);
+        m_STEPLineData = std::move(other.m_STEPLineData);
+        return *this;
+        }
 
     ~STEPLine() = default;
 
@@ -106,11 +155,30 @@ struct STEPLine
     size_t m_nLineNumber;
     std::string m_sTag;
     STEPLineData m_STEPLineData;
-};
+    };
 
 typedef std::unordered_map<std::string, STEPTag> STEPTagMapType;
 typedef std::unordered_map<size_t, STEPLineData> STEPLineDataMapType;
 typedef std::unordered_map<size_t, entity *> IDEntityMapType;
+
+typedef std::vector<std::string *> StringLinesChunk;
+typedef std::vector<STEPLine *> STEPLineChunk;
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Declarations: functions called by serial and concurrent readers
+//
+///////////////////////////////////////////////////////////////////////////////
+
+void CreateEntities(SGM::Result           &rResult,
+                    size_t                 maxSTEPLineNumber,
+                    STEPLineDataMapType   &mSTEPData,
+                    std::vector<entity *> &aEntities);
+
+void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
+                     std::string &sLine,
+                     STEPLine &stepLine,
+                     bool bScan);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -247,7 +315,7 @@ inline const char* FindIndicesMatrix(char const          *pos,
                                      std::vector<size_t> &aIndices,
                                      size_t              *nRows,
                                      size_t              *nColumns)
-{
+    {
     static const char NEXT_ROW[] = ",)";
     static const char NEXT_COL[] = "#)";
 
@@ -289,7 +357,7 @@ inline const char* FindIndicesMatrix(char const          *pos,
             return ++pos;
         }
     throw std::runtime_error("unable to end indices matrix");
-}
+    }
 
 
 // find all indices '#' or '*' on the string no matter how arranged between (#,(#)), all the way to end of string
@@ -417,7 +485,7 @@ inline void FindDoubleVector3(char const * pos,
 
 inline void FindVector(char const * pos,
                        double *vec)
-{
+    {
     // " ( 'NONE',  ( 81.01848140189099500, 21.68962376674730000, -3.860665940705227900 ) ) "
     // This is the most heavily called Find function;
     char * end;
@@ -427,7 +495,7 @@ inline void FindVector(char const * pos,
     assert(errno != ERANGE);
     vec[2] = std::strtod(SkipChar(end,','), nullptr);
     assert(errno != ERANGE);
-}
+    }
 
 // find all double PARAMETER_VALUE(x.xxx) on the string
 // return position one after the last double value, i.e. the close parenthesis
@@ -512,6 +580,68 @@ inline const char* FindIntVector(char const   *pos,
     throw std::runtime_error("no closing ) separator");
     }
 
-}
+// find a STEP tag
+// return pointer to string one past the end of first STEP tag
+
+inline const char *FindStepTag(const char *pString, std::string &sTag)
+    {
+    static const char WHITE_SPACE[] = " \n\r\t";
+    static const char WHITE_SPACE_PAREN[] = " (\n\r\t";
+
+    // skip to first non-white space
+    pString += std::strspn(pString, WHITE_SPACE);
+
+    // stop at the next following whitespace or open parenthesis
+    size_t end = std::strcspn(pString, WHITE_SPACE_PAREN);
+
+    // Try again if we did not find a token before a parenthesis, for example,
+    // #103697 =( BOUNDED_CURVE ( )  B_SPLINE_CURVE ( 3, (
+    // #2465=(B_SPLINE_CURVE(3,(#4345,#4346,#4347,#4348,#4349,#4350,#4351)
+    if (end == 0)
+        {
+        ++pString;
+        pString += std::strspn(pString, WHITE_SPACE);
+        end = std::strcspn(pString, WHITE_SPACE_PAREN);
+        if (end < 1)
+            {
+            throw std::runtime_error(pString); // no token was found
+            }
+        }
+    sTag.assign(pString, end); // assign the token to our m_sTag string
+    return pString + end;      // return position after the tag
+    }
+
+
+// Return the STEP Line number, unless the line is not a STEP Line or the tag is unrecognized then return 0.
+
+inline size_t MoveSTEPLineIntoMap(SGM::Result &rResult,
+                                  std::vector<std::string> &aLog,
+                                  STEPLine &stepLine,
+                                  STEPLineDataMapType &mSTEPData)
+    {
+    // if there was a line number (#ID) and a recognized tag
+    // add the data parsed to the Map (#ID -> STEPLineData)
+
+    if (stepLine.m_nLineNumber == 0)
+        {
+        return 0;
+        }
+    else if (stepLine.m_STEPLineData.m_nSTEPTag == STEPTag::NULL_NONE_INVALID)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeUnknownType);
+        aLog.push_back("Unknown STEP Tag " + stepLine.m_sTag);
+        return 0;
+        }
+    else
+        {
+        // Cast stepLine into an r-value reference---in effect, clearing out the
+        // stepLine member data object as it is copied into the map
+        mSTEPData.emplace(stepLine.m_nLineNumber, std::move(stepLine.m_STEPLineData));
+        return stepLine.m_nLineNumber;
+        }
+    }
+
+
+} // namespace SGMInternal
 
 #endif //SGM_READFILE_H

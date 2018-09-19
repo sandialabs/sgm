@@ -9,17 +9,28 @@
 namespace SGMInternal
 {
 
-NURBcurve::NURBcurve(SGM::Result                 &rResult,
-                 std::vector<SGM::Point4D> const &aControlPoints,
-                 std::vector<double>       const &aKnots):
-            curve(rResult,SGM::NURBCurveType),
-            m_aControlPoints(aControlPoints),
-            m_aKnots(aKnots)
+NURBcurve::NURBcurve(SGM::Result                     &rResult,
+                     std::vector<SGM::Point4D> const &aControlPoints,
+                     std::vector<double>       const &aKnots):
+    curve(rResult,SGM::NURBCurveType),
+    m_aControlPoints(aControlPoints),
+    m_aKnots(aKnots)
+    { Initialize(); }
+
+NURBcurve::NURBcurve(SGM::Result                &rResult,
+                     std::vector<SGM::Point4D> &&aControlPoints,
+                     std::vector<double>       &&aKnots):
+    curve(rResult,SGM::NURBCurveType),
+    m_aControlPoints(std::move(aControlPoints)),
+    m_aKnots(std::move(aKnots))
+    { Initialize(); }
+
+void NURBcurve::Initialize()
     {
-    m_Domain.m_dMin=aKnots.front();
-    m_Domain.m_dMax=aKnots.back();
-    SGM::Point4D const &Pos0=aControlPoints.front();
-    SGM::Point4D const &Pos1=aControlPoints.back();
+    m_Domain.m_dMin=m_aKnots.front();
+    m_Domain.m_dMax=m_aKnots.back();
+    SGM::Point4D const &Pos0=m_aControlPoints.front();
+    SGM::Point4D const &Pos1=m_aControlPoints.back();
     SGM::Point3D Pos3D0(Pos0.m_x,Pos0.m_y,Pos0.m_z);
     SGM::Point3D Pos3D1(Pos1.m_x,Pos1.m_y,Pos1.m_z);
     m_bClosed = SGM::NearEqual(Pos3D0,Pos3D1,SGM_MIN_TOL);

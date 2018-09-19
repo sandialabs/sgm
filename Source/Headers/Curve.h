@@ -227,6 +227,10 @@ class NUBcurve: public curve
                  std::vector<SGM::Point3D> const &aControlPoints,
                  std::vector<double>       const &aKnots);
 
+        NUBcurve(SGM::Result                &rResult,
+                 std::vector<SGM::Point3D> &&aControlPoints,
+                 std::vector<double>       &&aKnots);
+
         NUBcurve(SGM::Result &rResult, NUBcurve const &other);
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
@@ -277,6 +281,9 @@ class NUBcurve: public curve
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
+
+    private:
+        void Initialize();
     };
 
 class NURBcurve: public curve
@@ -286,6 +293,10 @@ class NURBcurve: public curve
         NURBcurve(SGM::Result                     &rResult,
                   std::vector<SGM::Point4D> const &aControlPoints,
                   std::vector<double>       const &aKnots);
+
+        NURBcurve(SGM::Result                &rResult,
+                  std::vector<SGM::Point4D> &&aControlPoints,
+                  std::vector<double>       &&aKnots);
 
         NURBcurve(SGM::Result &rResult, NURBcurve const &other);
 
@@ -337,6 +348,8 @@ class NURBcurve: public curve
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
+    private:
+        void Initialize();
     };
 
 class PointCurve: public curve
