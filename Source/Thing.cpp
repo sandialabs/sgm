@@ -48,11 +48,7 @@ namespace SGMInternal {
                       std::vector<std::string> &aCheckStrings,
                       bool                      bChildren) const
         {
-        // TODO: are we doing this right, should we check IsTopLevel()?
-        // TODO: should we use a ThreadPool?
-        // TODO: this mutex is locked for a long time, maybe get set of entities first, then check
-        // thing *always* checks at least top level children,
-        // and passing bChildren=true will check further down hierarchy
+        // Passing bChildren=true will check further down hierarchy.
         bool bAnswer = true;
         
         for (auto const &iter : m_mAllEntities)
@@ -69,15 +65,13 @@ namespace SGMInternal {
         {
         if (m_Box.IsEmpty())
             {
-            // TODO: this mutex is locked for a long time, maybe get set of entities first, then stretch
-            // TODO: should we use a ThreadPool?
-            // stretch box around every bounded entity that is top level
+            // Stretch box around every bounded entity that is top level
             
             for (auto const &iter : m_mAllEntities)
                 {
                 entity *pEntity = iter.second;
                 auto type = pEntity->GetType();
-                // if bounded entity
+                // If bounded entity
                 if (type == SGM::BodyType ||
                     type == SGM::VolumeType ||
                     type == SGM::FaceType ||
@@ -162,9 +156,8 @@ namespace SGMInternal {
         if(this)
             {
             assert(!m_bIsConcurrentActive); // we should not be modifying in threads
-            m_nNextID++;
             m_mAllEntities[m_nNextID] = pEntity;
-            return m_nNextID;
+            return m_nNextID++;
             }
         return 0;
         }

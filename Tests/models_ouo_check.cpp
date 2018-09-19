@@ -7,7 +7,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// import and OUO model and EXPECT ResultTypeOK
+// Import and OUO model and EXPECT ResultTypeOK
 void expect_import_ouo_success(std::string const &file_name, SGM::Result &rResult)
 {
     std::vector<SGM::Entity> entities;
@@ -38,8 +38,8 @@ void expect_check_success(SGM::Result &rResult)
 }
 
 
-// import a file from OUO directory and check all entities
-void expect_import_ouo_check_success(std::string const &ouo_file_name) // TODO: check fails
+// Import a file from OUO directory and check all entities
+void expect_import_ouo_check_success(std::string const &ouo_file_name)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -49,7 +49,7 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name) // TODO: 
 }
 
 
-TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) 
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
