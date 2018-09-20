@@ -394,8 +394,8 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
                                    STEPLineDataMapType const &mSTEPData,
                                    IDEntityMapType           &mIDToEntityMap,
                                    std::set<entity *>        &sEntities,
-                                   std::vector<size_t> const &aFaces,
-                                   std::vector<size_t> const &aEdges,
+                                   std::vector<size_t> const &,//aFaces,
+                                   std::vector<size_t> const &,//aEdges,
                                    std::vector<size_t>       &aVolumes)
     {
     size_t nVolumes = aVolumes.size();
@@ -542,7 +542,7 @@ void ConnectEdgesAndSurfacesToFaces(SGM::Result               &rResult,
                                     STEPLineDataMapType const &mSTEPData,
                                     IDEntityMapType     const &mIDToEntityMap,
                                     std::set<entity *>        &sEntities,
-                                    std::vector<size_t> const &aEdges,
+                                    std::vector<size_t> const &,//aEdges,
                                     std::vector<size_t>       &aFaces)
     {
     size_t nFaces = aFaces.size();
@@ -656,7 +656,7 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
                                      STEPLineDataMapType const &mSTEPData,
                                      IDEntityMapType     const &mIDToEntityMap,
                                      std::set<entity *>        &sEntities,
-                                     std::vector<size_t> const &aFaces,
+                                     std::vector<size_t> const &,//aFaces,
                                      std::vector<size_t> const &aEdges)
     {
     size_t nEdges = aEdges.size();
@@ -731,7 +731,7 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
         }
     }
 
-void ConnectSheetBodies(SGM::Result         &rResult,
+void ConnectSheetBodies(SGM::Result         &,//rResult,
                         std::vector<body *> &aSheetBodies)
     {
     // Make sheet bodies double sided.

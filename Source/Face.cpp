@@ -511,36 +511,37 @@ double face::FindArea(SGM::Result &rResult) const
     // Method one. 
     // Using Romberg integration on a reduced set of parametric triangles.
 
-    SGMInternal::FacetOptions Options;
-    Options.m_bParametric=true;
-    std::vector<SGM::Point2D> aPoints2D;
-    std::vector<SGM::Point3D> aPoints3D;
-    std::vector<unsigned int> aTriangles;
-    std::vector<SGM::UnitVector3D> aNormals;
-    std::vector<entity *> aEntities;
-    SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
-    size_t nTriangles=aTriangles.size();
-    double dMethod1=0;
-    size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        size_t a=aTriangles[Index1];
-        size_t b=aTriangles[Index1+1];
-        size_t c=aTriangles[Index1+2];
-        SGM::Point2D const &PosA=aPoints2D[a];
-        SGM::Point2D const &PosB=aPoints2D[b];
-        SGM::Point2D const &PosC=aPoints2D[c];
-        dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
-        }
+    //SGMInternal::FacetOptions Options;
+    //Options.m_bParametric=true;
+    //std::vector<SGM::Point2D> aPoints2D;
+    //std::vector<SGM::Point3D> aPoints3D;
+    //std::vector<unsigned int> aTriangles;
+    //std::vector<SGM::UnitVector3D> aNormals;
+    //std::vector<entity *> aEntities;
+    //SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
+    //size_t nTriangles=aTriangles.size();
+    //double dMethod1=0;
+    //size_t Index1;
+    //for(Index1=0;Index1<nTriangles;Index1+=3)
+    //    {
+    //    size_t a=aTriangles[Index1];
+    //    size_t b=aTriangles[Index1+1];
+    //    size_t c=aTriangles[Index1+2];
+    //    SGM::Point2D const &PosA=aPoints2D[a];
+    //    SGM::Point2D const &PosB=aPoints2D[b];
+    //    SGM::Point2D const &PosC=aPoints2D[c];
+    //    dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
+    //    }
 
     // Method two.  
     // Refining the full set of parametric triangles twice and taking their area.
 
     this->GetPoints2D(rResult);
-    aPoints2D=m_aPoints2D;
-    aPoints3D=m_aPoints3D;
-    aTriangles=m_aTriangles;
-    aEntities=m_aEntities;
+    std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
+    std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
+    std::vector<unsigned int> aTriangles=m_aTriangles;
+    std::vector<entity *> aEntities;//=m_aEntities;
+    aEntities.assign(m_aPoints2D.size(),(entity *)this);
 
     double dDiff=SGM_MAX;
     double dOldArea=SGM_MAX;
@@ -558,7 +559,8 @@ double face::FindArea(SGM::Result &rResult) const
         ++nCount;
         }
 
-    return std::max(dMethod1,dArea2);
+    return dArea2;
+    //return std::max(dMethod1,dArea2);
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
@@ -608,11 +610,6 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         }
     return dVolume;
     }
-
-//TODO: would it pay off to cache the aaLoops and aaFlipped?  No PRS.  
-// If cached they will have to be maintained, which is the whole point
-// of not having loops and coedges in SGM.  Moreover, it is only found
-// once hence caching will not help make things go faster.
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,

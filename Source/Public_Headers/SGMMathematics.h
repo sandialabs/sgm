@@ -716,11 +716,17 @@ namespace SGM
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    // Icosahedron
+    // Creaete the triangles and vertices of a Icosahedron.  If nRefineLevel is
+    // more than zero, then the icosahedron is refined nRefinelevels number of
+    // times by splitting each edge in half and projecting to the circumscribed
+    // sphere and splitting each triangle into four triangles using the mid points
+    // of the edges. 
 
     SGM_EXPORT void CreateIcosahedron(double                     dCircumscribedRadius,
+                                      SGM::Point3D        const &Center,
                                       std::vector<SGM::Point3D> &aPoints,
-                                      std::vector<unsigned int> &aTriangles);
+                                      std::vector<unsigned int> &aTriangles,
+                                      int                        nRefineLevel=0);
     } // End of SGM namespace
 
 #endif // SGM_MATHEMATICS_H

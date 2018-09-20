@@ -2664,11 +2664,8 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
         aNodes[nLoopStartNode].m_nPrevious=aNodes.size()-1;
         }
 
-    if(nLoops==0)
-        {
-        FindOuterLoop(rResult,pFace,Options,aNodes);
-        }
-    else
+    //FindOuterLoop(rResult,pFace,Options,aNodes);
+    if(nLoops)
         {
         AddNodesAtSingularites(rResult,pFace,Options,aNodes);
         FindSeamCrossings(pFace,Options,aNodes);
@@ -2711,6 +2708,25 @@ void FindNormalsAndPoints(face                     const *pFace,
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         aPoints3D.push_back(Pos);
+        }
+    }
+
+void FindNormalsAndPoints2D(face                     const *pFace,
+                            std::vector<SGM::Point3D>      &aPoints3D,
+                            std::vector<SGM::UnitVector3D> &aNormals,
+                            std::vector<SGM::Point2D>      &aPoints2D)
+    {
+    size_t nPoints3D=aPoints3D.size();
+    sphere const *pSphere=(sphere const *)(pFace->GetSurface());
+    SGM::Point3D const &Center=pSphere->m_Center;
+    size_t Index1;
+    for(Index1=0;Index1<nPoints3D;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints3D[Index1];
+        SGM::Point2D uv=pSphere->Inverse(Pos);
+        SGM::UnitVector3D Norm=Pos-Center;
+        aNormals.push_back(Norm);
+        aPoints2D.push_back(uv);
         }
     }
 
@@ -3535,6 +3551,12 @@ void FacetFace(SGM::Result                    &rResult,
             break;
             }
         case SGM::SphereType:
+            //{
+            //sphere const *pSphere=(sphere const *)(pFace->GetSurface());
+            //SGM::CreateIcosahedron(pSphere->m_dRadius,pSphere->m_Center,aPoints3D,aTriangles,3);
+            //FindNormalsAndPoints2D(pFace,aPoints3D,aNormals,aPoints2D);
+            //break;
+            //}
         case SGM::TorusType:
             {
             // Angle based uniform grid.
@@ -3581,6 +3603,9 @@ void FacetFace(SGM::Result                    &rResult,
             throw;
             }
         }
+
+    double dArea=pFace->FindArea(rResult);
+    dArea*=1;
     }
 
 } // End of SGMInternal namespace
