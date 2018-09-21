@@ -3588,11 +3588,11 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             }
         }
 
-    void SGM::CreateIcosahedron(double                     dRadius,
-                                SGM::Point3D        const &Center,
-                                std::vector<SGM::Point3D> &aPoints,
-                                std::vector<unsigned int> &aTriangles,
-                                int                        nRefineLevel)
+    void CreateIcosahedron(double                     dRadius,
+                           SGM::Point3D        const &Center,
+                           std::vector<SGM::Point3D> &aPoints,
+                           std::vector<unsigned int> &aTriangles,
+                           int                        nRefineLevel)
         {
         // (  0,+-1,+-G)
         // (+-1,+-G,  0) * dScale
