@@ -62,6 +62,13 @@ TEST(models_ouo_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
+TEST(models_ouo_check, import_check_OUO_grv_geom)
+{
+    const char* file_name = "OUO_grv_geom.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_ouo_check_success(file_name);
+}
+
 TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: hangs in RefineTriangles on ID 14
 {
     const char* file_name = "OUO_ZGeom.stp";
