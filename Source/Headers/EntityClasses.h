@@ -165,11 +165,11 @@ public:
 
 protected:
 
-    size_t m_ID;
-    SGM::EntityType m_Type;
+    size_t                                       m_ID;
+    SGM::EntityType                              m_Type;
 
-    mutable SGM::Interval3D   m_Box;
-    mutable std::set<entity *, EntityCompare> m_sOwners;
+    mutable SGM::Interval3D                      m_Box;
+    mutable std::set<entity *, EntityCompare>    m_sOwners;
     mutable std::set<attribute *, EntityCompare> m_sAttributes;
 
     // Only to be called from the thing constructor.
@@ -802,7 +802,6 @@ class face : public topology
         mutable std::vector<SGM::UnitVector3D>     m_aNormals;
         mutable std::vector<unsigned int>          m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
-        mutable std::vector<entity *>              m_aEntities;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
 

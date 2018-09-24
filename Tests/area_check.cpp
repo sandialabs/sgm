@@ -12,7 +12,7 @@
 #include "test_utility.h"
 
 
-TEST(area_check, DISABLED_area_of_sphere_single_face)
+TEST(area_check, area_of_sphere_single_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -26,10 +26,9 @@ TEST(area_check, DISABLED_area_of_sphere_single_face)
 
     SGM::Face FaceID=*(sFaces.begin());
     double dArea=SGM::FindArea(rResult,FaceID);
-    EXPECT_TRUE(SGM::NearEqual(dArea,4*SGM_PI,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(dArea,4*SGM_PI,SGM_MIN_TOL,false));
 
     SGM::DeleteEntity(rResult,UnitSphereID);
-
 
     SGMTesting::ReleaseTestThing(pThing);
 }

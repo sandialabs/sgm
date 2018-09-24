@@ -494,7 +494,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     std::vector<SGM::Point2D> aPoints2D;
     std::vector<SGM::Point3D> aPoints3D;
     std::vector<entity *> aEntities;
-    FacetFaceLoops(rResult,pNewFace,Options,aPoints2D,aPoints3D,aEntities,aaPolygons,pEdge);
+    FacetFaceLoops(rResult,pNewFace,Options,aPoints2D,aPoints3D,aaPolygons,pEdge);
     double dArea=0.0;
     for(std::vector<unsigned int> const &aPolygon : aaPolygons)
         {

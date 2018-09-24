@@ -90,22 +90,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.
 
-    std::vector<entity *> m_aFixedEntities;
-    m_aFixedEntities.reserve(m_aEntities.size());
-    for(auto pEntity : m_aFixedEntities)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_aFixedEntities.push_back(MapValue->second);
-            }
-        else
-            {
-            m_aFixedEntities.push_back(pEntity);
-            }
-        }
-    m_aEntities=m_aFixedEntities;
-
     std::map<edge *,SGM::EdgeSeamType> m_sFixedSeamType;
     for(auto SeamType : m_mSeamType)
         {
@@ -210,7 +194,7 @@ std::vector<SGM::Point2D> const &face::GetPoints2D(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aPoints2D;
     }
@@ -220,7 +204,7 @@ std::vector<SGM::Point3D> const &face::GetPoints3D(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aPoints3D;
     }
@@ -230,7 +214,7 @@ std::vector<unsigned int> const &face::GetTriangles(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aTriangles;
     }
@@ -240,7 +224,7 @@ std::vector<SGM::UnitVector3D> const &face::GetNormals(SGM::Result &rResult) con
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aNormals;
     }
@@ -494,7 +478,6 @@ void face::ClearFacets(SGM::Result &rResult) const
         {
         m_aPoints3D.clear();
         m_aPoints2D.clear();
-        m_aEntities.clear();
         m_aTriangles.clear();
         m_aNormals.clear();
         m_Box.Reset();
@@ -540,8 +523,6 @@ double face::FindArea(SGM::Result &rResult) const
     std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
     std::vector<unsigned int> aTriangles=m_aTriangles;
-    std::vector<entity *> aEntities;//=m_aEntities;
-    aEntities.assign(m_aPoints2D.size(),(entity *)this);
 
     double dDiff=SGM_MAX;
     double dOldArea=SGM_MAX;
@@ -550,7 +531,7 @@ double face::FindArea(SGM::Result &rResult) const
     size_t nCount=0;
     while(SGM_MIN_TOL<dDiff && nCount<4)
         {
-        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
         double dArea1=TriangleArea(aPoints3D,aTriangles);
         dArea2=(4*dArea1-dArea0)/3;
         dArea0=dArea1;
@@ -583,7 +564,6 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
     std::vector<SGM::Point2D> aPoints2D=GetPoints2D(rResult);
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
-    std::vector<entity *> aEntities=m_aEntities;
     std::vector<unsigned int> aTriangles=m_aTriangles;
     double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
     if(m_bFlipped)
@@ -599,7 +579,7 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     size_t Index1;
     for(Index1=0;Index1<2;++Index1)
         {
-        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
         if(m_bFlipped)
             {
