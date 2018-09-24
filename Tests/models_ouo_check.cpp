@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "test_utility.h"
 
+#include "SGMInterrogate.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Tests that import and read selected files from our OUO data directory
@@ -67,6 +69,13 @@ TEST(models_ouo_check, import_check_OUO_grv_geom)
     const char* file_name = "OUO_grv_geom.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
+
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    std::vector<SGM::Face> faces;
+    //SGM::Point3D sgm_point(0.00623037301312708,-1.04973316890717e-18,0.0166638951384168);
+    SGM::Point3D sgm_point(0,0,0);
+    SGM::FindCloseFaces(rResult, sgm_point, SGM::Thing(), 1e-5, faces);
 }
 
 TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: hangs in RefineTriangles on ID 14

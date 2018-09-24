@@ -1615,6 +1615,10 @@ size_t IntersectLineAndSurface(SGM::Result                        &rResult,
             {
             return IntersectLineAndSphere(Origin,Axis,Domain,(sphere const *)pSurface,dTolerance,aPoints,aTypes);
             }
+        case SGM::EntityType::ConeType:
+            {
+            return IntersectLineAndCone(Origin,Axis,Domain,(cone const *)pSurface,dTolerance,aPoints,aTypes);
+            }
         case SGM::EntityType::TorusType:
             {
             return IntersectLineAndTorus(Origin,Axis,Domain,(torus const *)pSurface,dTolerance,aPoints,aTypes);
