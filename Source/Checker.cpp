@@ -445,7 +445,10 @@ bool surface::Check(SGM::Result              &rResult,
         {
         face *pFace=*(m_sFaces.begin());
         std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
-        uv=SGM::FindCenterOfMass2D(aPoints);
+        if(!aPoints.empty())
+            {
+            uv=SGM::FindCenterOfMass2D(aPoints);
+            }
         }
     bool bAnswer=TestSurface(rResult,this,uv);
 

@@ -3834,7 +3834,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=11)
+    //if(pFace->GetID()==25)
     //    {
     //    return;
     //    }
