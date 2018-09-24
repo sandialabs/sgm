@@ -716,7 +716,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                 {
                 if(pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
                     {
-                    if(uv.m_v<uvPlus.m_v)
+                    if(uv.m_v<uvPlus.m_v && fabs(uv.m_v-uvPlus.m_v)<Domain.m_UDomain.Length()*0.5)
                         {
                         return SGM::EdgeSeamType::UpperUSeamType;
                         }
@@ -727,7 +727,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                     }
                 if(pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                     {
-                    if(uv.m_u<uvPlus.m_u)
+                    if(uv.m_u<uvPlus.m_u && fabs(uv.m_u-uvPlus.m_u)<Domain.m_VDomain.Length()*0.5)
                         {
                         return SGM::EdgeSeamType::LowerVSeamType;
                         }
@@ -816,14 +816,14 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 {
                 if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
                     {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
+                     if(nType==SGM::EdgeSideType::FaceOnRightType)
+                         {
+                         uv.m_u=Domain.m_UDomain.m_dMin;
+                         }
+                     else
+                         {
+                         uv.m_u=Domain.m_UDomain.m_dMax;
+                         }
                     }
                 else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
                     {
