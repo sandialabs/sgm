@@ -3644,13 +3644,13 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
         return dArea*0.5;
         }
 
-    void SGM::CreateIcosahedron(double                     dRadius,
-                                SGM::Point3D        const &Center,
-                                SGM::UnitVector3D   const &ZAxis,
-                                SGM::UnitVector3D   const &XAxis,
-                                std::vector<SGM::Point3D> &aPoints3D,
-                                std::vector<unsigned int> &aTriangles,
-                                int                        nRefine)
+    void CreateIcosahedron(double                     dRadius,
+                           SGM::Point3D        const &Center,
+                           SGM::UnitVector3D   const &ZAxis,
+                           SGM::UnitVector3D   const &XAxis,
+                           std::vector<SGM::Point3D> &aPoints3D,
+                           std::vector<unsigned int> &aTriangles,
+                           int                        nRefine)
         {
         // (  0,+-1,+-G)
         // (+-1,+-G,  0) * dScale
@@ -3723,13 +3723,13 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
             }
         }
 
-    void SGM::CreateOctahedron(double                     dRadius,
-                               SGM::Point3D        const &Center,
-                               SGM::UnitVector3D   const &ZAxis,
-                               SGM::UnitVector3D   const &XAxis,
-                               std::vector<SGM::Point3D> &aPoints3D,
-                               std::vector<unsigned int> &aTriangles,
-                               int                        nRefine)
+    void CreateOctahedron(double                     dRadius,
+                          SGM::Point3D        const &Center,
+                          SGM::UnitVector3D   const &ZAxis,
+                          SGM::UnitVector3D   const &XAxis,
+                          std::vector<SGM::Point3D> &aPoints3D,
+                          std::vector<unsigned int> &aTriangles,
+                          int                        nRefine)
         {
         aPoints3D={{       0,        0,  dRadius}, 
                    { dRadius,        0,        0},  
