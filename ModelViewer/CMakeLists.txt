@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 3.3)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
-cmake_policy(SET CMP0071 NEW)
-
 #use lower warning level for viewer project
 if(MSVC)
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
