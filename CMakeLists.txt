@@ -29,6 +29,14 @@ add_definitions(-DSGM_MODELS_DIRECTORY=\"${SGM_MODELS_DIRECTORY}\")
 set(SGM_MODELS_OUO_DIRECTORY "${CMAKE_SOURCE_DIR}/../sgm-models-ouo")
 add_definitions(-DSGM_MODELS_OUO_DIRECTORY=\"${SGM_MODELS_OUO_DIRECTORY}\")
 
+# Multithreaded use
+option(BUILD_MULTITHREADED "Build SGM with multithreaded capabilities." OFF)
+if(BUILD_MULTITHREADED)
+  message(STATUS "Build SGM multithreaded")
+  find_package(Threads)
+  add_definitions(-DSGM_MULTITHREADED=1)
+endif()
+
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
 
 # use the version number from the CMake project in the compile
@@ -73,12 +81,6 @@ add_subdirectory(Tests/lib/googletest-release-1.8.0)
 option(BUILD_MODEL_VIEWER "Build the Qt based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
   add_subdirectory(ModelViewer)
-endif()
-
-option(BUILD_MULTITHREADED "Build SGM with multithreaded capabilities." OFF)
-if(BUILD_MULTITHREADED)
-  find_package(Threads)
-  add_definitions(-DSGM_MULTITHREADED)
 endif()
 
 # installation for all projects
