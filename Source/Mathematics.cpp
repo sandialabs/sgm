@@ -1794,8 +1794,10 @@ bool InsertPolygon(Result                     &rResult,
             ForceEdge(rResult,aTriangles,aPoints2D,a,b,sEdges,Tree,aTris);
             if(sEdges.find({a,b})==sEdges.end())
                 {
-                // Was Unable to force and edge into the triangles.
-                return false;
+                // Was Unable to force an edge into the triangles.
+                //return false;
+                int ff=0;
+                ff=1;
                 }
             }
         }

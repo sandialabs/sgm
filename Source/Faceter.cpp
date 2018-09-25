@@ -3432,7 +3432,7 @@ void FindSpherePoints(sphere                   const *pSphere,
     size_t nPoints=aPoints3D.size();
     aPoints2D.reserve(nPoints);
     aNormals.reserve(nPoints);
-    std::set<size_t> sSeamPoints;
+    std::set<size_t> sSeamPoints,sPolePoints;
     size_t Index1;
     for(Index1=0;Index1<nPoints;++Index1)
         {
@@ -3440,12 +3440,33 @@ void FindSpherePoints(sphere                   const *pSphere,
         SGM::Point2D uv=pSphere->Inverse(Pos);
         SGM::UnitVector3D Norm;
         pSphere->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
-        aPoints2D.push_back(uv);
         aNormals.push_back(Norm);
-        if(uv.m_u<SGM_MIN_TOL)
+        // Make all seam and pole points have a uv.m_u values of zero.
+        if(uv.m_v-SGM_MIN_TOL<-SGM_HALF_PI)
             {
+            uv.m_u=0.0;
+            sPolePoints.insert(Index1);
             sSeamPoints.insert(Index1);
             }
+        else if(SGM_HALF_PI<uv.m_v+SGM_MIN_TOL)
+            {
+            uv.m_u=0.0;
+            sPolePoints.insert(Index1);
+            sSeamPoints.insert(Index1);
+            }
+        else
+            {
+            if(uv.m_u<SGM_MIN_TOL)
+                {
+                sSeamPoints.insert(Index1);
+                }
+            else if(SGM_TWO_PI<uv.m_u+SGM_MIN_TOL)
+                {
+                uv.m_u=0.0;
+                sSeamPoints.insert(Index1);
+                }
+            }
+        aPoints2D.push_back(uv);
         }
 
     // Create a point on the high value of the seam for every
@@ -3480,6 +3501,19 @@ void FindSpherePoints(sphere                   const *pSphere,
             SGM::Point3D const &C=aPoints3D[c];
             SGM::Point3D CM=SGM::CenterOfMass(A,B,C);
             SGM::Point2D GuessUV=pSphere->Inverse(CM);
+            if( sPolePoints.find(a)!=sPolePoints.end() ||
+                sPolePoints.find(b)!=sPolePoints.end() ||
+                sPolePoints.find(c)!=sPolePoints.end())
+                {
+                if(GuessUV.m_u<SGM_PI)
+                    {
+                    GuessUV.m_u=0.0;
+                    }
+                else
+                    {
+                    GuessUV.m_u=SGM_TWO_PI;
+                    }
+                }
             SGM::Point2D Auv=pSphere->Inverse(A,nullptr,&GuessUV);
             SGM::Point2D Buv=pSphere->Inverse(B,nullptr,&GuessUV);
             SGM::Point2D Cuv=pSphere->Inverse(C,nullptr,&GuessUV);
@@ -3566,7 +3600,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=6)
+    //if(pFace->GetID()!=3)
     //    {
     //    return;
     //    }
@@ -3608,8 +3642,9 @@ void FacetFace(SGM::Result                    &rResult,
             sphere const *pSphere=(sphere const *)(pFace->GetSurface());
             std::vector<SGM::Point2D> aPolygonPoints=aPoints2D;
             aPoints2D.clear();
-            SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
-            SGM::CreateOctahedron(pSphere->m_dRadius,pSphere->m_Center,ZAxis,XAxis,aPoints3D,aTriangles,3); 
+            SGM::CreateOctahedron(pSphere->m_dRadius,
+                pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
+                aPoints3D,aTriangles,4); 
             FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
             if(aaPolygons.size())
                 {
