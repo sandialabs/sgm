@@ -911,7 +911,7 @@ TEST(intersection_check, intersect_planar_NUBcurve_and_plane)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(intersection_check, DISABLED_intersect_nonplanar_NUBcurve_and_plane)
+TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

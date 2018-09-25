@@ -3620,6 +3620,28 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
+        if(nTestNumber==60)
+            {
+            std::vector<SGM::Point3D> aPoints3D;
+            std::vector<unsigned int> aSegments,aTriangles;
+            SGM::Point3D Center(0,0,0);
+            SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
+            SGM::CreateIcosahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles);
+            SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
+            return true;
+            }
+
+        if(nTestNumber==61)
+            {
+            std::vector<SGM::Point3D> aPoints3D;
+            std::vector<unsigned int> aSegments,aTriangles;
+            SGM::Point3D Center(0,0,0);
+            SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
+            SGM::CreateOctahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles,1);
+            SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
+            return true;
+            }
+
     return false;
     }
 

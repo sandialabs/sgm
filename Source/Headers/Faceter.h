@@ -50,17 +50,15 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<SGM::Point2D>      &aPoints2D,
                std::vector<SGM::Point3D>      &aPoints3D,
                std::vector<SGM::UnitVector3D> &aNormals,
-               std::vector<unsigned int>      &aTriangles,
-               std::vector<entity *>          &aEntities);
+               std::vector<unsigned int>      &aTriangles);
 
-size_t FacetFaceLoops(SGM::Result                             &rResult, 
-                      face                              const *pFace,
-                      FacetOptions                      const &Options,
-                      std::vector<SGM::Point2D>               &aPoints2D,
-                      std::vector<SGM::Point3D>               &aPoints3D,
-                      std::vector<entity *>                   &aEntities,
-                      std::vector<std::vector<unsigned int> > &aaPolygons,
-                      edge                                    *pInputEdge=nullptr);
+bool FacetFaceLoops(SGM::Result                             &rResult, 
+                    face                              const *pFace,
+                    FacetOptions                      const &Options,
+                    std::vector<SGM::Point2D>               &aPoints2D,
+                    std::vector<SGM::Point3D>               &aPoints3D,
+                    std::vector<std::vector<unsigned int> > &aaPolygons,
+                    edge                                    *pInputEdge=nullptr);
 
 bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,
@@ -89,12 +87,10 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
 //    / \  /\
 //   /___\/__\
 
-void SubdivideFacets(SGM::Result               &rResult,
-                     face                const *pFace,
+void SubdivideFacets(face                const *pFace,
                      std::vector<SGM::Point3D> &aPoints3D,
                      std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<unsigned int> &aTriangles,
-                     std::vector<entity *>     &aEntities);
+                     std::vector<unsigned int> &aTriangles);
 
 void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
                   std::vector<SGM::Point2D>       &aPoints,

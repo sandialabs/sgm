@@ -20,9 +20,9 @@ namespace SGMInternal
 
 // create a NUB or NURB curve
 
-curve* CreateBSplineCurveFromSTEP(SGM::Result &rResult,
+curve* CreateBSplineCurveFromSTEP(SGM::Result               &rResult,
                                   STEPLineDataMapType const &mSTEPData,
-                                  STEPLineData const &stepLineData)
+                                  STEPLineData        const &stepLineData)
     {
     std::vector<size_t> const &aIDs = stepLineData.m_aIDs;
     std::vector<int> const &aInts = stepLineData.m_aInts;
@@ -75,9 +75,9 @@ curve* CreateBSplineCurveFromSTEP(SGM::Result &rResult,
 
 // Create a NUBsurface or a NURBsurface
 
-surface* CreateBSplineSurfaceFromSTEP(SGM::Result &rResult,
+surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
                                       STEPLineDataMapType const &mSTEPData,
-                                      STEPLineData const &stepLineData)
+                                      STEPLineData        const &stepLineData)
     {
     std::vector<size_t> const &aIDs = stepLineData.m_aIDs;
     std::vector<int> const &aInts = stepLineData.m_aInts;
@@ -90,20 +90,31 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result &rResult,
     unsigned nVKnots = aSizes[1];
     size_t nCount = 2; // offset into aInts
 
-    size_t nMultiplicityKnots = (size_t)std::accumulate(&aInts[nCount], &aInts[nCount+nUKnots], 0);
+    size_t Index1,Index2;
+    size_t nMultiplicityKnots=0;
+    size_t nEnd=nCount+nUKnots;
+    for(Index1=nCount;Index1<nEnd;++Index1)
+        {
+        nMultiplicityKnots+=aInts[Index1];
+        }
     std::vector<double> aUKnots;
     aUKnots.reserve(nMultiplicityKnots);
-    for (size_t Index1 = 0; Index1 < nUKnots; ++Index1)
+    for (Index1 = 0; Index1 < nUKnots; ++Index1)
         {
         double dKnot = aDoubles[Index1];
         size_t nMultiplicity = (size_t)aInts[nCount++];
         aUKnots.insert(aUKnots.end(),nMultiplicity,dKnot); // push back N times
         }
 
-    nMultiplicityKnots = (size_t)std::accumulate(&aInts[nCount], &aInts[nCount+nVKnots], 0);
+    nMultiplicityKnots=0;
+    nEnd=nCount+nVKnots;
+    for(Index1=nCount;Index1<nEnd;++Index1)
+        {
+        nMultiplicityKnots+=aInts[Index1];
+        }
     std::vector<double> aVKnots;
     aVKnots.reserve(nMultiplicityKnots);
-    for (size_t Index1 = 0; Index1 < nVKnots; ++Index1)
+    for (Index1 = 0; Index1 < nVKnots; ++Index1)
         {
         size_t nMultiplicity = (size_t)aInts[nCount++];
         double dKnot = aDoubles[Index1 + nUKnots];
@@ -122,11 +133,11 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result &rResult,
 
         std::vector<std::vector<SGM::Point3D>> aaControlPoints;
         aaControlPoints.reserve(nUControlPoints);
-        for (size_t Index1 = 0; Index1 < nUControlPoints; ++Index1)
+        for (Index1 = 0; Index1 < nUControlPoints; ++Index1)
             {
             std::vector<SGM::Point3D> aControlPoints;
             aControlPoints.reserve(nVControlPoints);
-            for (size_t Index2 = 0; Index2 < nVControlPoints; ++Index2)
+            for (Index2 = 0; Index2 < nVControlPoints; ++Index2)
                 {
                 size_t nPointID = aIDs[nIDCount++];
                 std::vector<double> const &aPoint = mSTEPData.at(nPointID).m_aDoubles;
@@ -146,11 +157,11 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result &rResult,
         std::vector<std::vector<SGM::Point4D>> aaControlPoints;
         aaControlPoints.reserve(nUControlPoints);
 
-        for (size_t Index1 = 0; Index1 < nUControlPoints; ++Index1)
+        for (Index1 = 0; Index1 < nUControlPoints; ++Index1)
             {
             std::vector<SGM::Point4D> aControlPoints;
             aControlPoints.reserve(nVControlPoints);
-            for (size_t Index2 = 0; Index2 < nVControlPoints; ++Index2)
+            for (Index2 = 0; Index2 < nVControlPoints; ++Index2)
                 {
                 double dWeight = aDoubles[nDoubleCount++];
                 size_t nPointID = aIDs[nIDCount++];
@@ -166,11 +177,11 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result &rResult,
     return pSurface;
     }
 
-void GetAxesFromSTEP(STEPLineData const &stepLineData,
+void GetAxesFromSTEP(STEPLineData        const &stepLineData,
                      STEPLineDataMapType const &mSTEPData,
-                     SGM::Point3D &Center,
-                     SGM::UnitVector3D &ZAxis,
-                     SGM::UnitVector3D &XAxis)
+                     SGM::Point3D              &Center,
+                     SGM::UnitVector3D         &ZAxis,
+                     SGM::UnitVector3D         &XAxis)
     {
     size_t nLength = stepLineData.m_aIDs.size();
     assert(nLength >= 2 && nLength <= 3);
@@ -394,8 +405,8 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
                                    STEPLineDataMapType const &mSTEPData,
                                    IDEntityMapType           &mIDToEntityMap,
                                    std::set<entity *>        &sEntities,
-                                   std::vector<size_t> const &aFaces,
-                                   std::vector<size_t> const &aEdges,
+                                   std::vector<size_t> const &,//aFaces,
+                                   std::vector<size_t> const &,//aEdges,
                                    std::vector<size_t>       &aVolumes)
     {
     size_t nVolumes = aVolumes.size();
@@ -542,7 +553,7 @@ void ConnectEdgesAndSurfacesToFaces(SGM::Result               &rResult,
                                     STEPLineDataMapType const &mSTEPData,
                                     IDEntityMapType     const &mIDToEntityMap,
                                     std::set<entity *>        &sEntities,
-                                    std::vector<size_t> const &aEdges,
+                                    std::vector<size_t> const &,//aEdges,
                                     std::vector<size_t>       &aFaces)
     {
     size_t nFaces = aFaces.size();
@@ -656,7 +667,7 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
                                      STEPLineDataMapType const &mSTEPData,
                                      IDEntityMapType     const &mIDToEntityMap,
                                      std::set<entity *>        &sEntities,
-                                     std::vector<size_t> const &aFaces,
+                                     std::vector<size_t> const &,//aFaces,
                                      std::vector<size_t> const &aEdges)
     {
     size_t nEdges = aEdges.size();
@@ -731,7 +742,7 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
         }
     }
 
-void ConnectSheetBodies(SGM::Result         &rResult,
+void ConnectSheetBodies(SGM::Result         &,//rResult,
                         std::vector<body *> &aSheetBodies)
     {
     // Make sheet bodies double sided.

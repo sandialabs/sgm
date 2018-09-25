@@ -90,22 +90,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.
 
-    std::vector<entity *> m_aFixedEntities;
-    m_aFixedEntities.reserve(m_aEntities.size());
-    for(auto pEntity : m_aFixedEntities)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_aFixedEntities.push_back(MapValue->second);
-            }
-        else
-            {
-            m_aFixedEntities.push_back(pEntity);
-            }
-        }
-    m_aEntities=m_aFixedEntities;
-
     std::map<edge *,SGM::EdgeSeamType> m_sFixedSeamType;
     for(auto SeamType : m_mSeamType)
         {
@@ -210,7 +194,7 @@ std::vector<SGM::Point2D> const &face::GetPoints2D(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aPoints2D;
     }
@@ -220,7 +204,7 @@ std::vector<SGM::Point3D> const &face::GetPoints3D(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aPoints3D;
     }
@@ -230,7 +214,7 @@ std::vector<unsigned int> const &face::GetTriangles(SGM::Result &rResult) const
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aTriangles;
     }
@@ -240,7 +224,7 @@ std::vector<SGM::UnitVector3D> const &face::GetNormals(SGM::Result &rResult) con
     if(m_aPoints2D.empty())
         {
         FacetOptions Options;
-        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles,m_aEntities);
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
         }
     return m_aNormals;
     }
@@ -494,7 +478,6 @@ void face::ClearFacets(SGM::Result &rResult) const
         {
         m_aPoints3D.clear();
         m_aPoints2D.clear();
-        m_aEntities.clear();
         m_aTriangles.clear();
         m_aNormals.clear();
         m_Box.Reset();
@@ -511,45 +494,44 @@ double face::FindArea(SGM::Result &rResult) const
     // Method one. 
     // Using Romberg integration on a reduced set of parametric triangles.
 
-    SGMInternal::FacetOptions Options;
-    Options.m_bParametric=true;
-    std::vector<SGM::Point2D> aPoints2D;
-    std::vector<SGM::Point3D> aPoints3D;
-    std::vector<unsigned int> aTriangles;
-    std::vector<SGM::UnitVector3D> aNormals;
-    std::vector<entity *> aEntities;
-    SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
-    size_t nTriangles=aTriangles.size();
-    double dMethod1=0;
-    size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        size_t a=aTriangles[Index1];
-        size_t b=aTriangles[Index1+1];
-        size_t c=aTriangles[Index1+2];
-        SGM::Point2D const &PosA=aPoints2D[a];
-        SGM::Point2D const &PosB=aPoints2D[b];
-        SGM::Point2D const &PosC=aPoints2D[c];
-        dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
-        }
+    //SGMInternal::FacetOptions Options;
+    //Options.m_bParametric=true;
+    //std::vector<SGM::Point2D> aPoints2D;
+    //std::vector<SGM::Point3D> aPoints3D;
+    //std::vector<unsigned int> aTriangles;
+    //std::vector<SGM::UnitVector3D> aNormals;
+    //std::vector<entity *> aEntities;
+    //SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
+    //size_t nTriangles=aTriangles.size();
+    //double dMethod1=0;
+    //size_t Index1;
+    //for(Index1=0;Index1<nTriangles;Index1+=3)
+    //    {
+    //    size_t a=aTriangles[Index1];
+    //    size_t b=aTriangles[Index1+1];
+    //    size_t c=aTriangles[Index1+2];
+    //    SGM::Point2D const &PosA=aPoints2D[a];
+    //    SGM::Point2D const &PosB=aPoints2D[b];
+    //    SGM::Point2D const &PosC=aPoints2D[c];
+    //    dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
+    //    }
 
     // Method two.  
     // Refining the full set of parametric triangles twice and taking their area.
 
     this->GetPoints2D(rResult);
-    aPoints2D=m_aPoints2D;
-    aPoints3D=m_aPoints3D;
-    aTriangles=m_aTriangles;
-    aEntities=m_aEntities;
+    std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
+    std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
+    std::vector<unsigned int> aTriangles=m_aTriangles;
 
     double dDiff=SGM_MAX;
     double dOldArea=SGM_MAX;
     double dArea2=0;
     double dArea0=TriangleArea(aPoints3D,aTriangles);
     size_t nCount=0;
-    while(SGM_MIN_TOL<dDiff && nCount<4)
+    while(SGM_MIN_TOL<dDiff && nCount<5)
         {
-        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
         double dArea1=TriangleArea(aPoints3D,aTriangles);
         dArea2=(4*dArea1-dArea0)/3;
         dArea0=dArea1;
@@ -558,7 +540,8 @@ double face::FindArea(SGM::Result &rResult) const
         ++nCount;
         }
 
-    return std::max(dMethod1,dArea2);
+    return dArea2;
+    //return std::max(dMethod1,dArea2);
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
@@ -581,7 +564,6 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
     std::vector<SGM::Point2D> aPoints2D=GetPoints2D(rResult);
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
-    std::vector<entity *> aEntities=m_aEntities;
     std::vector<unsigned int> aTriangles=m_aTriangles;
     double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
     if(m_bFlipped)
@@ -597,7 +579,7 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     size_t Index1;
     for(Index1=0;Index1<2;++Index1)
         {
-        SubdivideFacets(rResult,this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
         if(m_bFlipped)
             {
@@ -608,11 +590,6 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         }
     return dVolume;
     }
-
-//TODO: would it pay off to cache the aaLoops and aaFlipped?  No PRS.  
-// If cached they will have to be maintained, which is the whole point
-// of not having loops and coedges in SGM.  Moreover, it is only found
-// once hence caching will not help make things go faster.
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
@@ -739,7 +716,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                 {
                 if(pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL))
                     {
-                    if(uv.m_v<uvPlus.m_v)
+                    if(uv.m_v<uvPlus.m_v && fabs(uv.m_v-uvPlus.m_v)<Domain.m_UDomain.Length()*0.5)
                         {
                         return SGM::EdgeSeamType::UpperUSeamType;
                         }
@@ -750,7 +727,7 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                     }
                 if(pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                     {
-                    if(uv.m_u<uvPlus.m_u)
+                    if(uv.m_u<uvPlus.m_u && fabs(uv.m_u-uvPlus.m_u)<Domain.m_VDomain.Length()*0.5)
                         {
                         return SGM::EdgeSeamType::LowerVSeamType;
                         }
@@ -839,14 +816,14 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 {
                 if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
                     {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
+                     if(nType==SGM::EdgeSideType::FaceOnRightType)
+                         {
+                         uv.m_u=Domain.m_UDomain.m_dMin;
+                         }
+                     else
+                         {
+                         uv.m_u=Domain.m_UDomain.m_dMax;
+                         }
                     }
                 else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
                     {

@@ -573,7 +573,7 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
     snprintf(Data0, sizeof(Data0), "%ld", aSegments.size());
     segments_item->setText(0, "Segments");
     segments_item->setText(1, Data0);
-    snprintf(Data0, sizeof(Data0), "%ld", aTriangles.size());
+    snprintf(Data0, sizeof(Data0), "%ld", aTriangles.size()/3);
     triangles_item->setText(0, "Triangles");
     triangles_item->setText(1, Data0);
 

@@ -90,20 +90,15 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
         switch(pSurface->GetSurfaceType())
             {
             case SGM::EntityType::CylinderType:
-                {
-                break;
-                }
             case SGM::EntityType::PlaneType:
-                {
-                break;
-                }
             case SGM::EntityType::SphereType:
+            case SGM::EntityType::ConeType:
+            case SGM::EntityType::TorusType:
                 {
                 break;
                 }
             default:
                 {
-                // Look for local mins.
                 throw;
                 }
             }

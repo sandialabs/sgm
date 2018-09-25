@@ -200,6 +200,10 @@ namespace SGM
                                     Point2D const &B,
                                     Point2D const &C);
 
+    SGM_EXPORT Point3D CenterOfMass(Point3D const &A,
+                                    Point3D const &B,
+                                    Point3D const &C);
+
     // Returns the area of the triangle ABC as positive if ABC are counter 
     // clockwise else it returns a negative area of triangle ABC.
 
@@ -267,7 +271,7 @@ namespace SGM
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
     // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
     // function will update a vector of 3D points and normals if the starting ones are
-    // passed to the function along with their surface.
+    // passed to the function along with their surface.  
 
     SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
@@ -292,11 +296,10 @@ namespace SGM
     SGM_EXPORT void FindBoundary(std::vector<unsigned int> const &aTriangles,
                                  std::vector<unsigned int>       &aBoundary);
 
-    // Removes the given point index from the given triangles.  Optionaly a vector of
-    // triangles to be considered may be given.  Note that the point is left in the 
-    // vector aPoints2D but removed from aTriangles. Returns false is the point cannot
-    // be removed.  The function also returns the indices of the triangles that were
-    // removed or changed, and the point indices of the triangels that were replaced.
+    // Removes the given point index from the given triangles.  Note that the point is 
+    // left in the vector aPoints2D but removed from aTriangles. Returns false is the 
+    // point cannot be removed.  The function also returns the indices of the triangles 
+    // that were removed or changed, and the point indices of the triangels that were replaced.
 
     SGM_EXPORT bool RemovePointFromTriangles(SGM::Result               &rResult,
                                              unsigned int               nRemoveIndex,
@@ -309,7 +312,7 @@ namespace SGM
     // that have been imprinted into the triangles RemoveOutsideTriangles removes the triangles
     // that are outside of the given polygons.  The function returns false if the given polygons 
     // are not well nested.  In addition, aPoints2D, and optionaly pPoints3D and pNormals are
-    // reduced to only the used points.  Moreover, it dMinDist is not zero, then interior points
+    // reduced to only the used points.  Moreover, if dMinDist is not zero, then interior points
     // that are within dMinDist of the boundary are also removed. 
 
     SGM_EXPORT bool RemoveOutsideTriangles(SGM::Result                                   &rResult,
@@ -710,6 +713,41 @@ namespace SGM
                              void                                 const *pData=nullptr,
                              double                                      dTolerance=SGM_ZERO);
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Polyhedra
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Creaete the triangles and vertices of a icosahedron, with the given 
+    // center and circumscribed radius.  In addition a vertex of the icosahedron
+    // is oriented to point in the ZAxis from the center, and one of the vertices 
+    // that is adjacent to the ZAxis vertex is oriented to lie on the seam of
+    // the circumscribed sphere with its seam in the XAxis direction from the 
+    // center.  If nRefine is positive then the triangles are sphericaly refined.
+
+    SGM_EXPORT void CreateIcosahedron(double                     dCircumscribedRadius,
+                                      SGM::Point3D        const &Center,
+                                      SGM::UnitVector3D   const &ZAxis,
+                                      SGM::UnitVector3D   const &XAxis,
+                                      std::vector<SGM::Point3D> &aPoints3D,
+                                      std::vector<unsigned int> &aTriangles,
+                                      int                        nRefine=0);
+
+    // Creaete the triangles and vertices of a octahedron, with the given 
+    // center and circumscribed radius.  In addition a vertex of the octahedron
+    // is oriented to point in the ZAxis from the center, and one of the vertices 
+    // that is adjacent to the ZAxis vertex is oriented to lie on the seam of
+    // the circumscribed sphere with its seam in the XAxis direction from the 
+    // center.   If nRefine is positive then the triangles are sphericaly refined.
+
+    SGM_EXPORT void CreateOctahedron(double                     dCircumscribedRadius,
+                                     SGM::Point3D        const &Center,
+                                     SGM::UnitVector3D   const &ZAxis,
+                                     SGM::UnitVector3D   const &XAxis,
+                                     std::vector<SGM::Point3D> &aPoints3D,
+                                     std::vector<unsigned int> &aTriangles,
+                                     int                        nRefine=0);
     } // End of SGM namespace
 
 #endif // SGM_MATHEMATICS_H

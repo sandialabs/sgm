@@ -80,10 +80,10 @@ namespace SGM {
                                     Vector4D const &Translate
     )
     {
-        m_Matrix[0] = Vector4D(XAxis.m_x, YAxis.m_x, ZAxis.m_x, Translate.m_x);
-        m_Matrix[1] = Vector4D(XAxis.m_y, YAxis.m_y, ZAxis.m_y, Translate.m_y);
-        m_Matrix[2] = Vector4D(XAxis.m_z, YAxis.m_z, ZAxis.m_z, Translate.m_z);
-        m_Matrix[3] = Vector4D(XAxis.m_w, YAxis.m_w, ZAxis.m_w, Translate.m_w);
+        m_Matrix[0] = XAxis;
+        m_Matrix[1] = YAxis;
+        m_Matrix[2] = ZAxis;
+        m_Matrix[3] = Translate;
     }
 
     inline double SGM::Transform3D::Scale(SGM::UnitVector3D const &Direction) const
