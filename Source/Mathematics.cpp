@@ -1014,6 +1014,13 @@ Point2D CenterOfMass(Point2D const &A,
     return SGM::Point2D((A.m_u+B.m_u+C.m_u)/3.0,(A.m_v+B.m_v+C.m_v)/3.0);
     }
 
+Point3D CenterOfMass(Point3D const &A,
+                     Point3D const &B,
+                     Point3D const &C)
+    {
+    return SGM::Point3D((A.m_x+B.m_x+C.m_x)/3.0,(A.m_y+B.m_y+C.m_y)/3.0,(A.m_z+B.m_z+C.m_z)/3.0);
+    }
+
 bool InCircumcircle(SGM::Point2D const &A,
                     SGM::Point2D const &B,
                     SGM::Point2D const &C,
@@ -1630,8 +1637,7 @@ bool InsertPolygon(Result                     &rResult,
                    std::vector<unsigned int>  &aPolygonIndices,
                    SGM::Surface               *pSurfaceID,
                    std::vector<Point3D>       *pPoints3D,
-                   std::vector<UnitVector3D>  *pNormals,
-                   bool                        bFlip)
+                   std::vector<UnitVector3D>  *pNormals)
     {
     double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
     double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
@@ -1757,12 +1763,9 @@ bool InsertPolygon(Result                     &rResult,
             }
         }
 
-    if(bFlip)
-        {
-        std::vector<unsigned int> aAdjacencies;
-        SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-        SGMInternal::DelaunayFlips(aPoints2D,aTriangles,aAdjacencies,pPoints3D,pNormals);
-        }
+    std::vector<unsigned int> aAdjacencies;
+    SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+    SGMInternal::DelaunayFlips(aPoints2D,aTriangles,aAdjacencies,pPoints3D,pNormals);
 
     // Force polygon edges to be in the triangles.
 

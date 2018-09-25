@@ -200,6 +200,10 @@ namespace SGM
                                     Point2D const &B,
                                     Point2D const &C);
 
+    SGM_EXPORT Point3D CenterOfMass(Point3D const &A,
+                                    Point3D const &B,
+                                    Point3D const &C);
+
     // Returns the area of the triangle ABC as positive if ABC are counter 
     // clockwise else it returns a negative area of triangle ABC.
 
@@ -267,8 +271,7 @@ namespace SGM
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
     // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
     // function will update a vector of 3D points and normals if the starting ones are
-    // passed to the function along with their surface.  If bFlip is true, then Delaunay
-    // flips are conducted on the resulting triangles.
+    // passed to the function along with their surface.  
 
     SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
@@ -277,8 +280,7 @@ namespace SGM
                                   std::vector<unsigned int>  &aPolygonIndices,
                                   SGM::Surface               *pSurfaceID=nullptr,
                                   std::vector<Point3D>       *pPoints3D=nullptr,
-                                  std::vector<UnitVector3D>  *pNormals=nullptr,
-                                  bool                        bFlip=true);
+                                  std::vector<UnitVector3D>  *pNormals=nullptr);
 
     // Returns true if the intersection of triangle {A,B,C} and the given segment
     // consists of more than one point.

@@ -529,7 +529,7 @@ double face::FindArea(SGM::Result &rResult) const
     double dArea2=0;
     double dArea0=TriangleArea(aPoints3D,aTriangles);
     size_t nCount=0;
-    while(SGM_MIN_TOL<dDiff && nCount<4)
+    while(SGM_MIN_TOL<dDiff && nCount<5)
         {
         SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
         double dArea1=TriangleArea(aPoints3D,aTriangles);

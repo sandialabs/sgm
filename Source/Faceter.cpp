@@ -1590,7 +1590,7 @@ void Refine(face        const *pFace,
         }
     }
 
-void FindSeamCrossings(face         const *pFace,
+bool FindSeamCrossings(face         const *pFace,
                        FacetOptions const &Options,
                        std::vector<Node>  &aNodes)
     {
@@ -1946,6 +1946,11 @@ void FindSeamCrossings(face         const *pFace,
         SGM::Interval1D const &VDomain=pSurface->GetDomain().m_VDomain;
         double dCosRefineAngle=cos(Options.m_dEdgeAngleTol);
 
+        if(nUOutLow!=aUInLow.size())
+            {
+            return false;
+            }
+
         for(Index1=0;Index1<nUOutLow;++Index1)
             {
             double v1=aUOutLow[Index1].first;
@@ -1987,6 +1992,12 @@ void FindSeamCrossings(face         const *pFace,
                     }
                 }
             }
+
+        if(nVOutLow!=aVInLow.size())
+            {
+            return false;
+            }
+
         for(Index1=0;Index1<nVOutLow;++Index1)
             {
             double u1=aVOutLow[Index1].first;
@@ -2028,6 +2039,12 @@ void FindSeamCrossings(face         const *pFace,
                     }
                 }
             }
+
+        if(nUOutHigh!=aUInHigh.size())
+            {
+            return false;
+            }
+
         for(Index1=0;Index1<nUOutHigh;++Index1)
             {
             double v1=aUOutHigh[Index1].first;
@@ -2069,6 +2086,12 @@ void FindSeamCrossings(face         const *pFace,
                     }
                 }
             }
+
+        if(nVOutHigh!=aVInHigh.size())
+            {
+            return false;
+            }
+
         for(Index1=0;Index1<nVOutHigh;++Index1)
             {
             double u1=aVOutHigh[Index1].first;
@@ -2111,6 +2134,8 @@ void FindSeamCrossings(face         const *pFace,
                 }
             }
         }
+
+    return true;
     }
 
 void FindPolygon(std::vector<Node>         &aNodes,
@@ -2475,13 +2500,13 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         }
     }
 
-size_t FacetFaceLoops(SGM::Result                             &rResult,
-                      face                              const *pFace,
-                      FacetOptions                      const &Options,
-                      std::vector<SGM::Point2D>               &aPoints2D,
-                      std::vector<SGM::Point3D>               &aPoints3D,
-                      std::vector<std::vector<unsigned int> > &aaPolygons,
-                      edge                                    *pInputEdge)
+bool FacetFaceLoops(SGM::Result                             &rResult,
+                    face                              const *pFace,
+                    FacetOptions                      const &Options,
+                    std::vector<SGM::Point2D>               &aPoints2D,
+                    std::vector<SGM::Point3D>               &aPoints3D,
+                    std::vector<std::vector<unsigned int> > &aaPolygons,
+                    edge                                    *pInputEdge)
     {
     // Find all the needed face information.
 
@@ -2565,12 +2590,15 @@ size_t FacetFaceLoops(SGM::Result                             &rResult,
     if(nLoops)
         {
         AddNodesAtSingularites(rResult,pFace,Options,aNodes);
-        FindSeamCrossings(pFace,Options,aNodes);
+        if(FindSeamCrossings(pFace,Options,aNodes)==false)
+            {
+            return false;
+            }
         }
      
     FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons);
 
-    return aaPolygons.size();
+    return true;
     }
 
 void FindNormals(face                     const *pFace,
@@ -2605,442 +2633,6 @@ void FindNormalsAndPoints(face                     const *pFace,
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         aPoints3D.push_back(Pos);
-        }
-    }
-
-void FindNormalsAndPoints2D(face                     const *pFace,
-                            std::vector<unsigned int>      &aTriangles,
-                            std::vector<SGM::Point3D>      &aPoints3D,
-                            std::vector<SGM::UnitVector3D> &aNormals,
-                            std::vector<SGM::Point2D>      &aPoints2D)
-    {
-    size_t nPoints3D=aPoints3D.size();
-    sphere const *pSphere=(sphere const *)(pFace->GetSurface());
-    SGM::Point3D const &Center=pSphere->m_Center;
-    double dULow=pSphere->GetDomain().m_UDomain.MidPoint(0.333333333333333333);
-    double dUHigh=pSphere->GetDomain().m_UDomain.MidPoint(0.666666666666666666);
-    double dULength=pSphere->GetDomain().m_UDomain.Length();
-    size_t Index1,Index2;
-    for(Index1=0;Index1<nPoints3D;++Index1)
-        {
-        SGM::Point3D const &Pos=aPoints3D[Index1];
-        SGM::Point2D uv=pSphere->Inverse(Pos);
-        SGM::UnitVector3D Norm=Pos-Center;
-        aNormals.push_back(Norm);
-        aPoints2D.push_back(uv);
-        }
-
-    // Fix uv values of triangles that cross the seam.
-
-    bool bFirstNorth=true,bFirstSouth=true;
-    double dNorth=SGM_HALF_PI-SGM_MIN_TOL;
-    double dSouth=SGM_MIN_TOL-SGM_HALF_PI;
-    size_t nTriangles=aTriangles.size();
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        unsigned int a=aTriangles[Index1];
-        unsigned int b=aTriangles[Index1+1];
-        unsigned int c=aTriangles[Index1+2];
-        SGM::Point2D A=aPoints2D[a];
-        SGM::Point2D B=aPoints2D[b];
-        SGM::Point2D C=aPoints2D[c];
-
-        // Fix seam crosses.
-        if(A.m_u<dULow && B.m_u<dULow && C.m_u>dUHigh)
-            {
-            if(A.m_u<SGM_MIN_TOL && B.m_u<SGM_MIN_TOL)
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u+=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-
-                SGM::Point2D NewB=B;
-                NewB.m_u+=dULength;
-                aTriangles[Index1+1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                }
-            else
-                {
-                SGM::Point2D NewC=C;
-                NewC.m_u-=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            }
-        else if(A.m_u<dULow && C.m_u<dULow && B.m_u>dUHigh)
-            {
-            if(A.m_u<SGM_MIN_TOL && C.m_u<SGM_MIN_TOL)
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u+=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-
-                SGM::Point2D NewC=C;
-                NewC.m_u+=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            else
-                {
-                SGM::Point2D NewB=B;
-                NewB.m_u-=dULength;
-                aTriangles[Index1+1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                }
-            }
-        else if(C.m_u<dULow && B.m_u<dULow && A.m_u>dUHigh)
-            {
-            if(B.m_u<SGM_MIN_TOL && C.m_u<SGM_MIN_TOL)
-                {
-                SGM::Point2D NewB=B;
-                NewB.m_u+=dULength;
-                aTriangles[Index1+1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-
-                SGM::Point2D NewC=C;
-                NewC.m_u+=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            else
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u-=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-                }
-            }
-        else if(C.m_u>dUHigh && B.m_u>dUHigh && A.m_u<dULow)
-            {
-            if(SGM_TWO_PI-SGM_MIN_TOL<B.m_u && SGM_TWO_PI-SGM_MIN_TOL<C.m_u)
-                {
-                SGM::Point2D NewB=B;
-                NewB.m_u-=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-
-                SGM::Point2D NewC=C;
-                NewC.m_u-=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            else
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u+=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-                }
-            }
-        else if(C.m_u>dUHigh && A.m_u>dUHigh && B.m_u<dULow)
-            {
-            if(SGM_TWO_PI-SGM_MIN_TOL<A.m_u && SGM_TWO_PI-SGM_MIN_TOL<C.m_u)
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u-=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-
-                SGM::Point2D NewC=C;
-                NewC.m_u-=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            else
-                {
-                SGM::Point2D NewB=B;
-                NewB.m_u+=dULength;
-                aTriangles[Index1+1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                }
-            }
-        else if(A.m_u>dUHigh && B.m_u>dUHigh && C.m_u<dULow)
-            {
-            if(SGM_TWO_PI-SGM_MIN_TOL<A.m_u && SGM_TWO_PI-SGM_MIN_TOL<B.m_u)
-                {
-                SGM::Point2D NewA=A;
-                NewA.m_u-=dULength;
-                aTriangles[Index1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewA);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-
-                SGM::Point2D NewB=B;
-                NewB.m_u-=dULength;
-                aTriangles[Index1+1]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewB);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                }
-            else
-                {
-                SGM::Point2D NewC=C;
-                NewC.m_u+=dULength;
-                aTriangles[Index1+2]=(unsigned int)aPoints3D.size();
-                aPoints2D.push_back(NewC);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                }
-            }
-        }
-
-    // Fix the north and south poles.
-
-    std::vector<std::pair<unsigned int,unsigned int> > aTopEdges,aBottomEdges;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        unsigned int a=aTriangles[Index1];
-        unsigned int b=aTriangles[Index1+1];
-        unsigned int c=aTriangles[Index1+2];
-        SGM::Point2D A=aPoints2D[a];
-        SGM::Point2D B=aPoints2D[b];
-        SGM::Point2D C=aPoints2D[c];
-        
-        // Fix north poles.
-        if(dNorth<A.m_v)
-            {
-            double u=(B.m_u+C.m_u)*0.5;
-            if(B.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<C.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstNorth)
-                {
-                bFirstNorth=false;
-                aPoints2D[a].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-                aTriangles[Index1]=nWhere;
-                a=nWhere;
-                }
-            aTopEdges.push_back({a,b});
-            aTopEdges.push_back({c,a});
-            }
-        else if(dNorth<B.m_v)
-            {
-            double u=(A.m_u+C.m_u)*0.5;
-            if(C.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<A.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstNorth)
-                {
-                bFirstNorth=false;
-                aPoints2D[b].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                aTriangles[Index1+1]=nWhere;
-                b=nWhere;
-                }
-            aTopEdges.push_back({b,c});
-            aTopEdges.push_back({a,b});
-            }
-        else if(dNorth<C.m_v)
-            {
-            double u=(A.m_u+B.m_u)*0.5;
-            if(A.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<B.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstNorth)
-                {
-                bFirstNorth=false;
-                aPoints2D[c].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                aTriangles[Index1+2]=nWhere;
-                c=nWhere;
-                }
-            aTopEdges.push_back({c,a});
-            aTopEdges.push_back({b,c});
-            }
-
-        // Fix south poles.
-        else if(A.m_v<dSouth)
-            {
-            double u=(B.m_u+C.m_u)*0.5;
-            if(C.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<B.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstSouth)
-                {
-                bFirstSouth=false;
-                aPoints2D[a].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,-SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[a]);
-                aNormals.push_back(aNormals[a]);
-                aTriangles[Index1]=nWhere;
-                a=nWhere;
-                }
-            aBottomEdges.push_back({a,b});
-            aBottomEdges.push_back({c,a});
-            }
-        else if(B.m_v<dSouth)
-            {
-            double u=(A.m_u+C.m_u)*0.5;
-            if(A.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<C.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstSouth)
-                {
-                bFirstSouth=false;
-                aPoints2D[b].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,-SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[b]);
-                aNormals.push_back(aNormals[b]);
-                aTriangles[Index1+1]=nWhere;
-                b=nWhere;
-                }
-            aBottomEdges.push_back({b,c});
-            aBottomEdges.push_back({a,b});
-            }
-        else if(C.m_v<dSouth)
-            {
-            double u=(A.m_u+B.m_u)*0.5;
-            if(B.m_u<SGM_MIN_TOL)
-                {
-                u=0.0;
-                }
-            if(SGM_TWO_PI-SGM_MIN_TOL<A.m_u)
-                {
-                u=SGM_TWO_PI;
-                }
-            if(bFirstSouth)
-                {
-                bFirstSouth=false;
-                aPoints2D[c].m_u=u;
-                }
-            else
-                {
-                SGM::Point2D UV(u,-SGM_HALF_PI);
-                unsigned int nWhere=(unsigned int)aPoints2D.size();
-                aPoints2D.push_back(UV);
-                aPoints3D.push_back(aPoints3D[c]);
-                aNormals.push_back(aNormals[c]);
-                aTriangles[Index1+2]=nWhere;
-                c=nWhere;
-                }
-            aBottomEdges.push_back({c,a});
-            aBottomEdges.push_back({b,c});
-            }
-        }
-
-    // Fill in zero 3D area triangles at the poles.
-
-    size_t nTopEdges=aTopEdges.size();
-    for(Index1=0;Index1<nTopEdges;Index1+=2)
-        {
-        unsigned int d=aTopEdges[Index1].second;
-        for(Index2=0;Index2<nTopEdges;Index2+=2)
-            {
-            if(d==aTopEdges[Index2+1].first)
-                {
-                unsigned int t1=aTopEdges[Index1].first;
-                unsigned int t2=aTopEdges[Index2+1].second;
-                aTriangles.push_back(t2);
-                aTriangles.push_back(t1);
-                aTriangles.push_back(d);
-                }
-            }
-        }
-
-    size_t nBottomEdges=aBottomEdges.size();
-    for(Index1=0;Index1<nBottomEdges;Index1+=2)
-        {
-        unsigned int d=aBottomEdges[Index1].second;
-        for(Index2=0;Index2<nBottomEdges;Index2+=2)
-            {
-            if(d==aBottomEdges[Index2+1].first)
-                {
-                unsigned int t1=aBottomEdges[Index1].first;
-                unsigned int t2=aBottomEdges[Index2+1].second;
-                aTriangles.push_back(t1);
-                aTriangles.push_back(t2);
-                aTriangles.push_back(d);
-                }
-            }
         }
     }
 
@@ -3760,7 +3352,10 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
                      std::vector<SGM::Point2D>               const &aPolygonPoints,
                      std::vector<std::vector<unsigned int> >       &aaPolygons,
                      std::vector<SGM::Point2D>                     &aPoints2D,
-                     std::vector<unsigned int>                     &aTriangles)
+                     std::vector<unsigned int>                     &aTriangles,
+                     SGM::Surface                                  *pSurfaceID,
+                     std::vector<SGM::Point3D>                     *pPoints3D,
+                     std::vector<SGM::UnitVector3D>                *pNormals)
     {
     // Insert the polygons.
 
@@ -3769,13 +3364,14 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        if(SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),aPoints2D,aTriangles,aPolygonIndices,nullptr,nullptr,nullptr,false)==false)
+        if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+            aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals)==false)
             {
             return false;
             }
         aaPolygons[Index1]=aPolygonIndices;
         }
-    RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist);
+    RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist,pPoints3D,pNormals);
     return true;
     }
 
@@ -3825,6 +3421,142 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,SGM_FIT,&aPoints3D,&aNormals);
     }
 
+void FindSpherePoints(sphere                   const *pSphere,
+                      std::vector<SGM::Point3D>      &aPoints3D,
+                      std::vector<unsigned int>      &aTriangles,
+                      std::vector<SGM::Point2D>      &aPoints2D,
+                      std::vector<SGM::UnitVector3D> &aNormals)
+    {
+    // Find all the 2D points and normals.
+
+    size_t nPoints=aPoints3D.size();
+    aPoints2D.reserve(nPoints);
+    aNormals.reserve(nPoints);
+    std::set<size_t> sSeamPoints;
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D Pos=aPoints3D[Index1];
+        SGM::Point2D uv=pSphere->Inverse(Pos);
+        SGM::UnitVector3D Norm;
+        pSphere->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+        aPoints2D.push_back(uv);
+        aNormals.push_back(Norm);
+        if(uv.m_u<SGM_MIN_TOL)
+            {
+            sSeamPoints.insert(Index1);
+            }
+        }
+
+    // Create a point on the high value of the seam for every
+    // point on the low value.
+
+    std::map<size_t,size_t> mSeamMap;
+    for(auto nSeamIndex : sSeamPoints)
+        {
+        SGM::Point2D uv=aPoints2D[nSeamIndex];
+        size_t nSize=aPoints2D.size();
+        mSeamMap[nSeamIndex]=nSize;
+        uv.m_u=SGM_TWO_PI;
+        aPoints2D.push_back(uv);
+        aNormals.push_back(aNormals[nSeamIndex]);
+        aPoints3D.push_back(aPoints3D[nSeamIndex]);
+        }
+
+    // Fix triangles that are on the seam to point to the correct side.
+
+    size_t nTriangles=aTriangles.size();
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=aTriangles[Index1];
+        unsigned int b=aTriangles[Index1+1];
+        unsigned int c=aTriangles[Index1+2];
+        if( sSeamPoints.find(a)!=sSeamPoints.end() ||
+            sSeamPoints.find(b)!=sSeamPoints.end() ||
+            sSeamPoints.find(c)!=sSeamPoints.end())
+            {
+            SGM::Point3D const &A=aPoints3D[a];
+            SGM::Point3D const &B=aPoints3D[b];
+            SGM::Point3D const &C=aPoints3D[c];
+            SGM::Point3D CM=SGM::CenterOfMass(A,B,C);
+            SGM::Point2D GuessUV=pSphere->Inverse(CM);
+            SGM::Point2D Auv=pSphere->Inverse(A,nullptr,&GuessUV);
+            SGM::Point2D Buv=pSphere->Inverse(B,nullptr,&GuessUV);
+            SGM::Point2D Cuv=pSphere->Inverse(C,nullptr,&GuessUV);
+            if(SGM_TWO_PI<Auv.m_u+SGM_MIN_TOL)
+                {
+                aTriangles[Index1]=(unsigned int)mSeamMap[a];
+                }
+            if(SGM_TWO_PI<Buv.m_u+SGM_MIN_TOL)
+                {
+                aTriangles[Index1+1]=(unsigned int)mSeamMap[b];
+                }
+            if(SGM_TWO_PI<Cuv.m_u+SGM_MIN_TOL)
+                {
+                aTriangles[Index1+2]=(unsigned int)mSeamMap[c];
+                }
+            }
+        }
+
+    // Add the two pole triangles.
+
+    size_t nLowMid=0,nHighMid=0,nLowLeft=0,nLowRight=0,nHighLeft=0,nHighRight=0;
+    double dMaxV=pSphere->GetDomain().m_VDomain.m_dMax;
+    double dMinV=pSphere->GetDomain().m_VDomain.m_dMin;
+    double dLowMid=dMaxV,dLowLeft=dMaxV,dLowRight=dMaxV;
+    double dHighMid=dMinV,dHighLeft=dMinV,dHighRight=dMinV;
+    nPoints=aPoints2D.size();
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point2D const &uv=aPoints2D[Index1];
+        if(uv.m_u<SGM_MIN_TOL)
+            {
+            if(uv.m_v<dLowLeft)
+                {
+                dLowLeft=uv.m_v;
+                nLowLeft=Index1;
+                }
+            if(dHighLeft<uv.m_v)
+                {
+                dHighLeft=uv.m_v;
+                nHighLeft=Index1;
+                }
+            }
+        else if(SGM_TWO_PI<uv.m_u+SGM_MIN_TOL)
+            {
+            if(uv.m_v<dLowRight)
+                {
+                dLowRight=uv.m_v;
+                nLowRight=Index1;
+                }
+            if(dHighRight<uv.m_v)
+                {
+                dHighRight=uv.m_v;
+                nHighRight=Index1;
+                }
+            }
+        else if(SGM_PI-SGM_MIN_TOL<uv.m_u && uv.m_u<SGM_PI+SGM_MIN_TOL)
+            {
+            if(uv.m_v<dLowMid)
+                {
+                dLowMid=uv.m_v;
+                nLowMid=Index1;
+                }
+            if(dHighMid<uv.m_v)
+                {
+                dHighMid=uv.m_v;
+                nHighMid=Index1;
+                }
+            }
+        }
+    aTriangles.push_back((unsigned int)nLowRight);
+    aTriangles.push_back((unsigned int)nLowMid);
+    aTriangles.push_back((unsigned int)nLowLeft);
+    aTriangles.push_back((unsigned int)nHighRight);
+    aTriangles.push_back((unsigned int)nHighLeft);
+    aTriangles.push_back((unsigned int)nHighMid);
+    }
+
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -3834,14 +3566,17 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()==25)
+    //if(pFace->GetID()!=6)
     //    {
     //    return;
     //    }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
-    FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aaPolygons);
+    if(FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aaPolygons)==false)
+        {
+        return;
+        }
 
     switch(pFace->GetSurface()->GetSurfaceType())
         {
@@ -3875,18 +3610,13 @@ void FacetFace(SGM::Result                    &rResult,
             aPoints2D.clear();
             SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
             SGM::CreateOctahedron(pSphere->m_dRadius,pSphere->m_Center,ZAxis,XAxis,aPoints3D,aTriangles,3); 
+            FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
             if(aaPolygons.size())
                 {
-                FindNormalsAndPoints2D(pFace,aTriangles,aPoints3D,aNormals,aPoints2D);
                 double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.5;
-                ImprintPolygons(rResult,dBoundaryDist,aPolygonPoints,aaPolygons,aPoints2D,aTriangles);
-                aPoints3D.clear();
-                aNormals.clear();
-                FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
-                }
-            else
-                {
-                FindNormalsAndPoints2D(pFace,aTriangles,aPoints3D,aNormals,aPoints2D);
+                SGM::Surface SurfID=pSphere->GetID();
+                ImprintPolygons(rResult,dBoundaryDist,aPolygonPoints,aaPolygons,
+                    aPoints2D,aTriangles,&SurfID,&aPoints3D,&aNormals);
                 }
             break;
             }

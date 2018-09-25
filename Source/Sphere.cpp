@@ -156,15 +156,13 @@ SGM::Point2D sphere::Inverse(SGM::Point3D const &Pos,
             dU=pGuess->m_u;
             dV=pGuess->m_v;
             }
-        else if(m_Domain.m_UDomain.InInterval(dU,SGM_ZERO)==false)
+        else if(m_Domain.m_UDomain.OnBoundary(dU,SGM_MIN_TOL))
             {
-            if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
-                SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+            if(m_Domain.m_UDomain.MidPoint()<pGuess->m_u)
                 {
                 dU=m_Domain.m_UDomain.m_dMax;
                 }
-            else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
-                     SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+            else 
                 {
                 dU=m_Domain.m_UDomain.m_dMin;
                 }
