@@ -258,7 +258,9 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
                    unsigned int                          nTri,
                    unsigned int                          nEdge,
                    std::vector<SGM::Point3D>      const *pPoints3D,
-                   std::vector<SGM::UnitVector3D> const *pNormals)
+                   std::vector<SGM::UnitVector3D> const *pNormals,
+                   std::vector<size_t>            const *aTris,
+                   SGM::BoxTree                         *Tree)
     {
     unsigned int a=aTriangles[nTri];
     unsigned int b=aTriangles[nTri+1];
@@ -356,6 +358,27 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTB;
             aAdjacencies[nT+1]=nT1;
             aAdjacencies[nT+2]=nTri;
+
+            if(aTris)
+                {
+                void const *pTri1=&(*aTris)[nTri/3];
+                void const *pTri2=&(*aTris)[nT/3];
+                Tree->Erase(pTri1);
+                Tree->Erase(pTri2);
+                std::vector<SGM::Point3D> aPos;
+                aPos.reserve(3);
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
+                SGM::Interval3D Box1(aPos);
+                aPos.clear();
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
+                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+                SGM::Interval3D Box2(aPos);
+                Tree->Insert(pTri1,Box1);
+                Tree->Insert(pTri2,Box2);
+                }
             }
         else if(nEdge==1)
             {
@@ -379,6 +402,27 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTB;
             aAdjacencies[nT+1]=nT2;
             aAdjacencies[nT+2]=nTri;
+
+            if(aTris)
+                {
+                void const *pTri1=&(*aTris)[nTri/3];
+                void const *pTri2=&(*aTris)[nT/3];
+                Tree->Erase(pTri1);
+                Tree->Erase(pTri2);
+                std::vector<SGM::Point3D> aPos;
+                aPos.reserve(3);
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
+                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
+                SGM::Interval3D Box1(aPos);
+                aPos.clear();
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
+                SGM::Interval3D Box2(aPos);
+                Tree->Insert(pTri1,Box1);
+                Tree->Insert(pTri2,Box2);
+                }
             }
         else
             {
@@ -402,6 +446,27 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTri;
             aAdjacencies[nT+1]=nT1;
             aAdjacencies[nT+2]=nTA;
+
+            if(aTris)
+                {
+                void const *pTri1=&(*aTris)[nTri/3];
+                void const *pTri2=&(*aTris)[nT/3];
+                Tree->Erase(pTri1);
+                Tree->Erase(pTri2);
+                std::vector<SGM::Point3D> aPos;
+                aPos.reserve(3);
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
+                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
+                SGM::Interval3D Box1(aPos);
+                aPos.clear();
+                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
+                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
+                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
+                SGM::Interval3D Box2(aPos);
+                Tree->Insert(pTri1,Box1);
+                Tree->Insert(pTri2,Box2);
+                }
             }
         FixBackPointers(nT,aTriangles,aAdjacencies);
         FixBackPointers(nTri,aTriangles,aAdjacencies);
@@ -439,7 +504,9 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
                    std::vector<unsigned int>            &aTriangles,
                    std::vector<unsigned int>            &aAdjacencies,
                    std::vector<SGM::Point3D>      const *pPoints3D,
-                   std::vector<SGM::UnitVector3D> const *pNormals)
+                   std::vector<SGM::UnitVector3D> const *pNormals,
+                   std::vector<size_t>            const *aTris,
+                   SGM::BoxTree                         *pTree)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
@@ -449,15 +516,15 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
         bFlipped=false;
         for(Index1=0;Index1<(unsigned int)nTriangles;Index1+=3)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,0,pPoints3D,pNormals))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,0,pPoints3D,pNormals,aTris,pTree))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,1,pPoints3D,pNormals))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,1,pPoints3D,pNormals,aTris,pTree))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,2,pPoints3D,pNormals))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,2,pPoints3D,pNormals,aTris,pTree))
                 {
                 bFlipped=true;
                 }
@@ -3367,6 +3434,10 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
         if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
             aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals)==false)
             {
+            aPoints2D.clear();
+            aTriangles.clear();
+            pPoints3D->clear();
+            pNormals->clear();
             return false;
             }
         aaPolygons[Index1]=aPolygonIndices;
@@ -3600,7 +3671,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=3)
+    //if(pFace->GetID()!=10)
     //    {
     //    return;
     //    }

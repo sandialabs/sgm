@@ -3620,27 +3620,51 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-        if(nTestNumber==60)
-            {
-            std::vector<SGM::Point3D> aPoints3D;
-            std::vector<unsigned int> aSegments,aTriangles;
-            SGM::Point3D Center(0,0,0);
-            SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
-            SGM::CreateIcosahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles);
-            SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
-            return true;
-            }
+    if(nTestNumber==60)
+        {
+        std::vector<SGM::Point3D> aPoints3D;
+        std::vector<unsigned int> aSegments,aTriangles;
+        SGM::Point3D Center(0,0,0);
+        SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
+        SGM::CreateIcosahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles);
+        SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
+        return true;
+        }
 
-        if(nTestNumber==61)
+    if(nTestNumber==61)
+        {
+        std::vector<SGM::Point3D> aPoints3D;
+        std::vector<unsigned int> aSegments,aTriangles;
+        SGM::Point3D Center(0,0,0);
+        SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
+        SGM::CreateOctahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles,1);
+        SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
+        return true;
+        }
+
+    if(nTestNumber==62)
+        {
+        std::vector<Point2D> aPoints2D;
+        aPoints2D.push_back(SGM::Point2D(0,0));
+        aPoints2D.push_back(SGM::Point2D(1,0));
+        aPoints2D.push_back(SGM::Point2D(0,1));
+        aPoints2D.push_back(SGM::Point2D(0.25,0.25));
+        std::vector<std::vector<unsigned int> > aaPolygons;
+        std::vector<unsigned int> aPolygon1,aPolygon2;
+        aPolygon1.push_back(0);
+        aPolygon1.push_back(1);
+        aPolygon1.push_back(2);
+        aPolygon2.push_back(3);
+        aaPolygons.push_back(aPolygon1);
+        aaPolygons.push_back(aPolygon2);
+        std::vector<unsigned int> aTriangles,aAdjacencies;
+        SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+        if(aTriangles.size()!=9)
             {
-            std::vector<SGM::Point3D> aPoints3D;
-            std::vector<unsigned int> aSegments,aTriangles;
-            SGM::Point3D Center(0,0,0);
-            SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
-            SGM::CreateOctahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles,1);
-            SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
-            return true;
+            return false;
             }
+        return true;
+        }
 
     return false;
     }

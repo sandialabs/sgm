@@ -10,6 +10,7 @@
 #include "SGMMathematics.h"
 #include "SGMSegment.h"
 #include "SGMTransform.h"
+#include "SGMPrimitives.h"
 
 #include "Faceter.h"
 #include "Graph.h"
@@ -117,9 +118,16 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
                 {
                 aNewPoly.push_back(aOutsidePolygon[Index2]);
                 }
-            for(Index2=0;Index2<=nInside;++Index2)
+            if(nInside==1)
                 {
-                aNewPoly.push_back(aInsidePolygon[(nExtreamPoint+Index2)%nInside]);
+                aNewPoly.push_back(aInsidePolygon[nExtreamPoint]);
+                }
+            else
+                {
+                for(Index2=0;Index2<=nInside;++Index2)
+                    {
+                    aNewPoly.push_back(aInsidePolygon[(nExtreamPoint+Index2)%nInside]);
+                    }
                 }
             for(Index2=nSpanHit;Index2<nOutside;++Index2)
                 {
@@ -1189,10 +1197,12 @@ bool SegmentCrossesTriangle(Segment2D const &Seg,
     }
 
 void FindBoundary(std::vector<unsigned int> const &aTriangles,
-                  std::vector<unsigned int>       &aBoundary)
+                  std::vector<unsigned int>       &aBoundary,
+                  std::set<unsigned int>          &sInterior)
     {
     std::vector<unsigned int> aAdj;
     size_t nSize=FindAdjacences2D(aTriangles,aAdj);
+    std::set<unsigned int> sBoundary;
     size_t Index1;
     for(Index1=0;Index1<nSize;Index1+=3)
         {
@@ -1203,16 +1213,30 @@ void FindBoundary(std::vector<unsigned int> const &aTriangles,
             {
             aBoundary.push_back(a);
             aBoundary.push_back(b);
+            sBoundary.insert(a);
+            sBoundary.insert(b);
             }
         if(aAdj[Index1+1]==std::numeric_limits<unsigned int>::max())
             {
             aBoundary.push_back(b);
             aBoundary.push_back(c);
+            sBoundary.insert(c);
+            sBoundary.insert(b);
             }
         if(aAdj[Index1+2]==std::numeric_limits<unsigned int>::max())
             {
             aBoundary.push_back(c);
             aBoundary.push_back(a);
+            sBoundary.insert(c);
+            sBoundary.insert(a);
+            }
+        }
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        unsigned int a=aTriangles[Index1];
+        if(sBoundary.find(a)==sBoundary.end())
+            {
+            sInterior.insert(a);
             }
         }
     }
@@ -1299,6 +1323,7 @@ void ForceEdge(Result                                          &rResult,
 
     // First remove points that are hit by the interior of the segment a,b.
 
+    std::vector<unsigned int> aHitTriangles;
     std::map<unsigned int,SGM::Point2D> mClose;
     for(Index1=0;Index1<nHits;++Index1)
         {
@@ -1309,11 +1334,17 @@ void ForceEdge(Result                                          &rResult,
         SGM::Point2D const &A=aPoints2D[a];
         SGM::Point2D const &B=aPoints2D[b];
         SGM::Point2D const &C=aPoints2D[c];
+        if(SegmentCrossesTriangle(Seg,A,B,C))
+            {
+            aHitTriangles.push_back(a);
+            aHitTriangles.push_back(b);
+            aHitTriangles.push_back(c);
+            }
         mClose[a]=A;
         mClose[b]=B;
         mClose[c]=C;
         }
-    std::vector<unsigned int> aRemove;
+    std::set<unsigned int> sRemove;
     for(auto iter : mClose)
         {
         unsigned int a=iter.first;
@@ -1322,17 +1353,16 @@ void ForceEdge(Result                                          &rResult,
             SGM::Point2D uv=iter.second;
             if(Seg.Distance(uv)<SGM_MIN_TOL)
                 {
-                aRemove.push_back(a);
+                sRemove.insert(a);
                 }
             }
         }
-    
-    if(size_t nRemove=aRemove.size())
+
+    if(!sRemove.empty())
         {
-        for(Index1=0;Index1<nRemove;++Index1)
+        for(unsigned int nPos : sRemove)
             {
             std::vector<unsigned int> aRemovedOrChanged,aReplacedTriangles;
-            unsigned int nPos=aRemove[Index1];
             SGM::Point2D uv=aPoints2D[nPos];
             SGM::Point3D Pos(uv.m_u,uv.m_v,0.0);
             SGM::RemovePointFromTriangles(rResult,nPos,aPoints2D,
@@ -1445,7 +1475,8 @@ void ForceEdge(Result                                          &rResult,
         aCutTris.push_back(aTriangles[nTri+2]);
         }
     std::vector<unsigned int> aBoundary,aPolygon;
-    FindBoundary(aCutTris,aBoundary);
+    std::set<unsigned int> sInterior;
+    FindBoundary(aCutTris,aBoundary,sInterior);
     if(FindPolygon(aBoundary,aPolygon)==false)
         {
         // In this case the boundary of the cut triangles
@@ -1464,8 +1495,38 @@ void ForceEdge(Result                                          &rResult,
         {
         return;
         }
-    TriangulatePolygon(rResult,aPoints2D,aPoly1,aTris1);
-    TriangulatePolygon(rResult,aPoints2D,aPoly2,aTris2);
+    if(sInterior.empty())
+        {
+        TriangulatePolygon(rResult,aPoints2D,aPoly1,aTris1);
+        TriangulatePolygon(rResult,aPoints2D,aPoly2,aTris2);
+        }
+    else
+        {
+        // Make the remove points holes in either aPoly1 or aPoly2.
+
+        std::vector<std::vector<unsigned int> > aaPolygons1,aaPolygons2;
+        aaPolygons1.push_back(aPoly1);
+        aaPolygons2.push_back(aPoly2);
+        std::vector<SGM::Point2D> aPolyPoints1=SGM::PointFormPolygon(aPoints2D,aPoly1);
+        for(unsigned int nHole : sInterior)
+            {
+            if(SGM::PointInPolygon(aPoints2D[nHole],aPolyPoints1))
+                {
+                std::vector<unsigned int> aHole;
+                aHole.push_back(nHole);
+                aaPolygons1.push_back(aHole);
+                }
+            else
+                {
+                std::vector<unsigned int> aHole;
+                aHole.push_back(nHole);
+                aaPolygons2.push_back(aHole);
+                }
+            }
+        std::vector<unsigned int> aAdj1,aAdj2;
+        SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons1,aTris1,aAdj1);
+        SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons2,aTris2,aAdj2);
+        }
     aTris1.insert(aTris1.end(),aTris2.begin(),aTris2.end());
 
     // Remove the edges from the aCuts triangles and put the new edges 
@@ -1489,6 +1550,13 @@ void ForceEdge(Result                                          &rResult,
 
         Tree.Erase(aCutHits[Index1]);
         }
+
+    if(nCuts!=aTris1.size()/3)
+        {
+        int bb=0;
+        bb*=1;
+        }
+
     for(Index1=0;Index1<nCuts;++Index1)
         {
         size_t nNewTri=Index1*3;
@@ -1545,7 +1613,8 @@ bool RemovePointFromTriangles(SGM::Result               &rResult,
             }
         }
     std::vector<unsigned int> aBoundary,aPolygon;
-    FindBoundary(aStarTris,aBoundary);
+    std::set<unsigned int> sInterior;
+    FindBoundary(aStarTris,aBoundary,sInterior);
     if(FindPolygon(aBoundary,aPolygon)==false)
         {
         // This can happen if the star of the point to be removed is not a manifold.
@@ -1763,10 +1832,6 @@ bool InsertPolygon(Result                     &rResult,
             }
         }
 
-    std::vector<unsigned int> aAdjacencies;
-    SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-    SGMInternal::DelaunayFlips(aPoints2D,aTriangles,aAdjacencies,pPoints3D,pNormals);
-
     // Force polygon edges to be in the triangles.
 
     nTriangles=aTriangles.size();
@@ -1795,9 +1860,10 @@ bool InsertPolygon(Result                     &rResult,
             if(sEdges.find({a,b})==sEdges.end())
                 {
                 // Was Unable to force an edge into the triangles.
-                //return false;
-                int ff=0;
-                ff=1;
+                SGM::Point3D Pos0=(*pPoints3D)[a];
+                SGM::Point3D Pos1=(*pPoints3D)[b];
+                SGM::CreateLinearEdge(rResult,Pos0,Pos1);
+                return false;
                 }
             }
         }

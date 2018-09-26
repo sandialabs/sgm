@@ -143,7 +143,8 @@ namespace SGM
     // first one, disjoint, clockwise.  The function returns false is aaPolygons
     // or aPoints is empty with an error of ResultTypeInsufficientData.
     // If the clockwise polygons are not contained inside a counter clockwise
-    // polygon then false is returned with an error of 
+    // polygon then false is returned.  In addition, the aAjacencies are returned
+    // since they are found in the process.
 
     SGM_EXPORT bool TriangulatePolygonWithHoles(Result                                        &rResult,
                                                 std::vector<Point2D>                    const &aPoints2D,
@@ -292,9 +293,11 @@ namespace SGM
 
     // Given a vector of triangle indices of the form (a0,b0,c0,a1,b1,c1,...) find 
     // the boundary as a vector of segment indices of the form (a0,b0,a1,b1,a2,b2,...).
+    // In addition, the indices of the interior points are also returned.
 
     SGM_EXPORT void FindBoundary(std::vector<unsigned int> const &aTriangles,
-                                 std::vector<unsigned int>       &aBoundary);
+                                 std::vector<unsigned int>       &aBoundary,
+                                 std::set<unsigned int>          &sInterior);
 
     // Removes the given point index from the given triangles.  Note that the point is 
     // left in the vector aPoints2D but removed from aTriangles. Returns false is the 

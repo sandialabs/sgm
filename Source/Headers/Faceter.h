@@ -66,7 +66,9 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
                    unsigned int                          nTri,
                    unsigned int                          nEdge,
                    std::vector<SGM::Point3D>      const *pPoints3D=nullptr,
-                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr);
+                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
+                   std::vector<size_t>            const *aTris=nullptr,
+                   SGM::BoxTree                         *Tree=nullptr);
 
 void FixBackPointers(unsigned int                     nTri,
                      std::vector<unsigned int> const &aTriangles,
@@ -76,7 +78,9 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,
                    std::vector<unsigned int>            &aAdjacencies,
                    std::vector<SGM::Point3D>      const *pPoint3D=nullptr,
-                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr);
+                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
+                   std::vector<size_t>            const *aTris=nullptr,
+                   SGM::BoxTree                         *Tree=nullptr);
 
 
 //  Devides all triangles into four triangles in the following way;
