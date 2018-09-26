@@ -1075,34 +1075,39 @@ void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
                              std::vector<Point2D>      &aPoints,
                              std::vector<unsigned int> &aTriangles)
     {
-    size_t nU=aUValues.size();
-    size_t nV=aVValues.size();
+    unsigned nU=(unsigned)aUValues.size();
+    unsigned nV=(unsigned)aVValues.size();
     aPoints.reserve(nU*nV);
     aTriangles.reserve((nU-1)*(nV-1)*6);
-    size_t Index1,Index2;
+    unsigned Index1,Index2;
     for(Index1=0;Index1<nU;++Index1)
         {
         double u=aUValues[Index1];
         for(Index2=0;Index2<nV;++Index2)
             {
             double v=aVValues[Index2];
-            aPoints.push_back(SGM::Point2D(u,v));
+            aPoints.emplace_back(u,v);
             }
         }
     for(Index1=1;Index1<nU;++Index1)
         {
+        unsigned Index1tV = Index1 * nV;
+        unsigned Index1m1 = Index1 - 1;
+        unsigned Index1m1tV = Index1m1 * nV;
+
         for(Index2=1;Index2<nV;++Index2)
             {
-            size_t a=Index2+Index1*nV;
-            size_t b=(Index2-1)+Index1*nV;
-            size_t c=(Index2-1)+(Index1-1)*nV;
-            size_t d=Index2+(Index1-1)*nV;
-            aTriangles.push_back((unsigned int)a);
-            aTriangles.push_back((unsigned int)c);
-            aTriangles.push_back((unsigned int)b);
-            aTriangles.push_back((unsigned int)a);
-            aTriangles.push_back((unsigned int)d);
-            aTriangles.push_back((unsigned int)c);
+            unsigned Index2m1 = Index2 - 1;
+            unsigned a = Index2 + Index1tV;
+            unsigned b = Index2m1 + Index1tV;
+            unsigned c = Index2m1 + Index1m1tV;
+            unsigned d = Index2 + Index1m1tV;
+            aTriangles.push_back(a);
+            aTriangles.push_back(c);
+            aTriangles.push_back(b);
+            aTriangles.push_back(a);
+            aTriangles.push_back(d);
+            aTriangles.push_back(c);
             }
         }
     }
