@@ -805,6 +805,7 @@ bool SplitAtSeams(SGM::Result                     & ,
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
+                    pEdge->SnapToDomain(t,SGM_MIN_TOL);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
                         if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
@@ -831,6 +832,7 @@ bool SplitAtSeams(SGM::Result                     & ,
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
                     FindCrossingPoint(pSeam,pCurve,Pos,t);
+                    pEdge->SnapToDomain(t,SGM_MIN_TOL);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
                         if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
@@ -3671,7 +3673,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=10)
+    //if(pFace->GetID()!=33)
     //    {
     //    return;
     //    }

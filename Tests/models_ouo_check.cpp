@@ -85,14 +85,14 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: hangs in Refine
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) 
 {
     const char* file_name = "OUO_glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0002_Bknob) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_glom4_0002_Bknob) 
 {
     const char* file_name = "OUO_glom4/0002-_Bknob.stp";
     SCOPED_TRACE(file_name);
