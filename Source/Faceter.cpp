@@ -2047,6 +2047,10 @@ bool FindSeamCrossings(face         const *pFace,
                 }
             else // Must go around the corner.
                 {
+                if(aVInLow.empty())
+                    {
+                    return false;
+                    }
                 // Through (min u,min v)
                 nNodeB=aVInLow[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMin);
@@ -2095,6 +2099,10 @@ bool FindSeamCrossings(face         const *pFace,
             else // Must go around the corner.
                 {
                 // Through (max u,min v)
+                if(aUInHigh.empty())
+                    {
+                    return false;
+                    }
                 nNodeB=aUInHigh[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMin);
                 aNodes[nNodeA].m_nNext=nNodeC;
@@ -2142,6 +2150,10 @@ bool FindSeamCrossings(face         const *pFace,
             else // Must go around the corner.
                 {
                 // Through (max u,max v)
+                if(aVInHigh.empty())
+                    {
+                    return false;
+                    }
                 nNodeB=aVInHigh[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
                 aNodes[nNodeA].m_nNext=nNodeC;
@@ -2189,6 +2201,10 @@ bool FindSeamCrossings(face         const *pFace,
             else // Must go around the corner.
                 {
                 // Through (min u,max v)
+                if(aUInLow.empty())
+                    {
+                    return false;
+                    }
                 nNodeB=aUInLow[0].second;
                 size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
                 aNodes[nNodeA].m_nNext=nNodeC;

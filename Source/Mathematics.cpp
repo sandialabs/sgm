@@ -1864,9 +1864,9 @@ bool InsertPolygon(Result                     &rResult,
             if(sEdges.find({a,b})==sEdges.end())
                 {
                 // Was Unable to force an edge into the triangles.
-                SGM::Point3D Pos0=(*pPoints3D)[a];
-                SGM::Point3D Pos1=(*pPoints3D)[b];
-                SGM::CreateLinearEdge(rResult,Pos0,Pos1);
+                //SGM::Point3D Pos0=(*pPoints3D)[a];
+                //SGM::Point3D Pos1=(*pPoints3D)[b];
+                //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
                 return false;
                 }
             }
