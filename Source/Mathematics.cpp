@@ -1558,8 +1558,7 @@ void ForceEdge(Result                                          &rResult,
 
     if(nCuts!=aTris1.size()/3)
         {
-        int bb=0;
-        bb*=1;
+        return;
         }
 
     for(Index1=0;Index1<nCuts;++Index1)
