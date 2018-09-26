@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 3.3)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 
-
 #use lower warning level for viewer project
 if(MSVC)
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -83,3 +82,7 @@ file(GENERATE OUTPUT ${QT_CONF_OUTDIR}/qt.conf CONTENT "[Paths]\nPrefix = ${_qt_
 install(FILES ${QT_CONF_OUTDIR}/qt.conf
         DESTINATION bin COMPONENT Runtime)
 
+install(TARGETS sgm_viewer EXPORT SGM
+        RUNTIME DESTINATION bin COMPONENT Runtime
+        LIBRARY DESTINATION lib COMPONENT Runtime
+        ARCHIVE DESTINATION lib COMPONENT Development)
