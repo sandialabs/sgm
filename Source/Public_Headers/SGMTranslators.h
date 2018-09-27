@@ -6,6 +6,7 @@
 #include "SGMResult.h"
 
 #include <vector>
+#include <string>
 
 #include "sgm_export.h"
 
@@ -72,7 +73,7 @@ namespace SGM
 
     SGM_EXPORT size_t ReadFile(SGM::Result                  &rResult,
                                std::string            const &sFileName,
-                               std::vector<Entity>          &aEntities,
+                               std::vector<SGM::Entity>     &aEntities,
                                std::vector<std::string>     &aLog,
                                SGM::TranslatorOptions const &Options);
 
@@ -98,3 +99,4 @@ namespace SGM
     } // End of SGM namespace
 
 #endif // SGM_TRANSLATORS_H
+
