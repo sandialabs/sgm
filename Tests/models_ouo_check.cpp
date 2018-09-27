@@ -78,7 +78,7 @@ TEST(models_ouo_check, import_check_OUO_grv_geom)
     SGM::FindCloseFaces(rResult, sgm_point, SGM::Thing(), 1e-5, faces);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: hangs in RefineTriangles on ID 14
+TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
 {
     const char* file_name = "OUO_ZGeom.stp";
     SCOPED_TRACE(file_name);
@@ -162,7 +162,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: Fac
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0011_Bdice) // TODO: Faces 10, 17, 18, 19 inverted spheres.
+TEST(models_ouo_check, import_check_OUO_glom4_0011_Bdice) 
 {
     const char* file_name = "OUO_glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);

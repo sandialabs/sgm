@@ -2373,7 +2373,8 @@ void FindSingularitiesValues(SGM::Result               &rResult,
     }
 
 bool SingularityInFace(SGM::Point2D      const &TestUV,
-                       std::vector<Node> const &aNodes)
+                       std::vector<Node> const &aNodes,
+                       surface           const *pSurface)
     {
     // Find the closest node in uv space.
 
@@ -2393,6 +2394,117 @@ bool SingularityInFace(SGM::Point2D      const &TestUV,
     SGM::Point2D uvA=ClosestNode.m_uv;
     SGM::Point2D uvB=PreviousNode.m_uv;
     SGM::Point2D uvC=NextNode.m_uv;
+
+    // Fix uvA, uvB, and uvC to not cross seams.
+
+    if(pSurface->ClosedInU())
+        {
+        double dLength=pSurface->GetDomain().m_UDomain.Length();
+        double dGap=dLength*0.5;
+        bool bAB=false,bBC=false,bCA=false;
+        if(dGap<fabs(uvA.m_u-uvB.m_u))
+            {
+            bAB=true;
+            }
+        if(dGap<fabs(uvB.m_u-uvC.m_u))
+            {
+            bBC=true;
+            }
+        if(dGap<fabs(uvA.m_u-uvC.m_u))
+            {
+            bCA=true;
+            }
+        if(bAB && bBC)
+            {
+            // Move B to be more like A.
+            if(uvB.m_u<uvA.m_u)
+                {
+                uvB.m_u+=dLength;
+                }
+            else
+                {
+                uvB.m_u-=dLength;
+                }
+            }
+        if(bBC && bCA)
+            {
+            // Move C to be more like A.
+            if(uvC.m_u<uvA.m_u)
+                {
+                uvC.m_u+=dLength;
+                }
+            else
+                {
+                uvC.m_u-=dLength;
+                }
+            }
+        if(bCA && bAB)
+            {
+            // Move A to be more like B.
+            if(uvA.m_u<uvB.m_u)
+                {
+                uvA.m_u+=dLength;
+                }
+            else
+                {
+                uvA.m_u-=dLength;
+                }
+            }
+        }
+    if(pSurface->ClosedInV())
+        {
+        double dLength=pSurface->GetDomain().m_VDomain.Length();
+        double dGap=dLength*0.5;
+        bool bAB=false,bBC=false,bCA=false;
+        if(dGap<fabs(uvA.m_v-uvB.m_v))
+            {
+            bAB=true;
+            }
+        if(dGap<fabs(uvB.m_v-uvC.m_v))
+            {
+            bBC=true;
+            }
+        if(dGap<fabs(uvA.m_v-uvC.m_v))
+            {
+            bCA=true;
+            }
+        if(bAB && bBC)
+            {
+            // Move B to be more like A.
+            if(uvB.m_v<uvA.m_v)
+                {
+                uvB.m_v+=dLength;
+                }
+            else
+                {
+                uvB.m_v-=dLength;
+                }
+            }
+        if(bBC && bCA)
+            {
+            // Move C to be more like A.
+            if(uvC.m_v<uvA.m_v)
+                {
+                uvC.m_v+=dLength;
+                }
+            else
+                {
+                uvC.m_v-=dLength;
+                }
+            }
+        if(bCA && bAB)
+            {
+            // Move A to be more like B.
+            if(uvA.m_v<uvB.m_v)
+                {
+                uvA.m_v+=dLength;
+                }
+            else
+                {
+                uvA.m_v-=dLength;
+                }
+            }
+        }
 
     return InAngle(uvA,uvC,uvB,TestUV);
     }
@@ -2414,7 +2526,7 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         pSurface->Evaluate(uvA,&Pos);
         bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
         if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes)==true)
+            SingularityInFace(uvA,aNodes,pSurface)==true)
             {
             Node NodeA,NodeB;
             size_t nNodeA=aNodes.size();
@@ -2446,7 +2558,7 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         pSurface->Evaluate(uvA,&Pos);
         bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
         if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes)==true)
+            SingularityInFace(uvA,aNodes,pSurface)==true)
             {
             Node NodeA,NodeB;
             size_t nNodeA=aNodes.size();
@@ -2494,7 +2606,7 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         pSurface->Evaluate(uvA,&Pos);
         bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
         if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes)==true)
+            SingularityInFace(uvA,aNodes,pSurface)==true)
             {
             Node NodeA,NodeB;
             size_t nNodeA=aNodes.size();
@@ -2543,7 +2655,7 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
         pSurface->Evaluate(uvA,&Pos);
         bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
         if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes)==true)
+            SingularityInFace(uvA,aNodes,pSurface)==true)
             {
             Node NodeA,NodeB;
             size_t nNodeA=aNodes.size();
@@ -3689,7 +3801,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=33)
+    //if(pFace->GetID()!=16)
     //    {
     //    return;
     //    }
