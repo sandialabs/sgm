@@ -23,13 +23,21 @@ cd $SGM_PATH
 mkdir build
 cd build
 
-# on the cee-lan, the default cmake and compiler are too old, need to load the sparc ones
+# several choices for build environment for SGM
+# on the cee-lan, the default cmake and compiler are too old
+
+# sparc options - do not use if you plan to link with NGS
 module purge
 module load sparc-dev/gcc
 # the modules overwrite SGM_ROOT!!! set it back
 export MY_SGM_ROOT=$SGM_INSTALL_PATH/sgm/install
 export SGM_ROOT=$MY_SGM_ROOT
 
+# sierra-devel option - best for consistency with NGS 
+# see also compile-ngs-sgm.txt 
+module load sierra-devel
+# but sierra cmake is too old, use a different one
+export PATH=/usr/netpub/cmake-3.4.3/bin/:$PATH
 
 # If you want just the tests and the main executable, not the ModelViewer, following is sufficient
 cmake ..
