@@ -26,6 +26,10 @@ cd build
 # on the cee-lan, the default cmake and compiler are too old, need to load the sparc ones
 module purge
 module load sparc-dev/gcc
+# the modules overwrite SGM_ROOT!!! set it back
+export MY_SGM_ROOT=$SGM_INSTALL_PATH/sgm/install
+export SGM_ROOT=$MY_SGM_ROOT
+
 
 # If you want just the tests and the main executable, not the ModelViewer, following is sufficient
 cmake ..
@@ -46,7 +50,7 @@ export SGM_QT_PATH=$SCRATCH/cubit-linux_libs/open
 # You might want this in your home space rather than scratch space, so you can get to it from different machines
 export SGM_INSTALL_PATH=~samitch/sgm
 
-# for NGS morph mesher, be sure to set shared_libs to OFF
+# for NGS morph mesher, be sure to set shared_libs to OFF, and be sure SGM_ROOT is set to where you want it to install, not something the module set
 cmake \
 -DCMAKE_BUILD_TYPE=Debug \
 -DBUILD_SHARED_LIBS=OFF \
@@ -60,6 +64,16 @@ $SGM_PATH
 # alternatively:  -DBUILD_SHARED_LIBS=ON \
 
 make -j16
+
+# check symbols in libSGMD.a
+cd lib
+nm -f posix libSGMD.a | cut -f1 -d' '|LANG=C sort -u > all_symbols
+grep '^_Z' all_symbols | c++filt|sort > demangled_c++_symbols
+grep "SGM::ReadFile" demangled_c++_symbols
+# should see
+# SGM::ReadFile(SGM::Result&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >
+# if it is just std::basic_string<char ... >, then you have a problem
+cd ..
 
 # install sgm libraries (not executables) to wherever you set the install path
 make install
@@ -136,7 +150,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QT_LD/lib
 export PATH=$PATH:$SGM_PATH/build/bin:~/bin
 
 # for use with building the morph_mesher
-export SGM_ROOT=$SGM_PATH
+export SGM_ROOT=$SGM_PATH/sgm/install
 
 ===
 
