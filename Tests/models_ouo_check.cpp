@@ -85,14 +85,14 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: hangs in Refine
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) 
 {
     const char* file_name = "OUO_glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0002_Bknob) // TODO: segfault interrupt
+TEST(models_ouo_check, import_check_OUO_glom4_0002_Bknob) 
 {
     const char* file_name = "OUO_glom4/0002-_Bknob.stp";
     SCOPED_TRACE(file_name);
@@ -134,35 +134,35 @@ TEST(models_ouo_check, import_check_OUO_Cone_definition)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: Faces 80 and 85.
 {
     const char* file_name = "OUO_glom4/0007-_Bflange.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0008_Bkey) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0008_Bkey) // TODO: Faces 5, 10, and 7.
 {
     const char* file_name = "OUO_glom4/0008-_Bkey.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) // TODO: Faces 78, 94, 100 surfaces 259, 265
 {
     const char* file_name = "OUO_glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: Face 388 infinite call
 {
     const char* file_name = "OUO_glom4/0010-_Bsteer.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0011_Bdice) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0011_Bdice) // TODO: Faces 10, 17, 18, 19 inverted spheres.
 {
     const char* file_name = "OUO_glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);
@@ -183,7 +183,7 @@ TEST(models_ouo_check, import_check_OUO_glom4_0013_Bbellows)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0014_Bplate) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0014_Bplate) // TODO: Lots of faces.
 {
     const char* file_name = "OUO_glom4/0014-_Bplate.stp";
     SCOPED_TRACE(file_name);
@@ -197,28 +197,28 @@ TEST(models_ouo_check, import_check_OUO_glom4_0015_Bpipe)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0016_Bspring) // TODO: hangs
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0016_Bspring) // TODO: Faces 2 and 3 minor flipped facet.
 {
     const char* file_name = "OUO_glom4/0016-_Bspring.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0017_Bcube) // TODO: Surface 9 does not pass derivative and inverse checks.
+TEST(models_ouo_check, import_check_OUO_glom4_0017_Bcube) 
 {
     const char* file_name = "OUO_glom4/0017-_Bcube.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: segfault interrupt
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: Lots of faces off.
 {
     const char* file_name = "OUO_glom4/0018-_Bhinkey.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
+TEST(models_ouo_check, import_check_OUO_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
