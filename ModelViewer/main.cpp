@@ -92,8 +92,10 @@ void CoverSTL(int argc, char **argv)
         {
         ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
         }
-    aParts.push_back(ComplexID);
-    SGM::Complex CoverID = SGM::CoverComplex(rResult, ComplexID);
+    SGM::Complex MergedComplexID=SGM::MergePoints(rResult, ComplexID, SGM_MIN_TOL);
+    SGM::DeleteEntity(rResult,ComplexID);
+    SGM::Complex CoverID = SGM::CoverComplex(rResult, MergedComplexID);
+    aParts.push_back(MergedComplexID);
     aParts.push_back(CoverID);
     SGM::MergeComplexes(rResult, aParts);
     for (auto &iPart : aParts)

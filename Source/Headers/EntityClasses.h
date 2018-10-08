@@ -789,6 +789,8 @@ class face : public topology
 
         void TransformFacets(SGM::Transform3D const &Trans);
 
+        bool HasBranchedVertex() const;
+
     private:
 
         std::set<edge *,EntityCompare>      m_sEdges;
@@ -879,7 +881,7 @@ class edge : public topology
 
         std::vector<double> const &GetParams(SGM::Result &rResult) const;
 
-        double GetTolerance() const {return m_dTolerance;}
+        double GetTolerance() const;
 
         bool IsTopLevel() const override;
 

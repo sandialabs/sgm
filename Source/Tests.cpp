@@ -3526,62 +3526,6 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-    if(nTestNumber==56)
-        {
-        // Boolean of two disks Peninsula
-
-        bool bAnswer=true;
-
-        SGM::Point3D Center0(0,0,0),Center1(0,1.0,0);
-        SGM::UnitVector3D Normal0(0,0,1),Normal1(1,0,0);
-        SGM::Body DiskID0=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
-        SGM::Body DiskID1=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
-
-        SGM::UniteBodies(rResult,DiskID0,DiskID1);
-
-        return bAnswer;
-        }
-
-    if(nTestNumber==57)
-        {
-        // Boolean of two disks Splitter and Island
-
-        bool bAnswer=true;
-
-        SGM::Point3D Center0(0,0,0),Center1(0,0.5,0);
-        SGM::UnitVector3D Normal0(0,0,1),Normal1(0,1,0);
-        SGM::Body DiskID0=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
-        SGM::Body DiskID1=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
-
-        SGM::UniteBodies(rResult,DiskID0,DiskID1);
-
-        return bAnswer;
-        }
-
-    if(nTestNumber==58)
-        {
-        // Imprinting an attol edge on a face,
-        // then imprinting a bridge edge on a face.
-
-        bool bAnswer=true;
-
-        SGM::Point3D Center(0,0,0);
-        SGM::UnitVector3D Normal(0,0,1);
-        SGM::Body DiskID=SGM::CreateDisk(rResult,Center,Normal,1.0);
-        SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Normal,0.5);
-        SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
-        std::set<SGM::Face> sFaces;
-        SGM::FindFaces(rResult,DiskID,sFaces);
-        SGM::Face FaceID=*(sFaces.begin());
-        std::vector<SGM::Face> aFaces=SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
-
-        SGM::Point3D StartPos(0.5,0,0),EndPos(1.0,0,0);
-        SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,StartPos,EndPos);
-        SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
-
-        return bAnswer;
-        }
-
     if(nTestNumber==59)
         {
         // Testing polygon trianglulation.

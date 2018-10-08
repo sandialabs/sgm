@@ -223,41 +223,15 @@ complex *complex::Cover(SGM::Result &rResult) const
             rResult.GetThing()->DeleteEntity(pCycle);
             }
         }
-    return aCovers[0];
-#if 0
-    double dAvergeEdgeLength=FindAverageEdgeLength();
-    std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
-    return aParts[0];
-
-    complex *pMerge=Merge(rResult);
-    complex *pBoundary=pMerge->FindBoundary(rResult);
-    rResult.GetThing()->DeleteEntity(pMerge);
-    std::vector<complex *> aBoundary=pBoundary->FindComponents(rResult);
-    rResult.GetThing()->DeleteEntity(pBoundary);
-    std::vector<std::vector<complex *> > aaPlanarSets;
-    std::vector<SortablePlane> aPlanes;
-    size_t nPlanes=SortByPlane(aBoundary,aaPlanarSets,aPlanes);
-    size_t Index1,Index2;
-    std::vector<complex *> aAllParts;
-    aAllParts.reserve(nPlanes);
-    for(Index1=0;Index1<nPlanes;++Index1)
+    complex *pLastComplex=aCovers[aCovers.size()-1];
+    aCovers.pop_back();
+    complex *pAnswer=pLastComplex->Merge(rResult,aCovers);
+    aCovers.push_back(pLastComplex);
+    for(auto pEnt : aCovers)
         {
-        aAllParts.push_back(CoverPlanarSet(rResult,aaPlanarSets[Index1]));
-        size_t nParts=aaPlanarSets[Index1].size();
-        for(Index2=0;Index2<nParts;++Index2)
-            {
-            rResult.GetThing()->DeleteEntity(aaPlanarSets[Index1][Index2]);
-            }
-        }
-    
-    std::vector<complex *> aAnswer=MakeSymmetriesMatch(aAllParts,aPlanes);
-    complex *pAnswer=Merge(rResult,aAnswer);
-    for(Index1=0;Index1<nPlanes;++Index1)
-        {
-        rResult.GetThing()->DeleteEntity(aAllParts[Index1]);
+        rResult.GetThing()->DeleteEntity(pEnt);
         }
     return pAnswer;
-#endif
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const

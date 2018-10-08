@@ -2344,12 +2344,12 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
      }
 
 size_t IntersectSphereAndSphere(SGM::Result                &rResult,
-                             sphere               const *pSphere1,
-                             sphere               const *pSphere2,
-                             std::vector<curve *>       &aCurves,
-                             face                 const *,//pFace1,
-                             face                 const *,//pFace2,
-                             double                      dTolerance)
+                                sphere               const *pSphere1,
+                                sphere               const *pSphere2,
+                                std::vector<curve *>       &aCurves,
+                                face                 const *,//pFace1,
+                                face                 const *,//pFace2,
+                                double                      dTolerance)
     {
     double dR1=pSphere1->m_dRadius;
     double dR2=pSphere2->m_dRadius;
@@ -2365,11 +2365,11 @@ size_t IntersectSphereAndSphere(SGM::Result                &rResult,
         }
     else if(dDist<dR1+dR2)
         {
-        double dR2Squared=dR2*dR2;
-        double dB=(dR2Squared-dR1*dR1)/(2*dDist);
         SGM::UnitVector3D Norm=Center1-Center2;
-        double dRadius=sqrt(dR2Squared-dB*dB);
-        aCurves.push_back(new circle(rResult,Center2+Norm*dB,Norm,dRadius));
+        double S=(dR1+dR2+dDist)*0.5;
+        double dArea=sqrt(S*(S-dR1)*(S-dR2)*(S-dDist));
+        double dRadius=2*dArea/dDist;
+        aCurves.push_back(new circle(rResult,Center2+Norm*sqrt(dR2*dR2-dRadius*dRadius),Norm,dRadius));
         }
     return aCurves.size();
     }

@@ -493,7 +493,7 @@ SGM::Complex SGM::MergeComplexes(SGM::Result                     &rResult,
     {
     std::vector<SGMInternal::complex *> aComplexes;
     size_t nComplexes=aComplexIDs.size();
-    aComplexes.reserve(nComplexes-1);
+    aComplexes.reserve(nComplexes);
     size_t Index1;
     for(Index1=0;Index1<nComplexes;++Index1)
         {
@@ -722,6 +722,13 @@ bool SGM::IsFaceFlipped(SGM::Result     &rResult,
     {
     SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
     return pFace->GetFlipped();
+    }
+
+double SGM::GetToleranceOfEdge(SGM::Result     &rResult,
+                                SGM::Edge const &EdgeID)
+    {
+    SGMInternal::edge const *pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pEdge->GetTolerance();
     }
 
 SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,

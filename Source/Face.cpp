@@ -694,6 +694,43 @@ void face::TransformFacets(SGM::Transform3D const &Trans)
         }
     }
 
+bool face::HasBranchedVertex() const
+    {
+    std::set<vertex *> sVertices;
+    for(auto pEdge : m_sEdges)
+        {
+        if(pEdge->GetStart())
+            {
+            sVertices.insert(pEdge->GetStart());
+            }
+        if(pEdge->GetEnd())
+            {
+            sVertices.insert(pEdge->GetEnd());
+            }
+        }
+    for(auto pVertex : sVertices)
+        {
+        std::set<edge *,EntityCompare> const &sEdges=pVertex->GetEdges();
+        int nCount=0;
+        for(auto pVertexEdge : sEdges)
+            {
+            if(m_sEdges.find(pVertexEdge)!=m_sEdges.end())
+                {
+                ++nCount;
+                if(pVertexEdge->GetStart()==pVertexEdge->GetEnd())
+                    {
+                    ++nCount;
+                    }
+                }
+            }
+        if(2<nCount)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 bool face::GetFlipped() const
     {
     return m_bFlipped;

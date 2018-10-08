@@ -733,6 +733,13 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
         {
         add_vertex_to_tree(edge_item, VertexID);
         }
+
+    double dTol = SGM::GetToleranceOfEdge(dPtr->mResult, EdgeID);
+    auto *tol_data_item = new QTreeWidgetItem(edge_item);
+    tol_data_item->setText(0, "Tolerance");
+    char Data[100];
+    snprintf(Data, sizeof(Data), "%.15G", dTol);
+    tol_data_item->setText(1, Data);
 }
 
 void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID)
@@ -863,6 +870,7 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             char Data0[100];
             snprintf(Data0, sizeof(Data0), "Cone %lu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
+
             break;
             }
         case SGM::SphereType:
@@ -870,6 +878,38 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             char Data0[100];
             snprintf(Data0, sizeof(Data0), "Sphere %lu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
+
+            char Data[100];
+            SGM::Point3D Origin{};
+            SGM::UnitVector3D XAxis, YAxis, ZAxis;
+            double dRadius;
+            SGM::GetSphereData(dPtr->mResult, SurfaceID, Origin, XAxis, YAxis, ZAxis, dRadius);
+
+            auto *data_item1 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
+            data_item1->setText(0, "Center");
+            data_item1->setText(1, Data);
+
+            auto *data_item2 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            data_item2->setText(0, "XAxis");
+            data_item2->setText(1, Data);
+
+            auto *data_item3 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            data_item3->setText(0, "YAxis");
+            data_item3->setText(1, Data);
+
+            auto *data_item4 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            data_item4->setText(0, "ZAxis");
+            data_item4->setText(1, Data);
+
+            auto *data_item5 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "%.15G", dRadius);
+            data_item5->setText(0, "Radius");
+            data_item5->setText(1, Data);
+
             break;
             }
         case SGM::TorusType:

@@ -58,7 +58,8 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     std::vector<SGM::Point2D>               &aPoints2D,
                     std::vector<SGM::Point3D>               &aPoints3D,
                     std::vector<std::vector<unsigned int> > &aaPolygons,
-                    edge                                    *pInputEdge=nullptr);
+                    edge                                    *pInputEdge=nullptr,
+                    std::vector<bool>                       *pImprintFlags=nullptr);
 
 bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,

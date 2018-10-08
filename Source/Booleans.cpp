@@ -168,6 +168,10 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
         aIsolated[0]=false;
         aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
         }
+    else if(aHits.empty() && pCurve->GetClosed())
+        {
+        aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
+        }
 
     // Check for isolated points.
 

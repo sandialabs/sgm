@@ -109,6 +109,13 @@ bool PointInEntity(SGM::Result        &rResult,
             }
         case SGM::FaceType:
             {
+            face const *pFace=(face const *)pEntity;
+            SGM::Point3D ClosePos;
+            SGM::Point2D uv=pFace->GetSurface()->Inverse(Point,&ClosePos);
+            if(Point.Distance(ClosePos)<dTolerance && pFace->PointInFace(rResult,uv))
+                {
+                bAnswer=true;
+                }
             break;
             }
         case SGM::EdgeType:

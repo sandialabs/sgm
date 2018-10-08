@@ -302,6 +302,29 @@ bool face::Check(SGM::Result              &rResult,
         snprintf(Buffer,sizeof(Buffer),"Face %lu does not have facets.\n",this->GetID());
         aCheckStrings.emplace_back(Buffer);
         }
+    else 
+        {
+        std::vector<unsigned int> aTemp=m_aTriangles;
+        SGM::MergeTriangles3D(m_aPoints3D,aTemp,SGM_MIN_TOL);
+        if(SGM::AreEdgeConnected(aTemp)==false)
+            {
+            bAnswer=false;
+            char Buffer[1000];
+            snprintf(Buffer,sizeof(Buffer),"Face %lu has facets that are not edge connected.\n",this->GetID());
+            aCheckStrings.emplace_back(Buffer);
+            }
+        //std::vector<unsigned int> aBoundary;
+        //std::set<unsigned int> sInterior;
+        //SGM::FindBoundary(aTemp,aBoundary,sInterior);
+        //size_t nComps=SGM::FindComponents1D(aBoundary);
+        //if(nComps!=nLoops)
+        //    {
+        //    bAnswer=false;
+        //    char Buffer[1000];
+        //    snprintf(Buffer,sizeof(Buffer),"Face %lu has facets with the wrong number of boundary components.\n",this->GetID());
+        //    aCheckStrings.emplace_back(Buffer);
+        //    }
+        }
 
     // Check all children.
 

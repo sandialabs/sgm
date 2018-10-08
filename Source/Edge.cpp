@@ -1,7 +1,10 @@
 #include "SGMInterval.h"
+
 #include "EntityClasses.h"
 #include "Faceter.h"
 #include "Curve.h"
+#include "Surface.h"
+
 #include <utility>
 
 namespace SGMInternal
@@ -307,6 +310,34 @@ SGM::Point3D const &edge::FindStartPoint() const
 bool edge::IsDegenerate() const
     {
     return m_pCurve->GetCurveType()==SGM::PointCurveType;
+    }
+
+double edge::GetTolerance() const
+    {
+    if(m_dTolerance==0)
+        {
+        SGM::Point3D Pos0=FindMidPoint(0.3923344);
+        SGM::Point3D Pos1=FindMidPoint(0.8943321);
+        m_dTolerance=SGM_ZERO;
+        for(auto pFace : m_sFaces)
+            {
+            surface const *pSurface=pFace->GetSurface();
+            SGM::Point3D Pos0B,Pos1B;
+            pSurface->Inverse(Pos0,&Pos0B);
+            pSurface->Inverse(Pos1,&Pos1B);
+            double dDist0=Pos0.Distance(Pos0B);
+            if(m_dTolerance<dDist0)
+                {
+                m_dTolerance=dDist0;
+                }
+            double dDist1=Pos1.Distance(Pos1B);
+            if(m_dTolerance<dDist1)
+                {
+                m_dTolerance=dDist1;
+                }
+            }
+        }
+    return m_dTolerance;
     }
 
 SGM::Point3D const &edge::FindEndPoint() const

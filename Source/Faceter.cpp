@@ -137,6 +137,7 @@ class Node
         double               m_t;
         SGMInternal::entity *m_Entity;
         bool                 m_bMark;
+        bool                 m_bImprint;
     };
 
 void FixBackPointers(unsigned int                     nTri,
@@ -981,6 +982,10 @@ void FacetEdge(SGM::Result               &rResult,
     curve const *pCurve=pEdge->GetCurve();
     SGM::Interval1D const &Domain=pEdge->GetDomain();
     FacetCurve(pCurve,Domain,Options,aPoints3D,aParams);
+
+    // Added so that this will be found at this time so that things will be thread safe after.
+
+    pEdge->GetTolerance(); 
     
     // Find where the facets cross the seams of their surfaces.
 
@@ -2703,7 +2708,8 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     std::vector<SGM::Point2D>               &aPoints2D,
                     std::vector<SGM::Point3D>               &aPoints3D,
                     std::vector<std::vector<unsigned int> > &aaPolygons,
-                    edge                                    *pInputEdge)
+                    edge                                    *pInputEdge,
+                    std::vector<bool>                       *)//pImprintFlags)
     {
     // Find all the needed face information.
 
@@ -2786,7 +2792,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     //FindOuterLoop(rResult,pFace,Options,aNodes);
     if(nLoops)
         {
-        AddNodesAtSingularites(rResult,pFace,Options,aNodes);
+        //AddNodesAtSingularites(rResult,pFace,Options,aNodes);
         if(FindSeamCrossings(pFace,Options,aNodes)==false)
             {
             return false;
@@ -3523,7 +3529,9 @@ bool AngleGrid(SGM::Result                                   &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        if(SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aScaledPolygonPoints,aaPolygons[Index1]),aScaled,aTriangles,aPolygonIndices)==false)
+        std::vector<bool> aImprintFlags;
+        if(SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aScaledPolygonPoints,aaPolygons[Index1]),
+            aScaled,aTriangles,aPolygonIndices,nullptr,nullptr,nullptr,&aImprintFlags)==false)
             {
             return false;
             }
@@ -3573,6 +3581,9 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
         aaPolygons[Index1]=aPolygonIndices;
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist,pPoints3D,pNormals);
+    //std::vector<unsigned int> aAdjacences;
+    //SGM::FindAdjacences2D(aTriangles,aAdjacences);
+    //DelaunayFlips(aPoints2D,aTriangles,aAdjacences,pPoints3D,pNormals);
     return true;
     }
 
@@ -3792,6 +3803,12 @@ void FindSpherePoints(sphere                   const *pSphere,
     aTriangles.push_back((unsigned int)nHighMid);
     }
 
+bool HasBranchedVertex(face const *pFace)
+    {
+    pFace;
+    return true;
+    }
+
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -3801,14 +3818,15 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=16)
+    //if(pFace->GetID()!=12 && pFace->GetEdges().empty()==false)
     //    {
     //    return;
     //    }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
-    if(FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aaPolygons)==false)
+    std::vector<bool> aImprintFlags;
+    if(FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags)==false)
         {
         return;
         }
@@ -3820,7 +3838,7 @@ void FacetFace(SGM::Result                    &rResult,
             // No scaling.
             // No refining.
 
-            SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+            SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
             FindNormals(pFace,aPoints2D,aNormals);
             break;
             }
@@ -3831,7 +3849,7 @@ void FacetFace(SGM::Result                    &rResult,
             // Scaling is needed.
             // No refining.
 
-            SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+            SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
             FindNormals(pFace,aPoints2D,aNormals);
             std::vector<SGM::Point2D> aScaled;
             ScaledUVs(pFace,aPoints2D,aScaled);
@@ -3849,7 +3867,7 @@ void FacetFace(SGM::Result                    &rResult,
             FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
             if(aaPolygons.size())
                 {
-                double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.5;
+                double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.25;
                 SGM::Surface SurfID=pSphere->GetID();
                 ImprintPolygons(rResult,dBoundaryDist,aPolygonPoints,aaPolygons,
                     aPoints2D,aTriangles,&SurfID,&aPoints3D,&aNormals);
@@ -3864,7 +3882,7 @@ void FacetFace(SGM::Result                    &rResult,
             if(AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,aaPolygons,aGridUVs,aTriangles)==false)
                 {
                 aTriangles.clear();
-                SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+                SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
                 if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
                     {
                     FindNormals(pFace,aPoints2D,aNormals);

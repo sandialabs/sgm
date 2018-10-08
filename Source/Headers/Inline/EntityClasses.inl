@@ -27,7 +27,8 @@ namespace SGMInternal {
             m_Box(),
             m_sOwners(),
             m_sAttributes()
-        {}
+        {
+        }
 
     inline entity::entity(SGM::Result &rResult, entity const &other) :
             m_ID(IDFromThing(rResult)),
@@ -393,7 +394,7 @@ namespace SGMInternal {
             topology(rResult,SGM::EntityType::EdgeType),
             m_pStart(nullptr),m_pEnd(nullptr),m_pVolume(nullptr),m_pCurve(nullptr)
     {
-        m_dTolerance=SGM_MIN_TOL;
+        m_dTolerance=0.0;
     }
 
     inline edge::edge(SGM::Result &rResult, edge const &other) :

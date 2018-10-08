@@ -1161,6 +1161,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
             {
             complex *pComplex=(complex *)aEntities[Index1];
             complex *pMergedComplex=pComplex->Merge(rResult,0.0);
+            rResult.GetThing()->DeleteEntity(pComplex);
             aNewEnts.push_back(pMergedComplex);
             }
         aEntities=aNewEnts;
