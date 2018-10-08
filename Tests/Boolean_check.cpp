@@ -181,7 +181,7 @@ TEST(Boolean_check, Sphere_Sphere_Imprint2)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, Sphere_Sphere_Unite)
+TEST(Boolean_check, DISABLED_Sphere_Sphere_Unite)
     {
     // Imprinting an attol edge on a face.
     

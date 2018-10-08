@@ -50,8 +50,7 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-
-TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) 
+TEST(models_ouo_check, DISABLED_import_check_OUO_TSLhousingGeom) 
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
@@ -85,14 +84,14 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) 
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0001_Bbat) 
 {
     const char* file_name = "OUO_glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0002_Bknob) 
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0002_Bknob) 
 {
     const char* file_name = "OUO_glom4/0002-_Bknob.stp";
     SCOPED_TRACE(file_name);
@@ -162,7 +161,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: Fac
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0011_Bdice) 
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0011_Bdice) 
 {
     const char* file_name = "OUO_glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);
