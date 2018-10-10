@@ -1790,11 +1790,6 @@ bool InsertPolygon(Result                     &rResult,
     for(Index1=0;Index1<nPolygon;++Index1)
         {
         SGM::Point2D const &D=aPolygon[Index1];
-
-        // $$$ check pImprintFlag here.
-
-        pImprintFlag;
-
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
         std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dTol);
         size_t nHits=aHits.size();
@@ -1897,8 +1892,10 @@ bool InsertPolygon(Result                     &rResult,
         unsigned int b=aPolygonIndices[(Index1+1)%nPolygon];
         if(sEdges.find({a,b})==sEdges.end())
             {
-            // $$$ check pImprintFlag here.
-
+            if(pImprintFlag && (*pImprintFlag)[Index1]==false && (*pImprintFlag)[(Index1+1)%nPolygon]==false)
+                {
+                continue;
+                }
             ForceEdge(rResult,aTriangles,aPoints2D,a,b,sEdges,Tree,aTris);
             if(sEdges.find({a,b})==sEdges.end())
                 {
@@ -2585,6 +2582,17 @@ void RemoveOutsideTriangles(SGM::Result                                   &rResu
                 sBoundary.insert(aPolygon[Index2]);
                 }
             }
+
+        // Do not remove points from the boundary of the triangles.
+
+        std::vector<unsigned int> aBoundary;
+        std::set<unsigned int> sInterior;
+        SGM::FindBoundary(aTriangles,aBoundary,sInterior);
+        for(auto nBoundIndex : aBoundary)
+            {
+            sBoundary.insert(nBoundIndex);
+            }
+
         SGM::BoxTree Tree;
         size_t nSegments=aSegments.size();
         for(Index1=0;Index1<nSegments;++Index1)

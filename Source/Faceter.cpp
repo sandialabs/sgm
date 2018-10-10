@@ -128,7 +128,7 @@ class Node
     {
     public:
 
-        Node() {m_bMark=false;}
+        Node() {m_bMark=false,m_bImprint=true;}
 
         size_t               m_nNext;
         size_t               m_nPrevious;
@@ -1583,6 +1583,7 @@ size_t AddNode(std::vector<Node>  &aNodes,
     NewNode.m_Entity=(entity *)pFace;
     NewNode.m_Pos=Pos;
     NewNode.m_uv=uv;
+    NewNode.m_bImprint=false;
     size_t nAnswer=aNodes.size();
     aNodes.push_back(NewNode);
     return nAnswer;
@@ -1664,9 +1665,8 @@ void Refine(face        const *pFace,
         }
     }
 
-bool FindSeamCrossings(face         const *pFace,
-                       FacetOptions const &Options,
-                       std::vector<Node>  &aNodes)
+bool FindSeamCrossings(face        const *pFace,
+                       std::vector<Node> &aNodes)
     {
    surface const *pSurface=pFace->GetSurface();
     std::vector<size_t> aCrossesU,aCrossesV;
@@ -2018,7 +2018,6 @@ bool FindSeamCrossings(face         const *pFace,
 
         SGM::Interval1D const &UDomain=pSurface->GetDomain().m_UDomain;
         SGM::Interval1D const &VDomain=pSurface->GetDomain().m_VDomain;
-        double dCosRefineAngle=cos(Options.m_dEdgeAngleTol);
 
         if(nUOutLow!=aUInLow.size())
             {
@@ -2035,38 +2034,49 @@ bool FindSeamCrossings(face         const *pFace,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else if(Index1<nUOutLow-1)
                 {
                 nNodeB=aUInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else // Must go around the corner.
                 {
                 if(aVInLow.empty())
                     {
-                    return false;
+                    // Through (min u,min v) and (max u,min v) then to aUInHigh[0]
+                    if(aUInHigh.empty())
+                        {
+                        return false;
+                        }
+                    nNodeB=aUInHigh[0].second;
+                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMin);
+                    size_t nNodeD=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMin);
+                    aNodes[nNodeA].m_nNext=nNodeC;
+                    aNodes[nNodeB].m_nPrevious=nNodeD;
+                    aNodes[nNodeC].m_nNext=nNodeD;
+                    aNodes[nNodeC].m_nPrevious=nNodeA;
+                    aNodes[nNodeD].m_nNext=nNodeB;
+                    aNodes[nNodeD].m_nPrevious=nNodeC;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
                     }
-                // Through (min u,min v)
-                nNodeB=aVInLow[0].second;
-                size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMin);
-                aNodes[nNodeA].m_nNext=nNodeC;
-                aNodes[nNodeB].m_nPrevious=nNodeC;
-                aNodes[nNodeC].m_nNext=nNodeB;
-                aNodes[nNodeC].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
+                else
                     {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    // Through (min u,min v)
+                    nNodeB=aVInLow[0].second;
+                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMin);
+                    aNodes[nNodeA].m_nNext=nNodeC;
+                    aNodes[nNodeB].m_nPrevious=nNodeC;
+                    aNodes[nNodeC].m_nNext=nNodeB;
+                    aNodes[nNodeC].m_nPrevious=nNodeA;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
                     }
                 }
             }
@@ -2086,20 +2096,16 @@ bool FindSeamCrossings(face         const *pFace,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else if(Index1<nVOutLow-1)
                 {
                 nNodeB=aVInLow[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else // Must go around the corner.
                 {
@@ -2114,11 +2120,8 @@ bool FindSeamCrossings(face         const *pFace,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             }
 
@@ -2137,38 +2140,49 @@ bool FindSeamCrossings(face         const *pFace,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else if(Index1<nUOutHigh-1)
                 {
                 nNodeB=aUInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else // Must go around the corner.
                 {
-                // Through (max u,max v)
                 if(aVInHigh.empty())
                     {
-                    return false;
+                    // Through (max u,max v) and (min u,max v) then to aUInLow[0]
+                    if(aUInLow.empty())
+                        {
+                        return false;
+                        }
+                    nNodeB=aUInLow[0].second;
+                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
+                    size_t nNodeD=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
+                    aNodes[nNodeA].m_nNext=nNodeC;
+                    aNodes[nNodeB].m_nPrevious=nNodeD;
+                    aNodes[nNodeC].m_nNext=nNodeD;
+                    aNodes[nNodeC].m_nPrevious=nNodeA;
+                    aNodes[nNodeD].m_nNext=nNodeB;
+                    aNodes[nNodeD].m_nPrevious=nNodeC;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
                     }
-                nNodeB=aVInHigh[0].second;
-                size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
-                aNodes[nNodeA].m_nNext=nNodeC;
-                aNodes[nNodeB].m_nPrevious=nNodeC;
-                aNodes[nNodeC].m_nNext=nNodeB;
-                aNodes[nNodeC].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
+                else
                     {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
+                    // Through (max u,max v)
+                    nNodeB=aVInHigh[0].second;
+                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
+                    aNodes[nNodeA].m_nNext=nNodeC;
+                    aNodes[nNodeB].m_nPrevious=nNodeC;
+                    aNodes[nNodeC].m_nNext=nNodeB;
+                    aNodes[nNodeC].m_nPrevious=nNodeA;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
                     }
                 }
             }
@@ -2188,20 +2202,16 @@ bool FindSeamCrossings(face         const *pFace,
                 {
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else if(Index1<nVOutHigh-1)
                 {
                 nNodeB=aVInHigh[Index1+1].second;
                 aNodes[nNodeA].m_nNext=nNodeB;
                 aNodes[nNodeB].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             else // Must go around the corner.
                 {
@@ -2216,11 +2226,8 @@ bool FindSeamCrossings(face         const *pFace,
                 aNodes[nNodeB].m_nPrevious=nNodeC;
                 aNodes[nNodeC].m_nNext=nNodeB;
                 aNodes[nNodeC].m_nPrevious=nNodeA;
-                if(Options.m_bParametric==false)
-                    {
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeA,nNodeC);
-                    Refine(pFace,dCosRefineAngle,aNodes,nNodeC,nNodeB);
-                    }
+                aNodes[nNodeA].m_bImprint=false;
+                aNodes[nNodeB].m_bImprint=false;
                 }
             }
         }
@@ -2246,16 +2253,25 @@ void FindPolygon(std::vector<Node>         &aNodes,
 void FindPolygons(std::vector<Node>                       &aNodes,
                   std::vector<SGM::Point2D>               &aPoints2D,
                   std::vector<SGM::Point3D>               &aPoints3D,
-                  std::vector<std::vector<unsigned int> > &aaPolygons)
+                  std::vector<std::vector<unsigned int> > &aaPolygons,
+                  std::vector<bool>                       *pImprintFlags)
     {
     unsigned int nNodes=(unsigned int)aNodes.size();
     unsigned int Index1;
     aPoints2D.reserve(nNodes);
     aPoints3D.reserve(nNodes);
+    if(pImprintFlags)
+        {
+        pImprintFlags->reserve(nNodes);
+        }
     for(Index1=0;Index1<nNodes;++Index1)
         {
         aPoints2D.push_back(aNodes[Index1].m_uv);
         aPoints3D.push_back(aNodes[Index1].m_Pos);
+        if(pImprintFlags)
+            {
+            pImprintFlags->push_back(aNodes[Index1].m_bImprint);
+            }
         }
     for(Index1=0;Index1<nNodes;++Index1)
         {
@@ -2272,9 +2288,7 @@ void FindPolygons(std::vector<Node>                       &aNodes,
         }
     }
 
-void FindOuterLoop(SGM::Result        &,//rResult,
-                   face         const *pFace,
-                   FacetOptions const &Options,
+void FindOuterLoop(face         const *pFace,
                    std::vector<Node>  &aNodes)
     {
     surface const *pSurface=pFace->GetSurface();
@@ -2289,7 +2303,6 @@ void FindOuterLoop(SGM::Result        &,//rResult,
         {
         std::reverse(aCorners.begin(),aCorners.end());
         }
-    double dCosRefine=cos(Options.m_dEdgeAngleTol);
     for(Index1=0;Index1<4;++Index1)
         {
         SGM::Point3D Pos;
@@ -2301,14 +2314,6 @@ void FindOuterLoop(SGM::Result        &,//rResult,
         CornerNode.m_nNext= Index1==3 ? 0 : Index1+1;
         CornerNode.m_nPrevious = Index1==0 ? 3 : Index1-1;
         aNodes.push_back(CornerNode);
-        }
-
-    if(Options.m_bParametric==false)
-        {
-        Refine(pFace,dCosRefine,aNodes,0,1);
-        Refine(pFace,dCosRefine,aNodes,1,2);
-        Refine(pFace,dCosRefine,aNodes,2,3);
-        Refine(pFace,dCosRefine,aNodes,3,0);
         }
     }
 
@@ -2704,12 +2709,11 @@ void AddNodesAtSingularites(SGM::Result        &rResult,
 
 bool FacetFaceLoops(SGM::Result                             &rResult,
                     face                              const *pFace,
-                    FacetOptions                      const &Options,
                     std::vector<SGM::Point2D>               &aPoints2D,
                     std::vector<SGM::Point3D>               &aPoints3D,
                     std::vector<std::vector<unsigned int> > &aaPolygons,
                     edge                                    *pInputEdge,
-                    std::vector<bool>                       *)//pImprintFlags)
+                    std::vector<bool>                       *pImprintFlags)
     {
     // Find all the needed face information.
 
@@ -2793,13 +2797,13 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     if(nLoops)
         {
         //AddNodesAtSingularites(rResult,pFace,Options,aNodes);
-        if(FindSeamCrossings(pFace,Options,aNodes)==false)
+        if(FindSeamCrossings(pFace,aNodes)==false)
             {
             return false;
             }
         }
      
-    FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons);
+    FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags);
 
     return true;
     }
@@ -3469,13 +3473,28 @@ bool AddGrid(face                     const *pFace,
         }
     }
 
+std::vector<bool> ShuffleFlags(std::vector<bool> const &aInputFlags,
+                               std::vector<unsigned int> &aPolygons)
+    {
+    std::vector<bool> aFlags;
+    size_t nPolygons=aPolygons.size();
+    aFlags.reserve(nPolygons);
+    size_t Index1;
+    for(Index1=0;Index1<nPolygons;++Index1)
+        {
+        aFlags.push_back(aInputFlags[aPolygons[Index1]]);
+        }
+    return aFlags;
+    }
+
 bool AngleGrid(SGM::Result                                   &rResult,
                surface                                 const *pSurface,
                FacetOptions                            const &Options,
                std::vector<SGM::Point2D>               const &aPolygonPoints,
                std::vector<std::vector<unsigned int> >       &aaPolygons,
                std::vector<SGM::Point2D>                     &aPoints2D,
-               std::vector<unsigned int>                     &aTriangles)
+               std::vector<unsigned int>                     &aTriangles,
+               std::vector<bool>                             *pImprintFlag)
     {
     // Create the base grid.
 
@@ -3529,15 +3548,15 @@ bool AngleGrid(SGM::Result                                   &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        std::vector<bool> aImprintFlags;
+        std::vector<bool> aFlags=ShuffleFlags(*pImprintFlag,aaPolygons[Index1]);
         if(SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aScaledPolygonPoints,aaPolygons[Index1]),
-            aScaled,aTriangles,aPolygonIndices,nullptr,nullptr,nullptr,&aImprintFlags)==false)
+            aScaled,aTriangles,aPolygonIndices,nullptr,nullptr,nullptr,&aFlags)==false)
             {
             return false;
             }
         aaPolygons[Index1]=aPolygonIndices;
         }
-    RemoveOutsideTriangles(rResult,aaPolygons,aScaled,aTriangles,dMinGrid*0.5);
+    RemoveOutsideTriangles(rResult,aaPolygons,aScaled,aTriangles,dMinGrid*0.25);
 
     // Since points were removed and added reset aPoints2D from aScaled.
 
@@ -3560,7 +3579,8 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
                      std::vector<unsigned int>                     &aTriangles,
                      SGM::Surface                                  *pSurfaceID,
                      std::vector<SGM::Point3D>                     *pPoints3D,
-                     std::vector<SGM::UnitVector3D>                *pNormals)
+                     std::vector<SGM::UnitVector3D>                *pNormals,
+                     std::vector<bool>                             *aImprintFlags)
     {
     // Insert the polygons.
 
@@ -3569,14 +3589,30 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
-            aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals)==false)
+        if(aImprintFlags)
             {
-            aPoints2D.clear();
-            aTriangles.clear();
-            pPoints3D->clear();
-            pNormals->clear();
-            return false;
+            std::vector<bool> aFlags=ShuffleFlags(*aImprintFlags,aaPolygons[Index1]);
+            if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+                aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals,&aFlags)==false)
+                {
+                aPoints2D.clear();
+                aTriangles.clear();
+                pPoints3D->clear();
+                pNormals->clear();
+                return false;
+                }
+            }
+        else
+            {
+            if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+                aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals,nullptr)==false)
+                {
+                aPoints2D.clear();
+                aTriangles.clear();
+                pPoints3D->clear();
+                pNormals->clear();
+                return false;
+                }
             }
         aaPolygons[Index1]=aPolygonIndices;
         }
@@ -3595,7 +3631,8 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
                     std::vector<SGM::Point2D>                     &aPoints2D,
                     std::vector<SGM::Point3D>                     &aPoints3D,
                     std::vector<SGM::UnitVector3D>                &aNormals,
-                    std::vector<unsigned int>                     &aTriangles)
+                    std::vector<unsigned int>                     &aTriangles,
+                    std::vector<bool>                             &aImprintFlags)
     {
     std::vector<double> aUValues,aVValues;
     SGM::Interval2D Box=pFace->GetSurface()->GetDomain();
@@ -3626,8 +3663,9 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
         {
         std::vector<unsigned int> aPolygonIndices;
         SGM::Surface SurfID(pFace->GetSurface()->GetID());
+        std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
         SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
-            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals);
+            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,SGM_FIT,&aPoints3D,&aNormals);
@@ -3818,15 +3856,15 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=12 && pFace->GetEdges().empty()==false)
-    //    {
-    //    return;
-    //    }
+    // if(pFace->GetID()!=12 && pFace->GetEdges().empty()==false)
+    //     {
+    //     return;
+    //     }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
     std::vector<bool> aImprintFlags;
-    if(FacetFaceLoops(rResult,pFace,Options,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags)==false)
+    if(FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags)==false)
         {
         return;
         }
@@ -3870,7 +3908,7 @@ void FacetFace(SGM::Result                    &rResult,
                 double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.25;
                 SGM::Surface SurfID=pSphere->GetID();
                 ImprintPolygons(rResult,dBoundaryDist,aPolygonPoints,aaPolygons,
-                    aPoints2D,aTriangles,&SurfID,&aPoints3D,&aNormals);
+                    aPoints2D,aTriangles,&SurfID,&aPoints3D,&aNormals,&aImprintFlags);
                 }
             break;
             }
@@ -3879,7 +3917,7 @@ void FacetFace(SGM::Result                    &rResult,
             // Angle based uniform grid.
 
             std::vector<SGM::Point2D> aGridUVs;
-            if(AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,aaPolygons,aGridUVs,aTriangles)==false)
+            if(AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,aaPolygons,aGridUVs,aTriangles,&aImprintFlags)==false)
                 {
                 aTriangles.clear();
                 SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
@@ -3906,7 +3944,7 @@ void FacetFace(SGM::Result                    &rResult,
 
             std::vector<SGM::Point2D> aGridUVs;
             aPoints3D.clear();
-            ParamCurveGrid(rResult,pFace,Options,aPoints2D,aaPolygons,aGridUVs,aPoints3D,aNormals,aTriangles);
+            ParamCurveGrid(rResult,pFace,Options,aPoints2D,aaPolygons,aGridUVs,aPoints3D,aNormals,aTriangles,aImprintFlags);
             aPoints2D=aGridUVs;
             break;
             }
