@@ -2,6 +2,7 @@
 #include "test_utility.h"
 
 #include "SGMInterrogate.h"
+#include "SGMTopology.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -68,13 +69,6 @@ TEST(models_ouo_check, import_check_OUO_grv_geom)
     const char* file_name = "OUO_grv_geom.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
-
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-    std::vector<SGM::Face> faces;
-    //SGM::Point3D sgm_point(0.00623037301312708,-1.04973316890717e-18,0.0166638951384168);
-    SGM::Point3D sgm_point(0,0,0);
-    SGM::FindCloseFaces(rResult, sgm_point, SGM::Thing(), 1e-5, faces);
 }
 
 TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
@@ -222,4 +216,23 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
     const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
+}
+
+TEST(models_ouo_check, point_in_volume_sphere) 
+{
+    const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_ouo_success(file_name, rResult);
+    expect_check_success(rResult);
+    
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Point3D Pos(2.1,2.9,-3.89);
+    bool bAnswer=SGM::PointInEntity(rResult,Pos,*(sVolumes.begin()));
+    EXPECT_TRUE(bAnswer);
+
+    SGMTesting::ReleaseTestThing(pThing);
 }

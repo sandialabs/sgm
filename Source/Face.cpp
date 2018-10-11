@@ -277,12 +277,14 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         *pBoundary=pEntity;
         }
-    SGM::Point2D Buv=m_pSurface->Inverse(CPos);
     if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
+        edge *pEdge=(edge *)pEntity;
+        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
+        SGM::Point2D Buv=EvaluateParamSpace(pEdge,EdgeTypeIter->second,CPos);
+
         SGM::Vector3D VecU,VecV,Vec;
         m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
-        edge *pEdge=(edge *)pEntity;
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
         if(pPos)
@@ -293,7 +295,6 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
-        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
         if(EdgeTypeIter->second==SGM::FaceOnRightType)
             {
             dZ=-dZ;
@@ -313,6 +314,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
+        SGM::Point2D Buv=m_pSurface->Inverse(CPos);
         vertex *pVertex=(vertex *)pEntity;
         SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)

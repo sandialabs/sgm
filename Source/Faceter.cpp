@@ -2019,13 +2019,12 @@ bool FindSeamCrossings(face        const *pFace,
         SGM::Interval1D const &UDomain=pSurface->GetDomain().m_UDomain;
         SGM::Interval1D const &VDomain=pSurface->GetDomain().m_VDomain;
 
-        if(nUOutLow!=aUInLow.size())
-            {
-            return false;
-            }
-
         for(Index1=0;Index1<nUOutLow;++Index1)
             {
+            if(aUInLow.size()<=Index1)
+                {
+                return false;
+                }
             double v1=aUOutLow[Index1].first;
             double v2=aUInLow[Index1].first;
             size_t nNodeA=aUOutLow[Index1].second;
@@ -2081,13 +2080,12 @@ bool FindSeamCrossings(face        const *pFace,
                 }
             }
 
-        if(nVOutLow!=aVInLow.size())
-            {
-            return false;
-            }
-
         for(Index1=0;Index1<nVOutLow;++Index1)
             {
+            if(aVInLow.size()<=Index1)
+                {
+                return false;
+                }
             double u1=aVOutLow[Index1].first;
             double u2=aVInLow[Index1].first;
             size_t nNodeA=aVOutLow[Index1].second;
@@ -2125,75 +2123,89 @@ bool FindSeamCrossings(face        const *pFace,
                 }
             }
 
-        if(nUOutHigh!=aUInHigh.size())
+         for(Index1=0;Index1<nUOutHigh;++Index1)
             {
-            return false;
-            }
-
-        for(Index1=0;Index1<nUOutHigh;++Index1)
-            {
-            double v1=aUOutHigh[Index1].first;
-            double v2=aUInHigh[Index1].first;
-            size_t nNodeA=aUOutHigh[Index1].second;
-            size_t nNodeB=aUInHigh[Index1].second;
-            if(v1<v2)
+            if(aUInHigh.size()<=Index1)
                 {
-                aNodes[nNodeA].m_nNext=nNodeB;
-                aNodes[nNodeB].m_nPrevious=nNodeA;
+                // Through aUOutHigh (max u,max v) and (min u,max v) then to aUInLow
+                size_t nNodeA=aUOutHigh[Index1].second;
+                size_t nNodeB=aUInLow[Index1].second;
+                nNodeB=aUInLow[0].second;
+                size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
+                size_t nNodeD=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
+                aNodes[nNodeA].m_nNext=nNodeC;
+                aNodes[nNodeB].m_nPrevious=nNodeD;
+                aNodes[nNodeC].m_nNext=nNodeD;
+                aNodes[nNodeC].m_nPrevious=nNodeA;
+                aNodes[nNodeD].m_nNext=nNodeB;
+                aNodes[nNodeD].m_nPrevious=nNodeC;
                 aNodes[nNodeA].m_bImprint=false;
                 aNodes[nNodeB].m_bImprint=false;
                 }
-            else if(Index1<nUOutHigh-1)
+            else 
                 {
-                nNodeB=aUInHigh[Index1+1].second;
-                aNodes[nNodeA].m_nNext=nNodeB;
-                aNodes[nNodeB].m_nPrevious=nNodeA;
-                aNodes[nNodeA].m_bImprint=false;
-                aNodes[nNodeB].m_bImprint=false;
-                }
-            else // Must go around the corner.
-                {
-                if(aVInHigh.empty())
+                double v1=aUOutHigh[Index1].first;
+                double v2=aUInHigh[Index1].first;
+                size_t nNodeA=aUOutHigh[Index1].second;
+                size_t nNodeB=aUInHigh[Index1].second;
+                if(v1<v2)
                     {
-                    // Through (max u,max v) and (min u,max v) then to aUInLow[0]
-                    if(aUInLow.empty())
+                    aNodes[nNodeA].m_nNext=nNodeB;
+                    aNodes[nNodeB].m_nPrevious=nNodeA;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
+                    }
+                else if(Index1<nUOutHigh-1)
+                    {
+                    nNodeB=aUInHigh[Index1+1].second;
+                    aNodes[nNodeA].m_nNext=nNodeB;
+                    aNodes[nNodeB].m_nPrevious=nNodeA;
+                    aNodes[nNodeA].m_bImprint=false;
+                    aNodes[nNodeB].m_bImprint=false;
+                    }
+                else // Must go around the corner.
+                    {
+                    if(aVInHigh.empty())
                         {
-                        return false;
+                        // Through (max u,max v) and (min u,max v) then to aUInLow[0]
+                        if(aUInLow.empty())
+                            {
+                            return false;
+                            }
+                        nNodeB=aUInLow[0].second;
+                        size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
+                        size_t nNodeD=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
+                        aNodes[nNodeA].m_nNext=nNodeC;
+                        aNodes[nNodeB].m_nPrevious=nNodeD;
+                        aNodes[nNodeC].m_nNext=nNodeD;
+                        aNodes[nNodeC].m_nPrevious=nNodeA;
+                        aNodes[nNodeD].m_nNext=nNodeB;
+                        aNodes[nNodeD].m_nPrevious=nNodeC;
+                        aNodes[nNodeA].m_bImprint=false;
+                        aNodes[nNodeB].m_bImprint=false;
                         }
-                    nNodeB=aUInLow[0].second;
-                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
-                    size_t nNodeD=AddNode(aNodes,pFace,UDomain.m_dMin,VDomain.m_dMax);
-                    aNodes[nNodeA].m_nNext=nNodeC;
-                    aNodes[nNodeB].m_nPrevious=nNodeD;
-                    aNodes[nNodeC].m_nNext=nNodeD;
-                    aNodes[nNodeC].m_nPrevious=nNodeA;
-                    aNodes[nNodeD].m_nNext=nNodeB;
-                    aNodes[nNodeD].m_nPrevious=nNodeC;
-                    aNodes[nNodeA].m_bImprint=false;
-                    aNodes[nNodeB].m_bImprint=false;
-                    }
-                else
-                    {
-                    // Through (max u,max v)
-                    nNodeB=aVInHigh[0].second;
-                    size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
-                    aNodes[nNodeA].m_nNext=nNodeC;
-                    aNodes[nNodeB].m_nPrevious=nNodeC;
-                    aNodes[nNodeC].m_nNext=nNodeB;
-                    aNodes[nNodeC].m_nPrevious=nNodeA;
-                    aNodes[nNodeA].m_bImprint=false;
-                    aNodes[nNodeB].m_bImprint=false;
+                    else
+                        {
+                        // Through (max u,max v)
+                        nNodeB=aVInHigh[0].second;
+                        size_t nNodeC=AddNode(aNodes,pFace,UDomain.m_dMax,VDomain.m_dMax);
+                        aNodes[nNodeA].m_nNext=nNodeC;
+                        aNodes[nNodeB].m_nPrevious=nNodeC;
+                        aNodes[nNodeC].m_nNext=nNodeB;
+                        aNodes[nNodeC].m_nPrevious=nNodeA;
+                        aNodes[nNodeA].m_bImprint=false;
+                        aNodes[nNodeB].m_bImprint=false;
+                        }
                     }
                 }
-            }
-
-        if(nVOutHigh!=aVInHigh.size())
-            {
-            return false;
             }
 
         for(Index1=0;Index1<nVOutHigh;++Index1)
             {
+            if(aVInHigh.size()<=Index1)
+                {
+                return false;
+                }
             double u1=aVOutHigh[Index1].first;
             double u2=aVInHigh[Index1].first;
             size_t nNodeA=aVOutHigh[Index1].second;
@@ -3856,10 +3868,10 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    // if(pFace->GetID()!=12 && pFace->GetEdges().empty()==false)
-    //     {
-    //     return;
-    //     }
+    //if(pFace->GetID()!=4 && pFace->GetEdges().empty()==false)
+    //    {
+    //    return;
+    //    }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
