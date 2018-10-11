@@ -3,6 +3,7 @@
 
 #include "SGMInterrogate.h"
 #include "SGMTopology.h"
+#include "SGMComplex.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -218,7 +219,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, point_in_volume_sphere) 
+TEST(models_ouo_check, ACISSphereGeometry_arbitraryCenter) 
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);
@@ -234,5 +235,47 @@ TEST(models_ouo_check, point_in_volume_sphere)
     bool bAnswer=SGM::PointInEntity(rResult,Pos,*(sVolumes.begin()));
     EXPECT_TRUE(bAnswer);
 
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_ouo_check, ACISBrickWithImprintedEllipses) 
+{
+    const char* file_name = "ACISBrickWithImprintedEllipses.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_ouo_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    SGM::Edge EdgeID1(23),EdgeID2(24);
+    size_t Index1,Index2;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.reserve(81);
+    for(Index1=1;Index1<10;++Index1)
+        {
+        for(Index2=1;Index2<10;++Index2)
+            {
+            SGM::Point3D Pos(5.0,Index1-5.0,Index2-5.0);
+            aPoints.push_back(Pos);
+            SGM::Entity CloseEntity;
+            SGM::Point3D ClosePos1,ClosePos2;
+            SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID1,ClosePos1,CloseEntity);
+            double dDist1=Pos.DistanceSquared(ClosePos1);
+            SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID2,ClosePos2,CloseEntity);
+            double dDist2=Pos.DistanceSquared(ClosePos2);
+            SGM::Point3D CPos=dDist1<dDist2 ? ClosePos1 : ClosePos2;
+            SGM::CreateLinearEdge(rResult,Pos,CPos);
+            }
+        }
+    SGM::CreatePoints(rResult,aPoints);
+
+    //SGM::Edge EdgeID1(23);
+    //SGM::Point3D Pos(5.0,-5.0,5.0);
+    //SGM::Entity CloseEntity;
+    //SGM::Point3D ClosePos1;
+    //SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID1,ClosePos1,CloseEntity);
+    //SGM::CreateLinearEdge(rResult,Pos,ClosePos1);
+    
     SGMTesting::ReleaseTestThing(pThing);
 }
