@@ -79,14 +79,14 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0001_Bbat) 
+TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) 
 {
     const char* file_name = "OUO_glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0002_Bknob) 
+TEST(models_ouo_check, import_check_OUO_glom4_0002_Bknob) 
 {
     const char* file_name = "OUO_glom4/0002-_Bknob.stp";
     SCOPED_TRACE(file_name);
@@ -135,7 +135,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: Fa
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0008_Bkey) // TODO: Faces 5, 10, and 7.
+TEST(models_ouo_check, import_check_OUO_glom4_0008_Bkey) 
 {
     const char* file_name = "OUO_glom4/0008-_Bkey.stp";
     SCOPED_TRACE(file_name);
@@ -156,7 +156,7 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: Fac
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0011_Bdice) 
+TEST(models_ouo_check, import_check_OUO_glom4_0011_Bdice) 
 {
     const char* file_name = "OUO_glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);
