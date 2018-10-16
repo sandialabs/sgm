@@ -149,7 +149,7 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     // Cover the holes.
 
     std::vector<unsigned int> aTriangles,aAdjacencies;
-    TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+    TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,false);
     return new complex(rResult,aPoints3D,aTriangles);
     }
 
@@ -194,7 +194,15 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    complex *pBoundary=FindBoundary(rResult);
+    complex *pBoundary;
+    if(m_aTriangles.size())
+        {
+        pBoundary=FindBoundary(rResult);
+        }
+    else
+        {
+        pBoundary=new complex(rResult,*this);
+        }
     double dAvergeEdgeLength=pBoundary->FindAverageEdgeLength();
     std::vector<complex *> aParts=pBoundary->SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
     SGM::Interval3D Box=pBoundary->GetBox(rResult);

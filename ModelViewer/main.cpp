@@ -85,26 +85,32 @@ void CoverSTL(int argc, char **argv)
         std::cerr << rResult.Message() << std::endl;
         exit(1);
         }
-    std::vector<SGM::Complex> aParts;
     std::vector<SGM::Complex> *aComplexes = (std::vector<SGM::Complex> *) &aEntities;
     SGM::Complex ComplexID = aComplexes->front();
     if (aComplexes->size() > 1)
         {
         ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
         }
-    SGM::Complex MergedComplexID=SGM::MergePoints(rResult, ComplexID, SGM_MIN_TOL);
-    SGM::DeleteEntity(rResult,ComplexID);
-    SGM::Complex CoverID = SGM::CoverComplex(rResult, MergedComplexID);
-    aParts.push_back(MergedComplexID);
+    //SGM::Complex MergedComplexID=SGM::MergePoints(rResult, ComplexID, SGM_MIN_TOL);
+    //SGM::DeleteEntity(rResult,ComplexID);
+    //SGM::Complex CoverID = SGM::CoverComplex(rResult, MergedComplexID);
+    //aParts.push_back(MergedComplexID);
+    //aParts.push_back(CoverID);
+    //SGM::MergeComplexes(rResult, aParts);
+    //for (auto &iPart : aParts)
+    //    {
+    //    SGM::DeleteEntity(rResult,iPart); // delete original entity
+    //    }
+    SGM::Complex CoverID = SGM::CoverComplex(rResult, ComplexID);
+    std::vector<SGM::Complex> aParts;
+    aParts.push_back(ComplexID);
     aParts.push_back(CoverID);
-    SGM::MergeComplexes(rResult, aParts);
-    for (auto &iPart : aParts)
-        {
-        SGM::DeleteEntity(rResult,iPart); // delete original entity
-        }
+    SGM::Complex AnswerID=SGM::MergeComplexes(rResult, aParts);
+    SGM::DeleteEntity(rResult,CoverID); 
+    SGM::DeleteEntity(rResult,ComplexID); 
     std::string OutputSTLFile(argv[3]);
 
-    SGM::SaveSTL(rResult, OutputSTLFile, SGM::Thing(), Options);
+    SGM::SaveSTL(rResult, OutputSTLFile, AnswerID, Options);
     }
 
 // return false if we are not done processing and should go on to the QtApp

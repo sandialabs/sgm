@@ -592,6 +592,11 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
         auto *oriented_item = new QTreeWidgetItem(complex_item);
         oriented_item->setText(0, "Oriented");
         }
+    if(SGM::ArePointsCoplanar(aPoints,SGM_MIN_TOL))
+        {
+        auto *planar_item = new QTreeWidgetItem(complex_item);
+        planar_item->setText(0, "Planar");
+        }
 
     add_attributes_to_tree(complex_item, ComplexID);
     add_bounding_box_to_tree(complex_item, ComplexID);

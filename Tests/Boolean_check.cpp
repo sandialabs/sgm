@@ -181,7 +181,7 @@ TEST(Boolean_check, Sphere_Sphere_Imprint2)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Sphere_Sphere_Unite)
+TEST(Boolean_check, Sphere_Sphere_Unite)
     {
     // Imprinting an attol edge on a face.
     
@@ -197,28 +197,6 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Unite)
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere1,Options,aCheckStrings));
-
-    // Find the four faces.
-    std::set<SGM::Face> sFaces;
-    SGM::FindFaces(rResult,Sphere1,sFaces);
-    auto iter=sFaces.begin();
-    SGM::Face Face0=*iter;
-    ++iter;
-    SGM::Face Face1=*iter;;
-    ++iter;
-    SGM::Face Face2=*iter;
-    ++iter;
-    SGM::Face Face3=*iter;
-
-    SGM::Point3D Pos0(1,0,0),Pos1(4,0,0),Pos2(-1,0,0),Pos3(0,0,0);
-    bool bGood0=SGM::PointInEntity(rResult,Pos0,Face0);
-    bool bGood1=SGM::PointInEntity(rResult,Pos1,Face1);
-    bool bGood2=SGM::PointInEntity(rResult,Pos2,Face2);
-    bool bGood3=SGM::PointInEntity(rResult,Pos3,Face3);
-    EXPECT_TRUE(bGood0);
-    EXPECT_TRUE(bGood1);
-    EXPECT_TRUE(bGood2);
-    EXPECT_TRUE(bGood3);
     
     SGMTesting::ReleaseTestThing(pThing);
     }
