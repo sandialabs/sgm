@@ -191,7 +191,7 @@ TEST(models_ouo_check, import_check_OUO_glom4_0015_Bpipe)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0016_Bspring) // TODO: Faces 2 and 3 minor flipped facet.
+TEST(models_ouo_check, import_check_OUO_glom4_0016_Bspring) 
 {
     const char* file_name = "OUO_glom4/0016-_Bspring.stp";
     SCOPED_TRACE(file_name);

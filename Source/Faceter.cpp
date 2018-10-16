@@ -2843,12 +2843,31 @@ void FindNormalsAndPoints(face                     const *pFace,
     {
     size_t nPoints2D=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    SGM::Interval1D const &DomainU=Domain.m_UDomain;
+    SGM::Interval1D const &DomainV=Domain.m_VDomain;
     size_t Index1;
     for(Index1=0;Index1<nPoints2D;++Index1)
         {
-        SGM::Point2D const &uv=aPoints2D[Index1];
+        SGM::Point2D uv=aPoints2D[Index1];
         SGM::UnitVector3D Norm;
         SGM::Point3D Pos;
+        if(uv.m_u<DomainU.m_dMin)
+            {
+            uv.m_u=DomainU.m_dMin;
+            }
+        if(DomainU.m_dMax<uv.m_u)
+            {
+            uv.m_u=DomainU.m_dMax;
+            }
+        if(uv.m_v<DomainV.m_dMin)
+            {
+            uv.m_v=DomainV.m_dMin;
+            }
+        if(DomainV.m_dMax<uv.m_v)
+            {
+            uv.m_v=DomainV.m_dMax;
+            }
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         aPoints3D.push_back(Pos);
@@ -3647,7 +3666,8 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
                     std::vector<bool>                             &aImprintFlags)
     {
     std::vector<double> aUValues,aVValues;
-    SGM::Interval2D Box=pFace->GetSurface()->GetDomain();
+    surface const *pSurf=pFace->GetSurface();
+    SGM::Interval2D Box=pSurf->GetDomain();
     double dMidU=Box.m_UDomain.MidPoint();
     double dMidV=Box.m_VDomain.MidPoint();
     SGM::Result EmptyResult(nullptr);
@@ -3666,6 +3686,20 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
     delete pUParam;
     delete pVParam;
     size_t Index1;
+
+    // Expand U and V values to that they are not hit by bondary curves.
+    if(pSurf->ClosedInU()==false)
+        {
+        double dLength=Box.m_UDomain.Length()/aUValues.size();
+        aUValues[0]-=dLength;
+        aUValues[aUValues.size()-1]+=dLength;
+        }
+    if(pSurf->ClosedInV()==false)
+        {
+        double dLength=Box.m_VDomain.Length()/aVValues.size();
+        aVValues[0]-=dLength;
+        aVValues[aVValues.size()-1]+=dLength;
+        }
 
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
     FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
@@ -3868,7 +3902,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=12 && pFace->GetEdges().empty()==false)
+    //if(pFace->GetID()!=2 && pFace->GetEdges().empty()==false)
     //    {
     //    return;
     //    }
