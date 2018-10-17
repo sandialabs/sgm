@@ -764,7 +764,8 @@ bool SplitAtSeams(SGM::Result                     & ,
                   curve                     const *pCurve,
                   std::vector<SGM::Point3D> const &aPoints3D,
                   std::vector<double>       const &aParams,
-                  std::vector<double>             &aCrosses)
+                  std::vector<double>             &aCrosses,
+                  std::vector<SGM::Point3D>       &aCrossPoints)
     {
     SGM::Result EmptyResult(nullptr);
     bool bFound=false;
@@ -772,6 +773,8 @@ bool SplitAtSeams(SGM::Result                     & ,
         {
         aCrosses.push_back(aParams.front());
         aCrosses.push_back(aParams.back());
+        aCrossPoints.push_back(aPoints3D.front());
+        aCrossPoints.push_back(aPoints3D.back());
         std::vector<Node> aNodes;
         unsigned int nParams=(unsigned int)aParams.size();
         unsigned int Index1;
@@ -812,6 +815,7 @@ bool SplitAtSeams(SGM::Result                     & ,
                         if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
                             {
                             aCrosses.push_back(t);
+                            aCrossPoints.push_back(Pos);
                             bFound=true;
                             }
                         }
@@ -839,6 +843,7 @@ bool SplitAtSeams(SGM::Result                     & ,
                         if(pEdge->GetDomain().InInterval(t,SGM_MIN_TOL))
                             {
                             aCrosses.push_back(t);
+                            aCrossPoints.push_back(Pos);
                             bFound=true;
                             }
                         }
@@ -990,13 +995,14 @@ void FacetEdge(SGM::Result               &rResult,
     // Find where the facets cross the seams of their surfaces.
 
     std::vector<double> aCrosses;
+    std::vector<SGM::Point3D> aCrossPoints;
     std::set<surface *,EntityCompare> sSurfaces;
     FindSurfaces(rResult,pEdge,sSurfaces);
     std::set<surface *,EntityCompare>::iterator iter=sSurfaces.begin();
     bool bFound=false;
     while(iter!=sSurfaces.end())
         {
-        if(SplitAtSeams(rResult,*iter,pEdge,pCurve,aPoints3D,aParams,aCrosses))
+        if(SplitAtSeams(rResult,*iter,pEdge,pCurve,aPoints3D,aParams,aCrosses,aCrossPoints))
             {
             bFound=true;
             }
@@ -1008,18 +1014,34 @@ void FacetEdge(SGM::Result               &rResult,
     if(bFound)
         {
         std::vector<double> aEnds;
-        std::sort(aCrosses.begin(),aCrosses.end());
+        std::vector<SGM::Point3D> aEndPoints;
         size_t nCrosses=aCrosses.size();
+        std::vector<SGM::Point4D> aParamAndPos;
+        aParamAndPos.reserve(nCrosses);
         size_t Index1,Index2;
+        for(Index1=0;Index1<nCrosses;++Index1)
+            {
+            SGM::Point3D const &Pos=aCrossPoints[Index1];
+            double dParam=aCrosses[Index1];
+            aParamAndPos.push_back(SGM::Point4D(dParam,Pos.m_x,Pos.m_y,Pos.m_z));
+            }
+        std::sort(aParamAndPos.begin(),aParamAndPos.end());
+        std::sort(aCrosses.begin(),aCrosses.end());
         aEnds.push_back(aCrosses.front());
+        SGM::Point4D Pos4D=aParamAndPos.front();
+        aEndPoints.push_back(SGM::Point3D(Pos4D.m_y,Pos4D.m_z,Pos4D.m_w));
         for(Index1=1;Index1<nCrosses;++Index1)
             {
             if(SGM_MIN_TOL<aCrosses[Index1]-aCrosses[Index1-1])
                 {
+                SGM::Point4D Pos4DIndex=aParamAndPos[Index1];
+                aEndPoints.push_back(SGM::Point3D(Pos4DIndex.m_y,Pos4DIndex.m_z,Pos4DIndex.m_w));
                 aEnds.push_back(aCrosses[Index1]);
                 }
             }
         size_t nEnds=aEnds.size();
+        SGM::Point4D Pos4DBack=aParamAndPos.back();
+        aEndPoints[nEnds-1]=SGM::Point3D(Pos4DBack.m_y,Pos4DBack.m_z,Pos4DBack.m_w);
         aEnds[nEnds-1]=aCrosses.back();
         aPoints3D.clear();
         aParams.clear();
@@ -1030,6 +1052,8 @@ void FacetEdge(SGM::Result               &rResult,
             std::vector<double> aTempParams;
             FacetCurve(pCurve,PartDomain,Options,aTempPos,aTempParams);
             size_t nTempPos=aTempPos.size();
+            aTempPos[0]=aEndPoints[Index1-1];
+            aTempPos[nTempPos-1]=aEndPoints[Index1];
             size_t nStart = Index1==1 ? 0 : 1;
             for(Index2=nStart;Index2<nTempPos;++Index2)
                 {
@@ -1668,7 +1692,7 @@ void Refine(face        const *pFace,
 bool FindSeamCrossings(face        const *pFace,
                        std::vector<Node> &aNodes)
     {
-   surface const *pSurface=pFace->GetSurface();
+    surface const *pSurface=pFace->GetSurface();
     std::vector<size_t> aCrossesU,aCrossesV;
     size_t Index1;
     if(pSurface->ClosedInU())
@@ -3902,10 +3926,10 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=2 && pFace->GetEdges().empty()==false)
-    //    {
-    //    return;
-    //    }
+    // if(pFace->GetID()!=80 && pFace->GetEdges().empty()==false)
+    //     {
+    //     return;
+    //     }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;

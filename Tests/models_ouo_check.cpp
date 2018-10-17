@@ -128,7 +128,7 @@ TEST(models_ouo_check, import_check_OUO_Cone_definition)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: Faces 80 and 85.
+TEST(models_ouo_check, import_check_OUO_glom4_0007_Bflange) 
 {
     const char* file_name = "OUO_glom4/0007-_Bflange.stp";
     SCOPED_TRACE(file_name);

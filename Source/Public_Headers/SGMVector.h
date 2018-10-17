@@ -97,6 +97,8 @@ namespace SGM
 
         double DistanceSquared(Point4D const &Pos) const;
 
+        bool operator<(Point4D const &Pos) const;
+
         double m_x;
         double m_y;
         double m_z;
