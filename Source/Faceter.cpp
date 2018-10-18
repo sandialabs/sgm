@@ -512,8 +512,15 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
     unsigned int Index1;
+    size_t nMaxFlips=aTriangles.size()/3;
+    size_t nCount=0;
     while(bFlipped)
         {
+        ++nCount;
+        if(nMaxFlips<nCount)
+            {
+            break;
+            }
         bFlipped=false;
         for(Index1=0;Index1<(unsigned int)nTriangles;Index1+=3)
             {
@@ -941,6 +948,8 @@ void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
     std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
     std::list<FacetNodeNormal>::iterator LastIter=iter;
     ++iter;
+    size_t nCount=0;
+    size_t nMaxSplit=1000;
     while(iter!=lNodes.end())
         {
         double dotProd = iter->m_Norm%LastIter->m_Norm;
@@ -955,6 +964,11 @@ void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
             else
                 {
                 bSplit = true;
+                ++nCount;
+                if(nMaxSplit<nCount)
+                    {
+                    break;
+                    }
                 }
             }
         else
@@ -3941,7 +3955,7 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=388 && pFace->GetEdges().empty()==false)
+    //if(pFace->GetID()!=4 && pFace->GetEdges().empty()==false)
     //    {
     //    return;
     //    }
