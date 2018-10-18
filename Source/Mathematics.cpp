@@ -1668,7 +1668,7 @@ bool RemovePointFromTriangles(SGM::Result               &rResult,
             aNewPoly.push_back(aPolygon[Index1]);
             }
         }
-    TriangulatePolygon(rResult,aPoints2D,aNewPoly,aNewTriangles);
+    TriangulatePolygon(rResult,aPoints2D,aNewPoly,aNewTriangles,false);
     size_t nNewTriangles=aNewTriangles.size();
 
     size_t nCount=0;

@@ -795,7 +795,8 @@ SGM::EdgeSeamType face::GetSeamType(edge const *pEdge) const
 
 SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                                       SGM::EdgeSideType   nType,
-                                      SGM::Point3D const &Pos) const
+                                      SGM::Point3D const &Pos,
+                                      bool                bFirstCall) const
     {
     SGM::EdgeSeamType nSeamType=GetSeamType(pEdge);
     SGM::Point2D uv=m_pSurface->Inverse(Pos);
@@ -1007,7 +1008,8 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
 
         // Deal with the case of a point at (0,0) on a torus.
 
-        if( m_pSurface->ClosedInU() && 
+        if( bFirstCall &&
+            m_pSurface->ClosedInU() && 
             m_pSurface->ClosedInV() &&
             Domain.OnCorner(uv,SGM_MIN_TOL))
             {
@@ -1025,7 +1027,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 t2=dFraction+SGM_FIT;
                 }
             SGM::Point3D TestPos=pEdge->FindMidPoint(t2);
-            SGM::Point2D TestUV=EvaluateParamSpace(pEdge,nType,TestPos);
+            SGM::Point2D TestUV=EvaluateParamSpace(pEdge,nType,TestPos,false);
             uv.m_u=TestUV.m_u<Domain.m_UDomain.MidPoint() ? Domain.m_UDomain.m_dMin : Domain.m_UDomain.m_dMax;
             uv.m_v=TestUV.m_v<Domain.m_VDomain.MidPoint() ? Domain.m_VDomain.m_dMin : Domain.m_VDomain.m_dMax;
             }

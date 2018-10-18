@@ -1083,6 +1083,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
 
     // create all the triangles/facets/boxes
+
     pThing->FindCachedData(rResult);
 
     return aEntities.size();

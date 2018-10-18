@@ -1674,8 +1674,11 @@ void ModelData::rebuild_graphics(bool                      bReset,
                     SGM::GetFaceNormals(dPtr->mResult, face);
             std::vector<SGM::Vector3D> face_colors;
             get_face_colors(face, face_colors, aEnts);
-            dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
-            update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
+            if(face_tris.empty()==false)
+                {
+                dPtr->mGraphics->add_face(face_points, face_tris, face_normals, face_colors);
+                update_bounds_face(dPtr->mResult, face, dPtr->mGraphics);
+                }
             }
 
         for (const SGM::Complex &ComplexID : complex_list)

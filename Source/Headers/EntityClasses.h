@@ -756,7 +756,8 @@ class face : public topology
 
         SGM::Point2D EvaluateParamSpace(edge         const *pEdge,
                                         SGM::EdgeSideType   nType,
-                                        SGM::Point3D const &Pos) const;
+                                        SGM::Point3D const &Pos,
+                                        bool                bFirstCall=true) const;
 
         // Return true if the normal of the surface points into the body.
 

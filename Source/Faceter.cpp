@@ -2271,22 +2271,30 @@ bool FindSeamCrossings(face        const *pFace,
     return true;
     }
 
-void FindPolygon(std::vector<Node>         &aNodes,
+bool FindPolygon(std::vector<Node>         &aNodes,
                  unsigned int               nStart,
                  std::vector<unsigned int> &aPolygon)
     {
     aPolygon.push_back(nStart);
     size_t nWhere=aNodes[nStart].m_nNext;
     aNodes[nStart].m_bMark=true;
+    size_t nCount=0;
+    size_t nMaxCount=aNodes.size();
     while(nWhere!=nStart)
         {
         aPolygon.push_back((unsigned int)nWhere);
         aNodes[nWhere].m_bMark=true;
         nWhere=aNodes[nWhere].m_nNext;
+        ++nCount;
+        if(nMaxCount<nCount)
+            {
+            return false;
+            }
         }
+    return true;
     }
 
-void FindPolygons(std::vector<Node>                       &aNodes,
+bool FindPolygons(std::vector<Node>                       &aNodes,
                   std::vector<SGM::Point2D>               &aPoints2D,
                   std::vector<SGM::Point3D>               &aPoints3D,
                   std::vector<std::vector<unsigned int> > &aaPolygons,
@@ -2314,7 +2322,10 @@ void FindPolygons(std::vector<Node>                       &aNodes,
         if(aNodes[Index1].m_bMark==false)
             {
             std::vector<unsigned int> aPolygon;
-            FindPolygon(aNodes,Index1,aPolygon);
+            if(FindPolygon(aNodes,Index1,aPolygon)==false)
+                {
+                return false;
+                }
             aaPolygons.push_back(aPolygon);
             if(Index1==1)
                 {
@@ -2322,6 +2333,7 @@ void FindPolygons(std::vector<Node>                       &aNodes,
                 }
             }
         }
+    return true;
     }
 
 void FindOuterLoop(face         const *pFace,
@@ -2839,7 +2851,10 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
             }
         }
      
-    FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags);
+    if(FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags)==false)
+        {
+        return false;
+        }
 
     return true;
     }
@@ -3926,10 +3941,10 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    // if(pFace->GetID()!=80 && pFace->GetEdges().empty()==false)
-    //     {
-    //     return;
-    //     }
+    //if(pFace->GetID()!=388 && pFace->GetEdges().empty()==false)
+    //    {
+    //    return;
+    //    }
 
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
@@ -3990,12 +4005,13 @@ void FacetFace(SGM::Result                    &rResult,
             if(AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,aaPolygons,aGridUVs,aTriangles,&aImprintFlags)==false)
                 {
                 aTriangles.clear();
-                SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
-                if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
-                    {
-                    FindNormals(pFace,aPoints2D,aNormals);
-                    DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
-                    }
+                return;
+                //SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
+                //if(AddGrid(pFace,Options,aPoints2D,aPoints3D,aTriangles,aAdjacencies))
+                //    {
+                //    FindNormals(pFace,aPoints2D,aNormals);
+                //    DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+                //    }
                 }
             else
                 {
