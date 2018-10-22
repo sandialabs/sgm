@@ -142,7 +142,7 @@ TEST(models_ouo_check, import_check_OUO_glom4_0008_Bkey)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) // TODO: Faces 78, 94, 100 surfaces 259, 265
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) 
 {
     const char* file_name = "OUO_glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
@@ -294,19 +294,21 @@ TEST(models_ouo_check, ACISNotchedBrickGeometry)
     SGM::FindBodies(rResult,SGM::Thing(),sBodies);
     SGM::Body BodyID=*(sBodies.begin());
     int Index1;
-    std::vector<SGM::Point3D> aPoints2;
+    std::vector<SGM::Point3D> aPoints,aPoints2;
     aPoints2.reserve(6);
     for(Index1=-5;Index1<1;++Index1)
         {
-        SGM::Point3D Pos(Index1,0.0,0.25);
+        SGM::Point3D Pos(Index1,0.0,-1.0);
         aPoints2.push_back(Pos);
         bool bInBody=SGM::PointInEntity(rResult,Pos,BodyID);
-        if(bInBody)
-            {
-            int a=0;
-            a*=1;
-            }
+        EXPECT_FALSE(bInBody);
+
+        SGM::Point3D Pos2(Index1,0.0,0.25);
+        aPoints.push_back(Pos2);
+        bool bInBody2=SGM::PointInEntity(rResult,Pos2,BodyID);
+        EXPECT_TRUE(bInBody2);
         }
+    SGM::CreatePoints(rResult,aPoints);
     SGM::CreatePoints(rResult,aPoints2);
     
     SGMTesting::ReleaseTestThing(pThing);
