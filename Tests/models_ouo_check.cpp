@@ -279,3 +279,35 @@ TEST(models_ouo_check, ACISBrickWithImprintedEllipses)
     
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(models_ouo_check, ACISNotchedBrickGeometry) 
+{
+    const char* file_name = "ACISNotchedBrickGeometry.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_ouo_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Body> sBodies;
+    SGM::FindBodies(rResult,SGM::Thing(),sBodies);
+    SGM::Body BodyID=*(sBodies.begin());
+    int Index1;
+    std::vector<SGM::Point3D> aPoints2;
+    aPoints2.reserve(6);
+    for(Index1=-5;Index1<1;++Index1)
+        {
+        SGM::Point3D Pos(Index1,0.0,0.25);
+        aPoints2.push_back(Pos);
+        bool bInBody=SGM::PointInEntity(rResult,Pos,BodyID);
+        if(bInBody)
+            {
+            int a=0;
+            a*=1;
+            }
+        }
+    SGM::CreatePoints(rResult,aPoints2);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}

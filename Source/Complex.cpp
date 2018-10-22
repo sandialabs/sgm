@@ -661,8 +661,55 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
     return aAnswer;
     }
 
+class IndexedPoint
+    {
+    public:
+
+        IndexedPoint(SGM::Point3D const &Pos,size_t Index):m_Pos(Pos),m_Index(Index) {}
+        
+        bool operator<(IndexedPoint const &IndexedPos) const {return m_Pos<IndexedPos.m_Pos;}
+
+        SGM::Point3D m_Pos;
+        size_t       m_Index;
+    };
+
 complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     {
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Fast merge by sorting.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+#if 0
+    std::vector<IndexedPoint> aOrdered;
+    size_t nPoints=m_aPoints.size();
+    aOrdered.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=m_aPoints[Index1];
+        aOrdered.push_back({Pos,Index1});
+        }
+    std::sort(aOrdered.begin(),aOrdered.end());
+    std::vector<size_t> mMap;
+    mMap.assign(nPoints,std::numeric_limits<size_t>::max());
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=m_aPoints[Index1];
+        auto Range=std::equal_range(aOrdered.begin(),aOrdered.end(),IndexedPoint(Pos,0));
+        for(auto Hit=Range.first;Hit<Range.second;++Hit)
+            {
+            Hit->m_Index;
+            mMap[]
+            }
+        }
+#endif
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Merge with tree.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
     if(dTolerance==0.0)
         {
         dTolerance=FindAverageEdgeLength()*SGM_FIT;
@@ -834,6 +881,14 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
         aAnswer.push_back(pComplex);
         }
     return aAnswer;
+    }
+
+complex *complex::FindSharpEdges(SGM::Result &rResult,
+                                 double       dAngle) const
+    {
+    rResult;
+    dAngle;
+    return nullptr;
     }
 
 complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,

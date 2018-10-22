@@ -82,6 +82,39 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t RayFireEdge(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   edge                         const *pEdge,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                              dTolerance,
+                   bool                                bUseWholeLine)
+    {
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
+    SGM::Interval1D Domain(-dTolerance,SGM_MAX);
+    curve const *pCurve=pEdge->GetCurve();
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectLineAndCurve(rResult,Origin,Axis,Domain,pCurve,dTolerance,aTempPoints,aTempTypes);
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aTempPoints[Index1];
+        double t=pCurve->Inverse(Pos);
+        if(pEdge->GetDomain().InInterval(t,dTolerance))
+            {
+            aAllPoints.push_back(Pos);
+            aAllTypes.push_back(aTempTypes[Index1]);
+            }
+        }
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
+    }
+
 size_t RayFireFace(SGM::Result                        &rResult,
                    SGM::Point3D                 const &Origin,
                    SGM::UnitVector3D            const &Axis,
@@ -98,15 +131,43 @@ size_t RayFireFace(SGM::Result                        &rResult,
     std::vector<SGM::Point3D> aTempPoints;
     std::vector<SGM::IntersectionType> aTempTypes;
     size_t nHits=IntersectLineAndSurface(rResult,Origin,Axis,Domain,pSurface,dTolerance,aTempPoints,aTempTypes);
-    size_t Index1;
+    size_t Index1,Index2;
     for(Index1=0;Index1<nHits;++Index1)
         {
         SGM::Point3D const &Pos=aTempPoints[Index1];
         SGM::Point2D uv=pSurface->Inverse(Pos);
-        if(pFace->PointInFace(rResult,uv))
+        if(aTempTypes[Index1]==SGM::CoincidentType)
             {
-            aAllPoints.push_back(Pos);
-            aAllTypes.push_back(aTempTypes[Index1]);
+            uv=pSurface->Inverse(Origin);
+            if(pFace->PointInFace(rResult,uv))
+                {
+                aAllPoints.push_back(Origin);
+                aAllTypes.push_back(SGM::CoincidentType);
+                }
+            else
+                {
+                std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+                std::vector<SGM::Point3D> aTempPoints;
+                std::vector<SGM::IntersectionType> aTempTypes;
+                for(edge *pEdge : sEdges)
+                    {
+                    RayFireEdge(rResult,Origin,Axis,pEdge,aTempPoints,aTempTypes,dTolerance,bUseWholeLine);
+                    size_t nTempPoints=aTempPoints.size();
+                    for(Index2=0;Index2<nTempPoints;++Index2)
+                        {
+                        aAllPoints.push_back(aTempPoints[Index2]);
+                        aAllTypes.push_back(SGM::CoincidentType);
+                        }
+                    }
+                }
+            }
+        else
+            {
+            if(pFace->PointInFace(rResult,uv))
+                {
+                aAllPoints.push_back(Pos);
+                aAllTypes.push_back(aTempTypes[Index1]);
+                }
             }
         }
     

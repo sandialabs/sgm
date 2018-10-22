@@ -592,6 +592,12 @@ class complex : public topology
         complex *CreateOrientedBoundingBox(SGM::Result             &rResult,
                                            SGM::UnitVector3D const &UpDirection) const;
 
+        // Returns a complex of segments for adjacent triangles that have an 
+        // angle between them of less than dAngle.
+
+        complex *FindSharpEdges(SGM::Result &rResult,
+                                double       dAngle) const;
+
     private:
 
         std::vector<SGM::Point3D> m_aPoints;

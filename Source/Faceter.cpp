@@ -2782,9 +2782,24 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
     size_t nLoops=1;
+    size_t Index1,Index2,Index3;
     if(pInputEdge==nullptr)
         {
         nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+
+        // Check the loops.
+        std::set<edge *> sLoopEdges;
+        for(auto aLoop : aaLoops)
+            {
+            for(auto pEdge : aLoop)
+                {
+                sLoopEdges.insert(pEdge);
+                }
+            }
+        if(sLoopEdges.size()!=pFace->GetEdges().size())
+            {
+            return false;
+            }
         }
     else
         {
@@ -2803,7 +2818,6 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     // Facet each loop.
 
     std::vector<Node> aNodes;
-    size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nLoops;++Index1)
         {
         std::vector<edge *> const &aLoop=aaLoops[Index1];
@@ -3955,11 +3969,11 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
-    //if(pFace->GetID()!=4 && pFace->GetEdges().empty()==false)
+    //if(pFace->GetID()!=78 && pFace->GetEdges().empty()==false)
     //    {
     //    return;
     //    }
-
+    
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
     std::vector<bool> aImprintFlags;

@@ -32,6 +32,10 @@ bool PointInVolume(SGM::Result        &rResult,
             {
             if(aTypes[Index1]!=SGM::IntersectionType::PointType)
                 {
+                if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
+                    {
+                    return true;
+                    }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
                 break;

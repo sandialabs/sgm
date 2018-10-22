@@ -202,11 +202,14 @@ bool face::Check(SGM::Result              &rResult,
     std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
     size_t nLoops=FindLoops(rResult,aaLoops,aaFlipped);
     size_t Index1,Index2;
+    size_t nTotalEdges=0;
+    size_t nDoubleEdges=0;
     for(Index1=0;Index1<nLoops;++Index1)
         {
         std::vector<edge *> const &aLoop=aaLoops[Index1];
         std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
         size_t nEdges=aLoop.size();
+        nTotalEdges+=nEdges;
         std::vector<vertex *> aStarts,aEnds;
         aStarts.reserve(nEdges);
         aEnds.reserve(nEdges);
@@ -215,6 +218,10 @@ bool face::Check(SGM::Result              &rResult,
             for(Index2=0;Index2<nEdges;++Index2)
                 {
                 edge *pEdge=aLoop[Index2];
+                if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+                    {
+                    ++nDoubleEdges;
+                    }
                 aStarts.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
                 aEnds.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
                 }
@@ -224,6 +231,10 @@ bool face::Check(SGM::Result              &rResult,
             for(Index2=0;Index2<nEdges;++Index2)
                 {
                 edge *pEdge=aLoop[Index2];
+                if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+                    {
+                    ++nDoubleEdges;
+                    }
                 aStarts.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
                 aEnds.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
                 }
@@ -242,6 +253,13 @@ bool face::Check(SGM::Result              &rResult,
                 aCheckStrings.emplace_back(Buffer);
                 }
             }
+        }
+    if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
+        {
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"The loops of Face %lu are missing %lu edges.\n",this->GetID(),(nDoubleEdges+m_sEdges.size())-nTotalEdges);
+        aCheckStrings.emplace_back(Buffer);
         }
 
     // Check the facets
