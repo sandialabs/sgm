@@ -25,6 +25,20 @@ void expect_import_ouo_success(std::string const &file_name, SGM::Result &rResul
 }
 
 
+// Import and model and EXPECT ResultTypeOK
+void expect_import_success(std::string const &file_name, SGM::Result &rResult)
+{
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string file_path = get_models_file_path(file_name);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+}
+
+
 // CheckEntity on a model (result), that has already been imported (from file_path);
 // write any non-empty log file messages to failure message
 void expect_check_success(SGM::Result &rResult)
@@ -219,14 +233,14 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, ACISSphereGeometry_arbitraryCenter) 
+TEST(models_check, ACISSphereGeometry_arbitraryCenter) 
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);
     
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
-    expect_import_ouo_success(file_name, rResult);
+    expect_import_success(file_name, rResult);
     expect_check_success(rResult);
     
     std::set<SGM::Volume> sVolumes;
@@ -238,14 +252,14 @@ TEST(models_ouo_check, ACISSphereGeometry_arbitraryCenter)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_ouo_check, ACISBrickWithImprintedEllipses) 
+TEST(models_check, ACISBrickWithImprintedEllipses) 
 {
     const char* file_name = "ACISBrickWithImprintedEllipses.stp";
     SCOPED_TRACE(file_name);
     
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
-    expect_import_ouo_success(file_name, rResult);
+    expect_import_success(file_name, rResult);
     expect_check_success(rResult);
 
     SGM::Edge EdgeID1(23),EdgeID2(24);
@@ -280,14 +294,14 @@ TEST(models_ouo_check, ACISBrickWithImprintedEllipses)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_ouo_check, ACISNotchedBrickGeometry) 
+TEST(models_check, ACISNotchedBrickGeometry) 
 {
     const char* file_name = "ACISNotchedBrickGeometry.stp";
     SCOPED_TRACE(file_name);
     
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
-    expect_import_ouo_success(file_name, rResult);
+    expect_import_success(file_name, rResult);
     expect_check_success(rResult);
 
     std::set<SGM::Body> sBodies;

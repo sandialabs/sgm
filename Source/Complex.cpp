@@ -680,7 +680,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     //  Fast merge by sorting.
     //
     ///////////////////////////////////////////////////////////////////////////
-#if 0
+//#if 0
     std::vector<IndexedPoint> aOrdered;
     size_t nPoints=m_aPoints.size();
     aOrdered.reserve(nPoints);
@@ -695,15 +695,45 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     mMap.assign(nPoints,std::numeric_limits<size_t>::max());
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        SGM::Point3D const &Pos=m_aPoints[Index1];
-        auto Range=std::equal_range(aOrdered.begin(),aOrdered.end(),IndexedPoint(Pos,0));
-        for(auto Hit=Range.first;Hit<Range.second;++Hit)
+        if(mMap[Index1]==std::numeric_limits<size_t>::max())
             {
-            Hit->m_Index;
-            mMap[]
+            SGM::Point3D const &Pos=m_aPoints[Index1];
+            SGM::Point3D PosUp=Pos;
+            SGM::Point3D PosDown=Pos;
+            PosUp.m_x+=dTolerance;
+            PosDown.m_x-=dTolerance;
+            auto Upper=std::upper_bound(aOrdered.begin(),aOrdered.end(),IndexedPoint(PosUp,0));
+            auto Lower=std::lower_bound(aOrdered.begin(),aOrdered.end(),IndexedPoint(PosDown,0));
+            for(auto Hit=Lower;Hit<Upper;++Hit)
+                {
+                if(SGM::NearEqual(Pos,Hit->m_Pos,dTolerance))
+                    {
+                    mMap[Hit->m_Index]=Index1;
+                    }
+                }
             }
         }
-#endif
+
+    size_t nSegments=m_aSegments.size();
+    std::vector<unsigned int> aNewSegments;
+    aNewSegments.reserve(nSegments);
+    for(Index1=0;Index1<nSegments;++Index1)
+        {
+        aNewSegments.push_back((unsigned int)mMap[m_aSegments[Index1]]);
+        }
+
+    size_t nTriangles=m_aTriangles.size();
+    std::vector<unsigned int> aNewTriangles;
+    aNewTriangles.reserve(nTriangles);
+    for(Index1=0;Index1<nTriangles;++Index1)
+        {
+        aNewTriangles.push_back((unsigned int)mMap[m_aTriangles[Index1]]);
+        }
+
+    complex *pAnswer=new complex(rResult,m_aPoints,aNewSegments,aNewTriangles);
+    pAnswer->ReduceToUsedPoints();
+    return pAnswer;
+#if 0
     ///////////////////////////////////////////////////////////////////////////
     //
     //  Merge with tree.
@@ -759,6 +789,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
         }
 
     return new complex(rResult,aNewPoints,aNewSegments,aNewTriangles);
+#endif
     }
 
 complex *complex::Merge(SGM::Result                  &rResult,
