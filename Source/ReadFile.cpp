@@ -9,16 +9,13 @@
 #include "Topology.h"
 
 #include <fstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
 
 //#define SGM_PROFILE_READER
-
-#ifdef SGM_PROFILE_READER
-#include <iostream>
-#endif
 
 namespace SGMInternal
 {
@@ -1019,11 +1016,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     {
     // Open the file.
     std::ifstream inputFileStream(FileName, std::ifstream::in);
-    if (inputFileStream.bad())
+    if (!inputFileStream.good())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        std::system_error open_error(errno, std::system_category(), "failed to open "+FileName);
+        std::cerr << open_error.what() << std::endl;
+        rResult.SetMessage(open_error.what());
+        //throw open_error;
         return 0;
         }
+
 
     // Split the file.
 

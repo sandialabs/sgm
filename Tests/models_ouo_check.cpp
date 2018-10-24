@@ -137,7 +137,7 @@ TEST(models_ouo_check, import_check_OUO_glom4_0006_Bangle)
 
 TEST(models_ouo_check, import_check_OUO_Cone_definition)
 {
-    const char* file_name = "OUO_glom4/OUO_Cone_definition.stp";
+    const char* file_name = "OUO_Cone_definition.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
