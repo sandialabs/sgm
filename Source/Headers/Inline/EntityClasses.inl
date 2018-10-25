@@ -111,6 +111,120 @@ namespace SGMInternal {
     inline size_t thing::GetMaxID() const
     { return m_nNextID; }
 
+    template<class P>
+    inline thing::iterator<P>::iterator(SGM::EntityType type, std::map<size_t, entity *> const &mAllEntities, bool bTopLevel) :
+            m_type(type), m_iter(mAllEntities.begin()), m_end(mAllEntities.end()), m_bTopLevel(bTopLevel)
+    {}
+
+    template<class P>
+    inline thing::iterator<P>::iterator(SGM::EntityType type, std::map<size_t, entity *>::const_iterator end, bool bTopLevel) :
+            m_type(type), m_iter(end), m_end(end), m_bTopLevel(bTopLevel)
+    {}
+
+    template<class P>
+    inline thing::iterator<P> & thing::iterator<P>::operator++()
+        {
+        while (++m_iter != m_end)
+            {
+            entity *pEntity = m_iter->second;
+            if (pEntity->GetType() == m_type && (!m_bTopLevel || pEntity->IsTopLevel()))
+                break; // we found the next one
+            }
+        return *this;
+        }
+
+    template<class P>
+    inline const thing::iterator<P> thing::iterator<P>::operator++(int)
+        {
+        iterator tmp(*this);
+        operator++();
+        return tmp;
+        }
+
+    template<class P>
+    inline bool thing::iterator<P>::operator==(const thing::iterator<P> &rhs) const
+        { return m_iter == rhs.m_iter && m_bTopLevel == rhs.m_bTopLevel; }
+
+    template<class P>
+    inline bool thing::iterator<P>::operator!=(const thing::iterator<P> &rhs) const
+    { return m_iter != rhs.m_iter || m_bTopLevel != rhs.m_bTopLevel; }
+
+    template<class P>
+    inline P thing::iterator<P>::operator*() const
+    { return reinterpret_cast<P>(m_iter->second); }
+
+    template<>
+    inline thing::iterator<body*> thing::Begin<body*>(bool bTopLevel) const
+    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<body*> thing::End<body*>(bool bTopLevel) const
+    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<volume*> thing::Begin<volume*>(bool bTopLevel) const
+    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<volume*> thing::End<volume*>(bool bTopLevel) const
+    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<face*> thing::Begin<face*>(bool bTopLevel) const
+    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<face*> thing::End<face*>(bool bTopLevel) const
+    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<edge*> thing::Begin<edge*>(bool bTopLevel) const
+    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<edge*> thing::End<edge*>(bool bTopLevel) const
+    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<vertex*> thing::Begin<vertex*>(bool bTopLevel) const
+    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<vertex*> thing::End<vertex*>(bool bTopLevel) const
+    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<complex*> thing::Begin<complex*>(bool bTopLevel) const
+    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<complex*> thing::End<complex*>(bool bTopLevel) const
+    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<surface*> thing::Begin<surface*>(bool bTopLevel) const
+    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<surface*> thing::End<surface*>(bool bTopLevel) const
+    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<curve*> thing::Begin<curve*>(bool bTopLevel) const
+    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<curve*> thing::End<curve*>(bool bTopLevel) const
+    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities.cend(), bTopLevel); }
+
+    template<>
+    inline thing::iterator<attribute*> thing::Begin<attribute*>(bool bTopLevel) const
+    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities, bTopLevel); }
+
+    template<>
+    inline thing::iterator<attribute*> thing::End<attribute*>(bool bTopLevel) const
+    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities.cend(), bTopLevel); }
+
     template <typename ENTITY_TYPE, typename ENTITY_SET>
     inline size_t thing::GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const
     {

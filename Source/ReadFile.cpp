@@ -8,6 +8,9 @@
 #include "ReadFile.h"
 #include "Topology.h"
 
+#define SGM_TIMER
+#include "Timer.h"
+
 #include <fstream>
 
 #ifdef _MSC_VER
@@ -1047,11 +1050,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     // consume lines and push back (line,STEPLineData) into map
     size_t maxSTEPLineNumber;
 
-    // TODO: detect file is big and switch to multithreaded ParseSTEPStreamConcurrent
+    SGM_TIMER_INITIALIZE();
+    SGM_TIMER_START("Parse STEP File");
+#ifdef SGM_MULTITHREADED
+    maxSTEPLineNumber = ParseSTEPStreamConcurrent(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
+    SGM_TIMER_STOP();
+#else
     maxSTEPLineNumber = ParseSTEPStreamSerial(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
-    //maxSTEPLineNumber = ParseSTEPStreamConcurrent(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
-
+#endif
     inputFileStream.close();
+    SGM_TIMER_SUM();
 
     // Create all the entities.
 

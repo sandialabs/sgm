@@ -2821,6 +2821,8 @@ void FindNormalsAndPoints(face                     const *pFace,
     {
     size_t nPoints2D=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
+    aNormals.reserve(nPoints2D);
+    aPoints3D.reserve(nPoints2D);
     size_t Index1;
     for(Index1=0;Index1<nPoints2D;++Index1)
         {
@@ -2828,8 +2830,8 @@ void FindNormalsAndPoints(face                     const *pFace,
         SGM::UnitVector3D Norm;
         SGM::Point3D Pos;
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-        aNormals.push_back(Norm);
-        aPoints3D.push_back(Pos);
+        aNormals.emplace_back(std::move(Norm));
+        aPoints3D.emplace_back(std::move(Pos));
         }
     }
 
@@ -3609,12 +3611,12 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
 
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
     FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
-    
+
+    SGM::Surface SurfID(pFace->GetSurface()->GetID());
     size_t nPolygons=aaPolygons.size();
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        SGM::Surface SurfID(pFace->GetSurface()->GetID());
         SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
             aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals);
         aaPolygons[Index1]=aPolygonIndices;
