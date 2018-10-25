@@ -149,7 +149,7 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     // Cover the holes.
 
     std::vector<unsigned int> aTriangles,aAdjacencies;
-    TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
+    TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,false);
     return new complex(rResult,aPoints3D,aTriangles);
     }
 
@@ -194,7 +194,15 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    complex *pBoundary=FindBoundary(rResult);
+    complex *pBoundary;
+    if(m_aTriangles.size())
+        {
+        pBoundary=FindBoundary(rResult);
+        }
+    else
+        {
+        pBoundary=new complex(rResult,*this);
+        }
     double dAvergeEdgeLength=pBoundary->FindAverageEdgeLength();
     std::vector<complex *> aParts=pBoundary->SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
     SGM::Interval3D Box=pBoundary->GetBox(rResult);
@@ -223,41 +231,15 @@ complex *complex::Cover(SGM::Result &rResult) const
             rResult.GetThing()->DeleteEntity(pCycle);
             }
         }
-    return aCovers[0];
-#if 0
-    double dAvergeEdgeLength=FindAverageEdgeLength();
-    std::vector<complex *> aParts=SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
-    return aParts[0];
-
-    complex *pMerge=Merge(rResult);
-    complex *pBoundary=pMerge->FindBoundary(rResult);
-    rResult.GetThing()->DeleteEntity(pMerge);
-    std::vector<complex *> aBoundary=pBoundary->FindComponents(rResult);
-    rResult.GetThing()->DeleteEntity(pBoundary);
-    std::vector<std::vector<complex *> > aaPlanarSets;
-    std::vector<SortablePlane> aPlanes;
-    size_t nPlanes=SortByPlane(aBoundary,aaPlanarSets,aPlanes);
-    size_t Index1,Index2;
-    std::vector<complex *> aAllParts;
-    aAllParts.reserve(nPlanes);
-    for(Index1=0;Index1<nPlanes;++Index1)
+    complex *pLastComplex=aCovers[aCovers.size()-1];
+    aCovers.pop_back();
+    complex *pAnswer=pLastComplex->Merge(rResult,aCovers);
+    aCovers.push_back(pLastComplex);
+    for(auto pEnt : aCovers)
         {
-        aAllParts.push_back(CoverPlanarSet(rResult,aaPlanarSets[Index1]));
-        size_t nParts=aaPlanarSets[Index1].size();
-        for(Index2=0;Index2<nParts;++Index2)
-            {
-            rResult.GetThing()->DeleteEntity(aaPlanarSets[Index1][Index2]);
-            }
-        }
-    
-    std::vector<complex *> aAnswer=MakeSymmetriesMatch(aAllParts,aPlanes);
-    complex *pAnswer=Merge(rResult,aAnswer);
-    for(Index1=0;Index1<nPlanes;++Index1)
-        {
-        rResult.GetThing()->DeleteEntity(aAllParts[Index1]);
+        rResult.GetThing()->DeleteEntity(pEnt);
         }
     return pAnswer;
-#endif
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const
@@ -679,8 +661,85 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
     return aAnswer;
     }
 
+class IndexedPoint
+    {
+    public:
+
+        IndexedPoint(SGM::Point3D const &Pos,size_t Index):m_Pos(Pos),m_Index(Index) {}
+        
+        bool operator<(IndexedPoint const &IndexedPos) const {return m_Pos<IndexedPos.m_Pos;}
+
+        SGM::Point3D m_Pos;
+        size_t       m_Index;
+    };
+
 complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     {
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Fast merge by sorting.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+//#if 0
+    std::vector<IndexedPoint> aOrdered;
+    size_t nPoints=m_aPoints.size();
+    aOrdered.reserve(nPoints);
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        SGM::Point3D const &Pos=m_aPoints[Index1];
+        aOrdered.push_back({Pos,Index1});
+        }
+    std::sort(aOrdered.begin(),aOrdered.end());
+    std::vector<size_t> mMap;
+    mMap.assign(nPoints,std::numeric_limits<size_t>::max());
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        if(mMap[Index1]==std::numeric_limits<size_t>::max())
+            {
+            SGM::Point3D const &Pos=m_aPoints[Index1];
+            SGM::Point3D PosUp=Pos;
+            SGM::Point3D PosDown=Pos;
+            PosUp.m_x+=dTolerance;
+            PosDown.m_x-=dTolerance;
+            auto Upper=std::upper_bound(aOrdered.begin(),aOrdered.end(),IndexedPoint(PosUp,0));
+            auto Lower=std::lower_bound(aOrdered.begin(),aOrdered.end(),IndexedPoint(PosDown,0));
+            for(auto Hit=Lower;Hit<Upper;++Hit)
+                {
+                if(SGM::NearEqual(Pos,Hit->m_Pos,dTolerance))
+                    {
+                    mMap[Hit->m_Index]=Index1;
+                    }
+                }
+            }
+        }
+
+    size_t nSegments=m_aSegments.size();
+    std::vector<unsigned int> aNewSegments;
+    aNewSegments.reserve(nSegments);
+    for(Index1=0;Index1<nSegments;++Index1)
+        {
+        aNewSegments.push_back((unsigned int)mMap[m_aSegments[Index1]]);
+        }
+
+    size_t nTriangles=m_aTriangles.size();
+    std::vector<unsigned int> aNewTriangles;
+    aNewTriangles.reserve(nTriangles);
+    for(Index1=0;Index1<nTriangles;++Index1)
+        {
+        aNewTriangles.push_back((unsigned int)mMap[m_aTriangles[Index1]]);
+        }
+
+    complex *pAnswer=new complex(rResult,m_aPoints,aNewSegments,aNewTriangles);
+    pAnswer->ReduceToUsedPoints();
+    return pAnswer;
+#if 0
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //  Merge with tree.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
     if(dTolerance==0.0)
         {
         dTolerance=FindAverageEdgeLength()*SGM_FIT;
@@ -730,6 +789,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
         }
 
     return new complex(rResult,aNewPoints,aNewSegments,aNewTriangles);
+#endif
     }
 
 complex *complex::Merge(SGM::Result                  &rResult,
@@ -852,6 +912,14 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
         aAnswer.push_back(pComplex);
         }
     return aAnswer;
+    }
+
+complex *complex::FindSharpEdges(SGM::Result &rResult,
+                                 double       dAngle) const
+    {
+    rResult;
+    dAngle;
+    return nullptr;
     }
 
 complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,

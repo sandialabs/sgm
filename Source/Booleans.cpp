@@ -168,6 +168,10 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
         aIsolated[0]=false;
         aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
         }
+    else if(aHits.empty() && pCurve->GetClosed())
+        {
+        aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
+        }
 
     // Check for isolated points.
 
@@ -490,11 +494,10 @@ face *ImprintAtoll(SGM::Result &rResult,
     pFace->GetVolume()->AddFace(pNewFace);
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
-    FacetOptions Options;
     std::vector<SGM::Point2D> aPoints2D;
     std::vector<SGM::Point3D> aPoints3D;
     std::vector<entity *> aEntities;
-    FacetFaceLoops(rResult,pNewFace,Options,aPoints2D,aPoints3D,aaPolygons,pEdge);
+    FacetFaceLoops(rResult,pNewFace,aPoints2D,aPoints3D,aaPolygons,pEdge);
     double dArea=0.0;
     for(std::vector<unsigned int> const &aPolygon : aaPolygons)
         {

@@ -621,6 +621,12 @@ class complex : public topology
         complex *CreateOrientedBoundingBox(SGM::Result             &rResult,
                                            SGM::UnitVector3D const &UpDirection) const;
 
+        // Returns a complex of segments for adjacent triangles that have an 
+        // angle between them of less than dAngle.
+
+        complex *FindSharpEdges(SGM::Result &rResult,
+                                double       dAngle) const;
+
     private:
 
         std::vector<SGM::Point3D> m_aPoints;
@@ -785,7 +791,8 @@ class face : public topology
 
         SGM::Point2D EvaluateParamSpace(edge         const *pEdge,
                                         SGM::EdgeSideType   nType,
-                                        SGM::Point3D const &Pos) const;
+                                        SGM::Point3D const &Pos,
+                                        bool                bFirstCall=true) const;
 
         // Return true if the normal of the surface points into the body.
 
@@ -817,6 +824,8 @@ class face : public topology
         void ClearFacets(SGM::Result &rResult) const;
 
         void TransformFacets(SGM::Transform3D const &Trans);
+
+        bool HasBranchedVertex() const;
 
     private:
 
@@ -908,7 +917,7 @@ class edge : public topology
 
         std::vector<double> const &GetParams(SGM::Result &rResult) const;
 
-        double GetTolerance() const {return m_dTolerance;}
+        double GetTolerance() const;
 
         bool IsTopLevel() const override;
 

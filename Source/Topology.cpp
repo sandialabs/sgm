@@ -709,10 +709,10 @@ edge *FindNextEdge(SGM::Result  &rResult,
         }
     std::vector<edge *> aEdges;
     size_t nEdges=OrderEdgesAboutVertexOnFace(rResult,pVertex,pFace,aEdges);
-    if(pFace->GetFlipped())
-        {
-        std::reverse(aEdges.begin(),aEdges.end());
-        }
+    //if(pFace->GetFlipped())
+    //    {
+    //    std::reverse(aEdges.begin(),aEdges.end());
+    //    }
     edge *pAnswer=nullptr;
     size_t Index1;
     for(Index1=0;Index1<nEdges;++Index1)

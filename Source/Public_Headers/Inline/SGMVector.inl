@@ -248,6 +248,43 @@ namespace SGM {
         return *this;
     }
 
+    inline bool Point4D::operator<(Point4D const &Pos) const
+    {
+        if(m_x<Pos.m_x)
+            {
+            return true;
+            }
+        if(Pos.m_x<m_x)
+            {
+            return false;
+            }
+        if(m_y<Pos.m_y)
+            {
+            return true;
+            }
+        if(Pos.m_y<m_y)
+            {
+            return false;
+            }
+        if(m_z<Pos.m_z)
+            {
+            return true;
+            }
+        if(Pos.m_z<m_z)
+            {
+            return false;
+            }
+        if(m_z<Pos.m_w)
+            {
+            return true;
+            }
+        if(Pos.m_z<m_w)
+            {
+            return false;
+            }
+        return false;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     //
     //  UnitVector2D methods

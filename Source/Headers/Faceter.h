@@ -21,15 +21,13 @@ class FacetOptions
             //m_dEdgeAngleTol(0.17453292519943295769236907684886),
             m_dMaxLength(0),
             m_dCordHeight(0),
-            m_nMaxFacets(10000),
-            m_bParametric(false) {}
+            m_nMaxFacets(10000) {}
 
         double m_dFaceAngleTol;
         double m_dEdgeAngleTol;
         double m_dMaxLength;
         double m_dCordHeight;
         size_t m_nMaxFacets;
-        bool   m_bParametric;
     };
 
 void FacetCurve(curve               const *pCurve,
@@ -54,11 +52,11 @@ void FacetFace(SGM::Result                    &rResult,
 
 bool FacetFaceLoops(SGM::Result                             &rResult, 
                     face                              const *pFace,
-                    FacetOptions                      const &Options,
                     std::vector<SGM::Point2D>               &aPoints2D,
                     std::vector<SGM::Point3D>               &aPoints3D,
                     std::vector<std::vector<unsigned int> > &aaPolygons,
-                    edge                                    *pInputEdge=nullptr);
+                    edge                                    *pInputEdge=nullptr,
+                    std::vector<bool>                       *pImprintFlags=nullptr);
 
 bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,

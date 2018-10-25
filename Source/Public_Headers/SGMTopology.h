@@ -98,6 +98,9 @@ namespace SGM
     SGM_EXPORT bool IsFaceFlipped(SGM::Result     &rResult,
                                   SGM::Face const &FaceID);
 
+    SGM_EXPORT double GetToleranceOfEdge(SGM::Result     &rResult,
+                                         SGM::Edge const &EdgeID);
+
     } // End of SGM namespace
 
 #endif // SGM_TOPOLOGY_CLASSES_H

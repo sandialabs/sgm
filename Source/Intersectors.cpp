@@ -82,6 +82,39 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t RayFireEdge(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   edge                         const *pEdge,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                              dTolerance,
+                   bool                                bUseWholeLine)
+    {
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
+    SGM::Interval1D Domain(-dTolerance,SGM_MAX);
+    curve const *pCurve=pEdge->GetCurve();
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectLineAndCurve(rResult,Origin,Axis,Domain,pCurve,dTolerance,aTempPoints,aTempTypes);
+    size_t Index1;
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        SGM::Point3D const &Pos=aTempPoints[Index1];
+        double t=pCurve->Inverse(Pos);
+        if(pEdge->GetDomain().InInterval(t,dTolerance))
+            {
+            aAllPoints.push_back(Pos);
+            aAllTypes.push_back(aTempTypes[Index1]);
+            }
+        }
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    aPoints=aAllPoints;
+    aTypes=aAllTypes;
+    return nAnswer;
+    }
+
 size_t RayFireFace(SGM::Result                        &rResult,
                    SGM::Point3D                 const &Origin,
                    SGM::UnitVector3D            const &Axis,
@@ -98,15 +131,43 @@ size_t RayFireFace(SGM::Result                        &rResult,
     std::vector<SGM::Point3D> aTempPoints;
     std::vector<SGM::IntersectionType> aTempTypes;
     size_t nHits=IntersectLineAndSurface(rResult,Origin,Axis,Domain,pSurface,dTolerance,aTempPoints,aTempTypes);
-    size_t Index1;
+    size_t Index1,Index2;
     for(Index1=0;Index1<nHits;++Index1)
         {
         SGM::Point3D const &Pos=aTempPoints[Index1];
         SGM::Point2D uv=pSurface->Inverse(Pos);
-        if(pFace->PointInFace(rResult,uv))
+        if(aTempTypes[Index1]==SGM::CoincidentType)
             {
-            aAllPoints.push_back(Pos);
-            aAllTypes.push_back(aTempTypes[Index1]);
+            uv=pSurface->Inverse(Origin);
+            if(pFace->PointInFace(rResult,uv))
+                {
+                aAllPoints.push_back(Origin);
+                aAllTypes.push_back(SGM::CoincidentType);
+                }
+            else
+                {
+                std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+                std::vector<SGM::Point3D> aTempPoints;
+                std::vector<SGM::IntersectionType> aTempTypes;
+                for(edge *pEdge : sEdges)
+                    {
+                    RayFireEdge(rResult,Origin,Axis,pEdge,aTempPoints,aTempTypes,dTolerance,bUseWholeLine);
+                    size_t nTempPoints=aTempPoints.size();
+                    for(Index2=0;Index2<nTempPoints;++Index2)
+                        {
+                        aAllPoints.push_back(aTempPoints[Index2]);
+                        aAllTypes.push_back(SGM::CoincidentType);
+                        }
+                    }
+                }
+            }
+        else
+            {
+            if(pFace->PointInFace(rResult,uv))
+                {
+                aAllPoints.push_back(Pos);
+                aAllTypes.push_back(aTempTypes[Index1]);
+                }
             }
         }
     
@@ -582,9 +643,9 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
-    else if(aPoints2.size()==1 && SGM::NearEqual(aPoints[0],Center,SGM_ZERO)==false)
+    else if(aPoints2.size()==1 && SGM::NearEqual(aPoints2[0],Center,SGM_ZERO)==false)
         {
-        SGM::UnitVector3D UVec=aPoints[0]-Center;
+        SGM::UnitVector3D UVec=aPoints2[0]-Center;
         SGM::Point3D Pos=Center+UVec*dRadius;
         if(Pos.DistanceSquared(aPoints2[0])<dTolerance*dTolerance)
             {
@@ -2344,12 +2405,12 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
      }
 
 size_t IntersectSphereAndSphere(SGM::Result                &rResult,
-                             sphere               const *pSphere1,
-                             sphere               const *pSphere2,
-                             std::vector<curve *>       &aCurves,
-                             face                 const *,//pFace1,
-                             face                 const *,//pFace2,
-                             double                      dTolerance)
+                                sphere               const *pSphere1,
+                                sphere               const *pSphere2,
+                                std::vector<curve *>       &aCurves,
+                                face                 const *,//pFace1,
+                                face                 const *,//pFace2,
+                                double                      dTolerance)
     {
     double dR1=pSphere1->m_dRadius;
     double dR2=pSphere2->m_dRadius;
@@ -2365,11 +2426,11 @@ size_t IntersectSphereAndSphere(SGM::Result                &rResult,
         }
     else if(dDist<dR1+dR2)
         {
-        double dR2Squared=dR2*dR2;
-        double dB=(dR2Squared-dR1*dR1)/(2*dDist);
         SGM::UnitVector3D Norm=Center1-Center2;
-        double dRadius=sqrt(dR2Squared-dB*dB);
-        aCurves.push_back(new circle(rResult,Center2+Norm*dB,Norm,dRadius));
+        double S=(dR1+dR2+dDist)*0.5;
+        double dArea=sqrt(S*(S-dR1)*(S-dR2)*(S-dDist));
+        double dRadius=2*dArea/dDist;
+        aCurves.push_back(new circle(rResult,Center2+Norm*sqrt(dR2*dR2-dRadius*dRadius),Norm,dRadius));
         }
     return aCurves.size();
     }

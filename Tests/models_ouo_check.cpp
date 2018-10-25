@@ -2,6 +2,8 @@
 #include "test_utility.h"
 
 #include "SGMInterrogate.h"
+#include "SGMTopology.h"
+#include "SGMComplex.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -17,6 +19,20 @@ void expect_import_ouo_success(std::string const &file_name, SGM::Result &rResul
     SGM::TranslatorOptions const options;
 
     std::string file_path = get_models_ouo_file_path(file_name);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+}
+
+
+// Import and model and EXPECT ResultTypeOK
+void expect_import_success(std::string const &file_name, SGM::Result &rResult)
+{
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string file_path = get_models_file_path(file_name);
     SGM::ReadFile(rResult, file_path, entities, log, options);
     auto resultType = rResult.GetResult();
     EXPECT_EQ(resultType, SGM::ResultTypeOK);
@@ -50,8 +66,7 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-
-TEST(models_ouo_check, import_check_OUO_TSLhousingGeom) 
+TEST(models_ouo_check, DISABLED_import_check_OUO_TSLhousingGeom) 
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
@@ -69,13 +84,6 @@ TEST(models_ouo_check, import_check_OUO_grv_geom)
     const char* file_name = "OUO_grv_geom.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
-
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-    std::vector<SGM::Face> faces;
-    //SGM::Point3D sgm_point(0.00623037301312708,-1.04973316890717e-18,0.0166638951384168);
-    SGM::Point3D sgm_point(0,0,0);
-    SGM::FindCloseFaces(rResult, sgm_point, SGM::Thing(), 1e-5, faces);
 }
 
 TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
@@ -129,26 +137,26 @@ TEST(models_ouo_check, import_check_OUO_glom4_0006_Bangle)
 
 TEST(models_ouo_check, import_check_OUO_Cone_definition)
 {
-    const char* file_name = "OUO_glom4/OUO_Cone_definition.stp";
+    const char* file_name = "OUO_Cone_definition.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0007_Bflange) // TODO: Faces 80 and 85.
+TEST(models_ouo_check, import_check_OUO_glom4_0007_Bflange) 
 {
     const char* file_name = "OUO_glom4/0007-_Bflange.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0008_Bkey) // TODO: Faces 5, 10, and 7.
+TEST(models_ouo_check, import_check_OUO_glom4_0008_Bkey) 
 {
     const char* file_name = "OUO_glom4/0008-_Bkey.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) // TODO: Faces 78, 94, 100 surfaces 259, 265
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) 
 {
     const char* file_name = "OUO_glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
@@ -197,7 +205,7 @@ TEST(models_ouo_check, import_check_OUO_glom4_0015_Bpipe)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0016_Bspring) // TODO: Faces 2 and 3 minor flipped facet.
+TEST(models_ouo_check, import_check_OUO_glom4_0016_Bspring) 
 {
     const char* file_name = "OUO_glom4/0016-_Bspring.stp";
     SCOPED_TRACE(file_name);
@@ -218,9 +226,104 @@ TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: Lo
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0019_Bhinkey_A)
+TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
+}
+
+TEST(models_check, ACISSphereGeometry_arbitraryCenter) 
+{
+    const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+    
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Point3D Pos(2.1,2.9,-3.89);
+    bool bAnswer=SGM::PointInEntity(rResult,Pos,*(sVolumes.begin()));
+    EXPECT_TRUE(bAnswer);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_check, ACISBrickWithImprintedEllipses) 
+{
+    const char* file_name = "ACISBrickWithImprintedEllipses.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    SGM::Edge EdgeID1(23),EdgeID2(24);
+    size_t Index1,Index2;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.reserve(81);
+    for(Index1=1;Index1<10;++Index1)
+        {
+        for(Index2=1;Index2<10;++Index2)
+            {
+            SGM::Point3D Pos(5.0,Index1-5.0,Index2-5.0);
+            aPoints.push_back(Pos);
+            SGM::Entity CloseEntity;
+            SGM::Point3D ClosePos1,ClosePos2;
+            SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID1,ClosePos1,CloseEntity);
+            double dDist1=Pos.DistanceSquared(ClosePos1);
+            SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID2,ClosePos2,CloseEntity);
+            double dDist2=Pos.DistanceSquared(ClosePos2);
+            SGM::Point3D CPos=dDist1<dDist2 ? ClosePos1 : ClosePos2;
+            SGM::CreateLinearEdge(rResult,Pos,CPos);
+            }
+        }
+    SGM::CreatePoints(rResult,aPoints);
+
+    //SGM::Edge EdgeID1(23);
+    //SGM::Point3D Pos(5.0,-5.0,5.0);
+    //SGM::Entity CloseEntity;
+    //SGM::Point3D ClosePos1;
+    //SGM::FindClosestPointOnEntity(rResult,Pos,EdgeID1,ClosePos1,CloseEntity);
+    //SGM::CreateLinearEdge(rResult,Pos,ClosePos1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_check, ACISNotchedBrickGeometry) 
+{
+    const char* file_name = "ACISNotchedBrickGeometry.stp";
+    SCOPED_TRACE(file_name);
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Body> sBodies;
+    SGM::FindBodies(rResult,SGM::Thing(),sBodies);
+    SGM::Body BodyID=*(sBodies.begin());
+    int Index1;
+    std::vector<SGM::Point3D> aPoints,aPoints2;
+    aPoints2.reserve(6);
+    for(Index1=-5;Index1<1;++Index1)
+        {
+        SGM::Point3D Pos(Index1,0.0,-1.0);
+        aPoints2.push_back(Pos);
+        bool bInBody=SGM::PointInEntity(rResult,Pos,BodyID);
+        EXPECT_FALSE(bInBody);
+
+        SGM::Point3D Pos2(Index1,0.0,0.25);
+        aPoints.push_back(Pos2);
+        bool bInBody2=SGM::PointInEntity(rResult,Pos2,BodyID);
+        EXPECT_TRUE(bInBody2);
+        }
+    SGM::CreatePoints(rResult,aPoints);
+    SGM::CreatePoints(rResult,aPoints2);
+    
+    SGMTesting::ReleaseTestThing(pThing);
 }

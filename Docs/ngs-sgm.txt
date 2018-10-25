@@ -61,3 +61,12 @@ code/ngs/morph_mesher/unit_tests/pgeom/ACISFixtures/UnitTestGeometryFixtures.cpp
 
 Matt suggested that to be a good test to start with
 
+
+==== here is a test
+/code/ngs/morph_mesher/unit_tests/pgeom/UnitTestPGeomSphereContainingPoint.cpp
+ 
+==== to run just it
+mpirun -n 1 ./bin/linux-gcc-7.2.0-ip-openmpi-1.10.2/release/morph_mesher_pgeom_utest --gtest_filter=MorphPGeomSphereContainingPoint.testSphereContainingPoint
+
+# with totalview
+mpirun -n 1 -tv morph_mesher_pgeom_utest --gtest_filter=MorphPGeomSphereContainingPointSGM.testSphereContainingPoint

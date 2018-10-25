@@ -32,6 +32,10 @@ bool PointInVolume(SGM::Result        &rResult,
             {
             if(aTypes[Index1]!=SGM::IntersectionType::PointType)
                 {
+                if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
+                    {
+                    return true;
+                    }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
                 break;
@@ -109,6 +113,13 @@ bool PointInEntity(SGM::Result        &rResult,
             }
         case SGM::FaceType:
             {
+            face const *pFace=(face const *)pEntity;
+            SGM::Point3D ClosePos;
+            SGM::Point2D uv=pFace->GetSurface()->Inverse(Point,&ClosePos);
+            if(Point.Distance(ClosePos)<dTolerance && pFace->PointInFace(rResult,uv))
+                {
+                bAnswer=true;
+                }
             break;
             }
         case SGM::EdgeType:

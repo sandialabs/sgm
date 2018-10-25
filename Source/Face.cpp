@@ -277,12 +277,14 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         *pBoundary=pEntity;
         }
-    SGM::Point2D Buv=m_pSurface->Inverse(CPos);
     if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
+        edge *pEdge=(edge *)pEntity;
+        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
+        SGM::Point2D Buv=EvaluateParamSpace(pEdge,EdgeTypeIter->second,CPos);
+
         SGM::Vector3D VecU,VecV,Vec;
         m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
-        edge *pEdge=(edge *)pEntity;
         curve const *pCurve=pEdge->GetCurve();
         double t=pCurve->Inverse(CPos);
         if(pPos)
@@ -293,7 +295,6 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
         SGM::Vector2D TestVec=uv-Buv;
         double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
-        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
         if(EdgeTypeIter->second==SGM::FaceOnRightType)
             {
             dZ=-dZ;
@@ -313,6 +314,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
+        SGM::Point2D Buv=m_pSurface->Inverse(CPos);
         vertex *pVertex=(vertex *)pEntity;
         SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)
@@ -694,6 +696,43 @@ void face::TransformFacets(SGM::Transform3D const &Trans)
         }
     }
 
+bool face::HasBranchedVertex() const
+    {
+    std::set<vertex *> sVertices;
+    for(auto pEdge : m_sEdges)
+        {
+        if(pEdge->GetStart())
+            {
+            sVertices.insert(pEdge->GetStart());
+            }
+        if(pEdge->GetEnd())
+            {
+            sVertices.insert(pEdge->GetEnd());
+            }
+        }
+    for(auto pVertex : sVertices)
+        {
+        std::set<edge *,EntityCompare> const &sEdges=pVertex->GetEdges();
+        int nCount=0;
+        for(auto pVertexEdge : sEdges)
+            {
+            if(m_sEdges.find(pVertexEdge)!=m_sEdges.end())
+                {
+                ++nCount;
+                if(pVertexEdge->GetStart()==pVertexEdge->GetEnd())
+                    {
+                    ++nCount;
+                    }
+                }
+            }
+        if(2<nCount)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 bool face::GetFlipped() const
     {
     return m_bFlipped;
@@ -756,7 +795,8 @@ SGM::EdgeSeamType face::GetSeamType(edge const *pEdge) const
 
 SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                                       SGM::EdgeSideType   nType,
-                                      SGM::Point3D const &Pos) const
+                                      SGM::Point3D const &Pos,
+                                      bool                bFirstCall) const
     {
     SGM::EdgeSeamType nSeamType=GetSeamType(pEdge);
     SGM::Point2D uv=m_pSurface->Inverse(Pos);
@@ -901,10 +941,75 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     }
                 }
             }
+        else
+            {
+            // Check for singularities.
+            if( m_pSurface->SingularHighV() && 
+                SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D PosE;
+                if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+                    {
+                    PosE=pEdge->FindMidPoint(0.01);
+                    }
+                else 
+                    {
+                    PosE=pEdge->FindMidPoint(0.99);
+                    }
+                SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+                uv.m_u=uvE.m_u;
+                }
+            else if( m_pSurface->SingularHighU() && 
+                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D PosE;
+                if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+                    {
+                    PosE=pEdge->FindMidPoint(0.01);
+                    }
+                else 
+                    {
+                    PosE=pEdge->FindMidPoint(0.99);
+                    }
+                SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+                uv.m_v=uvE.m_v;
+                }
+            else if( m_pSurface->SingularLowV() && 
+                SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D PosE;
+                if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+                    {
+                    PosE=pEdge->FindMidPoint(0.01);
+                    }
+                else 
+                    {
+                    PosE=pEdge->FindMidPoint(0.99);
+                    }
+                SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+                uv.m_u=uvE.m_u;
+                }
+            else if( m_pSurface->SingularLowU() && 
+                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+                {
+                SGM::Point3D PosE;
+                if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+                    {
+                    PosE=pEdge->FindMidPoint(0.01);
+                    }
+                else 
+                    {
+                    PosE=pEdge->FindMidPoint(0.99);
+                    }
+                SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+                uv.m_v=uvE.m_v;
+                }
+            }
 
         // Deal with the case of a point at (0,0) on a torus.
 
-        if( m_pSurface->ClosedInU() && 
+        if( bFirstCall &&
+            m_pSurface->ClosedInU() && 
             m_pSurface->ClosedInV() &&
             Domain.OnCorner(uv,SGM_MIN_TOL))
             {
@@ -922,7 +1027,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 t2=dFraction+SGM_FIT;
                 }
             SGM::Point3D TestPos=pEdge->FindMidPoint(t2);
-            SGM::Point2D TestUV=EvaluateParamSpace(pEdge,nType,TestPos);
+            SGM::Point2D TestUV=EvaluateParamSpace(pEdge,nType,TestPos,false);
             uv.m_u=TestUV.m_u<Domain.m_UDomain.MidPoint() ? Domain.m_UDomain.m_dMin : Domain.m_UDomain.m_dMax;
             uv.m_v=TestUV.m_v<Domain.m_VDomain.MidPoint() ? Domain.m_VDomain.m_dMin : Domain.m_VDomain.m_dMax;
             }

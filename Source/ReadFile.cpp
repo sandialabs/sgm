@@ -12,16 +12,13 @@
 #include "Timer.h"
 
 #include <fstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
 
 //#define SGM_PROFILE_READER
-
-#ifdef SGM_PROFILE_READER
-#include <iostream>
-#endif
 
 namespace SGMInternal
 {
@@ -1022,11 +1019,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     {
     // Open the file.
     std::ifstream inputFileStream(FileName, std::ifstream::in);
-    if (inputFileStream.bad())
+    if (!inputFileStream.good())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        std::system_error open_error(errno, std::system_category(), "failed to open "+FileName);
+        std::cerr << open_error.what() << std::endl;
+        rResult.SetMessage(open_error.what());
+        //throw open_error;
         return 0;
         }
+
 
     // Split the file.
 
@@ -1091,6 +1093,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
 
     // create all the triangles/facets/boxes
+
     pThing->FindCachedData(rResult);
 
     return aEntities.size();
@@ -1167,8 +1170,9 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
         size_t Index1;
         for(Index1=0;Index1<nEntities;++Index1)
             {
-            complex *pComplex=(complex *)aEntities[Index1];
-            complex *pMergedComplex=pComplex->Merge(rResult,0.0);
+            complex *pComplex=(complex *)aEntities[Index1]; 
+            complex *pMergedComplex=pComplex->Merge(rResult,SGM_ZERO);
+            rResult.GetThing()->DeleteEntity(pComplex);
             aNewEnts.push_back(pMergedComplex);
             }
         aEntities=aNewEnts;

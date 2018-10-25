@@ -144,20 +144,26 @@ namespace SGM
     // or aPoints is empty with an error of ResultTypeInsufficientData.
     // If the clockwise polygons are not contained inside a counter clockwise
     // polygon then false is returned.  In addition, the aAjacencies are returned
-    // since they are found in the process.
+    // since they are found in the process.  If the polygons are known to not
+    // self-intersect, then bSelfIntersect may be set to false and the function
+    // will run faster.
 
     SGM_EXPORT bool TriangulatePolygonWithHoles(Result                                        &rResult,
                                                 std::vector<Point2D>                    const &aPoints2D,
                                                 std::vector<std::vector<unsigned int> > const &aaPolygons,
                                                 std::vector<unsigned int>                     &aTriangles,
-                                                std::vector<unsigned int>                     &aAdjacencies);
+                                                std::vector<unsigned int>                     &aAdjacencies,
+                                                bool                                           bSelfIntersecting=true);
 
-    // Same as TriangulatePolygonWithHoles but works on only one polygon.
+    // Same as TriangulatePolygonWithHoles but works on only one polygon.  If the polygon 
+    // is known to not self-intersect, then bSelfIntersect may be set to false and the 
+    // function will run faster.
 
     SGM_EXPORT bool TriangulatePolygon(Result                          &rResult,
                                        std::vector<Point2D>      const &aPoints2D,
                                        std::vector<unsigned int> const &aPolygon,
-                                       std::vector<unsigned int>       &aTriangles);
+                                       std::vector<unsigned int>       &aTriangles,
+                                       bool                             bSelfIntersecting=true);
 
     // Returns true and a polygon of the form (a,b,c,d,...) if the given segments
     // of the form (a0,b0,a1,b1,a2,b2,...) form a cylic graph.
@@ -165,18 +171,18 @@ namespace SGM
     SGM_EXPORT bool FindPolygon(std::vector<unsigned int> const &aSegments,
                                 std::vector<unsigned int>       &aPolygon);
 
-    // Given a vector of points along with a vector of polygons on the given points divide the polygons into
+    // Given a vector of points along, with a vector of polygons, on the given points, divide the polygons into
     // nested groups of polygons where each first polygon is an outside polygon and the following polygons are
-    // inside the first polygon in the group.  If the polygons do not form well nested groups, then false is 
-    // returned.
+    // inside the first polygon in the group.  If an inside polygon is not inside an outside polygon, then
+    // an empty polygon is returned for the first or outside polygon of the group.
 
-    SGM_EXPORT bool GroupPolygons(std::vector<std::vector<unsigned int> >         const &aaPolygons,
+    SGM_EXPORT void GroupPolygons(std::vector<std::vector<unsigned int> >         const &aaPolygons,
                                   std::vector<Point2D>                            const &aPoints2D,
                                   std::vector<std::vector<std::vector<unsigned int> > > &aaaPolygons);
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  Triangles functions
+    //  Triangle functions
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +278,9 @@ namespace SGM
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
     // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
     // function will update a vector of 3D points and normals if the starting ones are
-    // passed to the function along with their surface.  
+    // passed to the function along with their surface.  Moreover, an optional vector
+    // flags may be given that tell is a point is to be imprinted or not, with false
+    // meaning to skip the imprinting of the point.
 
     SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
@@ -281,7 +289,8 @@ namespace SGM
                                   std::vector<unsigned int>  &aPolygonIndices,
                                   SGM::Surface               *pSurfaceID=nullptr,
                                   std::vector<Point3D>       *pPoints3D=nullptr,
-                                  std::vector<UnitVector3D>  *pNormals=nullptr);
+                                  std::vector<UnitVector3D>  *pNormals=nullptr,
+                                  std::vector<bool>          *pImprintFlag=nullptr);
 
     // Returns true if the intersection of triangle {A,B,C} and the given segment
     // consists of more than one point.
@@ -298,6 +307,11 @@ namespace SGM
     SGM_EXPORT void FindBoundary(std::vector<unsigned int> const &aTriangles,
                                  std::vector<unsigned int>       &aBoundary,
                                  std::set<unsigned int>          &sInterior);
+
+    // Returns the number of connect components of the given line segments as returned
+    // from the function FindBoundary.
+
+    SGM_EXPORT size_t FindComponents1D(std::vector<unsigned int> const &aSegments);
 
     // Removes the given point index from the given triangles.  Note that the point is 
     // left in the vector aPoints2D but removed from aTriangles. Returns false is the 
@@ -318,7 +332,7 @@ namespace SGM
     // reduced to only the used points.  Moreover, if dMinDist is not zero, then interior points
     // that are within dMinDist of the boundary are also removed. 
 
-    SGM_EXPORT bool RemoveOutsideTriangles(SGM::Result                                   &rResult,
+    SGM_EXPORT void RemoveOutsideTriangles(SGM::Result                                   &rResult,
                                            std::vector<std::vector<unsigned int> > const &aaPolygons,
                                            std::vector<Point2D>                          &aPoints2D,
                                            std::vector<unsigned int>                     &aTriangles,
@@ -333,6 +347,17 @@ namespace SGM
                                        std::vector<unsigned int> &aTriangles,
                                        std::vector<Point3D>      *pPoints3D,
                                        std::vector<UnitVector3D> *pNormals);
+
+    // Returns true if the given triangles are edge connected.
+
+    SGM_EXPORT bool AreEdgeConnected(std::vector<unsigned int> const &aTriangles);
+
+    // Merges the triangles based on two triangles are made to point to the same points
+    // if the vertices are within dTolerance to each other.
+
+    SGM_EXPORT void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
+                                     std::vector<unsigned int>  &aTriangles,
+                                     double                     dTolerance);
 
     ///////////////////////////////////////////////////////////////////////////
     //

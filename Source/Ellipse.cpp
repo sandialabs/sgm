@@ -105,6 +105,14 @@ double ellipse::Inverse(SGM::Point3D const &Pos,
     double dx=XVec%Vec;
     double dy=YVec%Vec;
     double dParam=SGM::SAFEatan2(dy,dx);
+    while(dParam<m_Domain.m_dMin)
+        {
+        dParam+=SGM_TWO_PI;
+        }
+    while(m_Domain.m_dMax<dParam)
+        {
+        dParam-=SGM_TWO_PI;
+        }
     double dAnswer=NewtonsMethod(dParam,Pos);
     while(dAnswer<m_Domain.m_dMin)
         {
