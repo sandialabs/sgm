@@ -252,7 +252,36 @@ class thing : public entity
 
         std::unordered_set<attribute *> GetAttributes(bool bTopLevel=false) const;
 
-        // Find methods
+        template<class ENTITY_POINTER>
+        class iterator : public std::iterator<std::output_iterator_tag, ENTITY_POINTER>
+            {
+            SGM::EntityType m_type;
+            std::map<size_t, entity *>::const_iterator m_iter;
+            std::map<size_t, entity *>::const_iterator m_end;
+            bool m_bTopLevel;
+
+        public:
+            iterator(SGM::EntityType type, std::map<size_t, entity *> const &mAllEntities, bool bTopLevel = false);
+
+            iterator(SGM::EntityType type, std::map<size_t, entity *>::const_iterator end, bool bTopLevel = false);
+
+            iterator &operator++();
+
+            const iterator operator++(int);
+
+            bool operator==(const iterator &rhs) const;
+            bool operator!=(const iterator &rhs) const;
+
+            ENTITY_POINTER operator*() const;
+            };
+
+        template <class ENTITY_POINTER>
+        iterator<ENTITY_POINTER> Begin(bool bTopLevel=false) const;
+
+        template <class ENTITY_POINTER>
+        iterator<ENTITY_POINTER> End(bool bTopLevel=false) const;
+
+    // Find methods
         
         entity *FindEntity(size_t ID) const;
 

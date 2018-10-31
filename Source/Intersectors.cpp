@@ -734,9 +734,9 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
-    else if(aPoints2.size()==1 && SGM::NearEqual(aPoints[0],Center,SGM_ZERO)==false)
+    else if(aPoints2.size()==1 && SGM::NearEqual(aPoints2[0],Center,SGM_ZERO)==false)
         {
-        SGM::UnitVector3D UVec=aPoints[0]-Center;
+        SGM::UnitVector3D UVec=aPoints2[0]-Center;
         SGM::Point3D Pos=Center+UVec*dRadius;
         if(Pos.DistanceSquared(aPoints2[0])<dTolerance*dTolerance)
             {
@@ -3047,7 +3047,7 @@ size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
     size_t Index1;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        SGM::Point3D const &Pos=aPoints[Index1];
+        SGM::Point3D const &Pos=aTempPoints[Index1];
         if(pEdge->PointInEdge(Pos,dTolerance))
             {
             aPoints.push_back(Pos);

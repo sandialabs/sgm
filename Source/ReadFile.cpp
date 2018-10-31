@@ -8,17 +8,17 @@
 #include "ReadFile.h"
 #include "Topology.h"
 
+#define SGM_TIMER
+#include "Timer.h"
+
 #include <fstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
 #endif
 
 //#define SGM_PROFILE_READER
-
-#ifdef SGM_PROFILE_READER
-#include <iostream>
-#endif
 
 namespace SGMInternal
 {
@@ -1019,11 +1019,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     {
     // Open the file.
     std::ifstream inputFileStream(FileName, std::ifstream::in);
-    if (inputFileStream.bad())
+    if (!inputFileStream.good())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        std::system_error open_error(errno, std::system_category(), "failed to open "+FileName);
+        std::cerr << open_error.what() << std::endl;
+        rResult.SetMessage(open_error.what());
+        //throw open_error;
         return 0;
         }
+
 
     // Split the file.
 
@@ -1047,11 +1052,16 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     // consume lines and push back (line,STEPLineData) into map
     size_t maxSTEPLineNumber;
 
-    // TODO: detect file is big and switch to multithreaded ParseSTEPStreamConcurrent
+    SGM_TIMER_INITIALIZE();
+    SGM_TIMER_START("Parse STEP File");
+#ifdef SGM_MULTITHREADED
+    maxSTEPLineNumber = ParseSTEPStreamConcurrent(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
+    SGM_TIMER_STOP();
+#else
     maxSTEPLineNumber = ParseSTEPStreamSerial(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
-    //maxSTEPLineNumber = ParseSTEPStreamConcurrent(rResult,Options,aLog,inputFileStream,mSTEPTagMap,mSTEPData);
-
+#endif
     inputFileStream.close();
+    SGM_TIMER_SUM();
 
     // Create all the entities.
 
