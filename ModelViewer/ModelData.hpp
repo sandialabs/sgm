@@ -141,6 +141,12 @@ public:
 
     void Merge(SGM::Entity EntityID);
 
+    void SharpEdges(SGM::Entity EntityID);
+
+    void FindHoles(SGM::Entity EntityID);
+
+    void FindDegenerateTriangles(SGM::Entity EntityID);
+
     void MergeComplexes(std::vector<SGM::Entity> aEntityIDs);
 
     void FindComponents(SGM::Entity EntityID);

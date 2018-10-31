@@ -671,6 +671,8 @@ SGMGraphicsWidget::SGMGraphicsWidget(QWidget *parent, Qt::WindowFlags f) :
         dPtr(new GraphicsData)
 {
     dPtr->render_faces = true;
+    dPtr->render_edges = true;
+    dPtr->render_vertices = true;
 }
 
 SGMGraphicsWidget::~SGMGraphicsWidget()
@@ -1032,8 +1034,8 @@ void SGMGraphicsWidget::initializeGL()
     opengl->glEnable(GL_POLYGON_OFFSET_FILL);
     opengl->glPolygonOffset(2, 1);
 
-    opengl->glEnable(GL_PROGRAM_POINT_SIZE);
-    opengl->glPointSize(7);
+    //opengl->glEnable(GL_PROGRAM_POINT_SIZE);
+    //opengl->glPointSize(7);
 
     // Did not make round points.
     //opengl->glEnable(GL_POINT_SMOOTH);

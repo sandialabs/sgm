@@ -14,6 +14,7 @@ namespace SGMInternal
 {
 class edge;
 class face;
+class complex;
 
 class GraphEdge
     {
@@ -49,6 +50,8 @@ class Graph
               std::set<face *,EntityCompare> const &sFaces,
               bool                                  bEdgeConnected);
 
+        Graph(complex const *pComplex);
+
         // Get methods
 
         std::set<size_t> const &GetVertices() const {return m_sVertices;}
@@ -67,6 +70,10 @@ class Graph
 
         bool IsCycle() const;
 
+        Graph FindMinCycle(GraphEdge &GE) const;
+
+        Graph FindLargestMinCycle() const;
+
         bool OrderVertices(std::vector<size_t> &aVertices) const;
 
         // Methods for directed graphs.
@@ -75,8 +82,11 @@ class Graph
 
     private:
 
-                std::set<size_t>                      m_sVertices;
-                std::set<GraphEdge>                   m_sEdges;
+        std::set<size_t>                      m_sVertices;
+        std::set<GraphEdge>                   m_sEdges;
+
+        // Given a vertex m_mNeighbors returns a vector of adjacent vertices.
+
         mutable std::map<size_t,std::vector<size_t> > m_mNeighbors;
     };
 }

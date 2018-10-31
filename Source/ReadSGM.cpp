@@ -151,10 +151,19 @@ double GetDouble(std::string const &aStr)
     return d;
     }
 
+char const *GetFirstNumberPointer(std::string const &aStr)
+    {
+    if(aStr[0]=='(' || aStr[0]==',')
+        {
+        return &aStr.c_str()[1];
+        }
+    return aStr.c_str();
+    }
+
 SGM::Point3D GetPoint3D(std::string const &aStr)
     {
     double x,y,z;
-    char const *pStr=&aStr.c_str()[1]; 
+    char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
     return SGM::Point3D(x,y,z);
     }
@@ -162,7 +171,7 @@ SGM::Point3D GetPoint3D(std::string const &aStr)
 SGM::UnitVector3D GetUnitVector3D(std::string const &aStr)
     {
     double x,y,z;
-    char const *pStr=&aStr.c_str()[1]; 
+    char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
     return SGM::UnitVector3D(x,y,z);
     }
@@ -389,7 +398,8 @@ void ReadComplex(SGM::Result              &rResult,
     std::vector<unsigned int> aSegments,aTriangles;
     ReadUnsignedInts(aArgs,"Segments",aSegments);
     ReadUnsignedInts(aArgs,"Triangles",aTriangles);
-    rSGMData.pEntity=new complex(rResult,aPoints,aSegments,aTriangles);
+    complex *pComplex=new complex(rResult,aPoints,aSegments,aTriangles);
+    rSGMData.pEntity=pComplex;
     mEntityMap[GetID(aArgs[0])]=rSGMData;
     }
         

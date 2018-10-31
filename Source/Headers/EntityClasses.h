@@ -493,6 +493,10 @@ class complex : public topology
 
         // Other methods
 
+        std::vector<SGM::UnitVector3D> FindTriangleNormals() const;
+
+        std::vector<double> FindTriangleAreas() const;
+
         double Area() const;
 
         double FindVolume(SGM::Result &) const
@@ -535,7 +539,7 @@ class complex : public topology
 
         std::vector<complex *> FindComponents(SGM::Result &rResult) const;
 
-        double FindAverageEdgeLength() const;
+        double FindAverageEdgeLength(double *dMaxEdgeLength=nullptr) const;
 
         // FindPolygon returns false if this complex is not a polygon.
         // Otherwise the function fills in aPolygon to point the the points
@@ -561,6 +565,8 @@ class complex : public topology
                       double             dTolerance) const;
 
         bool IsOriented() const;
+
+        bool IsManifold() const;
 
         double FindLength() const;
 
@@ -593,16 +599,34 @@ class complex : public topology
                                            SGM::UnitVector3D const &UpDirection) const;
 
         // Returns a complex of segments for adjacent triangles that have an 
-        // angle between them of less than dAngle.
+        // angle between them of less than dAngle.  If bIncludeBoundary is true,
+        // the edges with only one triangle are returned also.
 
         complex *FindSharpEdges(SGM::Result &rResult,
-                                double       dAngle) const;
+                                double       dAngle,
+                                bool         bIncludeBoundary=false) const;
 
+        // Returns holes in this complex that are lager than 
+        // the given nSize number of points.
+
+        size_t FindHoles(SGM::Result            &rResult,
+                         std::vector<complex *> &aHoles) const;
+
+        complex *FindDegenerateTriangles(SGM::Result &rResult) const;
+
+        void ReduceToLargestMinCycle();
+
+        SGM::BoxTree const &GetTree() const;
+        
     private:
+
+        void FindTree() const;
 
         std::vector<SGM::Point3D> m_aPoints;
         std::vector<unsigned int> m_aSegments;
         std::vector<unsigned int> m_aTriangles;
+
+        mutable SGM::BoxTree      m_Tree;
     };
 
 class volume : public topology

@@ -115,6 +115,76 @@ size_t RayFireEdge(SGM::Result                        &rResult,
     return nAnswer;
     }
 
+size_t RayFireComplex(SGM::Result                        &,//rResult,
+                      SGM::Point3D                 const &Origin,
+                      SGM::UnitVector3D            const &Axis,
+                      complex                      const *pComplex,
+                      std::vector<SGM::Point3D>          &aPoints,
+                      std::vector<SGM::IntersectionType> &aTypes,
+                      double                              dTolerance,
+                      bool                                bUseWholeLine)
+    {
+    SGM::BoxTree const &BTree=pComplex->GetTree();
+    std::vector<SGM::BoxTree::BoundedItemType> aHits;
+    SGM::Ray3D ray(Origin,Axis);
+    SGM::Interval1D Domain;
+    if(bUseWholeLine)
+        {
+        aHits=BTree.FindIntersectsLine(ray,dTolerance);
+        Domain.m_dMin=-SGM_MAX;
+        Domain.m_dMax=SGM_MAX;
+        }
+    else
+        {
+        aHits=BTree.FindIntersectsRay(ray,dTolerance);
+        Domain.m_dMin=-dTolerance;
+        Domain.m_dMax=SGM_MAX;
+        }
+    size_t nAnswer=0;
+    size_t nHits=aHits.size();
+    size_t Index1;
+    std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
+    std::vector<SGM::Point3D> const &aComplexPoints=pComplex->GetPoints();
+    unsigned int const *pBase=&aTriangles[0];
+    for(Index1=0;Index1<nHits;++Index1)
+        {
+        unsigned int const *pHit=(unsigned int const *)aHits[Index1].first;
+        size_t nWhere=(size_t)(pHit-pBase);
+        unsigned int a=aTriangles[nWhere];
+        unsigned int b=aTriangles[nWhere+1];
+        unsigned int c=aTriangles[nWhere+2];
+        SGM::Point3D const &A=aComplexPoints[a];
+        SGM::Point3D const &B=aComplexPoints[b];
+        SGM::Point3D const &C=aComplexPoints[c];
+        SGM::UnitVector3D Norm=(B-A)*(C-A);
+
+        std::vector<SGM::Point3D> aIntPoints;
+        std::vector<SGM::IntersectionType> aIntTypes;
+        size_t nInts=IntersectLineAndPlane(Origin,Axis,Domain,A,Norm,dTolerance,aIntPoints,aIntTypes);
+
+        if(nInts==1)
+            {
+            SGM::UnitVector3D XVec=B-A;
+            SGM::UnitVector3D YVec=Norm*XVec;
+            SGM::Point3D D=aIntPoints[0];
+            SGM::Point2D Auv(0,0);
+            SGM::Vector3D BVec=B-A;
+            SGM::Point2D Buv(XVec%BVec,YVec%BVec);
+            SGM::Vector3D CVec=C-A;
+            SGM::Point2D Cuv(XVec%CVec,YVec%CVec);
+            SGM::Vector3D DVec=D-A;
+            SGM::Point2D Duv(XVec%DVec,YVec%DVec);
+            if(SGM::InTriangle(Auv,Buv,Cuv,Duv))
+                {
+                aPoints.push_back(D);
+                aTypes.push_back(SGM::PointType);
+                ++nAnswer;
+                }
+            }
+        }
+    return nAnswer;
+    }
+
 size_t RayFireFace(SGM::Result                        &rResult,
                    SGM::Point3D                 const &Origin,
                    SGM::UnitVector3D            const &Axis,
@@ -261,7 +331,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
                     double                              dTolerance,
                     bool                                bUseWholeLine)
     {
-    // Find all top level bodies, volumes, and faces.
+    // Find all top level bodies, volumes, complexes, and faces.
 
     std::set<body *,EntityCompare> sBodies;
     FindBodies(rResult,pThing,sBodies,true);
@@ -298,6 +368,23 @@ size_t RayFireThing(SGM::Result                        &rResult,
             aAllTypes.push_back(aSubTypes[Index1]);
             }
         ++VolumeIter;
+        }
+
+    std::set<complex *,EntityCompare> sComplexes;
+    FindComplexes(rResult,pThing,sComplexes,true);
+    std::set<complex *,EntityCompare>::const_iterator ComplexIter=sComplexes.begin();
+    while(ComplexIter!=sComplexes.end())
+        {
+        complex *pComplex=*ComplexIter;
+        std::vector<SGM::Point3D> aSubPoints;
+        std::vector<SGM::IntersectionType> aSubTypes;
+        size_t nHits=RayFireComplex(rResult,Origin,Axis,pComplex,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            aAllPoints.push_back(aSubPoints[Index1]);
+            aAllTypes.push_back(aSubTypes[Index1]);
+            }
+        ++ComplexIter;
         }
     
     std::set<face *,EntityCompare> sFaces;
@@ -374,6 +461,10 @@ size_t RayFire(SGM::Result                        &rResult,
         case SGM::FaceType:
             {
             return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            }
+        case SGM::ComplexType:
+            {
+            return RayFireComplex(rResult,Origin,Axis,(complex const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
         default:
             {
