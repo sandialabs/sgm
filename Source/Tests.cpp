@@ -21,6 +21,7 @@
 #include "Intersectors.h"
 #include "FacetToBRep.h"
 #include "Primitive.h"
+#include "Graph.h"
 
 #include <string>
 #include <vector>
@@ -3608,6 +3609,103 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             return false;
             }
         return true;
+        }
+
+    if(nTestNumber==63)
+        {
+        std::set<size_t> sVertices;
+        std::set<SGMInternal::GraphEdge> sEdges;
+        
+        sVertices.insert(0);
+        sVertices.insert(1);
+        sVertices.insert(2);
+        sVertices.insert(3);
+        sVertices.insert(4);
+        sVertices.insert(5);
+        sVertices.insert(6);
+        sVertices.insert(7);
+        sVertices.insert(8);
+
+        sEdges.insert(SGMInternal::GraphEdge(0,1,0));
+        sEdges.insert(SGMInternal::GraphEdge(0,2,1));
+        sEdges.insert(SGMInternal::GraphEdge(3,1,2));
+        sEdges.insert(SGMInternal::GraphEdge(2,4,3));
+        sEdges.insert(SGMInternal::GraphEdge(3,5,4));
+        sEdges.insert(SGMInternal::GraphEdge(4,6,5));
+        sEdges.insert(SGMInternal::GraphEdge(5,6,6));
+        sEdges.insert(SGMInternal::GraphEdge(5,7,7));
+        sEdges.insert(SGMInternal::GraphEdge(6,8,8));
+        sEdges.insert(SGMInternal::GraphEdge(7,8,9));
+
+        SGMInternal::Graph graph(sVertices,sEdges);
+
+        SGMInternal::GraphEdge GE(0,1,0);
+        SGMInternal::Graph GLoop=graph.FindMinCycle(GE);
+        if(GLoop.GetVertices().size()!=7)
+            {
+            return false;
+            }
+        if(GLoop.GetEdges().size()!=7)
+            {
+            return false;
+            }
+        return true;
+        }
+
+    if(nTestNumber==64)
+        {
+        std::set<size_t> sVertices;
+        std::set<SGMInternal::GraphEdge> sEdges;
+        
+        sVertices.insert(0);
+        sVertices.insert(1);
+        sVertices.insert(2);
+        sVertices.insert(3);
+        sVertices.insert(4);
+        sVertices.insert(5);
+        sVertices.insert(6);
+
+        sEdges.insert(SGMInternal::GraphEdge(0,1,0));
+        sEdges.insert(SGMInternal::GraphEdge(0,2,1));
+        sEdges.insert(SGMInternal::GraphEdge(3,1,2));
+        sEdges.insert(SGMInternal::GraphEdge(2,4,3));
+        sEdges.insert(SGMInternal::GraphEdge(3,5,4));
+        sEdges.insert(SGMInternal::GraphEdge(4,5,5));
+        sEdges.insert(SGMInternal::GraphEdge(4,6,6));
+        sEdges.insert(SGMInternal::GraphEdge(6,6,7));
+
+        SGMInternal::Graph graph(sVertices,sEdges);
+
+        SGMInternal::GraphEdge GE(0,1,0);
+        SGMInternal::Graph GLoop=graph.FindMinCycle(GE);
+        if(GLoop.GetVertices().size()!=6)
+            {
+            return false;
+            }
+        if(GLoop.GetEdges().size()!=6)
+            {
+            return false;
+            }
+        return true;
+        }
+
+    if(nTestNumber==65)
+        {
+        std::vector<SGM::Point2D> aPoints;
+        aPoints.push_back(SGM::Point2D(0,0));
+        aPoints.push_back(SGM::Point2D(1,1));
+        aPoints.push_back(SGM::Point2D(0,1));
+        aPoints.push_back(SGM::Point2D(1,0));
+        std::vector<unsigned int> aPolygon;
+        aPolygon.push_back(0);
+        aPolygon.push_back(1);
+        aPolygon.push_back(2);
+        aPolygon.push_back(3);
+        std::vector<unsigned int> aTriangles;
+        bool bAnswer=SGM::TriangulatePolygon(rResult,aPoints,aPolygon,aTriangles);
+        bAnswer;
+        int a=0;
+        a*=1;
         }
 
     return false;

@@ -18,6 +18,7 @@ ViewMenu::ViewMenu(QWidget *parent) :
     QAction *vertices_action = addAction("Show &Vertices", this, SIGNAL(vertices()));
     vertices_action->setShortcut(tr("Ctrl+V"));
     vertices_action->setCheckable(true);
+    vertices_action->setChecked(true);
 
     QAction *facet_action = addAction("Show Fa&cet", this, SIGNAL(facet()));
     facet_action->setShortcut(tr("Ctrl+f"));

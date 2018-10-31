@@ -43,7 +43,8 @@ namespace SGM
     // Find functions
 
     SGM_EXPORT double FindAverageEdgeLength(SGM::Result        &rResult,
-                                            SGM::Complex const &ComplexID);
+                                            SGM::Complex const &ComplexID,
+                                            double             *dMaxLength=nullptr);
 
     SGM_EXPORT size_t FindGenus(SGM::Result        &rResult,
                                 SGM::Complex const &ComplexID);
@@ -58,6 +59,9 @@ namespace SGM
                             SGM::Complex const &ComplexID);
 
     SGM_EXPORT bool IsOriented(SGM::Result        &rResult,
+                               SGM::Complex const &ComplexID);
+
+    SGM_EXPORT bool IsManifold(SGM::Result        &rResult,
                                SGM::Complex const &ComplexID);
 
     // Splitting functions
@@ -103,6 +107,21 @@ namespace SGM
     SGM_EXPORT SGM::Complex MergePoints(SGM::Result        &rResult,
                                         SGM::Complex const &ComplexID,
                                         double              dTolerance);
+
+    SGM_EXPORT SGM::Complex FindSharpEdges(SGM::Result        &rResult,
+                                           SGM::Complex const &ComplexID,
+                                           double              dAngle,
+                                           bool                bIncludeBoundary=false);
+
+    SGM_EXPORT SGM::Complex FindDegenerateTriangles(SGM::Result        &rResult,
+                                                    SGM::Complex const &ComplexID);
+
+    SGM_EXPORT std::vector<double> FindTriangleAreas(SGM::Result        &rResult,
+                                                     SGM::Complex const &ComplexID);
+
+    SGM_EXPORT size_t FindHoles(SGM::Result               &rResult,
+                                SGM::Complex        const &ComplexID,
+                                std::vector<SGM::Complex> &aHoles);
 
     SGM_EXPORT SGM::Complex MergeComplexes(SGM::Result                     &rResult,
                                            std::vector<SGM::Complex> const &aComplexIDs);

@@ -35,6 +35,15 @@ if(BUILD_MULTITHREADED)
   message(STATUS "Build SGM multithreaded")
   find_package(Threads)
   add_definitions(-DSGM_MULTITHREADED=1)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    # using Intel C++
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    # using Visual Studio C++
+  endif()
 endif()
 
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)

@@ -77,7 +77,10 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     *option_find_components=nullptr,
                     *option_merge=nullptr,
                     *option_planar_split=nullptr,
-                    *option_create_complex=nullptr;
+                    *option_create_complex=nullptr,
+                    *option_sharp_edges=nullptr,
+                    *option_holes=nullptr,
+                    *option_degenerate=nullptr;
 
             option_color = menu.addAction(tr("Set Color"));
             option_remove_color = menu.addAction(tr("Remove Color"));
@@ -100,6 +103,9 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                 option_boundary = menu.addAction(tr("Boundary"));
                 option_find_components = menu.addAction(tr("Split by Components"));
                 option_planar_split = menu.addAction(tr("Split by Planes"));
+                option_sharp_edges = menu.addAction(tr("Find Sharp Edges"));
+                option_holes = menu.addAction(tr("Find Holes"));
+                option_degenerate = menu.addAction(tr("Find Degenerate Triangles"));
                 }
             option_rebuild = menu.addAction(tr("Rebuild Tree"));
 
@@ -184,6 +190,33 @@ void SGMTreeWidget::mouseReleaseEvent(QMouseEvent* event)
                     for(Index1=0;Index1<nEnts;++Index1)
                         {
                         mModel->FindPlanes(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_sharp_edges)
+                    {
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->SharpEdges(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_holes)
+                    {
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->FindHoles(aEnts[Index1]);
+                        }
+                    mModel->rebuild_tree();
+                    mModel->rebuild_graphics();
+                    }
+                else if(result == option_degenerate)
+                    {
+                    for(Index1=0;Index1<nEnts;++Index1)
+                        {
+                        mModel->FindDegenerateTriangles(aEnts[Index1]);
                         }
                     mModel->rebuild_tree();
                     mModel->rebuild_graphics();

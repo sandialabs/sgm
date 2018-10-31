@@ -28,6 +28,14 @@ namespace SGM
                                          UnitVector3D                    &YVec,
                                          UnitVector3D                    &ZVec);
 
+    // Returns the min and max X, Y, and Z value with Origin at (0,0,0).
+
+    SGM_EXPORT SGM::Interval3D FindOrientedBox(std::vector<SGM::Point3D> const &aPoints,
+                                               Point3D                   const &Origin,
+                                               UnitVector3D              const &XVec,
+                                               UnitVector3D              const &YVec,
+                                               UnitVector3D              const &ZVec);
+
     SGM_EXPORT bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
                                           Point3D                    &Origin,
                                           UnitVector3D               &Axis);

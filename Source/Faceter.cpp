@@ -2910,6 +2910,8 @@ void FindNormalsAndPoints(face                     const *pFace,
     {
     size_t nPoints2D=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
+    aNormals.reserve(nPoints2D);
+    aPoints3D.reserve(nPoints2D);
     SGM::Interval2D const &Domain=pSurface->GetDomain();
     SGM::Interval1D const &DomainU=Domain.m_UDomain;
     SGM::Interval1D const &DomainV=Domain.m_VDomain;
@@ -2936,8 +2938,8 @@ void FindNormalsAndPoints(face                     const *pFace,
             uv.m_v=DomainV.m_dMax;
             }
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-        aNormals.push_back(Norm);
-        aPoints3D.push_back(Pos);
+        aNormals.emplace_back(std::move(Norm));
+        aPoints3D.emplace_back(std::move(Pos));
         }
     }
 
@@ -3770,7 +3772,8 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
 
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
     FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
-    
+
+    SGM::Surface SurfID(pFace->GetSurface()->GetID());
     size_t nPolygons=aaPolygons.size();
     for(Index1=0;Index1<nPolygons;++Index1)
         {

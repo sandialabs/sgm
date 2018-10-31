@@ -123,6 +123,13 @@ bool SGM::IsOriented(SGM::Result        &rResult,
     return pComplex->IsOriented();
     }
 
+bool SGM::IsManifold(SGM::Result        &rResult,
+                     SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsManifold();
+    }
+
 SGM::Complex SGM::FindBoundary(SGM::Result        &rResult,
                                SGM::Complex const &ComplexID)
     {
@@ -163,10 +170,11 @@ size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
     }
 
 double SGM::FindAverageEdgeLength(SGM::Result        &rResult,
-                                  SGM::Complex const &ComplexID)
+                                  SGM::Complex const &ComplexID,
+                                  double             *dMaxLength)
     {
     SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
-    return pComplex->FindAverageEdgeLength();
+    return pComplex->FindAverageEdgeLength(dMaxLength);
     }
 
 SGM::Complex SGM::CreateComplex(SGM::Result       &rResult,
@@ -486,6 +494,45 @@ SGM::Complex SGM::MergePoints(SGM::Result        &rResult,
     SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
     SGMInternal::complex *pAnswer=pComplex->Merge(rResult,dTolerance);
     return SGM::Complex(pAnswer->GetID());
+    }
+
+SGM::Complex SGM::FindSharpEdges(SGM::Result        &rResult,
+                                 SGM::Complex const &ComplexID,
+                                 double              dAngle,
+                                 bool                bIncludeBoundary)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->FindSharpEdges(rResult,dAngle,bIncludeBoundary);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+SGM::Complex SGM::FindDegenerateTriangles(SGM::Result        &rResult,
+                                          SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    SGMInternal::complex *pAnswer=pComplex->FindDegenerateTriangles(rResult);
+    return SGM::Complex(pAnswer->GetID());
+    }
+
+std::vector<double> SGM::FindTriangleAreas(SGM::Result        &rResult,
+                                           SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    return pComplex->FindTriangleAreas();
+    }
+
+size_t SGM::FindHoles(SGM::Result               &rResult,
+                      SGM::Complex        const &ComplexID,
+                      std::vector<SGM::Complex> &aHoles)
+    {
+    SGMInternal::complex const *pComplex=(SGMInternal::complex const *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    std::vector<SGMInternal::complex *> aInternalHoles;
+    pComplex->FindHoles(rResult,aInternalHoles);
+    for(auto pHole : aInternalHoles)
+        {
+        aHoles.push_back(SGM::Complex(pHole->GetID()));
+        }
+    return aHoles.size();
     }
 
 SGM::Complex SGM::MergeComplexes(SGM::Result                     &rResult,

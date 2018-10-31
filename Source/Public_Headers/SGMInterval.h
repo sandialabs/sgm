@@ -69,13 +69,19 @@ namespace SGM {
         }
 
         double MidPoint(double dFraction = 0.5) const
-        { return m_dMin * (1 - dFraction) + m_dMax * dFraction; }
+        { 
+        return m_dMin * (1 - dFraction) + m_dMax * dFraction; 
+        }
 
         double Fraction(double t) const
-        {return (t-m_dMin)/(m_dMax-m_dMin);}
+        {
+        return (t-m_dMin)/(m_dMax-m_dMin);
+        }
 
         double Length() const
-        { return m_dMax - m_dMin; }
+        { 
+        return m_dMax - m_dMin; 
+        }
 
         bool InInterval(double Pos, double dTol) const;
 
@@ -209,6 +215,8 @@ namespace SGM {
         Interval3D &operator=(const Interval3D &mE) = default;
 
         Interval3D(Point3D const &Min, Point3D const &Max);
+
+        Interval3D(Point3D const &A, Point3D const &B, Point3D const &C);
 
         Interval3D(Point3D const &Pos, double tol);
 

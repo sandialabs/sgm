@@ -505,6 +505,65 @@ bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
     return FindLeastSquarePlane(aPoints, Origin, Axis, YVec, ZVec);
     }
 
+Interval3D FindOrientedBox(std::vector<Point3D> const &aPoints,
+                           Point3D              const &Origin,
+                           UnitVector3D         const &XVec,
+                           UnitVector3D         const &YVec,
+                           UnitVector3D         const &ZVec)
+    {
+    Interval3D Box;
+    size_t nPoints=aPoints.size();
+    if(nPoints)
+        {
+        double dMinX=std::numeric_limits<double>::max();
+        double dMinY=std::numeric_limits<double>::max();
+        double dMinZ=std::numeric_limits<double>::max();
+        double dMaxX=-std::numeric_limits<double>::max();
+        double dMaxY=-std::numeric_limits<double>::max();
+        double dMaxZ=-std::numeric_limits<double>::max();
+        size_t Index1;
+        for(Index1=0;Index1<nPoints;++Index1)
+            {
+            Point3D const &Pos=aPoints[Index1];
+            SGM::Vector3D Vec=Pos-Origin;
+            double x=Vec%XVec;
+            double y=Vec%YVec;
+            double z=Vec%ZVec;
+            if(x<dMinX)
+                {
+                dMinX=x;
+                }
+            if(dMaxX<x)
+                {
+                dMaxX=x;
+                }
+            if(y<dMinY)
+                {
+                dMinY=y;
+                }
+            if(dMaxY<y)
+                {
+                dMaxY=y;
+                }
+            if(z<dMinZ)
+                {
+                dMinZ=z;
+                }
+            if(dMaxZ<z)
+                {
+                dMaxZ=z;
+                }
+            }
+        Box.m_XDomain.m_dMin=dMinX;
+        Box.m_XDomain.m_dMax=dMaxX;
+        Box.m_YDomain.m_dMin=dMinY;
+        Box.m_YDomain.m_dMax=dMaxY;
+        Box.m_ZDomain.m_dMin=dMinZ;
+        Box.m_ZDomain.m_dMax=dMaxZ;
+        }
+    return Box;
+    }
+
 bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                           Point3D                    &Origin,
                           UnitVector3D               &XVec,
@@ -513,9 +572,10 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
     {
     double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
     Origin = FindCenterOfMass3D(aPoints);
+
     size_t nPoints = aPoints.size();
     size_t Index1;
-    for (Index1 = 0; Index1 < nPoints; ++Index1)
+    for (Index1 = nPoints/2; Index1 < nPoints; ++Index1)
         {
         Point3D const &Pos = aPoints[Index1];
         double x = Pos.m_x - Origin.m_x;
@@ -528,11 +588,14 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         SumYZ += y * z;
         SumZZ += z * z;
         }
+
+    double dScale=9.0/(SumXX+SumXY+SumXZ+SumXY+SumYY+SumYZ+SumXZ+SumYZ+SumZZ);
+
     const double aaMatrix[3][3] =
             {
-            SumXX, SumXY, SumXZ,
-            SumXY, SumYY, SumYZ,
-            SumXZ, SumYZ, SumZZ
+            SumXX*dScale, SumXY*dScale, SumXZ*dScale,
+            SumXY*dScale, SumYY*dScale, SumYZ*dScale,
+            SumXZ*dScale, SumYZ*dScale, SumZZ*dScale
             };
 
     std::vector<double> aValues;
@@ -698,9 +761,9 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
 
 
 bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
-                            double                           dTolerance,
-                            SGM::Point3D                    *Origin,
-                            SGM::UnitVector3D               *Normal)
+                       double                           dTolerance,
+                       SGM::Point3D                    *Origin,
+                       SGM::UnitVector3D               *Normal)
     {
     bool bCoplanar = false;
     SGM::Point3D PlaneOrigin;
@@ -3012,88 +3075,149 @@ bool LinearSolve(std::vector<std::vector<double> > &aaMatrix)
                fabs(aaMatrix[2][0]) < SGM_ZERO && fabs(aaMatrix[2][1]) < SGM_ZERO;
         }
 
-    size_t FindEigenVectors3D(double const aaMatrix[3][3],
-                                   std::vector<double> &aValues,
-                                   std::vector<UnitVector3D> &aVectors)
+SGM::UnitVector3D UnitVectorSolve(std::vector<std::vector<double> > aaMat)
+    {
+    double dX=aaMat[1][0]*aaMat[2][1]-aaMat[2][0]*aaMat[1][1];
+    double dY=aaMat[0][0]*aaMat[2][1]-aaMat[2][0]*aaMat[0][1];
+    double dZ=aaMat[0][0]*aaMat[1][1]-aaMat[1][0]*aaMat[0][1];
+    double dFX=fabs(dX);
+    double dFY=fabs(dY);
+    double dFZ=fabs(dZ);
+    if(dFY<dFX && dFZ<dFX)
         {
-        double dMaxValue = 0.0;
-        size_t Index1, Index2;
-        for (Index1 = 0; Index1 < 3; ++Index1)
-            {
-            for (Index2 = 0; Index2 < 3; ++Index2)
-                {
-                double dValue = fabs(aaMatrix[Index1][Index2]);
-                if (dMaxValue < dValue)
-                    {
-                    dMaxValue = dValue;
-                    }
-                }
-            }
-        double dTol = SGM_ZERO * std::max(1.0, dMaxValue);
-
-        if (IsDiagonal3D(aaMatrix))
-            {
-            aValues.push_back(aaMatrix[0][0]);
-            aValues.push_back(aaMatrix[1][1]);
-            aValues.push_back(aaMatrix[2][2]);
-            aVectors.emplace_back(1.0, 0.0, 0.0);
-            aVectors.emplace_back(0.0, 1.0, 0.0);
-            aVectors.emplace_back(0.0, 0.0, 1.0);
-            return 3;
-            }
-
-        double a, b, c, d;
-        CharacteristicPolynomial3D(aaMatrix, a, b, c, d);
-
-        std::vector<double> aRoots;
-        size_t nRoots = Cubic(a, b, c, d, aRoots);
-
-        // To find the Eigen vectors solve Mv=Lv where M is the matrix and
-        // L is an Eigen value.
-
-        size_t nAnswer = 0;
-        for (Index1 = 0; Index1 < nRoots; ++Index1)
-            {
-            if (dTol < fabs(aRoots[Index1]))
-                {
-                std::vector<std::vector<double> > aaMat;
-                aaMat.reserve(3);
-                std::vector<double> aMat;
-                aMat.reserve(4);
-                aMat.push_back(aaMatrix[0][0] - aRoots[Index1]);
-                aMat.push_back(aaMatrix[0][1]);
-                aMat.push_back(aaMatrix[0][2]);
-                aMat.push_back(0.0);
-                aaMat.push_back(aMat);
-                aMat.clear();
-                aMat.push_back(aaMatrix[1][0]);
-                aMat.push_back(aaMatrix[1][1] - aRoots[Index1]);
-                aMat.push_back(aaMatrix[1][2]);
-                aMat.push_back(0.0);
-                aaMat.push_back(aMat);
-                aMat.clear();
-                aMat.push_back(aaMatrix[2][0]);
-                aMat.push_back(aaMatrix[2][1]);
-                aMat.push_back(aaMatrix[2][2] - aRoots[Index1]);
-                aMat.push_back(0.0);
-                aaMat.push_back(aMat);
-                if (LinearSolve(aaMat) == true)
-                    {
-                    aValues.push_back(aRoots[Index1]);
-                    aVectors.emplace_back(aaMat[0].back(), aaMat[1].back(), aaMat[2].back());
-                    ++nAnswer;
-                    }
-                else if (dTol < fabs(aaMat[0][0]) && dTol < fabs(aaMat[0][1]))
-                    {
-                    aValues.push_back(aRoots[Index1]);
-                    double ratio = -aaMat[0][0] / aaMat[0][1];
-                    aVectors.emplace_back(1.0, ratio, 0.0);
-                    ++nAnswer;
-                    }
-                }
-            }
-        return nAnswer;
+        // Let X=1.
+        std::vector<double> aRow0,aRow1;
+        aRow0.push_back(aaMat[0][1]);
+        aRow0.push_back(aaMat[0][2]);
+        aRow0.push_back(aaMat[0][3]-aaMat[0][0]);
+        aRow1.push_back(aaMat[1][1]);
+        aRow1.push_back(aaMat[1][2]);
+        aRow1.push_back(aaMat[1][3]-aaMat[1][0]);
+        std::vector<std::vector<double> > aaSubmat;
+        aaSubmat.push_back(aRow0);
+        aaSubmat.push_back(aRow1);
+        LinearSolve(aaSubmat);
+        return SGM::UnitVector3D(1,aaSubmat[0].back(),aaSubmat[1].back());
         }
+    else if(dFY<dFY && dFZ<dFX)
+        {
+        // Let Y=1.
+        std::vector<double> aRow0,aRow1;
+        aRow0.push_back(aaMat[0][0]);
+        aRow0.push_back(aaMat[0][2]);
+        aRow0.push_back(aaMat[0][3]-aaMat[0][1]);
+        aRow1.push_back(aaMat[1][0]);
+        aRow1.push_back(aaMat[1][2]);
+        aRow1.push_back(aaMat[1][3]-aaMat[1][1]);
+        std::vector<std::vector<double> > aaSubmat;
+        aaSubmat.push_back(aRow0);
+        aaSubmat.push_back(aRow1);
+        LinearSolve(aaSubmat);
+        return SGM::UnitVector3D(aaSubmat[0].back(),1,aaSubmat[1].back());
+        }
+    else
+        {
+        // Let Z=1.
+        std::vector<double> aRow0,aRow1;
+        aRow0.push_back(aaMat[0][0]);
+        aRow0.push_back(aaMat[0][1]);
+        aRow0.push_back(aaMat[0][3]-aaMat[0][2]);
+        aRow1.push_back(aaMat[1][0]);
+        aRow1.push_back(aaMat[1][1]);
+        aRow1.push_back(aaMat[1][3]-aaMat[1][2]);
+        std::vector<std::vector<double> > aaSubmat;
+        aaSubmat.push_back(aRow0);
+        aaSubmat.push_back(aRow1);
+        LinearSolve(aaSubmat);
+        return SGM::UnitVector3D(aaSubmat[0].back(),aaSubmat[1].back(),1);
+        }
+    }
+
+size_t FindEigenVectors3D(double               const aaMatrix[3][3],
+                          std::vector<double>       &aValues,
+                          std::vector<UnitVector3D> &aVectors)
+    {
+    double dMaxValue = 0.0;
+    size_t Index1, Index2;
+    for (Index1 = 0; Index1 < 3; ++Index1)
+        {
+        for (Index2 = 0; Index2 < 3; ++Index2)
+            {
+            double dValue = fabs(aaMatrix[Index1][Index2]);
+            if (dMaxValue < dValue)
+                {
+                dMaxValue = dValue;
+                }
+            }
+        }
+    double dTol = SGM_ZERO * std::max(1.0, dMaxValue);
+
+    if (IsDiagonal3D(aaMatrix))
+        {
+        aValues.push_back(aaMatrix[0][0]);
+        aValues.push_back(aaMatrix[1][1]);
+        aValues.push_back(aaMatrix[2][2]);
+        aVectors.emplace_back(1.0, 0.0, 0.0);
+        aVectors.emplace_back(0.0, 1.0, 0.0);
+        aVectors.emplace_back(0.0, 0.0, 1.0);
+        return 3;
+        }
+
+    double a, b, c, d;
+    CharacteristicPolynomial3D(aaMatrix, a, b, c, d);
+
+    std::vector<double> aRoots;
+    size_t nRoots = Cubic(a, b, c, d, aRoots);
+
+    // To find the Eigen vectors solve Mv=Lv where M is the matrix and
+    // L is an Eigen value.
+
+    size_t nAnswer = 0;
+    for (Index1 = 0; Index1 < nRoots; ++Index1)
+        {
+        if (dTol < fabs(aRoots[Index1]))
+            {
+            std::vector<std::vector<double> > aaMat;
+            aaMat.reserve(3);
+            std::vector<double> aMat;
+            aMat.reserve(4);
+            aMat.push_back(aaMatrix[0][0] - aRoots[Index1]);
+            aMat.push_back(aaMatrix[0][1]);
+            aMat.push_back(aaMatrix[0][2]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            aMat.clear();
+            aMat.push_back(aaMatrix[1][0]);
+            aMat.push_back(aaMatrix[1][1] - aRoots[Index1]);
+            aMat.push_back(aaMatrix[1][2]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            aMat.clear();
+            aMat.push_back(aaMatrix[2][0]);
+            aMat.push_back(aaMatrix[2][1]);
+            aMat.push_back(aaMatrix[2][2] - aRoots[Index1]);
+            aMat.push_back(0.0);
+            aaMat.push_back(aMat);
+            aVectors.push_back(UnitVectorSolve(aaMat));
+            aValues.push_back(aRoots[Index1]);
+            ++nAnswer;
+            //if (LinearSolve(aaMat) == true)
+            //    {
+            //    aValues.push_back(aRoots[Index1]);
+            //    aVectors.emplace_back(aaMat[0].back(), aaMat[1].back(), aaMat[2].back());
+            //    ++nAnswer;
+            //    }
+            //else if (dTol < fabs(aaMat[0][0]) && dTol < fabs(aaMat[0][1]))
+            //    {
+            //    aValues.push_back(aRoots[Index1]);
+            //    double ratio = -aaMat[0][0] / aaMat[0][1];
+            //    aVectors.emplace_back(1.0, ratio, 0.0);
+            //    ++nAnswer;
+            //    }
+            }
+        }
+    return nAnswer;
+    }
 
     bool BandedSolve(std::vector<std::vector<double> > &aaMatrix)
         {

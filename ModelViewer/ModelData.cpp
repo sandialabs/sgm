@@ -49,7 +49,8 @@ ModelData::ModelData() :
     mface_mode = true;
     medge_mode = true;
 
-    mvertex_mode = false;
+    mvertex_mode = true;
+
     mfacet_mode = false;
     muvspace_mode = false;
     mperspective_mode = false;
@@ -330,33 +331,78 @@ void ModelData::create_revolve(SGM::Point3D const &Origin,
 void ModelData::ChangeColor(SGM::Entity EntityID, int nRed, int nGreen, int nBlue)
 {
     SGM::ChangeColor(dPtr->mResult, EntityID, nRed, nGreen, nBlue);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::RemoveColor(SGM::Entity EntityID)
 {
     SGM::RemoveColor(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::CreateComplex(SGM::Entity EntityID)
 {
     SGM::CreateComplex(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::Copy(SGM::Entity EntityID)
 {
     SGM::CopyEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::Cover(SGM::Entity EntityID)
 {
     SGM::CoverComplex(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::Merge(SGM::Entity EntityID)
 {
     SGM::MergePoints(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_ZERO);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
+}
+
+void ModelData::SharpEdges(SGM::Entity EntityID)
+{
+    SGM::FindSharpEdges(dPtr->mResult, SGM::Complex(EntityID.m_ID), SGM_HALF_PI*0.5, true);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
+}
+
+void ModelData::FindHoles(SGM::Entity EntityID)
+{
+    std::vector<SGM::Complex> aHoles;
+    SGM::FindHoles(dPtr->mResult, SGM::Complex(EntityID.m_ID), aHoles);
+    SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
+}
+
+void ModelData::FindDegenerateTriangles(SGM::Entity EntityID)
+{
+    SGM::FindDegenerateTriangles(dPtr->mResult, SGM::Complex(EntityID.m_ID));
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::MergeComplexes(std::vector<SGM::Entity> aEntityIDs)
@@ -373,6 +419,9 @@ void ModelData::MergeComplexes(std::vector<SGM::Entity> aEntityIDs)
         {
         SGM::DeleteEntity(dPtr->mResult, EntID);
         }
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::FindComponents(SGM::Entity EntityID)
@@ -380,6 +429,9 @@ void ModelData::FindComponents(SGM::Entity EntityID)
     std::vector<SGM::Complex> aComponents;
     SGM::FindComponents(dPtr->mResult, SGM::Complex(EntityID.m_ID),aComponents);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::FindPlanes(SGM::Entity EntityID)
@@ -388,12 +440,18 @@ void ModelData::FindPlanes(SGM::Entity EntityID)
     double dTol=SGM::FindAverageEdgeLength(dPtr->mResult,SGM::Complex(EntityID.m_ID))*SGM_FIT;
     SGM::FindPlanarParts(dPtr->mResult, SGM::Complex(EntityID.m_ID),aPlanarParts,dTol);
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::Boundary(SGM::Entity EntityID)
 {
     SGM::FindBoundary(dPtr->mResult, SGM::Complex(EntityID.m_ID));
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
@@ -407,11 +465,17 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             }
         }
     SGM::UnhookFaces(dPtr->mResult, aFaces);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 void ModelData::DeleteEntity(SGM::Entity EntityID)
 {
     SGM::DeleteEntity(dPtr->mResult, EntityID);
+
+    rebuild_tree();
+    rebuild_graphics();
 }
 
 SGM::Result ModelData::GetResult() const
@@ -592,11 +656,46 @@ void ModelData::add_complex_to_tree(QTreeWidgetItem *parent, SGM::Complex Comple
         auto *oriented_item = new QTreeWidgetItem(complex_item);
         oriented_item->setText(0, "Oriented");
         }
+    if(SGM::IsManifold(dPtr->mResult,ComplexID))
+        {
+        auto *manifold_item = new QTreeWidgetItem(complex_item);
+        manifold_item->setText(0, "Manifold");
+        }
+    else
+        {
+        auto *manifold_item = new QTreeWidgetItem(complex_item);
+        manifold_item->setText(0, "Not Manifold");
+        }
     if(SGM::ArePointsCoplanar(aPoints,SGM_MIN_TOL))
         {
         auto *planar_item = new QTreeWidgetItem(complex_item);
         planar_item->setText(0, "Planar");
         }
+
+    std::vector<double> aAreas=SGM::FindTriangleAreas(dPtr->mResult,ComplexID);
+    size_t nAreas=aAreas.size();
+    size_t Index1;
+    for(Index1=0;Index1<nAreas;++Index1)
+        {
+        if(aAreas[Index1]<SGM_MIN_TOL)
+            {
+            auto *small_item = new QTreeWidgetItem(complex_item);
+            small_item->setText(0, "Degenerate Triangles");
+            break;
+            }
+        }
+
+    double dMaxEdgeLength;
+    double dAverageEdgeLength=SGM::FindAverageEdgeLength(dPtr->mResult,ComplexID,&dMaxEdgeLength);
+    auto *average_edge_length_item = new QTreeWidgetItem(complex_item);
+    char Data[100];
+    snprintf(Data, sizeof(Data), "%.15G", dAverageEdgeLength);
+    average_edge_length_item->setText(0, "Average Length");
+    average_edge_length_item->setText(1, Data);
+    auto *max_edge_length_item = new QTreeWidgetItem(complex_item);
+    snprintf(Data, sizeof(Data), "%.15G", dMaxEdgeLength);
+    max_edge_length_item->setText(0, "Max Length");
+    max_edge_length_item->setText(1, Data);
 
     add_attributes_to_tree(complex_item, ComplexID);
     add_bounding_box_to_tree(complex_item, ComplexID);

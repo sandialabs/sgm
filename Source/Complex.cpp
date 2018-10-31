@@ -4,6 +4,7 @@
 #include "SGMTranslators.h"
 #include "SGMBoxTree.h"
 #include "SGMSegment.h"
+#include "SGMPrimitives.h"
 
 #include "EntityClasses.h"
 #include "Graph.h"
@@ -16,7 +17,10 @@ namespace SGMInternal
 SGM::Interval3D const &complex::GetBox(SGM::Result &) const
     {
     if (m_Box.IsEmpty())
+        {
         m_Box=SGM::Interval3D(GetPoints());
+        FindTree();
+        }
     return m_Box;
     }
 
@@ -194,52 +198,60 @@ std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aCo
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    complex *pBoundary;
     if(m_aTriangles.size())
         {
-        pBoundary=FindBoundary(rResult);
+        // The boundary of triangles version.
+
+        complex *pBoundary=FindBoundary(rResult);
+        double dAvergeEdgeLength=pBoundary->FindAverageEdgeLength();
+        std::vector<complex *> aParts=pBoundary->SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
+        SGM::Interval3D Box=pBoundary->GetBox(rResult);
+        rResult.GetThing()->DeleteEntity(pBoundary);
+        SGM::Point3D CM=Box.MidPoint();
+        size_t nParts=aParts.size();
+        size_t Index1;
+        std::vector<complex *> aCovers;
+        for(Index1=0;Index1<nParts;++Index1)
+            {
+            complex *pPart=aParts[Index1];
+            SGM::UnitVector3D XVec,YVec,ZVec;
+            SGM::Point3D Origin;
+            SGM::FindLeastSquarePlane(pPart->GetPoints(),Origin,XVec,YVec,ZVec);
+            SGM::Vector3D TestVec=pPart->GetPoints()[0]-CM;
+            if(TestVec%ZVec<0)
+                {
+                ZVec.Negate();
+                YVec=ZVec*XVec;
+                }
+            std::vector<complex *> aCycles=pPart->CloseWithBoundary(rResult,ZVec);
+            rResult.GetThing()->DeleteEntity(pPart);
+            aCovers.push_back(CoverPlanarSet(rResult,aCycles));
+            for(auto pCycle : aCycles)
+                {
+                rResult.GetThing()->DeleteEntity(pCycle);
+                }
+            }
+        complex *pLastComplex=aCovers[aCovers.size()-1];
+        aCovers.pop_back();
+        complex *pAnswer=pLastComplex->Merge(rResult,aCovers);
+        aCovers.push_back(pLastComplex);
+        for(auto pEnt : aCovers)
+            {
+            rResult.GetThing()->DeleteEntity(pEnt);
+            }
+        return pAnswer;
         }
     else
         {
-        pBoundary=new complex(rResult,*this);
+        // One-dimensional version.
+
+        Graph graph(this);
+        Graph MaxCycle=graph.FindLargestMinCycle();
+        std::vector<size_t> aVertices;
+        MaxCycle.OrderVertices(aVertices);
+
+        return nullptr;
         }
-    double dAvergeEdgeLength=pBoundary->FindAverageEdgeLength();
-    std::vector<complex *> aParts=pBoundary->SplitByPlanes(rResult,dAvergeEdgeLength*SGM_FIT);
-    SGM::Interval3D Box=pBoundary->GetBox(rResult);
-    rResult.GetThing()->DeleteEntity(pBoundary);
-    SGM::Point3D CM=Box.MidPoint();
-    size_t nParts=aParts.size();
-    size_t Index1;
-    std::vector<complex *> aCovers;
-    for(Index1=0;Index1<nParts;++Index1)
-        {
-        complex *pPart=aParts[Index1];
-        SGM::UnitVector3D XVec,YVec,ZVec;
-        SGM::Point3D Origin;
-        SGM::FindLeastSquarePlane(pPart->GetPoints(),Origin,XVec,YVec,ZVec);
-        SGM::Vector3D TestVec=pPart->GetPoints()[0]-CM;
-        if(TestVec%ZVec<0)
-            {
-            ZVec.Negate();
-            YVec=ZVec*XVec;
-            }
-        std::vector<complex *> aCycles=pPart->CloseWithBoundary(rResult,ZVec);
-        rResult.GetThing()->DeleteEntity(pPart);
-        aCovers.push_back(CoverPlanarSet(rResult,aCycles));
-        for(auto pCycle : aCycles)
-            {
-            rResult.GetThing()->DeleteEntity(pCycle);
-            }
-        }
-    complex *pLastComplex=aCovers[aCovers.size()-1];
-    aCovers.pop_back();
-    complex *pAnswer=pLastComplex->Merge(rResult,aCovers);
-    aCovers.push_back(pLastComplex);
-    for(auto pEnt : aCovers)
-        {
-        rResult.GetThing()->DeleteEntity(pEnt);
-        }
-    return pAnswer;
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const
@@ -464,16 +476,25 @@ bool complex::FindPolygon(std::vector<unsigned int> &aPolygon) const
     return false;
     }
 
-double complex::FindAverageEdgeLength() const
+double complex::FindAverageEdgeLength(double *dMaxEdgeLength) const
     {
     double dTotalLength=0;
     size_t nSegments=m_aSegments.size();
+    if(dMaxEdgeLength)
+        {
+        *dMaxEdgeLength=0.0;
+        }
     size_t Index1;
     for(Index1=0;Index1<nSegments;Index1+=2)
         {
         unsigned int a=m_aSegments[Index1];
         unsigned int b=m_aSegments[Index1+1];
-        dTotalLength+=m_aPoints[a].Distance(m_aPoints[b]);
+        double dDist=m_aPoints[a].Distance(m_aPoints[b]);
+        if(dMaxEdgeLength && (*dMaxEdgeLength)<dDist)
+            {
+            *dMaxEdgeLength=dDist;
+            }
+        dTotalLength+=dDist;
         }
     size_t nTriangles=m_aTriangles.size();
     for(Index1=0;Index1<nTriangles;Index1+=3)
@@ -481,9 +502,27 @@ double complex::FindAverageEdgeLength() const
         unsigned int a=m_aTriangles[Index1];
         unsigned int b=m_aTriangles[Index1+1];
         unsigned int c=m_aTriangles[Index1+2];
-        dTotalLength+=m_aPoints[a].Distance(m_aPoints[b]);
-        dTotalLength+=m_aPoints[b].Distance(m_aPoints[c]);
-        dTotalLength+=m_aPoints[c].Distance(m_aPoints[a]);
+        double dDistA=m_aPoints[a].Distance(m_aPoints[b]);
+        dTotalLength+=dDistA;
+        double dDistB=m_aPoints[b].Distance(m_aPoints[c]);
+        dTotalLength+=dDistB;
+        double dDistC=m_aPoints[c].Distance(m_aPoints[a]);
+        dTotalLength+=dDistC;
+        if(dMaxEdgeLength)
+            {
+            if((*dMaxEdgeLength)<dDistA)
+                {
+                *dMaxEdgeLength=dDistA;
+                }
+            if((*dMaxEdgeLength)<dDistB)
+                {
+                *dMaxEdgeLength=dDistB;
+                }
+            if((*dMaxEdgeLength)<dDistC)
+                {
+                *dMaxEdgeLength=dDistC;
+                }
+            }
         }
     return dTotalLength/(nSegments/2.0+nTriangles/3.0);
     }
@@ -542,6 +581,77 @@ bool complex::IsCycle() const
         return true;
         }
     return false;
+    }
+
+bool complex::IsManifold() const
+    {
+    std::vector<unsigned int> aAdjacences;
+    size_t nTriangles=SGM::FindAdjacences2D(m_aTriangles,aAdjacences);
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=m_aTriangles[Index1];
+        unsigned int b=m_aTriangles[Index1+1];
+        unsigned int c=m_aTriangles[Index1+2];
+        unsigned int T0=aAdjacences[Index1];
+        unsigned int T1=aAdjacences[Index1+1];
+        unsigned int T2=aAdjacences[Index1+2];
+        if(T0!=std::numeric_limits<unsigned int>::max())
+            {
+            unsigned int a0=m_aTriangles[T0];
+            unsigned int b0=m_aTriangles[T0+1];
+            unsigned int c0=m_aTriangles[T0+2];
+            if(((a0==a && b0==b) || (a0==b && b0==a)) && aAdjacences[T0]!=Index1)
+                {
+                return false;
+                }
+            if(((b0==a && c0==b) || (b0==b && c0==a)) && aAdjacences[T0+1]!=Index1)
+                {
+                return false;
+                }
+            if(((c0==a && a0==b) || (c0==b && a0==a)) && aAdjacences[T0+2]!=Index1)
+                {
+                return false;
+                }
+            }
+        if(T1!=std::numeric_limits<unsigned int>::max())
+            {
+            unsigned int a1=m_aTriangles[T1];
+            unsigned int b1=m_aTriangles[T1+1];
+            unsigned int c1=m_aTriangles[T1+2];
+            if(((a1==b && b1==c) || (a1==c && b1==b)) && aAdjacences[T1]!=Index1)
+                {
+                return false;
+                }
+            if(((b1==b && c1==c) || (b1==c && c1==b)) && aAdjacences[T1+1]!=Index1)
+                {
+                return false;
+                }
+            if(((c1==b && a1==c) || (c1==c && a1==b)) && aAdjacences[T1+2]!=Index1)
+                {
+                return false;
+                }
+            }
+        if(T2!=std::numeric_limits<unsigned int>::max())
+            {
+            unsigned int a2=m_aTriangles[T2];
+            unsigned int b2=m_aTriangles[T2+1];
+            unsigned int c2=m_aTriangles[T2+2];
+            if(((a2==b && b2==c) || (a2==c && b2==b)) && aAdjacences[T2]!=Index1)
+                {
+                return false;
+                }
+            if(((b2==b && c2==c) || (b2==c && c2==b)) && aAdjacences[T2+1]!=Index1)
+                {
+                return false;
+                }
+            if(((c2==b && a2==c) || (c2==c && a2==b)) && aAdjacences[T2+2]!=Index1)
+                {
+                return false;
+                }
+            }
+        }
+    return true;
     }
 
 bool complex::IsOriented() const
@@ -680,7 +790,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     //  Fast merge by sorting.
     //
     ///////////////////////////////////////////////////////////////////////////
-//#if 0
+//#if 1
     std::vector<IndexedPoint> aOrdered;
     size_t nPoints=m_aPoints.size();
     aOrdered.reserve(nPoints);
@@ -827,6 +937,44 @@ complex *complex::Merge(SGM::Result                  &rResult,
     return pAnswer;
     }
 
+std::vector<SGM::UnitVector3D> complex::FindTriangleNormals() const
+    {
+    std::vector<SGM::UnitVector3D> aNormals;
+    size_t nTriangles=m_aTriangles.size();
+    aNormals.reserve(nTriangles/3);
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=m_aTriangles[Index1];
+        unsigned int b=m_aTriangles[Index1+1];
+        unsigned int c=m_aTriangles[Index1+2];
+        SGM::Point3D const &A=m_aPoints[a];
+        SGM::Point3D const &B=m_aPoints[b];
+        SGM::Point3D const &C=m_aPoints[c];
+        aNormals.push_back((B-A)*(C-A));
+        }
+    return aNormals;
+    }
+
+std::vector<double> complex::FindTriangleAreas() const
+    {
+    std::vector<double> aAreas;
+    size_t nTriangles=m_aTriangles.size();
+    aAreas.reserve(nTriangles/3);
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=m_aTriangles[Index1];
+        unsigned int b=m_aTriangles[Index1+1];
+        unsigned int c=m_aTriangles[Index1+2];
+        SGM::Point3D const &A=m_aPoints[a];
+        SGM::Point3D const &B=m_aPoints[b];
+        SGM::Point3D const &C=m_aPoints[c];
+        aAreas.push_back(((B-A)*(C-A)).Magnitude());
+        }
+    return aAreas;
+    }
+
 double complex::Area() const
     {
     size_t Index1;
@@ -914,12 +1062,235 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
     return aAnswer;
     }
 
-complex *complex::FindSharpEdges(SGM::Result &rResult,
-                                 double       dAngle) const
+void PlanarDisk(SGM::Result   &rResult,
+                complex const *pComp)
     {
-    rResult;
-    dAngle;
-    return nullptr;
+
+    SGM::Point3D Origin;
+    SGM::UnitVector3D XVec,YVec,ZVec;
+    std::vector<SGM::Point3D> const &aPoints=pComp->GetPoints();
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+    double dRadius=0;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double dDist=aPoints[Index1].DistanceSquared(Origin);
+        if(dRadius<dDist)
+            {
+            dRadius=dDist;
+            }
+        }
+    dRadius=sqrt(dRadius);
+    //SGM::CreateDisk(rResult,Origin,ZVec,dRadius);
+    SGM::Point3D StartPos=Origin-ZVec*dRadius;
+    SGM::Point3D EndPos=Origin+ZVec*dRadius;
+    SGM::CreateLinearEdge(rResult,StartPos,EndPos);
+    }
+
+void complex::FindTree() const
+    {
+    size_t nTriangles=m_aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int a=m_aTriangles[Index1];
+        unsigned int b=m_aTriangles[Index1+1];
+        unsigned int c=m_aTriangles[Index1+2];
+        SGM::Point3D const &A=m_aPoints[a];
+        SGM::Point3D const &B=m_aPoints[b];
+        SGM::Point3D const &C=m_aPoints[c];
+        SGM::Interval3D Box(A,B,C);
+        m_Tree.Insert((const void *)(&m_aTriangles[Index1]),Box);
+        }
+    }
+
+SGM::BoxTree const &complex::GetTree() const
+    {
+    if(m_Tree.IsEmpty())
+        {
+        FindTree();
+        }
+    return m_Tree;
+    }
+
+complex *complex::FindDegenerateTriangles(SGM::Result &rResult) const
+    {
+    std::vector<double> aAreas=FindTriangleAreas();
+    size_t nAreas=aAreas.size();
+    size_t Index1;
+    std::vector<unsigned int> aTriangles;
+    for(Index1=0;Index1<nAreas;++Index1)
+        {
+        if(aAreas[Index1]<SGM_MIN_TOL)
+            {
+            size_t Index13=Index1*3;
+            aTriangles.push_back(m_aTriangles[Index13]);
+            aTriangles.push_back(m_aTriangles[Index13+1]);
+            aTriangles.push_back(m_aTriangles[Index13+2]);
+            }
+        }
+    complex *pAnswer=nullptr;
+    if(aTriangles.size())
+        {
+        pAnswer=new complex(rResult,m_aPoints,aTriangles);
+        pAnswer->ReduceToUsedPoints();
+        }
+    return pAnswer;
+    }
+
+void complex::ReduceToLargestMinCycle()
+    {
+    Graph graph(this);
+    Graph LMC=graph.FindLargestMinCycle();
+    std::vector<size_t> aVertices;
+    LMC.OrderVertices(aVertices);
+    std::vector<SGM::Point3D> aNewPoints;
+    std::vector<unsigned int> aNewSegs;
+    size_t nVertices=aVertices.size();
+    aNewPoints.reserve(nVertices);
+    aNewSegs.reserve(nVertices+nVertices);
+    size_t Index1;
+    for(Index1=0;Index1<nVertices;++Index1)
+        {
+        aNewPoints.push_back(m_aPoints[aVertices[Index1]]);
+        aNewSegs.push_back((unsigned int)Index1);
+        aNewSegs.push_back((unsigned int)((Index1+1)%nVertices));
+        }
+    m_aPoints=aNewPoints;
+    m_aSegments=aNewSegs;
+    }
+
+size_t complex::FindHoles(SGM::Result            &rResult,
+                          std::vector<complex *> &aHoles) const
+    {
+    SGM::Point3D Origin;
+    SGM::UnitVector3D XVec,YVec,ZVec;
+    SGM::FindLeastSquarePlane(m_aPoints,Origin,XVec,YVec,ZVec);
+
+    std::vector<SGM::UnitVector3D> aNormals=FindTriangleNormals();
+    size_t nNormals=aNormals.size();
+    size_t Index1;
+    std::vector<unsigned int> aNewTris;
+    for(Index1=0;Index1<nNormals;++Index1)
+        {
+        if(aNormals[Index1]%ZVec<0)
+            {
+            size_t nTri=Index1*3;
+            aNewTris.push_back(m_aTriangles[nTri]);
+            aNewTris.push_back(m_aTriangles[nTri+1]);
+            aNewTris.push_back(m_aTriangles[nTri+2]);
+            }
+        }
+    complex *pBottom=new complex(rResult,m_aPoints,aNewTris);
+    pBottom->ReduceToUsedPoints();
+    complex *pBoundary=pBottom->FindBoundary(rResult);
+    rResult.GetThing()->DeleteEntity(pBottom);
+    std::vector<complex *> aComps=pBoundary->FindComponents(rResult);
+    rResult.GetThing()->DeleteEntity(pBoundary);
+    size_t nComps=aComps.size();
+    size_t nMaxSize=0;
+    for(Index1=0;Index1<nComps;++Index1)
+        {
+        complex *pComp=aComps[Index1];
+        size_t nCompSize=pComp->GetPoints().size();
+        if(nMaxSize<nCompSize)
+            {
+            nMaxSize=nCompSize;
+            }
+        }
+    size_t nMinSize=10;
+    for(Index1=0;Index1<nComps;++Index1)
+        {
+        complex *pComp=aComps[Index1];
+        size_t nCompSize=pComp->GetPoints().size();
+        if(nMinSize<nCompSize && nCompSize<nMaxSize)
+            {
+            pComp->ReduceToLargestMinCycle();
+            aHoles.push_back(pComp);
+            }
+        else
+            {
+            rResult.GetThing()->DeleteEntity(pComp);
+            }
+        }
+
+    // Ray firing method.
+    /*
+    SGM::Interval3D Box=SGM::FindOrientedBox(m_aPoints,Origin,XVec,YVec,ZVec);
+    size_t nXNum=10,nYNum=10;
+    size_t Index1,Index2;
+    for(Index1=0;Index1<nXNum;++Index1)
+        {
+        double dX=Box.m_XDomain.MidPoint(Index1/(nXNum-1.0));
+        for(Index2=0;Index2<nYNum;++Index2)
+            {
+            double dY=Box.m_YDomain.MidPoint(Index2/(nYNum-1.0));
+            SGM::Point3D Pos0=Origin+dX*XVec+dY*YVec+Box.m_ZDomain.m_dMin*ZVec;
+            SGM::Point3D Pos1=Origin+dX*XVec+dY*YVec+Box.m_ZDomain.m_dMax*ZVec;
+            CreateEdge(rResult,Pos0,Pos1);
+            }
+        }
+    */
+    return aHoles.size();
+    }
+
+complex *complex::FindSharpEdges(SGM::Result &rResult,
+                                 double       dAngle,
+                                 bool         bIncludeBoundary) const
+    {
+    std::vector<SGM::UnitVector3D> aNormals=FindTriangleNormals();
+    std::vector<unsigned int> aAdjacences,aEdges;
+    SGM::FindAdjacences2D(m_aTriangles,aAdjacences);
+    size_t nTriangles=m_aTriangles.size();
+    double dTol=cos(dAngle);
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned int T0=aAdjacences[Index1];
+        unsigned int T1=aAdjacences[Index1+1];
+        unsigned int T2=aAdjacences[Index1+2];
+        unsigned int a=m_aTriangles[Index1];
+        unsigned int b=m_aTriangles[Index1+1];
+        unsigned int c=m_aTriangles[Index1+2];
+        SGM::UnitVector3D const &Norm=aNormals[Index1/3];
+        if(T0!=std::numeric_limits<unsigned int>::max() && a<b && Norm%aNormals[T0/3]<dTol)
+            {
+            aEdges.push_back(a);
+            aEdges.push_back(b);
+            }
+        if(T1!=std::numeric_limits<unsigned int>::max() && b<c && Norm%aNormals[T1/3]<dTol)
+            {
+            aEdges.push_back(b);
+            aEdges.push_back(c);
+            }
+        if(T2!=std::numeric_limits<unsigned int>::max() && c<a && Norm%aNormals[T2/3]<dTol)
+            {
+            aEdges.push_back(c);
+            aEdges.push_back(a);
+            }
+        if(bIncludeBoundary)
+            {
+            if(T0==std::numeric_limits<unsigned int>::max())
+                {
+                aEdges.push_back(a);
+                aEdges.push_back(b);
+                }
+            if(T1==std::numeric_limits<unsigned int>::max())
+                {
+                aEdges.push_back(b);
+                aEdges.push_back(c);
+                }
+            if(T2==std::numeric_limits<unsigned int>::max())
+                {
+                aEdges.push_back(c);
+                aEdges.push_back(a);
+                }
+            }
+        }
+    complex *pAnswer=new complex(rResult,aEdges,m_aPoints);
+    pAnswer->ReduceToUsedPoints();
+    return pAnswer;
     }
 
 complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
