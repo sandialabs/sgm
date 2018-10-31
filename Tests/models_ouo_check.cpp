@@ -4,6 +4,7 @@
 #include "SGMInterrogate.h"
 #include "SGMTopology.h"
 #include "SGMComplex.h"
+#include "SGMIntersector.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -327,3 +328,49 @@ TEST(models_check, ACISNotchedBrickGeometry)
     
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(models_check, check_plane_circle_consistent_with_cylinder_line_intersections)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const double tolerance = 1e-12;
+
+    expect_import_success("half_annulus.stp", rResult);
+
+    SGM::Point3D left_coords_top_edge  = {4.97552009369256, 0.4924115623322998, 0.5};
+    SGM::Point3D left_coords_face_node = left_coords_top_edge; //{4.97552009369256, 0.4924115623322996, 5.677036079487535e-21};
+
+    // top edge
+    std::vector<SGM::Point3D> aPointsEdgePlane;
+    std::vector<SGM::IntersectionType> aTypesEdgePlane;
+    //Euclid::Point3D plane_normal = {-0.1032603999127515, 0.9946543569551478, -3.312864505906003e-16};
+    SGM::UnitVector3D plane_normal = {-0.1032603999127515, 0.9946543569551478, 0}; //-3.312864505906003e-16};
+    {
+        size_t edge_id = 24; //40;
+
+        SGM::IntersectEdgeAndPlane(rResult, edge_id, left_coords_top_edge, plane_normal, aPointsEdgePlane, aTypesEdgePlane);
+    }
+
+    // face node
+    std::vector<SGM::Point3D> aPointsFaceLine;
+    std::vector<SGM::IntersectionType> aTypesFaceLine;
+    //Euclid::Point3D line_vect = {0.9946543569679107, 0.1032603997898127, -1.270825582042912e-14};
+    SGM::UnitVector3D line_vect = {plane_normal[1],-plane_normal[0],plane_normal[2]}; // choose orthog to plane_normals
+    {
+        size_t surf_id = 7; //26;
+
+        bool bUseWholeLine = true;
+        SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, tolerance, bUseWholeLine);
+    }
+
+    const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];
+
+    EXPECT_NEAR(dot_prod, 0.0, tolerance);
+    EXPECT_EQ(1, aPointsEdgePlane.size());
+    EXPECT_EQ(1, aPointsFaceLine.size());
+    EXPECT_NEAR(aPointsEdgePlane[0].m_x, aPointsFaceLine[0].m_x, tolerance);
+    EXPECT_NEAR(aPointsEdgePlane[0].m_x, aPointsFaceLine[0].m_x, tolerance);
+}
+
+

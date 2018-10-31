@@ -2956,7 +2956,7 @@ size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
     size_t Index1;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        SGM::Point3D const &Pos=aPoints[Index1];
+        SGM::Point3D const &Pos=aTempPoints[Index1];
         if(pEdge->PointInEdge(Pos,dTolerance))
             {
             aPoints.push_back(Pos);
