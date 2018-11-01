@@ -757,6 +757,13 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
     return pFace->GetSurface()->GetID();
     }
 
+SGM::Curve SGM::GetCurveOfEdge(SGM::Result     &rResult,
+                               SGM::Edge const &EdgeID)
+    {
+    SGMInternal::edge const *pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pEdge->GetCurve()->GetID();
+    }
+
 int SGM::GetSidesOfFace(SGM::Result     &rResult,
                         SGM::Face const &FaceID)
     {

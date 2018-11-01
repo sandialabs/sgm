@@ -1827,6 +1827,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
 
         aPoints.clear();
+        aTypes.clear();
         Origin.m_y=2.0;
         nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
         if( nHits!=3 ||
@@ -1838,6 +1839,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
 
         aPoints.clear();
+        aTypes.clear();
         Origin.m_y=3.0;
         nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
         if( nHits!=2 ||
@@ -1848,6 +1850,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
 
         aPoints.clear();
+        aTypes.clear();
         Origin.m_y=4.0;
         nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
         if( nHits!=1 ||
@@ -1857,6 +1860,7 @@ bool SGM::RunCPPTest(SGM::Result &rResult,
             }
 
         aPoints.clear();
+        aTypes.clear();
         Origin.m_y=5.0;
         nHits=IntersectLineAndTorus(Origin,Axis,Domain,pTorus,SGM_MIN_TOL,aPoints,aTypes);
         if(nHits!=0)

@@ -83,6 +83,9 @@ namespace SGM
     SGM_EXPORT SGM::Surface GetSurfaceOfFace(SGM::Result     &rResult,
                                              SGM::Face const &FaceID);
 
+    SGM_EXPORT SGM::Curve GetCurveOfEdge(SGM::Result     &rResult,
+                                         SGM::Edge const &EdgeID);
+
     SGM_EXPORT SGM::Interval1D const &GetDomainOfEdge(SGM::Result     &rResult,
                                                       SGM::Edge const &EdgeID);
 

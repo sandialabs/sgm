@@ -30,6 +30,21 @@ extrude::~extrude()
         m_pCurve->RemoveOwner(this);
     }
 
+SGM::UnitVector3D const &extrude::GetAxis() const
+    {
+    return m_vAxis;
+    }
+
+curve *extrude::GetCurve() const
+    {
+    return m_pCurve;
+    }
+
+SGM::Point3D const &extrude::GetOrigin() const
+    {
+    return m_Origin;
+    }
+
 bool extrude::IsSame(surface const *pOther,double dTolerance) const
     {
     if(pOther->GetSurfaceType()!=m_SurfaceType)
