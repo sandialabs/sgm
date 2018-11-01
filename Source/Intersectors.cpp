@@ -1338,16 +1338,19 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
     std::vector<SGM::Point3D> aHits;
     std::vector<double> aRoots;
     size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
-    if(nRoots==0 && SGM_ZERO<fabs(A))
+    if(nRoots==0) 
         {
-        double x=-B/(2.0*A);
-        aHits.push_back(Origin+x*Axis);
+        if (SGM_ZERO<fabs(A)) 
+            { 
+            double x=-B/(2.0*A);
+            aHits.push_back(Origin+x*Axis);
+            }
         }
     else if(nRoots==1)
         {
         aHits.push_back(Origin+aRoots[0]*Axis);
         }
-    else
+    else // nRoots==2
         {
         aHits.push_back(Origin+aRoots[0]*Axis);
         aHits.push_back(Origin+aRoots[1]*Axis);
