@@ -829,9 +829,7 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
         edge_item->setText(1, Data);
         }
 
-    std::set<SGM::Curve> sCurve;
-    SGM::FindCurves(dPtr->mResult, EdgeID, sCurve);
-    add_curve_to_tree(edge_item, *(sCurve.begin()));
+    add_curve_to_tree(edge_item,SGM::GetCurveOfEdge(dPtr->mResult,EdgeID));
 
     for (const SGM::Vertex &VertexID : sVertices)
         {

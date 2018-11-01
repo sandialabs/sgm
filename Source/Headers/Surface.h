@@ -740,6 +740,12 @@ class extrude : public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
+        SGM::UnitVector3D const &GetAxis() const;
+
+        curve *GetCurve() const;
+
+        SGM::Point3D const &GetOrigin() const;
+
     public:
 
         curve             *m_pCurve;

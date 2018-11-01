@@ -172,19 +172,6 @@ void constructor_timing()
     SGM_TIMER_SUM();
 }
 
-inline double dot_vec2d(double * __restrict__ Vec0, double * __restrict__ Vec1)
-    {
-    return Vec0[0]*Vec1[0] + Vec0[1]*Vec1[1];
-//    double d0 = Vec0[0]*Vec1[0];
-//    double d1 = Vec0[1]*Vec1[1];
-//    return d0 + d1;
-    }
-
-inline double dot_vec3d(double * __restrict__ Vec0, double * __restrict__ Vec1)
-    {
-    return Vec0[0]*Vec1[0] + Vec0[1]*Vec1[1] + Vec0[2]*Vec1[2];
-    }
-
 #ifdef SGM_SSE
 inline double dot_vec2d_sse(double *Vec0, double *Vec1)
     {

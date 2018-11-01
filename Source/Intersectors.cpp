@@ -1704,6 +1704,53 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     return aPoints.size();
     }
 
+size_t IntersectLineAndExtrude(SGM::Result                        &rResult,
+                               SGM::Point3D                 const &Origin,
+                               SGM::UnitVector3D            const &Direction,
+                               SGM::Interval1D              const &Domain,
+                               extrude                      const *pExtrude,
+                               double                              dTolerance,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes)
+    {
+    SGM::UnitVector3D const &Axis=pExtrude->GetAxis();
+    SGM::Point3D const &Pos=pExtrude->GetOrigin();
+    curve *pCurve=pExtrude->GetCurve();
+    SGM::Point3D PlanePos=Origin-Axis*((Origin-Pos)%Axis);
+    size_t nAnswer=0;
+    if(1<fabs(Direction%Axis)+SGM_MIN_TOL)
+        {
+        SGM::Point3D ClosePos;
+        pCurve->Inverse(PlanePos,&ClosePos);
+        double dDist=PlanePos.Distance(ClosePos);
+        if(dDist<dTolerance)
+            {
+            aPoints.push_back(ClosePos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            ++nAnswer;
+            }
+        }
+    else
+        {
+        SGM::UnitVector3D PlaneVec=Axis*(Direction*Axis);
+        std::vector<SGM::Point3D> aTempPoints;
+        std::vector<SGM::IntersectionType> aTempTypes;
+        size_t nHits=IntersectLineAndCurve(rResult,PlanePos,PlaneVec,Domain,pCurve,dTolerance,aTempPoints,aTempTypes);
+        size_t Index1;
+        SGM::Segment3D Seg1(Origin,Origin+Direction);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            SGM::Segment3D Seg2(aTempPoints[Index1],aTempPoints[Index1]+Axis);
+            SGM::Point3D Pos1,Pos2;
+            Seg1.Intersect(Seg2,Pos1,Pos2);
+            aPoints.push_back(Pos2);
+            aTypes.push_back(aTempTypes[Index1]);
+            ++nAnswer;
+            }
+        }
+    return nAnswer;
+    }
+
 size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
                                SGM::Point3D                 const &Origin,
                                SGM::UnitVector3D            const &Direction,
@@ -1786,6 +1833,10 @@ size_t IntersectLineAndSurface(SGM::Result                        &rResult,
         case SGM::EntityType::RevolveType:
             {
             return IntersectLineAndRevolve(rResult,Origin,Axis,Domain,(revolve const *)pSurface,dTolerance,aPoints,aTypes);
+            }
+        case SGM::EntityType::ExtrudeType:
+            {
+            return IntersectLineAndExtrude(rResult,Origin,Axis,Domain,(extrude const *)pSurface,dTolerance,aPoints,aTypes);
             }
         default:
             {

@@ -374,3 +374,31 @@ TEST(models_check, check_plane_circle_consistent_with_cylinder_line_intersection
 }
 
 
+TEST(intersection_check, intersect_line_and_extrude)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    expect_import_success("ACISSplineVolumeGeometry.stp", rResult);
+    
+    SGM::Point3D StartPos(-10,-10,-10);
+    SGM::Point3D EndPos(10,10,10);
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,StartPos,EndPos);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,SGM::Thing(),sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Curve IDCurve=SGM::GetCurveOfEdge(rResult,EdgeID);
+    SGM::Surface IDSurface=SGM::GetSurfaceOfFace(rResult,FaceID);
+    SGM::IntersectCurveAndSurface(rResult,IDCurve,IDSurface,aPoints,aTypes);
+
+    SGM::CreatePoints(rResult,aPoints);
+
+    EXPECT_EQ(3, aPoints.size());
+
+    SGMTesting::ReleaseTestThing(pThing); 
+}
+
+
