@@ -1377,7 +1377,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
                              double                              dMinorRadius,
                              double                              dTolerance,
                              std::vector<SGM::Point3D>          &aPoints,
-                             std::vector<SGM::IntersectionType> &)//aTypes)
+                             std::vector<SGM::IntersectionType> &aTypes)
     {
     // IsEmpty, one tangent point, two points, two tangents points, two points and one tangent point,
     // three points one tangent, four points.
@@ -1422,6 +1422,16 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     size_t Index1;
     for(Index1=0;Index1<nRoots;++Index1)
         {
+        double t=aRoots[Index1];
+        double ftp=t*(t*(4*A*t+3*B)+2*C)+D;
+        if(fabs(ftp)<dTolerance)
+            {
+            aTypes.push_back(SGM::IntersectionType::TangentType);
+            }
+        else
+            {
+            aTypes.push_back(SGM::IntersectionType::PointType);
+            }
         aPoints.push_back(Origin+aRoots[Index1]*Axis);
         }
     return aPoints.size();
