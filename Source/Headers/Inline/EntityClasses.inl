@@ -70,7 +70,8 @@ namespace SGMInternal {
     { return m_sOwners; }
 
     inline void entity::AddAttribute(attribute *pEntity)
-    { m_sAttributes.insert(pEntity); }
+    { m_sAttributes.insert(pEntity); 
+    pEntity->AddOwner(this);}
 
     inline void entity::RemoveAttribute(attribute *pEntity)
     { m_sAttributes.erase(pEntity); }

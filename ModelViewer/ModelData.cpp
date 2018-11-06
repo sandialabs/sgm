@@ -124,6 +124,14 @@ bool ModelData::open_file(const QString &filename)
     std::vector<std::string> log;
     SGM::TranslatorOptions options;
 
+    if(SGM::FileType FileType=SGM::GetFileType(filename.toUtf8().data()))
+        {
+        if(FileType==SGM::STLFileType)
+            {
+            options.m_bMerge=true;
+            }
+        }
+
     SGM::ReadFile(dPtr->mResult, filename.toUtf8().data(), ents, log, options);
 
     rebuild_tree();
@@ -391,7 +399,7 @@ void ModelData::FindHoles(SGM::Entity EntityID)
 {
     std::vector<SGM::Complex> aHoles;
     SGM::FindHoles(dPtr->mResult, SGM::Complex(EntityID.m_ID), aHoles);
-    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    //SGM::DeleteEntity(dPtr->mResult, EntityID);
 
     rebuild_tree();
     rebuild_graphics();

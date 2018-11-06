@@ -51,15 +51,34 @@ void FindArguments(std::string        const &line,
     char const *pString=line.c_str();
     size_t nCount=1;
     size_t nStart=0;
+    bool bInString=false;
+    bool bString=false;
     while(pString[nCount])
         {
-        if(pString[nCount]==' ' || pString[nCount]==';')
+        if(pString[nCount]=='"')
+            {
+            bInString=!bInString;
+            ++nCount;
+            bString=true;
+            }
+        if(bInString==false && (pString[nCount]==' ' || pString[nCount]==';'))
             {
             size_t Index1;
             std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
+            if(bString)
                 {
-                Arg+=pString[Index1];
+                bString=false;
+                for(Index1=nStart+1;Index1+1<nCount;++Index1)
+                    {
+                    Arg+=pString[Index1];
+                    }
+                }
+            else
+                {
+                for(Index1=nStart;Index1<nCount;++Index1)
+                    {
+                    Arg+=pString[Index1];
+                    }
                 }
             nStart=nCount+1;
             aArgs.push_back(Arg);
@@ -473,10 +492,23 @@ void ReadVertex(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pVertex;
     } 
       
-void ReadAttribute(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
+void ReadAttribute(SGM::Result              &rResult,
+                   std::vector<std::string> &aArgs,
+                   std::map<size_t,SGMData> &mEntityMap)
     {
+    // #47 Attribute Name "SGM Color" Integer 170,85,255}
+
+    if(aArgs[3]=="Integer")
+        {
+        std::vector<int> aData;
+        GetInts(aArgs[4],aData);
+        attribute *pAttribute=new IntegerAttribute(rResult,aArgs[2],aData);
+        mEntityMap[GetID(aArgs[0])].pEntity=pAttribute;
+        }
+    else
+        {
+        throw; // More attribute types need to be added.
+        }
     } 
        
 void ReadLine(SGM::Result              &rResult,

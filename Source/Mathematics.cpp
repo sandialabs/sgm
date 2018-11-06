@@ -1208,6 +1208,47 @@ void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
     aPoints=aNewPoints;
     }
 
+double HausdorffSub(std::vector<SGM::Point3D> const &aPoints1,
+                    std::vector<SGM::Point3D> const &aPoints2)
+    {
+    size_t nPoints1=aPoints1.size();
+    size_t nPoints2=aPoints2.size();
+    size_t Index1,Index2;
+    double dAnswer=0;
+    for(Index1=0;Index1<nPoints1;++Index1)
+        {
+        double dMinDist=std::numeric_limits<double>::max();
+        SGM::Point3D const &A=aPoints1[Index1];
+        for(Index2=0;Index2<nPoints2;++Index2)
+            {
+            SGM::Point3D const &B=aPoints2[Index2];
+            double dDist=A.DistanceSquared(B);
+            if(dDist<dAnswer)
+                {
+                dMinDist=dAnswer;
+                break;
+                }
+            else if(dDist<dMinDist)
+                {
+                dMinDist=dDist;
+                }
+            }
+        if(dAnswer<dMinDist)
+            {
+            dAnswer=dMinDist;
+            }
+        }
+    return dAnswer;
+    }
+
+double HausdorffDistance(std::vector<SGM::Point3D> const &aPoints1,
+                         std::vector<SGM::Point3D> const &aPoints2)
+    {
+    double dH1=HausdorffSub(aPoints1,aPoints2);
+    double dH2=HausdorffSub(aPoints2,aPoints1);
+    return sqrt(std::max(dH1,dH2));
+    }
+
 void RemoveDuplicates3D(std::vector<SGM::Point3D> &aPoints,
                         double                     dTolerance,
                         SGM::Interval3D     const *pBox)

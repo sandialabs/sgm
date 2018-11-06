@@ -71,6 +71,8 @@ namespace SGM
                                    // Used in STEP read.
         };
 
+    SGM_EXPORT FileType GetFileType(std::string const &sFileName);
+
     SGM_EXPORT size_t ReadFile(SGM::Result                  &rResult,
                                std::string            const &sFileName,
                                std::vector<SGM::Entity>     &aEntities,

@@ -292,11 +292,11 @@ void attribute::WriteSGM(SGM::Result                  &rResult,
     entity::WriteSGM(rResult,pFile,Options);
     if(m_AttributeType==SGM::AttributeType)
         {
-        fprintf(pFile," Name %s;\n",m_Name.c_str());
+        fprintf(pFile," \"%s\";\n",m_Name.c_str());
         }
     else
         {
-        fprintf(pFile," Name %s ",m_Name.c_str());
+        fprintf(pFile," \"%s\"",m_Name.c_str());
         }
     }
 
@@ -313,7 +313,7 @@ void IntegerAttribute::WriteSGM(SGM::Result                  &rResult,
                                 SGM::TranslatorOptions const &Options) const
     {
     attribute::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile," Integer ");
+    fprintf(pFile," Integer {");
     size_t nInts=m_aData.size();
     size_t Index1;
     for(Index1=0;Index1<nInts;++Index1)
@@ -324,7 +324,7 @@ void IntegerAttribute::WriteSGM(SGM::Result                  &rResult,
             fprintf(pFile,",");
             }
         }
-    fprintf(pFile,"}\n");
+    fprintf(pFile,"};\n");
     }
 
 void DoubleAttribute::WriteSGM(SGM::Result                  &rResult,
@@ -627,7 +627,10 @@ void entity::WriteSGM(SGM::Result                  &/*rResult*/,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &/*Options*/) const
     {
-    WriteEntityList(pFile," Owners",(std::set<entity *,EntityCompare> const *)&m_sOwners);
+    if(m_Type   !=SGM::EntityType::AttributeType)
+        {
+        WriteEntityList(pFile," Owners",(std::set<entity *,EntityCompare> const *)&m_sOwners);
+        }
     WriteEntityList(pFile," Attributes",(std::set<entity *,EntityCompare> const *)&m_sAttributes);
     }
 

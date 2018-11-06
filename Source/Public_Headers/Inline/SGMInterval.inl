@@ -690,6 +690,14 @@ namespace SGM {
         return *this;
     }
 
+    inline double Interval3D::Diagonal() const
+        {
+        double dX=m_XDomain.Length();
+        double dY=m_YDomain.Length();
+        double dZ=m_ZDomain.Length();
+        return sqrt(dX*dX+dY*dY+dZ*dZ);
+        }
+
     inline bool Interval3D::OnBoundary(SGM::Point3D Pos, double dTol) const
         {
         if(SGM_ZERO<m_XDomain.Length() && m_XDomain.OnBoundary(Pos.m_x,dTol))

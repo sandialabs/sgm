@@ -548,6 +548,7 @@ Graph Graph::FindLargestMinCycle() const
         if(nMax<MC.m_sEdges.size())
             {
             MaxGE=GE;
+            nMax=MC.m_sEdges.size();
             }
         }
     return FindMinCycle(MaxGE);

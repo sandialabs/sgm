@@ -88,6 +88,11 @@ namespace SGM
                                        double                     dTolerance,
                                        SGM::Interval3D     const *Box=nullptr);
 
+    // Returns the Hausdarff distance between the two point sets.
+
+    SGM_EXPORT double HausdorffDistance(std::vector<SGM::Point3D> const &aPoints1,
+                                        std::vector<SGM::Point3D> const &aPoints2);
+
     /////////////////////////////////////////////////////////////////////////
     //
     //  Polygon functions

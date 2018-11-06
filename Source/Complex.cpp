@@ -10,6 +10,7 @@
 #include "Graph.h"
 #include "Mathematics.h"
 #include "Primitive.h"
+#include "Topology.h"
 
 namespace SGMInternal
 {
@@ -1164,50 +1165,62 @@ void complex::ReduceToLargestMinCycle()
 size_t complex::FindHoles(SGM::Result            &rResult,
                           std::vector<complex *> &aHoles) const
     {
+    // Find the top and bottom triangles.
+
     SGM::Point3D Origin;
     SGM::UnitVector3D XVec,YVec,ZVec;
     SGM::FindLeastSquarePlane(m_aPoints,Origin,XVec,YVec,ZVec);
-
     std::vector<SGM::UnitVector3D> aNormals=FindTriangleNormals();
     size_t nNormals=aNormals.size();
-    size_t Index1;
-    std::vector<unsigned int> aNewTris;
+    size_t Index1,Index2;
+    std::vector<unsigned int> aBottom,aTop;
     for(Index1=0;Index1<nNormals;++Index1)
         {
+        size_t nTri=Index1*3;
         if(aNormals[Index1]%ZVec<0)
             {
-            size_t nTri=Index1*3;
-            aNewTris.push_back(m_aTriangles[nTri]);
-            aNewTris.push_back(m_aTriangles[nTri+1]);
-            aNewTris.push_back(m_aTriangles[nTri+2]);
+            aBottom.push_back(m_aTriangles[nTri]);
+            aBottom.push_back(m_aTriangles[nTri+1]);
+            aBottom.push_back(m_aTriangles[nTri+2]);
+            }
+        else
+            {
+            aTop.push_back(m_aTriangles[nTri]);
+            aTop.push_back(m_aTriangles[nTri+1]);
+            aTop.push_back(m_aTriangles[nTri+2]);
             }
         }
-    complex *pBottom=new complex(rResult,m_aPoints,aNewTris);
+
+    // Find the bottom holes.
+
+    std::vector<complex *> aBottomHoles;
+    complex *pBottom=new complex(rResult,m_aPoints,aBottom);
     pBottom->ReduceToUsedPoints();
-    complex *pBoundary=pBottom->FindBoundary(rResult);
+    complex *pBottomBoundary=pBottom->FindBoundary(rResult);
     rResult.GetThing()->DeleteEntity(pBottom);
-    std::vector<complex *> aComps=pBoundary->FindComponents(rResult);
-    rResult.GetThing()->DeleteEntity(pBoundary);
-    size_t nComps=aComps.size();
-    size_t nMaxSize=0;
-    for(Index1=0;Index1<nComps;++Index1)
+    std::vector<complex *> aBottomComps=pBottomBoundary->FindComponents(rResult);
+    rResult.GetThing()->DeleteEntity(pBottomBoundary);
+    size_t nBottomComps=aBottomComps.size();
+    size_t nBottomMaxSize=0;
+    for(Index1=0;Index1<nBottomComps;++Index1)
         {
-        complex *pComp=aComps[Index1];
+        complex *pComp=aBottomComps[Index1];
         size_t nCompSize=pComp->GetPoints().size();
-        if(nMaxSize<nCompSize)
+        if(nBottomMaxSize<nCompSize)
             {
-            nMaxSize=nCompSize;
+            nBottomMaxSize=nCompSize;
             }
         }
     size_t nMinSize=10;
-    for(Index1=0;Index1<nComps;++Index1)
+    for(Index1=0;Index1<nBottomComps;++Index1)
         {
-        complex *pComp=aComps[Index1];
+        complex *pComp=aBottomComps[Index1];
         size_t nCompSize=pComp->GetPoints().size();
-        if(nMinSize<nCompSize && nCompSize<nMaxSize)
+        if(nMinSize<nCompSize && nCompSize<nBottomMaxSize)
             {
             pComp->ReduceToLargestMinCycle();
-            aHoles.push_back(pComp);
+            aBottomHoles.push_back(pComp);
+            pComp->ChangeColor(rResult,0,0,255);
             }
         else
             {
@@ -1215,23 +1228,81 @@ size_t complex::FindHoles(SGM::Result            &rResult,
             }
         }
 
-    // Ray firing method.
-    /*
-    SGM::Interval3D Box=SGM::FindOrientedBox(m_aPoints,Origin,XVec,YVec,ZVec);
-    size_t nXNum=10,nYNum=10;
-    size_t Index1,Index2;
-    for(Index1=0;Index1<nXNum;++Index1)
+    // Find the top holes.
+
+    std::vector<complex *> aTopHoles;
+    complex *pTop=new complex(rResult,m_aPoints,aTop);
+    pTop->ReduceToUsedPoints();
+    complex *pTopBoundary=pTop->FindBoundary(rResult);
+    rResult.GetThing()->DeleteEntity(pTop);
+    std::vector<complex *> aTopComps=pTopBoundary->FindComponents(rResult);
+    rResult.GetThing()->DeleteEntity(pTopBoundary);
+    size_t nTopComps=aTopComps.size();
+    size_t nMaxSize=0;
+    for(Index1=0;Index1<nTopComps;++Index1)
         {
-        double dX=Box.m_XDomain.MidPoint(Index1/(nXNum-1.0));
-        for(Index2=0;Index2<nYNum;++Index2)
+        complex *pComp=aTopComps[Index1];
+        size_t nCompSize=pComp->GetPoints().size();
+        if(nMaxSize<nCompSize)
             {
-            double dY=Box.m_YDomain.MidPoint(Index2/(nYNum-1.0));
-            SGM::Point3D Pos0=Origin+dX*XVec+dY*YVec+Box.m_ZDomain.m_dMin*ZVec;
-            SGM::Point3D Pos1=Origin+dX*XVec+dY*YVec+Box.m_ZDomain.m_dMax*ZVec;
-            CreateEdge(rResult,Pos0,Pos1);
+            nMaxSize=nCompSize;
             }
         }
-    */
+    for(Index1=0;Index1<nTopComps;++Index1)
+        {
+        complex *pComp=aTopComps[Index1];
+        size_t nCompSize=pComp->GetPoints().size();
+        if(nMinSize<nCompSize && nCompSize<nMaxSize)
+            {
+            pComp->ReduceToLargestMinCycle();
+            aTopHoles.push_back(pComp);
+            }
+        else
+            {
+            rResult.GetThing()->DeleteEntity(pComp);
+            }
+        }
+
+    // Find matching holes.
+    
+    size_t nBottomHoles=aBottomHoles.size();
+    size_t nTopHoles=aTopHoles.size();
+    std::set<complex *> sKeep;
+    for(Index1=0;Index1<nBottomHoles;++Index1)
+        {
+        complex *pBottom=aBottomHoles[Index1];
+        SGM::Interval3D Box=pBottom->GetBox(rResult);
+        double dTol1=Box.Diagonal();
+        for(Index2=0;Index2<nTopHoles;++Index2)
+            {
+            complex *pTop=aTopHoles[Index2];
+            double dTol2=Box.Diagonal();
+            double dHD=SGM::HausdorffDistance(pBottom->GetPoints(),pTop->GetPoints());
+            if(dHD<std::min(dTol1,dTol2))
+                {
+                aHoles.push_back(pBottom);
+                sKeep.insert(pBottom);
+                break;
+                }
+            }
+        }
+
+    // Clean memory up.
+
+    for(Index1=0;Index1<nBottomHoles;++Index1)
+        {
+        complex *pBottom=aBottomHoles[Index1];
+        if(sKeep.find(pBottom)==sKeep.end())
+            {
+            rResult.GetThing()->DeleteEntity(pBottom);
+            }
+        }
+    for(Index1=0;Index1<nTopHoles;++Index1)
+        {
+        complex *pTop=aTopHoles[Index1];
+        rResult.GetThing()->DeleteEntity(pTop);
+        }
+    
     return aHoles.size();
     }
 

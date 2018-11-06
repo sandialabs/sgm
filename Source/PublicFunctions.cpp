@@ -1704,6 +1704,29 @@ size_t SGM::FindCloseFaces(SGM::Result            &rResult,
     return aFaces.size();
     }
 
+SGM::FileType SGM::GetFileType(std::string const &sFileName)
+    {
+    std::string Extension;
+    SGMInternal::FindFileExtension(sFileName,Extension);
+
+    if(Extension=="stp" || Extension=="step")
+        {
+        return SGM::STEPFileType;
+        }
+    else if(Extension=="stl")
+        {
+        return SGM::STLFileType;
+        }
+    else if(Extension=="sgm")
+        {
+        return SGM::SGMFileType;
+        }
+    else
+        {
+        return SGM::UnknownFileType;
+        }
+    }
+
 size_t SGM::ReadFile(SGM::Result                  &rResult,
                      std::string            const &FileName,
                      std::vector<SGM::Entity>     &aEntities,

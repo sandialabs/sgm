@@ -111,6 +111,14 @@ namespace SGM
         LogRight        // Right Face of a block, i.e. +X.
         };
 
+    enum FileType
+        {
+        SGMFileType,     // SGM internal file format.
+        STLFileType,     // STL file.
+        STEPFileType,    // STEP file either stp or step.
+        UnknownFileType 
+        };
+
     } // End of SGM namespace
 
 #endif // SGM_ENUMS_H

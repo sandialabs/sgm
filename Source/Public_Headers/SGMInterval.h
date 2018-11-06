@@ -319,6 +319,8 @@ namespace SGM {
 
         bool OnBoundary(SGM::Point3D Pos, double dTol) const;
 
+        double Diagonal() const;
+
     public:
 
         Interval1D m_XDomain;
