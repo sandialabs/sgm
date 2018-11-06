@@ -1,0 +1,2 @@
+cd ../Tests/STEP\ Parts
+mpirun -np 1 -tv morph_mesher --geom=cube.stp --outmesh=cube_mesh.g --size=0.5 --create_bad --echo-command-line 
