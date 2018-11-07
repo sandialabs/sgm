@@ -13,6 +13,8 @@
 #include "Primitive.h"
 #include "Graph.h"
 
+#include "Interrogate.h"
+
 #include <utility>
 #include <string>
 #include <algorithm>
@@ -44,6 +46,36 @@ class SGMData
 //  Helper functions for parcing strings.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+bool ReadFilePoint(FILE         *pFile,
+                   SGM::Point3D &Pos)
+    {
+    char data;
+    std::string PosStr;
+    size_t nCount=0;
+    double d[3];
+    while(fread(&data,1,1,pFile))
+        {
+        if(data>32 && data!=',') 
+            {
+            PosStr+=data;
+            }
+        else if(PosStr.empty()==false)
+            {
+            sscanf(PosStr.c_str(),"%lf",&d[nCount]);
+            PosStr.clear();
+            ++nCount;
+            if(nCount==3)
+                {
+                Pos.m_x=d[0];
+                Pos.m_y=d[1];
+                Pos.m_z=d[2];
+                return true;
+                }
+            }
+        }
+    return false;
+    }
 
 void FindArguments(std::string        const &line,
                    std::vector<std::string> &aArgs)
@@ -1047,6 +1079,56 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
         }
 
     return aEntities.size();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+//
+//  The main SGM file read function.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t ReadTXTFile(SGM::Result                  &rResult,
+                   std::string            const &FileName,
+                   std::vector<entity *>        &aEntities,
+                   std::vector<std::string>     &,//aLog,
+                   SGM::TranslatorOptions const &)//Options)
+    {
+    // Open the file.
+
+    FILE *pFile = fopen(FileName.c_str(),"rt");
+    if(pFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        return 0;
+        }
+
+    std::vector<SGM::Point3D> aPoints;
+    std::map<size_t,SGMData> mEntityMap;
+    SGM::Point3D Pos;
+    while(ReadFilePoint(pFile,Pos))
+        {
+        aPoints.push_back(Pos);
+        }
+
+    //////////////////////// TEMP CODE FOR TESTING
+    /*
+    std::vector<SGM::Point3D> aInPoints;
+    std::set<volume *,EntityCompare> sVolumes;
+    FindVolumes(rResult,rResult.GetThing(),sVolumes,false);
+    volume *pVolume=*(sVolumes.begin());
+    for(auto TestPos : aPoints)
+        {
+        if(PointInEntity(rResult,TestPos,pVolume))
+            {
+            aInPoints.push_back(TestPos);
+            }
+        }
+    
+    complex *pComplex=new complex(rResult,aInPoints);
+    */
+    complex *pComplex=new complex(rResult,aPoints);
+    aEntities.push_back(pComplex);
+    return 1;
     }
 
 } // End of SGMInternal namespace

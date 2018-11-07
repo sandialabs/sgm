@@ -1293,18 +1293,18 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
                             cone                         const *pCone,
                             double                              dTolerance,
                             std::vector<SGM::Point3D>          &aPoints,
-                            std::vector<SGM::IntersectionType> &)//aTypes)
+                            std::vector<SGM::IntersectionType> &aTypes)
     {
     //  IsEmpty, one point tangent or not, two points.
 
     // A point is on a cone with apex at the origin and axis the positive 
     // z-axis if and only if x^2+y^2=(cos(half angle)/sin(half angle))^2*z^2.
 
-    SGM::Point3D Center=pCone->m_Origin;
+    SGM::Point3D Apex=pCone->FindApex();
     SGM::UnitVector3D XVec=pCone->m_XAxis;
     SGM::UnitVector3D YVec=pCone->m_YAxis;
     SGM::UnitVector3D ZVec=pCone->m_ZAxis;
-    SGM::Transform3D Trans(XVec,YVec,ZVec,SGM::Vector3D(Center));
+    SGM::Transform3D Trans(XVec,YVec,ZVec,SGM::Vector3D(Apex));
     SGM::Transform3D Inverse;
     Trans.Inverse(Inverse);
 
@@ -1331,11 +1331,12 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
     double d=TAxis.m_y;
     double f=TAxis.m_z;
 
-    double A = d*d-f*f*s;
-    double B = 2*a*b+2*c*d-2*e*f*s;
+    double A = b*b+d*d-f*f*s;
+    double B = 2*(a*b+c*d-e*f*s);
     double C = a*a+c*c-e*e*s;
 
     std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aTempTypes;
     std::vector<double> aRoots;
     size_t nRoots=SGM::Quadratic(A,B,C,aRoots);
     if(nRoots==0) 
@@ -1343,17 +1344,21 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
         if (SGM_ZERO<fabs(A)) 
             { 
             double x=-B/(2.0*A);
-            aHits.push_back(Origin+x*Axis);
+            aHits.push_back(TOrigin+x*TAxis);
+            aTempTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
     else if(nRoots==1)
         {
-        aHits.push_back(Origin+aRoots[0]*Axis);
+        aHits.push_back(TOrigin+aRoots[0]*TAxis);
+        aTempTypes.push_back(SGM::IntersectionType::TangentType);
         }
     else // nRoots==2
         {
-        aHits.push_back(Origin+aRoots[0]*Axis);
-        aHits.push_back(Origin+aRoots[1]*Axis);
+        aHits.push_back(TOrigin+aRoots[0]*TAxis);
+        aHits.push_back(TOrigin+aRoots[1]*TAxis);
+        aTempTypes.push_back(SGM::IntersectionType::PointType);
+        aTempTypes.push_back(SGM::IntersectionType::PointType);
         }
 
     // Check all the hits.
@@ -1369,6 +1374,7 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
         if(SGM::NearEqual(Pos,CPos,dTolerance))
             {
             aPoints.push_back(CPos);
+            aTypes.push_back(aTempTypes[Index1]);
             }
         }
     return aPoints.size();

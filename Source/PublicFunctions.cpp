@@ -1752,6 +1752,10 @@ size_t SGM::ReadFile(SGM::Result                  &rResult,
         {
         SGMInternal::ReadSGMFile(rResult,FileName,aEnts,aLog,Options);
         }
+    else if(Extension=="txt")
+        {
+        SGMInternal::ReadTXTFile(rResult,FileName,aEnts,aLog,Options);
+        }
     else
         {
         rResult.SetResult(ResultType::ResultTypeUnknownFileType);
