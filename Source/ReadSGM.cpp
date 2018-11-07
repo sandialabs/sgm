@@ -1111,7 +1111,7 @@ size_t ReadTXTFile(SGM::Result                  &rResult,
         }
 
     //////////////////////// TEMP CODE FOR TESTING
-    /*
+    
     std::vector<SGM::Point3D> aInPoints;
     std::set<volume *,EntityCompare> sVolumes;
     FindVolumes(rResult,rResult.GetThing(),sVolumes,false);
@@ -1125,8 +1125,8 @@ size_t ReadTXTFile(SGM::Result                  &rResult,
         }
     
     complex *pComplex=new complex(rResult,aInPoints);
-    */
-    complex *pComplex=new complex(rResult,aPoints);
+    
+    //complex *pComplex=new complex(rResult,aPoints);
     aEntities.push_back(pComplex);
     return 1;
     }

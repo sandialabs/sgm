@@ -23,60 +23,60 @@
 namespace SGMInternal
 {
 
-edge *FindEdge(SGM::Result &rResult,
-               face  const *pFace,
-               entity      *pEntA,
-               entity      *pEntB)
-    {
-    if(pEntA->GetType()==SGM::FaceType || pEntB->GetType()==SGM::FaceType)
-        {
-        return nullptr;
-        }
-    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::EdgeType && pEntA!=pEntB)
-        {
-        return nullptr;
-        }
-    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::VertexType)
-        {
-        edge *pEdge=(edge *)pEntA;
-        vertex *pVertex=(vertex *)pEntB;
-        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
-            {
-            return nullptr;
-            }
-        }
-    if(pEntB->GetType()==SGM::EdgeType && pEntA->GetType()==SGM::VertexType)
-        {
-        edge *pEdge=(edge *)pEntB;
-        vertex *pVertex=(vertex *)pEntA;
-        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
-            {
-            return nullptr;
-            }
-        }
-    if(pEntA->GetType()==SGM::EdgeType)
-        {
-        return (edge *)pEntA;
-        }
-    if(pEntB->GetType()==SGM::EdgeType)
-        {
-        return (edge *)pEntB;
-        }
-    vertex *pVertex1=(vertex *)pEntA;
-    vertex *pVertex2=(vertex *)pEntB;
-    std::vector<edge *> aEdges;
-    size_t nEdges=FindCommonEdgesFromVertices(rResult,pVertex1,pVertex2,aEdges,pFace);
-    if(nEdges)
-        {
-        return aEdges[0];
-        }
-    return nullptr;
-    }
+//static edge *FindEdge(SGM::Result &rResult,
+//                      face  const *pFace,
+//                      entity      *pEntA,
+//                      entity      *pEntB)
+//    {
+//    if(pEntA->GetType()==SGM::FaceType || pEntB->GetType()==SGM::FaceType)
+//        {
+//        return nullptr;
+//        }
+//    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::EdgeType && pEntA!=pEntB)
+//        {
+//        return nullptr;
+//        }
+//    if(pEntA->GetType()==SGM::EdgeType && pEntB->GetType()==SGM::VertexType)
+//        {
+//        edge *pEdge=(edge *)pEntA;
+//        vertex *pVertex=(vertex *)pEntB;
+//        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
+//            {
+//            return nullptr;
+//            }
+//        }
+//    if(pEntB->GetType()==SGM::EdgeType && pEntA->GetType()==SGM::VertexType)
+//        {
+//        edge *pEdge=(edge *)pEntB;
+//        vertex *pVertex=(vertex *)pEntA;
+//        if(pEdge->GetStart()!=pVertex && pEdge->GetEnd()!=pVertex)
+//            {
+//            return nullptr;
+//            }
+//        }
+//    if(pEntA->GetType()==SGM::EdgeType)
+//        {
+//        return (edge *)pEntA;
+//        }
+//    if(pEntB->GetType()==SGM::EdgeType)
+//        {
+//        return (edge *)pEntB;
+//        }
+//    vertex *pVertex1=(vertex *)pEntA;
+//    vertex *pVertex2=(vertex *)pEntB;
+//    std::vector<edge *> aEdges;
+//    size_t nEdges=FindCommonEdgesFromVertices(rResult,pVertex1,pVertex2,aEdges,pFace);
+//    if(nEdges)
+//        {
+//        return aEdges[0];
+//        }
+//    return nullptr;
+//    }
 
 void SubdivideFacets(face                const *pFace,
-                     std::vector<SGM::Point3D> &aPoints3D,
-                     std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<unsigned int> &aTriangles)
+                            std::vector<SGM::Point3D> &aPoints3D,
+                            std::vector<SGM::Point2D> &aPoints2D,
+                            std::vector<unsigned int> &aTriangles)
     {
     surface const *pSurface=pFace->GetSurface();
     size_t nPoints=aPoints3D.size();
@@ -140,9 +140,9 @@ class Node
         bool                 m_bImprint;
     };
 
-void FixBackPointers(unsigned int                     nTri,
-                     std::vector<unsigned int> const &aTriangles,
-                     std::vector<unsigned int>       &aAdjacencies)
+static void FixBackPointers(unsigned int                     nTri,
+                            std::vector<unsigned int> const &aTriangles,
+                            std::vector<unsigned int>       &aAdjacencies)
     {
     unsigned int nT0=aAdjacencies[nTri];
     unsigned int nT1=aAdjacencies[nTri+1];
@@ -206,9 +206,9 @@ void FixBackPointers(unsigned int                     nTri,
         }
     }
 
-bool TestTriangle(SGM::Point2D const &A,
-                  SGM::Point2D const &B,
-                  SGM::Point2D const &C)
+static bool TestTriangle(SGM::Point2D const &A,
+                         SGM::Point2D const &B,
+                         SGM::Point2D const &C)
     {
     SGM::Vector2D Vec1=B-A;
     SGM::Vector2D Vec2=C-A;
@@ -216,14 +216,14 @@ bool TestTriangle(SGM::Point2D const &A,
     return 0<dTest;
     }
 
-bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
-                  std::vector<SGM::UnitVector3D> const &aNormals,
-                  unsigned int                          a0,
-                  unsigned int                          b0,
-                  unsigned int                          c0,
-                  unsigned int                          a1,
-                  unsigned int                          b1,
-                  unsigned int                          c1)
+static bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
+                         std::vector<SGM::UnitVector3D> const &aNormals,
+                         unsigned int                          a0,
+                         unsigned int                          b0,
+                         unsigned int                          c0,
+                         unsigned int                          a1,
+                         unsigned int                          b1,
+                         unsigned int                          c1)
     {
     SGM::Point3D const &A0=aPoints3D[a0];
     SGM::Point3D const &B0=aPoints3D[b0];
@@ -253,15 +253,15 @@ bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
     return true;
     }
 
-bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
-                   std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies,
-                   unsigned int                          nTri,
-                   unsigned int                          nEdge,
-                   std::vector<SGM::Point3D>      const *pPoints3D,
-                   std::vector<SGM::UnitVector3D> const *pNormals,
-                   std::vector<size_t>            const *aTris,
-                   SGM::BoxTree                         *Tree)
+static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
+                          std::vector<unsigned int>            &aTriangles,
+                          std::vector<unsigned int>            &aAdjacencies,
+                          unsigned int                          nTri,
+                          unsigned int                          nEdge,
+                          std::vector<SGM::Point3D>      const *pPoints3D,
+                          std::vector<SGM::UnitVector3D> const *pNormals,
+                          std::vector<size_t>            const *aTris,
+                          SGM::BoxTree                         *Tree)
     {
     unsigned int a=aTriangles[nTri];
     unsigned int b=aTriangles[nTri+1];
@@ -476,38 +476,38 @@ bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
     return false;
     }
 
-void FindScales(surface                   const *pSurface,
-                std::vector<SGM::Point2D> const &aPoints,
-                std::vector<SGM::Vector2D>      &aScales)
-    {
-    size_t nPoints=aPoints.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        SGM::Point2D const &uv=aPoints[Index1];
-        SGM::UnitVector3D Vec1,Vec2;
-        double k1,k2;
-        pSurface->PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
-        double r1=fabs(k1)<0.001 ? 1000.0 : 1.0/fabs(k1);
-        double r2=fabs(k2)<0.001 ? 1000.0 : 1.0/fabs(k2);
-        SGM::Vector3D DU,DV;
-        pSurface->Evaluate(uv,nullptr,&DU,&DV);
-        SGM::UnitVector3D UnitU=DU,UnitV=DV;
-        double dDotU=Vec1%UnitU;
-        double dDotV=Vec1%UnitV;
-        SGM::Vector2D UVec(1,0),VVec(0,1);
-        SGM::Vector2D PVec=(dDotU*UVec+dDotV*VVec)*(r2/r1);
-        aScales.push_back(PVec);
-        }
-    }
+//static void FindScales(surface                   const *pSurface,
+//                       std::vector<SGM::Point2D> const &aPoints,
+//                       std::vector<SGM::Vector2D>      &aScales)
+//    {
+//    size_t nPoints=aPoints.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nPoints;++Index1)
+//        {
+//        SGM::Point2D const &uv=aPoints[Index1];
+//        SGM::UnitVector3D Vec1,Vec2;
+//        double k1,k2;
+//        pSurface->PrincipleCurvature(uv,Vec1,Vec2,k1,k2);
+//        double r1=fabs(k1)<0.001 ? 1000.0 : 1.0/fabs(k1);
+//        double r2=fabs(k2)<0.001 ? 1000.0 : 1.0/fabs(k2);
+//        SGM::Vector3D DU,DV;
+//        pSurface->Evaluate(uv,nullptr,&DU,&DV);
+//        SGM::UnitVector3D UnitU=DU,UnitV=DV;
+//        double dDotU=Vec1%UnitU;
+//        double dDotV=Vec1%UnitV;
+//        SGM::Vector2D UVec(1,0),VVec(0,1);
+//        SGM::Vector2D PVec=(dDotU*UVec+dDotV*VVec)*(r2/r1);
+//        aScales.push_back(PVec);
+//        }
+//    }
 
 void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
-                   std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies,
-                   std::vector<SGM::Point3D>      const *pPoints3D,
-                   std::vector<SGM::UnitVector3D> const *pNormals,
-                   std::vector<size_t>            const *aTris,
-                   SGM::BoxTree                         *pTree)
+                          std::vector<unsigned int>            &aTriangles,
+                          std::vector<unsigned int>            &aAdjacencies,
+                          std::vector<SGM::Point3D>      const *pPoints3D,
+                          std::vector<SGM::UnitVector3D> const *pNormals,
+                          std::vector<size_t>            const *aTris,
+                          SGM::BoxTree                         *pTree)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
@@ -566,10 +566,10 @@ class FacetNodeNormal
     };
 
 void FacetCurve(curve               const *pCurve,
-                SGM::Interval1D     const &Domain,
-                FacetOptions        const &Options,
-                std::vector<SGM::Point3D> &aPoints3D,
-                std::vector<double>       &aParams)
+                       SGM::Interval1D     const &Domain,
+                       FacetOptions        const &Options,
+                       std::vector<SGM::Point3D> &aPoints3D,
+                       std::vector<double>       &aParams)
     {
     SGM::EntityType nCurveType=pCurve->GetCurveType();
     switch(nCurveType)
@@ -746,10 +746,10 @@ void FacetCurve(curve               const *pCurve,
         }
     }
 
-void FindCrossingPoint(curve  const *pCurve1, // Seam
-                       curve  const *pCurve2, 
-                       SGM::Point3D &Pos,     // Start point returned as answer.
-                       double       &t)       // pCurve2 params, also returned as answer.
+static void FindCrossingPoint(curve  const *pCurve1, // Seam
+                              curve  const *pCurve2, 
+                              SGM::Point3D &Pos,     // Start point returned as answer.
+                              double       &t)       // pCurve2 params, also returned as answer.
     {
     SGM::Point3D CPos;
     pCurve1->Inverse(Pos,&CPos);
@@ -765,14 +765,14 @@ void FindCrossingPoint(curve  const *pCurve1, // Seam
         }
     }
 
-bool SplitAtSeams(SGM::Result                     & ,
-                  surface                   const *pSurface,
-                  edge                      const *pEdge,
-                  curve                     const *pCurve,
-                  std::vector<SGM::Point3D> const &aPoints3D,
-                  std::vector<double>       const &aParams,
-                  std::vector<double>             &aCrosses,
-                  std::vector<SGM::Point3D>       &aCrossPoints)
+static bool SplitAtSeams(SGM::Result                     & ,
+                         surface                   const *pSurface,
+                         edge                      const *pEdge,
+                         curve                     const *pCurve,
+                         std::vector<SGM::Point3D> const &aPoints3D,
+                         std::vector<double>       const &aParams,
+                         std::vector<double>             &aCrosses,
+                         std::vector<SGM::Point3D>       &aCrossPoints)
     {
     SGM::Result EmptyResult(nullptr);
     bool bFound=false;
@@ -861,11 +861,11 @@ bool SplitAtSeams(SGM::Result                     & ,
     return bFound;
     }
 
-bool SplitFacet(curve                          const *pCurve,
-                surface                        const *pSurface,
-                std::list<FacetNodeNormal>::iterator &NodeA,
-                std::list<FacetNodeNormal>::iterator &NodeB,
-                std::list<FacetNodeNormal>           &lNodes)
+static bool SplitFacet(curve                          const *pCurve,
+                       surface                        const *pSurface,
+                       std::list<FacetNodeNormal>::iterator &NodeA,
+                       std::list<FacetNodeNormal>::iterator &NodeB,
+                       std::list<FacetNodeNormal>           &lNodes)
     {
     int u_cont = pSurface->UContinuity();
     int v_cont = pSurface->VContinuity();
@@ -891,12 +891,12 @@ bool SplitFacet(curve                          const *pCurve,
     return true;
     }
 
-void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
-                             FacetOptions        const &Options,
-                             surface             const *pSurface,
-                             curve               const *pCurve,
-                             std::vector<SGM::Point3D> &aPoints3D,
-                             std::vector<double>       &aParams)
+static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
+                                    FacetOptions        const &Options,
+                                    surface             const *pSurface,
+                                    curve               const *pCurve,
+                                    std::vector<SGM::Point3D> &aPoints3D,
+                                    std::vector<double>       &aParams)
     {
     std::list<FacetNodeNormal> lNodes;
     size_t nPoints=aPoints3D.size();
@@ -993,10 +993,10 @@ void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
     }
 
 void FacetEdge(SGM::Result               &rResult,
-               edge                const *pEdge,
-               FacetOptions        const &Options,
-               std::vector<SGM::Point3D> &aPoints3D,
-               std::vector<double>       &aParams)
+                      edge                const *pEdge,
+                      FacetOptions        const &Options,
+                      std::vector<SGM::Point3D> &aPoints3D,
+                      std::vector<double>       &aParams)
     {
     curve const *pCurve=pEdge->GetCurve();
     SGM::Interval1D const &Domain=pEdge->GetDomain();
@@ -1087,39 +1087,39 @@ void FacetEdge(SGM::Result               &rResult,
         }
     }
 
-size_t FindUCrosses(SGM::Interval1D           const &UDomain,
-                    std::vector<SGM::Point2D> const &aPoints2D,
-                    std::vector<size_t>       const &aPolygon,
-                    std::vector<double>             &aSplitValues,
-                    std::vector<size_t>             &aSplitIndex)
-    {
-    double dMaxGap=UDomain.Length()*0.5;
-    double dMinU=UDomain.m_dMin;
-    double dMaxU=UDomain.m_dMax;
-    size_t nPoints=aPolygon.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        SGM::Point2D const &UV0=aPoints2D[aPolygon[Index1]];
-        SGM::Point2D const &UV1=aPoints2D[aPolygon[(Index1+1)%nPoints]];
-        double dUGap=fabs(UV0.m_u-UV1.m_u);
-        if(dMaxGap<dUGap)
-            {
-            double d0=std::min(UV0.m_u-dMinU,dMaxU-UV0.m_u);
-            double d1=std::min(UV1.m_u-dMinU,dMaxU-UV1.m_u);
-            if(d0<d1)
-                {
-                aSplitValues.push_back(UV0.m_v);
-                }
-            else
-                {
-                aSplitValues.push_back(UV1.m_v);
-                }
-            aSplitIndex.push_back(Index1);
-            }
-        }
-    return aSplitValues.size();
-    }
+//static size_t FindUCrosses(SGM::Interval1D           const &UDomain,
+//                           std::vector<SGM::Point2D> const &aPoints2D,
+//                           std::vector<size_t>       const &aPolygon,
+//                           std::vector<double>             &aSplitValues,
+//                           std::vector<size_t>             &aSplitIndex)
+//    {
+//    double dMaxGap=UDomain.Length()*0.5;
+//    double dMinU=UDomain.m_dMin;
+//    double dMaxU=UDomain.m_dMax;
+//    size_t nPoints=aPolygon.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nPoints;++Index1)
+//        {
+//        SGM::Point2D const &UV0=aPoints2D[aPolygon[Index1]];
+//        SGM::Point2D const &UV1=aPoints2D[aPolygon[(Index1+1)%nPoints]];
+//        double dUGap=fabs(UV0.m_u-UV1.m_u);
+//        if(dMaxGap<dUGap)
+//            {
+//            double d0=std::min(UV0.m_u-dMinU,dMaxU-UV0.m_u);
+//            double d1=std::min(UV1.m_u-dMinU,dMaxU-UV1.m_u);
+//            if(d0<d1)
+//                {
+//                aSplitValues.push_back(UV0.m_v);
+//                }
+//            else
+//                {
+//                aSplitValues.push_back(UV1.m_v);
+//                }
+//            aSplitIndex.push_back(Index1);
+//            }
+//        }
+//    return aSplitValues.size();
+//    }
 
 class SplitData
     {
@@ -1145,473 +1145,473 @@ class MergeData
         SplitData m_Split2;
     };
 
-GraphEdge FindGraphEdge(SGM::Interval1D           const &Domain,
-                        std::vector<size_t>       const &aSplitMap,
-                        size_t                           nPoints,
-                        std::vector<SGM::Point2D> const &aPoints2D,
-                        size_t                           nPos0,
-                        size_t                           nPos1,
-                        size_t                          &nCount)
-    {
-    GraphEdge GE(nPos0,nPos1,nCount);
-    ++nCount;
-    if(nPos0<nPoints && nPos1<nPoints)
-        {
-        }
-    else if(nPos0<nPoints)
-        {
-        double u0=aPoints2D[nPos0].m_u;
-        double u1A=aPoints2D[nPos1].m_u;
-        double u1B=aPoints2D[aSplitMap[nPos1-nPoints]].m_u;
-        if(u0<Domain.MidPoint())
-            {
-            GE.m_nEnd=u1A<u1B ? nPos1 : aSplitMap[nPos1-nPoints];
-            }
-        else
-            {
-            GE.m_nEnd=u1A<u1B ? aSplitMap[nPos1-nPoints] : nPos1;
-            }
-        }
-    else if(nPos1<nPoints)
-        {
-        double u1=aPoints2D[nPos1].m_u;
-        double u0A=aPoints2D[nPos0].m_u;
-        double u0B=aPoints2D[aSplitMap[nPos0-nPoints]].m_u;
-        if(u1<Domain.MidPoint())
-            {
-            GE.m_nStart=u0A<u0B ? nPos0 : aSplitMap[nPos0-nPoints];
-            }
-        else
-            {
-            GE.m_nStart=u0A<u0B ? aSplitMap[nPos0-nPoints] : nPos0;
-            }
-        }
-    else
-        {
-        throw;
-        }
-    return GE;
-    }
+//static GraphEdge FindGraphEdge(SGM::Interval1D           const &Domain,
+//                               std::vector<size_t>       const &aSplitMap,
+//                               size_t                           nPoints,
+//                               std::vector<SGM::Point2D> const &aPoints2D,
+//                               size_t                           nPos0,
+//                               size_t                           nPos1,
+//                               size_t                          &nCount)
+//    {
+//    GraphEdge GE(nPos0,nPos1,nCount);
+//    ++nCount;
+//    if(nPos0<nPoints && nPos1<nPoints)
+//        {
+//        }
+//    else if(nPos0<nPoints)
+//        {
+//        double u0=aPoints2D[nPos0].m_u;
+//        double u1A=aPoints2D[nPos1].m_u;
+//        double u1B=aPoints2D[aSplitMap[nPos1-nPoints]].m_u;
+//        if(u0<Domain.MidPoint())
+//            {
+//            GE.m_nEnd=u1A<u1B ? nPos1 : aSplitMap[nPos1-nPoints];
+//            }
+//        else
+//            {
+//            GE.m_nEnd=u1A<u1B ? aSplitMap[nPos1-nPoints] : nPos1;
+//            }
+//        }
+//    else if(nPos1<nPoints)
+//        {
+//        double u1=aPoints2D[nPos1].m_u;
+//        double u0A=aPoints2D[nPos0].m_u;
+//        double u0B=aPoints2D[aSplitMap[nPos0-nPoints]].m_u;
+//        if(u1<Domain.MidPoint())
+//            {
+//            GE.m_nStart=u0A<u0B ? nPos0 : aSplitMap[nPos0-nPoints];
+//            }
+//        else
+//            {
+//            GE.m_nStart=u0A<u0B ? aSplitMap[nPos0-nPoints] : nPos0;
+//            }
+//        }
+//    else
+//        {
+//        throw;
+//        }
+//    return GE;
+//    }
 
-void FindLowGraphEdge(SGM::Interval1D           const &Domain,
-                      std::vector<size_t>       const &aSplitMap,
-                      size_t                           nPoints,
-                      std::vector<SGM::Point2D> const &aPoints2D,
-                      size_t                           nPos0A,
-                      size_t                           nPos1A,
-                      size_t                          &nCount,
-                      std::set<GraphEdge>             &sGraphEdges)
-    {
-    size_t nLow0,nLow1,nHigh0,nHigh1;
-    if(aPoints2D[nPos0A].m_u<Domain.MidPoint())
-        {
-        nLow0=nPos0A;
-        nHigh0=aSplitMap[nPos0A-nPoints];
-        }
-    else
-        {
-        nLow0=aSplitMap[nPos0A-nPoints];
-        nHigh0=nPos0A;
-        }
-    if(aPoints2D[nPos1A].m_u<Domain.MidPoint())
-        {
-        nLow1=nPos1A;
-        nHigh1=aSplitMap[nPos1A-nPoints];
-        }
-    else
-        {
-        nLow1=aSplitMap[nPos1A-nPoints];
-        nHigh1=nPos1A;
-        }
-    size_t nA,nB,nC,nD;
-    if(aPoints2D[nLow0].m_v<aPoints2D[nLow1].m_v)
-        {
-        nA=nLow1;
-        nB=nLow0;
-        }
-    else
-        {
-        nA=nLow0;
-        nB=nLow1;
-        }
-    if(aPoints2D[nHigh0].m_v<aPoints2D[nHigh1].m_v)
-        {
-        nC=nHigh0;
-        nD=nHigh1;
-        }
-    else
-        {
-        nC=nHigh1;
-        nD=nHigh0;
-        }
+//static void FindLowGraphEdge(SGM::Interval1D           const &Domain,
+//                             std::vector<size_t>       const &aSplitMap,
+//                             size_t                           nPoints,
+//                             std::vector<SGM::Point2D> const &aPoints2D,
+//                             size_t                           nPos0A,
+//                             size_t                           nPos1A,
+//                             size_t                          &nCount,
+//                             std::set<GraphEdge>             &sGraphEdges)
+//    {
+//    size_t nLow0,nLow1,nHigh0,nHigh1;
+//    if(aPoints2D[nPos0A].m_u<Domain.MidPoint())
+//        {
+//        nLow0=nPos0A;
+//        nHigh0=aSplitMap[nPos0A-nPoints];
+//        }
+//    else
+//        {
+//        nLow0=aSplitMap[nPos0A-nPoints];
+//        nHigh0=nPos0A;
+//        }
+//    if(aPoints2D[nPos1A].m_u<Domain.MidPoint())
+//        {
+//        nLow1=nPos1A;
+//        nHigh1=aSplitMap[nPos1A-nPoints];
+//        }
+//    else
+//        {
+//        nLow1=aSplitMap[nPos1A-nPoints];
+//        nHigh1=nPos1A;
+//        }
+//    size_t nA,nB,nC,nD;
+//    if(aPoints2D[nLow0].m_v<aPoints2D[nLow1].m_v)
+//        {
+//        nA=nLow1;
+//        nB=nLow0;
+//        }
+//    else
+//        {
+//        nA=nLow0;
+//        nB=nLow1;
+//        }
+//    if(aPoints2D[nHigh0].m_v<aPoints2D[nHigh1].m_v)
+//        {
+//        nC=nHigh0;
+//        nD=nHigh1;
+//        }
+//    else
+//        {
+//        nC=nHigh1;
+//        nD=nHigh0;
+//        }
+//
+//    sGraphEdges.insert(GraphEdge(nA,nB,nCount));
+//    ++nCount;
+//    sGraphEdges.insert(GraphEdge(nC,nD,nCount));
+//    ++nCount;
+//    }
 
-    sGraphEdges.insert(GraphEdge(nA,nB,nCount));
-    ++nCount;
-    sGraphEdges.insert(GraphEdge(nC,nD,nCount));
-    ++nCount;
-    }
+//static void MergePolygons(face                              const *pFace,
+//                          std::vector<MergeData>            const &aMerge,
+//                          std::vector<SGM::Point2D>               &aPoints2D,
+//                          std::vector<SGM::Point3D>               &aPoints3D,
+//                          std::vector<entity *>                   &aEntities,
+//                          std::vector<std::vector<size_t> >       &aaPolygons)
+//    {
+//    SGM::Interval1D const &UDomain=pFace->GetSurface()->GetDomain().m_UDomain;
+//    double dMidDomain=UDomain.MidPoint();
+//
+//    // Add the span points.
+//
+//    size_t nPoints=aPoints2D.size();
+//    std::vector<size_t> aSplitMap;
+//    size_t nMerge=aMerge.size();
+//    size_t nSplits=nMerge*2;
+//    aSplitMap.reserve(nSplits);
+//    size_t Index1;
+//    std::vector<SplitData> aSplits;
+//    aSplits.reserve(nSplits);
+//    std::vector<size_t> aSplitVertices;
+//    aSplitVertices.reserve(nSplits);
+//    std::set<size_t> sUsedPolygons;
+//    for(Index1=0;Index1<nMerge;++Index1)
+//        {
+//        aSplits.push_back(aMerge[Index1].m_Split1);
+//        aSplits.push_back(aMerge[Index1].m_Split2);
+//        sUsedPolygons.insert(aMerge[Index1].m_Split1.m_nPolygon);
+//        sUsedPolygons.insert(aMerge[Index1].m_Split2.m_nPolygon);
+//        }
+//    for(Index1=0;Index1<nSplits;++Index1)
+//        {
+//        size_t nPoly=aSplits[Index1].m_nPolygon;
+//        size_t nSpan=aSplits[Index1].m_nSpan;
+//        std::vector<size_t> &aPoly=aaPolygons[nPoly];
+//        size_t nPolyPoints=aPoly.size();
+//        size_t nPos0=aPoly[nSpan];
+//        size_t nPos1=aPoly[(nSpan+1)%nPolyPoints];
+//        double u0=aPoints2D[nPos0].m_u;
+//        double u1=aPoints2D[nPos1].m_u;
+//        double v0=aPoints2D[nPos0].m_v;
+//        double v1=aPoints2D[nPos1].m_v;
+//        SGM::Point3D const &Pos0=aPoints3D[nPos0];
+//        SGM::Point3D const &Pos1=aPoints3D[nPos1];
+//        entity *pEnt0=aEntities[nPos0];
+//        entity *pEnt1=aEntities[nPos1];
+//        if(UDomain.OnBoundary(u0,SGM_MIN_TOL))
+//            {
+//            if(dMidDomain<u0)
+//                {
+//                u0=UDomain.m_dMin;
+//                }
+//            else
+//                {
+//                u0=UDomain.m_dMax;
+//                }
+//            aSplitMap.push_back(nPos0);
+//            nPos0=aPoints2D.size();
+//            aSplitVertices.push_back(nPos0);
+//            aPoly[nSpan]=nPos0;
+//            aPoints2D.emplace_back(u0,v0);
+//            aPoints3D.push_back(Pos0);
+//            aEntities.push_back(pEnt0);
+//            }
+//        else if(UDomain.OnBoundary(u1,SGM_MIN_TOL))
+//            {
+//            if(dMidDomain<u1)
+//                {
+//                u1=UDomain.m_dMin;
+//                }
+//            else
+//                {
+//                u1=UDomain.m_dMax;
+//                }
+//            aSplitMap.push_back(nPos1);
+//            nPos1=aPoints2D.size();
+//            aSplitVertices.push_back(nPos1);
+//            aPoly[(nSpan+1)%nPolyPoints]=nPos1;
+//            aPoints2D.emplace_back(u1,v1);
+//            aPoints3D.push_back(Pos1);
+//            aEntities.push_back(pEnt1);
+//            }
+//        else
+//            {
+//            throw;
+//            }
+//        }
+//
+//    // Create a segment graph.
+//
+//    size_t nCount=0;
+//    std::set<GraphEdge> sFacetEdges;
+//    std::set<size_t> sFacetPoints;
+//    std::set<size_t>::iterator PolyIter=sUsedPolygons.begin();
+//    while(PolyIter!=sUsedPolygons.end())
+//        {
+//        std::vector<size_t> const &aPoly=aaPolygons[*PolyIter];
+//        size_t nPoly=aPoly.size();
+//        for(Index1=0;Index1<nPoly;++Index1)
+//            {
+//            size_t nPos0=aPoly[Index1];
+//            size_t nPos1=aPoly[(Index1+1)%nPoly];
+//            sFacetPoints.insert(nPos0);
+//            sFacetEdges.insert(FindGraphEdge(UDomain,aSplitMap,nPoints,aPoints2D,nPos0,nPos1,nCount));
+//            }
+//        ++PolyIter;
+//        }
+//    for(Index1=0;Index1<nSplits;Index1+=2)
+//        {
+//        FindLowGraphEdge(UDomain,aSplitMap,nPoints,aPoints2D,aSplitVertices[Index1],aSplitVertices[Index1+1],nCount,sFacetEdges);
+//        }
+//    Graph graph(sFacetPoints,sFacetEdges);
+//    std::vector<Graph> aComps;
+//    size_t nComps=graph.FindComponents(aComps);
+//
+//    // Build the new polygons.
+//
+//    std::vector<std::vector<size_t> > aaNewPolygons;
+//    for(Index1=0;Index1<nComps;++Index1)
+//        {
+//        Graph const &comp=aComps[Index1];
+//        if(comp.IsCycle())
+//            {
+//            std::vector<size_t> aPolygon;
+//            comp.OrderVertices(aPolygon);
+//            aaNewPolygons.push_back(aPolygon);
+//            }
+//        else
+//            {
+//            throw;
+//            }
+//        }
+//    aaPolygons=aaNewPolygons;
+//    }
 
-void MergePolygons(face                              const *pFace,
-                   std::vector<MergeData>            const &aMerge,
-                   std::vector<SGM::Point2D>               &aPoints2D,
-                   std::vector<SGM::Point3D>               &aPoints3D,
-                   std::vector<entity *>                   &aEntities,
-                   std::vector<std::vector<size_t> >       &aaPolygons)
-    {
-    SGM::Interval1D const &UDomain=pFace->GetSurface()->GetDomain().m_UDomain;
-    double dMidDomain=UDomain.MidPoint();
+//static void CreateWholeSurfaceLoop(SGM::Result                       & ,
+//                                   face                        const *pFace,
+//                                   FacetOptions                const &Options,
+//                                   std::vector<SGM::Point2D>         &aPoints2D,
+//                                   std::vector<SGM::Point3D>         &aPoints3D,
+//                                   std::vector<entity *>             &aEntities,
+//                                   std::vector<std::vector<size_t> > &aaPolygons,
+//                                   std::vector<size_t>               &aTriangles)
+//    {
+//    SGM::Result EmptyResult(nullptr);
+//    surface const *pSurface=pFace->GetSurface();
+//    if(pSurface->ClosedInU())
+//        {
+//        if(pSurface->ClosedInV())
+//            {
+//            // The torus case.
+//
+//            SGM::Interval2D const &Domain=pSurface->GetDomain();
+//            double dMinU=Domain.m_UDomain.m_dMin;
+//            double dMaxU=Domain.m_UDomain.m_dMax;
+//            double dMinV=Domain.m_VDomain.m_dMin;
+//            double dMaxV=Domain.m_VDomain.m_dMax;
+//
+//            curve *pUSeam=pSurface->UParamLine(EmptyResult,dMinU);
+//            std::vector<SGM::Point3D> aUTemp3D;
+//            std::vector<double> aUParams;
+//            FacetCurve(pUSeam,Domain.m_UDomain,Options,aUTemp3D,aUParams);
+//
+//            curve *pVSeam=pSurface->VParamLine(EmptyResult,dMinV);
+//            std::vector<SGM::Point3D> aVTemp3D;
+//            std::vector<double> aVParams;
+//            FacetCurve(pVSeam,Domain.m_VDomain,Options,aVTemp3D,aVParams);
+//
+//            size_t nUTemp3D=aUTemp3D.size();
+//            size_t nVTemp3D=aVTemp3D.size();
+//            size_t Index1;
+//            for(Index1=0;Index1<nVTemp3D-1;++Index1)
+//                {
+//                SGM::Point3D const &Pos=aVTemp3D[Index1];
+//                SGM::Point2D uv=pSurface->Inverse(Pos);
+//                uv.m_v=dMinV;
+//                if(Index1==0)
+//                    {
+//                    uv.m_u=dMinU;
+//                    }
+//                aPoints2D.push_back(uv);
+//                aPoints3D.push_back(Pos);
+//                }
+//            for(Index1=0;Index1<nUTemp3D-1;++Index1)
+//                {
+//                SGM::Point3D const &Pos=aUTemp3D[Index1];
+//                SGM::Point2D uv=pSurface->Inverse(Pos);
+//                uv.m_u=dMaxU;
+//                if(Index1==0)
+//                    {
+//                    uv.m_v=dMinV;
+//                    }
+//                aPoints2D.push_back(uv);
+//                aPoints3D.push_back(Pos);
+//                }
+//            for(Index1=nUTemp3D-1;0<Index1;--Index1)
+//                {
+//                SGM::Point3D const &Pos=aVTemp3D[Index1];
+//                SGM::Point2D uv=pSurface->Inverse(Pos);
+//                uv.m_v=dMaxV;
+//                if(Index1==nUTemp3D-1)
+//                    {
+//                    uv.m_u=dMaxU;
+//                    }
+//                aPoints2D.push_back(uv);
+//                aPoints3D.push_back(Pos);
+//                }
+//            for(Index1=nVTemp3D-1;0<Index1;--Index1)
+//                {
+//                SGM::Point3D const &Pos=aUTemp3D[Index1];
+//                SGM::Point2D uv=pSurface->Inverse(Pos);
+//                uv.m_u=dMinU;
+//                if(Index1==nVTemp3D-1)
+//                    {
+//                    uv.m_v=dMaxV;
+//                    }
+//                aPoints2D.push_back(uv);
+//                aPoints3D.push_back(Pos);
+//                }
+//            size_t nPoints=aPoints3D.size();
+//            aEntities.assign(nPoints,(entity *)pFace);
+//            std::vector<size_t> aPolygon;
+//            aPolygon.reserve(nPoints);
+//            for(Index1=0;Index1<nPoints;++Index1)
+//                {
+//                aPolygon.push_back(Index1);
+//                }
+//            aaPolygons.push_back(aPolygon);
+//            }
+//        else if(pSurface->SingularLowV() && pSurface->SingularHighV())
+//            {
+//            // The sphere case
+//
+//            SGM::Interval2D const &Domain=pSurface->GetDomain();
+//            double dMinU=Domain.m_UDomain.m_dMin;
+//            double dMaxU=Domain.m_UDomain.m_dMax;
+//            double dMinV=Domain.m_VDomain.m_dMin;
+//            double dMaxV=Domain.m_VDomain.m_dMax;
+//
+//            // Find the seam points.
+//
+//            curve *pSeam=pSurface->UParamLine(EmptyResult,dMinU);
+//            std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
+//            std::vector<double> aParams;
+//            FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D,aParams);
+//            
+//            // Trim off the two singularities.
+//
+//            size_t nTemp3D=aTemp3D.size();
+//            aSeamPoints3D.reserve(nTemp3D-2);
+//            size_t Index1;
+//            for(Index1=1;Index1<nTemp3D-1;++Index1)
+//                {
+//                aSeamPoints3D.push_back(aTemp3D[Index1]);
+//                }
+//            size_t nSeamPoints3D=aSeamPoints3D.size();
+//            SGM::Point3D LowPos=aSeamPoints3D.front();
+//            SGM::Point3D HighPos=aSeamPoints3D.back();
+//            dMinV=pSurface->Inverse(LowPos).m_v;
+//            dMaxV=pSurface->Inverse(HighPos).m_v;
+//
+//            std::vector<double> aSeamVs;
+//            aSeamVs.reserve(nSeamPoints3D);
+//            for(Index1=0;Index1<nSeamPoints3D;++Index1)
+//                {
+//                aSeamVs.push_back(pSeam->Inverse(aSeamPoints3D[Index1]));
+//                }
+//            std::vector<size_t> aPolygon;
+//            aPolygon.reserve(nSeamPoints3D*2-2);
+//            aPoints2D.reserve(nSeamPoints3D*2-2);
+//            aPoints3D.reserve(nSeamPoints3D*2-2);
+//            aEntities.assign(nSeamPoints3D*2-2,(entity *)pFace);
+//            size_t nCount=0;
+//
+//            // South pole.
+//
+//            size_t nSouthPoleStart=aPoints3D.size();
+//            size_t nPolePoints=7;
+//            for(Index1=0;Index1<nPolePoints;++Index1)
+//                {
+//                double dFraction=Index1/(nPolePoints-1.0);
+//                double dU=Domain.m_UDomain.MidPoint(dFraction);
+//                SGM::Point3D Pos;
+//                SGM::Point2D uv(dU,dMinV);
+//                pSurface->Evaluate(uv,&Pos);
+//                aPoints3D.push_back(Pos);
+//                aPoints2D.push_back(uv);
+//                aPolygon.push_back(nCount);
+//                ++nCount;
+//                }
+//            
+//            // High U seam
+//
+//            for(Index1=1;Index1<nSeamPoints3D-1;++Index1)
+//                {
+//                aPoints3D.push_back(aSeamPoints3D[Index1]);
+//                aPoints2D.emplace_back(dMaxU,aSeamVs[Index1]);
+//                aPolygon.push_back(nCount);
+//                ++nCount;
+//                }
+//
+//            // North pole.
+//
+//            size_t nNorthPoleStart=aPoints3D.size();
+//            for(Index1=0;Index1<nPolePoints;++Index1)
+//                {
+//                double dFraction=(nPolePoints-1-Index1)/(nPolePoints-1.0);
+//                double dU=Domain.m_UDomain.MidPoint(dFraction);
+//                SGM::Point3D Pos;
+//                SGM::Point2D uv(dU,dMaxV);
+//                pSurface->Evaluate(uv,&Pos);
+//                aPoints3D.push_back(Pos);
+//                aPoints2D.push_back(uv);
+//                aPolygon.push_back(nCount);
+//                ++nCount;
+//                }
+//
+//            // Low U seam
+//
+//            for(Index1=nSeamPoints3D-2;0<Index1;--Index1)
+//                {
+//                aPoints3D.push_back(aSeamPoints3D[Index1]);
+//                aPoints2D.emplace_back(dMinU,aSeamVs[Index1]);
+//                aPolygon.push_back(nCount);
+//                ++nCount;
+//                }
+//
+//            aaPolygons.push_back(aPolygon);
+//            
+//            // Add in the polar triangles.
+//
+//            SGM::Point3D NorthPole=aTemp3D.back();
+//            SGM::Point3D SouthPole=aTemp3D.front();
+//            SGM::Point2D NorthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMax);
+//            SGM::Point2D SouthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMin);
+//            size_t nNorth=aPoints3D.size();
+//            aPoints3D.push_back(NorthPole);
+//            aPoints2D.push_back(NorthUV);
+//            size_t nSouth=aPoints3D.size();
+//            aPoints3D.push_back(SouthPole);
+//            aPoints2D.push_back(SouthUV);
+//            for(Index1=nNorthPoleStart+1;Index1<nNorthPoleStart+nPolePoints;++Index1)
+//                {
+//                aTriangles.push_back(nNorth);
+//                aTriangles.push_back(Index1);
+//                aTriangles.push_back(Index1-1);
+//                }
+//            for(Index1=nSouthPoleStart+1;Index1<nSouthPoleStart+nPolePoints;++Index1)
+//                {
+//                aTriangles.push_back(nSouth);
+//                aTriangles.push_back(Index1);
+//                aTriangles.push_back(Index1-1);
+//                }
+//            }
+//        }
+//    }
 
-    // Add the span points.
-
-    size_t nPoints=aPoints2D.size();
-    std::vector<size_t> aSplitMap;
-    size_t nMerge=aMerge.size();
-    size_t nSplits=nMerge*2;
-    aSplitMap.reserve(nSplits);
-    size_t Index1;
-    std::vector<SplitData> aSplits;
-    aSplits.reserve(nSplits);
-    std::vector<size_t> aSplitVertices;
-    aSplitVertices.reserve(nSplits);
-    std::set<size_t> sUsedPolygons;
-    for(Index1=0;Index1<nMerge;++Index1)
-        {
-        aSplits.push_back(aMerge[Index1].m_Split1);
-        aSplits.push_back(aMerge[Index1].m_Split2);
-        sUsedPolygons.insert(aMerge[Index1].m_Split1.m_nPolygon);
-        sUsedPolygons.insert(aMerge[Index1].m_Split2.m_nPolygon);
-        }
-    for(Index1=0;Index1<nSplits;++Index1)
-        {
-        size_t nPoly=aSplits[Index1].m_nPolygon;
-        size_t nSpan=aSplits[Index1].m_nSpan;
-        std::vector<size_t> &aPoly=aaPolygons[nPoly];
-        size_t nPolyPoints=aPoly.size();
-        size_t nPos0=aPoly[nSpan];
-        size_t nPos1=aPoly[(nSpan+1)%nPolyPoints];
-        double u0=aPoints2D[nPos0].m_u;
-        double u1=aPoints2D[nPos1].m_u;
-        double v0=aPoints2D[nPos0].m_v;
-        double v1=aPoints2D[nPos1].m_v;
-        SGM::Point3D const &Pos0=aPoints3D[nPos0];
-        SGM::Point3D const &Pos1=aPoints3D[nPos1];
-        entity *pEnt0=aEntities[nPos0];
-        entity *pEnt1=aEntities[nPos1];
-        if(UDomain.OnBoundary(u0,SGM_MIN_TOL))
-            {
-            if(dMidDomain<u0)
-                {
-                u0=UDomain.m_dMin;
-                }
-            else
-                {
-                u0=UDomain.m_dMax;
-                }
-            aSplitMap.push_back(nPos0);
-            nPos0=aPoints2D.size();
-            aSplitVertices.push_back(nPos0);
-            aPoly[nSpan]=nPos0;
-            aPoints2D.emplace_back(u0,v0);
-            aPoints3D.push_back(Pos0);
-            aEntities.push_back(pEnt0);
-            }
-        else if(UDomain.OnBoundary(u1,SGM_MIN_TOL))
-            {
-            if(dMidDomain<u1)
-                {
-                u1=UDomain.m_dMin;
-                }
-            else
-                {
-                u1=UDomain.m_dMax;
-                }
-            aSplitMap.push_back(nPos1);
-            nPos1=aPoints2D.size();
-            aSplitVertices.push_back(nPos1);
-            aPoly[(nSpan+1)%nPolyPoints]=nPos1;
-            aPoints2D.emplace_back(u1,v1);
-            aPoints3D.push_back(Pos1);
-            aEntities.push_back(pEnt1);
-            }
-        else
-            {
-            throw;
-            }
-        }
-
-    // Create a segment graph.
-
-    size_t nCount=0;
-    std::set<GraphEdge> sFacetEdges;
-    std::set<size_t> sFacetPoints;
-    std::set<size_t>::iterator PolyIter=sUsedPolygons.begin();
-    while(PolyIter!=sUsedPolygons.end())
-        {
-        std::vector<size_t> const &aPoly=aaPolygons[*PolyIter];
-        size_t nPoly=aPoly.size();
-        for(Index1=0;Index1<nPoly;++Index1)
-            {
-            size_t nPos0=aPoly[Index1];
-            size_t nPos1=aPoly[(Index1+1)%nPoly];
-            sFacetPoints.insert(nPos0);
-            sFacetEdges.insert(FindGraphEdge(UDomain,aSplitMap,nPoints,aPoints2D,nPos0,nPos1,nCount));
-            }
-        ++PolyIter;
-        }
-    for(Index1=0;Index1<nSplits;Index1+=2)
-        {
-        FindLowGraphEdge(UDomain,aSplitMap,nPoints,aPoints2D,aSplitVertices[Index1],aSplitVertices[Index1+1],nCount,sFacetEdges);
-        }
-    Graph graph(sFacetPoints,sFacetEdges);
-    std::vector<Graph> aComps;
-    size_t nComps=graph.FindComponents(aComps);
-
-    // Build the new polygons.
-
-    std::vector<std::vector<size_t> > aaNewPolygons;
-    for(Index1=0;Index1<nComps;++Index1)
-        {
-        Graph const &comp=aComps[Index1];
-        if(comp.IsCycle())
-            {
-            std::vector<size_t> aPolygon;
-            comp.OrderVertices(aPolygon);
-            aaNewPolygons.push_back(aPolygon);
-            }
-        else
-            {
-            throw;
-            }
-        }
-    aaPolygons=aaNewPolygons;
-    }
-
-void CreateWholeSurfaceLoop(SGM::Result                       & ,
-                            face                        const *pFace,
-                            FacetOptions                const &Options,
-                            std::vector<SGM::Point2D>         &aPoints2D,
-                            std::vector<SGM::Point3D>         &aPoints3D,
-                            std::vector<entity *>             &aEntities,
-                            std::vector<std::vector<size_t> > &aaPolygons,
-                            std::vector<size_t>               &aTriangles)
-    {
-    SGM::Result EmptyResult(nullptr);
-    surface const *pSurface=pFace->GetSurface();
-    if(pSurface->ClosedInU())
-        {
-        if(pSurface->ClosedInV())
-            {
-            // The torus case.
-
-            SGM::Interval2D const &Domain=pSurface->GetDomain();
-            double dMinU=Domain.m_UDomain.m_dMin;
-            double dMaxU=Domain.m_UDomain.m_dMax;
-            double dMinV=Domain.m_VDomain.m_dMin;
-            double dMaxV=Domain.m_VDomain.m_dMax;
-
-            curve *pUSeam=pSurface->UParamLine(EmptyResult,dMinU);
-            std::vector<SGM::Point3D> aUTemp3D;
-            std::vector<double> aUParams;
-            FacetCurve(pUSeam,Domain.m_UDomain,Options,aUTemp3D,aUParams);
-
-            curve *pVSeam=pSurface->VParamLine(EmptyResult,dMinV);
-            std::vector<SGM::Point3D> aVTemp3D;
-            std::vector<double> aVParams;
-            FacetCurve(pVSeam,Domain.m_VDomain,Options,aVTemp3D,aVParams);
-
-            size_t nUTemp3D=aUTemp3D.size();
-            size_t nVTemp3D=aVTemp3D.size();
-            size_t Index1;
-            for(Index1=0;Index1<nVTemp3D-1;++Index1)
-                {
-                SGM::Point3D const &Pos=aVTemp3D[Index1];
-                SGM::Point2D uv=pSurface->Inverse(Pos);
-                uv.m_v=dMinV;
-                if(Index1==0)
-                    {
-                    uv.m_u=dMinU;
-                    }
-                aPoints2D.push_back(uv);
-                aPoints3D.push_back(Pos);
-                }
-            for(Index1=0;Index1<nUTemp3D-1;++Index1)
-                {
-                SGM::Point3D const &Pos=aUTemp3D[Index1];
-                SGM::Point2D uv=pSurface->Inverse(Pos);
-                uv.m_u=dMaxU;
-                if(Index1==0)
-                    {
-                    uv.m_v=dMinV;
-                    }
-                aPoints2D.push_back(uv);
-                aPoints3D.push_back(Pos);
-                }
-            for(Index1=nUTemp3D-1;0<Index1;--Index1)
-                {
-                SGM::Point3D const &Pos=aVTemp3D[Index1];
-                SGM::Point2D uv=pSurface->Inverse(Pos);
-                uv.m_v=dMaxV;
-                if(Index1==nUTemp3D-1)
-                    {
-                    uv.m_u=dMaxU;
-                    }
-                aPoints2D.push_back(uv);
-                aPoints3D.push_back(Pos);
-                }
-            for(Index1=nVTemp3D-1;0<Index1;--Index1)
-                {
-                SGM::Point3D const &Pos=aUTemp3D[Index1];
-                SGM::Point2D uv=pSurface->Inverse(Pos);
-                uv.m_u=dMinU;
-                if(Index1==nVTemp3D-1)
-                    {
-                    uv.m_v=dMaxV;
-                    }
-                aPoints2D.push_back(uv);
-                aPoints3D.push_back(Pos);
-                }
-            size_t nPoints=aPoints3D.size();
-            aEntities.assign(nPoints,(entity *)pFace);
-            std::vector<size_t> aPolygon;
-            aPolygon.reserve(nPoints);
-            for(Index1=0;Index1<nPoints;++Index1)
-                {
-                aPolygon.push_back(Index1);
-                }
-            aaPolygons.push_back(aPolygon);
-            }
-        else if(pSurface->SingularLowV() && pSurface->SingularHighV())
-            {
-            // The sphere case
-
-            SGM::Interval2D const &Domain=pSurface->GetDomain();
-            double dMinU=Domain.m_UDomain.m_dMin;
-            double dMaxU=Domain.m_UDomain.m_dMax;
-            double dMinV=Domain.m_VDomain.m_dMin;
-            double dMaxV=Domain.m_VDomain.m_dMax;
-
-            // Find the seam points.
-
-            curve *pSeam=pSurface->UParamLine(EmptyResult,dMinU);
-            std::vector<SGM::Point3D> aTemp3D,aSeamPoints3D;
-            std::vector<double> aParams;
-            FacetCurve(pSeam,Domain.m_VDomain,Options,aTemp3D,aParams);
-            
-            // Trim off the two singularities.
-
-            size_t nTemp3D=aTemp3D.size();
-            aSeamPoints3D.reserve(nTemp3D-2);
-            size_t Index1;
-            for(Index1=1;Index1<nTemp3D-1;++Index1)
-                {
-                aSeamPoints3D.push_back(aTemp3D[Index1]);
-                }
-            size_t nSeamPoints3D=aSeamPoints3D.size();
-            SGM::Point3D LowPos=aSeamPoints3D.front();
-            SGM::Point3D HighPos=aSeamPoints3D.back();
-            dMinV=pSurface->Inverse(LowPos).m_v;
-            dMaxV=pSurface->Inverse(HighPos).m_v;
-
-            std::vector<double> aSeamVs;
-            aSeamVs.reserve(nSeamPoints3D);
-            for(Index1=0;Index1<nSeamPoints3D;++Index1)
-                {
-                aSeamVs.push_back(pSeam->Inverse(aSeamPoints3D[Index1]));
-                }
-            std::vector<size_t> aPolygon;
-            aPolygon.reserve(nSeamPoints3D*2-2);
-            aPoints2D.reserve(nSeamPoints3D*2-2);
-            aPoints3D.reserve(nSeamPoints3D*2-2);
-            aEntities.assign(nSeamPoints3D*2-2,(entity *)pFace);
-            size_t nCount=0;
-
-            // South pole.
-
-            size_t nSouthPoleStart=aPoints3D.size();
-            size_t nPolePoints=7;
-            for(Index1=0;Index1<nPolePoints;++Index1)
-                {
-                double dFraction=Index1/(nPolePoints-1.0);
-                double dU=Domain.m_UDomain.MidPoint(dFraction);
-                SGM::Point3D Pos;
-                SGM::Point2D uv(dU,dMinV);
-                pSurface->Evaluate(uv,&Pos);
-                aPoints3D.push_back(Pos);
-                aPoints2D.push_back(uv);
-                aPolygon.push_back(nCount);
-                ++nCount;
-                }
-            
-            // High U seam
-
-            for(Index1=1;Index1<nSeamPoints3D-1;++Index1)
-                {
-                aPoints3D.push_back(aSeamPoints3D[Index1]);
-                aPoints2D.emplace_back(dMaxU,aSeamVs[Index1]);
-                aPolygon.push_back(nCount);
-                ++nCount;
-                }
-
-            // North pole.
-
-            size_t nNorthPoleStart=aPoints3D.size();
-            for(Index1=0;Index1<nPolePoints;++Index1)
-                {
-                double dFraction=(nPolePoints-1-Index1)/(nPolePoints-1.0);
-                double dU=Domain.m_UDomain.MidPoint(dFraction);
-                SGM::Point3D Pos;
-                SGM::Point2D uv(dU,dMaxV);
-                pSurface->Evaluate(uv,&Pos);
-                aPoints3D.push_back(Pos);
-                aPoints2D.push_back(uv);
-                aPolygon.push_back(nCount);
-                ++nCount;
-                }
-
-            // Low U seam
-
-            for(Index1=nSeamPoints3D-2;0<Index1;--Index1)
-                {
-                aPoints3D.push_back(aSeamPoints3D[Index1]);
-                aPoints2D.emplace_back(dMinU,aSeamVs[Index1]);
-                aPolygon.push_back(nCount);
-                ++nCount;
-                }
-
-            aaPolygons.push_back(aPolygon);
-            
-            // Add in the polar triangles.
-
-            SGM::Point3D NorthPole=aTemp3D.back();
-            SGM::Point3D SouthPole=aTemp3D.front();
-            SGM::Point2D NorthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMax);
-            SGM::Point2D SouthUV(Domain.m_UDomain.MidPoint(),Domain.m_VDomain.m_dMin);
-            size_t nNorth=aPoints3D.size();
-            aPoints3D.push_back(NorthPole);
-            aPoints2D.push_back(NorthUV);
-            size_t nSouth=aPoints3D.size();
-            aPoints3D.push_back(SouthPole);
-            aPoints2D.push_back(SouthUV);
-            for(Index1=nNorthPoleStart+1;Index1<nNorthPoleStart+nPolePoints;++Index1)
-                {
-                aTriangles.push_back(nNorth);
-                aTriangles.push_back(Index1);
-                aTriangles.push_back(Index1-1);
-                }
-            for(Index1=nSouthPoleStart+1;Index1<nSouthPoleStart+nPolePoints;++Index1)
-                {
-                aTriangles.push_back(nSouth);
-                aTriangles.push_back(Index1);
-                aTriangles.push_back(Index1-1);
-                }
-            }
-        }
-    }
-
-size_t AddNode(std::vector<Node>  &aNodes,
-               face         const *pFace,
-               double              dU,
-               double              dV)
+static size_t AddNode(std::vector<Node>  &aNodes,
+                      face         const *pFace,
+                      double              dU,
+                      double              dV)
     {
     surface const *pSurface=pFace->GetSurface();
     SGM::Point2D uv(dU,dV);
@@ -1627,11 +1627,11 @@ size_t AddNode(std::vector<Node>  &aNodes,
     return nAnswer;
     }
 
-void Refine(face        const *pFace,
-            double             dCosRefine,
-            std::vector<Node> &aNodes,
-            size_t             nNodeA,
-            size_t             nNodeB)
+static void Refine(face        const *pFace,
+                   double             dCosRefine,
+                   std::vector<Node> &aNodes,
+                   size_t             nNodeA,
+                   size_t             nNodeB)
     {
     surface const *pSurface=pFace->GetSurface();
     SGM::Point2D uvA=aNodes[nNodeA].m_uv;
@@ -1703,8 +1703,8 @@ void Refine(face        const *pFace,
         }
     }
 
-bool FindSeamCrossings(face        const *pFace,
-                       std::vector<Node> &aNodes)
+static bool FindSeamCrossings(face        const *pFace,
+                              std::vector<Node> &aNodes)
     {
     surface const *pSurface=pFace->GetSurface();
     std::vector<size_t> aCrossesU,aCrossesV;
@@ -2285,9 +2285,9 @@ bool FindSeamCrossings(face        const *pFace,
     return true;
     }
 
-bool FindPolygon(std::vector<Node>         &aNodes,
-                 unsigned int               nStart,
-                 std::vector<unsigned int> &aPolygon)
+static bool FindPolygon(std::vector<Node>         &aNodes,
+                        unsigned int               nStart,
+                        std::vector<unsigned int> &aPolygon)
     {
     aPolygon.push_back(nStart);
     size_t nWhere=aNodes[nStart].m_nNext;
@@ -2308,11 +2308,11 @@ bool FindPolygon(std::vector<Node>         &aNodes,
     return true;
     }
 
-bool FindPolygons(std::vector<Node>                       &aNodes,
-                  std::vector<SGM::Point2D>               &aPoints2D,
-                  std::vector<SGM::Point3D>               &aPoints3D,
-                  std::vector<std::vector<unsigned int> > &aaPolygons,
-                  std::vector<bool>                       *pImprintFlags)
+static bool FindPolygons(std::vector<Node>                       &aNodes,
+                         std::vector<SGM::Point2D>               &aPoints2D,
+                         std::vector<SGM::Point3D>               &aPoints3D,
+                         std::vector<std::vector<unsigned int> > &aaPolygons,
+                         std::vector<bool>                       *pImprintFlags)
     {
     unsigned int nNodes=(unsigned int)aNodes.size();
     unsigned int Index1;
@@ -2350,432 +2350,432 @@ bool FindPolygons(std::vector<Node>                       &aNodes,
     return true;
     }
 
-void FindOuterLoop(face         const *pFace,
-                   std::vector<Node>  &aNodes)
-    {
-    surface const *pSurface=pFace->GetSurface();
-    size_t Index1;
-    SGM::Interval2D const &Domain=pSurface->GetDomain();
-    std::vector<SGM::Point2D> aCorners;
-    aCorners.push_back(Domain.LowerLeft());
-    aCorners.push_back(Domain.LowerRight());
-    aCorners.push_back(Domain.UpperRight());
-    aCorners.push_back(Domain.UpperLeft());
-    if(pFace->GetFlipped())
-        {
-        std::reverse(aCorners.begin(),aCorners.end());
-        }
-    for(Index1=0;Index1<4;++Index1)
-        {
-        SGM::Point3D Pos;
-        pSurface->Evaluate(aCorners[Index1],&Pos);
-        Node CornerNode;
-        CornerNode.m_Entity=(entity *)pFace;
-        CornerNode.m_uv=aCorners[Index1];
-        CornerNode.m_Pos=Pos;
-        CornerNode.m_nNext= Index1==3 ? 0 : Index1+1;
-        CornerNode.m_nPrevious = Index1==0 ? 3 : Index1-1;
-        aNodes.push_back(CornerNode);
-        }
-    }
+//static void FindOuterLoop(face         const *pFace,
+//                          std::vector<Node>  &aNodes)
+//    {
+//    surface const *pSurface=pFace->GetSurface();
+//    size_t Index1;
+//    SGM::Interval2D const &Domain=pSurface->GetDomain();
+//    std::vector<SGM::Point2D> aCorners;
+//    aCorners.push_back(Domain.LowerLeft());
+//    aCorners.push_back(Domain.LowerRight());
+//    aCorners.push_back(Domain.UpperRight());
+//    aCorners.push_back(Domain.UpperLeft());
+//    if(pFace->GetFlipped())
+//        {
+//        std::reverse(aCorners.begin(),aCorners.end());
+//        }
+//    for(Index1=0;Index1<4;++Index1)
+//        {
+//        SGM::Point3D Pos;
+//        pSurface->Evaluate(aCorners[Index1],&Pos);
+//        Node CornerNode;
+//        CornerNode.m_Entity=(entity *)pFace;
+//        CornerNode.m_uv=aCorners[Index1];
+//        CornerNode.m_Pos=Pos;
+//        CornerNode.m_nNext= Index1==3 ? 0 : Index1+1;
+//        CornerNode.m_nPrevious = Index1==0 ? 3 : Index1-1;
+//        aNodes.push_back(CornerNode);
+//        }
+//    }
 
-bool PointOnNodes(SGM::Point3D      const &Pos,
-                  std::vector<Node> const &aNodes,
-                  size_t                  &nNode)
-    {
-    nNode=0;
-    size_t nNodes=aNodes.size();
-    size_t Index1;
-    for(Index1=0;Index1<nNodes;++Index1)
-        {
-        if(aNodes[Index1].m_Pos.DistanceSquared(Pos)<SGM_ZERO)
-            {
-            nNode=Index1;
-            return true;
-            }
-        }
-    return false;
-    }
+//static bool PointOnNodes(SGM::Point3D      const &Pos,
+//                         std::vector<Node> const &aNodes,
+//                         size_t                  &nNode)
+//    {
+//    nNode=0;
+//    size_t nNodes=aNodes.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nNodes;++Index1)
+//        {
+//        if(aNodes[Index1].m_Pos.DistanceSquared(Pos)<SGM_ZERO)
+//            {
+//            nNode=Index1;
+//            return true;
+//            }
+//        }
+//    return false;
+//    }
 
-void FindSingularitiesValues(SGM::Result               &rResult,
-                             SGM::Point3D        const &Pos,
-                             face                const *pFace,
-                             bool                       bVValues,
-                             std::map<entity *,double> &mValues)
-    {
-    std::vector<std::vector<edge *> > aaLoops;
-    std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
-    size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
-    size_t Index1,Index2;
-    for(Index1=0;Index1<nLoops;++Index1)
-        {
-        std::vector<edge *> const &aLoop=aaLoops[Index1];
-        std::vector<SGM::EdgeSideType> const &aSides=aaEdgeSideTypes[Index1];
-        size_t nLoop=aLoop.size();
-        for(Index2=0;Index2<nLoop;++Index2)
-            {
-            edge *pEdge=aLoop[Index2];
-            SGM::EdgeSideType nSide=aSides[Index2];
-            SGM::Interval1D const &Domain=pEdge->GetDomain();
-            double dParam=std::numeric_limits<double>::max();
-            if(SGM::NearEqual(pEdge->GetStart()->GetPoint(),Pos,SGM_MIN_TOL))
-                {
-                dParam=Domain.MidPoint(0.01);
-                }
-            else if(SGM::NearEqual(pEdge->GetEnd()->GetPoint(),Pos,SGM_MIN_TOL))
-                {
-                dParam=Domain.MidPoint(0.99);
-                }
-            if(dParam<std::numeric_limits<double>::max())
-                {
-                SGM::Point3D CPos;
-                pEdge->GetCurve()->Evaluate(dParam,&CPos);
-                SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,CPos);
-                if(bVValues)
-                    {
-                    mValues[pEdge]=uv.m_v;
-                    }
-                else
-                    {
-                    mValues[pEdge]=uv.m_u;
-                    }
-                }
-            }
-        }
-    }
+//static void FindSingularitiesValues(SGM::Result               &rResult,
+//                                    SGM::Point3D        const &Pos,
+//                                    face                const *pFace,
+//                                    bool                       bVValues,
+//                                    std::map<entity *,double> &mValues)
+//    {
+//    std::vector<std::vector<edge *> > aaLoops;
+//    std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
+//    size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+//    size_t Index1,Index2;
+//    for(Index1=0;Index1<nLoops;++Index1)
+//        {
+//        std::vector<edge *> const &aLoop=aaLoops[Index1];
+//        std::vector<SGM::EdgeSideType> const &aSides=aaEdgeSideTypes[Index1];
+//        size_t nLoop=aLoop.size();
+//        for(Index2=0;Index2<nLoop;++Index2)
+//            {
+//            edge *pEdge=aLoop[Index2];
+//            SGM::EdgeSideType nSide=aSides[Index2];
+//            SGM::Interval1D const &Domain=pEdge->GetDomain();
+//            double dParam=std::numeric_limits<double>::max();
+//            if(SGM::NearEqual(pEdge->GetStart()->GetPoint(),Pos,SGM_MIN_TOL))
+//                {
+//                dParam=Domain.MidPoint(0.01);
+//                }
+//            else if(SGM::NearEqual(pEdge->GetEnd()->GetPoint(),Pos,SGM_MIN_TOL))
+//                {
+//                dParam=Domain.MidPoint(0.99);
+//                }
+//            if(dParam<std::numeric_limits<double>::max())
+//                {
+//                SGM::Point3D CPos;
+//                pEdge->GetCurve()->Evaluate(dParam,&CPos);
+//                SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,CPos);
+//                if(bVValues)
+//                    {
+//                    mValues[pEdge]=uv.m_v;
+//                    }
+//                else
+//                    {
+//                    mValues[pEdge]=uv.m_u;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-bool SingularityInFace(SGM::Point2D      const &TestUV,
-                       std::vector<Node> const &aNodes,
-                       surface           const *pSurface)
-    {
-    // Find the closest node in uv space.
+//static bool SingularityInFace(SGM::Point2D      const &TestUV,
+//                              std::vector<Node> const &aNodes,
+//                              surface           const *pSurface)
+//    {
+//    // Find the closest node in uv space.
+//
+//    double dDistSquared=std::numeric_limits<double>::max();
+//    Node ClosestNode=aNodes[0];
+//    for(auto TestNode : aNodes)
+//        {
+//        double dTestDistSquared=TestNode.m_uv.DistanceSquared(TestUV);
+//        if(dTestDistSquared<dDistSquared)
+//            {
+//            dDistSquared=dTestDistSquared;
+//            ClosestNode=TestNode;
+//            }
+//        }
+//    Node PreviousNode=aNodes[ClosestNode.m_nPrevious];
+//    Node NextNode=aNodes[ClosestNode.m_nNext];
+//    SGM::Point2D uvA=ClosestNode.m_uv;
+//    SGM::Point2D uvB=PreviousNode.m_uv;
+//    SGM::Point2D uvC=NextNode.m_uv;
+//
+//    // Fix uvA, uvB, and uvC to not cross seams.
+//
+//    if(pSurface->ClosedInU())
+//        {
+//        double dLength=pSurface->GetDomain().m_UDomain.Length();
+//        double dGap=dLength*0.5;
+//        bool bAB=false,bBC=false,bCA=false;
+//        if(dGap<fabs(uvA.m_u-uvB.m_u))
+//            {
+//            bAB=true;
+//            }
+//        if(dGap<fabs(uvB.m_u-uvC.m_u))
+//            {
+//            bBC=true;
+//            }
+//        if(dGap<fabs(uvA.m_u-uvC.m_u))
+//            {
+//            bCA=true;
+//            }
+//        if(bAB && bBC)
+//            {
+//            // Move B to be more like A.
+//            if(uvB.m_u<uvA.m_u)
+//                {
+//                uvB.m_u+=dLength;
+//                }
+//            else
+//                {
+//                uvB.m_u-=dLength;
+//                }
+//            }
+//        if(bBC && bCA)
+//            {
+//            // Move C to be more like A.
+//            if(uvC.m_u<uvA.m_u)
+//                {
+//                uvC.m_u+=dLength;
+//                }
+//            else
+//                {
+//                uvC.m_u-=dLength;
+//                }
+//            }
+//        if(bCA && bAB)
+//            {
+//            // Move A to be more like B.
+//            if(uvA.m_u<uvB.m_u)
+//                {
+//                uvA.m_u+=dLength;
+//                }
+//            else
+//                {
+//                uvA.m_u-=dLength;
+//                }
+//            }
+//        }
+//    if(pSurface->ClosedInV())
+//        {
+//        double dLength=pSurface->GetDomain().m_VDomain.Length();
+//        double dGap=dLength*0.5;
+//        bool bAB=false,bBC=false,bCA=false;
+//        if(dGap<fabs(uvA.m_v-uvB.m_v))
+//            {
+//            bAB=true;
+//            }
+//        if(dGap<fabs(uvB.m_v-uvC.m_v))
+//            {
+//            bBC=true;
+//            }
+//        if(dGap<fabs(uvA.m_v-uvC.m_v))
+//            {
+//            bCA=true;
+//            }
+//        if(bAB && bBC)
+//            {
+//            // Move B to be more like A.
+//            if(uvB.m_v<uvA.m_v)
+//                {
+//                uvB.m_v+=dLength;
+//                }
+//            else
+//                {
+//                uvB.m_v-=dLength;
+//                }
+//            }
+//        if(bBC && bCA)
+//            {
+//            // Move C to be more like A.
+//            if(uvC.m_v<uvA.m_v)
+//                {
+//                uvC.m_v+=dLength;
+//                }
+//            else
+//                {
+//                uvC.m_v-=dLength;
+//                }
+//            }
+//        if(bCA && bAB)
+//            {
+//            // Move A to be more like B.
+//            if(uvA.m_v<uvB.m_v)
+//                {
+//                uvA.m_v+=dLength;
+//                }
+//            else
+//                {
+//                uvA.m_v-=dLength;
+//                }
+//            }
+//        }
+//
+//    return InAngle(uvA,uvC,uvB,TestUV);
+//    }
 
-    double dDistSquared=std::numeric_limits<double>::max();
-    Node ClosestNode=aNodes[0];
-    for(auto TestNode : aNodes)
-        {
-        double dTestDistSquared=TestNode.m_uv.DistanceSquared(TestUV);
-        if(dTestDistSquared<dDistSquared)
-            {
-            dDistSquared=dTestDistSquared;
-            ClosestNode=TestNode;
-            }
-        }
-    Node PreviousNode=aNodes[ClosestNode.m_nPrevious];
-    Node NextNode=aNodes[ClosestNode.m_nNext];
-    SGM::Point2D uvA=ClosestNode.m_uv;
-    SGM::Point2D uvB=PreviousNode.m_uv;
-    SGM::Point2D uvC=NextNode.m_uv;
-
-    // Fix uvA, uvB, and uvC to not cross seams.
-
-    if(pSurface->ClosedInU())
-        {
-        double dLength=pSurface->GetDomain().m_UDomain.Length();
-        double dGap=dLength*0.5;
-        bool bAB=false,bBC=false,bCA=false;
-        if(dGap<fabs(uvA.m_u-uvB.m_u))
-            {
-            bAB=true;
-            }
-        if(dGap<fabs(uvB.m_u-uvC.m_u))
-            {
-            bBC=true;
-            }
-        if(dGap<fabs(uvA.m_u-uvC.m_u))
-            {
-            bCA=true;
-            }
-        if(bAB && bBC)
-            {
-            // Move B to be more like A.
-            if(uvB.m_u<uvA.m_u)
-                {
-                uvB.m_u+=dLength;
-                }
-            else
-                {
-                uvB.m_u-=dLength;
-                }
-            }
-        if(bBC && bCA)
-            {
-            // Move C to be more like A.
-            if(uvC.m_u<uvA.m_u)
-                {
-                uvC.m_u+=dLength;
-                }
-            else
-                {
-                uvC.m_u-=dLength;
-                }
-            }
-        if(bCA && bAB)
-            {
-            // Move A to be more like B.
-            if(uvA.m_u<uvB.m_u)
-                {
-                uvA.m_u+=dLength;
-                }
-            else
-                {
-                uvA.m_u-=dLength;
-                }
-            }
-        }
-    if(pSurface->ClosedInV())
-        {
-        double dLength=pSurface->GetDomain().m_VDomain.Length();
-        double dGap=dLength*0.5;
-        bool bAB=false,bBC=false,bCA=false;
-        if(dGap<fabs(uvA.m_v-uvB.m_v))
-            {
-            bAB=true;
-            }
-        if(dGap<fabs(uvB.m_v-uvC.m_v))
-            {
-            bBC=true;
-            }
-        if(dGap<fabs(uvA.m_v-uvC.m_v))
-            {
-            bCA=true;
-            }
-        if(bAB && bBC)
-            {
-            // Move B to be more like A.
-            if(uvB.m_v<uvA.m_v)
-                {
-                uvB.m_v+=dLength;
-                }
-            else
-                {
-                uvB.m_v-=dLength;
-                }
-            }
-        if(bBC && bCA)
-            {
-            // Move C to be more like A.
-            if(uvC.m_v<uvA.m_v)
-                {
-                uvC.m_v+=dLength;
-                }
-            else
-                {
-                uvC.m_v-=dLength;
-                }
-            }
-        if(bCA && bAB)
-            {
-            // Move A to be more like B.
-            if(uvA.m_v<uvB.m_v)
-                {
-                uvA.m_v+=dLength;
-                }
-            else
-                {
-                uvA.m_v-=dLength;
-                }
-            }
-        }
-
-    return InAngle(uvA,uvC,uvB,TestUV);
-    }
-
-void AddNodesAtSingularites(SGM::Result        &rResult,
-                            face         const *pFace,
-                            FacetOptions const &Options,
-                            std::vector<Node>  &aNodes)
-    {
-    surface const *pSurface=pFace->GetSurface();
-    SGM::Interval2D const &Domain=pSurface->GetDomain();
-    double dCosRefine=cos(Options.m_dEdgeAngleTol);
-    size_t nNode;
-    if(pSurface->SingularHighU())
-        {
-        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
-        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
-        SGM::Point3D Pos;
-        pSurface->Evaluate(uvA,&Pos);
-        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
-        if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes,pSurface)==true)
-            {
-            Node NodeA,NodeB;
-            size_t nNodeA=aNodes.size();
-            size_t nNodeB=nNodeA+1;
-            NodeA.m_Entity=(entity *)pFace;
-            NodeA.m_nNext=nNodeB;
-            NodeA.m_nPrevious=nNodeB;
-            NodeA.m_uv=uvA;
-            NodeA.m_Pos=Pos;
-            NodeB.m_Entity=(entity *)pFace;
-            NodeB.m_nNext=nNodeA;
-            NodeB.m_nPrevious=nNodeA;
-            NodeB.m_uv=uvB;
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeA);
-            aNodes.push_back(NodeB);
-            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
-            }
-        else if(bPointOnNodes)
-            {
-            throw;  // TODO: missing code
-            }
-        }
-    if(pSurface->SingularHighV())
-        {
-        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
-        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
-        SGM::Point3D Pos;
-        pSurface->Evaluate(uvA,&Pos);
-        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
-        if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes,pSurface)==true)
-            {
-            Node NodeA,NodeB;
-            size_t nNodeA=aNodes.size();
-            size_t nNodeB=nNodeA+1;
-            NodeA.m_Entity=(entity *)pFace;
-            NodeA.m_nNext=nNodeB;
-            NodeA.m_nPrevious=nNodeB;
-            NodeA.m_uv=uvA;
-            NodeA.m_Pos=Pos;
-            NodeB.m_Entity=(entity *)pFace;
-            NodeB.m_nNext=nNodeA;
-            NodeB.m_nPrevious=nNodeA;
-            NodeB.m_uv=uvB;
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeA);
-            aNodes.push_back(NodeB);
-            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
-            }
-        else if(bPointOnNodes)
-            {
-            std::map<entity *,double> mValues;
-            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
-
-            size_t nNodeB=aNodes.size();
-            Node NodeB;
-            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
-            NodeB.m_nNext=aNodes[nNode].m_nNext;
-            NodeB.m_nPrevious=nNode;
-            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
-            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeB);
-
-            aNodes[nNode].m_nNext=nNodeB;
-            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
-
-            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
-            }
-        }
-    if(pSurface->SingularLowU())
-        {
-        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
-        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
-        SGM::Point3D Pos;
-        pSurface->Evaluate(uvA,&Pos);
-        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
-        if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes,pSurface)==true)
-            {
-            Node NodeA,NodeB;
-            size_t nNodeA=aNodes.size();
-            size_t nNodeB=nNodeA+1;
-            NodeA.m_Entity=(entity *)pFace;
-            NodeA.m_nNext=nNodeB;
-            NodeA.m_nPrevious=nNodeB;
-            NodeA.m_uv=uvA;
-            NodeA.m_Pos=Pos;
-            NodeB.m_Entity=(entity *)pFace;
-            NodeB.m_nNext=nNodeA;
-            NodeB.m_nPrevious=nNodeA;
-            NodeB.m_uv=uvB;
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeA);
-            aNodes.push_back(NodeB);
-            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
-            }
-        else if(bPointOnNodes)
-            {
-            std::map<entity *,double> mValues;
-            FindSingularitiesValues(rResult,Pos,pFace,true,mValues);
-
-            size_t nNodeB=aNodes.size();
-            Node NodeB;
-            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
-            NodeB.m_nNext=nNode;
-            NodeB.m_nPrevious=aNodes[nNode].m_nPrevious;
-            NodeB.m_uv.m_u=aNodes[nNode].m_uv.m_u;
-            NodeB.m_uv.m_v=mValues[NodeB.m_Entity];
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeB);
-
-            aNodes[aNodes[nNode].m_nPrevious].m_nNext=nNodeB;
-            aNodes[nNode].m_nPrevious=nNodeB;
-            aNodes[nNodeB].m_uv.m_v=mValues[aNodes[nNode].m_Entity];
-
-            Refine(pFace,dCosRefine,aNodes,nNodeB,nNode);
-            }
-        }
-    if(pSurface->SingularLowV())
-        {
-        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
-        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
-        SGM::Point3D Pos;
-        pSurface->Evaluate(uvA,&Pos);
-        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
-        if( bPointOnNodes==false &&
-            SingularityInFace(uvA,aNodes,pSurface)==true)
-            {
-            Node NodeA,NodeB;
-            size_t nNodeA=aNodes.size();
-            size_t nNodeB=nNodeA+1;
-            NodeA.m_Entity=(entity *)pFace;
-            NodeA.m_nNext=nNodeB;
-            NodeA.m_nPrevious=nNodeB;
-            NodeA.m_uv=uvA;
-            NodeA.m_Pos=Pos;
-            NodeB.m_Entity=(entity *)pFace;
-            NodeB.m_nNext=nNodeA;
-            NodeB.m_nPrevious=nNodeA;
-            NodeB.m_uv=uvB;
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeA);
-            aNodes.push_back(NodeB);
-            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
-            }
-        else if(bPointOnNodes)
-            {
-            std::map<entity *,double> mValues;
-            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
-
-            size_t nNodeB=aNodes.size();
-            Node NodeB;
-            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
-            NodeB.m_nNext=aNodes[nNode].m_nNext;
-            NodeB.m_nPrevious=nNode;
-            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
-            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
-            NodeB.m_Pos=Pos;
-            aNodes.push_back(NodeB);
-
-            aNodes[nNode].m_nNext=nNodeB;
-            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
-
-            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
-            }
-        }
-    }
+//static void AddNodesAtSingularites(SGM::Result        &rResult,
+//                                   face         const *pFace,
+//                                   FacetOptions const &Options,
+//                                   std::vector<Node>  &aNodes)
+//    {
+//    surface const *pSurface=pFace->GetSurface();
+//    SGM::Interval2D const &Domain=pSurface->GetDomain();
+//    double dCosRefine=cos(Options.m_dEdgeAngleTol);
+//    size_t nNode;
+//    if(pSurface->SingularHighU())
+//        {
+//        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
+//        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
+//        SGM::Point3D Pos;
+//        pSurface->Evaluate(uvA,&Pos);
+//        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+//        if( bPointOnNodes==false &&
+//            SingularityInFace(uvA,aNodes,pSurface)==true)
+//            {
+//            Node NodeA,NodeB;
+//            size_t nNodeA=aNodes.size();
+//            size_t nNodeB=nNodeA+1;
+//            NodeA.m_Entity=(entity *)pFace;
+//            NodeA.m_nNext=nNodeB;
+//            NodeA.m_nPrevious=nNodeB;
+//            NodeA.m_uv=uvA;
+//            NodeA.m_Pos=Pos;
+//            NodeB.m_Entity=(entity *)pFace;
+//            NodeB.m_nNext=nNodeA;
+//            NodeB.m_nPrevious=nNodeA;
+//            NodeB.m_uv=uvB;
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeA);
+//            aNodes.push_back(NodeB);
+//            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+//            }
+//        else if(bPointOnNodes)
+//            {
+//            throw;  // TODO: missing code
+//            }
+//        }
+//    if(pSurface->SingularHighV())
+//        {
+//        SGM::Point2D uvA(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMax);
+//        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
+//        SGM::Point3D Pos;
+//        pSurface->Evaluate(uvA,&Pos);
+//        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+//        if( bPointOnNodes==false &&
+//            SingularityInFace(uvA,aNodes,pSurface)==true)
+//            {
+//            Node NodeA,NodeB;
+//            size_t nNodeA=aNodes.size();
+//            size_t nNodeB=nNodeA+1;
+//            NodeA.m_Entity=(entity *)pFace;
+//            NodeA.m_nNext=nNodeB;
+//            NodeA.m_nPrevious=nNodeB;
+//            NodeA.m_uv=uvA;
+//            NodeA.m_Pos=Pos;
+//            NodeB.m_Entity=(entity *)pFace;
+//            NodeB.m_nNext=nNodeA;
+//            NodeB.m_nPrevious=nNodeA;
+//            NodeB.m_uv=uvB;
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeA);
+//            aNodes.push_back(NodeB);
+//            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+//            }
+//        else if(bPointOnNodes)
+//            {
+//            std::map<entity *,double> mValues;
+//            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
+//
+//            size_t nNodeB=aNodes.size();
+//            Node NodeB;
+//            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
+//            NodeB.m_nNext=aNodes[nNode].m_nNext;
+//            NodeB.m_nPrevious=nNode;
+//            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
+//            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeB);
+//
+//            aNodes[nNode].m_nNext=nNodeB;
+//            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
+//
+//            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
+//            }
+//        }
+//    if(pSurface->SingularLowU())
+//        {
+//        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMax);
+//        SGM::Point2D uvB(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
+//        SGM::Point3D Pos;
+//        pSurface->Evaluate(uvA,&Pos);
+//        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+//        if( bPointOnNodes==false &&
+//            SingularityInFace(uvA,aNodes,pSurface)==true)
+//            {
+//            Node NodeA,NodeB;
+//            size_t nNodeA=aNodes.size();
+//            size_t nNodeB=nNodeA+1;
+//            NodeA.m_Entity=(entity *)pFace;
+//            NodeA.m_nNext=nNodeB;
+//            NodeA.m_nPrevious=nNodeB;
+//            NodeA.m_uv=uvA;
+//            NodeA.m_Pos=Pos;
+//            NodeB.m_Entity=(entity *)pFace;
+//            NodeB.m_nNext=nNodeA;
+//            NodeB.m_nPrevious=nNodeA;
+//            NodeB.m_uv=uvB;
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeA);
+//            aNodes.push_back(NodeB);
+//            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+//            }
+//        else if(bPointOnNodes)
+//            {
+//            std::map<entity *,double> mValues;
+//            FindSingularitiesValues(rResult,Pos,pFace,true,mValues);
+//
+//            size_t nNodeB=aNodes.size();
+//            Node NodeB;
+//            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
+//            NodeB.m_nNext=nNode;
+//            NodeB.m_nPrevious=aNodes[nNode].m_nPrevious;
+//            NodeB.m_uv.m_u=aNodes[nNode].m_uv.m_u;
+//            NodeB.m_uv.m_v=mValues[NodeB.m_Entity];
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeB);
+//
+//            aNodes[aNodes[nNode].m_nPrevious].m_nNext=nNodeB;
+//            aNodes[nNode].m_nPrevious=nNodeB;
+//            aNodes[nNodeB].m_uv.m_v=mValues[aNodes[nNode].m_Entity];
+//
+//            Refine(pFace,dCosRefine,aNodes,nNodeB,nNode);
+//            }
+//        }
+//    if(pSurface->SingularLowV())
+//        {
+//        SGM::Point2D uvA(Domain.m_UDomain.m_dMin,Domain.m_VDomain.m_dMin);
+//        SGM::Point2D uvB(Domain.m_UDomain.m_dMax,Domain.m_VDomain.m_dMin);
+//        SGM::Point3D Pos;
+//        pSurface->Evaluate(uvA,&Pos);
+//        bool bPointOnNodes=PointOnNodes(Pos,aNodes,nNode);
+//        if( bPointOnNodes==false &&
+//            SingularityInFace(uvA,aNodes,pSurface)==true)
+//            {
+//            Node NodeA,NodeB;
+//            size_t nNodeA=aNodes.size();
+//            size_t nNodeB=nNodeA+1;
+//            NodeA.m_Entity=(entity *)pFace;
+//            NodeA.m_nNext=nNodeB;
+//            NodeA.m_nPrevious=nNodeB;
+//            NodeA.m_uv=uvA;
+//            NodeA.m_Pos=Pos;
+//            NodeB.m_Entity=(entity *)pFace;
+//            NodeB.m_nNext=nNodeA;
+//            NodeB.m_nPrevious=nNodeA;
+//            NodeB.m_uv=uvB;
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeA);
+//            aNodes.push_back(NodeB);
+//            Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeB);
+//            }
+//        else if(bPointOnNodes)
+//            {
+//            std::map<entity *,double> mValues;
+//            FindSingularitiesValues(rResult,Pos,pFace,false,mValues);
+//
+//            size_t nNodeB=aNodes.size();
+//            Node NodeB;
+//            NodeB.m_Entity=aNodes[aNodes[nNode].m_nNext].m_Entity;
+//            NodeB.m_nNext=aNodes[nNode].m_nNext;
+//            NodeB.m_nPrevious=nNode;
+//            NodeB.m_uv.m_v=aNodes[nNode].m_uv.m_v;
+//            NodeB.m_uv.m_u=mValues[NodeB.m_Entity];
+//            NodeB.m_Pos=Pos;
+//            aNodes.push_back(NodeB);
+//
+//            aNodes[nNode].m_nNext=nNodeB;
+//            aNodes[nNode].m_uv.m_u=mValues[aNodes[nNode].m_Entity];
+//
+//            Refine(pFace,dCosRefine,aNodes,nNode,nNodeB);
+//            }
+//        }
+//    }
 
 bool FacetFaceLoops(SGM::Result                             &rResult,
-                    face                              const *pFace,
-                    std::vector<SGM::Point2D>               &aPoints2D,
-                    std::vector<SGM::Point3D>               &aPoints3D,
-                    std::vector<std::vector<unsigned int> > &aaPolygons,
-                    edge                                    *pInputEdge,
-                    std::vector<bool>                       *pImprintFlags)
+                           face                              const *pFace,
+                           std::vector<SGM::Point2D>               &aPoints2D,
+                           std::vector<SGM::Point3D>               &aPoints3D,
+                           std::vector<std::vector<unsigned int> > &aaPolygons,
+                           edge                                    *pInputEdge,
+                           std::vector<bool>                       *pImprintFlags)
     {
     // Find all the needed face information.
 
@@ -2887,9 +2887,9 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     return true;
     }
 
-void FindNormals(face                     const *pFace,
-                 std::vector<SGM::Point2D>      &aPoints2D,
-                 std::vector<SGM::UnitVector3D> &aNormals)
+static void FindNormals(face                     const *pFace,
+                        std::vector<SGM::Point2D>      &aPoints2D,
+                        std::vector<SGM::UnitVector3D> &aNormals)
     {
     size_t nPoints2D=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
@@ -2903,10 +2903,10 @@ void FindNormals(face                     const *pFace,
         }
     }
 
-void FindNormalsAndPoints(face                     const *pFace,
-                          std::vector<SGM::Point2D>      &aPoints2D,
-                          std::vector<SGM::UnitVector3D> &aNormals,
-                          std::vector<SGM::Point3D>      &aPoints3D)
+static void FindNormalsAndPoints(face                     const *pFace,
+                                 std::vector<SGM::Point2D>      &aPoints2D,
+                                 std::vector<SGM::UnitVector3D> &aNormals,
+                                 std::vector<SGM::Point3D>      &aPoints3D)
     {
     size_t nPoints2D=aPoints2D.size();
     surface const *pSurface=pFace->GetSurface();
@@ -2943,9 +2943,9 @@ void FindNormalsAndPoints(face                     const *pFace,
         }
     }
 
-double ScaledUVs(face                      const *pFace,
-                 std::vector<SGM::Point2D> const &aPoints2D,
-                 std::vector<SGM::Point2D>       &aScaled)
+static double ScaledUVs(face                      const *pFace,
+                        std::vector<SGM::Point2D> const &aPoints2D,
+                        std::vector<SGM::Point2D>       &aScaled)
     {
     surface const *pSurface=pFace->GetSurface();
     SGM::Vector3D DU,DV;
@@ -2969,10 +2969,10 @@ double ScaledUVs(face                      const *pFace,
     return dScale;
     }
 
-double ScaledUVs2(double                          dUGap,
-                  double                          dVGap,
-                  std::vector<SGM::Point2D> const &aPoints2D,
-                  std::vector<SGM::Point2D>       &aScaled)
+static double ScaledUVs2(double                          dUGap,
+                         double                          dVGap,
+                         std::vector<SGM::Point2D> const &aPoints2D,
+                         std::vector<SGM::Point2D>       &aScaled)
     {
     size_t Index1;
     double dScale=dUGap/dVGap;
@@ -2987,91 +2987,91 @@ double ScaledUVs2(double                          dUGap,
     return dScale;
     }
 
-bool PointOnSegment(SGM::Point2D const &A,
-                    SGM::Point2D const &B,
-                    SGM::Point2D const &D,
-                    double              dTolerance)
-    {
-    SGM::UnitVector2D Axis=B-A;
-    SGM::Point2D ClosePos=A+Axis*((D-A)%Axis);
-    return ClosePos.DistanceSquared(D)<dTolerance*dTolerance;
-    }
+//static bool PointOnSegment(SGM::Point2D const &A,
+//                           SGM::Point2D const &B,
+//                           SGM::Point2D const &D,
+//                           double              dTolerance)
+//    {
+//    SGM::UnitVector2D Axis=B-A;
+//    SGM::Point2D ClosePos=A+Axis*((D-A)%Axis);
+//    return ClosePos.DistanceSquared(D)<dTolerance*dTolerance;
+//    }
 
-bool OnTwoEdges(unsigned int                                      a1,
-                unsigned int                                      b1,
-                unsigned int                                      c1,
-                SGM::Point2D                               const &A,
-                SGM::Point2D                               const &B,
-                SGM::Point2D                               const &C,
-                size_t                                            nStart,
-                std::vector<SGM::BoxTree::BoundedItemType> const &aHits,
-                std::vector<SGM::Point2D>                  const &aPoints,
-                std::vector<unsigned int>                  const &aTriangles,
-                SGM::Point2D                               const &D,
-                double                                            dTolerance,
-                size_t                                           &nOther,
-                size_t                                           &nEdge1,
-                size_t                                           &nEdge2)
-    {
-    unsigned int a=a1,b=b1;
-    if(PointOnSegment(A,B,D,dTolerance))
-        {
-        nEdge1=0;
-        }
-    else if(PointOnSegment(B,C,D,dTolerance))
-        {
-        nEdge1=1;
-        a=b1;
-        b=c1;
-        }
-    else if(PointOnSegment(C,A,D,dTolerance))
-        {
-        nEdge1=2;
-        a=c1;
-        b=a1;
-        }
-    else
-        {
-        return false;
-        }
-    size_t Index1;
-    size_t nHits=aHits.size();
-    nEdge2=3;
-    for(Index1=nStart+1;Index1<nHits;++Index1)
-        {
-        nOther=*((size_t *)aHits[Index1].first);
-        unsigned int a2=aTriangles[nOther]; 
-        unsigned int b2=aTriangles[nOther+1]; 
-        unsigned int c2=aTriangles[nOther+2]; 
-        if((a2==b && b2==a) || (b2==b && c2==a) || (c2==b && a2==a))
-            {
-            SGM::Point2D const &A2=aPoints[a2];
-            SGM::Point2D const &B2=aPoints[b2];
-            SGM::Point2D const &C2=aPoints[c2];
-            if(PointOnSegment(A2,B2,D,dTolerance))
-                {
-                nEdge2=0;
-                }
-            else if(PointOnSegment(B2,C2,D,dTolerance))
-                {
-                nEdge2=1;
-                }
-            else if(PointOnSegment(C2,A2,D,dTolerance))
-                {
-                nEdge2=2;
-                }
-            if(nEdge2!=3)
-                {
-                return true;
-                }
-            }
-        }
-    return false;
-    }
+//static bool OnTwoEdges(unsigned int                                      a1,
+//                       unsigned int                                      b1,
+//                       unsigned int                                      c1,
+//                       SGM::Point2D                               const &A,
+//                       SGM::Point2D                               const &B,
+//                       SGM::Point2D                               const &C,
+//                       size_t                                            nStart,
+//                       std::vector<SGM::BoxTree::BoundedItemType> const &aHits,
+//                       std::vector<SGM::Point2D>                  const &aPoints,
+//                       std::vector<unsigned int>                  const &aTriangles,
+//                       SGM::Point2D                               const &D,
+//                       double                                            dTolerance,
+//                       size_t                                           &nOther,
+//                       size_t                                           &nEdge1,
+//                       size_t                                           &nEdge2)
+//    {
+//    unsigned int a=a1,b=b1;
+//    if(PointOnSegment(A,B,D,dTolerance))
+//        {
+//        nEdge1=0;
+//        }
+//    else if(PointOnSegment(B,C,D,dTolerance))
+//        {
+//        nEdge1=1;
+//        a=b1;
+//        b=c1;
+//        }
+//    else if(PointOnSegment(C,A,D,dTolerance))
+//        {
+//        nEdge1=2;
+//        a=c1;
+//        b=a1;
+//        }
+//    else
+//        {
+//        return false;
+//        }
+//    size_t Index1;
+//    size_t nHits=aHits.size();
+//    nEdge2=3;
+//    for(Index1=nStart+1;Index1<nHits;++Index1)
+//        {
+//        nOther=*((size_t *)aHits[Index1].first);
+//        unsigned int a2=aTriangles[nOther]; 
+//        unsigned int b2=aTriangles[nOther+1]; 
+//        unsigned int c2=aTriangles[nOther+2]; 
+//        if((a2==b && b2==a) || (b2==b && c2==a) || (c2==b && a2==a))
+//            {
+//            SGM::Point2D const &A2=aPoints[a2];
+//            SGM::Point2D const &B2=aPoints[b2];
+//            SGM::Point2D const &C2=aPoints[c2];
+//            if(PointOnSegment(A2,B2,D,dTolerance))
+//                {
+//                nEdge2=0;
+//                }
+//            else if(PointOnSegment(B2,C2,D,dTolerance))
+//                {
+//                nEdge2=1;
+//                }
+//            else if(PointOnSegment(C2,A2,D,dTolerance))
+//                {
+//                nEdge2=2;
+//                }
+//            if(nEdge2!=3)
+//                {
+//                return true;
+//                }
+//            }
+//        }
+//    return false;
+//    }
 
-SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
-                            std::vector<unsigned int> &aTriangles,
-                            size_t                     nTri)
+static SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
+                                   std::vector<unsigned int> &aTriangles,
+                                   size_t                     nTri)
     {
     unsigned int a=aTriangles[nTri];
     unsigned int b=aTriangles[nTri+1];
@@ -3091,14 +3091,14 @@ SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
     }
 
 void SplitEdgeUpdateTree(SGM::Point2D        const &D,
-                         std::vector<SGM::Point2D> &aPoints,
-                         std::vector<unsigned int> &aTriangles,
-                         size_t                     nHitTri,
-                         size_t                     nEdge1,
-                         size_t                     nOther,
-                         size_t                     nEdge2,
-                         std::vector<size_t> const &aTris,
-                         SGM::BoxTree              &Tree)
+                                std::vector<SGM::Point2D> &aPoints,
+                                std::vector<unsigned int> &aTriangles,
+                                size_t                     nHitTri,
+                                size_t                     nEdge1,
+                                size_t                     nOther,
+                                size_t                     nEdge2,
+                                std::vector<size_t> const &aTris,
+                                SGM::BoxTree              &Tree)
     {
     unsigned int a1=aTriangles[nHitTri];
     unsigned int b1=aTriangles[nHitTri+1];
@@ -3193,12 +3193,12 @@ void SplitEdgeUpdateTree(SGM::Point2D        const &D,
     }
 
 void SplitEdgeUpdateTree(SGM::Point2D             const &D,
-                         std::vector<SGM::Point2D>      &aPoints2D,
-                         std::vector<unsigned int>      &aTriangles,
-                         size_t                          nHitTri,
-                         size_t                          nEdge1,
-                         std::vector<size_t>      const &aTris,
-                         SGM::BoxTree                   &Tree)
+                                std::vector<SGM::Point2D>      &aPoints2D,
+                                std::vector<unsigned int>      &aTriangles,
+                                size_t                          nHitTri,
+                                size_t                          nEdge1,
+                                std::vector<size_t>      const &aTris,
+                                SGM::BoxTree                   &Tree)
     {
     unsigned int a1=aTriangles[nHitTri];
     unsigned int b1=aTriangles[nHitTri+1];
@@ -3255,11 +3255,11 @@ void SplitEdgeUpdateTree(SGM::Point2D             const &D,
     }
 
 void SplitTriangleUpdateTree(SGM::Point2D        const &D,
-                             std::vector<SGM::Point2D> &aPoints2D,
-                             std::vector<unsigned int> &aTriangles,
-                             size_t                     nHitTri,
-                             std::vector<size_t> const &aTris,
-                             SGM::BoxTree              &Tree)
+                                    std::vector<SGM::Point2D> &aPoints2D,
+                                    std::vector<unsigned int> &aTriangles,
+                                    size_t                     nHitTri,
+                                    std::vector<size_t> const &aTris,
+                                    SGM::BoxTree              &Tree)
     {
     
     unsigned int a=aTriangles[nHitTri];
@@ -3305,276 +3305,276 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     Tree.Insert(pNew2,New2Box);
     }
 
-bool NearBoundary(unsigned int                                           a,
-                  unsigned int                                           b,
-                  unsigned int                                           c,
-                  SGM::Point2D                                    const &A,
-                  SGM::Point2D                                    const &B,
-                  SGM::Point2D                                    const &C,
-                  SGM::Point2D                                    const &D,
-                  std::set<std::pair<unsigned int,unsigned int> > const &sBoundaryEdges,
-                  double                                                 dBoundaryTolerance)
-    {
-    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(a,b))!=sBoundaryEdges.end())
-        {
-        if(SGM::Segment2D(A,B).Distance(D)<dBoundaryTolerance)
-            {
-            return true;
-            }
-        }
-    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(b,c))!=sBoundaryEdges.end())
-        {
-        if(SGM::Segment2D(B,C).Distance(D)<dBoundaryTolerance)
-            {
-            return true;
-            }
-        }
-    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(c,a))!=sBoundaryEdges.end())
-        {
-        if(SGM::Segment2D(C,A).Distance(D)<dBoundaryTolerance)
-            {
-            return true;
-            }
-        }
-    return false;
-    }
+//static bool NearBoundary(unsigned int                                           a,
+//                         unsigned int                                           b,
+//                         unsigned int                                           c,
+//                         SGM::Point2D                                    const &A,
+//                         SGM::Point2D                                    const &B,
+//                         SGM::Point2D                                    const &C,
+//                         SGM::Point2D                                    const &D,
+//                         std::set<std::pair<unsigned int,unsigned int> > const &sBoundaryEdges,
+//                         double                                                 dBoundaryTolerance)
+//    {
+//    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(a,b))!=sBoundaryEdges.end())
+//        {
+//        if(SGM::Segment2D(A,B).Distance(D)<dBoundaryTolerance)
+//            {
+//            return true;
+//            }
+//        }
+//    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(b,c))!=sBoundaryEdges.end())
+//        {
+//        if(SGM::Segment2D(B,C).Distance(D)<dBoundaryTolerance)
+//            {
+//            return true;
+//            }
+//        }
+//    if(sBoundaryEdges.find(std::pair<unsigned int,unsigned int>(c,a))!=sBoundaryEdges.end())
+//        {
+//        if(SGM::Segment2D(C,A).Distance(D)<dBoundaryTolerance)
+//            {
+//            return true;
+//            }
+//        }
+//    return false;
+//    }
 
-void InsertPoints(face                      const *pFace,
-                  std::vector<SGM::Point2D>       &aInsertPoints,
-                  double                           dBoundaryTolerance,
-                  std::vector<SGM::Point2D>       &aPoints2D,
-                  std::vector<SGM::Point3D>       &aPoints3D,
-                  std::vector<unsigned int>       &aTriangles,
-                  bool                             bEdge)
-    {
-    // Find the boundary edges.
+//static void InsertPoints(face                      const *pFace,
+//                         std::vector<SGM::Point2D>       &aInsertPoints,
+//                         double                           dBoundaryTolerance,
+//                         std::vector<SGM::Point2D>       &aPoints2D,
+//                         std::vector<SGM::Point3D>       &aPoints3D,
+//                         std::vector<unsigned int>       &aTriangles,
+//                         bool                             bEdge)
+//    {
+//    // Find the boundary edges.
+//
+//    std::vector<SGM::Point2D> aEdgePoints;
+//    std::set<std::pair<unsigned int,unsigned int> > sBoundaryEdges;
+//    SGM::FindBoundaryEdges(aTriangles,sBoundaryEdges);
+//    dBoundaryTolerance*=0.5;
+//
+//    // Create a tree of the facets.
+//
+//    size_t nInsertPoints=aInsertPoints.size();
+//    std::vector<size_t> aTris;
+//    size_t nTriangles=aTriangles.size();
+//    size_t nMaxTris=nTriangles+nInsertPoints*6;
+//    aTris.reserve(nMaxTris/3);
+//    size_t Index1,Index2;
+//    for(Index1=0;Index1<nMaxTris;Index1+=3)
+//        {
+//        aTris.push_back(Index1);
+//        }
+//    std::vector<SGM::Point3D> aVertices;
+//    aVertices.reserve(3);
+//    SGM::BoxTree Tree;
+//    for(Index1=0;Index1<nTriangles;Index1+=3)
+//        {
+//        unsigned int a=aTriangles[Index1]; 
+//        unsigned int b=aTriangles[Index1+1]; 
+//        unsigned int c=aTriangles[Index1+2]; 
+//        SGM::Point2D const &A=aPoints2D[a];
+//        SGM::Point2D const &B=aPoints2D[b];
+//        SGM::Point2D const &C=aPoints2D[c];
+//        aVertices.emplace_back(A.m_u,A.m_v,0.0);
+//        aVertices.emplace_back(B.m_u,B.m_v,0.0);
+//        aVertices.emplace_back(C.m_u,C.m_v,0.0);
+//        SGM::Interval3D Box(aVertices);
+//        aVertices.clear();
+//        Tree.Insert(&aTris[Index1/3],Box);
+//        }
+//
+//    // For each point find the triangles with intersecting boxes.
+//
+//    surface const *pSurface=pFace->GetSurface();
+//    for(Index1=0;Index1<nInsertPoints;++Index1)
+//        {
+//        SGM::Point2D const &D=aInsertPoints[Index1];
+//        SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
+//        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,SGM_MIN_TOL);
+//        size_t nHits=aHits.size();
+//
+//        // There are potentially nHits on aEdgePoints and aPoints3D.
+//        aEdgePoints.reserve(aPoints3D.size() + nHits);
+//        aPoints3D.reserve(aPoints3D.size() + nHits);
+//
+//        for(Index2=0;Index2<nHits;++Index2)
+//            {
+//            size_t nHitTri=*((size_t *)aHits[Index2].first);
+//            unsigned int a=aTriangles[nHitTri]; 
+//            unsigned int b=aTriangles[nHitTri+1]; 
+//            unsigned int c=aTriangles[nHitTri+2]; 
+//            SGM::Point2D const &A=aPoints2D[a];
+//            SGM::Point2D const &B=aPoints2D[b];
+//            SGM::Point2D const &C=aPoints2D[c];
+//            if(SGM::InTriangle(A,B,C,D) && !NearBoundary(a,b,c,A,B,C,D,sBoundaryEdges,dBoundaryTolerance))
+//                {
+//                // There are three cases the point is a vertex, on an edge, or inside the triangle.
+//
+//                size_t nOther,nEdge1,nEdge2;
+//
+//                if(SGM::NearEqual(A,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT))
+//                    {
+//                    // Point already there.
+//                    break;
+//                    }
+//                else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_MIN_TOL,nOther,nEdge1,nEdge2))
+//                    {
+//                    // Split nHitTri at nEdge1 and nOther at nEdge2.
+//                    if(bEdge)
+//                        {
+//                        SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
+//                        SGM::Point3D Pos;
+//                        pSurface->Evaluate(D,&Pos);
+//                        aPoints3D.push_back(Pos);
+//                        }
+//                    else
+//                        {
+//                        aEdgePoints.push_back(D);
+//                        }
+//                    break;
+//                    }
+//                else
+//                    {
+//                    // Split nHitTri.
+//                    SplitTriangleUpdateTree(D,aPoints2D,aTriangles,nHitTri,aTris,Tree);
+//                    SGM::Point3D Pos;
+//                    pSurface->Evaluate(D,&Pos);
+//                    aPoints3D.push_back(Pos);
+//                    break;
+//                    }
+//                }
+//            }
+//        }
+//    aInsertPoints=aEdgePoints;
+//    }
 
-    std::vector<SGM::Point2D> aEdgePoints;
-    std::set<std::pair<unsigned int,unsigned int> > sBoundaryEdges;
-    SGM::FindBoundaryEdges(aTriangles,sBoundaryEdges);
-    dBoundaryTolerance*=0.5;
+//static void OrderPoints(std::vector<SGM::Point2D> &aPoints,
+//                        SGM::Point2D        const &Pos)
+//    {
+//    size_t nPoints=aPoints.size();
+//    std::vector<std::pair<double,size_t> > aPairs;
+//    aPairs.reserve(nPoints);
+//    size_t Index1;
+//    for(Index1=0;Index1<nPoints;++Index1)
+//        {
+//        double dDist=Pos.DistanceSquared(aPoints[Index1]);
+//        aPairs.push_back(std::pair<double,size_t>(dDist,Index1));
+//        }
+//    std::sort(aPairs.begin(),aPairs.end());
+//    std::vector<SGM::Point2D> aTemp;
+//    aTemp.reserve(nPoints);
+//    for(Index1=0;Index1<nPoints;++Index1)
+//        {
+//        aTemp.push_back(aPoints[aPairs[Index1].second]);
+//        }
+//    aPoints=aTemp;
+//    }
 
-    // Create a tree of the facets.
+//tatic bool AddGrid(face                     const *pFace,
+//                   FacetOptions             const &Options,
+//                   std::vector<SGM::Point2D>      &aPoints2D,
+//                   std::vector<SGM::Point3D>      &aPoints3D,
+//                   std::vector<unsigned int>      &aTriangles,
+//                   std::vector<unsigned int>      &aAdjacencies)
+//   {
+//   SGM::EntityType nSurfaceType=pFace->GetSurface()->GetSurfaceType();
+//   switch(nSurfaceType)
+//       {
+//       case SGM::TorusType:
+//           {
+//           // Add a grid based on the facet angle tolerance.
+//
+//           SGM::Interval2D Box(aPoints2D);
+//           size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+//           size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
+//           if(nU<3)
+//               {
+//               nU=3;
+//               }
+//           if(nV<3)
+//               {
+//               nV=3;
+//               }
+//           double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
+//           std::vector<SGM::Point2D> aInsertPoints;
+//           aInsertPoints.reserve(nU*nV);
+//           size_t Index1,Index2;
+//           for(Index1=0;Index1<nU;++Index1)
+//               {
+//               double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
+//               for(Index2=0;Index2<nV;++Index2)
+//                   {
+//                   double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
+//                   SGM::Point2D uv(u,v);
+//                   aInsertPoints.push_back(uv);
+//                   }
+//               }
+//           OrderPoints(aInsertPoints,Box.MidPoint());
+//           InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
+//           InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           return true;
+//           }
+//       case SGM::NURBSurfaceType:
+//           {
+//           // Add a grid based on the unquie knot grid.
+//
+//           NURBsurface *pNURB=(NURBsurface *)pFace->GetSurface();
+//           std::vector<SGM::Point2D> const &aSeedParams=pNURB->GetSeedParams();
+//           size_t nSize=aSeedParams.size();
+//           std::vector<SGM::Point2D> aInsertPoints;
+//           aInsertPoints.reserve(nSize);
+//           size_t Index1;
+//           for(Index1=0;Index1<nSize;++Index1)
+//               {
+//               aInsertPoints.push_back(aSeedParams[Index1]);
+//               }
+//           nSize=(size_t)sqrt(nSize);
+//           SGM::Interval2D Box(aInsertPoints);
+//           double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nSize,Box.m_VDomain.Length()/nSize);
+//           OrderPoints(aInsertPoints,Box.MidPoint());
+//
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           std::vector<SGM::Point2D> aScaled;
+//           ScaledUVs(pFace,aPoints2D,aScaled);
+//           DelaunayFlips(aScaled,aTriangles,aAdjacencies);
+//
+//           InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
+//
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           aScaled.clear();
+//           ScaledUVs(pFace,aPoints2D,aScaled);
+//           DelaunayFlips(aScaled,aTriangles,aAdjacencies);
+//
+//           InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
+//
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           aScaled.clear();
+//           ScaledUVs(pFace,aPoints2D,aScaled);
+//           DelaunayFlips(aScaled,aTriangles,aAdjacencies);
+//
+//           aAdjacencies.clear();
+//           SGM::FindAdjacences2D(aTriangles,aAdjacencies);
+//           return true;
+//           }
+//       default:
+//           {
+//           return false;
+//           }
+//       }
+//   }
 
-    size_t nInsertPoints=aInsertPoints.size();
-    std::vector<size_t> aTris;
-    size_t nTriangles=aTriangles.size();
-    size_t nMaxTris=nTriangles+nInsertPoints*6;
-    aTris.reserve(nMaxTris/3);
-    size_t Index1,Index2;
-    for(Index1=0;Index1<nMaxTris;Index1+=3)
-        {
-        aTris.push_back(Index1);
-        }
-    std::vector<SGM::Point3D> aVertices;
-    aVertices.reserve(3);
-    SGM::BoxTree Tree;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        unsigned int a=aTriangles[Index1]; 
-        unsigned int b=aTriangles[Index1+1]; 
-        unsigned int c=aTriangles[Index1+2]; 
-        SGM::Point2D const &A=aPoints2D[a];
-        SGM::Point2D const &B=aPoints2D[b];
-        SGM::Point2D const &C=aPoints2D[c];
-        aVertices.emplace_back(A.m_u,A.m_v,0.0);
-        aVertices.emplace_back(B.m_u,B.m_v,0.0);
-        aVertices.emplace_back(C.m_u,C.m_v,0.0);
-        SGM::Interval3D Box(aVertices);
-        aVertices.clear();
-        Tree.Insert(&aTris[Index1/3],Box);
-        }
-
-    // For each point find the triangles with intersecting boxes.
-
-    surface const *pSurface=pFace->GetSurface();
-    for(Index1=0;Index1<nInsertPoints;++Index1)
-        {
-        SGM::Point2D const &D=aInsertPoints[Index1];
-        SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,SGM_MIN_TOL);
-        size_t nHits=aHits.size();
-
-        // There are potentially nHits on aEdgePoints and aPoints3D.
-        aEdgePoints.reserve(aPoints3D.size() + nHits);
-        aPoints3D.reserve(aPoints3D.size() + nHits);
-
-        for(Index2=0;Index2<nHits;++Index2)
-            {
-            size_t nHitTri=*((size_t *)aHits[Index2].first);
-            unsigned int a=aTriangles[nHitTri]; 
-            unsigned int b=aTriangles[nHitTri+1]; 
-            unsigned int c=aTriangles[nHitTri+2]; 
-            SGM::Point2D const &A=aPoints2D[a];
-            SGM::Point2D const &B=aPoints2D[b];
-            SGM::Point2D const &C=aPoints2D[c];
-            if(SGM::InTriangle(A,B,C,D) && !NearBoundary(a,b,c,A,B,C,D,sBoundaryEdges,dBoundaryTolerance))
-                {
-                // There are three cases the point is a vertex, on an edge, or inside the triangle.
-
-                size_t nOther,nEdge1,nEdge2;
-
-                if(SGM::NearEqual(A,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT) || SGM::NearEqual(B,D,SGM_FIT))
-                    {
-                    // Point already there.
-                    break;
-                    }
-                else if(OnTwoEdges(a,b,c,A,B,C,Index2,aHits,aPoints2D,aTriangles,D,SGM_MIN_TOL,nOther,nEdge1,nEdge2))
-                    {
-                    // Split nHitTri at nEdge1 and nOther at nEdge2.
-                    if(bEdge)
-                        {
-                        SplitEdgeUpdateTree(D,aPoints2D,aTriangles,nHitTri,nEdge1,nOther,nEdge2,aTris,Tree);
-                        SGM::Point3D Pos;
-                        pSurface->Evaluate(D,&Pos);
-                        aPoints3D.push_back(Pos);
-                        }
-                    else
-                        {
-                        aEdgePoints.push_back(D);
-                        }
-                    break;
-                    }
-                else
-                    {
-                    // Split nHitTri.
-                    SplitTriangleUpdateTree(D,aPoints2D,aTriangles,nHitTri,aTris,Tree);
-                    SGM::Point3D Pos;
-                    pSurface->Evaluate(D,&Pos);
-                    aPoints3D.push_back(Pos);
-                    break;
-                    }
-                }
-            }
-        }
-    aInsertPoints=aEdgePoints;
-    }
-
-void OrderPoints(std::vector<SGM::Point2D> &aPoints,
-                 SGM::Point2D        const &Pos)
-    {
-    size_t nPoints=aPoints.size();
-    std::vector<std::pair<double,size_t> > aPairs;
-    aPairs.reserve(nPoints);
-    size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        double dDist=Pos.DistanceSquared(aPoints[Index1]);
-        aPairs.push_back(std::pair<double,size_t>(dDist,Index1));
-        }
-    std::sort(aPairs.begin(),aPairs.end());
-    std::vector<SGM::Point2D> aTemp;
-    aTemp.reserve(nPoints);
-    for(Index1=0;Index1<nPoints;++Index1)
-        {
-        aTemp.push_back(aPoints[aPairs[Index1].second]);
-        }
-    aPoints=aTemp;
-    }
-
-bool AddGrid(face                     const *pFace,
-             FacetOptions             const &Options,
-             std::vector<SGM::Point2D>      &aPoints2D,
-             std::vector<SGM::Point3D>      &aPoints3D,
-             std::vector<unsigned int>      &aTriangles,
-             std::vector<unsigned int>      &aAdjacencies)
-    {
-    SGM::EntityType nSurfaceType=pFace->GetSurface()->GetSurfaceType();
-    switch(nSurfaceType)
-        {
-        case SGM::TorusType:
-            {
-            // Add a grid based on the facet angle tolerance.
-
-            SGM::Interval2D Box(aPoints2D);
-            size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
-            size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL);
-            if(nU<3)
-                {
-                nU=3;
-                }
-            if(nV<3)
-                {
-                nV=3;
-                }
-            double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nU,Box.m_VDomain.Length()/nV);
-            std::vector<SGM::Point2D> aInsertPoints;
-            aInsertPoints.reserve(nU*nV);
-            size_t Index1,Index2;
-            for(Index1=0;Index1<nU;++Index1)
-                {
-                double u=Box.m_UDomain.MidPoint((Index1+1)/(nU+1.0));
-                for(Index2=0;Index2<nV;++Index2)
-                    {
-                    double v=Box.m_VDomain.MidPoint((Index2+1)/(nV+1.0));
-                    SGM::Point2D uv(u,v);
-                    aInsertPoints.push_back(uv);
-                    }
-                }
-            OrderPoints(aInsertPoints,Box.MidPoint());
-            InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            DelaunayFlips(aPoints2D,aTriangles,aAdjacencies);
-            InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            return true;
-            }
-        case SGM::NURBSurfaceType:
-            {
-            // Add a grid based on the unquie knot grid.
-
-            NURBsurface *pNURB=(NURBsurface *)pFace->GetSurface();
-            std::vector<SGM::Point2D> const &aSeedParams=pNURB->GetSeedParams();
-            size_t nSize=aSeedParams.size();
-            std::vector<SGM::Point2D> aInsertPoints;
-            aInsertPoints.reserve(nSize);
-            size_t Index1;
-            for(Index1=0;Index1<nSize;++Index1)
-                {
-                aInsertPoints.push_back(aSeedParams[Index1]);
-                }
-            nSize=(size_t)sqrt(nSize);
-            SGM::Interval2D Box(aInsertPoints);
-            double dBoundaryTolerance=std::min(Box.m_UDomain.Length()/nSize,Box.m_VDomain.Length()/nSize);
-            OrderPoints(aInsertPoints,Box.MidPoint());
-
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            std::vector<SGM::Point2D> aScaled;
-            ScaledUVs(pFace,aPoints2D,aScaled);
-            DelaunayFlips(aScaled,aTriangles,aAdjacencies);
-
-            InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,false);
-
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            aScaled.clear();
-            ScaledUVs(pFace,aPoints2D,aScaled);
-            DelaunayFlips(aScaled,aTriangles,aAdjacencies);
-
-            InsertPoints(pFace,aInsertPoints,dBoundaryTolerance,aPoints2D,aPoints3D,aTriangles,true);
-
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            aScaled.clear();
-            ScaledUVs(pFace,aPoints2D,aScaled);
-            DelaunayFlips(aScaled,aTriangles,aAdjacencies);
-
-            aAdjacencies.clear();
-            SGM::FindAdjacences2D(aTriangles,aAdjacencies);
-            return true;
-            }
-        default:
-            {
-            return false;
-            }
-        }
-    }
-
-std::vector<bool> ShuffleFlags(std::vector<bool> const &aInputFlags,
-                               std::vector<unsigned int> &aPolygons)
+static std::vector<bool> ShuffleFlags(std::vector<bool> const &aInputFlags,
+                                      std::vector<unsigned int> &aPolygons)
     {
     std::vector<bool> aFlags;
     size_t nPolygons=aPolygons.size();
@@ -3587,14 +3587,14 @@ std::vector<bool> ShuffleFlags(std::vector<bool> const &aInputFlags,
     return aFlags;
     }
 
-bool AngleGrid(SGM::Result                                   &rResult,
-               surface                                 const *pSurface,
-               FacetOptions                            const &Options,
-               std::vector<SGM::Point2D>               const &aPolygonPoints,
-               std::vector<std::vector<unsigned int> >       &aaPolygons,
-               std::vector<SGM::Point2D>                     &aPoints2D,
-               std::vector<unsigned int>                     &aTriangles,
-               std::vector<bool>                             *pImprintFlag)
+static bool AngleGrid(SGM::Result                                   &rResult,
+                      surface                                 const *pSurface,
+                      FacetOptions                            const &Options,
+                      std::vector<SGM::Point2D>               const &aPolygonPoints,
+                      std::vector<std::vector<unsigned int> >       &aaPolygons,
+                      std::vector<SGM::Point2D>                     &aPoints2D,
+                      std::vector<unsigned int>                     &aTriangles,
+                      std::vector<bool>                             *pImprintFlag)
     {
     // Create the base grid.
 
@@ -3671,16 +3671,16 @@ bool AngleGrid(SGM::Result                                   &rResult,
     return true;
     }
 
-bool ImprintPolygons(SGM::Result                                   &rResult,
-                     double                                         dBoundaryDist,
-                     std::vector<SGM::Point2D>               const &aPolygonPoints,
-                     std::vector<std::vector<unsigned int> >       &aaPolygons,
-                     std::vector<SGM::Point2D>                     &aPoints2D,
-                     std::vector<unsigned int>                     &aTriangles,
-                     SGM::Surface                                  *pSurfaceID,
-                     std::vector<SGM::Point3D>                     *pPoints3D,
-                     std::vector<SGM::UnitVector3D>                *pNormals,
-                     std::vector<bool>                             *aImprintFlags)
+static bool ImprintPolygons(SGM::Result                                   &rResult,
+                            double                                         dBoundaryDist,
+                            std::vector<SGM::Point2D>               const &aPolygonPoints,
+                            std::vector<std::vector<unsigned int> >       &aaPolygons,
+                            std::vector<SGM::Point2D>                     &aPoints2D,
+                            std::vector<unsigned int>                     &aTriangles,
+                            SGM::Surface                                  *pSurfaceID,
+                            std::vector<SGM::Point3D>                     *pPoints3D,
+                            std::vector<SGM::UnitVector3D>                *pNormals,
+                            std::vector<bool>                             *aImprintFlags)
     {
     // Insert the polygons.
 
@@ -3723,16 +3723,16 @@ bool ImprintPolygons(SGM::Result                                   &rResult,
     return true;
     }
 
-void ParamCurveGrid(SGM::Result                                   &rResult,
-                    face                                    const *pFace,
-                    FacetOptions                            const &Options,
-                    std::vector<SGM::Point2D>               const &aPolygonPoints,
-                    std::vector<std::vector<unsigned int> >       &aaPolygons,
-                    std::vector<SGM::Point2D>                     &aPoints2D,
-                    std::vector<SGM::Point3D>                     &aPoints3D,
-                    std::vector<SGM::UnitVector3D>                &aNormals,
-                    std::vector<unsigned int>                     &aTriangles,
-                    std::vector<bool>                             &aImprintFlags)
+static void ParamCurveGrid(SGM::Result                                   &rResult,
+                           face                                    const *pFace,
+                           FacetOptions                            const &Options,
+                           std::vector<SGM::Point2D>               const &aPolygonPoints,
+                           std::vector<std::vector<unsigned int> >       &aaPolygons,
+                           std::vector<SGM::Point2D>                     &aPoints2D,
+                           std::vector<SGM::Point3D>                     &aPoints3D,
+                           std::vector<SGM::UnitVector3D>                &aNormals,
+                           std::vector<unsigned int>                     &aTriangles,
+                           std::vector<bool>                             &aImprintFlags)
     {
     std::vector<double> aUValues,aVValues;
     surface const *pSurf=pFace->GetSurface();
@@ -3787,11 +3787,11 @@ void ParamCurveGrid(SGM::Result                                   &rResult,
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,SGM_FIT,&aPoints3D,&aNormals);
     }
 
-void FindSpherePoints(sphere                   const *pSphere,
-                      std::vector<SGM::Point3D>      &aPoints3D,
-                      std::vector<unsigned int>      &aTriangles,
-                      std::vector<SGM::Point2D>      &aPoints2D,
-                      std::vector<SGM::UnitVector3D> &aNormals)
+static void FindSpherePoints(sphere                   const *pSphere,
+                             std::vector<SGM::Point3D>      &aPoints3D,
+                             std::vector<unsigned int>      &aTriangles,
+                             std::vector<SGM::Point2D>      &aPoints2D,
+                             std::vector<SGM::UnitVector3D> &aNormals)
     {
     // Find all the 2D points and normals.
 
@@ -3957,19 +3957,19 @@ void FindSpherePoints(sphere                   const *pSphere,
     aTriangles.push_back((unsigned int)nHighMid);
     }
 
-bool HasBranchedVertex(face const *pFace)
-    {
-    pFace;
-    return true;
-    }
+//static bool HasBranchedVertex(face const *pFace)
+//    {
+//    pFace;
+//    return true;
+//    }
 
 void FacetFace(SGM::Result                    &rResult,
-               face                     const *pFace,
-               FacetOptions             const &Options,
-               std::vector<SGM::Point2D>      &aPoints2D,
-               std::vector<SGM::Point3D>      &aPoints3D,
-               std::vector<SGM::UnitVector3D> &aNormals,
-               std::vector<unsigned int>      &aTriangles)
+                      face                     const *pFace,
+                      FacetOptions             const &Options,
+                      std::vector<SGM::Point2D>      &aPoints2D,
+                      std::vector<SGM::Point3D>      &aPoints3D,
+                      std::vector<SGM::UnitVector3D> &aNormals,
+                      std::vector<unsigned int>      &aTriangles)
     {
     // How to facet only one face by ID.
     //if(pFace->GetID()!=78 && pFace->GetEdges().empty()==false)
