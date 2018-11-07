@@ -12,7 +12,6 @@
 #include "SGMInterval.h"
 #include "SGMResult.h"
 #include "SGMSegment.h"
-#include "SGMEntityClasses.h"
 
 namespace SGM
     {

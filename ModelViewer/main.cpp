@@ -57,7 +57,44 @@ void PrintHelp(std::string sExecutableName)
     PrintVersion();
     PrintUsage(sExecutableName);
     std::cerr << std::endl;
-    std::cerr << "     -c --cover      read STL file and output an STL file with coordinate aligned planar gaps covered" << std::endl;
+    std::cerr << "     -c --cover      read STL file and output an STL file with coordinate aligned planar gaps covered." << std::endl;
+    std::cerr << "     -f --factures   read STL file and output an SGM file of the factures in a scaned sheet." << std::endl;
+    }
+
+void FindFractures(int argc, char **argv)
+    {
+    if (argc != 4)
+        {
+        std::cerr << "error: unable to determine input and output file names" << std::endl;
+        PrintUsage(GetExecutableName(argv[0]));
+        exit(1);
+        }
+
+    SGMInternal::thing *pThing = SGM::CreateThing();
+    SGM::Result rResult(pThing);
+    std::string InputSTLFile(argv[2]);
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::TranslatorOptions Options;
+    Options.m_bMerge = true;
+    SGM::ReadFile(rResult, InputSTLFile, aEntities, aLog, Options);
+    auto resultType = rResult.GetResult();
+    if (resultType != SGM::ResultTypeOK)
+        {
+        std::cerr << rResult.Message() << std::endl;
+        exit(1);
+        }
+    std::vector<SGM::Complex> *aComplexes = (std::vector<SGM::Complex> *) &aEntities;
+    SGM::Complex ComplexID = aComplexes->front();
+    if (aComplexes->size() > 1)
+        {
+        ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
+        }
+    std::vector<SGM::Complex> aHoles;
+    SGM::Complex HolesID=SGM::FindHoles(rResult,ComplexID,aHoles);
+    SGM::DeleteEntity(rResult,ComplexID); 
+    std::string OutputSGMLFile(argv[3]);
+    SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);
     }
 
 // cover open surfaces on an STL file
@@ -91,16 +128,6 @@ void CoverSTL(int argc, char **argv)
         {
         ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
         }
-    //SGM::Complex MergedComplexID=SGM::MergePoints(rResult, ComplexID, SGM_MIN_TOL);
-    //SGM::DeleteEntity(rResult,ComplexID);
-    //SGM::Complex CoverID = SGM::CoverComplex(rResult, MergedComplexID);
-    //aParts.push_back(MergedComplexID);
-    //aParts.push_back(CoverID);
-    //SGM::MergeComplexes(rResult, aParts);
-    //for (auto &iPart : aParts)
-    //    {
-    //    SGM::DeleteEntity(rResult,iPart); // delete original entity
-    //    }
     SGM::Complex CoverID = SGM::CoverComplex(rResult, ComplexID);
     std::vector<SGM::Complex> aParts;
     aParts.push_back(ComplexID);
@@ -150,6 +177,10 @@ bool RunFromCommandLine(int argc, char **argv)
         if (strcmp(argv[1], "--cover") == 0 || strcmp(argv[1], "-c") == 0)
             {
             CoverSTL(argc, argv);
+            }
+        else if (strcmp(argv[2], "--fractures") == 0 || strcmp(argv[1], "-f") == 0)
+            {
+            FindFractures(argc, argv);
             }
         else
             {
