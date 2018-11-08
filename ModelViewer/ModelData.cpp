@@ -205,16 +205,6 @@ void ModelData::set_background()
     rebuild_graphics();
 }
 
-bool ModelData::RunCPPTest(size_t nTest)
-{
-    bool bAnswer = SGM::RunCPPTest(dPtr->mResult, nTest);
-
-    rebuild_tree();
-    rebuild_graphics();
-
-    return bAnswer;
-}
-
 void ModelData::check(std::vector<std::string> &aLog)
 {
     SGM::CheckOptions Options;

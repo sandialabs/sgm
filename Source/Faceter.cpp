@@ -1627,81 +1627,81 @@ static size_t AddNode(std::vector<Node>  &aNodes,
     return nAnswer;
     }
 
-static void Refine(face        const *pFace,
-                   double             dCosRefine,
-                   std::vector<Node> &aNodes,
-                   size_t             nNodeA,
-                   size_t             nNodeB)
-    {
-    surface const *pSurface=pFace->GetSurface();
-    SGM::Point2D uvA=aNodes[nNodeA].m_uv;
-    SGM::Point2D uvB=aNodes[nNodeB].m_uv;
-    SGM::UnitVector3D NormA,NormB;
-    pSurface->Evaluate(uvA,nullptr,nullptr,nullptr,&NormA);
-    pSurface->Evaluate(uvB,nullptr,nullptr,nullptr,&NormB);
-    SGM::Point2D uv=SGM::MidPoint(uvA,uvB);
-    SGM::Point3D Pos;
-    SGM::UnitVector3D Norm;
-    pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-    if(NormA%NormB<dCosRefine || Norm%NormA<dCosRefine || Norm%NormB<dCosRefine)
-        {
-        Node MidNode;
-        MidNode.m_Entity=(entity *)pFace;
-        MidNode.m_Pos=Pos;
-        MidNode.m_uv=uv;
-        size_t nNodeC=aNodes.size();
-        aNodes[nNodeA].m_nNext=nNodeC;
-        aNodes[nNodeB].m_nPrevious=nNodeC;
-        MidNode.m_nNext=nNodeB;
-        MidNode.m_nPrevious=nNodeA;
-        aNodes.push_back(MidNode);
-        Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeC);
-        Refine(pFace,dCosRefine,aNodes,nNodeC,nNodeB);
-        }
-    else if(pSurface->IsSingularity(uv,SGM_MIN_TOL))
-        {
-        SGM::Interval2D const &Domain=pSurface->GetDomain();
-        size_t nCuts=0;
-        if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
-            {
-            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
-            }
-        else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
-            {
-            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
-            }
-        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
-            {
-            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
-            }
-        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
-            {
-            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
-            }
-
-        if(nCuts)
-            {
-            size_t Index1;
-            for(Index1=0;Index1<nCuts;++Index1)
-                {
-                double dFraction=(Index1+1.0)/(nCuts+1.0);
-                uv=SGM::MidPoint(uvA,uvB,dFraction);
-                pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-                Node MidNode;
-                MidNode.m_Entity=(entity *)pFace;
-                MidNode.m_Pos=Pos;
-                MidNode.m_uv=uv;
-                size_t nNodeC=aNodes.size();
-                aNodes[nNodeA].m_nNext=nNodeC;
-                aNodes[nNodeB].m_nPrevious=nNodeC;
-                MidNode.m_nNext=nNodeB;
-                MidNode.m_nPrevious=nNodeA;
-                aNodes.push_back(MidNode);
-                nNodeA=nNodeC;
-                }
-            }
-        }
-    }
+//static void Refine(face        const *pFace,
+//                   double             dCosRefine,
+//                   std::vector<Node> &aNodes,
+//                   size_t             nNodeA,
+//                   size_t             nNodeB)
+//    {
+//    surface const *pSurface=pFace->GetSurface();
+//    SGM::Point2D uvA=aNodes[nNodeA].m_uv;
+//    SGM::Point2D uvB=aNodes[nNodeB].m_uv;
+//    SGM::UnitVector3D NormA,NormB;
+//    pSurface->Evaluate(uvA,nullptr,nullptr,nullptr,&NormA);
+//    pSurface->Evaluate(uvB,nullptr,nullptr,nullptr,&NormB);
+//    SGM::Point2D uv=SGM::MidPoint(uvA,uvB);
+//    SGM::Point3D Pos;
+//    SGM::UnitVector3D Norm;
+//    pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
+//    if(NormA%NormB<dCosRefine || Norm%NormA<dCosRefine || Norm%NormB<dCosRefine)
+//        {
+//        Node MidNode;
+//        MidNode.m_Entity=(entity *)pFace;
+//        MidNode.m_Pos=Pos;
+//        MidNode.m_uv=uv;
+//        size_t nNodeC=aNodes.size();
+//        aNodes[nNodeA].m_nNext=nNodeC;
+//        aNodes[nNodeB].m_nPrevious=nNodeC;
+//        MidNode.m_nNext=nNodeB;
+//        MidNode.m_nPrevious=nNodeA;
+//        aNodes.push_back(MidNode);
+//        Refine(pFace,dCosRefine,aNodes,nNodeA,nNodeC);
+//        Refine(pFace,dCosRefine,aNodes,nNodeC,nNodeB);
+//        }
+//    else if(pSurface->IsSingularity(uv,SGM_MIN_TOL))
+//        {
+//        SGM::Interval2D const &Domain=pSurface->GetDomain();
+//        size_t nCuts=0;
+//        if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+//            {
+//            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
+//            }
+//        else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+//            {
+//            nCuts=(size_t)(3.999999*fabs(uvA.m_v-uvB.m_v)/Domain.m_VDomain.Length());
+//            }
+//        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+//            {
+//            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
+//            }
+//        else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+//            {
+//            nCuts=(size_t)(3.999999*fabs(uvA.m_u-uvB.m_u)/Domain.m_UDomain.Length());
+//            }
+//
+//        if(nCuts)
+//            {
+//            size_t Index1;
+//            for(Index1=0;Index1<nCuts;++Index1)
+//                {
+//                double dFraction=(Index1+1.0)/(nCuts+1.0);
+//                uv=SGM::MidPoint(uvA,uvB,dFraction);
+//                pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
+//                Node MidNode;
+//                MidNode.m_Entity=(entity *)pFace;
+//                MidNode.m_Pos=Pos;
+//                MidNode.m_uv=uv;
+//                size_t nNodeC=aNodes.size();
+//                aNodes[nNodeA].m_nNext=nNodeC;
+//                aNodes[nNodeB].m_nPrevious=nNodeC;
+//                MidNode.m_nNext=nNodeB;
+//                MidNode.m_nPrevious=nNodeA;
+//                aNodes.push_back(MidNode);
+//                nNodeA=nNodeC;
+//                }
+//            }
+//        }
+//    }
 
 static bool FindSeamCrossings(face        const *pFace,
                               std::vector<Node> &aNodes)

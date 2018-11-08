@@ -1029,6 +1029,24 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
     }
 
+bool SGM::TestCurve(SGM::Result      &rResult,
+                    SGM::Curve const &CurveID,
+                    double            dT)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::curve *pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
+    return SGMInternal::TestCurve(pCurve,dT);
+    }
+
+bool SGM::TestSurface(SGM::Result        &rResult,
+                      SGM::Surface const &SurfaceID,
+                      SGM::Point2D const &uv)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)pThing->FindEntity(SurfaceID.m_ID);
+    return SGMInternal::TestSurface(rResult,pSurface,uv);
+    }
+
 SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
                                       SGM::Curve const &CurveID)
     {
@@ -1068,6 +1086,19 @@ SGM::Vector3D SGM::CurveCurvature(SGM::Result        &rResult,
     SGMInternal::curve *pCurve=(SGMInternal::curve *)(pThing->FindEntity(CurveID.m_ID));
     return pCurve->Curvature(t);
 }
+
+void SGM::PrincipleCurvature(SGM::Result        &rResult,
+                             SGM::Surface const &SurfaceID,
+                             SGM::Point2D const &uv,
+                             SGM::UnitVector3D  &Vec1,
+                             SGM::UnitVector3D  &Vec2,
+                             double             &dk1,
+                             double             &dk2)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)(pThing->FindEntity(SurfaceID.m_ID));
+    pSurface->PrincipleCurvature(uv,Vec1,Vec2,dk1,dk2);
+    }
 
 void SGM::EvaluateSurface(SGM::Result             &rResult,
                           SGM::Surface      const &SurfaceID,
@@ -1115,11 +1146,19 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     }
 
 SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
-                                                        std::vector<SGM::Point4D> const &aControlPoints,
-                                                        std::vector<double>       const &aKnots)
+                                                         std::vector<SGM::Point4D> const &aControlPoints,
+                                                         std::vector<double>       const &aKnots)
     {
     SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
     return {pNURB->GetID()};
+    }
+
+SGM::Curve SGM::CreateNUBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
+                                                        std::vector<SGM::Point3D> const &aControlPoints,
+                                                        std::vector<double>       const &aKnots)
+    {
+    SGMInternal::NUBcurve *pNUB=new SGMInternal::NUBcurve(rResult, aControlPoints, aKnots);
+    return {pNUB->GetID()};
     }
 
 SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
@@ -1135,16 +1174,37 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
 
 SGM::Surface SGM::CreateSphereSurface(SGM::Result        &rResult,
                                       SGM::Point3D const &Center,
-                                      double              dRadius)
+                                      double              dRadius,
+                                      SGM::UnitVector3D  *pXAxis,
+                                      SGM::UnitVector3D  *pYAxis)
     {
-    SGMInternal::surface *pSurface=new SGMInternal::sphere(rResult,Center,dRadius);
+    SGMInternal::surface *pSurface=new SGMInternal::sphere(rResult,Center,dRadius,pXAxis,pYAxis);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateCylinderSurface(SGM::Result        &rResult,
+                                        SGM::Point3D const &Bottom,
+                                        SGM::Point3D const &Top,
+                                        double              dRadius)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::cylinder(rResult,Bottom,Top,dRadius);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateConeSurface(SGM::Result             &rResult,
+                                    SGM::Point3D      const &Origin,
+                                    SGM::UnitVector3D const &Axis,
+                                    double                   dRadius,
+                                    double                   dHalfAngle)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::cone(rResult,Origin,Axis,dRadius,dHalfAngle);
     return {pSurface->GetID()};
     }
 
 SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
-                         SGM::Point3D const &Origin,
-                         SGM::Point3D const &XPos,
-                         SGM::Point3D const &YPos)
+                              SGM::Point3D const &Origin,
+                              SGM::Point3D const &XPos,
+                              SGM::Point3D const &YPos)
     {
     SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
     return {pPlane->GetID()};

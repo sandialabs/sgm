@@ -60,12 +60,6 @@ private slots:
 
     void view_background();
 
-    void test_all();
-
-    void test_number();
-
-    void test_script();
-
     void test_check();
 
 #ifdef VIEWER_WITH_GTEST
