@@ -35,7 +35,7 @@ TEST(create_check, create_parabola)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(create_check, create_hyperbola)
+TEST(create_check, DISABLED_create_hyperbola)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
