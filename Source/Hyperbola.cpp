@@ -88,7 +88,7 @@ void hyperbola::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         }
     if(D2)
         {
-        double ddy=-m_dA*t*t/(dB2*dB2*dR*dS);
+        double ddy=(m_dA*(1.0-t*t/(dR*dB2)))/(dS*dB2);
         D2->m_x=m_YAxis.m_x*ddy;
         D2->m_y=m_YAxis.m_y*ddy;
         D2->m_z=m_YAxis.m_z*ddy;

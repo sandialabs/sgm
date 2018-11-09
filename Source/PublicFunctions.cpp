@@ -29,6 +29,7 @@
 #include "Surface.h"
 #include "Interrogate.h"
 #include "Modify.h"
+#include "FacetToBRep.h"
 
 #include <algorithm>
 
@@ -1978,8 +1979,17 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
 
 
 SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
-                            SGM::Point3D &Pos)
+                                 SGM::Point3D &Pos)
 {
     SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
     return {pCurve->GetID()};
 }
+
+
+SGM::Curve SGM::FindConic(SGM::Result                     &rResult,
+                          std::vector<SGM::Point3D> const &aPoints,
+                          double                           dTolerance)
+    {
+    SGMInternal::curve *pCurve=SGMInternal::FindConic(rResult,aPoints,dTolerance);
+    return {pCurve->GetID()};
+    }

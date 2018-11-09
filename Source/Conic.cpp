@@ -202,30 +202,23 @@ curve *FindConic(SGM::Result                     &rResult,
                     // Hyperbola f(t)=a*sqrt(1+t^2/b^2)
                     // x^2/a^2-y^2/b^2=1
 
+                    std::swap(a,b);
                     bool bLow=false,bHigh=false;
-                    double dTest1=0,dTest2=0;
                     for(Index1=0;Index1<5;++Index1)
                         {
-                        double x=ax[Index1];
-                        if(dTolerance<x)
+                        double y=ay[Index1];
+                        if(dTolerance<y)
                             {
                             bHigh=true;
                             }
-                        else if(x<-dTolerance)
+                        else if(y<-dTolerance)
                             {
                             bLow=true;
                             }
-                        double y=ay[Index1];
-                        dTest1+=fabs(x*x/(a*a)-y*y/(b*b)-1);
-                        dTest2+=fabs(x*x/(b*b)-y*y/(a*a)-1);
                         }
                     if(bLow && bHigh)
                         {
                         return nullptr; // Not in one sheet.
-                        }
-                    if(dTest2<dTest1)
-                        {
-                        std::swap(a,b);
                         }
                     if(bLow)
                         {

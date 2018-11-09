@@ -77,6 +77,12 @@ SGM_EXPORT SGM::Curve CreateNURBCurveWithControlPointsAndKnots(SGM::Result      
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
                                        SGM::Point3D &Pos);
 
+// Fits a conic curve to five points returning a line, circle, ellipse, parabola or hyperbola.
+
+SGM_EXPORT SGM::Curve FindConic(SGM::Result                     &rResult,
+                                std::vector<SGM::Point3D> const &aPoints,
+                                double                           dTolerance);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Surface Creation Functions
