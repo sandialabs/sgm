@@ -3,7 +3,8 @@
 #include <gtest/gtest.h>
 #include <FacetToBRep.h>
 
-#include "Curve.h"
+#include "SGMGeometry.h"
+#include "SGMEntityFunctions.h"
 
 #include "test_utility.h"
 
@@ -25,17 +26,13 @@ TEST(create_check, create_parabola)
     aPoints.emplace_back(2.0, 8.0, 0.0);
     aPoints.emplace_back(-3.0, 18.0, 0.0);
 
-    SGMInternal::curve *pConic0 = SGMInternal::FindConic(rResult, aPoints, dTolerance);
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultType::ResultTypeOK);
-    EXPECT_TRUE(pConic0 != nullptr);
-    if (pConic0)
-        {
-        rResult.GetThing()->DeleteEntity(pConic0);
-        }
+    SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+    SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(create_check, DISABLED_create_hyperbola)
+TEST(create_check, create_hyperbola)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -50,19 +47,14 @@ TEST(create_check, DISABLED_create_hyperbola)
     aPoints.clear();
 
     aPoints.emplace_back(2.0, 0.0, 0.0);
-    aPoints.emplace_back(-2.0, 0.0, 0.0);
+    aPoints.emplace_back(3.0, 3.3541019662496845446137605030969, 0.0);
     aPoints.emplace_back(6.0, 8.4852813742385702928101323452582, 0.0);
     aPoints.emplace_back(6.0, -8.4852813742385702928101323452582, 0.0);
-    aPoints.emplace_back(-6.0, 8.4852813742385702928101323452582, 0.0);
+    aPoints.emplace_back(3.0, -3.3541019662496845446137605030969, 0.0);
 
-    SGMInternal::curve *pConic1 = SGMInternal::FindConic(rResult, aPoints, dTolerance);
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultType::ResultTypeOK);
-    EXPECT_TRUE(pConic1 != nullptr);
-    if (pConic1)
-        {
-        rResult.GetThing()->DeleteEntity(pConic1);
-        }
-
+    SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+    SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -86,13 +78,8 @@ TEST(create_check, create_ellipse)
     aPoints.emplace_back(0.0, -3.0, 0.0);
     aPoints.emplace_back(1.0, 2.5980762113533159402911695122588, 0.0);
 
-    SGMInternal::curve *pConic2 = SGMInternal::FindConic(rResult, aPoints, dTolerance);
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultType::ResultTypeOK);
-    EXPECT_TRUE(pConic2 != nullptr);
-    if (pConic2)
-        {
-        rResult.GetThing()->DeleteEntity(pConic2);
-        }
-
+    SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+    SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
