@@ -60,7 +60,7 @@ if(CMAKE_SYSTEM_NAME MATCHES Linux OR CMAKE_SYSTEM_NAME MATCHES Darwin)
   add_custom_target(coverage
           WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
           COMMAND test ! -e coverage || mv coverage coverage_`date -r coverage +%Y-%m-%d_%H-%M-%S`
-          COMMAND cd Source && find . -name "*.gcda" -type f -delete # remove old data files
+          COMMAND find . -name "*.gcda" -type f -delete # remove old data files
           COMMAND ${PROJECT_BINARY_DIR}/bin/sgm_tests                # run tests
           COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR}/Source --xml -o coverage.xml #`date +%Y-%m-%d-%H-%M-%S`_coverage.xml
           COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR}/Source --html --html-details -o coverage.html

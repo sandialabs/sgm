@@ -2015,61 +2015,6 @@ bool RunCPPTest(SGM::Result &rResult,
         return bAnswer;
         }
 
-     if(nTestNumber==25)
-        {
-        // Test finding conic sections from five points
-
-        bool bAnswer=true;
-
-        double dTolerance=SGM_MIN_TOL;
-        std::vector<SGM::Point3D> aPoints;
-        aPoints.reserve(5);
-
-        // y=ax^2 parabola
-        // a=2 
-        
-        aPoints.emplace_back(0.0,0.0,0.0);
-        aPoints.emplace_back(1.0,2.0,0.0);
-        aPoints.emplace_back(-1.0,2.0,0.0);
-        aPoints.emplace_back(2.0,8.0,0.0);
-        aPoints.emplace_back(-3.0,18.0,0.0);
-
-        SGMInternal::curve *pConic0=SGMInternal::FindConic(rResult,aPoints,dTolerance);
-        if(pConic0)
-            {
-            bAnswer=false;
-            rResult.GetThing()->DeleteEntity(pConic0);
-            }
-
-        // x^2/a^2-y^2/b^2=1 hyperbola
-        // a=2 b=3
-        
-        aPoints.clear();
-        aPoints.emplace_back(2.0,0.0,0.0);
-        aPoints.emplace_back(-2.0,0.0,0.0);
-        aPoints.emplace_back(6.0,8.4852813742385702928101323452582,0.0);
-        aPoints.emplace_back(6.0,-8.4852813742385702928101323452582,0.0);
-        aPoints.emplace_back(-6.0,8.4852813742385702928101323452582,0.0);
-
-        SGMInternal::curve *pConic1=SGMInternal::FindConic(rResult,aPoints,dTolerance);
-        rResult.GetThing()->DeleteEntity(pConic1);
-
-        // x^2/a^2+y^2/b^2=1 ellipse
-        // a=2 b=3
-
-        aPoints.clear();
-        aPoints.emplace_back(0.0,3.0,0.0);
-        aPoints.emplace_back(2.0,0.0,0.0);
-        aPoints.emplace_back(-2.0,0.0,0.0);
-        aPoints.emplace_back(0.0,-3.0,0.0);
-        aPoints.emplace_back(1.0,2.5980762113533159402911695122588,0.0);
-        
-        SGMInternal::curve *pConic2=SGMInternal::FindConic(rResult,aPoints,dTolerance);
-        rResult.GetThing()->DeleteEntity(pConic2);
-
-        return bAnswer;
-        }
-
     if(nTestNumber==26)
         {
         // Test inverse on lemon and apple tori.

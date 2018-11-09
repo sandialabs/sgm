@@ -8,7 +8,7 @@
 #include "ReadFile.h"
 #include "Topology.h"
 
-#define SGM_TIMER
+//#define SGM_TIMER
 #include "Timer.h"
 
 #include <fstream>

@@ -6,6 +6,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 set(SGM_GTEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boxtree_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/create_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/intersection_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/interval_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/math_check.cpp
