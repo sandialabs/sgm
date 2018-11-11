@@ -57,11 +57,11 @@ SGM_EXPORT SGM::Curve CreateTorusKnot(SGM::Result             &rResult,
                                       size_t                   nB);
 
 SGM_EXPORT SGM::Curve CreateNUBCurve(SGM::Result                     &rResult,
-                                     std::vector<SGM::Point3D> const &aPoints,
+                                     std::vector<SGM::Point3D> const &aInterpolatePoints,
                                      std::vector<double>       const *pParams=nullptr);
 
 SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
-                                                   std::vector<SGM::Point3D> const &aPoints,
+                                                   std::vector<SGM::Point3D> const &aInterpolatePoints,
                                                    SGM::Vector3D             const &StartVec,
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);
@@ -70,9 +70,9 @@ SGM_EXPORT SGM::Curve CreateNUBCurveWithControlPointsAndKnots(SGM::Result       
                                                               std::vector<SGM::Point3D> const &aControlPoints,
                                                               std::vector<double>       const &aKnots);
 
-SGM_EXPORT SGM::Curve CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
-                                                               std::vector<SGM::Point4D> const &aControlPoints,
-                                                               std::vector<double>       const &aKnots);
+SGM_EXPORT SGM::Curve CreateNURBCurve(SGM::Result                     &rResult,
+                                      std::vector<SGM::Point4D> const &aControlPoints,
+                                      std::vector<double>       const &aKnots);
 
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
                                        SGM::Point3D &Pos);
@@ -124,6 +124,11 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<SGM::Vector3D>              const *paEndVecs=nullptr,
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
+
+SGM_EXPORT SGM::Surface CreateNURBSurface(SGM::Result                                   &rResult,
+                                          std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                                          std::vector<double>                     const &aUKnots,
+                                          std::vector<double>                     const &aVKnots);
 
 SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
                                              SGM::Point3D      const &Origin,

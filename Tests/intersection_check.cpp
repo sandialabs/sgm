@@ -1191,7 +1191,7 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
     aKnots.push_back(SGM_PI*1.5);
     aKnots.push_back(SGM_PI*1.5);
 
-    SGM::Curve NURBcurve = SGM::CreateNURBCurveWithControlPointsAndKnots(rResult, aControlPoints, aKnots);
+    SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
     // coincident plane
     SGM::Point3D PlaneOrigin(1,0,0);
@@ -1308,7 +1308,7 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
     aKnots.push_back(SGM_TWO_PI);
     aKnots.push_back(SGM_TWO_PI);
 
-    SGM::Curve NURBcurve = SGM::CreateNURBCurveWithControlPointsAndKnots(rResult, aControlPoints, aKnots);
+    SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
     // one intersection point
     SGM::Point3D PlaneOrigin(1.5,0,-1.5);

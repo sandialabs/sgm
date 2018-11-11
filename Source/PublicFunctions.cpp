@@ -553,6 +553,15 @@ SGM::Complex SGM::MergeComplexes(SGM::Result                     &rResult,
     return SGM::Complex(pAnswer->GetID());
     }
 
+void SGM::SplitComplexAtPoints(SGM::Result                     &rResult,
+                               SGM::Complex                    &ComplexID,
+                               std::vector<SGM::Point3D> const &aPoints,
+                               double                           dTolerance)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    pComplex->SplitAtPoints(rResult,aPoints,dTolerance);
+    }
+
 void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
                              SGM::Complex &ComplexID)
     {
@@ -1146,9 +1155,9 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     return {pCurve->GetID()};
     }
 
-SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
-                                                         std::vector<SGM::Point4D> const &aControlPoints,
-                                                         std::vector<double>       const &aKnots)
+SGM::Curve SGM::CreateNURBCurve(SGM::Result                     &rResult,
+                                std::vector<SGM::Point4D> const &aControlPoints,
+                                std::vector<double>       const &aKnots)
     {
     SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
     return {pNURB->GetID()};
@@ -1170,6 +1179,15 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      bool                     bApple)
     {
     SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateNURBSurface(SGM::Result                                   &rResult,
+                                    std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                                    std::vector<double>                     const &aUKnots,
+                                    std::vector<double>                     const &aVKnots)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NURBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
     return {pSurface->GetID()};
     }
 
@@ -1874,12 +1892,21 @@ void SGM::SaveSGM(SGM::Result                  &rResult,
     SGMInternal::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }
 
-double SGM::FindLength(SGM::Result     &rResult,
-                       SGM::Edge const &EdgeID,
-                       double           dTolerance)
+double SGM::FindEdgeLength(SGM::Result     &rResult,
+                           SGM::Edge const &EdgeID,
+                           double           dTolerance)
     {
     SGMInternal::edge const *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     return pEdge->FindLength(dTolerance);
+    }
+
+double SGM::FindCurveLength(SGM::Result           &rResult,
+                            SGM::Interval1D const &Domain,
+                            SGM::Curve      const &CurveID,
+                            double                 dTolerance)
+    {
+    SGMInternal::curve const *pCurve=(SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    return pCurve->FindLength(Domain,dTolerance);
     }
 
 double SGM::FindArea(SGM::Result     &rResult,

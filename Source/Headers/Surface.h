@@ -556,10 +556,10 @@ class NURBsurface: public surface
     {
     public:
 
-        NURBsurface(SGM::Result                            &rResult,
-                    std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
-                    std::vector<double>                    &&aUKnots,
-                    std::vector<double>                    &&aVKnots);
+        NURBsurface(SGM::Result                                   &rResult,
+                    std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                    std::vector<double>                     const &aUKnots,
+                    std::vector<double>                     const &aVKnots);
 
         NURBsurface(SGM::Result &rResult, NURBsurface const &other);
 

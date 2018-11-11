@@ -1,10 +1,10 @@
 #include "SGMMathematics.h"
 #include "SGMVector.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
-#include "Graph.h"
 #include "Topology.h"
 #include "Surface.h"
 #include "Curve.h"
@@ -598,8 +598,13 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
-    Graph graph(rResult,m_sEdges);
-    std::vector<Graph> aComponents;
+    std::set<SGM::Edge> sEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        sEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    SGM::Graph graph(rResult,sEdges);
+    std::vector<SGM::Graph> aComponents;
     size_t nLoops=graph.FindComponents(aComponents);
     aaLoops.reserve(nLoops);
     aaFlipped.reserve(nLoops);
@@ -611,10 +616,10 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     size_t Index1;
     for(Index1=0;Index1<nLoops;++Index1)
         {
-        Graph const &comp=aComponents[Index1];
-        std::set<GraphEdge> const &sGEdges=comp.GetEdges();
+        SGM::Graph const &comp=aComponents[Index1];
+        std::set<SGM::GraphEdge> const &sGEdges=comp.GetEdges();
         std::set<edge *,EntityCompare> sEdges;
-        std::set<GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
+        std::set<SGM::GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
         while(GEdgeIter!=sGEdges.end())
             {
             size_t ID=GEdgeIter->m_nID;

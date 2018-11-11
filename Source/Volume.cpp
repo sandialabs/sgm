@@ -1,7 +1,9 @@
 #include <EntityFunctions.h>
+
+#include "SGMGraph.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
-#include "Graph.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -197,19 +199,24 @@ SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const
     return m_FaceTree;
     }
 
-size_t volume::FindShells(SGM::Result                    &rResult,
+size_t volume::FindShells(SGM::Result                                  &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const
     {
     thing *pThing=rResult.GetThing();
-    Graph graph(rResult,m_sFaces,false);
-    std::vector<Graph> aComps;
+    std::set<SGM::Face> sFaces;
+    for(auto pFace : m_sFaces)
+        {
+        sFaces.insert(SGM::Face(pFace->GetID()));
+        }
+    SGM::Graph graph(rResult,sFaces,false);
+    std::vector<SGM::Graph> aComps;
     size_t nShells=graph.FindComponents(aComps);
     aShells.reserve(nShells);
     size_t Index1;
     for(Index1=0;Index1<nShells;++Index1)
         {
         std::set<face *,EntityCompare> sShell;
-        Graph const &Comp=aComps[Index1];
+        SGM::Graph const &Comp=aComps[Index1];
         std::set<size_t> const &sFaces=Comp.GetVertices();
         std::set<size_t>::const_iterator Iter=sFaces.begin();
         while(Iter!=sFaces.end())

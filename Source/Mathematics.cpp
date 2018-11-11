@@ -11,9 +11,9 @@
 #include "SGMSegment.h"
 #include "SGMTransform.h"
 #include "SGMPrimitives.h"
+#include "SGMGraph.h"
 
 #include "Faceter.h"
-#include "Graph.h"
 #include "Surface.h"
 
 namespace SGMInternal
@@ -1314,7 +1314,7 @@ size_t FindComponents1D(std::vector<unsigned int> const &aSegments)
     std::vector<unsigned int> aAdjacency;
     SGM::FindAdjacences1D(aSegments,aAdjacency);
     std::set<size_t> sVertices;
-    std::set<SGMInternal::GraphEdge> sEdges;
+    std::set<SGM::GraphEdge> sEdges;
     size_t nSegments=aSegments.size();
     size_t Index1,nCount=0;
     for(Index1=0;Index1<nSegments;Index1+=2)
@@ -1324,15 +1324,15 @@ size_t FindComponents1D(std::vector<unsigned int> const &aSegments)
         unsigned int nS1=aAdjacency[Index1+1];
         if(nS0!=std::numeric_limits<unsigned int>::max())
             {
-            sEdges.insert(SGMInternal::GraphEdge((unsigned int)Index1,nS0,++nCount));
+            sEdges.insert(SGM::GraphEdge((unsigned int)Index1,nS0,++nCount));
             }
         if(nS1!=std::numeric_limits<unsigned int>::max())
             {
-            sEdges.insert(SGMInternal::GraphEdge((unsigned int)Index1,nS1,++nCount));
+            sEdges.insert(SGM::GraphEdge((unsigned int)Index1,nS1,++nCount));
             }
         }
-    SGMInternal::Graph graph(sVertices,sEdges);
-    std::vector<SGMInternal::Graph> aComponents;
+    SGM::Graph graph(sVertices,sEdges);
+    std::vector<SGM::Graph> aComponents;
     return graph.FindComponents(aComponents);
     }
 
@@ -1385,7 +1385,7 @@ bool FindPolygon(std::vector<unsigned int> const &aSegments,
                  std::vector<unsigned int>       &aPolygon)
     {
     std::set<size_t> sVertices;
-    std::set<SGMInternal::GraphEdge> sEdges;
+    std::set<SGM::GraphEdge> sEdges;
     size_t nSegments=aSegments.size();
     size_t Index1;
     for(Index1=0;Index1<nSegments;++Index1)
@@ -1396,9 +1396,9 @@ bool FindPolygon(std::vector<unsigned int> const &aSegments,
         {
         unsigned int a=aSegments[Index1];
         unsigned int b=aSegments[Index1+1];
-        sEdges.insert(SGMInternal::GraphEdge(a,b,Index1));
+        sEdges.insert(SGM::GraphEdge(a,b,Index1));
         }
-    SGMInternal::Graph graph(sVertices,sEdges);
+    SGM::Graph graph(sVertices,sEdges);
     std::vector<size_t> aVertices;
     bool bAnswer=graph.OrderVertices(aVertices);
     size_t nVertices=aVertices.size();
@@ -2496,7 +2496,7 @@ bool PointInPolygonGroup(Point2D                                 const &Pos,
 bool AreEdgeConnected(std::vector<unsigned int> const &aTriangles)
     {
     std::set<size_t> sVertices;
-    std::set<SGMInternal::GraphEdge> sEdges;
+    std::set<SGM::GraphEdge> sEdges;
     std::vector<unsigned int> aAdjacentcies;
     SGM::FindAdjacences2D(aTriangles,aAdjacentcies);
     size_t nTriangles=aTriangles.size();
@@ -2509,20 +2509,20 @@ bool AreEdgeConnected(std::vector<unsigned int> const &aTriangles)
         unsigned int nT2=aAdjacentcies[Index1+2];
         if(nT0!=std::numeric_limits<unsigned int>::max())
             {
-            sEdges.insert(SGMInternal::GraphEdge(Index1,nT0,++nCount));
+            sEdges.insert(SGM::GraphEdge(Index1,nT0,++nCount));
             }
         if(nT1!=std::numeric_limits<unsigned int>::max())
             {
-            sEdges.insert(SGMInternal::GraphEdge(Index1,nT1,++nCount));
+            sEdges.insert(SGM::GraphEdge(Index1,nT1,++nCount));
             }
         if(nT2!=std::numeric_limits<unsigned int>::max())
             {
-            sEdges.insert(SGMInternal::GraphEdge(Index1,nT2,++nCount));
+            sEdges.insert(SGM::GraphEdge(Index1,nT2,++nCount));
             }
         sVertices.insert(Index1);
         }
-    SGMInternal::Graph graph(sVertices,sEdges);
-    std::vector<SGMInternal::Graph> aComponents;
+    SGM::Graph graph(sVertices,sEdges);
+    std::vector<SGM::Graph> aComponents;
     size_t nComps=graph.FindComponents(aComponents);
     return nComps==1;
     }
@@ -2581,6 +2581,9 @@ void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
     if(pPoints3D)
         {
         pPoints3D->reserve(sUsed.size());
+        }
+    if(pNormals)
+        {
         pNormals->reserve(sUsed.size());
         }
     unsigned int nCount=0;
@@ -2591,6 +2594,9 @@ void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
         if(pPoints3D)
             {
             aNewPoints3D.push_back((*pPoints3D)[nWhere]);
+            }
+        if(pNormals)
+            {
             aNewNormals.push_back((*pNormals)[nWhere]);
             }
         ++nCount;
@@ -2599,6 +2605,9 @@ void ReduceToUsedPoints(std::vector<Point2D>      &aPoints2D,
     if(pPoints3D)
         {
         *pPoints3D=aNewPoints3D;
+        }
+    if(pNormals)
+        {
         *pNormals=aNewNormals;
         }
     for(Index1=0;Index1<nTriangles;++Index1)

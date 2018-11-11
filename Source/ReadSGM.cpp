@@ -2,6 +2,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
 #include "SGMInterrogate.h"
+#include "SGMGraph.h"
 
 #include "EntityFunctions.h"
 #include "Topology.h"
@@ -11,7 +12,6 @@
 #include "STEP.h"
 #include "Curve.h"
 #include "Primitive.h"
-#include "Graph.h"
 
 #include "Interrogate.h"
 

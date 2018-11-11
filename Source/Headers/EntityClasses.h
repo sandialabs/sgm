@@ -643,7 +643,7 @@ class complex : public topology
 
         complex *FindDegenerateTriangles(SGM::Result &rResult) const;
 
-        void ReduceToLargestMinCycle();
+        void ReduceToLargestMinCycle(SGM::Result &rResult);
 
         SGM::BoxTree const &GetTree() const;
         

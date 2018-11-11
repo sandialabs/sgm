@@ -5,9 +5,9 @@
 #include "SGMBoxTree.h"
 #include "SGMSegment.h"
 #include "SGMPrimitives.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
-#include "Graph.h"
 #include "Mathematics.h"
 #include "Primitive.h"
 #include "Topology.h"
@@ -246,8 +246,8 @@ complex *complex::Cover(SGM::Result &rResult) const
         {
         // One-dimensional version.
 
-        Graph graph(this);
-        Graph MaxCycle=graph.FindLargestMinCycle();
+        SGM::Graph graph(rResult,SGM::Complex(this->GetID()));
+        SGM::Graph MaxCycle=graph.FindLargestMinCycle();
         std::vector<size_t> aVertices;
         MaxCycle.OrderVertices(aVertices);
 
@@ -533,7 +533,7 @@ bool complex::IsConnected() const
     if(m_aSegments.size())
         {
         std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
+        std::set<SGM::GraphEdge> sEdges;
 
         size_t nPoints=m_aPoints.size();
         size_t Index1;
@@ -544,12 +544,12 @@ bool complex::IsConnected() const
         size_t nSegments=m_aSegments.size();
         for(Index1=0;Index1<nSegments;Index1+=2)
             {
-            GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
+            SGM::GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
             sEdges.insert(GEdge);
             }
 
-        Graph graph(sVertices,sEdges);
-        std::vector<Graph> aGraphs;
+        SGM::Graph graph(sVertices,sEdges);
+        std::vector<SGM::Graph> aGraphs;
         size_t nComps=graph.FindComponents(aGraphs);
         if(nComps==1)
             {
@@ -735,7 +735,7 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
     if(m_aSegments.size())
         {
         std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
+        std::set<SGM::GraphEdge> sEdges;
 
         size_t nPoints=m_aPoints.size();
         size_t Index1;
@@ -746,19 +746,19 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
         size_t nSegments=m_aSegments.size();
         for(Index1=0;Index1<nSegments;Index1+=2)
             {
-            GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
+            SGM::GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
             sEdges.insert(GEdge);
             }
 
-        Graph graph(sVertices,sEdges);
-        std::vector<Graph> aGraphs;
+        SGM::Graph graph(sVertices,sEdges);
+        std::vector<SGM::Graph> aGraphs;
         size_t nComps=graph.FindComponents(aGraphs);
         for(Index1=0;Index1<nComps;++Index1)
             {
             std::vector<SGM::Point3D> aPoints=m_aPoints;
             std::vector<unsigned int> aSegments;
-            Graph const &comp=aGraphs[Index1];
-            std::set<GraphEdge> const &sEdges2=comp.GetEdges();
+            SGM::Graph const &comp=aGraphs[Index1];
+            std::set<SGM::GraphEdge> const &sEdges2=comp.GetEdges();
             for(auto GEdge : sEdges2)
                 {
                 aSegments.push_back((unsigned int)(GEdge.m_nStart));
@@ -1140,10 +1140,10 @@ complex *complex::FindDegenerateTriangles(SGM::Result &rResult) const
     return pAnswer;
     }
 
-void complex::ReduceToLargestMinCycle()
+void complex::ReduceToLargestMinCycle(SGM::Result &rResult)
     {
-    Graph graph(this);
-    Graph LMC=graph.FindLargestMinCycle();
+    SGM::Graph graph(rResult,SGM::Complex(this->GetID()));
+    SGM::Graph LMC=graph.FindLargestMinCycle();
     std::vector<size_t> aVertices;
     LMC.OrderVertices(aVertices);
     std::vector<SGM::Point3D> aNewPoints;
@@ -1218,7 +1218,7 @@ size_t complex::FindHoles(SGM::Result            &rResult,
         size_t nCompSize=pComp->GetPoints().size();
         if(nMinSize<nCompSize && nCompSize<nBottomMaxSize)
             {
-            pComp->ReduceToLargestMinCycle();
+            pComp->ReduceToLargestMinCycle(rResult);
             aBottomHoles.push_back(pComp);
             pComp->ChangeColor(rResult,0,0,255);
             }
@@ -1254,7 +1254,7 @@ size_t complex::FindHoles(SGM::Result            &rResult,
         size_t nCompSize=pComp->GetPoints().size();
         if(nMinSize<nCompSize && nCompSize<nMaxSize)
             {
-            pComp->ReduceToLargestMinCycle();
+            pComp->ReduceToLargestMinCycle(rResult);
             aTopHoles.push_back(pComp);
             }
         else

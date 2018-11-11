@@ -1,4 +1,6 @@
-#include "Graph.h"
+#include "SGMGraph.h"
+#include "SGMEntityClasses.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
 
@@ -6,15 +8,13 @@
 #include <map>
 #include <vector>
 
-namespace SGMInternal
-{
-void FindNeighbors(std::set<GraphEdge>             const &sEdges,
+void FindNeighbors(std::set<SGM::GraphEdge>        const &sEdges,
                    std::map<size_t,std::vector<size_t> > &mNeighbors)
     {
-    std::set<GraphEdge>::const_iterator iter=sEdges.begin();
+    std::set<SGM::GraphEdge>::const_iterator iter=sEdges.begin();
     while(iter!=sEdges.end())
         {
-        GraphEdge const &GEdge=*iter;
+        SGM::GraphEdge const &GEdge=*iter;
         size_t nStart=GEdge.m_nStart;
         size_t nEnd=GEdge.m_nEnd;
         std::map<size_t,std::vector<size_t> >::iterator StartIter=mNeighbors.find(nStart);
@@ -43,7 +43,7 @@ void FindNeighbors(std::set<GraphEdge>             const &sEdges,
         }
     }
 
-bool GraphEdge::operator<(GraphEdge const &GEdge) const
+bool SGM::GraphEdge::operator<(SGM::GraphEdge const &GEdge) const
     {
     if(m_nStart<GEdge.m_nStart)
         {
@@ -66,8 +66,10 @@ bool GraphEdge::operator<(GraphEdge const &GEdge) const
     return false;
     }
 
-Graph::Graph(complex const *pComplex)
+SGM::Graph::Graph(SGM::Result        &rResult,
+                  SGM::Complex const &ComplexID)
     {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
     std::vector<unsigned int> const &aSegments=pComplex->GetSegments();
     size_t nPoints=pComplex->GetPoints().size();
     size_t Index1;
@@ -84,17 +86,16 @@ Graph::Graph(complex const *pComplex)
         }
     }
 
-Graph::Graph(SGM::Result                          &rResult,
-             std::set<edge *,EntityCompare> const &sEdges)
+SGM::Graph::Graph(SGM::Result               &rResult,
+                  std::set<SGM::Edge> const &sEdges)
     {
     if(!sEdges.empty())
         {
-        std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
-        thing *pThing=rResult.GetThing();
+        SGMInternal::thing *pThing=rResult.GetThing();
         size_t nMaxID=pThing->GetMaxID();
-        while(EdgeIter!=sEdges.end())
+        for(SGM::Edge EdgeID : sEdges)
             {
-            edge *pEdge=*EdgeIter;
+            SGMInternal::edge const *pEdge=(SGMInternal::edge const *)pThing->FindEntity(EdgeID.m_ID);
             size_t nEdge=pEdge->GetID();
             if(pEdge->GetStart()==nullptr)
                 {
@@ -110,34 +111,33 @@ Graph::Graph(SGM::Result                          &rResult,
                 m_sVertices.insert(nEnd);
                 m_sEdges.insert(GraphEdge(nStart,nEnd,nEdge));
                 }
-            ++EdgeIter;
             }
         }
     }
 
-Graph::Graph(SGM::Result            &rResult,
-             std::set<face *,EntityCompare> const &sFaces,
-             bool                    bEdgeConnected)
+SGM::Graph::Graph(SGM::Result               &rResult,
+                  std::set<SGM::Face> const &sFaces,
+                  bool                       bEdgeConnected)
     {
     if(bEdgeConnected)
         {
-        std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
+        std::set<SGM::Face>::const_iterator FaceIter=sFaces.begin();
         while(FaceIter!=sFaces.end())
             {
-            face *pFace=*FaceIter;
+            SGMInternal::face *pFace=(SGMInternal::face *)(rResult.GetThing()->FindEntity(FaceIter->m_ID));
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
-            std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
-            std::set<edge *,EntityCompare>::const_iterator EdgeIter=sEdges.begin();
+            std::set<SGMInternal::edge *,SGMInternal::EntityCompare> const &sEdges=pFace->GetEdges();
+            std::set<SGMInternal::edge *,SGMInternal::EntityCompare>::const_iterator EdgeIter=sEdges.begin();
             while(EdgeIter!=sEdges.end())
                 {
-                edge *pEdge=*EdgeIter;
+                SGMInternal::edge *pEdge=*EdgeIter;
                 size_t nEdge=pEdge->GetID();
-                std::set<face *,EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
-                std::set<face *,EntityCompare>::const_iterator EdgeFaceIter=sEdgeFaces.begin();
+                std::set<SGMInternal::face *,SGMInternal::EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
+                std::set<SGMInternal::face *,SGMInternal::EntityCompare>::const_iterator EdgeFaceIter=sEdgeFaces.begin();
                 while(EdgeFaceIter!=sEdgeFaces.end())
                     {
-                    face *pEdgeFace=*EdgeFaceIter;
+                    SGMInternal::face *pEdgeFace=*EdgeFaceIter;
                     if(pEdgeFace!=pFace)
                         {
                         m_sEdges.insert(GraphEdge(nStart,pEdgeFace->GetID(),nEdge));
@@ -151,25 +151,25 @@ Graph::Graph(SGM::Result            &rResult,
         }
     else
         {
-        std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
+        std::set<SGM::Face>::const_iterator FaceIter=sFaces.begin();
         while(FaceIter!=sFaces.end())
             {
-            face *pFace=*FaceIter;
+            SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceIter->m_ID);
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
-            std::set<vertex *,EntityCompare> sVertices;
+            std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertices;
             FindVertices(rResult,pFace,sVertices);
-            std::set<vertex *,EntityCompare>::const_iterator VertexIter=sVertices.begin();
+            std::set<SGMInternal::vertex *,SGMInternal::EntityCompare>::const_iterator VertexIter=sVertices.begin();
             while(VertexIter!=sVertices.end())
                 {
-                vertex *pVertex=*VertexIter;
+                SGMInternal::vertex *pVertex=*VertexIter;
                 size_t nVertex=pVertex->GetID();
-                std::set<face *,EntityCompare> sVertexFaces;
+                std::set<SGMInternal::face *,SGMInternal::EntityCompare> sVertexFaces;
                 FindFaces(rResult,pVertex,sVertexFaces);
-                std::set<face *,EntityCompare>::const_iterator VertexFaceIter=sVertexFaces.begin();
+                std::set<SGMInternal::face *,SGMInternal::EntityCompare>::const_iterator VertexFaceIter=sVertexFaces.begin();
                 while(VertexFaceIter!=sVertexFaces.end())
                     {
-                    face *pVertexFace=*VertexFaceIter;
+                    SGMInternal::face *pVertexFace=*VertexFaceIter;
                     if(pVertexFace!=pFace)
                         {
                         m_sEdges.insert(GraphEdge(nStart,pVertexFace->GetID(),nVertex));
@@ -183,7 +183,7 @@ Graph::Graph(SGM::Result            &rResult,
         }
     }
 
-size_t Graph::FindComponents(std::vector<Graph> &aComponents) const
+size_t SGM::Graph::FindComponents(std::vector<SGM::Graph> &aComponents) const
     {
     if(m_mNeighbors.empty())
         {
@@ -277,7 +277,7 @@ size_t Graph::FindComponents(std::vector<Graph> &aComponents) const
     return nAnswer;
     }
 
-size_t Graph::GetDegree(size_t nVertex) const
+size_t SGM::Graph::GetDegree(size_t nVertex) const
     {
     if(m_mNeighbors.empty())
         {
@@ -286,7 +286,7 @@ size_t Graph::GetDegree(size_t nVertex) const
     return m_mNeighbors.find(nVertex)->second.size();
     }
 
-std::vector<size_t> const &Graph::GetStar(size_t nVertex) const
+std::vector<size_t> const &SGM::Graph::GetStar(size_t nVertex) const
     {
     if(m_mNeighbors.empty())
         {
@@ -295,7 +295,7 @@ std::vector<size_t> const &Graph::GetStar(size_t nVertex) const
     return m_mNeighbors.find(nVertex)->second;
     }
 
-bool Graph::IsCycle() const
+bool SGM::Graph::IsCycle() const
     {
     std::set<size_t>::iterator iter=m_sVertices.begin();
     while(iter!=m_sVertices.end())
@@ -311,7 +311,7 @@ bool Graph::IsCycle() const
 
 std::vector<size_t> FindPath(size_t                                 nStart,
                              size_t                                 nFirst,
-                             GraphEdge                             &EndEdge,
+                             SGM::GraphEdge                        &EndEdge,
                              std::map<size_t,size_t>               &mDistance,
                              std::map<size_t,std::vector<size_t> > &mNeighbors)
     {
@@ -377,7 +377,7 @@ size_t FindLower(size_t                                 nStart,
     return nStart;
     }
 
-Graph Graph::FindMinCycle(GraphEdge &GE) const
+SGM::Graph SGM::Graph::FindMinCycle(SGM::GraphEdge &GE) const
     {
     std::map<size_t,size_t> mDistance;
     size_t nLevel=0;
@@ -538,7 +538,7 @@ Graph Graph::FindMinCycle(GraphEdge &GE) const
     return gAnswer;
     }
 
-Graph Graph::FindLargestMinCycle() const
+SGM::Graph SGM::Graph::FindLargestMinCycle() const
     {
     GraphEdge MaxGE;
     size_t nMax=0;
@@ -554,7 +554,7 @@ Graph Graph::FindLargestMinCycle() const
     return FindMinCycle(MaxGE);
     }
 
-size_t Graph::FindSources(std::vector<size_t> &aSources) const
+size_t SGM::Graph::FindSources(std::vector<size_t> &aSources) const
     {
     std::map<size_t,size_t> aIncoming;
     for(auto nVertex : m_sVertices)
@@ -576,7 +576,7 @@ size_t Graph::FindSources(std::vector<size_t> &aSources) const
     return aSources.size();
     }
 
-bool Graph::OrderVertices(std::vector<size_t> &aVertices) const
+bool SGM::Graph::OrderVertices(std::vector<size_t> &aVertices) const
     {
     bool bAnswer=false;
     if(IsCycle())
@@ -602,7 +602,7 @@ bool Graph::OrderVertices(std::vector<size_t> &aVertices) const
     return bAnswer;
     }
 
-size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
+size_t SGM::Graph::FindBranches(std::vector<Graph> &aBranches) const
     {
     // Create a graph were the vertices are edges and they are connected
     // only if they are adjacent to each other through a degree two vertex.
@@ -655,4 +655,3 @@ size_t Graph::FindBranches(std::vector<Graph> &aBranches) const
     return nComps;
     }
 
-}

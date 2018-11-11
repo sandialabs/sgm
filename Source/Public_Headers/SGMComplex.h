@@ -129,6 +129,11 @@ namespace SGM
     SGM_EXPORT void ReduceToUsedPoints(SGM::Result  &rResult,
                                        SGM::Complex &ComplexID);
 
+    SGM_EXPORT void SplitComplexAtPoints(SGM::Result                     &rResult,
+                                         SGM::Complex                    &ComplexID,
+                                         std::vector<SGM::Point3D> const &aPoints,
+                                         double                           dTolerance=SGM_MIN_TOL);
+
     } // End of SGM namespace
 
 #endif // SGM_COMPLEX_H
