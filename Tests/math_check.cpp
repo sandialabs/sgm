@@ -1804,6 +1804,34 @@ TEST(math_check, sgm_save_and_read_block)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, step_save_and_read_block) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    std::string file_path=get_models_file_path("block.step");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSTEP(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,BlockID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, topology_traversal) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
