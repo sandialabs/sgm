@@ -558,6 +558,18 @@ namespace SGMInternal {
     inline bool vertex::IsTopLevel() const
     { return m_sEdges.empty() && m_sOwners.empty(); }
 
+    inline volume *vertex::GetVolume() const
+        {
+        if(m_sEdges.empty())
+            {
+            return nullptr;
+            }
+        else
+            {
+            return (*(m_sEdges.begin()))->GetVolume();
+            }
+        }
+
     //
     // attribute
     //

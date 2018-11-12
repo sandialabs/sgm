@@ -1803,3 +1803,279 @@ TEST(math_check, sgm_save_and_read_block)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(math_check, topology_traversal) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BlockID);
+    
+    // Top level checkes.
+
+    SGM::Volume VolumeID;
+    SGM::Face FaceID;
+    SGM::Edge EdgeID;
+    SGM::Vertex VertexID;
+    SGM::Curve CurveID;
+    SGM::Surface SurfaceID;
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,SGM::Thing(),sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,SGM::Thing(),sComplexes);
+        EXPECT_EQ(sComplexes.size(),1);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+        VolumeID=*(sVolumes.begin());
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,SGM::Thing(),sFaces);
+        EXPECT_EQ(sFaces.size(),6);
+        FaceID=*(sFaces.begin());
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,SGM::Thing(),sEdges);
+        EXPECT_EQ(sEdges.size(),12);
+        EdgeID=*(sEdges.begin());
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,SGM::Thing(),sVertex);
+        EXPECT_EQ(sVertex.size(),8);
+        VertexID=*(sVertex.begin());
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,SGM::Thing(),sCurves);
+        EXPECT_EQ(sCurves.size(),12);
+        CurveID=*(sCurves.begin());
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,SGM::Thing(),sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),6);
+        SurfaceID=*(sSurfaces.begin());
+    }
+
+    // Body level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,BlockID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,BlockID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,BlockID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,BlockID,sFaces);
+        EXPECT_EQ(sFaces.size(),6);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,BlockID,sEdges);
+        EXPECT_EQ(sEdges.size(),12);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,BlockID,sVertex);
+        EXPECT_EQ(sVertex.size(),8);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,BlockID,sCurves);
+        EXPECT_EQ(sCurves.size(),12);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,BlockID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),6);
+    }
+
+    // Volume level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,VolumeID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,VolumeID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,VolumeID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,VolumeID,sFaces);
+        EXPECT_EQ(sFaces.size(),6);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,VolumeID,sEdges);
+        EXPECT_EQ(sEdges.size(),12);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,VolumeID,sVertex);
+        EXPECT_EQ(sVertex.size(),8);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,VolumeID,sCurves);
+        EXPECT_EQ(sCurves.size(),12);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,VolumeID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),6);
+    }
+
+    // Face level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,FaceID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,FaceID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,FaceID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,FaceID,sFaces);
+        EXPECT_EQ(sFaces.size(),1);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,FaceID,sEdges);
+        EXPECT_EQ(sEdges.size(),4);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,FaceID,sVertex);
+        EXPECT_EQ(sVertex.size(),4);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,FaceID,sCurves);
+        EXPECT_EQ(sCurves.size(),4);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,FaceID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),1);
+    }
+
+    // Edge level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,EdgeID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,EdgeID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,EdgeID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,EdgeID,sFaces);
+        EXPECT_EQ(sFaces.size(),2);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,EdgeID,sEdges);
+        EXPECT_EQ(sEdges.size(),1);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,EdgeID,sVertex);
+        EXPECT_EQ(sVertex.size(),2);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,EdgeID,sCurves);
+        EXPECT_EQ(sCurves.size(),1);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,EdgeID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),2);
+    }
+
+    // Curve level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,CurveID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,CurveID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,CurveID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,CurveID,sFaces);
+        EXPECT_EQ(sFaces.size(),2);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,CurveID,sEdges);
+        EXPECT_EQ(sEdges.size(),1);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,CurveID,sVertex);
+        EXPECT_EQ(sVertex.size(),2);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,CurveID,sCurves);
+        EXPECT_EQ(sCurves.size(),1);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,CurveID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),2);
+    }
+
+    // Vertex level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,VertexID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,VertexID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,VertexID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,VertexID,sFaces);
+        EXPECT_EQ(sFaces.size(),3);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,VertexID,sEdges);
+        EXPECT_EQ(sEdges.size(),3);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,VertexID,sVertex);
+        EXPECT_EQ(sVertex.size(),1);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,VertexID,sCurves);
+        EXPECT_EQ(sCurves.size(),3);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,VertexID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),3);
+    }
+
+    SGMTesting::ReleaseTestThing(pThing);
+}

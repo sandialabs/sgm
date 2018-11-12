@@ -1038,6 +1038,8 @@ class vertex : public topology
 
         void TransformData(SGM::Transform3D const &Trans);
 
+        volume *GetVolume() const;
+
     private:
 
         SGM::Point3D                   m_Pos;

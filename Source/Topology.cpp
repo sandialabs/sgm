@@ -83,7 +83,7 @@ void FindBodies(SGM::Result                    &,//rResult,
                 face *pFace=*(sFaces.begin());
                 sBodies.insert(pFace->GetVolume()->GetBody());
                 }
-            if(volume *pVolume=((edge *)(pEntity))->GetVolume())
+            if(volume *pVolume=((vertex *)(pEntity))->GetVolume())
                 {
                 sBodies.insert(pVolume->GetBody());
                 }
