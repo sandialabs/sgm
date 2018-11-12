@@ -1969,6 +1969,42 @@ TEST(math_check, topology_traversal)
         EXPECT_EQ(sSurfaces.size(),1);
     }
 
+    // Surface level checkes.
+
+    {
+        std::set<SGM::Body> sBodies;
+        SGM::FindBodies(rResult,SurfaceID,sBodies);
+        EXPECT_EQ(sBodies.size(),1);
+
+        std::set<SGM::Complex> sComplexes;
+        SGM::FindComplexes(rResult,SurfaceID,sComplexes);
+        EXPECT_EQ(sComplexes.size(),0);
+
+        std::set<SGM::Volume> sVolumes;
+        SGM::FindVolumes(rResult,SurfaceID,sVolumes);
+        EXPECT_EQ(sVolumes.size(),1);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult,SurfaceID,sFaces);
+        EXPECT_EQ(sFaces.size(),1);
+
+        std::set<SGM::Edge> sEdges;
+        SGM::FindEdges(rResult,SurfaceID,sEdges);
+        EXPECT_EQ(sEdges.size(),4);
+
+        std::set<SGM::Vertex> sVertex;
+        SGM::FindVertices(rResult,SurfaceID,sVertex);
+        EXPECT_EQ(sVertex.size(),4);
+
+        std::set<SGM::Curve> sCurves;
+        SGM::FindCurves(rResult,SurfaceID,sCurves);
+        EXPECT_EQ(sCurves.size(),4);
+
+        std::set<SGM::Surface> sSurfaces;
+        SGM::FindSurfaces(rResult,SurfaceID,sSurfaces);
+        EXPECT_EQ(sSurfaces.size(),1);
+    }
+
     // Edge level checkes.
 
     {

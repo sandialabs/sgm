@@ -548,6 +548,7 @@ void FindVertices(SGM::Result        &,//rResult,
                     }
                 ++EdgeIter;
                 }
+            ++FaceIter;
             }
         }
     else if(Type==SGM::EntityType::CurveType)
