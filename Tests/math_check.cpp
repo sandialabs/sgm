@@ -15,6 +15,7 @@
 
 #include "test_utility.h"
 
+
 TEST(math_check, find_least_square_plane)
 {
     std::vector<SGM::Point3D> aPoints;
@@ -1691,3 +1692,40 @@ TEST(math_check, DISABLED_line_nub_surface_intersect)
 
     EXPECT_TRUE(bAnswer);
     }
+
+
+TEST(math_check, cover_stl)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    std::string file_path = get_models_file_path("STL Files/kelvin.stl");
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<SGM::Complex> *aComplexes = (std::vector<SGM::Complex> *) &entities;
+    SGM::Complex ComplexID = aComplexes->front();
+    if (aComplexes->size() > 1)
+        {
+        ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
+        }
+    SGM::Complex CoverID = SGM::CoverComplex(rResult, ComplexID);
+    std::vector<SGM::Complex> aParts;
+    aParts.push_back(ComplexID);
+    aParts.push_back(CoverID);
+    SGM::Complex AnswerID=SGM::MergeComplexes(rResult, aParts);
+    SGM::DeleteEntity(rResult,CoverID); 
+    SGM::DeleteEntity(rResult,ComplexID); 
+
+    std::string OutputSTLFile = get_models_file_path("STL Files/kelvin_output.stl");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSTL(rResult, OutputSTLFile, AnswerID, Options);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}

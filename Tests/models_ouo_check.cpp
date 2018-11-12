@@ -401,4 +401,3 @@ TEST(intersection_check, intersect_line_and_extrude)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
-
