@@ -468,10 +468,10 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                             &rResult,
-                   std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
-                   std::vector<double>                    &&aUKnots,
-                   std::vector<double>                    &&aVKnots);
+        NUBsurface(SGM::Result                                   &rResult,
+                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
+                   std::vector<double>                     const &aUKnots,
+                   std::vector<double>                     const &aVKnots);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 

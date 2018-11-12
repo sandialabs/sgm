@@ -8,10 +8,10 @@
 
 namespace SGMInternal
 {
-NUBsurface::NUBsurface(SGM::Result                             &rResult,
-                       std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
-                       std::vector<double>                    &&aUKnots,
-                       std::vector<double>                    &&aVKnots):
+NUBsurface::NUBsurface(SGM::Result                                   &rResult,
+                       std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
+                       std::vector<double>                     const &aUKnots,
+                       std::vector<double>                     const &aVKnots):
         surface(rResult,SGM::NUBSurfaceType),
         m_aaControlPoints(std::move(aControlPoints)),
         m_aUKnots(std::move(aUKnots)),

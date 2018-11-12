@@ -147,7 +147,7 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
                 }
             aaControlPoints.emplace_back(std::move(aControlPoints));
             }
-        pSurface = new NUBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
+        pSurface = new NUBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
         }
     else
         {

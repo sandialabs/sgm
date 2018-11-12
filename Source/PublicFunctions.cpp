@@ -1182,6 +1182,15 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateNUBSurfaceFromControlPoints(SGM::Result                                   &rResult,
+                                                    std::vector<std::vector<SGM::Point3D> > const &aaControlPoints,
+                                                    std::vector<double>                     const &aUKnots,
+                                                    std::vector<double>                     const &aVKnots)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
+    return {pSurface->GetID()};
+    }
+
 SGM::Surface SGM::CreateNURBSurface(SGM::Result                                   &rResult,
                                     std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
                                     std::vector<double>                     const &aUKnots,

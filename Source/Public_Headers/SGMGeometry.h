@@ -119,11 +119,16 @@ SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
                                            bool                     bApple=true);
 
 SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                                   &rResult,
-                                         std::vector<std::vector<SGM::Point3D> > const &aaPoints,
+                                         std::vector<std::vector<SGM::Point3D> > const &aaInterpolatePoints,
                                          std::vector<SGM::Vector3D>              const *paStartVecs=nullptr,
                                          std::vector<SGM::Vector3D>              const *paEndVecs=nullptr,
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
+
+SGM_EXPORT SGM::Surface CreateNUBSurfaceFromControlPoints(SGM::Result                                   &rResult,
+                                                          std::vector<std::vector<SGM::Point3D> > const &aaControlPoints,
+                                                          std::vector<double>                     const &aUKnots,
+                                                          std::vector<double>                     const &aVKnots);
 
 SGM_EXPORT SGM::Surface CreateNURBSurface(SGM::Result                                   &rResult,
                                           std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
