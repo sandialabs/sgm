@@ -1755,6 +1755,7 @@ TEST(math_check, find_holes_stl)
     std::vector<SGM::Complex> aHoles;
     SGM::Complex HolesID=SGM::FindHoles(rResult,ComplexID,aHoles);
     SGM::DeleteEntity(rResult,ComplexID); 
+
     std::string OutputSGMLFile("STL Files/SNL-2024-T3-IMP1_Output.stl");
     SGM::TranslatorOptions Options;
     SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);    
@@ -1771,6 +1772,34 @@ TEST(math_check, unite_spheres)
     SGM::Body SphereID1=SGM::CreateSphere(rResult,Center1,1.0);
     SGM::Body SphereID2=SGM::CreateSphere(rResult,Center2,1.0);
     SGM::UniteBodies(rResult,SphereID1,SphereID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sgm_save_and_read_block) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    std::string file_path=get_models_file_path("block.sgm");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,BlockID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
 
     SGMTesting::ReleaseTestThing(pThing);
 }

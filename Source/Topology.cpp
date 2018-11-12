@@ -1443,6 +1443,15 @@ body *UnhookFaces(SGM::Result         &rResult,
         mCopyMap[pEnt]=pEnt->Clone(rResult);
         }
 
+    // Move the faces to unhook to the pAnswerVolume.
+
+    for(Index1=0;Index1<nFaces;++Index1)
+        {
+        face *pFace=aFaces[Index1];
+        pFace->GetVolume()->RemoveFace(pFace);
+        pAnswerVolume->AddFace(pFace);
+        }
+
     // Replace the shaired entities with the copies in the unhooked faces.
 
     for(entity *pEnt : sCopyEnts)
