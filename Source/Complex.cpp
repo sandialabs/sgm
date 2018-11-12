@@ -558,7 +558,7 @@ double complex::FindAverageEdgeLength(double *dMaxEdgeLength) const
                 }
             }
         }
-    return dTotalLength/(nSegments/2.0+nTriangles/3.0);
+    return dTotalLength/(nSegments/2.0+nTriangles);
     }
 
 bool complex::IsConnected() const

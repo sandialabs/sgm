@@ -1882,6 +1882,62 @@ TEST(math_check, copy_a_complex_and_block)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, transform_complex) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BlockID);
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,ComplexID);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, test_complex_props) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BlockID);
+
+    double dMaxLength;
+    double dAverageLength=SGM::FindAverageEdgeLength(rResult,ComplexID,&dMaxLength);
+
+    EXPECT_TRUE(SGM::NearEqual(dMaxLength,14.142135623730950488016887242097,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(dAverageLength,11.380711874576983,SGM_ZERO,false));
+
+    size_t nGenus=SGM::FindGenus(rResult,ComplexID);
+
+    EXPECT_EQ(nGenus,0);
+    
+    bool bLinear=SGM::IsLinear(rResult,ComplexID);
+
+    EXPECT_FALSE(bLinear);
+
+    bool bCycle=SGM::IsCycle(rResult,ComplexID);
+
+    EXPECT_FALSE(bCycle);
+
+    bool bOrigined=SGM::IsOriented(rResult,ComplexID);
+
+    EXPECT_TRUE(bOrigined);
+
+    bool bManifold=SGM::IsManifold(rResult,ComplexID);
+
+    EXPECT_TRUE(bManifold);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, sheet_body_check) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
