@@ -1832,6 +1832,42 @@ TEST(math_check, step_save_and_read_block)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, delete_face_from_block) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::DeleteEntity(rResult,FaceID);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, copy_a_complex) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BlockID);
+    SGM::CopyEntity(rResult,ComplexID);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, topology_traversal) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

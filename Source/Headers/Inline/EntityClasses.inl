@@ -437,9 +437,6 @@ namespace SGMInternal {
     inline bool complex::IsTopLevel() const
     { return m_sOwners.empty(); }
 
-    inline void complex::ReplacePointers(std::map<entity *,entity *> const &)
-    { throw std::logic_error("not implemented"); }
-
     //
     // volume
     //
