@@ -1729,3 +1729,34 @@ TEST(math_check, cover_stl)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(math_check, find_holes_stl)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    std::string file_path = get_models_file_path("STL Files/SNL-2024-T3-IMP1.stl");
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<SGM::Complex> *aComplexes = (std::vector<SGM::Complex> *) &entities;
+    SGM::Complex ComplexID = aComplexes->front();
+    if (aComplexes->size() > 1)
+        {
+        ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
+        }
+    std::vector<SGM::Complex> aHoles;
+    SGM::Complex HolesID=SGM::FindHoles(rResult,ComplexID,aHoles);
+    SGM::DeleteEntity(rResult,ComplexID); 
+    std::string OutputSGMLFile("STL Files/SNL-2024-T3-IMP1_Output.stl");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);    
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
