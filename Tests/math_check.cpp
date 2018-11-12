@@ -1776,6 +1776,19 @@ TEST(math_check, unite_spheres)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, DISABLED_unite_squares_island) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,0),Pos3(2,5,-4),Pos4(8,5,4);
+    SGM::Body SheetID1=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::Body SheetID2=SGM::CreateBlock(rResult,Pos3,Pos4);
+    SGM::UniteBodies(rResult,SheetID1,SheetID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, sgm_save_and_read_block) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -1851,7 +1864,7 @@ TEST(math_check, delete_face_from_block)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, copy_a_complex) 
+TEST(math_check, copy_a_complex_and_block) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1860,6 +1873,23 @@ TEST(math_check, copy_a_complex)
     SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
     SGM::Complex ComplexID=SGM::CreateComplex(rResult,BlockID);
     SGM::CopyEntity(rResult,ComplexID);
+    SGM::CopyEntity(rResult,BlockID);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sheet_body_check) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,0);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    EXPECT_TRUE(SGM::IsSheetBody(rResult,BlockID));
 
     std::vector<std::string> aLog;
     SGM::CheckOptions CheckOptions;

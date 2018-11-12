@@ -450,9 +450,13 @@ namespace SGMInternal {
             topology(rResult, other),
             m_sFaces(other.m_sFaces),
             m_sEdges(other.m_sEdges),
-            m_pBody(other.m_pBody),
-            m_FaceTree(other.m_FaceTree)
-    {}
+            m_pBody(other.m_pBody)
+    {
+    if(other.m_FaceTree.IsEmpty()==false)
+        {
+        m_FaceTree=other.m_FaceTree;
+        }
+    }
 
     inline void volume::Accept(EntityVisitor &v)
     { v.Visit(*this); }
