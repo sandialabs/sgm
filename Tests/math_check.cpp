@@ -12,6 +12,7 @@
 #include "SGMMeasure.h"
 #include "SGMInterrogate.h"
 #include "SGMTopology.h"
+#include "SGMModify.h"
 
 #include "test_utility.h"
 
@@ -1730,7 +1731,7 @@ TEST(math_check, cover_stl)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, find_holes_stl)
+TEST(math_check, find_holes_stl) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1757,6 +1758,19 @@ TEST(math_check, find_holes_stl)
     std::string OutputSGMLFile("STL Files/SNL-2024-T3-IMP1_Output.stl");
     SGM::TranslatorOptions Options;
     SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);    
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, unite_spheres) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center1(0,0,0),Center2(1.5,0,0);
+    SGM::Body SphereID1=SGM::CreateSphere(rResult,Center1,1.0);
+    SGM::Body SphereID2=SGM::CreateSphere(rResult,Center2,1.0);
+    SGM::UniteBodies(rResult,SphereID1,SphereID2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
