@@ -97,13 +97,13 @@ namespace SGM {
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    Point3D operator*(Transform3D const &Trans,Point3D const &Pos);
+    SGM_EXPORT Point3D operator*(Transform3D const &Trans,Point3D const &Pos);
 
-    Vector3D operator*(Transform3D const &Trans, Vector3D const &Vec);
+    SGM_EXPORT Vector3D operator*(Transform3D const &Trans, Vector3D const &Vec);
 
-    UnitVector3D operator*(Transform3D const &Trans, UnitVector3D const &UVec);
+    SGM_EXPORT UnitVector3D operator*(Transform3D const &Trans, UnitVector3D const &UVec);
 
-    Transform3D operator*(Transform3D const &Trans0, Transform3D const &Trans1);
+    SGM_EXPORT Transform3D operator*(Transform3D const &Trans0, Transform3D const &Trans1);
 
 } // End of SGM namespace
 
