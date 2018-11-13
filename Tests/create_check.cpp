@@ -120,6 +120,7 @@ TEST(create_check, create_torus_knot)
     double dR=5.0,dr=2;
 
     SGM::Curve IDCurve = SGM::CreateTorusKnot(rResult, Center, XAxis, YAxis, dr, dR, nA, nB);
+    EXPECT_TRUE(SGM::TestCurve(rResult,IDCurve,1.0));
     SGM::Edge Edge1 = SGM::CreateEdge(rResult, IDCurve);
 
     SGM::Curve IDCurve2 = SGM::Curve(SGM::CopyEntity(rResult, IDCurve).m_ID);
