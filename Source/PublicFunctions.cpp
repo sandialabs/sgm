@@ -1436,6 +1436,24 @@ bool SGM::GetNURBCurveData(SGM::Result               &rResult,
     return true;
     }
 
+bool SGM::GetHermiteCurveData(SGM::Result                &rResult,
+                              SGM::Curve           const &CurveID,
+                              std::vector<SGM::Point3D>  &aPoints,
+                              std::vector<SGM::Vector3D> &aVectors,
+                              std::vector<double>        &aParams)
+    {
+    SGMInternal::curve const *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
+    if(pCurve->GetCurveType()!=SGM::EntityType::HermiteCurveType)
+        {
+        return false;
+        }
+    SGMInternal::hermite const *pHermite=(SGMInternal::hermite const *)pCurve;
+    aPoints=pHermite->m_aPoints;
+    aVectors=pHermite->m_aTangents;
+    aParams=pHermite->m_aParams;
+    return true;
+    }
+
 bool SGM::GetPointCurveData(SGM::Result      &rResult,
                             SGM::Curve const &CurveID,
                             SGM::Point3D     &Pos)

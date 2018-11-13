@@ -253,6 +253,12 @@ SGM_EXPORT bool GetNURBCurveData(SGM::Result               &rResult,
                                  std::vector<SGM::Point4D> &aControlPoints,
                                  std::vector<double>       &aKnots);  
 
+SGM_EXPORT bool GetHermiteCurveData(SGM::Result                &rResult,
+                                    SGM::Curve           const &CurveID,
+                                    std::vector<SGM::Point3D>  &aPoints,
+                                    std::vector<SGM::Vector3D> &aVectors,
+                                    std::vector<double>        &aParams);
+
 SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
                                   SGM::Curve const &CurveID,
                                   SGM::Point3D     &Pos);
