@@ -206,45 +206,10 @@ bool TestCurve(SGMInternal::curve const *pCurve,
   
 } // SGMIntneral namespace
 
+#if 0
 bool RunCPPTest(SGM::Result &rResult,
                      size_t       nTestNumber)
     {
-    
-    if(nTestNumber==26)
-        {
-        // Test inverse on lemon and apple tori.
-
-        bool bAnswer=true;
-
-        SGM::Point3D Center;
-        SGM::UnitVector3D Axis(0.0,0.0,1.0),XAxis(1.0,0.0,0.0);
-        SGMInternal::torus *pApple=new SGMInternal::torus(rResult,Center,Axis,2.0,0.5,true,&XAxis);
-        SGMInternal::torus *pLemon=new SGMInternal::torus(rResult,Center,Axis,2.0,0.5,false,&XAxis);
-
-        SGM::Point3D Pos0(0.5,0.0,0.0);
-        SGM::Point3D Pos1(1.5,0.0,2.0);
-        SGM::Point3D CPos;
-
-        pApple->Inverse(Pos0,&CPos);
-        pLemon->Inverse(Pos1,&CPos);
-        
-        rResult.GetThing()->DeleteEntity(pApple);
-        rResult.GetThing()->DeleteEntity(pLemon);
-
-        pApple=new SGMInternal::torus(rResult,Center,Axis,2.0,1.5,true,&XAxis);
-        pLemon=new SGMInternal::torus(rResult,Center,Axis,2.0,1.5,false,&XAxis);
-
-        SGM::Point3D Pos2(1.5,0.0,0.0);
-        SGM::Point3D Pos3(2.5,0.0,2.0);
-        
-        pApple->Inverse(Pos2,&CPos);
-        pLemon->Inverse(Pos3,&CPos);
-
-        rResult.GetThing()->DeleteEntity(pApple);
-        rResult.GetThing()->DeleteEntity(pLemon);
-        
-        return bAnswer;
-        }
 
     if(nTestNumber==27)
         {
@@ -362,29 +327,6 @@ bool RunCPPTest(SGM::Result &rResult,
         
         return bAnswer;
         }
-
-    if(nTestNumber==34)
-        {
-        std::vector<SGM::Point3D> aPoints;
-        aPoints.emplace_back(-2,.5,0);
-        aPoints.emplace_back(-1,1.5,0);
-        aPoints.emplace_back(0,1,0);
-        aPoints.emplace_back(1,1.5,0);
-        aPoints.emplace_back(2,2,0);
-        SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
-        CreateEdge(rResult,CurveID);
-        //SGM::Point3D Origin(-1,0,0);
-        //SGM::UnitVector3D Axis(1,0,0);
-        //SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
-
-        //std::set<SGM::Face> sFaces;
-        //SGM::FindFaces(rResult, BodyID, sFaces);
-
-        //for(Face FaceID : sFaces)
-        //  SGM::GetFaceTriangles(rResult, FaceID);
-
-        return true;
-        } 
 
     if(nTestNumber==37)
         {
@@ -704,4 +646,5 @@ bool RunCPPTest(SGM::Result &rResult,
 
     return false;
     }
+#endif
 

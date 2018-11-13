@@ -1176,9 +1176,18 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      SGM::UnitVector3D const &Axis,
                                      double                   dMinorRadius,
                                      double                   dMajorRadius,
-                                     bool                     bApple)
+                                     bool                     bApple,
+                                     SGM::UnitVector3D const *pXAxis)
     {
-    SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    SGMInternal::surface *pSurface;
+    if(pXAxis)
+        {
+        pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple,pXAxis);
+        }
+    else
+        {
+        pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+        }
     return {pSurface->GetID()};
     }
 

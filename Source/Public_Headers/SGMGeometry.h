@@ -116,7 +116,8 @@ SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
                                            SGM::UnitVector3D const &Axis,
                                            double                   dMinorRadius,
                                            double                   dMajorRadius,
-                                           bool                     bApple=true);
+                                           bool                     bApple=true,
+                                           SGM::UnitVector3D const *pXAxis=nullptr);
 
 SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                                   &rResult,
                                          std::vector<std::vector<SGM::Point3D> > const &aaInterpolatePoints,

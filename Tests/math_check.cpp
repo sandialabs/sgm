@@ -2530,6 +2530,18 @@ TEST(math_check, sgm_save_and_read_block)
     SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
     SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
     SGM::ChangeColor(rResult,BlockID,255,0,0);
+    int nRed,nGreen,nBlue;
+    SGM::GetColor(rResult,BlockID,nRed,nGreen,nBlue);
+
+    EXPECT_EQ(nRed,255);
+    EXPECT_EQ(nGreen,0);
+    EXPECT_EQ(nBlue,0);
+
+    SGM::RemoveColor(rResult,BlockID);
+
+    EXPECT_FALSE(SGM::GetColor(rResult,BlockID,nRed,nGreen,nBlue));
+
+    SGM::ChangeColor(rResult,BlockID,255,0,0);
 
     std::string file_path=get_models_file_path("block.sgm");
     SGM::TranslatorOptions Options;
@@ -3114,3 +3126,52 @@ TEST(math_check, sgm_save_and_read_torus)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(math_check, lemon_and_apple_tori) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+ 
+    // Test inverse on lemon and apple tori.
+
+    SGM::Point3D Center;
+    SGM::UnitVector3D Axis(0.0,0.0,1.0),XAxis(1.0,0.0,0.0);
+    SGM::Surface AppleID=SGM::CreateTorusSurface(rResult,Center,Axis,2.0,0.5,true,&XAxis);
+    SGM::Surface LemonID=SGM::CreateTorusSurface(rResult,Center,Axis,2.0,0.5,false,&XAxis);
+
+    SGM::Point3D Pos0(0.5,0.0,0.0);
+    SGM::Point3D Pos1(1.5,0.0,2.0);
+    SGM::Point3D CPos0,CPos1;
+    SGM::SurfaceInverse(rResult,AppleID,Pos0,&CPos0);
+    SGM::SurfaceInverse(rResult,LemonID,Pos0,&CPos1);
+    
+    SGM::DeleteEntity(rResult,AppleID);
+    SGM::DeleteEntity(rResult,LemonID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+
+TEST(math_check, create_revolve) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+ 
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.emplace_back(-2,.5,0);
+    aPoints.emplace_back(-1,1.5,0);
+    aPoints.emplace_back(0,1,0);
+    aPoints.emplace_back(1,1.5,0);
+    aPoints.emplace_back(2,2,0);
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
+    CreateEdge(rResult,CurveID);
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Body BodyID = SGM::CreateRevolve(rResult, Origin, Axis, CurveID);
+
+    std::vector<std::string> aCheckStrings;
+    SGM::CheckOptions Options;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
