@@ -2160,6 +2160,296 @@ TEST(math_check, NUB_curve_to_two_points)
     SGMTesting::ReleaseTestThing(pThing); 
     }
 
+TEST(math_check, create_nub_surface) 
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Test NUB surface.
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.assign(3,SGM::Point3D(0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
+    aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
+    aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
+    aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+    aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
+    aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
+    aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
+    aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
+    SGM::Surface NUBSurfID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    bool bAnswer=SGM::TestSurface(rResult,NUBSurfID,SGM::Point2D(0.3,0.2));
+    
+    SGM::UnitVector3D Vec1,Vec2;
+    double k1,k2;
+    SGM::Point2D uv(0.5,0.5);
+    SGM::PrincipleCurvature(rResult,NUBSurfID,uv,Vec1,Vec2,k1,k2);
+
+    if(SGM::NearEqual(Vec1,SGM::UnitVector3D(1.0,-1.0,0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(Vec2,SGM::UnitVector3D(1.0,1.0,0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(k1,-4.0,SGM_ZERO,false)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(k2,4.0,SGM_ZERO,false)==false)
+        {
+        bAnswer=false;
+        }
+
+    EXPECT_TRUE(bAnswer); 
+    SGMTesting::ReleaseTestThing(pThing); 
+    }
+
+
+TEST(math_check, line_torus_intersection) 
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Test Line Torus Intersections.
+
+    bool bAnswer=true;
+
+    SGM::Point3D Origin(-20,0,0);
+    SGM::UnitVector3D Axis(1.0,0.0,0.0);
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+
+    SGM::Point3D Center(0.0,0.0,0.0);
+    SGM::UnitVector3D ZAxis(0.0,0.0,1.0);
+    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,Center,ZAxis,1.0,3.0,false);
+    
+    SGM::Curve Line1=SGM::CreateLine(rResult,Origin,Axis);
+    size_t nHits=SGM::IntersectCurveAndSurface(rResult,Line1,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    if( nHits!=4 ||
+        SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[2],SGM::Point3D( 2.0,0.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[3],SGM::Point3D( 4.0,0.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aTypes.clear();
+    Origin.m_y=2.0;
+    SGM::Curve Line2=SGM::CreateLine(rResult,Origin,Axis);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line2,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    if( nHits!=3 ||
+        SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[2],SGM::Point3D(3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aTypes.clear();
+    Origin.m_y=3.0;
+    SGM::Curve Line3=SGM::CreateLine(rResult,Origin,Axis);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line3,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    if( nHits!=2 ||
+        SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO)==false ||
+        SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aTypes.clear();
+    Origin.m_y=4.0;
+    SGM::Curve Line4=SGM::CreateLine(rResult,Origin,Axis);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line4,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    if( nHits!=1 ||
+        SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aTypes.clear();
+    Origin.m_y=5.0;
+    SGM::Curve Line5=SGM::CreateLine(rResult,Origin,Axis);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line5,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    if(nHits!=0)
+        {
+        bAnswer=false;
+        }
+
+    SGM::DeleteEntity(rResult,TorusID);
+    SGM::DeleteEntity(rResult,Line1);
+    SGM::DeleteEntity(rResult,Line2);
+    SGM::DeleteEntity(rResult,Line3);
+    SGM::DeleteEntity(rResult,Line4);
+    SGM::DeleteEntity(rResult,Line5);
+
+    EXPECT_TRUE(bAnswer); 
+    SGMTesting::ReleaseTestThing(pThing); 
+    }
+
+TEST(math_check, DISABLED_least_squares_plane) 
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Test Least Squared Plane Fitting.
+
+    bool bAnswer=true;
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.emplace_back(0.0,0.0,0.0);
+    aPoints.emplace_back(2.0,0.0,0.0);
+    aPoints.emplace_back(2.0,1.0,0.0);
+    aPoints.emplace_back(0.0,1.0,0.0);
+    aPoints.emplace_back(1.0,0.5,0.4);
+
+    SGM::Point3D Origin;
+    SGM::UnitVector3D XVec,YVec,ZVec;
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+    if(SGM::NearEqual(Origin,SGM::Point3D(1.0,0.5,0.08),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,0.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aPoints.emplace_back(1.0,0.0,0.0);
+    aPoints.emplace_back(0.0,1.0,0.0);
+    aPoints.emplace_back(3.0,2.0,0.0);
+    aPoints.emplace_back(2.0,3.0,0.0);
+
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+    if(SGM::NearEqual(Origin,SGM::Point3D(1.5,1.5,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(YVec,SGM::UnitVector3D(1.0,-1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,-1.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aPoints.emplace_back(1.0,0.0,0.0);
+    aPoints.emplace_back(0.0,1.0,0.0);
+    aPoints.emplace_back(1.0,1.0,0.0);
+    aPoints.emplace_back(0.0,0.0,0.0);
+    aPoints.emplace_back(1.0,0.0,1.0);
+    aPoints.emplace_back(0.0,1.0,1.0);
+    aPoints.emplace_back(1.0,1.0,1.0);
+    aPoints.emplace_back(0.0,0.0,1.0);
+
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+    if(SGM::NearEqual(Origin,SGM::Point3D(0.5,0.5,0.5),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,0.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aPoints.emplace_back(0.0,0.0,0.0);
+    aPoints.emplace_back(8.0,8.0,0.0);
+    aPoints.emplace_back(4.0,4.0,0.0);
+
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+    if(SGM::NearEqual(Origin,SGM::Point3D(4.0,4.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(YVec,SGM::UnitVector3D(-1.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(ZVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    aPoints.clear();
+    aPoints.emplace_back(0.0,0.0,0.0);
+    aPoints.emplace_back(8.0,8.0,0.0);
+    aPoints.emplace_back(4.0,4.0,0.1);
+
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+
+    if(SGM::NearEqual(Origin,SGM::Point3D(4.0,4.0,0.0333333333333333),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(XVec,SGM::UnitVector3D(1.0,1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(YVec,SGM::UnitVector3D(0.0,0.0,1.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+    if(SGM::NearEqual(ZVec,SGM::UnitVector3D(1.0,-1.0,0.0),SGM_ZERO)==false)
+        {
+        bAnswer=false;
+        }
+
+    EXPECT_TRUE(bAnswer); 
+    SGMTesting::ReleaseTestThing(pThing); 
+    }
+
 TEST(math_check, DISABLED_unite_squares_island) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
