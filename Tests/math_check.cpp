@@ -13,6 +13,7 @@
 #include "SGMInterrogate.h"
 #include "SGMTopology.h"
 #include "SGMModify.h"
+#include "SGMDisplay.h"
 
 #include "test_utility.h"
 
@@ -2508,46 +2509,6 @@ TEST(math_check, DISABLED_least_squares_plane)
     SGMTesting::ReleaseTestThing(pThing); 
     }
 
-
-TEST(math_check, create_torus_knot) 
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
-    size_t nA=2,nB=3;
-    double dR=5.0,dr=2;
-    SGM::Curve IDCurve = SGM::CreateTorusKnot(rResult, Center, XAxis, YAxis, dr, dR, nA, nB);
-    SGM::Edge Edge1 = SGM::CreateEdge(rResult, IDCurve);
-
-    SGM::Curve IDCurve2 = SGM::Curve(SGM::CopyEntity(rResult, IDCurve).m_ID);
-    SGM::Transform3D Trans;
-    SGM::Point3D Origin(0, 0, 0);
-    SGM::UnitVector3D Axis(0, 0, 1);
-    double dAngle = 0.52359877559829887307710723054658; // 30 degrees.
-    SGM::Rotate(Origin, Axis, dAngle, Trans);
-    SGM::TransformEntity(rResult, Trans, IDCurve2);
-    SGM::Edge Edge2 = SGM::CreateEdge(rResult, IDCurve2);
-
-    SGM::UnitVector3D Normal = XAxis * YAxis;
-    SGM::Surface SurfaceID = SGM::CreateTorusSurface(rResult, Center, Normal, dr, dR);
-    std::vector<SGM::Edge> aEdges;
-    aEdges.push_back(Edge1);
-    aEdges.push_back(Edge2);
-    std::vector<SGM::EdgeSideType> aTypes;
-    aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
-    aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
-    SGM::Body BodyID = SGM::CreateSheetBody(rResult, SurfaceID, aEdges, aTypes);
-
-    SGM::CheckOptions Options;
-    std::vector<std::string> aCheckStrings;
-    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings));
-    
-    SGMTesting::ReleaseTestThing(pThing);
-}
-
-
 TEST(math_check, DISABLED_unite_squares_island) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -2568,6 +2529,8 @@ TEST(math_check, sgm_save_and_read_block)
     
     SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
     SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
+    SGM::ChangeColor(rResult,BlockID,255,0,0);
+
     std::string file_path=get_models_file_path("block.sgm");
     SGM::TranslatorOptions Options;
     SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
@@ -2718,6 +2681,7 @@ TEST(math_check, sheet_body_check)
     SGM::Point3D Pos1(0,0,0),Pos2(10,10,0);
     SGM::Body BlockID=SGM::CreateBlock(rResult,Pos1,Pos2);
     EXPECT_TRUE(SGM::IsSheetBody(rResult,BlockID));
+    EXPECT_FALSE(SGM::IsWireBody(rResult,BlockID));
 
     std::vector<std::string> aLog;
     SGM::CheckOptions CheckOptions;
