@@ -2265,3 +2265,116 @@ TEST(math_check, topology_traversal)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(math_check, sgm_save_and_read_cylinder) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,Pos1,Pos2,1);
+    std::string file_path=get_models_file_path("cylinder.sgm");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,CylinderID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sgm_save_and_read_cone) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0),Pos2(10,10,10);
+    SGM::Body ConeID=SGM::CreateCone(rResult,Pos1,Pos2,1,2);
+    std::string file_path=get_models_file_path("cone.sgm");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,ConeID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sgm_save_and_read_sphere) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0);
+    SGM::Body ConeID=SGM::CreateSphere(rResult,Pos1,2);
+    std::string file_path=get_models_file_path("sphere.sgm");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,ConeID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sgm_save_and_read_torus) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point3D Pos1(0,0,0);
+    SGM::UnitVector3D Axis(0,0,1);
+    SGM::Body TorusID=SGM::CreateTorus(rResult,Pos1,Axis,1,3);
+    std::string file_path=get_models_file_path("torus.sgm");
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult, file_path, SGM::Thing() , Options); 
+    SGM::DeleteEntity(rResult,TorusID);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,SGM::Thing(),CheckOptions,aLog));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}

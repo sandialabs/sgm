@@ -170,18 +170,7 @@ bool face::Check(SGM::Result              &rResult,
                  bool                      bChildren) const
     {
     bool bAnswer=true;
-    size_t nBigTriangleVertices = 30000;
-
-    // Check to see if size of triangles
-
-    if (m_aTriangles.size() > nBigTriangleVertices)
-        {
-        bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Face %lu had more than %lu triangles.\n",GetID(),nBigTriangleVertices/3);
-        aCheckStrings.emplace_back(Buffer);
-        }
-
+    
     // Check to see if all its edges point to it.
 
     for (auto pEdge : m_sEdges)
