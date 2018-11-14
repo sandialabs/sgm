@@ -2,6 +2,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
 #include "SGMInterrogate.h"
+#include "SGMGraph.h"
 
 #include "EntityFunctions.h"
 #include "Topology.h"
@@ -11,7 +12,6 @@
 #include "STEP.h"
 #include "Curve.h"
 #include "Primitive.h"
-#include "Graph.h"
 
 #include "Interrogate.h"
 
@@ -709,22 +709,121 @@ void ReadCylinder(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCylinder;
     } 
 
-void ReadCone(SGM::Result              &,//rResult,
-              std::vector<std::string> &,//aArgs,
-              std::map<size_t,SGMData> &)//mEntityMap)
+void ReadCone(SGM::Result              &rResult,
+              std::vector<std::string> &aArgs,
+              std::map<size_t,SGMData> &mEntityMap)
     {
+    // #10 Cone Origin (0.0,0.0,0.0) Normal (0.577350269189626,0.577350269189626,0.577350269189626) 
+    // XAxis (-0.707106781186547,0.707106781186547,0.0) Radius 1.00000000000000 HalfAngle 0.0576710048844255;
+
+    double dRadius=0.0;
+    double dHalfAngle=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Origin")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Radius")
+            {
+            dRadius=GetDouble(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="HalfAngle")
+            {
+            dHalfAngle=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    cone *pCone=new cone(rResult,Center,Normal,dRadius,dHalfAngle,&XAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pCone;
     } 
 
-void ReadSphere(SGM::Result              &,//rResult,
-                std::vector<std::string> &,//aArgs,
-                std::map<size_t,SGMData> &)//mEntityMap)
+void ReadSphere(SGM::Result              &rResult,
+                std::vector<std::string> &aArgs,
+                std::map<size_t,SGMData> &mEntityMap)
     {
+    // #3 Sphere Center (0.0,0.0,0.0) Normal (0.0,0.0,1.0) XAxis (1.0,0.0,0.0) Radius 2.00000000000000;
+
+    double dRadius=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Center")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Radius")
+            {
+            dRadius=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    SGM::UnitVector3D YAxis=Normal*XAxis;
+    sphere *pSphere=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pSphere;
     } 
 
-void ReadTorus(SGM::Result              &,//rResult,
-               std::vector<std::string> &,//aArgs,
-               std::map<size_t,SGMData> &)//mEntityMap)
+void ReadTorus(SGM::Result              &rResult,
+               std::vector<std::string> &aArgs,
+               std::map<size_t,SGMData> &mEntityMap)
     {
+    // #3 Torus Center (0.0,0.0,0.0) Normal (0.0,0.0,1.0) XAxis (1.0,0.0,0.0)
+    // Minor 1.00000000000000 Major 3.00000000000000;
+
+    double dMinor=0.0;
+    double dMajor=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Center")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Minor")
+            {
+            dMinor=GetDouble(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Major")
+            {
+            dMajor=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    SGM::UnitVector3D YAxis=Normal*XAxis;
+    bool bApple=true;
+    torus *pTorus=new torus(rResult,Center,Normal,dMinor,dMajor,bApple,&XAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pTorus;
     }
 
 void ReadNUBSurface(SGM::Result              &,//rResult,

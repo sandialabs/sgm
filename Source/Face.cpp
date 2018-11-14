@@ -1,10 +1,10 @@
 #include "SGMMathematics.h"
 #include "SGMVector.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
-#include "Graph.h"
 #include "Topology.h"
 #include "Surface.h"
 #include "Curve.h"
@@ -598,8 +598,13 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
-    Graph graph(rResult,m_sEdges);
-    std::vector<Graph> aComponents;
+    std::set<SGM::Edge> sEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        sEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    SGM::Graph graph(rResult,sEdges);
+    std::vector<SGM::Graph> aComponents;
     size_t nLoops=graph.FindComponents(aComponents);
     aaLoops.reserve(nLoops);
     aaFlipped.reserve(nLoops);
@@ -611,10 +616,10 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     size_t Index1;
     for(Index1=0;Index1<nLoops;++Index1)
         {
-        Graph const &comp=aComponents[Index1];
-        std::set<GraphEdge> const &sGEdges=comp.GetEdges();
+        SGM::Graph const &comp=aComponents[Index1];
+        std::set<SGM::GraphEdge> const &sGEdges=comp.GetEdges();
         std::set<edge *,EntityCompare> sEdges;
-        std::set<GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
+        std::set<SGM::GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
         while(GEdgeIter!=sGEdges.end())
             {
             size_t ID=GEdgeIter->m_nID;
@@ -944,7 +949,8 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
         else
             {
             // Check for singularities.
-            if( m_pSurface->SingularHighV() && 
+            if( pEdge->GetStart() && 
+                m_pSurface->SingularHighV() && 
                 SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
@@ -959,8 +965,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_u=uvE.m_u;
                 }
-            else if( m_pSurface->SingularHighU() && 
-                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularHighU() && 
+                     SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
@@ -974,8 +981,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_v=uvE.m_v;
                 }
-            else if( m_pSurface->SingularLowV() && 
-                SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularLowV() && 
+                     SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
@@ -989,8 +997,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_u=uvE.m_u;
                 }
-            else if( m_pSurface->SingularLowU() && 
-                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularLowU() && 
+                     SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))

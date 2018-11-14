@@ -30,8 +30,7 @@ class surface : public entity
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const override;
+                   std::vector<std::string> &aCheckStrings) const override;
 
         surface *Clone(SGM::Result &rResult) const override = 0;
 
@@ -468,10 +467,10 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                             &rResult,
-                   std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
-                   std::vector<double>                    &&aUKnots,
-                   std::vector<double>                    &&aVKnots);
+        NUBsurface(SGM::Result                                   &rResult,
+                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
+                   std::vector<double>                     const &aUKnots,
+                   std::vector<double>                     const &aVKnots);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
@@ -556,10 +555,10 @@ class NURBsurface: public surface
     {
     public:
 
-        NURBsurface(SGM::Result                            &rResult,
-                    std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
-                    std::vector<double>                    &&aUKnots,
-                    std::vector<double>                    &&aVKnots);
+        NURBsurface(SGM::Result                                   &rResult,
+                    std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                    std::vector<double>                     const &aUKnots,
+                    std::vector<double>                     const &aVKnots);
 
         NURBsurface(SGM::Result &rResult, NURBsurface const &other);
 

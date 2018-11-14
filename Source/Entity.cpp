@@ -11,16 +11,6 @@
 namespace SGMInternal
 {
 
-bool entity::Check(SGM::Result              &,
-                   SGM::CheckOptions const  &,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      ) const
-{
-    // we do not throw so that checking may continue
-    aCheckStrings.emplace_back("Derived class must override Check()\n");
-    return false;
-}
-
 void entity::ChangeColor(SGM::Result &rResult,
                          int nRed,int nGreen,int nBlue)
     {

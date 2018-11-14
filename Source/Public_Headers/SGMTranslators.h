@@ -30,10 +30,6 @@ namespace SGM
                 m_bSplitFile(false)
                 {}
 
-            explicit TranslatorOptions(std::string const &sOptions);
-
-            std::string FindString() const;
-
             bool m_bBinary;        // Output a binary version of the file.
                                    // Default is false.
                                    // Used by STL write.

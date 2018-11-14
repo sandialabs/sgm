@@ -5,6 +5,7 @@
 
 #include "SGMGeometry.h"
 #include "SGMEntityFunctions.h"
+#include "SGMTransform.h"
 
 #include "test_utility.h"
 
@@ -28,6 +29,13 @@ TEST(create_check, create_parabola)
 
     SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+
+    SGM::Curve CopyID=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,CopyID);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
+    SGM::DeleteEntity(rResult,CopyID);
+    
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -54,9 +62,17 @@ TEST(create_check, create_hyperbola)
 
     SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+    
+    SGM::Curve CopyID=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,CopyID);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
+    SGM::DeleteEntity(rResult,CopyID);
+
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
+
 
 TEST(create_check, create_ellipse)
     {
@@ -80,6 +96,56 @@ TEST(create_check, create_ellipse)
 
     SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
+    
+    SGM::Curve CopyID=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,CopyID);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
+    SGM::DeleteEntity(rResult,CopyID);
+
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
+
+
+
+TEST(create_check, create_torus_knot)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+        
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
+    size_t nA=2,nB=3;
+    double dR=5.0,dr=2;
+
+    SGM::Curve IDCurve = SGM::CreateTorusKnot(rResult, Center, XAxis, YAxis, dr, dR, nA, nB);
+    EXPECT_TRUE(SGM::TestCurve(rResult,IDCurve,1.0));
+    SGM::Edge Edge1 = SGM::CreateEdge(rResult, IDCurve);
+
+    SGM::Curve IDCurve2 = SGM::Curve(SGM::CopyEntity(rResult, IDCurve).m_ID);
+    SGM::Transform3D Trans;
+    SGM::Point3D Origin(0, 0, 0);
+    SGM::UnitVector3D Axis(0, 0, 1);
+    double dAngle = 0.52359877559829887307710723054658; // 30 degrees.
+    SGM::Rotate(Origin, Axis, dAngle, Trans);
+    SGM::TransformEntity(rResult, Trans, IDCurve2);
+    SGM::Edge Edge2 = SGM::CreateEdge(rResult, IDCurve2);
+
+    SGM::UnitVector3D Normal = XAxis * YAxis;
+    SGM::Surface SurfaceID = SGM::CreateTorusSurface(rResult, Center, Normal, dr, dR);
+    std::vector<SGM::Edge> aEdges;
+    aEdges.push_back(Edge1);
+    aEdges.push_back(Edge2);
+    std::vector<SGM::EdgeSideType> aTypes;
+    aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
+    aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
+    SGM::Body BodyID = SGM::CreateSheetBody(rResult, SurfaceID, aEdges, aTypes);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+

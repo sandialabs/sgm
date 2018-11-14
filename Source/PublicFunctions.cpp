@@ -117,6 +117,23 @@ bool SGM::IsCycle(SGM::Result        &rResult,
     return pComplex->IsCycle();
     }
 
+bool SGM::IsConnected(SGM::Result        &rResult,
+                      SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsConnected();
+    }
+
+bool SGM::IsPlanar(SGM::Result        &rResult,
+                   SGM::Complex const &ComplexID,
+                   SGM::Point3D       &Origin,
+                   SGM::UnitVector3D  &Normal,
+                   double              dTolerance)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsPlanar(Origin,Normal,dTolerance);
+    }
+
 bool SGM::IsOriented(SGM::Result        &rResult,
                      SGM::Complex const &ComplexID)
     {
@@ -168,6 +185,20 @@ size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
                              std::vector<SGM::Complex> &)//aComponents)
     {
     return 0;
+    }
+
+double SGM::FindComplexLength(SGM::Result        &rResult,
+                              SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->FindLength();
+    }
+
+double SGM::FindComplexArea(SGM::Result        &rResult,
+                            SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->Area();
     }
 
 double SGM::FindAverageEdgeLength(SGM::Result        &rResult,
@@ -551,6 +582,15 @@ SGM::Complex SGM::MergeComplexes(SGM::Result                     &rResult,
     aComplexes.pop_back();
     SGMInternal::complex *pAnswer=pComplex->Merge(rResult,aComplexes);
     return SGM::Complex(pAnswer->GetID());
+    }
+
+void SGM::SplitComplexAtPoints(SGM::Result                     &rResult,
+                               SGM::Complex                    &ComplexID,
+                               std::vector<SGM::Point3D> const &aPoints,
+                               double                           dTolerance)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)(rResult.GetThing()->FindEntity(ComplexID.m_ID));
+    pComplex->SplitAtPoints(rResult,aPoints,dTolerance);
     }
 
 void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
@@ -1027,7 +1067,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
+    return pEntity->Check(rResult,Options,aCheckStrings); // only top level
     }
 
 bool SGM::TestCurve(SGM::Result      &rResult,
@@ -1146,9 +1186,9 @@ SGM::Curve SGM::CreateNUBCurveWithEndVectors(SGM::Result                     &rR
     return {pCurve->GetID()};
     }
 
-SGM::Curve SGM::CreateNURBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
-                                                         std::vector<SGM::Point4D> const &aControlPoints,
-                                                         std::vector<double>       const &aKnots)
+SGM::Curve SGM::CreateNURBCurve(SGM::Result                     &rResult,
+                                std::vector<SGM::Point4D> const &aControlPoints,
+                                std::vector<double>       const &aKnots)
     {
     SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
     return {pNURB->GetID()};
@@ -1167,9 +1207,36 @@ SGM::Surface SGM::CreateTorusSurface(SGM::Result             &rResult,
                                      SGM::UnitVector3D const &Axis,
                                      double                   dMinorRadius,
                                      double                   dMajorRadius,
-                                     bool                     bApple)
+                                     bool                     bApple,
+                                     SGM::UnitVector3D const *pXAxis)
     {
-    SGMInternal::surface *pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+    SGMInternal::surface *pSurface;
+    if(pXAxis)
+        {
+        pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple,pXAxis);
+        }
+    else
+        {
+        pSurface=new SGMInternal::torus(rResult,Center,Axis,dMinorRadius,dMajorRadius,bApple);
+        }
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateNUBSurfaceFromControlPoints(SGM::Result                                   &rResult,
+                                                    std::vector<std::vector<SGM::Point3D> > const &aaControlPoints,
+                                                    std::vector<double>                     const &aUKnots,
+                                                    std::vector<double>                     const &aVKnots)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateNURBSurface(SGM::Result                                   &rResult,
+                                    std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                                    std::vector<double>                     const &aUKnots,
+                                    std::vector<double>                     const &aVKnots)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NURBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
     return {pSurface->GetID()};
     }
 
@@ -1397,6 +1464,24 @@ bool SGM::GetNURBCurveData(SGM::Result               &rResult,
     SGMInternal::NURBcurve const *pNURBCurve=(SGMInternal::NURBcurve const *)pCurve;
     aControlPoints=pNURBCurve->m_aControlPoints;
     aKnots        =pNURBCurve->m_aKnots;
+    return true;
+    }
+
+bool SGM::GetHermiteCurveData(SGM::Result                &rResult,
+                              SGM::Curve           const &CurveID,
+                              std::vector<SGM::Point3D>  &aPoints,
+                              std::vector<SGM::Vector3D> &aVectors,
+                              std::vector<double>        &aParams)
+    {
+    SGMInternal::curve const *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
+    if(pCurve->GetCurveType()!=SGM::EntityType::HermiteCurveType)
+        {
+        return false;
+        }
+    SGMInternal::hermite const *pHermite=(SGMInternal::hermite const *)pCurve;
+    aPoints=pHermite->m_aPoints;
+    aVectors=pHermite->m_aTangents;
+    aParams=pHermite->m_aParams;
     return true;
     }
 
@@ -1874,12 +1959,21 @@ void SGM::SaveSGM(SGM::Result                  &rResult,
     SGMInternal::SaveSGM(rResult,sFileName,rResult.GetThing()->FindEntity(EntityID.m_ID),Options);
     }
 
-double SGM::FindLength(SGM::Result     &rResult,
-                       SGM::Edge const &EdgeID,
-                       double           dTolerance)
+double SGM::FindEdgeLength(SGM::Result     &rResult,
+                           SGM::Edge const &EdgeID,
+                           double           dTolerance)
     {
     SGMInternal::edge const *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     return pEdge->FindLength(dTolerance);
+    }
+
+double SGM::FindCurveLength(SGM::Result           &rResult,
+                            SGM::Interval1D const &Domain,
+                            SGM::Curve      const &CurveID,
+                            double                 dTolerance)
+    {
+    SGMInternal::curve const *pCurve=(SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    return pCurve->FindLength(Domain,dTolerance);
     }
 
 double SGM::FindArea(SGM::Result     &rResult,
@@ -1906,6 +2000,7 @@ double SGM::FindVolume(SGM::Result       &rResult,
     return dAnswer;
     }
 
+/*
 std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
                                               SGM::Edge   &EdgeID,
                                               SGM::Face   &FaceID)
@@ -1930,6 +2025,7 @@ void SGM::UniteBodies(SGM::Result &rResult,
     SGMInternal::body *pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
     SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
     }
+*/
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {

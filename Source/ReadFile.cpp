@@ -1,10 +1,10 @@
 #include "SGMVector.h"
 #include "SGMTranslators.h"
+#include "SGMGraph.h"
 
 #include "Curve.h"
 #include "EntityFunctions.h"
 #include "FileFunctions.h"
-#include "Graph.h"
 #include "ReadFile.h"
 #include "Topology.h"
 
@@ -950,7 +950,7 @@ void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
         // Create a directed graph.
 
         std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
+        std::set<SGM::GraphEdge> sEdges;
         size_t nCount = 0;
         for (auto MapIter : aIDMap)
             {
@@ -959,20 +959,17 @@ void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
             std::vector<size_t> const &aIDs = MapIter.second;
             for (auto nID : aIDs)
                 {
-                sEdges.insert(GraphEdge(nLine, nID, nCount, true));
+                sEdges.insert(SGM::GraphEdge(nLine, nID, nCount, true));
                 ++nCount;
                 }
             }
-        Graph graph(sVertices, sEdges);
+        SGM::Graph graph(sVertices, sEdges);
 
         std::vector<size_t> aSources;
         graph.FindSources(aSources);
 
-        std::vector<Graph> aComponents;
+        std::vector<SGM::Graph> aComponents;
         graph.FindComponents(aComponents);
-
-        int a = 0;
-        a *= 1;
     }
 
 // Given a input file stream, get a map of (#ID->STEPLineData)

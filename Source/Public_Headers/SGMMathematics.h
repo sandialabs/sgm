@@ -727,7 +727,7 @@ namespace SGM
     // function to return a value for x.
 
     double Integrate1D(double f(double x,void const *pData),
-                       Interval1D        const &Domain,
+                       Interval1D             const &Domain,
                        void                   const *pData=nullptr,
                        double                        dTolerance=SGM_ZERO);
 
@@ -738,8 +738,8 @@ namespace SGM
 
     double Integrate2D(double f(Point2D const &uv,void const *pData),
                        Interval2D                      const &Domain,
-                       void                                 const *pData=nullptr,
-                       double                                      dTolerance=SGM_ZERO);
+                       void                            const *pData=nullptr,
+                       double                                 dTolerance=SGM_ZERO);
 
     // Returns the definite integral of the given function, f, over the given triangle ABC. 
     // The integration is numerically performed using Romberg integration.
@@ -750,8 +750,8 @@ namespace SGM
                              Point2D                         const &PosA,
                              Point2D                         const &PosB,
                              Point2D                         const &PosC,
-                             void                                 const *pData=nullptr,
-                             double                                      dTolerance=SGM_ZERO);
+                             void                            const *pData=nullptr,
+                             double                                 dTolerance=SGM_ZERO);
     
     ///////////////////////////////////////////////////////////////////////////
     //

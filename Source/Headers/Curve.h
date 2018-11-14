@@ -35,8 +35,7 @@ class curve : public entity
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const override;
+                   std::vector<std::string> &aCheckStrings) const override;
 
         curve *Clone(SGM::Result &) const override = 0;
 

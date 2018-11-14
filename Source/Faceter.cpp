@@ -7,11 +7,11 @@
 #include "SGMBoxTree.h"
 #include "SGMSegment.h"
 #include "SGMEntityClasses.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Faceter.h"
-#include "Graph.h"
 #include "Surface.h"
 #include "Curve.h"
 #include "Primitive.h"

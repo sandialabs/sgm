@@ -83,7 +83,7 @@ void FindBodies(SGM::Result                    &,//rResult,
                 face *pFace=*(sFaces.begin());
                 sBodies.insert(pFace->GetVolume()->GetBody());
                 }
-            if(volume *pVolume=((edge *)(pEntity))->GetVolume())
+            if(volume *pVolume=((vertex *)(pEntity))->GetVolume())
                 {
                 sBodies.insert(pVolume->GetBody());
                 }
@@ -548,6 +548,7 @@ void FindVertices(SGM::Result        &,//rResult,
                     }
                 ++EdgeIter;
                 }
+            ++FaceIter;
             }
         }
     else if(Type==SGM::EntityType::CurveType)
@@ -1441,6 +1442,15 @@ body *UnhookFaces(SGM::Result         &rResult,
     for(entity *pEnt : sCopyEnts)
         {
         mCopyMap[pEnt]=pEnt->Clone(rResult);
+        }
+
+    // Move the faces to unhook to the pAnswerVolume.
+
+    for(Index1=0;Index1<nFaces;++Index1)
+        {
+        face *pFace=aFaces[Index1];
+        pFace->GetVolume()->RemoveFace(pFace);
+        pAnswerVolume->AddFace(pFace);
         }
 
     // Replace the shaired entities with the copies in the unhooked faces.

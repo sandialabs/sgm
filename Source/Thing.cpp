@@ -40,10 +40,9 @@ thing::~thing()
         }
     }
 
-bool thing::Check(SGM::Result &rResult,
-                  SGM::CheckOptions const &Options,
-                  std::vector<std::string> &aCheckStrings,
-                  bool bChildren) const
+bool thing::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings) const
     {
     // TODO: are we doing this right, should we check IsTopLevel()?
     // TODO: should we use a ThreadPool for checking?
@@ -53,7 +52,7 @@ bool thing::Check(SGM::Result &rResult,
 
     for (auto const &iter : m_mAllEntities)
         {
-        if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
+        if (!iter.second->Check(rResult, Options, aCheckStrings))
             bAnswer = false;
         }
     return bAnswer;

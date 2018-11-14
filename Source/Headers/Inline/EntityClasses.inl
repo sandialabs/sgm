@@ -285,6 +285,11 @@ namespace SGMInternal {
     inline void assembly::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented for assembly"); }
 
+    inline bool assembly::Check(SGM::Result &,
+                                SGM::CheckOptions const  &,
+                                std::vector<std::string> &) const 
+    {return true;}
+
     //
     // reference 
     //
@@ -311,6 +316,11 @@ namespace SGMInternal {
 
     inline void reference::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented yet for reference"); }
+
+    inline bool reference::Check(SGM::Result &,
+                                 SGM::CheckOptions const  &,
+                                 std::vector<std::string> &) const 
+    {return true;}
 
     //
     // body
@@ -404,9 +414,6 @@ namespace SGMInternal {
     inline bool complex::IsTopLevel() const
     { return m_sOwners.empty(); }
 
-    inline void complex::ReplacePointers(std::map<entity *,entity *> const &)
-    { throw std::logic_error("not implemented"); }
-
     //
     // volume
     //
@@ -423,9 +430,13 @@ namespace SGMInternal {
             topology(rResult, other),
             m_sFaces(other.m_sFaces),
             m_sEdges(other.m_sEdges),
-            m_pBody(other.m_pBody),
-            m_FaceTree(other.m_FaceTree)
-    {}
+            m_pBody(other.m_pBody)
+    {
+    if(other.m_FaceTree.IsEmpty()==false)
+        {
+        m_FaceTree=other.m_FaceTree;
+        }
+    }
 
     inline void volume::Accept(EntityVisitor &v)
     { v.Visit(*this); }
@@ -527,6 +538,18 @@ namespace SGMInternal {
 
     inline bool vertex::IsTopLevel() const
     { return m_sEdges.empty() && m_sOwners.empty(); }
+
+    inline volume *vertex::GetVolume() const
+        {
+        if(m_sEdges.empty())
+            {
+            return nullptr;
+            }
+        else
+            {
+            return (*(m_sEdges.begin()))->GetVolume();
+            }
+        }
 
     //
     // attribute

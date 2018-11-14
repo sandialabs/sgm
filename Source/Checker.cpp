@@ -25,24 +25,9 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-bool CheckAllChildren(entity const             &parentEntity,
-                      SGM::Result              &rResult,
-                      SGM::CheckOptions  const &Options,
-                      std::vector<std::string> &aCheckStrings)
-    {
-    bool bAnswer=true;
-    std::set<entity *,EntityCompare> sChildren;
-    parentEntity.FindAllChildren(sChildren);
-    for (auto pChild : sChildren)
-        if (!pChild->Check(rResult,Options,aCheckStrings,false))
-            bAnswer = false;
-    return bAnswer;
-    }
-
-bool body::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &Options,
-                 std::vector<std::string> &aCheckStrings,
-                 bool                      bChildren) const
+bool body::Check(SGM::Result              &,//rResult,
+                 SGM::CheckOptions  const &,//Options,
+                 std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -67,19 +52,12 @@ bool body::Check(SGM::Result              &rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
-
     return bAnswer;
     }
 
 bool complex::Check(SGM::Result              &,//rResult,
                     SGM::CheckOptions  const &,//Options,
-                    std::vector<std::string> &aCheckStrings,
-                    bool                      ) const //bChildren)
+                    std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -135,10 +113,9 @@ bool complex::Check(SGM::Result              &,//rResult,
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const
+bool volume::Check(SGM::Result              &,//rResult,
+                   SGM::CheckOptions  const &,//Options,
+                   std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -155,33 +132,15 @@ bool volume::Check(SGM::Result              &rResult,
             }
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
-
     return bAnswer;
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &Options,
-                 std::vector<std::string> &aCheckStrings,
-                 bool                      bChildren) const
+                 SGM::CheckOptions  const &,//Options,
+                 std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
-    size_t nBigTriangleVertices = 30000;
-
-    // Check to see if size of triangles
-
-    if (m_aTriangles.size() > nBigTriangleVertices)
-        {
-        bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Face %lu had more than %lu triangles.\n",GetID(),nBigTriangleVertices/3);
-        aCheckStrings.emplace_back(Buffer);
-        }
-
+    
     // Check to see if all its edges point to it.
 
     for (auto pEdge : m_sEdges)
@@ -344,18 +303,12 @@ bool face::Check(SGM::Result              &rResult,
         //    }
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
     return bAnswer;
     }
 
-bool edge::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &Options,
-                 std::vector<std::string> &aCheckStrings,
-                 bool                      bChildren) const
+bool edge::Check(SGM::Result              &,//rResult,
+                 SGM::CheckOptions  const &,//Options,
+                 std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -432,19 +385,12 @@ bool edge::Check(SGM::Result              &rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
-
     return bAnswer;
     }
 
 bool vertex::Check(SGM::Result              &,//rResult,
                    SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      /* bChildren */) const
+                   std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=true;
 
@@ -461,8 +407,7 @@ bool vertex::Check(SGM::Result              &,//rResult,
 
 bool curve::Check(SGM::Result              &,//rResult,
                   SGM::CheckOptions  const &,//Options,
-                  std::vector<std::string> &aCheckStrings,
-                  bool                      /* bChildren */) const
+                  std::vector<std::string> &aCheckStrings) const
     {
     bool bAnswer=TestCurve(this,m_Domain.MidPoint());
 
@@ -477,9 +422,8 @@ bool curve::Check(SGM::Result              &,//rResult,
     }
 
 bool surface::Check(SGM::Result              &rResult,
-                    SGM::CheckOptions  const &,
-                    std::vector<std::string> &aCheckStrings,
-                    bool                     /* bChildren */) const
+                    SGM::CheckOptions  const &,//Options
+                    std::vector<std::string> &aCheckStrings) const
     {
     SGM::Point2D uv=m_Domain.MidPoint();
     if(!m_sFaces.empty())

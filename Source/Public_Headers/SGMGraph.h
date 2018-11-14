@@ -1,22 +1,24 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef SGM_GRAPH_H
+#define SGM_GRAPH_H
+
+#ifdef _MSC_VER
+#pragma warning(disable:4251)
+#endif
 
 #include "SGMVector.h"
 #include "SGMResult.h"
-
-#include "EntityClasses.h"
+#include "SGMEntityClasses.h"
 
 #include <set>
 #include <map>
 #include <vector>
 
-namespace SGMInternal
-{
-class edge;
-class face;
-class complex;
+#include "sgm_export.h"
 
-class GraphEdge
+namespace SGM
+{
+
+class SGM_EXPORT GraphEdge
     {
     public:
 
@@ -34,7 +36,7 @@ class GraphEdge
         bool   m_bOneWay;
     };
 
-class Graph
+class SGM_EXPORT Graph
     {
     public:
 
@@ -43,14 +45,15 @@ class Graph
         // If an edge is closed, then a non-simple graph is returned and extra vertices may  
         // be added with potentially invalid IDs if the closed edge(s) do not have vertices.
 
-        Graph(SGM::Result                          &rResult,
-              std::set<edge *,EntityCompare> const &sEdges);
+        Graph(SGM::Result               &rResult,
+              std::set<SGM::Edge> const &sEdges);
 
-        Graph(SGM::Result                          &rResult,
-              std::set<face *,EntityCompare> const &sFaces,
-              bool                                  bEdgeConnected);
+        Graph(SGM::Result               &rResult,
+              std::set<SGM::Face> const &sFaces,
+              bool                       bEdgeConnected);
 
-        Graph(complex const *pComplex);
+        Graph(SGM::Result               &rResult,
+              SGM::Complex        const &ComplexID);
 
         // Get methods
 
@@ -82,12 +85,12 @@ class Graph
 
     private:
 
-        std::set<size_t>                      m_sVertices;
-        std::set<GraphEdge>                   m_sEdges;
+        std::set<size_t>    m_sVertices;
+        std::set<GraphEdge> m_sEdges;
 
         // Given a vertex m_mNeighbors returns a vector of adjacent vertices.
 
         mutable std::map<size_t,std::vector<size_t> > m_mNeighbors;
     };
 }
-#endif // GRAPH_H
+#endif // SGM_GRAPH_H

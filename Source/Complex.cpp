@@ -3,9 +3,9 @@
 #include "SGMTranslators.h"
 #include "SGMBoxTree.h"
 #include "SGMPrimitives.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
-#include "Graph.h"
 #include "Mathematics.h"
 
 namespace SGMInternal
@@ -61,6 +61,39 @@ SGM::Interval3D const &complex::GetBox(SGM::Result &) const
     return m_Box;
     }
 
+void complex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap) 
+    {
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedAttributes.insert(pAttribute);
+            }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        else
+            {
+            m_sFixedOwners.insert(pEntity);
+            }
+        }
+    m_sOwners=m_sFixedOwners;
+    }
+
 void complex::Transform(SGM::Transform3D const &Trans)
     {
     size_t nPoints=m_aPoints.size();
@@ -69,51 +102,6 @@ void complex::Transform(SGM::Transform3D const &Trans)
         {
         m_aPoints[Index1]*=Trans;
         }
-    }
-
-size_t SortByPlane(std::vector<complex *>         const &aComplexes,
-                   std::vector<std::vector<complex *> > &aaPlanarSets,
-                   std::vector<SortablePlane>           &aPlanes)
-    {
-    size_t nComplexes=aComplexes.size();
-    size_t Index1;
-    double dTotal=0.0;
-    for(Index1=0;Index1<nComplexes;++Index1)
-        {
-        complex *pComplex=aComplexes[Index1];
-        dTotal+=pComplex->FindAverageEdgeLength();
-        }
-    double dTolernace=(dTotal/nComplexes)*SGM_FIT;
-    std::vector<std::pair<SortablePlane,size_t> > aTempPlane;
-    aTempPlane.reserve(nComplexes);
-    for(Index1=0;Index1<nComplexes;++Index1)
-        {
-        SortablePlane SP(aComplexes[Index1]->GetPoints());
-        SP.SetMinTolerance(dTolernace);
-        aTempPlane.push_back({SP,Index1});
-        }
-    std::sort(aTempPlane.begin(),aTempPlane.end());
-    std::vector<complex *> aPlanarSet;
-    aPlanarSet.push_back(aComplexes[aTempPlane[0].second]);
-    SortablePlane LastPlane=aTempPlane[0].first;
-    aPlanes.push_back(LastPlane);
-    for(Index1=1;Index1<nComplexes;++Index1)
-        {
-        if(aTempPlane[Index1].first==LastPlane)
-            {
-            aPlanarSet.push_back(aComplexes[aTempPlane[Index1].second]);
-            }
-        else
-            {
-            aaPlanarSets.push_back(aPlanarSet);
-            aPlanarSet.clear();
-            LastPlane=aTempPlane[Index1].first;
-            aPlanes.push_back(LastPlane);
-            aPlanarSet.push_back(aComplexes[aTempPlane[Index1].second]);
-            }
-        }
-    aaPlanarSets.push_back(aPlanarSet);
-    return aaPlanarSets.size();
     }
 
 complex *CoverPlanarSet(SGM::Result                  &rResult,
@@ -194,45 +182,6 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     return new complex(rResult,aPoints3D,aTriangles);
     }
 
-std::vector<complex *> MakeSymmetriesMatch(std::vector<complex *>     const &aComplexes,
-                                           std::vector<SortablePlane> const &aPlanes)
-    {
-    size_t nPlanes=aPlanes.size();
-    size_t Index1,Index2;
-    for(Index1=1;Index1<nPlanes;++Index1)
-        {
-        SGM::Vector3D Offset;
-        if(aPlanes[Index1-1].Parallel(aPlanes[Index1],Offset,SGM_MIN_TOL))
-            {
-            complex *pComplex0=aComplexes[Index1-1];
-            complex *pComplex1=aComplexes[Index1];
-            std::vector<SGM::Point3D> aPoints0=pComplex0->GetPoints();
-            std::vector<SGM::Point3D> const &aPoints1=pComplex1->GetPoints();
-            size_t nPoints1=aPoints1.size();
-            for(Index2=0;Index2<nPoints1;++Index2)
-                {
-                aPoints0[Index2]+=Offset;
-                }
-            std::map<unsigned int,unsigned int> mMatchMap;
-            if(DoPointsMatch(aPoints0,aPoints1,mMatchMap,SGM_MIN_TOL))
-                {
-                std::vector<unsigned int> const &aTriangles0=pComplex0->GetTriangles();
-                std::vector<unsigned int> &aTriangles1=pComplex1->GetTrianglesNonConst();
-                size_t nTriangles1=aTriangles1.size();
-                for(Index2=0;Index2<nTriangles1;++Index2)
-                    {
-                    aTriangles1[Index2]=mMatchMap[aTriangles0[Index2]];
-                    }
-                for(Index2=0;Index2<nTriangles1;Index2+=3)
-                    {
-                    std::swap(aTriangles1[Index2],aTriangles1[Index2+1]);
-                    }
-                }
-            }
-        }
-    return aComplexes;
-    }
-
 complex *complex::Cover(SGM::Result &rResult) const
     {
     if(m_aTriangles.size())
@@ -278,17 +227,7 @@ complex *complex::Cover(SGM::Result &rResult) const
             }
         return pAnswer;
         }
-    else
-        {
-        // One-dimensional version.
-
-        Graph graph(this);
-        Graph MaxCycle=graph.FindLargestMinCycle();
-        std::vector<size_t> aVertices;
-        MaxCycle.OrderVertices(aVertices);
-
-        return nullptr;
-        }
+    return nullptr;
     }
 
 complex *complex::FindBoundary(SGM::Result &rResult) const
@@ -561,7 +500,7 @@ double complex::FindAverageEdgeLength(double *dMaxEdgeLength) const
                 }
             }
         }
-    return dTotalLength/(nSegments/2.0+nTriangles/3.0);
+    return dTotalLength/(nSegments/2.0+nTriangles);
     }
 
 bool complex::IsConnected() const
@@ -569,7 +508,7 @@ bool complex::IsConnected() const
     if(m_aSegments.size())
         {
         std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
+        std::set<SGM::GraphEdge> sEdges;
 
         size_t nPoints=m_aPoints.size();
         size_t Index1;
@@ -580,12 +519,12 @@ bool complex::IsConnected() const
         size_t nSegments=m_aSegments.size();
         for(Index1=0;Index1<nSegments;Index1+=2)
             {
-            GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
+            SGM::GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
             sEdges.insert(GEdge);
             }
 
-        Graph graph(sVertices,sEdges);
-        std::vector<Graph> aGraphs;
+        SGM::Graph graph(sVertices,sEdges);
+        std::vector<SGM::Graph> aGraphs;
         size_t nComps=graph.FindComponents(aGraphs);
         if(nComps==1)
             {
@@ -771,7 +710,7 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
     if(m_aSegments.size())
         {
         std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
+        std::set<SGM::GraphEdge> sEdges;
 
         size_t nPoints=m_aPoints.size();
         size_t Index1;
@@ -782,19 +721,19 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
         size_t nSegments=m_aSegments.size();
         for(Index1=0;Index1<nSegments;Index1+=2)
             {
-            GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
+            SGM::GraphEdge GEdge(m_aSegments[Index1],m_aSegments[Index1+1],Index1);
             sEdges.insert(GEdge);
             }
 
-        Graph graph(sVertices,sEdges);
-        std::vector<Graph> aGraphs;
+        SGM::Graph graph(sVertices,sEdges);
+        std::vector<SGM::Graph> aGraphs;
         size_t nComps=graph.FindComponents(aGraphs);
         for(Index1=0;Index1<nComps;++Index1)
             {
             std::vector<SGM::Point3D> aPoints=m_aPoints;
             std::vector<unsigned int> aSegments;
-            Graph const &comp=aGraphs[Index1];
-            std::set<GraphEdge> const &sEdges2=comp.GetEdges();
+            SGM::Graph const &comp=aGraphs[Index1];
+            std::set<SGM::GraphEdge> const &sEdges2=comp.GetEdges();
             for(auto GEdge : sEdges2)
                 {
                 aSegments.push_back((unsigned int)(GEdge.m_nStart));
@@ -1019,9 +958,9 @@ double complex::Area() const
     double dArea=0;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        SGM::Point3D const &A=m_aPoints[Index1];
-        SGM::Point3D const &B=m_aPoints[Index1+1];
-        SGM::Point3D const &C=m_aPoints[Index1+2];
+        SGM::Point3D const &A=m_aPoints[m_aTriangles[Index1]];
+        SGM::Point3D const &B=m_aPoints[m_aTriangles[Index1+1]];
+        SGM::Point3D const &C=m_aPoints[m_aTriangles[Index1+2]];
         dArea+=((A-B)*(C-B)).Magnitude();
         }
     return dArea*0.5;
@@ -1099,6 +1038,7 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
     return aAnswer;
     }
 
+#if 0
 void PlanarDisk(SGM::Result   &rResult,
                 complex const *pComp)
     {
@@ -1124,6 +1064,7 @@ void PlanarDisk(SGM::Result   &rResult,
     SGM::Point3D EndPos=Origin+ZVec*dRadius;
     SGM::CreateLinearEdge(rResult,StartPos,EndPos);
     }
+#endif
 
 void complex::FindTree() const
     {
@@ -1176,10 +1117,10 @@ complex *complex::FindDegenerateTriangles(SGM::Result &rResult) const
     return pAnswer;
     }
 
-void complex::ReduceToLargestMinCycle()
+void complex::ReduceToLargestMinCycle(SGM::Result &rResult)
     {
-    Graph graph(this);
-    Graph LMC=graph.FindLargestMinCycle();
+    SGM::Graph graph(rResult,SGM::Complex(this->GetID()));
+    SGM::Graph LMC=graph.FindLargestMinCycle();
     std::vector<size_t> aVertices;
     LMC.OrderVertices(aVertices);
     std::vector<SGM::Point3D> aNewPoints;
@@ -1254,7 +1195,7 @@ size_t complex::FindHoles(SGM::Result            &rResult,
         size_t nCompSize=pComp->GetPoints().size();
         if(nMinSize<nCompSize && nCompSize<nBottomMaxSize)
             {
-            pComp->ReduceToLargestMinCycle();
+            pComp->ReduceToLargestMinCycle(rResult);
             aBottomHoles.push_back(pComp);
             pComp->ChangeColor(rResult,0,0,255);
             }
@@ -1290,7 +1231,7 @@ size_t complex::FindHoles(SGM::Result            &rResult,
         size_t nCompSize=pComp->GetPoints().size();
         if(nMinSize<nCompSize && nCompSize<nMaxSize)
             {
-            pComp->ReduceToLargestMinCycle();
+            pComp->ReduceToLargestMinCycle(rResult);
             aTopHoles.push_back(pComp);
             }
         else

@@ -1,6 +1,8 @@
+#if 0
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMModify.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
@@ -9,7 +11,6 @@
 #include "Modify.h"
 #include "Primitive.h"
 #include "Topology.h"
-#include "Graph.h"
 #include "Faceter.h"
 
 #include <limits>
@@ -762,7 +763,7 @@ void UniteBodies(SGM::Result &rResult,
     std::set<volume *,EntityCompare> const &sVolumes0=pKeepBody->GetVolumes();
     std::set<volume *,EntityCompare> const &sVolumes1=pDeleteBody->GetVolumes();
     std::set<size_t> sGraphVertices;
-    std::set<GraphEdge> sGraphEdges;
+    std::set<SGM::GraphEdge> sGraphEdges;
     for(volume *pVolume : sVolumes0)
         {
         sGraphVertices.insert(pVolume->GetID());
@@ -774,13 +775,13 @@ void UniteBodies(SGM::Result &rResult,
     size_t nGraphEdgeCount=0;
     for(auto iter : sMergedVolumes)
         {
-        sGraphEdges.insert(GraphEdge(iter.first,iter.second,nGraphEdgeCount));
+        sGraphEdges.insert(SGM::GraphEdge(iter.first,iter.second,nGraphEdgeCount));
         ++nGraphEdgeCount;
         }
-    Graph graph(sGraphVertices,sGraphEdges);
-    std::vector<Graph> aComps;
+    SGM::Graph graph(sGraphVertices,sGraphEdges);
+    std::vector<SGM::Graph> aComps;
     graph.FindComponents(aComps);
-    for(Graph const &comp : aComps)
+    for(SGM::Graph const &comp : aComps)
         {
         std::set<size_t> const &sVerts=comp.GetVertices();
         MergeAndMoveVolumes(rResult,pKeepBody,sVerts);
@@ -789,4 +790,4 @@ void UniteBodies(SGM::Result &rResult,
     }
 
 } // End of SGMInternal namespace.
-
+#endif

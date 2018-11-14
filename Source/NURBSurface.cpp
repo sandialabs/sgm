@@ -10,14 +10,14 @@
 
 namespace SGMInternal
 {
-NURBsurface::NURBsurface(SGM::Result                             &rResult,
-                         std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
-                         std::vector<double>                    &&aUKnots,
-                         std::vector<double>                    &&aVKnots):
+NURBsurface::NURBsurface(SGM::Result                                   &rResult,
+                         std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                         std::vector<double>                     const &aUKnots,
+                         std::vector<double>                     const &aVKnots):
         surface(rResult,SGM::NURBSurfaceType),
-        m_aaControlPoints(std::move(aControlPoints)),
-        m_aUKnots(std::move(aUKnots)),
-        m_aVKnots(std::move(aVKnots))
+        m_aaControlPoints(aaControlPoints),
+        m_aUKnots(aUKnots),
+        m_aVKnots(aVKnots)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();

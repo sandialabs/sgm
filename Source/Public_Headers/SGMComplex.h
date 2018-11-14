@@ -42,9 +42,15 @@ namespace SGM
 
     // Find functions
 
+    SGM_EXPORT double FindComplexLength(SGM::Result        &rResult,
+                                        SGM::Complex const &ComplexID);
+
     SGM_EXPORT double FindAverageEdgeLength(SGM::Result        &rResult,
                                             SGM::Complex const &ComplexID,
                                             double             *dMaxLength=nullptr);
+
+    SGM_EXPORT double FindComplexArea(SGM::Result        &rResult,
+                                      SGM::Complex const &ComplexID);
 
     SGM_EXPORT size_t FindGenus(SGM::Result        &rResult,
                                 SGM::Complex const &ComplexID);
@@ -57,6 +63,15 @@ namespace SGM
 
     SGM_EXPORT bool IsCycle(SGM::Result        &rResult,
                             SGM::Complex const &ComplexID);
+
+    SGM_EXPORT bool IsConnected(SGM::Result        &rResult,
+                                SGM::Complex const &ComplexID);
+
+    SGM_EXPORT bool IsPlanar(SGM::Result        &rResult,
+                             SGM::Complex const &ComplexID,
+                             SGM::Point3D       &Origin,
+                             SGM::UnitVector3D  &Normal,
+                             double              dTolerance);
 
     SGM_EXPORT bool IsOriented(SGM::Result        &rResult,
                                SGM::Complex const &ComplexID);
@@ -128,6 +143,11 @@ namespace SGM
 
     SGM_EXPORT void ReduceToUsedPoints(SGM::Result  &rResult,
                                        SGM::Complex &ComplexID);
+
+    SGM_EXPORT void SplitComplexAtPoints(SGM::Result                     &rResult,
+                                         SGM::Complex                    &ComplexID,
+                                         std::vector<SGM::Point3D> const &aPoints,
+                                         double                           dTolerance=SGM_MIN_TOL);
 
     } // End of SGM namespace
 

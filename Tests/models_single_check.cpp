@@ -243,7 +243,7 @@ TEST(models_single_check, DISABLED_import_check_glom4_0019_Bhinkey_A)
     expect_import_check_success(file_name);
 }
 
-TEST(models_check, ACISSphereGeometry_arbitraryCenter) 
+TEST(models_single_check, ACISSphereGeometry_arbitraryCenter)
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);
@@ -262,7 +262,7 @@ TEST(models_check, ACISSphereGeometry_arbitraryCenter)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_check, ACISBrickWithImprintedEllipses) 
+TEST(models_single_check, ACISBrickWithImprintedEllipses)
 {
     const char* file_name = "ACISBrickWithImprintedEllipses.stp";
     SCOPED_TRACE(file_name);
@@ -304,7 +304,7 @@ TEST(models_check, ACISBrickWithImprintedEllipses)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_check, ACISNotchedBrickGeometry) 
+TEST(models_single_check, ACISNotchedBrickGeometry)
 {
     const char* file_name = "ACISNotchedBrickGeometry.stp";
     SCOPED_TRACE(file_name);
@@ -338,7 +338,7 @@ TEST(models_check, ACISNotchedBrickGeometry)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_check, check_plane_circle_consistent_with_cylinder_line_intersections)
+TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -409,5 +409,4 @@ TEST(intersection_check, intersect_line_and_extrude)
 
     SGMTesting::ReleaseTestThing(pThing); 
 }
-
 

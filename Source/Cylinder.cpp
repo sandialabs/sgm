@@ -155,7 +155,7 @@ SGM::Point2D cylinder::Inverse(SGM::Point3D const &Pos,
         {
         // Check for points on the axis, and on the seam.
 
-        if(!m_Domain.m_UDomain.InInterval(dU, SGM_ZERO))
+        if(m_Domain.m_UDomain.OnBoundary(dU, SGM_MIN_TOL))
             {
             if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                 SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
