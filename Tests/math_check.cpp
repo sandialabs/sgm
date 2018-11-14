@@ -20,6 +20,32 @@
 
 #include "test_utility.h"
 
+TEST(math_check, extrude_hermit)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Vector3D> aVectors;
+    std::vector<double> aParams;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(10,0,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aParams.push_back(0);
+    aParams.push_back(12);
+    SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
+    SGM::UnitVector3D Axis(0,0,1);
+    SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
+
+    SGM::DeleteEntity(rResult,SurfID);
+    SGM::DeleteEntity(rResult,CurveID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, closest_point)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -943,6 +943,16 @@ SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateExtrudeSurface(SGM::Result             &rResult,
+                                       SGM::UnitVector3D const &Axis,
+                                       SGM::Curve              &CurveID)
+    {
+    SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    SGMInternal::surface *pSurface=SGMInternal::CreateExtrudeSurface(rResult, Axis, pCurve);
+
+    return {pSurface->GetID()};
+    }
+
 SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
                                SGM::Surface                   &SurfaceID,
                                std::vector<SGM::Edge>         &aEdges,
@@ -1192,6 +1202,15 @@ SGM::Curve SGM::CreateNURBCurve(SGM::Result                     &rResult,
     {
     SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
     return {pNURB->GetID()};
+    }
+
+SGM::Curve SGM::CreateHermitCurve(SGM::Result                      &rResult,
+                                  std::vector<SGM::Point3D>  const &aPoints,
+                                  std::vector<SGM::Vector3D> const &aVectors,
+                                  std::vector<double>        const &aParams)
+    {
+    SGMInternal::hermite *pHermite=new SGMInternal::hermite(rResult,aPoints,aVectors,aParams);
+    return {pHermite->GetID()};
     }
 
 SGM::Curve SGM::CreateNUBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,

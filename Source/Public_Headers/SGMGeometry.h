@@ -74,6 +74,11 @@ SGM_EXPORT SGM::Curve CreateNURBCurve(SGM::Result                     &rResult,
                                       std::vector<SGM::Point4D> const &aControlPoints,
                                       std::vector<double>       const &aKnots);
 
+SGM_EXPORT SGM::Curve CreateHermitCurve(SGM::Result                      &rResult,
+                                        std::vector<SGM::Point3D>  const &aPoints,
+                                        std::vector<SGM::Vector3D> const &aVectors,
+                                        std::vector<double>        const &aParams);
+
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
                                        SGM::Point3D &Pos);
 
@@ -138,6 +143,10 @@ SGM_EXPORT SGM::Surface CreateNURBSurface(SGM::Result                           
 
 SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
                                              SGM::Point3D      const &Origin,
+                                             SGM::UnitVector3D const &Axis,
+                                             SGM::Curve              &CurveID);
+
+SGM_EXPORT SGM::Surface CreateExtrudeSurface(SGM::Result             &rResult,
                                              SGM::UnitVector3D const &Axis,
                                              SGM::Curve              &CurveID);
 

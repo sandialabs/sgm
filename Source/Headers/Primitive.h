@@ -44,6 +44,10 @@ surface *CreateRevolveSurface(SGM::Result             &rResult,
                               SGM::UnitVector3D const &Axis,
                               curve                   *pCurve);
 
+surface *CreateExtrudeSurface(SGM::Result             &rResult,
+                              SGM::UnitVector3D const &Axis,
+                              curve                   *pCurve);
+
 edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
                  SGM::Interval1D const *pDomain);
