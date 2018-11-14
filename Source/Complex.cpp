@@ -1078,6 +1078,11 @@ complex *complex::FindDegenerateTriangles(SGM::Result &rResult) const
         pAnswer=new complex(rResult,m_aPoints,aTriangles);
         pAnswer->ReduceToUsedPoints();
         }
+    else
+        {
+        std::vector<SGM::Point3D> aEmpty;
+        pAnswer=new complex(rResult,aEmpty);
+        }
     return pAnswer;
     }
 
