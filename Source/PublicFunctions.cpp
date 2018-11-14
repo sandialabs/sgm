@@ -117,6 +117,23 @@ bool SGM::IsCycle(SGM::Result        &rResult,
     return pComplex->IsCycle();
     }
 
+bool SGM::IsConnected(SGM::Result        &rResult,
+                      SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsConnected();
+    }
+
+bool SGM::IsPlanar(SGM::Result        &rResult,
+                   SGM::Complex const &ComplexID,
+                   SGM::Point3D       &Origin,
+                   SGM::UnitVector3D  &Normal,
+                   double              dTolerance)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->IsPlanar(Origin,Normal,dTolerance);
+    }
+
 bool SGM::IsOriented(SGM::Result        &rResult,
                      SGM::Complex const &ComplexID)
     {
@@ -168,6 +185,20 @@ size_t SGM::SplitWithComplex(SGM::Result               &,//rResult,
                              std::vector<SGM::Complex> &)//aComponents)
     {
     return 0;
+    }
+
+double SGM::FindComplexLength(SGM::Result        &rResult,
+                              SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->FindLength();
+    }
+
+double SGM::FindComplexArea(SGM::Result        &rResult,
+                            SGM::Complex const &ComplexID)
+    {
+    SGMInternal::complex *pComplex=(SGMInternal::complex *)rResult.GetThing()->FindEntity(ComplexID.m_ID);
+    return pComplex->Area();
     }
 
 double SGM::FindAverageEdgeLength(SGM::Result        &rResult,

@@ -20,6 +20,31 @@
 
 #include "test_utility.h"
 
+TEST(math_check, rectangle)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    SGM::Point2D Pos0(0,0),Pos1(1,1);
+    SGM::Complex RectangleID=SGM::CreateRectangle(rResult,Pos0,Pos1,false);
+    double dLength=SGM::FindComplexLength(rResult,RectangleID);
+    bool bTest1=SGM::NearEqual(dLength,4.0,SGM_ZERO,false);
+    EXPECT_TRUE(bTest1);
+
+    EXPECT_TRUE(SGM::IsCycle(rResult,RectangleID));
+    SGM::Point3D Origin;
+    SGM::UnitVector3D Normal;
+    EXPECT_TRUE(SGM::IsPlanar(rResult,RectangleID,Origin,Normal,SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::IsConnected(rResult,RectangleID));
+
+    SGM::Complex FilledID=SGM::CreateRectangle(rResult,Pos0,Pos1,true);
+    double dArea=SGM::FindComplexArea(rResult,FilledID);
+    bool bTest2=SGM::NearEqual(dArea,1.0,SGM_ZERO,false);
+    EXPECT_TRUE(bTest2);
+        
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, cylinder_copy_transform)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -922,9 +922,9 @@ double complex::Area() const
     double dArea=0;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        SGM::Point3D const &A=m_aPoints[Index1];
-        SGM::Point3D const &B=m_aPoints[Index1+1];
-        SGM::Point3D const &C=m_aPoints[Index1+2];
+        SGM::Point3D const &A=m_aPoints[m_aTriangles[Index1]];
+        SGM::Point3D const &B=m_aPoints[m_aTriangles[Index1+1]];
+        SGM::Point3D const &C=m_aPoints[m_aTriangles[Index1+2]];
         dArea+=((A-B)*(C-B)).Magnitude();
         }
     return dArea*0.5;
@@ -1002,6 +1002,7 @@ std::vector<complex *> complex::SplitByPlanes(SGM::Result &rResult,double dToler
     return aAnswer;
     }
 
+#if 0
 void PlanarDisk(SGM::Result   &rResult,
                 complex const *pComp)
     {
@@ -1027,6 +1028,7 @@ void PlanarDisk(SGM::Result   &rResult,
     SGM::Point3D EndPos=Origin+ZVec*dRadius;
     SGM::CreateLinearEdge(rResult,StartPos,EndPos);
     }
+#endif
 
 void complex::FindTree() const
     {
