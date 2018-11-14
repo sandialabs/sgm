@@ -20,6 +20,23 @@
 
 #include "test_utility.h"
 
+TEST(math_check, save_step_primitives)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    SGM::CreateCylinder(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::CreateCone(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1,2);
+    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,3);
+
+    SGM::TranslatorOptions TranslatorOpts;
+    SGM::SaveSTEP(rResult,"primitives.stp",SGM::Thing(),TranslatorOpts);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+
 TEST(math_check, revolve_surface_save_step)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
