@@ -10,7 +10,7 @@ set(SGM_GTEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/intersection_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/interval_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/math_check.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/models_ouo_check.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/models_single_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/volume_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_utility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/area_check.cpp

@@ -56,6 +56,15 @@ void expect_check_success(SGM::Result &rResult)
         }
 }
 
+// Import a file from modles directory and check all entities
+void expect_import_check_success(std::string const &file_name)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 // Import a file from OUO directory and check all entities
 void expect_import_ouo_check_success(std::string const &ouo_file_name)
@@ -67,171 +76,171 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_TSLhousingGeom) 
+TEST(models_single_check, import_check_OUO_Cone_definition)
+    {
+    const char* file_name = "OUO_Cone_definition.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_ouo_check_success(file_name);
+    }
+
+TEST(models_single_check, DISABLED_import_check_OUO_TSLhousingGeom)
 {
     std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
 }
 
-TEST(models_ouo_check, import_check_OUO_full_model_volume1)
+TEST(models_single_check, import_check_OUO_full_model_volume1)
 {
     const char* file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_grv_geom)
+TEST(models_single_check, import_check_OUO_grv_geom)
 {
     const char* file_name = "OUO_grv_geom.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
+TEST(models_single_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of faces.
 {
     const char* file_name = "OUO_ZGeom.stp";
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0001_Bbat) 
+TEST(models_single_check, import_check_glom4_0001_Bbat)
 {
-    const char* file_name = "OUO_glom4/0001-_Bbat.stp";
+    const char* file_name = "Glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0002_Bknob) 
+TEST(models_single_check, import_check_glom4_0002_Bknob) 
 {
-    const char* file_name = "OUO_glom4/0002-_Bknob.stp";
+    const char* file_name = "Glom4/0002-_Bknob.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0003_Bbracket)
+TEST(models_single_check, import_check_glom4_0003_Bbracket)
 {
-    const char* file_name = "OUO_glom4/0003-_Bbracket.stp";
+    const char* file_name = "Glom4/0003-_Bbracket.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0004_BSump1)
+TEST(models_single_check, import_check_glom4_0004_BSump1)
 {
-    const char* file_name = "OUO_glom4/0004-_BSump1.stp";
+    const char* file_name = "Glom4/0004-_BSump1.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0005_BSump2)
+TEST(models_single_check, import_check_glom4_0005_BSump2)
 {
-    const char* file_name = "OUO_glom4/0005-_BSump2.stp";
+    const char* file_name = "Glom4/0005-_BSump2.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0006_Bangle)
+TEST(models_single_check, import_check_glom4_0006_Bangle)
 {
-    const char* file_name = "OUO_glom4/0006-_Bangle.stp";
+    const char* file_name = "Glom4/0006-_Bangle.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_Cone_definition)
+TEST(models_single_check, import_check_glom4_0007_Bflange)
 {
-    const char* file_name = "OUO_Cone_definition.stp";
+    const char* file_name = "Glom4/0007-_Bflange.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0007_Bflange) 
+TEST(models_single_check, import_check_glom4_0008_Bkey) 
 {
-    const char* file_name = "OUO_glom4/0007-_Bflange.stp";
+    const char* file_name = "Glom4/0008-_Bkey.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0008_Bkey) 
+TEST(models_single_check, DISABLED_import_check_glom4_0009_Bcam) 
 {
-    const char* file_name = "OUO_glom4/0008-_Bkey.stp";
+    const char* file_name = "Glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0009_Bcam) 
+TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) // TODO: Face 388 infinite call
 {
-    const char* file_name = "OUO_glom4/0009-_Bcam.stp";
+    const char* file_name = "Glom4/0010-_Bsteer.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0010_Bsteer) // TODO: Face 388 infinite call
+TEST(models_single_check, import_check_glom4_0011_Bdice) 
 {
-    const char* file_name = "OUO_glom4/0010-_Bsteer.stp";
+    const char* file_name = "Glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0011_Bdice) 
+TEST(models_single_check, import_check_glom4_0012_Bgear)
 {
-    const char* file_name = "OUO_glom4/0011-_Bdice.stp";
+    const char* file_name = "Glom4/0012-_Bgear.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0012_Bgear)
+TEST(models_single_check, import_check_glom4_0013_Bbellows)
 {
-    const char* file_name = "OUO_glom4/0012-_Bgear.stp";
+    const char* file_name = "Glom4/0013-_Bbellows.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0013_Bbellows)
+TEST(models_single_check, DISABLED_import_check_glom4_0014_Bplate) // TODO: Lots of faces.
 {
-    const char* file_name = "OUO_glom4/0013-_Bbellows.stp";
+    const char* file_name = "Glom4/0014-_Bplate.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0014_Bplate) // TODO: Lots of faces.
+TEST(models_single_check, import_check_glom4_0015_Bpipe)
 {
-    const char* file_name = "OUO_glom4/0014-_Bplate.stp";
+    const char* file_name = "Glom4/0015-_Bpipe.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0015_Bpipe)
+TEST(models_single_check, import_check_glom4_0016_Bspring) 
 {
-    const char* file_name = "OUO_glom4/0015-_Bpipe.stp";
+    const char* file_name = "Glom4/0016-_Bspring.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0016_Bspring) 
+TEST(models_single_check, import_check_glom4_0017_Bcube) 
 {
-    const char* file_name = "OUO_glom4/0016-_Bspring.stp";
+    const char* file_name = "Glom4/0017-_Bcube.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, import_check_OUO_glom4_0017_Bcube) 
+TEST(models_single_check, DISABLED_import_check_glom4_0018_Bhinkey) // TODO: Lots of faces off.
 {
-    const char* file_name = "OUO_glom4/0017-_Bcube.stp";
+    const char* file_name = "Glom4/0018-_Bhinkey.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0018_Bhinkey) // TODO: Lots of faces off.
+TEST(models_single_check, DISABLED_import_check_glom4_0019_Bhinkey_A)
 {
-    const char* file_name = "OUO_glom4/0018-_Bhinkey.stp";
+    const char* file_name = "Glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
-}
-
-TEST(models_ouo_check, DISABLED_import_check_OUO_glom4_0019_Bhinkey_A)
-{
-    const char* file_name = "OUO_glom4/0019-_Bhinkey_A.stp";
-    SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_check_success(file_name);
 }
 
 TEST(models_check, ACISSphereGeometry_arbitraryCenter) 

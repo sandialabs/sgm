@@ -10,8 +10,11 @@ namespace SGM {
     ///////////////////////////////////////////////////////////////////////////
 
     inline BoxTree::BoxTree(BoxTree const & other)
-    : m_treeRoot(CreateDeepCopy(*other.m_treeRoot)), m_treeSize(other.m_treeSize)
-    { }
+    : m_treeRoot(nullptr), m_treeSize(other.m_treeSize)
+    {
+        if (other.m_treeRoot != nullptr)
+            m_treeRoot = CreateDeepCopy(*other.m_treeRoot);
+    }
 
     inline BoxTree& BoxTree::operator=( const BoxTree& rhs )
     {

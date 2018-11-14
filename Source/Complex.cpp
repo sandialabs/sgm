@@ -1,19 +1,55 @@
 #include "SGMMathematics.h"
-#include "SGMInterval.h"
 #include "SGMComplex.h"
 #include "SGMTranslators.h"
 #include "SGMBoxTree.h"
-#include "SGMSegment.h"
 #include "SGMPrimitives.h"
 
 #include "EntityClasses.h"
 #include "Graph.h"
 #include "Mathematics.h"
-#include "Primitive.h"
-#include "Topology.h"
 
 namespace SGMInternal
 {
+
+complex::complex(SGM::Result &rResult,
+                 std::vector<SGM::Point3D> const &aPoints,
+                 bool bFilled) :
+        topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(),
+        m_aTriangles(),
+        m_Tree()
+    {
+    unsigned int nPoints = (unsigned int) aPoints.size();
+    m_aSegments.reserve(nPoints * 2);
+    unsigned int Index1;
+    for (Index1 = 0; Index1 < nPoints; ++Index1)
+        {
+        m_aSegments.push_back(Index1);
+        m_aSegments.push_back((Index1 + 1) % nPoints);
+        }
+    if (bFilled)
+        {
+        std::vector<unsigned int> aPolygon;
+        for (Index1 = 0; Index1 < nPoints; ++Index1)
+            {
+            aPolygon.push_back(Index1);
+            }
+        SGM::UnitVector3D XAxis, YAxis, ZAxis;
+        SGM::Point3D Origin;
+        SGM::FindLeastSquarePlane(aPoints, Origin, XAxis, YAxis, ZAxis);
+        std::vector<SGM::Point2D> aPoints2D;
+        SGM::ProjectPointsToPlane(m_aPoints, Origin, XAxis, YAxis, ZAxis, aPoints2D);
+        if (SGM::PolygonArea(aPoints2D) < 0)
+            {
+            for (Index1 = 0; Index1 < nPoints; ++Index1)
+                {
+                aPoints2D[Index1].m_u = -aPoints2D[Index1].m_u;
+                }
+            }
+        SGM::TriangulatePolygon(rResult, aPoints2D, aPolygon, m_aTriangles);
+        }
+    }
 
 SGM::Interval3D const &complex::GetBox(SGM::Result &) const
     {
