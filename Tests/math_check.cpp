@@ -20,6 +20,35 @@
 
 #include "test_utility.h"
 
+TEST(math_check, closest_point)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateCylinder(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,2),1);
+    SGM::Point3D Pos(1,0,3);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    auto iter=sFaces.begin();
+    SGM::Face FaceID1=*iter;
+    ++iter;
+    SGM::Face FaceID2=*iter;
+    ++iter;
+    SGM::Face FaceID3=*iter;
+
+    SGM::Point3D CPos1,CPos2,CPos3;
+    SGM::Entity Ent1,Ent2,Ent3;
+    SGM::FindClosestPointOnEntity(rResult,Pos,FaceID1,CPos1,Ent1);
+    SGM::FindClosestPointOnEntity(rResult,Pos,FaceID2,CPos2,Ent2);
+    SGM::FindClosestPointOnEntity(rResult,Pos,FaceID3,CPos3,Ent3);
+
+    EXPECT_TRUE(SGM::NearEqual(CPos1,SGM::Point3D(1,0,2),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(CPos2,SGM::Point3D(1,0,0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(CPos3,SGM::Point3D(1,0,2),SGM_MIN_TOL));
+      
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, rectangle)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -51,7 +80,7 @@ TEST(math_check, rectangle)
     SGM::Complex IDComplexBox=SGM::CreateComplex(rResult,IDBox);
     SGM::FindSharpEdges(rResult,IDComplexBox,0.1);
 
-    std::vector<SGM::Point3D> aPoints1,aPoints2;
+    std::vector<SGM::Point3D> aPoints1,aPoints2,aPoints3;
     std::vector<SGM::IntersectionType> aTypes1,aTypes2;
     SGM::Point3D Root(5,5,5);
     SGM::UnitVector3D Axis(0,0,1);
@@ -59,6 +88,10 @@ TEST(math_check, rectangle)
     SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints2,aTypes2,SGM_MIN_TOL,true);
     EXPECT_EQ(aPoints1.size(),1);
     EXPECT_EQ(aPoints2.size(),2);
+
+    SGM::Segment3D Seg(Root,SGM::Point3D(5,5,15));
+    SGM::IntersectSegment(rResult,Seg,IDBox,aPoints3);
+    EXPECT_EQ(aPoints3.size(),1);
         
     SGMTesting::ReleaseTestThing(pThing);
 }
