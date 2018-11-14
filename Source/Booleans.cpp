@@ -1,3 +1,4 @@
+#if 0
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMModify.h"
@@ -789,4 +790,4 @@ void UniteBodies(SGM::Result &rResult,
     }
 
 } // End of SGMInternal namespace.
-
+#endif

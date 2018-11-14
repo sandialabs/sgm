@@ -1969,6 +1969,7 @@ double SGM::FindVolume(SGM::Result       &rResult,
     return dAnswer;
     }
 
+/*
 std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
                                               SGM::Edge   &EdgeID,
                                               SGM::Face   &FaceID)
@@ -1993,6 +1994,7 @@ void SGM::UniteBodies(SGM::Result &rResult,
     SGMInternal::body *pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
     SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
     }
+*/
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {

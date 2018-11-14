@@ -11,9 +11,11 @@
 namespace SGMInternal
 {
 
+/*
 void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody);
+*/
 
 // pFace1 may be a nullptr and mHitMap(n) returns the edges or vertices
 // hit by paramters on the curve on face n.

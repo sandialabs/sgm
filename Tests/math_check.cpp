@@ -17,7 +17,6 @@
 
 #include "test_utility.h"
 
-
 TEST(math_check, find_least_square_plane)
 {
     std::vector<SGM::Point3D> aPoints;
@@ -1763,7 +1762,7 @@ TEST(math_check, find_holes_stl)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-
+/*
 TEST(math_check, unite_spheres) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -1776,7 +1775,7 @@ TEST(math_check, unite_spheres)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-
+*/
 TEST(math_check, NUB_curve_inverse) 
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -2508,7 +2507,7 @@ TEST(math_check, DISABLED_least_squares_plane)
     EXPECT_TRUE(bAnswer); 
     SGMTesting::ReleaseTestThing(pThing); 
     }
-
+/*
 TEST(math_check, DISABLED_unite_squares_island) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -2521,7 +2520,7 @@ TEST(math_check, DISABLED_unite_squares_island)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-
+*/
 TEST(math_check, sgm_save_and_read_block) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
