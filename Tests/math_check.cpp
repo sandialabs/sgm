@@ -36,11 +36,20 @@ TEST(math_check, rectangle)
     SGM::UnitVector3D Normal;
     EXPECT_TRUE(SGM::IsPlanar(rResult,RectangleID,Origin,Normal,SGM_MIN_TOL));
     EXPECT_TRUE(SGM::IsConnected(rResult,RectangleID));
+    EXPECT_FALSE(SGM::IsLinear(rResult,RectangleID));
 
     SGM::Complex FilledID=SGM::CreateRectangle(rResult,Pos0,Pos1,true);
     double dArea=SGM::FindComplexArea(rResult,FilledID);
     bool bTest2=SGM::NearEqual(dArea,1.0,SGM_ZERO,false);
     EXPECT_TRUE(bTest2);
+
+    SGM::FindDegenerateTriangles(rResult,FilledID);
+    SGM::GetBoundingBox(rResult,FilledID);
+    SGM::GetBoundingBox(rResult,RectangleID);
+
+    SGM::Body IDBox=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Complex IDComplexBox=SGM::CreateComplex(rResult,IDBox);
+    SGM::FindSharpEdges(rResult,IDComplexBox,0.1);
         
     SGMTesting::ReleaseTestThing(pThing);
 }
