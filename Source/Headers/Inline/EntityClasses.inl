@@ -285,6 +285,11 @@ namespace SGMInternal {
     inline void assembly::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented for assembly"); }
 
+    inline bool assembly::Check(SGM::Result &,
+                                SGM::CheckOptions const  &,
+                                std::vector<std::string> &) const 
+    {return true;}
+
     //
     // reference 
     //
@@ -311,6 +316,11 @@ namespace SGMInternal {
 
     inline void reference::ReplacePointers(std::map<entity *, entity *> const &)
     { throw std::logic_error("not implemented yet for reference"); }
+
+    inline bool reference::Check(SGM::Result &,
+                                 SGM::CheckOptions const  &,
+                                 std::vector<std::string> &) const 
+    {return true;}
 
     //
     // body

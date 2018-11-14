@@ -1036,7 +1036,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings,false); // only top level
+    return pEntity->Check(rResult,Options,aCheckStrings); // only top level
     }
 
 bool SGM::TestCurve(SGM::Result      &rResult,
