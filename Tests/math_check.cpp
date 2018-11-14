@@ -15,6 +15,9 @@
 #include "SGMModify.h"
 #include "SGMDisplay.h"
 
+#define SGM_TIMER 
+#include "Timer.h"
+
 #include "test_utility.h"
 
 TEST(math_check, find_least_square_plane)
@@ -65,6 +68,14 @@ TEST(math_check, find_least_square_plane)
 
     EXPECT_TRUE(bFound);
     EXPECT_TRUE(SGM::NearEqual(fabs(ZVec%SGM::UnitVector3D(0,0,1)), 1.0, SGM_ZERO, false));
+}
+
+TEST(math_check, timer)
+{
+    SGM_TIMER_INITIALIZE();
+    SGM_TIMER_START("test");
+    SGM_TIMER_STOP();
+    SGM_TIMER_SUM();
 }
 
 TEST(math_check, quartic_equation)
