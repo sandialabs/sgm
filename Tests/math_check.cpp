@@ -20,6 +20,45 @@
 
 #include "test_utility.h"
 
+TEST(math_check, revolve_surface_save_step)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.emplace_back(-2,.5,0);
+    aPoints1.emplace_back(-1,1.5,0);
+    aPoints1.emplace_back(0,1,0);
+    aPoints1.emplace_back(1,1.5,0);
+    aPoints1.emplace_back(2,2,0);
+
+    // simple case
+    //aPoints1.push_back(SGM::Point3D(-2,.5,0));
+    //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
+    //aPoints1.push_back(SGM::Point3D(0,.5,0));
+    //aPoints1.push_back(SGM::Point3D(1,.5,0));
+    //aPoints1.push_back(SGM::Point3D(2,.5,0));
+
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
+
+    std::vector<SGM::Edge> aEdges;
+    std::vector<SGM::EdgeSideType> aTypes;
+    SGM::Body BodyID=SGM::CreateSheetBody(rResult,RevolveID,aEdges,aTypes);
+    
+    SGM::TranslatorOptions TranslatorOpts;
+    SGM::SaveSTEP(rResult,"revolve_sheet.stp",SGM::Thing(),TranslatorOpts);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, revolve_surface_test)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
