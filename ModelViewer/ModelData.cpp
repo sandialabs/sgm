@@ -462,7 +462,7 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             aFaces.emplace_back(EntityID.m_ID);
             }
         }
-    SGM::UnhookFaces(dPtr->mResult, aFaces);
+    //SGM::UnhookFaces(dPtr->mResult, aFaces);
 
     rebuild_tree();
     rebuild_graphics();

@@ -2051,6 +2051,7 @@ void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     SGMInternal::ImprintVerticesOnClosedEdges(rResult);
     }
 
+/*
 SGM::Body SGM::UnhookFaces(SGM::Result            &rResult,
                            std::vector<SGM::Face> &aFaceIDs)
     {
@@ -2065,6 +2066,7 @@ SGM::Body SGM::UnhookFaces(SGM::Result            &rResult,
         }
     return SGM::Body(SGMInternal::UnhookFaces(rResult,aFaces)->GetID());
     }
+*/
 
 size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
                                    SGM::Curve                   const &CurveID,

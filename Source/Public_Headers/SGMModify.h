@@ -59,10 +59,10 @@ SGM_EXPORT SGM::Vertex ImprintPoint(SGM::Result        &rResult,
 SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
 
 // Unhook the given faces and return them in a different body.
-
+/*
 SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,
                                  std::vector<SGM::Face> &aFaces);
-
+*/
 
 } // End of SGM namespace
 
