@@ -20,6 +20,54 @@
 
 #include "test_utility.h"
 
+TEST(math_check, cylinder_copy_transform)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Pos0(0,0,0),Pos1(0,0,1);
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,Pos0,Pos1,1.0);
+    SGM::Transform3D Trans(SGM::Vector3D(1,2,3));
+    SGM::TransformEntity(rResult,Trans,CylinderID);
+    SGM::CopyEntity(rResult,CylinderID);
+
+    SGM::Surface SurfID=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    SGM::Point2D uvGuess1(0,0);
+    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
+    bool bTest1=SGM::NearEqual(uv1.m_u,0,SGM_MIN_TOL,false);
+    EXPECT_TRUE(bTest1);
+    SGM::Point2D uvGuess2(SGM_TWO_PI,0);
+    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
+    bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
+    EXPECT_TRUE(bTest2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, cone_copy_transform)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Pos0(0,0,0),Pos1(0,0,1);
+    SGM::Body ConeID=SGM::CreateCone(rResult,Pos0,Pos1,1.0,2.0);
+    SGM::Transform3D Trans(SGM::Vector3D(1,2,3));
+    SGM::TransformEntity(rResult,Trans,ConeID);
+    SGM::CopyEntity(rResult,ConeID);
+
+    SGM::Surface SurfID=SGM::CreateConeSurface(rResult,Pos0,Pos1-Pos0,1.0,2.0);
+    SGM::Point2D uvGuess1(0,0);
+    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
+    bool bTest1=SGM::NearEqual(uv1.m_u,0,SGM_MIN_TOL,false);
+    EXPECT_TRUE(bTest1);
+    SGM::Point2D uvGuess2(SGM_TWO_PI,0);
+    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
+    bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
+    EXPECT_TRUE(bTest2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, find_least_square_plane)
 {
     std::vector<SGM::Point3D> aPoints;

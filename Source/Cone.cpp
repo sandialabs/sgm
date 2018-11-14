@@ -143,7 +143,7 @@ SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
         {
         // Check for points on the axis, and on the seam.
 
-        if(m_Domain.m_UDomain.InInterval(dU,SGM_ZERO)==false)
+        if(m_Domain.m_UDomain.OnBoundary(dU,SGM_ZERO))
             {
             if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                 SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
