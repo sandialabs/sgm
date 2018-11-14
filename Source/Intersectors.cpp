@@ -119,11 +119,13 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
                       SGM::Point3D                 const &Origin,
                       SGM::UnitVector3D            const &Axis,
                       complex                      const *pComplex,
-                      std::vector<SGM::Point3D>          &aPoints,
-                      std::vector<SGM::IntersectionType> &aTypes,
+                      std::vector<SGM::Point3D>          &aInPoints,
+                      std::vector<SGM::IntersectionType> &aInTypes,
                       double                              dTolerance,
                       bool                                bUseWholeLine)
     {
+    std::vector<SGM::Point3D> aAllPoints;
+    std::vector<SGM::IntersectionType> aAllTypes;
     SGM::BoxTree const &BTree=pComplex->GetTree();
     std::vector<SGM::BoxTree::BoundedItemType> aHits;
     SGM::Ray3D ray(Origin,Axis);
@@ -140,7 +142,6 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
         Domain.m_dMin=-dTolerance;
         Domain.m_dMax=SGM_MAX;
         }
-    size_t nAnswer=0;
     size_t nHits=aHits.size();
     size_t Index1;
     std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
@@ -176,12 +177,15 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
             SGM::Point2D Duv(XVec%DVec,YVec%DVec);
             if(SGM::InTriangle(Auv,Buv,Cuv,Duv))
                 {
-                aPoints.push_back(D);
-                aTypes.push_back(SGM::PointType);
-                ++nAnswer;
+                aAllPoints.push_back(D);
+                aAllTypes.push_back(SGM::PointType);
                 }
             }
         }
+
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    aInPoints=aAllPoints;
+    aInTypes=aAllTypes;
     return nAnswer;
     }
 

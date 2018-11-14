@@ -50,6 +50,15 @@ TEST(math_check, rectangle)
     SGM::Body IDBox=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
     SGM::Complex IDComplexBox=SGM::CreateComplex(rResult,IDBox);
     SGM::FindSharpEdges(rResult,IDComplexBox,0.1);
+
+    std::vector<SGM::Point3D> aPoints1,aPoints2;
+    std::vector<SGM::IntersectionType> aTypes1,aTypes2;
+    SGM::Point3D Root(5,5,5);
+    SGM::UnitVector3D Axis(0,0,1);
+    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints1,aTypes1);
+    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints2,aTypes2,SGM_MIN_TOL,true);
+    EXPECT_EQ(aPoints1.size(),1);
+    EXPECT_EQ(aPoints2.size(),2);
         
     SGMTesting::ReleaseTestThing(pThing);
 }
