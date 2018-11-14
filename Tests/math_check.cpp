@@ -20,6 +20,84 @@
 
 #include "test_utility.h"
 
+TEST(math_check, revolve_surface_test)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Test Revolve Surface
+
+    bool bAnswer=true;
+
+    // relatively easy testcase to debug
+    // NUB curve is a straight line parallel to the axis
+    // both have a slope of 2:1, and distance between is sqrt(5.0)
+    std::vector<double> aKnots1={0,0,0,0,0.5,1,1,1,1};
+    std::vector<SGM::Point3D> aControlPoints1;
+    aControlPoints1.emplace_back(3.5,1,0);
+    aControlPoints1.emplace_back(3.75,1.5,0);
+    aControlPoints1.emplace_back(4,2,0);
+    aControlPoints1.emplace_back(4.25,2.5,0);
+    aControlPoints1.emplace_back(4.5,3,0);
+
+    SGM::Curve NUBID1=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints1,aKnots1);
+
+    SGM::Point3D Origin1(1.0,1.0,0.0);
+    SGM::UnitVector3D Axis1(1.0,2.0,0.0);
+    SGM::Surface RevolveID1=SGM::CreateRevolveSurface(rResult,Origin1,Axis1,NUBID1);
+
+    SGM::Point3D Pos;
+    SGM::Vector3D Du, Dv;
+    SGM::EvaluateSurface(rResult,RevolveID1,SGM::Point2D(SGM_PI/2.0, 0.5), &Pos, &Du, &Dv);
+
+    bool bAnswer1 = true;
+    double dDistance = sqrt(5.0);
+    if(SGM::NearEqual(Pos, SGM::Point3D(2.0,3.0,-dDistance), SGM_ZERO)==false)
+        {
+        bAnswer1=false;
+        }
+    SGM::UnitVector3D uDuDirection(-2,1,0);
+    SGM::UnitVector3D UnitDu = Du;
+    if(SGM::NearEqual(uDuDirection,UnitDu,SGM_ZERO)==false)
+        {
+        bAnswer1=false;
+        }
+    SGM::UnitVector3D uDvDirection(1,2,0);
+    SGM::UnitVector3D UnitDv = Dv;
+    if(SGM::NearEqual(uDvDirection,UnitDv,SGM_ZERO)==false)
+        {
+        bAnswer1=false;
+        }
+
+    // create a more general NUB to revolve
+    std::vector<double> aKnots2={0,0,0,0,0.5,1,1,1,1};
+    std::vector<SGM::Point3D> aControlPoints2;
+    aControlPoints2.emplace_back(1,1,0);
+    aControlPoints2.emplace_back(1.166666666666666,1.166666666666666,0);
+    aControlPoints2.emplace_back(2,2.8333333333333333,0);
+    aControlPoints2.emplace_back(2.8333333333333333,2.8333333333333333,0);
+    aControlPoints2.emplace_back(3,3,0);
+
+    SGM::Curve NUBID2=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints2,aKnots2);
+
+    SGM::Point3D Origin2(1.0,3.0,0.0);
+    SGM::UnitVector3D Axis2(1.0,2.0,0.0);
+    SGM::Surface RevolveID2=SGM::CreateRevolveSurface(rResult,Origin2,Axis2,NUBID2);
+
+    bool bAnswer2 = SGM::TestSurface(rResult,RevolveID2, SGM::Point2D(0.5,0.2));
+
+    bAnswer = (bAnswer1 && bAnswer2);
+
+    SGM::DeleteEntity(rResult,RevolveID1);
+    SGM::DeleteEntity(rResult,RevolveID2);
+    SGM::DeleteEntity(rResult,NUBID1);
+    SGM::DeleteEntity(rResult,NUBID2);
+
+    EXPECT_TRUE(bAnswer);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, extrude_hermit)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
