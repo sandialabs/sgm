@@ -3462,6 +3462,12 @@ TEST(math_check, circle_merge)
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
+
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3487,6 +3493,12 @@ TEST(math_check, ellipse_merge)
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
+
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3537,6 +3549,12 @@ TEST(math_check, parabola_merge)
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
+
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,1,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3562,6 +3580,12 @@ TEST(math_check, hyperbola_merge)
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
+
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3678,6 +3702,40 @@ TEST(math_check, DISABLED_NURB_curve_merge)
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, ray_fire_thing) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BodyID);
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),ComplexID);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::RayFire(rResult,SGM::Point3D(-1,-1,-1),SGM::UnitVector3D(1,1,1),SGM::Thing(),aPoints,aTypes);
+
+    EXPECT_EQ(aPoints.size(),4);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, intersect_coincident_lines) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,1,1));
+    SGM::Curve LineID2=SGM::CreateLine(rResult,SGM::Point3D(1,1,1),SGM::UnitVector3D(-1,-1,-1));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,LineID1,LineID2,aPoints,aTypes);
+
+    EXPECT_EQ(aPoints.size(),2);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
