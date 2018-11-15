@@ -56,6 +56,19 @@ edge *CreateEdge(SGM::Result        &rResult,
     return pEdge;
     }
 
+body *CreateWireBody(SGM::Result            &rResult,
+                     std::set<edge *> const &sEdges)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    for(auto pEdge : sEdges)
+        {
+        pVolume->AddEdge(pEdge);
+        }
+    return pBody;
+    }
+
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,

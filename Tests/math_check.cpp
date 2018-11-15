@@ -3389,3 +3389,40 @@ TEST(math_check, integrate)
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+
+TEST(math_check, body_copy_with_attribute) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::ChangeColor(rResult,BodyID,255,0,0);
+    SGM::CopyEntity(rResult,BodyID);
+    int nRed=0,nGreen=0,nBlue=0;
+    SGM::GetColor(rResult,BodyID,nRed,nGreen,nBlue);
+    EXPECT_EQ(nRed,255);
+    EXPECT_FALSE(SGM::IsSheetBody(rResult,BodyID));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+TEST(math_check, wire_body) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Edge> sEdges;
+    sEdges.insert(EdgeID);
+    SGM::Body WireID=SGM::CreateWireBody(rResult,sEdges);
+    EXPECT_TRUE(SGM::IsWireBody(rResult,WireID));
+    SGM::ChangeColor(rResult,WireID,255,0,0);
+    SGM::CopyEntity(rResult,WireID);
+    int nRed=0,nGreen=0,nBlue=0;
+    SGM::GetColor(rResult,WireID,nRed,nGreen,nBlue);
+    EXPECT_EQ(nRed,255);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 

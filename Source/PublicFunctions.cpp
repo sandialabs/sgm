@@ -1053,6 +1053,20 @@ SGM::Edge SGM::CreateLinearEdge(SGM::Result        &rResult,
     return {pEdge->GetID()};
     }
 
+SGM::Body SGM::CreateWireBody(SGM::Result               &rResult,
+                              std::set<SGM::Edge> const &sEdges)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    std::set<SGMInternal::edge *> spEdges;
+    for(auto EdgeID : sEdges)
+        {
+        SGMInternal::edge *pEdge=(SGMInternal::edge *)pThing->FindEntity(EdgeID.m_ID);
+        spEdges.insert(pEdge);
+        }
+    SGMInternal::body *pBody=SGMInternal::CreateWireBody(rResult,spEdges);
+    return {pBody->GetID()};
+    }
+
 SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
                             SGM::Entity const &EntityID)
     {

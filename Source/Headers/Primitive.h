@@ -58,6 +58,9 @@ edge *CreateEdge(SGM::Result        &rResult,
                  SGM::Point3D const &StartPos,
                  SGM::Point3D const &EndPos);
 
+body *CreateWireBody(SGM::Result            &rResult,
+                     std::set<edge *> const &sEdges);
+
 NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
                          std::vector<SGM::Point3D> const &aPoints,
                          std::vector<double>       const *pParams=nullptr);
