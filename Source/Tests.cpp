@@ -223,8 +223,8 @@ double TestIntegrand2D(SGM::Point2D const &uv,void const *)
     return x*x+4*y;
     }
 
-bool SGM::RunInternalTest(SGM::Result &rResult,
-                          size_t       nTestNumber)
+bool RunInternalTest(SGM::Result &rResult,
+                     size_t       nTestNumber)
     {
     bool bAnswer=true;
 
