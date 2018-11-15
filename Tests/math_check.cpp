@@ -3542,6 +3542,142 @@ TEST(math_check, parabola_merge)
 } 
 
 
-SGM_EXPORT SGM::Vertex ImprintPoint(SGM::Result        &rResult,
-                                    SGM::Point3D const &Pos,
-                                    SGM::Topology      &Topology);
+TEST(math_check, hyperbola_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
+    SGM::Curve CurveID=SGM::CreateHyperbola(rResult,Center,XAxis,YAxis,1,1);
+    SGM::Interval1D Domain(-10,10);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+    SGM::Point3D Pos0(1,0,0);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+TEST(math_check,hermite_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Vector3D> aVectors;
+    std::vector<double> aParams;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(10,0,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aParams.push_back(0);
+    aParams.push_back(12);
+    SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
+
+    SGM::Point3D Pos0;
+    SGM::EvaluateCurve(rResult,CurveID,6,&Pos0);
+
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, NUB_curve_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.emplace_back(-2,.5,0);
+    aPoints1.emplace_back(-1,1.5,0);
+    aPoints1.emplace_back(0,1,0);
+    aPoints1.emplace_back(1,1.5,0);
+    aPoints1.emplace_back(2,2,0);
+
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+    SGM::Point3D Pos0;
+    double dt=SGM::GetDomainOfCurve(rResult,CurveID).MidPoint();
+    SGM::EvaluateCurve(rResult,CurveID,dt,&Pos0);
+
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, DISABLED_NURB_curve_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point4D> aControlPoints;
+    aControlPoints.emplace_back(1,0,0,1);
+    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(0,1,0,1);
+    aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(-1,0,0,1);
+    aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(0,-1,0,1);
+    aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(1,0,0,1);
+    
+    std::vector<double> aKnots;
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_TWO_PI);
+    aKnots.push_back(SGM_TWO_PI);
+    aKnots.push_back(SGM_TWO_PI);
+
+    SGM::Curve CurveID=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
+
+    SGM::Point3D Pos0;
+    double dt=SGM::GetDomainOfCurve(rResult,CurveID).MidPoint();
+    SGM::EvaluateCurve(rResult,CurveID,dt,&Pos0);
+
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
