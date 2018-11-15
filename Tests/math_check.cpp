@@ -3468,6 +3468,12 @@ TEST(math_check, circle_merge)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),2);
+
+    SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3499,6 +3505,12 @@ TEST(math_check, ellipse_merge)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),2);
+
+    SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3555,6 +3567,12 @@ TEST(math_check, parabola_merge)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),2);
+
+    SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3586,6 +3604,12 @@ TEST(math_check, hyperbola_merge)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),2);
+
+    SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
