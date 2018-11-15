@@ -3,6 +3,7 @@
 
 #include "EntityClasses.h"
 #include "Curve.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -248,7 +249,7 @@ double DerivativeMagnitude(double t,void const *pData)
 
 double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
     {
-    return SGM::Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
+    return Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
     }
 
 //

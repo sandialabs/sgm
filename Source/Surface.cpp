@@ -10,6 +10,7 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Topology.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -114,7 +115,7 @@ double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
                                              SGM::Point2D const &PosB,
                                              SGM::Point2D const &PosC) const
     {
-    return SGM::IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
+    return IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
     }
 
 SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,

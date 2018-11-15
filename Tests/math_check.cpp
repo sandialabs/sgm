@@ -1551,97 +1551,6 @@ TEST(math_check, sphere_area)
     EXPECT_TRUE(bAnswer);
     }
 
-#if 0
-double TestIntegrand(double x,void const *)
-    {
-    return 4.0/(1.0+x*x);
-    }
-
-double TestIntegrand2D(SGM::Point2D const &uv,void const *)
-    {
-    double x=uv.m_u;
-    double y=uv.m_v;
-    return x*x+4*y;
-    }
-
-TEST(math_check, integrate)
-    {
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    bool bAnswer=true;
-
-    SGM::Interval2D Domain2D(11,14,7,10);
-    double dValue2D=SGM::Integrate2D(TestIntegrand2D,Domain2D,nullptr,SGM_ZERO);
-    if(SGM::NearEqual(dValue2D,1719,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-
-    SGM::Point2D PosA(11,7),PosB(14,7),PosC(14,10),PosD(11,10);
-    dValue2D=SGM::IntegrateTriangle(TestIntegrand2D,PosA,PosB,PosC,nullptr,SGM_ZERO);
-    dValue2D+=SGM::IntegrateTriangle(TestIntegrand2D,PosA,PosC,PosD,nullptr,SGM_ZERO);
-    if(SGM::NearEqual(dValue2D,1719,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-
-    SGM::Point2D PosE(14,8.5),PosF(11,8.5);
-    double dT1=SGM::IntegrateTriangle(TestIntegrand2D,PosA,PosB,PosE,nullptr,SGM_ZERO);
-    double dT3=SGM::IntegrateTriangle(TestIntegrand2D,PosA,PosE,PosD,nullptr,SGM_ZERO);
-    double dT2=SGM::IntegrateTriangle(TestIntegrand2D,PosD,PosC,PosE,nullptr,SGM_ZERO);
-    dValue2D=dT1+dT2+dT3;
-    if(SGM::NearEqual(dValue2D,1719,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-
-    dT1=SGM::IntegrateTriangle(TestIntegrand2D,PosA,PosB,PosF,nullptr,SGM_ZERO);
-    dT3=SGM::IntegrateTriangle(TestIntegrand2D,PosB,PosF,PosC,nullptr,SGM_ZERO);
-    dT2=SGM::IntegrateTriangle(TestIntegrand2D,PosD,PosC,PosF,nullptr,SGM_ZERO);
-    dValue2D=dT1+dT2+dT3;
-    if(SGM::NearEqual(dValue2D,1719,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-
-    SGM::Interval1D Domain(0.0,1.0);
-    double dValue=SGM::Integrate1D(TestIntegrand,Domain,nullptr,SGM_ZERO);
-    if(SGM::NearEqual(dValue,SGM_PI,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-
-    SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D Normal(0,0,1);
-    SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Normal,1.0);
-
-    SGM::Interval1D const &CurveDomain=SGM::GetCurveDomain(rResult,CurveID);
-    
-    dValue=SGM::FindCurveLength(rResult,CurveDomain,CurveID,SGM_MIN_TOL);
-    if(SGM::NearEqual(dValue,SGM_TWO_PI,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-    SGM::DeleteEntity(rResult,CurveID);
-
-    SGM::Body BodyID=SGM::CreateSphere(rResult,Center,1.0);
-    std::set<SGM::Face> sFaces;
-    SGM::FindFaces(rResult,BodyID,sFaces);
-    SGM::Face FaceID=*(sFaces.begin());
-    double dArea=SGM::FindArea(rResult,FaceID);
-    if(SGM::NearEqual(dArea,12.566370614359172953850573533118,SGM_ZERO,false)==false)
-        {
-        bAnswer=false;
-        }
-    SGM::DeleteEntity(rResult,BodyID);
-
-    SGMTesting::ReleaseTestThing(pThing);
-    
-    EXPECT_TRUE(bAnswer);
-    }
-#endif
-
 bool TestIntersections(SGM::Result        &rResult,
                        SGM::Surface const &Surface1,
                        SGM::Surface const &Surface2,
@@ -3466,6 +3375,17 @@ TEST(math_check, create_revolve)
     std::vector<std::string> aCheckStrings;
     SGM::CheckOptions Options;
     EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+TEST(math_check, integrate) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    EXPECT_TRUE(SGM::RunInternalTest(rResult,1));
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
