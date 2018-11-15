@@ -3840,3 +3840,47 @@ TEST(math_check, intersect_sphere_cylinder)
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, complex_tests) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned int> aTriangles;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,1,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    aTriangles.push_back(3);
+    aTriangles.push_back(4);
+    aTriangles.push_back(5);
+    SGM::Complex ComplexID=SGM::CreateTriangles(rResult,aPoints,aTriangles);
+
+    std::vector<unsigned int> aSegments;
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    aSegments.push_back(1);
+    aSegments.push_back(2);
+    aSegments.push_back(2);
+    aSegments.push_back(0);
+    aSegments.push_back(3);
+    aSegments.push_back(4);
+    SGM::Complex SegmentsID=SGM::CreateSegments(rResult,aPoints,aSegments);
+
+    std::vector<SGM::Complex> aComponents;
+    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),3);
+    SGM::ReduceToUsedPoints(rResult,SegmentsID);
+    aComponents.clear();
+    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),2);
+    aComponents.clear();
+    EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),1);
+    SGM::FindBoundary(rResult,ComplexID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
