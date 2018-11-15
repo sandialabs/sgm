@@ -1305,10 +1305,13 @@ void Merge(SGM::Result &rResult,
         if(sVertexEdges.size()==1)
             {
             edge *pEdge0=*(sVertexEdges.begin());
-            pEdge0->SetStart(nullptr);
-            pEdge0->SetEnd(nullptr);
-            rResult.GetThing()->DeleteEntity(pVertex);
-            sFixEdges.insert(pEdge0);
+            if(pEdge0->GetCurve()->GetClosed())
+                {
+                pEdge0->SetStart(nullptr);
+                pEdge0->SetEnd(nullptr);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                sFixEdges.insert(pEdge0);
+                }
             }
         else if(sVertexEdges.size()==2)
             {

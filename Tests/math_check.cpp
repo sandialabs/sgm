@@ -3456,8 +3456,87 @@ TEST(math_check, circle_merge)
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, ellipse_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0);
+    double dXRadius=1,dYRadius=2;
+    SGM::Curve CurveID=SGM::CreateEllipse(rResult,Center,XAxis,YAxis,dXRadius,dYRadius);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
+    SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, line_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Origin(0,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Curve CurveID=SGM::CreateLine(rResult,Origin,Axis);
+    SGM::Interval1D Domain(-10,10);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+    SGM::Point3D Pos0(0,0,0);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+TEST(math_check, parabola_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0);
+    double dA=1.0;
+    SGM::Curve CurveID=SGM::CreateParabola(rResult,Center,XAxis,YAxis,dA);
+    SGM::Interval1D Domain(-10,10);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+    SGM::Point3D Pos0(0,0,0);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    EXPECT_EQ(sEdges.size(),2);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    sEdges.clear();
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    EXPECT_EQ(sEdges.size(),1);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
