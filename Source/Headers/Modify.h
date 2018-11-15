@@ -43,6 +43,10 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       entity      *pStartEntity,
                                       entity      *pEndEntity);
 
+vertex *ImprintPoint(SGM::Result        &rResult,
+                     SGM::Point3D const &Pos,
+                     topology           *pTopology);
+
 // Imprints the given point on given edge and returns a vertex at the point.
 
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,

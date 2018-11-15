@@ -110,6 +110,9 @@ SGM_EXPORT SGM::Body CreateWireBody(SGM::Result               &rResult,
 SGM_EXPORT SGM::Body CreatePolyLine(SGM::Result                     &rResult,
                                     std::vector<SGM::Point3D> const &aPoints);
 
+SGM_EXPORT SGM::Body CreatePointBody(SGM::Result                  &rResult,
+                                     std::set<SGM::Point3D> const &sPoints);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Simplicial Complex Creation Functions

@@ -1067,6 +1067,12 @@ SGM::Body SGM::CreateWireBody(SGM::Result               &rResult,
     return {pBody->GetID()};
     }
 
+SGM_EXPORT SGM::Body SGM::CreatePointBody(SGM::Result                  &rResult,
+                                          std::set<SGM::Point3D> const &sPoints)
+    {
+    return {SGMInternal::CreatePointBody(rResult,sPoints)->GetID()};
+    }
+
 SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
                             SGM::Entity const &EntityID)
     {
@@ -2063,6 +2069,21 @@ void SGM::UniteBodies(SGM::Result &rResult,
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {
     SGMInternal::ImprintVerticesOnClosedEdges(rResult);
+    }
+
+SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,
+                              SGM::Point3D const &Pos,
+                              SGM::Topology      &TopologyID)
+    {
+    SGMInternal::topology *pTopology=(SGMInternal::topology *)rResult.GetThing()->FindEntity(TopologyID.m_ID);
+    return {SGMInternal::ImprintPoint(rResult,Pos,pTopology)->GetID()};
+    }
+
+void SGM::Merge(SGM::Result &rResult,
+                SGM::Entity &EntityID)
+    {
+    SGMInternal::entity *pEntity=(SGMInternal::entity *)rResult.GetThing()->FindEntity(EntityID.m_ID);
+    SGMInternal::Merge(rResult,pEntity);
     }
 
 /*

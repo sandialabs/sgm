@@ -38,8 +38,14 @@ SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
         {
         auto sFaces = GetFaces();
         auto sEdges = GetEdges();
-        StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
-        StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
+        if(sEdges.empty()==false)
+            {
+            StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
+            }
+        if(sFaces.empty()==false)
+            {
+            StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
+            }
         }
     return m_Box;
     }

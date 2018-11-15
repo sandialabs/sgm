@@ -3426,3 +3426,43 @@ TEST(math_check, wire_body)
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, point_body) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::set<SGM::Point3D> sPoints;
+    sPoints.insert(SGM::Point3D(0,0,0));
+    sPoints.insert(SGM::Point3D(10,10,10));
+    SGM::Body BodyID=SGM::CreatePointBody(rResult,sPoints);
+    EXPECT_FALSE(SGM::IsSheetBody(rResult,BodyID));
+    EXPECT_FALSE(SGM::IsWireBody(rResult,BodyID));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, circle_merge) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D Normal(0,0,1);
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Normal,1);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
+    SGM::ImprintPoint(rResult,Pos0,EdgeID);
+    SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,VertexID,sEdges);
+    SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::Merge(rResult,BodyID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+SGM_EXPORT SGM::Vertex ImprintPoint(SGM::Result        &rResult,
+                                    SGM::Point3D const &Pos,
+                                    SGM::Topology      &Topology);

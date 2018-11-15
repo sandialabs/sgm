@@ -69,6 +69,17 @@ body *CreateWireBody(SGM::Result            &rResult,
     return pBody;
     }
 
+body *CreatePointBody(SGM::Result                  &rResult,
+                      std::set<SGM::Point3D> const &sPoints)
+    {
+    body *pBody=new body(rResult); 
+    for(auto Pos : sPoints)
+        {
+        pBody->AddPoint(Pos);
+        }
+    return pBody;
+    }
+
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
