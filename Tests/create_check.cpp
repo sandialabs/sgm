@@ -179,6 +179,17 @@ TEST(create_check, create_attributes)
     SGM::Attribute AttributeID5=SGM::CreateStringAttribute(rResult,"StringAttributeTestName","string_test");
     EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID5),SGM::EntityType::StringAttributeType);
 
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::AddAttribute(rResult,BodyID,AttributeID1);
+    SGM::AddAttribute(rResult,BodyID,AttributeID2);
+    SGM::AddAttribute(rResult,BodyID,AttributeID3);
+    SGM::AddAttribute(rResult,BodyID,AttributeID4);
+    SGM::AddAttribute(rResult,BodyID,AttributeID5);
+
+    std::set<SGM::Attribute> sAttributes;
+    SGM::FindAttributes(rResult,BodyID,sAttributes);
+    EXPECT_EQ(sAttributes.size(),5);
+
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGMTesting::ReleaseTestThing(pThing);

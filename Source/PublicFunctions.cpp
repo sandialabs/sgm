@@ -700,6 +700,15 @@ SGM::Attribute SGM::CreateStringAttribute(SGM::Result       &rResult,
     return {pAttribute->GetID()};
     }
 
+void SGM::AddAttribute(SGM::Result    &rResult,
+                       SGM::Entity    &EntityID,
+                       SGM::Attribute &AttributeID)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    SGMInternal::attribute *pAttribute=(SGMInternal::attribute *)rResult.GetThing()->FindEntity(AttributeID.m_ID);
+    pEntity->AddAttribute(pAttribute);
+    }
+
 SGM::Attribute SGM::CreateAttribute(SGM::Result       &rResult,
                                     std::string const &Name)
     {

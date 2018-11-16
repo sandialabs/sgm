@@ -209,32 +209,13 @@ void FindVolumes(SGM::Result        &,//rResult,
 void FindAttributes(SGM::Result                         &,//rResult,
                     entity                        const *pEntity,
                     std::set<attribute *,EntityCompare> &sAttributes,
-                    bool                                 bTopLevel)
+                    bool                                 )//bTopLevel)
     {
     if(pEntity==nullptr)
         {
         return;
         }
-    SGM::EntityType Type=pEntity->GetType();
-    if(Type==SGM::EntityType::ThingType)
-        {
-        auto sThingAttributes = ((thing *)pEntity)->GetAttributes(bTopLevel);
-        sAttributes.insert(sThingAttributes.begin(), sThingAttributes.end());
-        }
-    else
-        {
-        std::set<entity *,EntityCompare> const &sOwners=pEntity->GetOwners();
-        auto iter=sOwners.begin();
-        while(iter!=sOwners.end())
-            {
-            entity *pOwner=*iter;
-            if(pOwner->GetType()==SGM::AttributeType)
-                {
-                sAttributes.insert((attribute *)pOwner);
-                }
-            ++iter;
-            }
-        }
+    sAttributes=pEntity->GetAttributes();
     }
 
 void FindFaces(SGM::Result                    &,//rResult,
