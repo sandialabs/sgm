@@ -3910,9 +3910,9 @@ TEST(math_check, stl_face_save)
 
     SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
     SGM::TranslatorOptions TranslatorOpts;
-    SGM::SaveSTEP(rResult,"sphere_test1.stl",BodyID,TranslatorOpts);
+    SGM::SaveSTL(rResult,"sphere_test1.stl",BodyID,TranslatorOpts);
     TranslatorOpts.m_b2D=true;
-    SGM::SaveSTEP(rResult,"sphere_test2.stl",BodyID,TranslatorOpts);
+    SGM::SaveSTL(rResult,"sphere_test2.stl",BodyID,TranslatorOpts);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
