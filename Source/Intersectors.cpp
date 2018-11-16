@@ -466,6 +466,10 @@ size_t RayFire(SGM::Result                        &rResult,
             {
             return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
             }
+        case SGM::EdgeType:
+            {
+            return RayFireEdge(rResult,Origin,Axis,(edge const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            }
         case SGM::ComplexType:
             {
             return RayFireComplex(rResult,Origin,Axis,(complex const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);

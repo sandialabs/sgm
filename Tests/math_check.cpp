@@ -3456,6 +3456,12 @@ TEST(math_check, circle_merge)
     SGM::UnitVector3D Normal(0,0,1);
     SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Normal,1);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aHitTypes;
+    SGM::RayFire(rResult,SGM::Point3D(-1,-1,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    EXPECT_EQ(aHits.size(),1);
+
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
     SGM::ImprintPoint(rResult,Pos0,EdgeID);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
@@ -3493,6 +3499,12 @@ TEST(math_check, ellipse_merge)
     double dXRadius=1,dYRadius=2;
     SGM::Curve CurveID=SGM::CreateEllipse(rResult,Center,XAxis,YAxis,dXRadius,dYRadius);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aHitTypes;
+    SGM::RayFire(rResult,SGM::Point3D(-1,-2,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    EXPECT_EQ(aHits.size(),1);
+
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
     SGM::ImprintPoint(rResult,Pos0,EdgeID);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
@@ -3556,6 +3568,12 @@ TEST(math_check, parabola_merge)
     SGM::Curve CurveID=SGM::CreateParabola(rResult,Center,XAxis,YAxis,dA);
     SGM::Interval1D Domain(-10,10);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aHitTypes;
+    SGM::RayFire(rResult,SGM::Point3D(-1,0,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    EXPECT_EQ(aHits.size(),1);
+
     SGM::Point3D Pos0(0,0,0);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
@@ -3593,6 +3611,12 @@ TEST(math_check, hyperbola_merge)
     SGM::Curve CurveID=SGM::CreateHyperbola(rResult,Center,XAxis,YAxis,1,1);
     SGM::Interval1D Domain(-10,10);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aHitTypes;
+    SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),EdgeID,aHits,aHitTypes);
+    EXPECT_EQ(aHits.size(),1);
+
     SGM::Point3D Pos0(1,0,0);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
