@@ -1072,13 +1072,13 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     exit(1);
 #endif // SGM_PROFILE_READER
 
-
+    /*
     if(Options.m_bHeal)
         {
         HealOptions Options;
         Heal(rResult,aEntities,Options);
         }
-
+    */
     if(Options.m_bMerge)
         {
         size_t nEntities=aEntities.size();

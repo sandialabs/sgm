@@ -17,7 +17,7 @@ void expect_import_ouo_success(std::string const &file_name, SGM::Result &rResul
 {
     std::vector<SGM::Entity> entities;
     std::vector<std::string> log;
-    SGM::TranslatorOptions const options;
+    SGM::TranslatorOptions options;
 
     std::string file_path = get_models_ouo_file_path(file_name);
     SGM::ReadFile(rResult, file_path, entities, log, options);

@@ -190,6 +190,7 @@ void TransformEntity(SGM::Result            &rResult,
         }
     }
 
+/*
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,
           HealOptions     const &Options)
@@ -216,5 +217,5 @@ void Heal(SGM::Result           &rResult,
             }
         }
     }
-
+*/
 } // End of SGMInternal namespace

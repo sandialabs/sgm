@@ -1069,6 +1069,7 @@ size_t FindCommonEdgesFromFaces(SGM::Result         &rResult,
     return nCount;
     }
 
+/*
 void RemoveFace(SGM::Result &rResult,
                 face        *pFace)
     {
@@ -1190,6 +1191,7 @@ void RemoveFace(SGM::Result &rResult,
             }
         }
     }
+*/
 
 void MergeFaces(SGM::Result &rResult,
                 face        *pFace1,
