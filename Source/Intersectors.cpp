@@ -1321,8 +1321,8 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
 
     double dCosHalfAngle=pCone->m_dCosHalfAngle;
     double dSinHalfAngle=pCone->m_dSinHalfAngle;
-    double dCoTan=dCosHalfAngle/dSinHalfAngle;
-    double s=dCoTan*dCoTan;
+    double dTan=dSinHalfAngle/dCosHalfAngle;
+    double s=dTan*dTan;
 
     // x^2+y^2=s*z^2
     //

@@ -3795,7 +3795,7 @@ TEST(math_check, intersect_coincident_lines)
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
-TEST(math_check, DISABLED_intersect_line_cone) 
+TEST(math_check, intersect_line_cone) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
