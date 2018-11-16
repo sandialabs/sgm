@@ -121,14 +121,24 @@ bool volume::Check(SGM::Result              &,//rResult,
 
     // Check to see if all its faces point to it.
 
-    for (auto pFace : m_sFaces)
+    if(m_sFaces.empty())
         {
-        if(this!=pFace->GetVolume())
+        bAnswer=false;
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"Volume %lu is empty.\n",this->GetID());
+        aCheckStrings.emplace_back(Buffer);
+        }
+    else
+        {
+        for (auto pFace : m_sFaces)
             {
-            bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Face %lu of Volume %lu does not point to its volume.\n",pFace->GetID(),this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            if(this!=pFace->GetVolume())
+                {
+                bAnswer=false;
+                char Buffer[1000];
+                snprintf(Buffer,sizeof(Buffer),"Face %lu of Volume %lu does not point to its volume.\n",pFace->GetID(),this->GetID());
+                aCheckStrings.emplace_back(Buffer);
+                }
             }
         }
 

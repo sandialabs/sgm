@@ -3902,3 +3902,59 @@ TEST(math_check, point_in_tests)
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, checking_the_checker) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Check for empty volumes.
+
+    SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Volume VolumeID=SGM::FindVolume(rResult,FaceID);
+    SGM::DeleteEntity(rResult,FaceID);
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,VolumeID,Options,aCheckStrings));
+
+    // Check for empty bodies.
+
+    SGM::DeleteEntity(rResult,VolumeID);
+    SGM::CheckOptions Options2;
+    std::vector<std::string> aCheckStrings2;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,BodyID,Options2,aCheckStrings2));
+
+    // Bad segments in a complex.
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned int> aSegments;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aSegments.push_back(0);
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    aSegments.push_back(2);
+    SGM::Complex ComplexID=SGM::CreateSegments(rResult,aPoints,aSegments);
+    SGM::CheckOptions Options3;
+    std::vector<std::string> aCheckStrings3;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,ComplexID,Options3,aCheckStrings3));
+    SGM::DeleteEntity(rResult,ComplexID);
+
+    // Bad triangles in a complex.
+
+    std::vector<SGM::Point3D> aPoints2;
+    std::vector<unsigned int> aTriangles2;
+    aPoints2.push_back(SGM::Point3D(0,0,0));
+    aTriangles2.push_back(0);
+    aTriangles2.push_back(0);
+    aTriangles2.push_back(2);
+    SGM::Complex ComplexID2=SGM::CreateTriangles(rResult,aPoints2,aTriangles2);
+    SGM::CheckOptions Options4;
+    std::vector<std::string> aCheckStrings4;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,ComplexID2,Options4,aCheckStrings4));
+    SGM::DeleteEntity(rResult,ComplexID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
