@@ -1426,6 +1426,8 @@ TEST(math_check, NURB_surface)
         bAnswer=false;
         }
 
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
     EXPECT_TRUE(bAnswer);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -1487,6 +1489,8 @@ TEST(math_check, NURB_curve)
         bAnswer=false;
         }
     EXPECT_TRUE(bAnswer);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -1686,6 +1690,8 @@ TEST(math_check, cylinder_sphere_intersect)
         }
     
     SGMTesting::ReleaseTestThing(pThing);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     EXPECT_TRUE(bAnswer);
     }
@@ -1890,6 +1896,7 @@ TEST(math_check, DISABLED_line_nub_surface_intersect)
             bAnswer=false;
             }
         }
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
     SGM::DeleteEntity(rResult,LineID3);
     SGM::DeleteEntity(rResult,NUBSurfaceID);
     
@@ -3677,6 +3684,8 @@ TEST(math_check, NUB_curve_merge)
     SGM::FindEdges(rResult,BodyID,sEdges);
     EXPECT_EQ(sEdges.size(),1);
 
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
@@ -3881,6 +3890,8 @@ TEST(math_check, complex_tests)
     aComponents.clear();
     EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),1);
     SGM::FindBoundary(rResult,ComplexID);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGMTesting::ReleaseTestThing(pThing);
 } 

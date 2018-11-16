@@ -36,6 +36,8 @@ TEST(create_check, create_parabola)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
     
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
@@ -70,6 +72,8 @@ TEST(create_check, create_hyperbola)
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
 
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -103,6 +107,8 @@ TEST(create_check, create_ellipse)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::DeleteEntity(rResult,CurveID);
     SGMTesting::ReleaseTestThing(pThing);
@@ -145,6 +151,8 @@ TEST(create_check, create_torus_knot)
     std::vector<std::string> aCheckStrings;
     SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings);
 
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
     SGMTesting::ReleaseTestThing(pThing);
     }
     
@@ -170,6 +178,8 @@ TEST(create_check, create_attributes)
 
     SGM::Attribute AttributeID5=SGM::CreateStringAttribute(rResult,"StringAttributeTestName","string_test");
     EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID5),SGM::EntityType::StringAttributeType);
+
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGMTesting::ReleaseTestThing(pThing);
     }
