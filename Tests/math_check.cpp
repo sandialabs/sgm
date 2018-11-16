@@ -3918,6 +3918,21 @@ TEST(math_check, stl_face_save)
 } 
 
 
+TEST(math_check, imprint_point_on_block) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    SGM::Edge EdgeID=*(sEdges.begin());
+    SGM::ImprintPoint(rResult,SGM::Point3D(0,0,0),EdgeID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
 TEST(math_check, checking_the_checker) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

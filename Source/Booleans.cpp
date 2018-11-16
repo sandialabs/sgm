@@ -77,18 +77,10 @@ vertex *ImprintPoint(SGM::Result        &rResult,
                      topology           *pTopology)
     {
     vertex *pAnswer=nullptr;
-    switch(pTopology->GetType())
+    if(pTopology->GetType()==SGM::EntityType::EdgeType)
         {
-        case SGM::EntityType::EdgeType:
-            {
-            edge *pEdge=(edge *)pTopology;
-            pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
-            break;
-            }
-        default:
-            {
-            throw;
-            }
+        edge *pEdge=(edge *)pTopology;
+        pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
         }
     return pAnswer;
     }
