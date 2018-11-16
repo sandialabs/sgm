@@ -668,6 +668,46 @@ void SGM::FindVolumes(SGM::Result           &rResult,
         }
     }
 
+SGM::Attribute SGM::CreateIntegerAttribute(SGM::Result            &rResult,
+                                           std::string      const &Name,
+                                           std::vector<int> const &aData)
+    {
+    SGMInternal::attribute *pAttribute=new SGMInternal::IntegerAttribute(rResult,Name,aData);
+    return {pAttribute->GetID()};
+    }
+
+SGM::Attribute SGM::CreateDoubleAttribute(SGM::Result               &rResult,
+                                          std::string         const &Name,
+                                          std::vector<double> const &aData)
+    {
+    SGMInternal::attribute *pAttribute=new SGMInternal::DoubleAttribute(rResult,Name,aData);
+    return {pAttribute->GetID()};
+    }
+
+SGM::Attribute SGM::CreateCharAttribute(SGM::Result             &rResult,
+                                        std::string       const &Name,
+                                        std::vector<char> const &aData)
+    {
+    SGMInternal::attribute *pAttribute=new SGMInternal::CharAttribute(rResult,Name,aData);
+    return {pAttribute->GetID()};
+    }
+
+SGM::Attribute SGM::CreateStringAttribute(SGM::Result       &rResult,
+                                          std::string const &Name,
+                                          std::string const &Data)
+    {
+    SGMInternal::attribute *pAttribute=new SGMInternal::StringAttribute(rResult,Name,Data);
+    return {pAttribute->GetID()};
+    }
+
+SGM::Attribute SGM::CreateAttribute(SGM::Result       &rResult,
+                                    std::string const &Name)
+    {
+    SGMInternal::attribute *pAttribute=new SGMInternal::attribute(rResult,Name);
+    return {pAttribute->GetID()};
+    }
+
+
 void SGM::FindAttributes(SGM::Result              &rResult,
                          SGM::Entity        const &EntityID,
                          std::set<SGM::Attribute> &sAttributes,

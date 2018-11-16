@@ -6,6 +6,7 @@
 #include "SGMGeometry.h"
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
+#include "SGMAttribute.h"
 
 #include "test_utility.h"
 
@@ -107,8 +108,6 @@ TEST(create_check, create_ellipse)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-
-
 TEST(create_check, create_torus_knot)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -149,38 +148,31 @@ TEST(create_check, create_torus_knot)
     SGMTesting::ReleaseTestThing(pThing);
     }
     
-/*
 TEST(create_check, create_attributes)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
+    SGM::Attribute AttributeID1=SGM::CreateAttribute(rResult,"AttributeTestName");
+    EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID1),SGM::EntityType::AttributeType);
+
     std::vector<int> aIntegers(3,1);
-    SGMInternal::IntegerAttribute * pIntegerAttribute = new SGMInternal::IntegerAttribute(rResult,
-        "IntegerAttributeTestName", aIntegers);
-    EXPECT_TRUE(pIntegerAttribute != nullptr);
-    EXPECT_EQ(pIntegerAttribute->GetAttributeType(),SGM::EntityType::IntegerAttributeType);
+    SGM::Attribute AttributeID2=SGM::CreateIntegerAttribute(rResult,"IntegerAttributeTestName",aIntegers);
+    EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID2),SGM::EntityType::IntegerAttributeType);
 
     std::vector<double> aDoubles(3,1.0);
-    SGMInternal::DoubleAttribute * pDoubleAttribute = new SGMInternal::DoubleAttribute(rResult,
-        "DoubleAttributeTestName", aDoubles);
-    EXPECT_TRUE(pDoubleAttribute != nullptr);
-    EXPECT_EQ(pDoubleAttribute->GetAttributeType(),SGM::EntityType::DoubleAttributeType);
+    SGM::Attribute AttributeID3=SGM::CreateDoubleAttribute(rResult,"DoubleAttributeTestName",aDoubles);
+    EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID3),SGM::EntityType::DoubleAttributeType);
 
     std::vector<char> aChars(3,'c');
-    SGMInternal::CharAttribute * pCharAttribute = new SGMInternal::CharAttribute(rResult,
-        "CharAttributeTestName", aChars);
-    EXPECT_TRUE(pCharAttribute != nullptr);
-    EXPECT_EQ(pCharAttribute->GetAttributeType(),SGM::EntityType::CharAttributeType);
+    SGM::Attribute AttributeID4=SGM::CreateCharAttribute(rResult,"CharAttributeTestName",aChars);
+    EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID4),SGM::EntityType::CharAttributeType);
 
-    SGMInternal::StringAttribute * pStringAttribute = new SGMInternal::StringAttribute(rResult,
-        "StringAttributeTestName", "string_test");
-    EXPECT_TRUE(pStringAttribute != nullptr);
-    EXPECT_EQ(pStringAttribute->GetAttributeType(),SGM::EntityType::StringAttributeType);
+    SGM::Attribute AttributeID5=SGM::CreateStringAttribute(rResult,"StringAttributeTestName","string_test");
+    EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID5),SGM::EntityType::StringAttributeType);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
-*/
 
 TEST(create_check, miscellaneous_entity)
     {
