@@ -3459,7 +3459,7 @@ TEST(math_check, circle_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(-1,-1,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
     EXPECT_EQ(aHits.size(),1);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
@@ -3502,7 +3502,7 @@ TEST(math_check, ellipse_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(-1,-2,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    SGM::RayFire(rResult,SGM::Point3D(0,-2,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
     EXPECT_EQ(aHits.size(),1);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
@@ -3571,7 +3571,7 @@ TEST(math_check, parabola_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(-1,0,0),SGM::UnitVector3D(1,0,0),EdgeID,aHits,aHitTypes);
+    SGM::RayFire(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
     EXPECT_EQ(aHits.size(),1);
 
     SGM::Point3D Pos0(0,0,0);
@@ -3614,7 +3614,7 @@ TEST(math_check, hyperbola_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),EdgeID,aHits,aHitTypes);
+    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
     EXPECT_EQ(aHits.size(),1);
 
     SGM::Point3D Pos0(1,0,0);
