@@ -28,7 +28,10 @@ TEST(math_check, save_step_primitives)
     SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
     SGM::CreateCylinder(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
     SGM::CreateCone(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1,2);
-    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,3);
+    SGM::Body BodyID=SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,3);
+
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,BodyID);
 
     SGM::TranslatorOptions TranslatorOpts;
     SGM::SaveSTEP(rResult,"primitives.stp",SGM::Thing(),TranslatorOpts);
@@ -173,6 +176,9 @@ TEST(math_check, extrude_hermit)
     SGM::UnitVector3D Axis(0,0,1);
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
+
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,SurfID);
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
