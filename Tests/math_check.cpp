@@ -3884,3 +3884,21 @@ TEST(math_check, complex_tests)
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, point_in_tests) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Volume> sVolume;
+    SGM::FindVolumes(rResult,BodyID,sVolume);
+    SGM::Volume VolumeID=*(sVolume.begin());
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    EXPECT_FALSE(SGM::PointInEntity(rResult,SGM::Point3D(20,0,0),VolumeID));
+    EXPECT_FALSE(SGM::PointInEntity(rResult,SGM::Point3D(20,0,0),FaceID));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
