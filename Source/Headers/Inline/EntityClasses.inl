@@ -593,6 +593,12 @@ namespace SGMInternal {
     inline void attribute::TransformBox(SGM::Result &, SGM::Transform3D const &)
     { throw std::logic_error("not implemented yet for attribute"); }
 
+    inline std::string const &attribute::GetName() const
+    {return m_Name;}
+
+    inline SGM::EntityType attribute::GetAttributeType() const
+    {return m_AttributeType;}
+
     //
     // StringAttribute
     //
@@ -631,7 +637,7 @@ namespace SGMInternal {
     //
 
     inline DoubleAttribute::DoubleAttribute(SGM::Result &rResult, std::string Name, std::vector<double> const &aData) :
-            attribute(rResult,SGM::EntityType::BodyType,std::move(Name)),
+            attribute(rResult,SGM::EntityType::DoubleAttributeType,std::move(Name)),
             m_aData(aData) {}
 
     inline DoubleAttribute::DoubleAttribute(SGM::Result &rResult, DoubleAttribute const &other) :
@@ -646,7 +652,7 @@ namespace SGMInternal {
     // CharAttribute
     //
     inline CharAttribute::CharAttribute(SGM::Result &rResult, std::string Name, std::vector<char> const &aData) :
-            attribute(rResult,SGM::EntityType::BodyType,std::move(Name)),
+            attribute(rResult,SGM::EntityType::CharAttributeType,std::move(Name)),
             m_aData(aData)
     {}
 
