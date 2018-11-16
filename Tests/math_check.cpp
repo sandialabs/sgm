@@ -3949,6 +3949,7 @@ TEST(math_check, checking_the_checker)
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_FALSE(SGM::CheckEntity(rResult,VolumeID,Options,aCheckStrings));
+    EXPECT_FALSE(SGM::CheckEntity(rResult,SGM::Thing(),Options,aCheckStrings));
 
     // Check for empty bodies.
 
@@ -4025,6 +4026,21 @@ TEST(math_check, checking_the_checker)
     EXPECT_FALSE(SGM::CheckEntity(rResult,SphereID,Options8,aCheckStrings8));
     SGM::DeleteEntity(rResult,SphereID);
     rResult.SetDebugFlag(0);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, create_polygon) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    SGM::CreatePolygon(rResult,aPoints,false);
+    SGM::CreatePolygon(rResult,aPoints,true);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 

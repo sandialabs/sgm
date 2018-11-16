@@ -1107,8 +1107,8 @@ SGM::Body SGM::CreateWireBody(SGM::Result               &rResult,
     return {pBody->GetID()};
     }
 
-SGM_EXPORT SGM::Body SGM::CreatePointBody(SGM::Result                  &rResult,
-                                          std::set<SGM::Point3D> const &sPoints)
+SGM::Body SGM::CreatePointBody(SGM::Result                  &rResult,
+                               std::set<SGM::Point3D> const &sPoints)
     {
     return {SGMInternal::CreatePointBody(rResult,sPoints)->GetID()};
     }
