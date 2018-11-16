@@ -149,6 +149,7 @@ TEST(create_check, create_torus_knot)
     SGMTesting::ReleaseTestThing(pThing);
     }
     
+/*
 TEST(create_check, create_attributes)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -179,6 +180,7 @@ TEST(create_check, create_attributes)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
+*/
 
 TEST(create_check, miscellaneous_entity)
     {
