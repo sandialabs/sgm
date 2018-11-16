@@ -63,6 +63,10 @@ void edge::SeverRelations(SGM::Result &rResult)
         GetStart()->RemoveEdge(this);
     if(GetEnd())
         GetEnd()->RemoveEdge(this);
+    if(m_pVolume)
+        {
+        m_pVolume->RemoveEdge(this);
+        }
     RemoveAllOwners();
     }
 

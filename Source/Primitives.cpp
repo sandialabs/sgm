@@ -56,6 +56,30 @@ edge *CreateEdge(SGM::Result        &rResult,
     return pEdge;
     }
 
+body *CreateWireBody(SGM::Result            &rResult,
+                     std::set<edge *> const &sEdges)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    for(auto pEdge : sEdges)
+        {
+        pVolume->AddEdge(pEdge);
+        }
+    return pBody;
+    }
+
+body *CreatePointBody(SGM::Result                  &rResult,
+                      std::set<SGM::Point3D> const &sPoints)
+    {
+    body *pBody=new body(rResult); 
+    for(auto Pos : sPoints)
+        {
+        pBody->AddPoint(Pos);
+        }
+    return pBody;
+    }
+
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
                   SGM::UnitVector3D const &Axis,
@@ -789,15 +813,30 @@ body *CreateSheetBody(SGM::Result                    &rResult,
 
     size_t nEdges=aEdges.size();
     size_t Index1;
-    for(Index1=0;Index1<nEdges;++Index1)
+    if(nEdges)
         {
-        edge *pEdge=aEdges[Index1];
-        if(pEdge->GetStart())
+        for(Index1=0;Index1<nEdges;++Index1)
             {
-            // More code needs to be added to merge vertices.
-            throw;
+            edge *pEdge=aEdges[Index1];
+            if(pEdge->GetStart())
+                {
+                // More code needs to be added to merge vertices.
+                throw;
+                }
+            pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
             }
-        pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
+        }
+    else if(pSurface->ClosedInU())
+        {
+        SGM::Interval2D const &Domain=pSurface->GetDomain();
+        double dStart=Domain.m_VDomain.m_dMin;
+        double dEnd=Domain.m_VDomain.m_dMax;
+        curve *pStart=pSurface->VParamLine(rResult,dStart);
+        curve *pEnd=pSurface->VParamLine(rResult,dEnd);
+        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
+        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
         }
 
     return pBody;
@@ -866,8 +905,15 @@ surface *CreateRevolveSurface(SGM::Result             &rResult,
                               curve                   *pCurve)
     {
     surface *pRevolve=new revolve(rResult,Origin,Axis,pCurve);
-
     return pRevolve;
+    }
+
+surface *CreateExtrudeSurface(SGM::Result             &rResult,
+                              SGM::UnitVector3D const &Axis,
+                              curve                   *pCurve)
+    {
+    surface *pExtrude=new extrude(rResult,Axis,pCurve);
+    return pExtrude;
     }
 
 } // end namespace SGMInternal

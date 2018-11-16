@@ -45,6 +45,9 @@ namespace SGM
     SGM_EXPORT bool TestSurface(SGM::Result        &rResult,
                                 SGM::Surface const &SurfaceID,
                                 SGM::Point2D const &uv);
+
+    SGM_EXPORT bool RunInternalTest(SGM::Result &rResult,
+                                    size_t       nTestNumber);
     
     SGM_EXPORT bool CompareFiles(SGM::Result       &rResult,
                                  std::string const &sFile1,

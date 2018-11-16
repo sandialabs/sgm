@@ -961,6 +961,7 @@ void ImprintVerticesOnClosedEdges(SGM::Result &rResult)
         }
     }
 
+/*
 size_t FindCommonEdgesFromVertices(SGM::Result         &rResult,
                                    vertex        const *pVertex1, // Input
                                    vertex        const *pVertex2, // Input
@@ -1012,7 +1013,7 @@ size_t FindCommonEdgesFromVertices(SGM::Result         &rResult,
         }
     return aEdges.size();
     }
-
+*/
 size_t FindAdjacentFaces(SGM::Result                    &rResult,
                          face                     const *pFace,
                          std::set<face *,EntityCompare> &sFaces)
@@ -1304,10 +1305,13 @@ void Merge(SGM::Result &rResult,
         if(sVertexEdges.size()==1)
             {
             edge *pEdge0=*(sVertexEdges.begin());
-            pEdge0->SetStart(nullptr);
-            pEdge0->SetEnd(nullptr);
-            rResult.GetThing()->DeleteEntity(pVertex);
-            sFixEdges.insert(pEdge0);
+            if(pEdge0->GetCurve()->GetClosed())
+                {
+                pEdge0->SetStart(nullptr);
+                pEdge0->SetEnd(nullptr);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                sFixEdges.insert(pEdge0);
+                }
             }
         else if(sVertexEdges.size()==2)
             {
@@ -1357,6 +1361,7 @@ void Merge(SGM::Result &rResult,
         }
     }
 
+/*
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces)
     {
@@ -1504,5 +1509,5 @@ body *UnhookFaces(SGM::Result         &rResult,
 
     return pAnswer;
     }
-
+*/
 } // end namespace SGMInternal

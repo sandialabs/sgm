@@ -52,17 +52,20 @@ SGM_EXPORT std::vector<SGM::Face> ImprintEdgeOnFace(SGM::Result &rResult,
 
 SGM_EXPORT SGM::Vertex ImprintPoint(SGM::Result        &rResult,
                                     SGM::Point3D const &Pos,
-                                    SGM::Topology      &Topology);
+                                    SGM::Topology      &TopologyID);
+
+SGM_EXPORT void Merge(SGM::Result &rResult,
+                      SGM::Entity &EntityID);
 
 // Adds vertices at the seam of closed edges.
 
 SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
 
 // Unhook the given faces and return them in a different body.
-
+/*
 SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,
                                  std::vector<SGM::Face> &aFaces);
-
+*/
 
 } // End of SGM namespace
 

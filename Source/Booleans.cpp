@@ -1,4 +1,4 @@
-#if 0
+
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMModify.h"
@@ -20,6 +20,81 @@
 namespace SGMInternal
 {
 
+vertex *ImprintPointOnEdge(SGM::Result        &rResult,
+                           SGM::Point3D const &Pos,
+                           edge               *pEdge)
+    {
+    // Create the new vertex.
+
+    std::set<face *,EntityCompare> sFaces=pEdge->GetFaces();
+    double t=pEdge->GetCurve()->Inverse(Pos);
+    vertex *pAnswer=new vertex(rResult,Pos);
+    vertex *pEnd=pEdge->GetEnd();
+
+    // Split open edges at the new vertex and 
+    // closed edge with a vertex at the new vertex
+
+    if(pEnd==nullptr)
+        {
+        pEdge->SetStart(pAnswer);
+        pEdge->SetEnd(pAnswer);
+
+        SGM::Interval1D Domain(t,pEdge->GetCurve()->GetDomain().Length()+t);
+        pEdge->SetDomain(rResult,Domain);
+        }
+    else
+        {
+        edge *pNewEdge=new edge(rResult);
+        pNewEdge->SetCurve(pEdge->GetCurve());
+    
+        SGM::Interval1D Domain=pEdge->GetDomain();
+        pNewEdge->SetEnd(pEnd);
+        pNewEdge->SetStart(pAnswer);
+        pEdge->SetEnd(pAnswer);
+        if(pEdge->GetStart()==pEnd)
+            {
+            pEdge->GetStart()->AddEdge(pEdge);
+            }
+
+        SGM::Interval1D Domain1(Domain.m_dMin,t),Domain2(t,Domain.m_dMax);
+        pEdge->SetDomain(rResult,Domain1);
+        pNewEdge->SetDomain(rResult,Domain2);
+
+        // Add the pNewEdge to the pface.
+
+        for(face *pFace : sFaces)
+            {
+            SGM::EdgeSideType nType=pFace->GetSideType(pEdge);
+            pFace->AddEdge(rResult,pNewEdge,nType);
+            }
+        }
+
+    return pAnswer;
+    }
+
+vertex *ImprintPoint(SGM::Result        &rResult,
+                     SGM::Point3D const &Pos,
+                     topology           *pTopology)
+    {
+    vertex *pAnswer=nullptr;
+    switch(pTopology->GetType())
+        {
+        case SGM::EntityType::EdgeType:
+            {
+            edge *pEdge=(edge *)pTopology;
+            pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
+            break;
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    return pAnswer;
+    }
+
+} // End of SGMInternal namespace.
+#if 0
 void TrimCurveWithFaces(SGM::Result               &rResult,
                         curve                     *pCurve,
                         face                const *pFace0,
@@ -199,58 +274,6 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
                 }
             }
         }
-    }
-
-vertex *ImprintPointOnEdge(SGM::Result        &rResult,
-                           SGM::Point3D const &Pos,
-                           edge               *pEdge)
-    {
-    // Create the new vertex.
-
-    std::set<face *,EntityCompare> sFaces=pEdge->GetFaces();
-    double t=pEdge->GetCurve()->Inverse(Pos);
-    vertex *pAnswer=new vertex(rResult,Pos);
-    vertex *pEnd=pEdge->GetEnd();
-
-    // Split open edges at the new vertex and 
-    // closed edge with a vertex at the new vertex
-
-    if(pEnd==nullptr)
-        {
-        pEdge->SetStart(pAnswer);
-        pEdge->SetEnd(pAnswer);
-
-        SGM::Interval1D Domain(t,pEdge->GetCurve()->GetDomain().Length()+t);
-        pEdge->SetDomain(rResult,Domain);
-        }
-    else
-        {
-        edge *pNewEdge=new edge(rResult);
-        pNewEdge->SetCurve(pEdge->GetCurve());
-    
-        SGM::Interval1D Domain=pEdge->GetDomain();
-        pNewEdge->SetEnd(pEnd);
-        pNewEdge->SetStart(pAnswer);
-        pEdge->SetEnd(pAnswer);
-        if(pEdge->GetStart()==pEnd)
-            {
-            pEdge->GetStart()->AddEdge(pEdge);
-            }
-
-        SGM::Interval1D Domain1(Domain.m_dMin,t),Domain2(t,Domain.m_dMax);
-        pEdge->SetDomain(rResult,Domain1);
-        pNewEdge->SetDomain(rResult,Domain2);
-
-        // Add the pNewEdge to the pface.
-
-        for(face *pFace : sFaces)
-            {
-            SGM::EdgeSideType nType=pFace->GetSideType(pEdge);
-            pFace->AddEdge(rResult,pNewEdge,nType);
-            }
-        }
-
-    return pAnswer;
     }
 
 void MergeVerices(SGM::Result &rResult,

@@ -943,6 +943,16 @@ SGM::Surface SGM::CreateRevolveSurface(SGM::Result             &rResult,
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateExtrudeSurface(SGM::Result             &rResult,
+                                       SGM::UnitVector3D const &Axis,
+                                       SGM::Curve              &CurveID)
+    {
+    SGMInternal::curve *pCurve = (SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    SGMInternal::surface *pSurface=SGMInternal::CreateExtrudeSurface(rResult, Axis, pCurve);
+
+    return {pSurface->GetID()};
+    }
+
 SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
                                SGM::Surface                   &SurfaceID,
                                std::vector<SGM::Edge>         &aEdges,
@@ -1041,6 +1051,26 @@ SGM::Edge SGM::CreateLinearEdge(SGM::Result        &rResult,
     {
     SGMInternal::edge *pEdge=SGMInternal::CreateEdge(rResult,StartPos,EndPos);
     return {pEdge->GetID()};
+    }
+
+SGM::Body SGM::CreateWireBody(SGM::Result               &rResult,
+                              std::set<SGM::Edge> const &sEdges)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    std::set<SGMInternal::edge *> spEdges;
+    for(auto EdgeID : sEdges)
+        {
+        SGMInternal::edge *pEdge=(SGMInternal::edge *)pThing->FindEntity(EdgeID.m_ID);
+        spEdges.insert(pEdge);
+        }
+    SGMInternal::body *pBody=SGMInternal::CreateWireBody(rResult,spEdges);
+    return {pBody->GetID()};
+    }
+
+SGM_EXPORT SGM::Body SGM::CreatePointBody(SGM::Result                  &rResult,
+                                          std::set<SGM::Point3D> const &sPoints)
+    {
+    return {SGMInternal::CreatePointBody(rResult,sPoints)->GetID()};
     }
 
 SGM::Entity SGM::CopyEntity(SGM::Result       &rResult,
@@ -1192,6 +1222,15 @@ SGM::Curve SGM::CreateNURBCurve(SGM::Result                     &rResult,
     {
     SGMInternal::NURBcurve *pNURB=new SGMInternal::NURBcurve(rResult, aControlPoints, aKnots);
     return {pNURB->GetID()};
+    }
+
+SGM::Curve SGM::CreateHermitCurve(SGM::Result                      &rResult,
+                                  std::vector<SGM::Point3D>  const &aPoints,
+                                  std::vector<SGM::Vector3D> const &aVectors,
+                                  std::vector<double>        const &aParams)
+    {
+    SGMInternal::hermite *pHermite=new SGMInternal::hermite(rResult,aPoints,aVectors,aParams);
+    return {pHermite->GetID()};
     }
 
 SGM::Curve SGM::CreateNUBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
@@ -2032,6 +2071,22 @@ void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     SGMInternal::ImprintVerticesOnClosedEdges(rResult);
     }
 
+SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,
+                              SGM::Point3D const &Pos,
+                              SGM::Topology      &TopologyID)
+    {
+    SGMInternal::topology *pTopology=(SGMInternal::topology *)rResult.GetThing()->FindEntity(TopologyID.m_ID);
+    return {SGMInternal::ImprintPoint(rResult,Pos,pTopology)->GetID()};
+    }
+
+void SGM::Merge(SGM::Result &rResult,
+                SGM::Entity &EntityID)
+    {
+    SGMInternal::entity *pEntity=(SGMInternal::entity *)rResult.GetThing()->FindEntity(EntityID.m_ID);
+    SGMInternal::Merge(rResult,pEntity);
+    }
+
+/*
 SGM::Body SGM::UnhookFaces(SGM::Result            &rResult,
                            std::vector<SGM::Face> &aFaceIDs)
     {
@@ -2046,6 +2101,7 @@ SGM::Body SGM::UnhookFaces(SGM::Result            &rResult,
         }
     return SGM::Body(SGMInternal::UnhookFaces(rResult,aFaces)->GetID());
     }
+*/
 
 size_t SGM::IntersectCurveAndPlane(SGM::Result                        &rResult,
                                    SGM::Curve                   const &CurveID,

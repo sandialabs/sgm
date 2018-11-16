@@ -78,20 +78,23 @@ void hermite::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3
         }
     if(D1)
         {
-        double h1=s*(6*s-6);
+        double sp=1.0/(t1-t0);
+        double h1=s*(6*s-6)*sp;
         double h2=-h1;
-        double h3=s*(3*s-4)+1;
-        double h4=s*(3*s-2);
+        double h3=(s*(3*s-4)+1)*sp;
+        double h4=s*(3*s-2)*sp;
         D1->m_x=h1*P0.m_x+h2*P1.m_x+h3*T0.m_x+h4*T1.m_x;
         D1->m_y=h1*P0.m_y+h2*P1.m_y+h3*T0.m_y+h4*T1.m_y;
         D1->m_z=h1*P0.m_z+h2*P1.m_z+h3*T0.m_z+h4*T1.m_z;
         }
     if(D2)
         {
-        double h1=12*s-6;
-        double h2=-12*s+6;
-        double h3=6*s-4;
-        double h4=6*s-2;
+        double spp=1.0/(t1-t0);
+        spp*=spp;
+        double h1=(12*s-6)*spp;
+        double h2=-h1;
+        double h3=(6*s-4)*spp;
+        double h4=(6*s-2)*spp;
         D2->m_x=h1*P0.m_x+h2*P1.m_x+h3*T0.m_x+h4*T1.m_x;
         D2->m_y=h1*P0.m_y+h2*P1.m_y+h3*T0.m_y+h4*T1.m_y;
         D2->m_z=h1*P0.m_z+h2*P1.m_z+h3*T0.m_z+h4*T1.m_z;
@@ -133,6 +136,29 @@ double hermite::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
    
+void AddMidPoints(curve               const *pCurve,
+                  std::vector<SGM::Point3D> &aPoints,
+                  std::vector<double>       &aParams)
+    {
+    std::vector<SGM::Point3D> aNewPoints;
+    std::vector<double> aNewParams;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    aNewPoints.push_back(aPoints[0]);
+    aNewParams.push_back(aParams[0]);
+    for(Index1=1;Index1<nPoints;++Index1)
+        {
+        double t=(aParams[Index1]+aParams[Index1-1])*0.5;
+        SGM::Point3D Pos;
+        pCurve->Evaluate(t,&Pos);
+        aNewPoints.push_back(Pos);
+        aNewParams.push_back(t);
+        aNewPoints.push_back(aPoints[Index1]);
+        aNewParams.push_back(aParams[Index1]);
+        }
+    aPoints=aNewPoints;
+    aParams=aNewParams;
+    }
     
 std::vector<SGM::Point3D> const &hermite::GetSeedPoints() const
     {
@@ -141,6 +167,7 @@ std::vector<SGM::Point3D> const &hermite::GetSeedPoints() const
         FacetOptions Options;
         Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
+        AddMidPoints(this,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedPoints;
     }
@@ -152,6 +179,7 @@ std::vector<double> const &hermite::GetSeedParams() const
         FacetOptions Options;
         Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
+        AddMidPoints(this,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
     }

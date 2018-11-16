@@ -99,6 +99,7 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
                 }
             default:
                 {
+                // Look for local mins
                 throw;
                 }
             }
