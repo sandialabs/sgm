@@ -1691,8 +1691,6 @@ TEST(math_check, cylinder_sphere_intersect)
     
     SGMTesting::ReleaseTestThing(pThing);
 
-    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
-
     EXPECT_TRUE(bAnswer);
     }
 
