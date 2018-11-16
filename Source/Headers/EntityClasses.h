@@ -178,6 +178,8 @@ protected:
 
     void RemoveAllOwners();
 
+    void OwnerAndAttributeReplacePointers(std::map<entity *, entity *> const &mEntityMap);
+
 private:
 
     size_t IDFromThing(SGM::Result &rResult);
