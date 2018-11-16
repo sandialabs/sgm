@@ -1086,9 +1086,9 @@ class attribute : public entity
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        std::string const &GetName() const {return m_Name;}
+        std::string const &GetName() const;
 
-        SGM::EntityType GetAttributeType() const {return m_AttributeType;}
+        SGM::EntityType GetAttributeType() const;
 
     private:
 

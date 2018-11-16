@@ -394,4 +394,42 @@ namespace SGM {
         return nodeCopy;
     }
 
+    inline BoxTree::Node* BoxTree::InsertInternal(BoxTree::Leaf* leaf, BoxTree::Node* node, bool firstInsert)
+    {
+    // Insert nodes recursively.
+    // If this function returns a non-null pointer to a node,
+    // the node should be added to the caller's level of the tree
+
+    // Enlarge all covering boxes in the insertion path such that they are minimum bounding boxes
+    // enclosing the children boxes
+    node->m_Bound.operator+=(leaf->m_Bound);
+
+    // If we're at a leaf, then use that level
+    if (node->m_bHasLeaves) {
+        // If we grow past max children we will take care of it below
+        node->m_aItems.push_back(leaf);
+        }
+    else {
+        // Invoke ChooseSubtree with the level as a parameter to find an appropriate node N
+        // on which to place the new leaf
+
+        // determine whether we need to split the overflow or not
+        Node* tmp_node = InsertInternal(leaf, ChooseSubtree(node, &leaf->m_Bound), firstInsert);
+
+        if (!tmp_node)
+            return nullptr;
+
+        // this gets joined to the list of items at this level
+        node->m_aItems.push_back(tmp_node);
+        }
+
+    // If N has max + 1 items, invoke OverflowTreatment with the level of N as a parameter for reinsertion or split.
+    if (node->m_aItems.size() > MAX_CHILDREN) {
+
+        // If a split was performed, propagate OverflowTreatment upwards if necessary inside function.
+        return OverflowTreatment(node, firstInsert);
+        }
+    return nullptr;
+    }
+
 } // namespace SGM

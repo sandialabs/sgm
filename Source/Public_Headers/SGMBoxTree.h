@@ -563,12 +563,13 @@ namespace SGM {
 
         size_t m_treeSize;
 
-        static const size_t REINSERT_CHILDREN;  // in [1 <= m <= MIN_CHILDREN]
-        static const size_t MIN_CHILDREN;       // in [1 <= m < M)
-        static const size_t MAX_CHILDREN;       // in [2*MIN_CHILDREN <= m < M)
-        static const size_t RESERVE_CHILDREN;   // in [MIN_CHILDREN, MAX_CHILDREN]
+        static const size_t REINSERT_CHILDREN;      // in [1 <= m <= MIN_CHILDREN]
+        static const size_t MIN_CHILDREN;           // in [1 <= m < M)
+        static const size_t MAX_CHILDREN;           // in [2*MIN_CHILDREN <= m < M)
+        static const size_t RESERVE_CHILDREN;       // in [MIN_CHILDREN, MAX_CHILDREN]
         static const size_t CHOOSE_SUBTREE;
-        static const size_t MEMORY_POOL_BYTES;  // size of chunks in memory pool allocator
+        static const size_t MEMORY_POOL_BYTES;      // size of chunks in memory pool allocator
+        static const bool MAX_GT_CHOOSE_SUBTREE;    // condition for entering subtree
     };
 
 }

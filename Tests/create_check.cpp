@@ -148,4 +148,47 @@ TEST(create_check, create_torus_knot)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
+    
+TEST(create_check, create_attributes)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<int> aIntegers(3,1);
+    SGMInternal::IntegerAttribute * pIntegerAttribute = new SGMInternal::IntegerAttribute(rResult,
+        "IntegerAttributeTestName", aIntegers);
+    EXPECT_TRUE(pIntegerAttribute != nullptr);
+    EXPECT_EQ(pIntegerAttribute->GetAttributeType(),SGM::EntityType::IntegerAttributeType);
+
+    std::vector<double> aDoubles(3,1.0);
+    SGMInternal::DoubleAttribute * pDoubleAttribute = new SGMInternal::DoubleAttribute(rResult,
+        "DoubleAttributeTestName", aDoubles);
+    EXPECT_TRUE(pDoubleAttribute != nullptr);
+    EXPECT_EQ(pDoubleAttribute->GetAttributeType(),SGM::EntityType::DoubleAttributeType);
+
+    std::vector<char> aChars(3,'c');
+    SGMInternal::CharAttribute * pCharAttribute = new SGMInternal::CharAttribute(rResult,
+        "CharAttributeTestName", aChars);
+    EXPECT_TRUE(pCharAttribute != nullptr);
+    EXPECT_EQ(pCharAttribute->GetAttributeType(),SGM::EntityType::CharAttributeType);
+
+    SGMInternal::StringAttribute * pStringAttribute = new SGMInternal::StringAttribute(rResult,
+        "StringAttributeTestName", "string_test");
+    EXPECT_TRUE(pStringAttribute != nullptr);
+    EXPECT_EQ(pStringAttribute->GetAttributeType(),SGM::EntityType::StringAttributeType);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+TEST(create_check, miscellaneous_entity)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // cloning a thing is not currently allowed
+    EXPECT_THROW(pThing->Clone(rResult), std::logic_error);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
 
