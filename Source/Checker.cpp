@@ -25,9 +25,43 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-bool body::Check(SGM::Result              &,//rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+bool thing::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings,
+                  bool                      ) const
+    {
+    bool bAnswer = true;
+
+    for (auto const &iter : m_mAllEntities)
+        {
+        if (!iter.second->Check(rResult, Options, aCheckStrings,false))
+            bAnswer = false;
+        }
+    return bAnswer;
+    }
+
+bool CheckChildern(SGM::Result              &rResult,
+                   entity             const *pEntity,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings)
+    {
+    std::set<entity *,EntityCompare> sChildern;
+    pEntity->FindAllChildren(sChildern);
+    bool bAnswer=true;
+    for(auto pChild : sChildern)
+        {
+        if(pChild->Check(rResult,Options,aCheckStrings,false)==false)
+            {
+            bAnswer=false;
+            }
+        }
+    return bAnswer;
+    }
+
+bool body::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -52,12 +86,21 @@ bool body::Check(SGM::Result              &,//rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
-bool complex::Check(SGM::Result              &,//rResult,
-                    SGM::CheckOptions  const &,//Options,
-                    std::vector<std::string> &aCheckStrings) const
+bool complex::Check(SGM::Result              &rResult,
+                    SGM::CheckOptions  const &Options,
+                    std::vector<std::string> &aCheckStrings,
+                    bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -110,12 +153,21 @@ bool complex::Check(SGM::Result              &,//rResult,
             }
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
-bool volume::Check(SGM::Result              &,//rResult,
-                   SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &aCheckStrings) const
+bool volume::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -142,12 +194,21 @@ bool volume::Check(SGM::Result              &,//rResult,
             }
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
 bool face::Check(SGM::Result              &rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
     
@@ -253,9 +314,9 @@ bool face::Check(SGM::Result              &rResult,
             continue;
             }
         SGM::UnitVector3D Norm=TestNorm;
-        double dDotA=Norm%aNormals[a];
-        double dDotB=Norm%aNormals[b];
-        double dDotC=Norm%aNormals[c];
+        double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
+        double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
+        double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
         double dTol=0.70710678118654752440084436210485; // cos(45) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
@@ -313,12 +374,21 @@ bool face::Check(SGM::Result              &rResult,
         //    }
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
-bool edge::Check(SGM::Result              &,//rResult,
-                 SGM::CheckOptions  const &,//Options,
-                 std::vector<std::string> &aCheckStrings) const
+bool edge::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions  const &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -395,12 +465,21 @@ bool edge::Check(SGM::Result              &,//rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
-bool vertex::Check(SGM::Result              &,//rResult,
-                   SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &aCheckStrings) const
+bool vertex::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const
     {
     bool bAnswer=true;
 
@@ -412,14 +491,23 @@ bool vertex::Check(SGM::Result              &,//rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
-bool curve::Check(SGM::Result              &,//rResult,
-                  SGM::CheckOptions  const &,//Options,
-                  std::vector<std::string> &aCheckStrings) const
+bool curve::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings,
+                  bool                      bChildern) const
     {
-    bool bAnswer=TestCurve(this,m_Domain.MidPoint());
+    bool bAnswer=TestCurve(rResult,this,m_Domain.MidPoint());
 
     if(!bAnswer)
         {
@@ -428,12 +516,21 @@ bool curve::Check(SGM::Result              &,//rResult,
         aCheckStrings.emplace_back(Buffer);
         }
 
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
+
     return bAnswer;
     }
 
 bool surface::Check(SGM::Result              &rResult,
-                    SGM::CheckOptions  const &,//Options
-                    std::vector<std::string> &aCheckStrings) const
+                    SGM::CheckOptions  const &Options,
+                    std::vector<std::string> &aCheckStrings,
+                    bool                      bChildern) const
     {
     SGM::Point2D uv=m_Domain.MidPoint();
     if(!m_sFaces.empty())
@@ -452,6 +549,14 @@ bool surface::Check(SGM::Result              &rResult,
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"Surface %lu does not pass derivative and inverse checks.\n",GetID());
         aCheckStrings.emplace_back(Buffer);
+        }
+
+    if(bChildern)
+        {
+        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
         }
 
     return bAnswer;

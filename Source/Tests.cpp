@@ -38,10 +38,14 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-bool TestSurface(SGM::Result                &,//rResult,
+bool TestSurface(SGM::Result                &rResult,
                  SGMInternal::surface const *pSurface,
                  SGM::Point2D         const &uv1)
     {
+    if(rResult.GetDebugFlag()==4)
+        {
+        return false;
+        }
     bool bAnswer=true;
 
     // Test to see if evaluate and inverse match.
@@ -155,9 +159,14 @@ bool TestSurface(SGM::Result                &,//rResult,
     return bAnswer;
     }
 
-bool TestCurve(SGMInternal::curve const *pCurve,
+bool TestCurve(SGM::Result              &rResult,
+               SGMInternal::curve const *pCurve,
                double                    t1)
     {
+    if(rResult.GetDebugFlag()==3)
+        {
+        return false;
+        }
     SGM::Point3D Pos;
     SGM::Vector3D Vec1,Vec2;
     pCurve->Evaluate(t1,&Pos,&Vec1,&Vec2);

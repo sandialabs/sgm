@@ -3964,13 +3964,45 @@ static void FindSpherePoints(sphere                   const *pSphere,
 //    }
 
 void FacetFace(SGM::Result                    &rResult,
-                      face                     const *pFace,
-                      FacetOptions             const &Options,
-                      std::vector<SGM::Point2D>      &aPoints2D,
-                      std::vector<SGM::Point3D>      &aPoints3D,
-                      std::vector<SGM::UnitVector3D> &aNormals,
-                      std::vector<unsigned int>      &aTriangles)
+               face                     const *pFace,
+               FacetOptions             const &Options,
+               std::vector<SGM::Point2D>      &aPoints2D,
+               std::vector<SGM::Point3D>      &aPoints3D,
+               std::vector<SGM::UnitVector3D> &aNormals,
+               std::vector<unsigned int>      &aTriangles)
     {
+    if(rResult.GetDebugFlag())
+        {
+        if(rResult.GetDebugFlag()==1)
+            {
+            aPoints2D.push_back(SGM::Point2D(0,0));
+            aPoints2D.push_back(SGM::Point2D(1,0));
+            aPoints2D.push_back(SGM::Point2D(0,1));
+            aPoints2D.push_back(SGM::Point2D(0,0));
+            aPoints2D.push_back(SGM::Point2D(1,0));
+            aPoints2D.push_back(SGM::Point2D(0,1));
+            aPoints3D.push_back(SGM::Point3D(0,0,0));
+            aPoints3D.push_back(SGM::Point3D(1,0,0));
+            aPoints3D.push_back(SGM::Point3D(100,-100,100));
+            aPoints3D.push_back(SGM::Point3D(0,0,0));
+            aPoints3D.push_back(SGM::Point3D(1,0,0));
+            aPoints3D.push_back(SGM::Point3D(100,-100,100));
+            aNormals.push_back(SGM::UnitVector3D(1,2,3));
+            aNormals.push_back(SGM::UnitVector3D(1,2,3));
+            aTriangles.push_back(0);
+            aTriangles.push_back(1);
+            aTriangles.push_back(2);
+            aTriangles.push_back(3);
+            aTriangles.push_back(4);
+            aTriangles.push_back(5);
+            return;
+            }
+        else if(rResult.GetDebugFlag()==2)
+            {
+            return;
+            }
+        }
+    
     // How to facet only one face by ID.
     //if(pFace->GetID()!=78 && pFace->GetEdges().empty()==false)
     //    {

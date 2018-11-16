@@ -1137,7 +1137,7 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
-    return pEntity->Check(rResult,Options,aCheckStrings); // only top level
+    return pEntity->Check(rResult,Options,aCheckStrings,true);
     }
 
 bool SGM::TestCurve(SGM::Result      &rResult,
@@ -1146,7 +1146,7 @@ bool SGM::TestCurve(SGM::Result      &rResult,
     {
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::curve *pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
-    return SGMInternal::TestCurve(pCurve,dT);
+    return SGMInternal::TestCurve(rResult,pCurve,dT);
     }
 
 bool SGM::TestSurface(SGM::Result        &rResult,

@@ -40,24 +40,6 @@ thing::~thing()
         }
     }
 
-bool thing::Check(SGM::Result              &rResult,
-                  SGM::CheckOptions  const &Options,
-                  std::vector<std::string> &aCheckStrings) const
-    {
-    // TODO: are we doing this right, should we check IsTopLevel()?
-    // TODO: should we use a ThreadPool for checking?
-    // thing *always* checks at least top level children,
-    // and passing bChildren=true will check further down hierarchy
-    bool bAnswer = true;
-
-    for (auto const &iter : m_mAllEntities)
-        {
-        if (!iter.second->Check(rResult, Options, aCheckStrings))
-            bAnswer = false;
-        }
-    return bAnswer;
-    }
-
 SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

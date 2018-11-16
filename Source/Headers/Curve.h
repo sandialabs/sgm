@@ -35,7 +35,8 @@ class curve : public entity
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const override;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
 
         curve *Clone(SGM::Result &) const override = 0;
 
@@ -641,7 +642,8 @@ class hermite: public curve
         mutable std::vector<double>       m_aSeedParams;
     };
 
-bool TestCurve(SGMInternal::curve const *pCurve,
+bool TestCurve(SGM::Result              &rResult,
+               SGMInternal::curve const *pCurve,
                double                    t1);
 
 ///////////////////////////////////////////////////////////////////////////////

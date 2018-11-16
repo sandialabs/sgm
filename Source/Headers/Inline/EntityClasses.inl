@@ -287,7 +287,8 @@ namespace SGMInternal {
 
     inline bool assembly::Check(SGM::Result &,
                                 SGM::CheckOptions const  &,
-                                std::vector<std::string> &) const 
+                                std::vector<std::string> &,
+                                bool) const 
     {return true;}
 
     //
@@ -319,7 +320,8 @@ namespace SGMInternal {
 
     inline bool reference::Check(SGM::Result &,
                                  SGM::CheckOptions const  &,
-                                 std::vector<std::string> &) const 
+                                 std::vector<std::string> &,
+                                 bool) const 
     {return true;}
 
     //

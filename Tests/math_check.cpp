@@ -3956,5 +3956,45 @@ TEST(math_check, checking_the_checker)
     EXPECT_FALSE(SGM::CheckEntity(rResult,ComplexID2,Options4,aCheckStrings4));
     SGM::DeleteEntity(rResult,ComplexID2);
 
+    // Bad facets normals and connectivity.
+
+    rResult.SetDebugFlag(1);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CheckOptions Options5;
+    std::vector<std::string> aCheckStrings5;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,BlockID,Options5,aCheckStrings5));
+    SGM::DeleteEntity(rResult,BlockID);
+    rResult.SetDebugFlag(0);
+
+    // Missing facets.
+
+    rResult.SetDebugFlag(2);
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CheckOptions Options6;
+    std::vector<std::string> aCheckStrings6;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,BlockID2,Options6,aCheckStrings6));
+    SGM::DeleteEntity(rResult,BlockID2);
+    rResult.SetDebugFlag(0);
+
+    // bad curves.
+
+    rResult.SetDebugFlag(3);
+    SGM::Edge LineID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CheckOptions Options7;
+    std::vector<std::string> aCheckStrings7;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,LineID,Options7,aCheckStrings7));
+    SGM::DeleteEntity(rResult,LineID);
+    rResult.SetDebugFlag(0);
+
+    // bad surface.
+
+    rResult.SetDebugFlag(4);
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    SGM::CheckOptions Options8;
+    std::vector<std::string> aCheckStrings8;
+    EXPECT_FALSE(SGM::CheckEntity(rResult,SphereID,Options8,aCheckStrings8));
+    SGM::DeleteEntity(rResult,SphereID);
+    rResult.SetDebugFlag(0);
+
     SGMTesting::ReleaseTestThing(pThing);
 } 

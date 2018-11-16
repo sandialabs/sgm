@@ -30,7 +30,8 @@ class surface : public entity
 
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings) const override;
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
 
         surface *Clone(SGM::Result &rResult) const override = 0;
 

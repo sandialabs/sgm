@@ -21,11 +21,11 @@ class Result
     {
     public:
 
-        SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK), m_pThing(nullptr), m_bLog(false) {}
+        SGM_EXPORT Result() : m_nType(ResultType::ResultTypeOK),m_pThing(nullptr),m_bLog(false),m_nDebugFlag(0) {}
 
         SGM_EXPORT explicit Result(SGMInternal::thing *pThing) :
                 m_nType(ResultType::ResultTypeOK), m_pThing(pThing),
-                m_bLog(false)
+                m_bLog(false),m_nDebugFlag(0)
         {}
 
         SGM_EXPORT void SetResult(ResultType nType);
@@ -52,6 +52,19 @@ class Result
 
         SGM_EXPORT void AddLog(Entity const &EntityID,LogType nLogEntry) {m_aLog.push_back(EntityID);m_aLogEntries.push_back(nLogEntry);}
 
+        // For internal use only.
+
+        SGM_EXPORT void SetDebugFlag(size_t nFlag) {m_nDebugFlag=nFlag;}
+
+        SGM_EXPORT size_t GetDebugFlag() {return m_nDebugFlag;}
+
+        // Debug flags
+        // 0 turned off. (Default)
+        // 1 make bad face facets.
+        // 2 make no face facets.
+        // 3 return bad curve tests.
+        // 4 return bad surface tests.
+
     private:
 
         ResultType           m_nType;
@@ -60,6 +73,7 @@ class Result
         bool                 m_bLog;
         std::vector<Entity>  m_aLog;
         std::vector<LogType> m_aLogEntries;
+        size_t               m_nDebugFlag;
 };
 
 } // End of SGM namespace
