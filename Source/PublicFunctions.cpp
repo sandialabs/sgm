@@ -1236,6 +1236,28 @@ void SGM::EvaluateSurface(SGM::Result             &rResult,
     pSurface->Evaluate(uv,pPos,pDu,pDv,pNorm,pDuu,pDuv,pDvv);
     }
 
+bool SGM::SameSurface(SGM::Result        &rResult,
+                      SGM::Surface const &SurfaceID1,
+                      SGM::Surface const &SurfaceID2,
+                      double              dTolerance)
+    {
+    SGMInternal::thing   *pThing=rResult.GetThing();
+    SGMInternal::surface *pSurface1=(SGMInternal::surface *)(pThing->FindEntity(SurfaceID1.m_ID));
+    SGMInternal::surface *pSurface2=(SGMInternal::surface *)(pThing->FindEntity(SurfaceID2.m_ID));
+    return pSurface1->IsSame(pSurface2,dTolerance);
+    }
+
+bool SGM::SameCurve(SGM::Result      &rResult,
+                    SGM::Curve const &CurveID1,
+                    SGM::Curve const &CurveID2,
+                    double            dTolerance)
+    {
+    SGMInternal::thing   *pThing=rResult.GetThing();
+    SGMInternal::curve *pCurve1=(SGMInternal::curve *)(pThing->FindEntity(CurveID1.m_ID));
+    SGMInternal::curve *pCurve2=(SGMInternal::curve *)(pThing->FindEntity(CurveID2.m_ID));
+    return pCurve1->IsSame(pCurve2,dTolerance);
+    }
+
 SGM::Point2D SGM::SurfaceInverse(SGM::Result        &rResult,
                                  SGM::Surface const &SurfaceID,
                                  SGM::Point3D const &Pos,

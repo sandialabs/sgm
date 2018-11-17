@@ -201,6 +201,16 @@ SGM_EXPORT SGM::Point2D SurfaceInverse(SGM::Result        &rResult,
                                        SGM::Point3D       *pClosePos=nullptr,
                                        SGM::Point2D const *pGuess=nullptr);
 
+SGM_EXPORT bool SameSurface(SGM::Result        &rResult,
+                            SGM::Surface const &SurfaceID1,
+                            SGM::Surface const &SurfaceID2,
+                            double              dTolerance);
+
+SGM_EXPORT bool SameCurve(SGM::Result      &rResult,
+                          SGM::Curve const &CurveID1,
+                          SGM::Curve const &CurveID2,
+                          double            dTolerance);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Get Curve Data

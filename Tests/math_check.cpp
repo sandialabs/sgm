@@ -76,6 +76,12 @@ TEST(math_check, revolve_surface_save_step)
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID,Options,aCheckStrings));
 
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,RevolveID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,RevolveID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -177,8 +183,11 @@ TEST(math_check, extrude_hermit)
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
 
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,SurfID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
@@ -306,6 +315,11 @@ TEST(math_check, cone_copy_transform)
     SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
     bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest2);
+
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
+    SGM::TransformEntity(rResult,Trans,SurfID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -560,6 +574,13 @@ TEST(surface_check, sphere)
     SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,Origin,dRadius,&XAxis,&YAxis);
 
     bool bAnswer=SGM::TestSurface(rResult,SphereID,SGM::Point2D(0.5,0.2));
+
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SphereID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,SphereID,SurfID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,SphereID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,SphereID,SurfID2,SGM_MIN_TOL));
+
     SGM::DeleteEntity(rResult,SphereID);
     SGMTesting::ReleaseTestThing(pThing);
 
@@ -593,10 +614,17 @@ TEST(surface_check, torus)
 
     SGM::Point3D Origin(0,0,0);
     SGM::UnitVector3D ZAxis(0,0,1);
-    SGM::Surface SphereID=SGM::CreateTorusSurface(rResult,Origin,ZAxis,2,5,true);
+    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,Origin,ZAxis,2,5,true);
 
-    bool bAnswer=SGM::TestSurface(rResult,SphereID,SGM::Point2D(0.5,0.2));
-    SGM::DeleteEntity(rResult,SphereID);
+    bool bAnswer=SGM::TestSurface(rResult,TorusID,SGM::Point2D(0.5,0.2));
+
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,TorusID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,TorusID,SurfID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,TorusID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,TorusID,SurfID2,SGM_MIN_TOL));
+
+    SGM::DeleteEntity(rResult,TorusID);
     SGMTesting::ReleaseTestThing(pThing);
 
     EXPECT_TRUE(bAnswer);
@@ -1433,6 +1461,12 @@ TEST(math_check, NURB_surface)
         }
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,SurfID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
     EXPECT_TRUE(bAnswer);
 
@@ -2430,6 +2464,12 @@ TEST(math_check, create_nub_surface)
         {
         bAnswer=false;
         }
+
+    SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,NUBSurfID).m_ID);
+    EXPECT_TRUE(SGM::SameSurface(rResult,NUBSurfID,SurfID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,NUBSurfID);
+    EXPECT_FALSE(SGM::SameSurface(rResult,NUBSurfID,SurfID2,SGM_MIN_TOL));
 
     EXPECT_TRUE(bAnswer); 
     SGMTesting::ReleaseTestThing(pThing); 
