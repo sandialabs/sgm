@@ -4356,3 +4356,58 @@ TEST(math_check, top_level_faces)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+TEST(math_check, principal_curvatures_on_plane)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    double dK1,dK2;
+    SGM::UnitVector3D Vec1,Vec2;
+    SGM::Point2D uv(0,0);
+    SGM::PrincipleCurvature(rResult,SurfID,uv,Vec1,Vec2,dK1,dK2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, same_curve_tests)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point4D> aControlPoints;
+    aControlPoints.emplace_back(1,0,0,1);
+    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(0,1,0,1);
+    aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(-1,0,0,1);
+    aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(0,-1,0,1);
+    aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(1,0,0,1);
+    
+    std::vector<double> aKnots;
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_TWO_PI);
+    aKnots.push_back(SGM_TWO_PI);
+    aKnots.push_back(SGM_TWO_PI);
+
+    SGM::Curve CurveID1=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
+
+    SGM::Curve CurveID2=SGM::Curve(SGM::CopyEntity(rResult,CurveID1).m_ID);
+    EXPECT_TRUE(SGM::SameCurve(rResult,CurveID1,CurveID2,SGM_MIN_TOL));
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    SGM::TransformEntity(rResult,Trans,CurveID1);
+    EXPECT_FALSE(SGM::SameCurve(rResult,CurveID1,CurveID2,SGM_MIN_TOL));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
