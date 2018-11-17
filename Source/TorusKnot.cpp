@@ -176,7 +176,15 @@ bool TorusKnot::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    else if(SGM::NearEqual(fabs(m_Normal%pTorusKnot2->m_Normal),1.0,dTolerance,false)==false)
+    else if(SGM::NearEqual(m_Normal,pTorusKnot2->m_Normal,dTolerance)==false)
+        {
+        return false;
+        }
+    else if(SGM::NearEqual(m_XAxis,pTorusKnot2->m_XAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    else if(SGM::NearEqual(m_YAxis,pTorusKnot2->m_YAxis,dTolerance)==false)
         {
         return false;
         }

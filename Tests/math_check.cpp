@@ -182,6 +182,8 @@ TEST(math_check, extrude_hermit)
     SGM::TransformEntity(rResult,Trans,SurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
+    SGM::CopyEntity(rResult,CurveID);
+
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
     
@@ -4408,6 +4410,24 @@ TEST(math_check, same_curve_tests)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,CurveID1);
     EXPECT_FALSE(SGM::SameCurve(rResult,CurveID1,CurveID2,SGM_MIN_TOL));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, transform_nub_curve)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.emplace_back(-2,.5,0);
+    aPoints1.emplace_back(-1,1.5,0);
+    aPoints1.emplace_back(0,1,0);
+    aPoints1.emplace_back(1,1.5,0);
+    aPoints1.emplace_back(2,2,0);
+
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,2,3)),CurveID);
     
     SGMTesting::ReleaseTestThing(pThing);
 }

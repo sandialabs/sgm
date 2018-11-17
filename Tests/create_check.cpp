@@ -137,6 +137,8 @@ TEST(create_check, create_torus_knot)
     SGM::TransformEntity(rResult, Trans, IDCurve2);
     SGM::Edge Edge2 = SGM::CreateEdge(rResult, IDCurve2);
 
+    EXPECT_FALSE(SGM::SameCurve(rResult,IDCurve,IDCurve2,SGM_MIN_TOL));
+
     SGM::UnitVector3D Normal = XAxis * YAxis;
     SGM::Surface SurfaceID = SGM::CreateTorusSurface(rResult, Center, Normal, dr, dR);
     std::vector<SGM::Edge> aEdges;
