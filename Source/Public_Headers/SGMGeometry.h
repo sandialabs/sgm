@@ -88,6 +88,14 @@ SGM_EXPORT SGM::Curve FindConic(SGM::Result                     &rResult,
                                 std::vector<SGM::Point3D> const &aPoints,
                                 double                           dTolerance);
 
+SGM_EXPORT SGM::Curve FindUParamCurve(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID,
+                                      double              dU);
+
+SGM_EXPORT SGM::Curve FindVParamCurve(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID,
+                                      double              dV);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Surface Creation Functions

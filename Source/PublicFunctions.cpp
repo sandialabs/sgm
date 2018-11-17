@@ -2254,3 +2254,21 @@ SGM::Curve SGM::FindConic(SGM::Result                     &rResult,
         }
     return {pCurve->GetID()};
     }
+
+SGM::Curve SGM::FindUParamCurve(SGM::Result        &rResult,
+                                SGM::Surface const &SurfaceID,
+                                double              dU)
+    {
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
+    SGMInternal::curve *pCurve=pSurface->UParamLine(rResult,dU);
+    return {pCurve->GetID()};
+    }
+
+SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
+                                SGM::Surface const &SurfaceID,
+                                double              dV)
+    {
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
+    SGMInternal::curve *pCurve=pSurface->VParamLine(rResult,dV);
+    return {pCurve->GetID()};
+    }

@@ -287,6 +287,9 @@ TEST(math_check, cylinder_copy_transform)
     bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest2);
 
+    double dU=SGM::GetDomainOfSurface(rResult,SurfID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SurfID,dU);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -315,6 +318,9 @@ TEST(math_check, cone_copy_transform)
     EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
     SGM::TransformEntity(rResult,Trans,SurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
+    
+    double dU=SGM::GetDomainOfSurface(rResult,SurfID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SurfID,dU);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -568,6 +574,9 @@ TEST(surface_check, sphere)
     double dRadius=2.5;
     SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,Origin,dRadius,&XAxis,&YAxis);
 
+    double dU=SGM::GetDomainOfSurface(rResult,SphereID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SphereID,dU);
+
     bool bAnswer=SGM::TestSurface(rResult,SphereID,SGM::Point2D(0.5,0.2));
 
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SphereID).m_ID);
@@ -618,6 +627,12 @@ TEST(surface_check, torus)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,TorusID);
     EXPECT_FALSE(SGM::SameSurface(rResult,TorusID,SurfID2,SGM_MIN_TOL));
+    
+    double dU=SGM::GetDomainOfSurface(rResult,TorusID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,TorusID,dU);
+
+    double dV=SGM::GetDomainOfSurface(rResult,TorusID).m_VDomain.MidPoint();
+    SGM::FindVParamCurve(rResult,TorusID,dV);
 
     SGM::DeleteEntity(rResult,TorusID);
     SGMTesting::ReleaseTestThing(pThing);
@@ -1152,6 +1167,12 @@ TEST(math_check, intersect_line_and_revolve)
     SGM::UnitVector3D Axis(1,0,0);
     SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
 
+    double dU=SGM::GetDomainOfSurface(rResult,RevolveID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,RevolveID,dU);
+
+    double dV=SGM::GetDomainOfSurface(rResult,RevolveID).m_VDomain.MidPoint();
+    SGM::FindVParamCurve(rResult,RevolveID,dV);
+
     SGM::Point3D LineOrigin1(1,0,0);
     SGM::UnitVector3D uDirection1(0,0,1);
     SGM::Curve Line1ID = SGM::CreateLine(rResult, LineOrigin1, uDirection1);
@@ -1462,6 +1483,12 @@ TEST(math_check, NURB_surface)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,SurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
+    
+    double dU=SGM::GetDomainOfSurface(rResult,SurfID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SurfID,dU);
+
+    double dV=SGM::GetDomainOfSurface(rResult,SurfID).m_VDomain.MidPoint();
+    SGM::FindVParamCurve(rResult,SurfID,dV);
 
     EXPECT_TRUE(bAnswer);
 
@@ -2465,6 +2492,12 @@ TEST(math_check, create_nub_surface)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,NUBSurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,NUBSurfID,SurfID2,SGM_MIN_TOL));
+
+    double dU=SGM::GetDomainOfSurface(rResult,NUBSurfID).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,NUBSurfID,dU);
+
+    double dV=SGM::GetDomainOfSurface(rResult,NUBSurfID).m_VDomain.MidPoint();
+    SGM::FindVParamCurve(rResult,NUBSurfID,dV);
 
     EXPECT_TRUE(bAnswer); 
     SGMTesting::ReleaseTestThing(pThing); 
@@ -4431,3 +4464,4 @@ TEST(math_check, transform_nub_curve)
     
     SGMTesting::ReleaseTestThing(pThing);
 }
+
