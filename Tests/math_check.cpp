@@ -4132,7 +4132,7 @@ TEST(math_check, intersection_tests)
     SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
-    SGM::RayFire(rResult,SGM::Point3D(4,0,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes);
+    SGM::RayFire(rResult,SGM::Point3D(0.9,0.9,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),0);
     SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),SphereID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),1);
@@ -4141,20 +4141,37 @@ TEST(math_check, intersection_tests)
     EXPECT_TRUE(SGM::NearEqual(SGM::FindEdgeLength(rResult,EdgeID),1,SGM_MIN_TOL,false));
 
     SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
-    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,0,1));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurveAndSurface(rResult,LineID,CylinderID,aPoints,aTypes);
-    EXPECT_EQ(aTypes[0],SGM::IntersectionType::TangentType);
+    EXPECT_EQ(aTypes[0],SGM::IntersectionType::CoincidentType);
 
     SGM::Point3D Center(0,0,0);
     SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
     SGM::Curve CurveID=SGM::CreateHyperbola(rResult,Center,XAxis,YAxis,1,1);
-    SGM::Curve LineID2=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(10,0,0));
+    SGM::Curve LineID2=SGM::CreateLine(rResult,SGM::Point3D(0,1,0),SGM::UnitVector3D(1,-1,0));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID2,CurveID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),1);
 
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, volume_ray_fire) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    std::set<SGM::Volume> sVolumes;
+    SGM::ReduceToVolumes(rResult,BodyID,sVolumes);
+    SGM::Volume VolumeID=*(sVolumes.begin());
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),VolumeID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
+    
     SGMTesting::ReleaseTestThing(pThing);
 } 

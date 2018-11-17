@@ -12,6 +12,12 @@
 namespace SGM
 {
 
+// Strip bodies from volumes.
+
+SGM_EXPORT void ReduceToVolumes(SGM::Result           &rResult,
+                                SGM::Body             &BodyID,
+                                std::set<SGM::Volume> &sVolumes);
+
 // Unite the two given bodies
 
 SGM_EXPORT void UniteBodies(SGM::Result &rResult,

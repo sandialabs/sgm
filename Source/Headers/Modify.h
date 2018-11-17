@@ -17,6 +17,10 @@ void UniteBodies(SGM::Result &rResult,
                  body        *pDeleteBody);
 */
 
+void ReduceToVolumes(SGM::Result                      &rResult,
+                     body                             *pBody,
+                     std::set<volume *,EntityCompare> &sVolumes);
+
 // pFace1 may be a nullptr and mHitMap(n) returns the edges or vertices
 // hit by paramters on the curve on face n.
 

@@ -2110,6 +2110,19 @@ double SGM::FindVolume(SGM::Result       &rResult,
     return dAnswer;
     }
 
+void SGM::ReduceToVolumes(SGM::Result           &rResult,
+                          SGM::Body             &BodyID,
+                          std::set<SGM::Volume> &sVolumes)
+    {
+    SGMInternal::body *pBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+    std::set<SGMInternal::volume *,SGMInternal::EntityCompare> svolumes;
+    SGMInternal::ReduceToVolumes(rResult,pBody,svolumes);
+    for(auto pVolume : svolumes)
+        {
+        sVolumes.insert(SGM::Volume(pVolume->GetID()));
+        }
+    }
+
 /*
 std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
                                               SGM::Edge   &EdgeID,

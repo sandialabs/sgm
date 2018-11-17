@@ -20,6 +20,15 @@
 namespace SGMInternal
 {
 
+void ReduceToVolumes(SGM::Result                      &rResult,
+                     body                             *pBody,
+                     std::set<volume *,EntityCompare> &sVolumes)
+    {
+    FindVolumes(rResult,pBody,sVolumes);
+    pBody->SeverRelations(rResult);
+    rResult.GetThing()->DeleteEntity(pBody);
+    }
+
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
                            edge               *pEdge)
