@@ -273,11 +273,12 @@ SGM::Complex SGM::CreateSlice(SGM::Result   &,//rResult,
     return {0};
     }
 
-SGM::Complex SGM::CreatePolygon(SGM::Result                &,//rResult,
-                                std::vector<Point3D> const &,//aPoints,
-                                bool                        )//bFilled)
+SGM::Complex SGM::CreatePolygon(SGM::Result                &rResult,
+                                std::vector<Point3D> const &aPoints,
+                                bool                        bFilled)
     {
-    return {0};
+    SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,aPoints,bFilled);
+    return {pComplex->GetID()};
     }
 
 std::vector<unsigned int> const &SGM::GetFaceTriangles(SGM::Result     &rResult,
