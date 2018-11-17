@@ -2228,5 +2228,9 @@ SGM::Curve SGM::FindConic(SGM::Result                     &rResult,
                           double                           dTolerance)
     {
     SGMInternal::curve *pCurve=SGMInternal::FindConic(rResult,aPoints,dTolerance);
+    if(pCurve==nullptr)
+        {
+        return {0};
+        }
     return {pCurve->GetID()};
     }

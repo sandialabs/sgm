@@ -4175,3 +4175,162 @@ TEST(math_check, volume_ray_fire)
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, non_manifold_complex) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,0,1));
+    aPoints.push_back(SGM::Point3D(-1,0,0));
+    std::vector<unsigned int> aTriangles;
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(3);
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(4);
+    SGM::Complex IDComplex=SGM::CreateTriangles(rResult,aPoints,aTriangles);
+    EXPECT_FALSE(SGM::IsManifold(rResult,IDComplex));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, DISABLED_non_manifold_complex_1d) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(-1,0,0));
+    std::vector<unsigned int> aSegments;
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    aSegments.push_back(0);
+    aSegments.push_back(2);
+    aSegments.push_back(0);
+    aSegments.push_back(3);
+    SGM::Complex IDComplex=SGM::CreateSegments(rResult,aPoints,aSegments);
+    EXPECT_FALSE(SGM::IsManifold(rResult,IDComplex));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, find_sharp_edges) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::DeleteEntity(rResult,FaceID);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BodyID);
+    SGM::FindSharpEdges(rResult,ComplexID,0.1,true);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, find_oriented_box) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,0,1));
+    aPoints.push_back(SGM::Point3D(-1,0,0));
+    SGM::Point3D Origin;
+    SGM::UnitVector3D XVec(1,0,0),YVec(0,1,0),ZVec(0,0,1);
+    SGM::FindOrientedBox(aPoints,Origin,XVec,YVec,ZVec);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, cone_inverse_at_apex) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreateConeSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,1);
+    SGM::Point3D Pos(1,0,10),ClosePos;
+    SGM::Point2D Guess(1,0);
+    SGM::SurfaceInverse(rResult,SurfID,Pos,&ClosePos,&Guess);
+        
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, find_sad_parabola) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,-1,0));
+    aPoints.push_back(SGM::Point3D(2,-4,0));
+    aPoints.push_back(SGM::Point3D(-1,-1,0));
+    aPoints.push_back(SGM::Point3D(-2,-4,0));
+    SGM::FindConic(rResult,aPoints,SGM_MIN_TOL);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+
+TEST(math_check, find_conic_line) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.push_back(SGM::Point3D(3,0,0));
+    aPoints.push_back(SGM::Point3D(4,0,0));
+    SGM::FindConic(rResult,aPoints,SGM_MIN_TOL);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, find_conic_too_few_points) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.push_back(SGM::Point3D(3,0,0));
+    SGM::FindConic(rResult,aPoints,SGM_MIN_TOL);
+    EXPECT_FALSE(rResult.GetResult()==SGM::ResultTypeOK);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(math_check, testing_the_thing) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::GetBoundingBox(rResult,SGM::Thing());
+    SGM::Entity EntID=SGM::Thing();
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),EntID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
