@@ -4123,3 +4123,38 @@ TEST(math_check, create_polygon)
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, intersection_tests) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::RayFire(rResult,SGM::Point3D(4,0,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),0);
+    SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),SphereID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0));
+    EXPECT_TRUE(SGM::NearEqual(SGM::FindEdgeLength(rResult,EdgeID),1,SGM_MIN_TOL,false));
+
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndSurface(rResult,LineID,CylinderID,aPoints,aTypes);
+    EXPECT_EQ(aTypes[0],SGM::IntersectionType::TangentType);
+
+    SGM::Point3D Center(0,0,0);
+    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
+    SGM::Curve CurveID=SGM::CreateHyperbola(rResult,Center,XAxis,YAxis,1,1);
+    SGM::Curve LineID2=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(10,0,0));
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurves(rResult,LineID2,CurveID,aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
