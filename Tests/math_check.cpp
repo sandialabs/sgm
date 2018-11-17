@@ -52,13 +52,6 @@ TEST(math_check, revolve_surface_save_step)
     aPoints1.emplace_back(1,1.5,0);
     aPoints1.emplace_back(2,2,0);
 
-    // simple case
-    //aPoints1.push_back(SGM::Point3D(-2,.5,0));
-    //aPoints1.push_back(SGM::Point3D(-1,1.5,0));
-    //aPoints1.push_back(SGM::Point3D(0,.5,0));
-    //aPoints1.push_back(SGM::Point3D(1,.5,0));
-    //aPoints1.push_back(SGM::Point3D(2,.5,0));
-
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
     SGM::Point3D Origin(-1,0,0);
@@ -4334,3 +4327,32 @@ TEST(math_check, testing_the_thing)
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
+
+TEST(math_check, top_level_faces)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.emplace_back(-2,.5,0);
+    aPoints1.emplace_back(-1,1.5,0);
+    aPoints1.emplace_back(0,1,0);
+    aPoints1.emplace_back(1,1.5,0);
+    aPoints1.emplace_back(2,2,0);
+
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
+
+    std::vector<SGM::Edge> aEdges;
+    std::vector<SGM::EdgeSideType> aTypes;
+    SGM::CreateFaceFromSurface(rResult,RevolveID,aEdges,aTypes);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aTypes2;
+    SGM::RayFire(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),SGM::Thing(),aHits,aTypes2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}

@@ -799,6 +799,45 @@ body *CreateDisk(SGM::Result             &rResult,
     return pBody;
     }
 
+face *CreateFaceFromSurface(SGM::Result                    &rResult,
+                            surface                        *pSurface,
+                            std::vector<edge *>            &aEdges,
+                            std::vector<SGM::EdgeSideType> &aTypes)
+    {
+    face *pFace=new face(rResult);
+    pFace->SetSurface(pSurface);
+
+    size_t nEdges=aEdges.size();
+    size_t Index1;
+    if(nEdges)
+        {
+        for(Index1=0;Index1<nEdges;++Index1)
+            {
+            edge *pEdge=aEdges[Index1];
+            if(pEdge->GetStart())
+                {
+                // More code needs to be added to merge vertices.
+                throw;
+                }
+            pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
+            }
+        }
+    else if(pSurface->ClosedInU())
+        {
+        SGM::Interval2D const &Domain=pSurface->GetDomain();
+        double dStart=Domain.m_VDomain.m_dMin;
+        double dEnd=Domain.m_VDomain.m_dMax;
+        curve *pStart=pSurface->VParamLine(rResult,dStart);
+        curve *pEnd=pSurface->VParamLine(rResult,dEnd);
+        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
+        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
+        }
+
+    return pFace;
+    }
+
 body *CreateSheetBody(SGM::Result                    &rResult,
                       surface                        *pSurface,
                       std::vector<edge *>            &aEdges,

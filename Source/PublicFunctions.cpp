@@ -1023,6 +1023,26 @@ SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
     return {pBody->GetID()};
     }
 
+SGM::Face SGM::CreateFaceFromSurface(SGM::Result                    &rResult,
+                                     SGM::Surface                   &SurfaceID,
+                                     std::vector<SGM::Edge>         &aEdges,
+                                     std::vector<SGM::EdgeSideType> &aTypes)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)pThing->FindEntity(SurfaceID.m_ID);
+    std::vector<SGMInternal::edge *> aedges;
+    size_t Index1;
+    size_t nEdges=aEdges.size();
+    aedges.reserve(nEdges);
+    for(Index1=0;Index1<nEdges;++Index1)
+        {
+        SGMInternal::edge *pEdge=(SGMInternal::edge *)pThing->FindEntity(aEdges[Index1].m_ID);
+        aedges.push_back(pEdge);
+        }
+    SGMInternal::face *pFace=SGMInternal::CreateFaceFromSurface(rResult,pSurface,aedges,aTypes);
+    return {pFace->GetID()};
+    }
+
 SGM::Curve SGM::CreateLine(SGM::Result             &rResult,
                            SGM::Point3D      const &Origin,
                            SGM::UnitVector3D const &Axis)

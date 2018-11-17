@@ -79,6 +79,11 @@ body *CreateSheetBody(SGM::Result                    &rResult,
                       std::vector<edge *>            &aEdges,
                       std::vector<SGM::EdgeSideType> &aTypes);
 
+face *CreateFaceFromSurface(SGM::Result                    &rResult,
+                            surface                        *pSurface,
+                            std::vector<edge *>            &aEdges,
+                            std::vector<SGM::EdgeSideType> &aTypes);
+
 body *CreateDisk(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
                  SGM::UnitVector3D const &Normal,

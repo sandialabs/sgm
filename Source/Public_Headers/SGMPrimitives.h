@@ -84,6 +84,11 @@ SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result                    &rResult,
                                      std::vector<SGM::Edge>         &aEdges,
                                      std::vector<SGM::EdgeSideType> &aTypes);
 
+SGM_EXPORT SGM::Face CreateFaceFromSurface(SGM::Result                    &rResult,
+                                           SGM::Surface                   &SurfaceID,
+                                           std::vector<SGM::Edge>         &aEdges,
+                                           std::vector<SGM::EdgeSideType> &aTypes);
+
 SGM_EXPORT SGM::Body CoverPlanarWire(SGM::Result &rResult,
                                      SGM::Body   &PlanarWireID);
 
