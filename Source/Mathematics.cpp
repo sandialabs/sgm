@@ -1904,29 +1904,29 @@ bool InsertPolygon(Result                     &rResult,
     return true;
     }
 
-void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
-                       std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges)
-    {
-    std::set<std::pair<unsigned int,unsigned int> > sAllEdges;
-    size_t nTriangles=aTriangles.size();
-    size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
-        {
-        unsigned int a=aTriangles[Index1];
-        unsigned int b=aTriangles[Index1+1];
-        unsigned int c=aTriangles[Index1+2];
-        sAllEdges.insert(std::pair<unsigned int,unsigned int>(a,b));
-        sAllEdges.insert(std::pair<unsigned int,unsigned int>(b,c));
-        sAllEdges.insert(std::pair<unsigned int,unsigned int>(c,a));
-        }
-    for(auto abpair : sAllEdges)
-        {
-        if(sAllEdges.find(std::pair<unsigned int,unsigned int>(abpair.second,abpair.first))==sAllEdges.end())
-            {
-            sBoundaryEdges.insert(abpair);
-            }
-        }
-    }
+//void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
+//                       std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges)
+//    {
+//    std::set<std::pair<unsigned int,unsigned int> > sAllEdges;
+//    size_t nTriangles=aTriangles.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nTriangles;Index1+=3)
+//        {
+//        unsigned int a=aTriangles[Index1];
+//        unsigned int b=aTriangles[Index1+1];
+//        unsigned int c=aTriangles[Index1+2];
+//        sAllEdges.insert(std::pair<unsigned int,unsigned int>(a,b));
+//        sAllEdges.insert(std::pair<unsigned int,unsigned int>(b,c));
+//        sAllEdges.insert(std::pair<unsigned int,unsigned int>(c,a));
+//        }
+//    for(auto abpair : sAllEdges)
+//        {
+//        if(sAllEdges.find(std::pair<unsigned int,unsigned int>(abpair.second,abpair.first))==sAllEdges.end())
+//            {
+//            sBoundaryEdges.insert(abpair);
+//            }
+//        }
+//    }
 
 size_t FindAdjacences1D(std::vector<unsigned int> const &aSegments,
                         std::vector<unsigned int>       &aAdjacency)

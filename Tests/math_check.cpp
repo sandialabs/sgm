@@ -29,7 +29,7 @@ TEST(math_check, remove_duplicates)
     aPoints.push_back(SGM::Point3D(2,0,0));
     SGM::Interval3D Box(0,1,0,1,0,1);
     SGM::RemoveDuplicates3D(aPoints,SGM_MIN_TOL,&Box);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),1);
 }
 
 TEST(math_check, relatively_prime)

@@ -276,8 +276,8 @@ namespace SGM
     // edges that belong to only one triangle. The direction of the triangle's edge
     // is returned in the set.
 
-    SGM_EXPORT void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
-                                      std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges);
+    //SGM_EXPORT void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
+    //                                  std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges);
 
     // Creates a vector of points and triangles for a grid of u and v values.
 
