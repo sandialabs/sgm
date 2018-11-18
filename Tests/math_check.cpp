@@ -25,6 +25,20 @@ TEST(math_check, relatively_prime)
     EXPECT_TRUE(SGM::RelativelyPrime(6,25));
 }
 
+TEST(math_check, do_points_match)
+{
+    std::vector<SGM::Point3D> aPoints1,aPoints2;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,0,0));
+    aPoints2.push_back(SGM::Point3D(0,0,0));
+    aPoints2.push_back(SGM::Point3D(1,0,0));
+    std::map<unsigned int,unsigned int> mMatchMap;
+    EXPECT_TRUE(SGM::DoPointsMatch(aPoints1,aPoints2,mMatchMap,SGM_MIN_TOL));  
+
+    double dDist=SGM::DistanceToPoints(aPoints1,SGM::Point3D(3,0,0));
+    EXPECT_TRUE(SGM::NearEqual(dDist,2,SGM_MIN_TOL,false));
+}
+
 TEST(math_check, find_max_edge_length_2D)
 {
     std::vector<SGM::Point2D> aPoints;
