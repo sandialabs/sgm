@@ -4200,6 +4200,8 @@ TEST(math_check, volume_ray_fire)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),VolumeID,aPoints,aTypes);
     EXPECT_EQ(aPoints.size(),2);
+    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),SGM::Thing(),aPoints,aTypes);
+    EXPECT_EQ(aPoints.size(),2);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -4583,10 +4585,10 @@ TEST(math_check, plane_cylinder_intersection_ellipse)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::Surface ConeID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0.1,0,1));
     std::vector<SGM::Curve> aCurves;
-    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
+    SGM::IntersectSurfaces(rResult,PlaneID,CylinderID,aCurves);
     EXPECT_TRUE(SGM::GetCurveType(rResult,aCurves[0])==SGM::EntityType::EllipseType);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -4597,10 +4599,10 @@ TEST(math_check, plane_cylinder_intersection_circle)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::Surface ConeID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
     std::vector<SGM::Curve> aCurves;
-    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
+    SGM::IntersectSurfaces(rResult,PlaneID,CylinderID,aCurves);
     EXPECT_TRUE(SGM::GetCurveType(rResult,aCurves[0])==SGM::EntityType::CircleType);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -4611,10 +4613,10 @@ TEST(math_check, plane_cylinder_intersection_one_line)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::Surface ConeID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(1,0,0));
     std::vector<SGM::Curve> aCurves;
-    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
+    SGM::IntersectSurfaces(rResult,PlaneID,CylinderID,aCurves);
     EXPECT_EQ(aCurves.size(),1);
     EXPECT_TRUE(SGM::GetCurveType(rResult,aCurves[0])==SGM::EntityType::LineType);
 
@@ -4626,14 +4628,22 @@ TEST(math_check, plane_cylinder_intersection_two_line)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::Surface ConeID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
     std::vector<SGM::Curve> aCurves;
-    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
+    SGM::IntersectSurfaces(rResult,PlaneID,CylinderID,aCurves);
     EXPECT_EQ(aCurves.size(),2);
     EXPECT_TRUE(SGM::GetCurveType(rResult,aCurves[0])==SGM::EntityType::LineType);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, entity_free_intersections) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    EXPECT_TRUE(SGM::RunInternalTest(rResult,2));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 

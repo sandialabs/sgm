@@ -237,7 +237,7 @@ bool RunInternalTest(SGM::Result &rResult,
     {
     bool bAnswer=true;
 
-    if(nTestNumber==1)
+    if(nTestNumber==1) // Integration
         {
         SGM::Interval2D Domain2D(11,14,7,10);
         double dValue2D=SGMInternal::Integrate2D(TestIntegrand2D,Domain2D,nullptr,SGM_ZERO);
@@ -303,6 +303,52 @@ bool RunInternalTest(SGM::Result &rResult,
             bAnswer=false;
             }
         SGM::DeleteEntity(rResult,BodyID);
+        }
+    else if(nTestNumber==2) // Entity free intersections
+        {
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGM::Interval1D Domain1(-10,10),Domain2(-10,10);
+        SGMInternal::IntersectLineAndLine(SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),Domain1,
+                                          SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,-1),Domain2,
+                                          SGM_MIN_TOL,aPoints,aTypes);
+        if(aPoints.size()!=2)
+            {
+            bAnswer=false;
+            }
+
+        SGM::Interval1D Domain3(0,1);
+        aPoints.clear();
+        aTypes.clear();
+        SGMInternal::IntersectLineAndPlane(SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),Domain3,
+                                           SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),
+                                           SGM_MIN_TOL,aPoints,aTypes);
+        if(aPoints.size()!=1)
+            {
+            bAnswer=false;
+            }
+
+        SGM::Interval1D Domain4(-1,0);
+        aPoints.clear();
+        aTypes.clear();
+        SGMInternal::IntersectLineAndPlane(SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),Domain4,
+                                           SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),
+                                           SGM_MIN_TOL,aPoints,aTypes);
+        if(aPoints.size()!=1)
+            {
+            bAnswer=false;
+            }
+
+        SGM::Interval1D Domain5(-2,-1);
+        aPoints.clear();
+        aTypes.clear();
+        SGMInternal::IntersectLineAndPlane(SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),Domain5,
+                                           SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),
+                                           SGM_MIN_TOL,aPoints,aTypes);
+        if(aPoints.size()!=0)
+            {
+            bAnswer=false;
+            }
         }
 
     return bAnswer;
