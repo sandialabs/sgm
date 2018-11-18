@@ -110,8 +110,8 @@ namespace SGM
 
     // Returns the indices of of all the points that form concave angles.
 
-    SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
-                                        std::vector<size_t>        &aConcavePoints);
+    //SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
+    //                                    std::vector<size_t>        &aConcavePoints);
 
     // If the given point is on the polygon, then the returned answer may
     // be either true or false.
@@ -123,8 +123,8 @@ namespace SGM
     // In other words the smallest distance to one of the defining line 
     // segments of the polygon.
 
-    SGM_EXPORT double DistanceToPolygon(Point2D              const &Pos,
-                                        std::vector<Point2D> const &aPolygon);
+    //SGM_EXPORT double DistanceToPolygon(Point2D              const &Pos,
+    //                                    std::vector<Point2D> const &aPolygon);
 
     // Returns true if the given point is inside the first polygon and outside the others,
     // If the given point is on one of the the polygon, then the returned answer may

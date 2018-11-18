@@ -797,47 +797,47 @@ double SmallestPolygonEdge(std::vector<Point2D> const &aPolygon)
         }
     }
 
-size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
-                         std::vector<size_t> &aConcavePoints)
-    {
-    double dArea = PolygonArea(aPolygon);
-    size_t nPoints = aPolygon.size();
-    size_t Index1;
-    for (Index1 = 0; Index1 < nPoints; ++Index1)
-        {
-        Point2D const &Pos0 = aPolygon[(Index1 + nPoints - 1) % nPoints];
-        Point2D const &Pos1 = aPolygon[Index1];
-        Point2D const &Pos2 = aPolygon[(Index1 + 1) % nPoints];
-        double dVec0u = Pos2.m_u - Pos1.m_u;
-        double dVec0v = Pos2.m_v - Pos1.m_v;
-        double dVec1u = Pos0.m_u - Pos1.m_u;
-        double dVec1v = Pos0.m_v - Pos1.m_v;
-        double dAngle = dVec0u * dVec1v - dVec1u * dVec0v;
-        if (0 < dAngle * dArea)
-            {
-            aConcavePoints.push_back(Index1);
-            }
-        }
-    return aConcavePoints.size();
-    }
+//size_t SGM::FindConcavePoints(std::vector<Point2D> const &aPolygon,
+//                              std::vector<size_t> &aConcavePoints)
+//    {
+//    double dArea = PolygonArea(aPolygon);
+//    size_t nPoints = aPolygon.size();
+//    size_t Index1;
+//    for (Index1 = 0; Index1 < nPoints; ++Index1)
+//        {
+//        Point2D const &Pos0 = aPolygon[(Index1 + nPoints - 1) % nPoints];
+//        Point2D const &Pos1 = aPolygon[Index1];
+//        Point2D const &Pos2 = aPolygon[(Index1 + 1) % nPoints];
+//        double dVec0u = Pos2.m_u - Pos1.m_u;
+//        double dVec0v = Pos2.m_v - Pos1.m_v;
+//        double dVec1u = Pos0.m_u - Pos1.m_u;
+//        double dVec1v = Pos0.m_v - Pos1.m_v;
+//        double dAngle = dVec0u * dVec1v - dVec1u * dVec0v;
+//        if (0 < dAngle * dArea)
+//            {
+//            aConcavePoints.push_back(Index1);
+//            }
+//        }
+//    return aConcavePoints.size();
+//    }
 
-double DistanceToPolygon(Point2D              const &Pos,
-                         std::vector<Point2D> const &aPolygon)
-    {
-    double dAnswer=std::numeric_limits<double>::max();
-    size_t nPolygon=aPolygon.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPolygon;++Index1)
-        {
-        Segment2D Seg(aPolygon[Index1],aPolygon[(Index1+1)%nPolygon]);
-        double dDist=Seg.Distance(Pos);
-        if(dDist<dAnswer)
-            {
-            dAnswer=dDist;
-            }
-        }
-    return dAnswer;
-    }
+//double DistanceToPolygon(Point2D              const &Pos,
+//                         std::vector<Point2D> const &aPolygon)
+//    {
+//    double dAnswer=std::numeric_limits<double>::max();
+//    size_t nPolygon=aPolygon.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nPolygon;++Index1)
+//        {
+//        Segment2D Seg(aPolygon[Index1],aPolygon[(Index1+1)%nPolygon]);
+//        double dDist=Seg.Distance(Pos);
+//        if(dDist<dAnswer)
+//            {
+//            dAnswer=dDist;
+//            }
+//        }
+//    return dAnswer;
+//    }
 
 bool PointInPolygon(Point2D const &Pos,
                     std::vector<Point2D> const &aPolygon)

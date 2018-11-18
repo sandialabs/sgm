@@ -20,6 +20,18 @@
 
 #include "test_utility.h"
 
+TEST(math_check, remove_duplicates)
+{
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    SGM::Interval3D Box(0,1,0,1,0,1);
+    SGM::RemoveDuplicates3D(aPoints,SGM_MIN_TOL,&Box);
+    EXPECT_EQ(aPoints.size(),2);
+}
+
 TEST(math_check, relatively_prime)
 {
     EXPECT_TRUE(SGM::RelativelyPrime(6,25));
