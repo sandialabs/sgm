@@ -521,15 +521,15 @@ namespace SGM
 
     // Returns the product of two two by two matrices, A*B=C
 
-    SGM_EXPORT void FindProduct2D(double const aaMatrix1[2][2], // A
-                                  double const aMatrix2[2][2],  // B
-                                  double       aAnswer[2][2]);  // C
+    SGM_EXPORT void FindProduct2D(double const aaMatrix1[2][2],  // A
+                                  double const aaMatrix2[2][2],  // B
+                                  double       aaAnswer[2][2]);  // C
 
     // Returns the product of two three by three matrices, A*B=C
 
-    SGM_EXPORT void FindProduct3D(double const aaMatrix1[3][3], // A
-                                  double const aMatrix2[3][3],  // B
-                                  double       aAnswer[3][3]);  // C
+    SGM_EXPORT void FindProduct3D(double const aaMatrix1[3][3],  // A
+                                  double const aaMatrix2[3][3],  // B
+                                  double       aaAnswer[3][3]);  // C
 
     // Returns the characteristic polynomial of a two by two 
     // matrix[row][column] in the form a*x^2+b*x+c.
@@ -601,8 +601,8 @@ namespace SGM
     // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
     // same x coordinate, then false will be returned.
 
-    SGM_EXPORT bool PolynomialFit(std::vector<Point2D> aPoints,
-                                  std::vector<double>       aCoefficients);
+    SGM_EXPORT bool PolynomialFit(std::vector<Point2D> &aPoints,
+                                  std::vector<double>  &aCoefficients);
 
     ///////////////////////////////////////////////////////////////////////////
     //

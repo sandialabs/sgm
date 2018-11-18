@@ -2723,7 +2723,7 @@ double FindMaxEdgeLength2D(std::vector<SGM::Point2D> const &aPoints,
 double FindMinEdgeLength3D(std::vector<SGM::Point3D> const &aPoints,
                            std::vector<unsigned int> const &aTriangles)
     {
-    double dAnswer=0;
+    double dAnswer=std::numeric_limits<double>::max();
     size_t nTriangles=aTriangles.size();
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
@@ -2735,17 +2735,17 @@ double FindMinEdgeLength3D(std::vector<SGM::Point3D> const &aPoints,
         SGM::Point3D const &B=aPoints[b];
         SGM::Point3D const &C=aPoints[c];
         double dLengthAB=A.DistanceSquared(B);
-        if(dAnswer>dLengthAB)
+        if(dLengthAB<dAnswer)
             {
             dAnswer=dLengthAB;
             }
         double dLengthBC=C.DistanceSquared(B);
-        if(dAnswer>dLengthBC)
+        if(dLengthBC<dAnswer)
             {
             dAnswer=dLengthBC;
             }
         double dLengthCA=A.DistanceSquared(C);
-        if(dAnswer>dLengthCA)
+        if(dLengthCA<dAnswer)
             {
             dAnswer=dLengthCA;
             }
@@ -3464,8 +3464,8 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         return aRoots.size();
     }
 
-    bool PolynomialFit(std::vector<Point2D> aPoints,
-                            std::vector<double> aCoefficients)
+    bool SGM::PolynomialFit(std::vector<SGM::Point2D> &aPoints,
+                            std::vector<double>       &aCoefficients)
     {
         std::sort(aPoints.begin(), aPoints.end());
         size_t nPoints = aPoints.size();

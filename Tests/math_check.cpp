@@ -20,6 +20,72 @@
 
 #include "test_utility.h"
 
+TEST(math_check, relatively_prime)
+{
+    EXPECT_TRUE(SGM::RelativelyPrime(6,25));
+}
+
+TEST(math_check, find_max_edge_length_2D)
+{
+    std::vector<SGM::Point2D> aPoints;
+    aPoints.push_back(SGM::Point2D(0,0));
+    aPoints.push_back(SGM::Point2D(1,0));
+    aPoints.push_back(SGM::Point2D(2,0));
+    std::vector<unsigned int> aTriangles;
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    double dMin=SGM::FindMaxEdgeLength2D(aPoints,aTriangles);
+    EXPECT_TRUE(SGM::NearEqual(dMin,2,SGM_ZERO,false));
+}
+
+TEST(math_check, find_min_edge_length_3D)
+{
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    std::vector<unsigned int> aTriangles;
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    double dMin=SGM::FindMinEdgeLength3D(aPoints,aTriangles);
+    EXPECT_TRUE(SGM::NearEqual(dMin,1,SGM_ZERO,false));
+}
+
+TEST(math_check, matrix_multiply_2D)
+{
+    double aMatrix1[2][2];
+    double aMatrix2[2][2];
+    double aAnswer[2][2];
+    aMatrix1[0][0]=1;
+    aMatrix1[0][1]=2;
+    aMatrix1[1][0]=3;
+    aMatrix1[1][1]=4;
+    aMatrix2[0][0]=1;
+    aMatrix2[0][1]=2;
+    aMatrix2[1][0]=3;
+    aMatrix2[1][1]=4;
+    SGM::FindProduct2D(aMatrix1,aMatrix2,aAnswer);
+    EXPECT_TRUE(SGM::NearEqual(aAnswer[0][0],7,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(aAnswer[0][1],10,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(aAnswer[1][0],15,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(aAnswer[1][1],22,SGM_ZERO,false));
+}
+
+TEST(math_check, polynomial_fit)
+{
+    std::vector<SGM::Point2D> aPoints;
+    aPoints.push_back(SGM::Point2D(-1,1));
+    aPoints.push_back(SGM::Point2D(0,0));
+    aPoints.push_back(SGM::Point2D(1,1));
+    std::vector<double> aCoefficients;
+    SGM::PolynomialFit(aPoints,aCoefficients);
+    EXPECT_TRUE(SGM::NearEqual(aCoefficients[0],1,SGM_MIN_TOL,false));
+    EXPECT_TRUE(SGM::NearEqual(aCoefficients[1],0,SGM_MIN_TOL,false));
+    EXPECT_TRUE(SGM::NearEqual(aCoefficients[2],0,SGM_MIN_TOL,false));
+}
+
 TEST(math_check, partial_order)
 {
     std::set<std::pair<size_t,size_t> > sPartialOrder;
