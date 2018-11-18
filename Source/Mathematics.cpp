@@ -3721,22 +3721,6 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
             aTriangles.push_back(bc);
             }
         }
-    
-    double TriangleArea2(std::vector<SGM::Point3D> const &aPoints3D,
-                         std::vector<unsigned int> const &aTriangles)
-        {
-        double dArea=0.0;
-        size_t nTriangles=aTriangles.size();
-        size_t Index1;
-        for(Index1=0;Index1<nTriangles;Index1+=3)
-            {
-            size_t a=aTriangles[Index1];
-            size_t b=aTriangles[Index1+1];
-            size_t c=aTriangles[Index1+2];
-            dArea+=((aPoints3D[b]-aPoints3D[a])*(aPoints3D[c]-aPoints3D[a])).Magnitude();
-            }
-        return dArea*0.5;
-        }
 
     void CreateIcosahedron(double                     dRadius,
                            SGM::Point3D        const &Center,

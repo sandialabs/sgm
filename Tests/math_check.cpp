@@ -20,6 +20,43 @@
 
 #include "test_utility.h"
 
+TEST(math_check, partial_order)
+{
+    std::set<std::pair<size_t,size_t> > sPartialOrder;
+    sPartialOrder.insert({1,0});
+    sPartialOrder.insert({2,0});
+    sPartialOrder.insert({4,3});
+    sPartialOrder.insert({5,0});
+    sPartialOrder.insert({5,1});
+    std::vector<size_t> aMaximalElements;
+    size_t nMax=SGM::FindMaximalElements(sPartialOrder,aMaximalElements);
+    EXPECT_EQ(nMax,2);
+
+    std::vector<size_t> aAllDecendents;
+    size_t nAllDecendents=SGM::FindDecendentsOfGroup(sPartialOrder,aMaximalElements,aAllDecendents);
+    EXPECT_EQ(nAllDecendents,4);
+
+    std::vector<std::vector<size_t> > aaGenerations;
+    size_t nGenerations=SGM::FindGenerations(sPartialOrder,0,aaGenerations);
+    EXPECT_EQ(nGenerations,2);
+
+    std::vector<size_t> aDecendents;
+    size_t nDecendents=SGM::FindDecendents(sPartialOrder,0,aDecendents);
+    EXPECT_EQ(nDecendents,3);
+
+    std::vector<size_t> aChildern;
+    size_t nChildern=SGM::FindChildern(sPartialOrder,0,aChildern);
+    EXPECT_EQ(nChildern,2);
+
+    std::vector<size_t> aKeep;
+    aKeep.push_back(0);
+    aKeep.push_back(2);
+    SGM::SubsetPartailOrder(aKeep,sPartialOrder);
+    EXPECT_EQ(sPartialOrder.size(),1);
+
+    
+}
+    
 TEST(math_check, save_step_primitives)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

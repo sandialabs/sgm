@@ -408,12 +408,12 @@ namespace SGM
     // Returns the greatest common divisor of nA and nB or zero if nA and
     // nB are not both positive.
 
-    size_t GreatestCommonDivisor(size_t nA,
+    SGM_EXPORT size_t GreatestCommonDivisor(size_t nA,
                                  size_t nB);
     
     // Returns true if nA and nB are positive and relatively prime.
 
-    bool RelativelyPrime(size_t nA,
+    SGM_EXPORT bool RelativelyPrime(size_t nA,
                          size_t nB);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -423,47 +423,47 @@ namespace SGM
     ///////////////////////////////////////////////////////////////////////////
 
     // Given a partial order, definded by a set of ordered pairs of indices,
-    // such that a<=b if and only if <a,b> is in the set, find the maximal
+    // such that a<b if and only if <a,b> is in the set, find the maximal
     // elements.  An element is m is maximal if there does not exist an
     // element p, not equal to m, such that m<p.
     
-    size_t FindMaximalElements(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+    SGM_EXPORT size_t FindMaximalElements(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
                                std::vector<size_t>                       &aMaximalElements);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
-    // such that a<=b if and only if <a,b> is in the set, find the decendents of
+    // such that a<b if and only if <a,b> is in the set, find the decendents of
     // a given nParent element.  An element a is a decendent of b if a<b.
 
-    size_t FindDecendents(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+    SGM_EXPORT size_t FindDecendents(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
                           size_t                                     nParent,
                           std::vector<size_t>                       &aDecendents);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
-    // such that a<=b if and only if <a,b> is in the set, find the decendents of
+    // such that a<b if and only if <a,b> is in the set, find the decendents of
     // a given group of parent elements.  An element a is a decendent of b if a<b.
 
-    size_t FindDecendentsOfGroup(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+    SGM_EXPORT size_t FindDecendentsOfGroup(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
                                  std::vector<size_t>                 const &aParents,
                                  std::vector<size_t>                       &aDecendents);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
-    // such that a<=b if and only if <a,b> is in the set, find the childern of
+    // such that a<b if and only if <a,b> is in the set, find the childern of
     // a given nParent element.  An element c is a child of p if c<p and
     // there does not exist an element e such that a<e and e<b.
 
-    size_t FindChildern(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+    SGM_EXPORT size_t FindChildern(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
                         size_t                                     nParent,
                         std::vector<size_t>                       &aChildern);
 
     // Returns all the decendents by their generation from a given nParent.
 
-    size_t FindGenerations(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
+    SGM_EXPORT size_t FindGenerations(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
                            size_t                                     nParent,
                            std::vector<std::vector<size_t> >         &aaGenerations);
 
     // Subsets a partial order to the only contain the given elements.
 
-    void SubsetPartailOrder(std::vector<size_t>           const &aKeep,
+    SGM_EXPORT void SubsetPartailOrder(std::vector<size_t>           const &aKeep,
                             std::set<std::pair<size_t,size_t> > &sPartialOrder);
 
     ///////////////////////////////////////////////////////////////////////////
