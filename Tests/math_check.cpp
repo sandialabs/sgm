@@ -4465,3 +4465,17 @@ TEST(math_check, transform_nub_curve)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, cone_plane_intersection_circle)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface ConeID=SGM::CreateConeSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,SGM_HALF_PI);
+    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,ConeID,PlaneID,aCurves);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+

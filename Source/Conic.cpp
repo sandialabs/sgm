@@ -70,6 +70,26 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
     return true;
     }
 
+curve *CheckForLine(SGM::Result                     &rResult,
+                    std::vector<SGM::Point3D> const &aPoints,
+                    double                           dTolerance)
+    {
+    size_t Index1;
+    double dTol=dTolerance*dTolerance;
+    SGM::Point3D Origin=aPoints[0];
+    SGM::Vector3D XVec=aPoints[1]-aPoints[0];
+    for(Index1=0;Index1<5;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        double dDist=(Origin+((Pos-Origin)%XVec)*XVec).DistanceSquared(Pos);
+        if(dTol<=dDist)
+            {
+            return nullptr;
+            }
+        }
+    return new line(rResult,Origin,XVec);
+    }
+
 curve *FindConic(SGM::Result                     &rResult,
                  std::vector<SGM::Point3D> const &aPoints,
                  double                           dTolerance)
@@ -261,21 +281,9 @@ curve *FindConic(SGM::Result                     &rResult,
             }
         else
             {
-            // Check for a single line.
-
-            double dTol=dTolerance*dTolerance;
-            for(Index1=0;Index1<5;++Index1)
-                {
-                SGM::Point3D const &Pos=aPoints[Index1];
-                double dDist=(Origin+((Pos-Origin)%XVec)*XVec).DistanceSquared(Pos);
-                if(dTol<=dDist)
-                    {
-                    return nullptr;
-                    }
-                }
-            return new line(rResult,Origin,XVec);
+            return CheckForLine(rResult,aPoints,dTolerance);
             }
         }
-    return nullptr;
+    return CheckForLine(rResult,aPoints,dTolerance);
     }
 }
