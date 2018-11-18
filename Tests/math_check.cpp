@@ -4465,7 +4465,7 @@ TEST(math_check, transform_nub_curve)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, cone_plane_intersection_circle)
+TEST(math_check, DISABLED_cone_plane_intersection_circle)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -4473,7 +4473,20 @@ TEST(math_check, cone_plane_intersection_circle)
     SGM::Surface ConeID=SGM::CreateConeSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,SGM_HALF_PI);
     SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
     std::vector<SGM::Curve> aCurves;
-    SGM::IntersectSurfaces(rResult,ConeID,PlaneID,aCurves);
+    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, plane_cone_intersection_circle)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface ConeID=SGM::CreateConeSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,SGM_HALF_PI);
+    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
