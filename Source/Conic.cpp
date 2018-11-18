@@ -42,9 +42,8 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
 
     // A=1 -> B*(2xy)+C*(y^2)+D*(2x)+E*(2y)+F*(1)=(-X^2)
 
-    size_t nPoints=aPoints.size();
     size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
+    for(Index1=0;Index1<5;++Index1)
         {
         SGM::Point2D const &uv=aPoints2D[Index1];
         std::vector<double> aMatrix;
@@ -63,7 +62,7 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
         }
     aConicParams.reserve(6);
     aConicParams.push_back(1.0);
-    for(Index1=0;Index1<nPoints;++Index1)
+    for(Index1=0;Index1<5;++Index1)
         {
         aConicParams.push_back(aaMatrix[Index1].back());
         }
@@ -223,24 +222,39 @@ curve *FindConic(SGM::Result                     &rResult,
                     // x^2/a^2-y^2/b^2=1
 
                     std::swap(a,b);
-                    bool bLow=false,bHigh=false;
+                    bool bLowX=false,bHighX=false;
+                    for(Index1=0;Index1<5;++Index1)
+                        {
+                        double x=ax[Index1];
+                        if(dTolerance<x)
+                            {
+                            bHighX=true;
+                            }
+                        else if(x<-dTolerance)
+                            {
+                            bLowX=true;
+                            }
+                        }
+                    bool bLowY=false,bHighY=false;
                     for(Index1=0;Index1<5;++Index1)
                         {
                         double y=ay[Index1];
                         if(dTolerance<y)
                             {
-                            bHigh=true;
+                            bHighY=true;
                             }
                         else if(y<-dTolerance)
                             {
-                            bLow=true;
+                            bLowY=true;
                             }
                         }
-                    if(bLow && bHigh)
+                    if(bHighY && bLowY)
                         {
-                        return nullptr; // Not in one sheet.
+                        std::swap(XAxis,YAxis);
+                        std::swap(a,b);
+                        std::swap(bLowX,bLowY);
                         }
-                    if(bLow)
+                    if(bLowX)
                         {
                         YAxis.Negate();
                         }

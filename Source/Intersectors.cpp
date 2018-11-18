@@ -2314,18 +2314,18 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
      SGM::UnitVector3D Axis2=Axis1*Norm;
      IntersectLineAndCone(Pos,Axis2,Domain,pCone,SGM_MIN_TOL,aPoints,aTypes);
      IntersectLineAndCone(Pos,Axis1+Axis2,Domain,pCone,SGM_MIN_TOL,aPoints,aTypes);
-     IntersectLineAndCone(Pos,Axis1+Axis2,Domain,pCone,SGM_MIN_TOL,aPoints,aTypes);
+     IntersectLineAndCone(Pos,Axis2-Axis1,Domain,pCone,SGM_MIN_TOL,aPoints,aTypes);
      IntersectLineAndCone(Pos,Axis1-Axis2,Domain,pCone,SGM_MIN_TOL,aPoints,aTypes);
      return FindConic(rResult,aPoints,SGM_MIN_TOL);
      }
 
  size_t IntersectPlaneAndCone(SGM::Result                        &rResult,
-                           plane                        const *pPlane,
-                           cone                         const *pCone,
-                           std::vector<curve *>               &aCurves,
-                           face                         const *,//pFace1,
-                           face                         const *,//pFace2,
-                           double                              )//dTolerance)
+                              plane                        const *pPlane,
+                              cone                         const *pCone,
+                              std::vector<curve *>               &aCurves,
+                              face                         const *,//pFace1,
+                              face                         const *,//pFace2,
+                              double                              )//dTolerance)
      {
      SGM::Point3D Apex=pCone->FindApex();
      SGM::UnitVector3D const &Axis=pCone->m_ZAxis;

@@ -102,6 +102,12 @@ SGM_EXPORT SGM::Curve FindVParamCurve(SGM::Result        &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+SGM_EXPORT SGM::Surface CreatePlaneFromOriginAndNormal(SGM::Result             &rResult,
+                                                       SGM::Point3D      const &Origin,
+                                                       SGM::UnitVector3D const &Normal);
+
+// Creates a plane from three points. 
+
 SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
                                     SGM::Point3D const &Origin,
                                     SGM::Point3D const &XPos,

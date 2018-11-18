@@ -163,6 +163,10 @@ class plane : public surface
               SGM::UnitVector3D const &YAxis,
               SGM::UnitVector3D const &ZAxis);
 
+        plane(SGM::Result             &rResult,
+              SGM::Point3D      const &Origin,
+              SGM::UnitVector3D const &ZAxis);
+
         plane(SGM::Result &rResult, plane const &other);
 
         ~plane() override = default;

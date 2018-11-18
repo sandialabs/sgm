@@ -1405,7 +1405,15 @@ SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
                               SGM::Point3D const &XPos,
                               SGM::Point3D const &YPos)
     {
-    SGMInternal::plane *pPlane = new SGMInternal::plane(rResult, Origin, XPos, YPos);
+    SGMInternal::plane *pPlane = new SGMInternal::plane(rResult,Origin,XPos,YPos);
+    return {pPlane->GetID()};
+    }
+
+SGM::Surface SGM::CreatePlaneFromOriginAndNormal(SGM::Result             &rResult,
+                                                 SGM::Point3D      const &Origin,
+                                                 SGM::UnitVector3D const &Normal)
+    {
+    SGMInternal::plane *pPlane = new SGMInternal::plane(rResult,Origin,Normal);
     return {pPlane->GetID()};
     }
 
