@@ -73,18 +73,18 @@ TEST(math_check, matrix_multiply_2D)
     EXPECT_TRUE(SGM::NearEqual(aAnswer[1][1],22,SGM_ZERO,false));
 }
 
-TEST(math_check, polynomial_fit)
-{
-    std::vector<SGM::Point2D> aPoints;
-    aPoints.push_back(SGM::Point2D(-1,1));
-    aPoints.push_back(SGM::Point2D(0,0));
-    aPoints.push_back(SGM::Point2D(1,1));
-    std::vector<double> aCoefficients;
-    SGM::PolynomialFit(aPoints,aCoefficients);
-    EXPECT_TRUE(SGM::NearEqual(aCoefficients[0],1,SGM_MIN_TOL,false));
-    EXPECT_TRUE(SGM::NearEqual(aCoefficients[1],0,SGM_MIN_TOL,false));
-    EXPECT_TRUE(SGM::NearEqual(aCoefficients[2],0,SGM_MIN_TOL,false));
-}
+//TEST(math_check, polynomial_fit)
+//{
+//    std::vector<SGM::Point2D> aPoints;
+//    aPoints.push_back(SGM::Point2D(-1,1));
+//    aPoints.push_back(SGM::Point2D(0,0));
+//    aPoints.push_back(SGM::Point2D(1,1));
+//    std::vector<double> aCoefficients;
+//    SGM::PolynomialFit(aPoints,aCoefficients);
+//    EXPECT_TRUE(SGM::NearEqual(aCoefficients[0],1,SGM_MIN_TOL,false));
+//    EXPECT_TRUE(SGM::NearEqual(aCoefficients[1],0,SGM_MIN_TOL,false));
+//    EXPECT_TRUE(SGM::NearEqual(aCoefficients[2],0,SGM_MIN_TOL,false));
+//}
 
 TEST(math_check, partial_order)
 {

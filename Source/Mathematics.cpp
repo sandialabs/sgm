@@ -3464,6 +3464,7 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         return aRoots.size();
     }
 
+    /*
     bool SGM::PolynomialFit(std::vector<SGM::Point2D> &aPoints,
                             std::vector<double>       &aCoefficients)
     {
@@ -3499,6 +3500,7 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
             }
         return true;
     }
+    */
 
     size_t FindMaximalElements(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
                                     std::vector<size_t> &aMaximalElements)

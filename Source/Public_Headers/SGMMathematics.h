@@ -601,8 +601,8 @@ namespace SGM
     // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
     // same x coordinate, then false will be returned.
 
-    SGM_EXPORT bool PolynomialFit(std::vector<Point2D> &aPoints,
-                                  std::vector<double>  &aCoefficients);
+    //SGM_EXPORT bool PolynomialFit(std::vector<Point2D> &aPoints,
+    //                              std::vector<double>  &aCoefficients);
 
     ///////////////////////////////////////////////////////////////////////////
     //
