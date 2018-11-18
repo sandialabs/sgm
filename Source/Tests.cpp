@@ -577,5 +577,137 @@ bool RunCPPTest(SGM::Result &rResult,
 
     return false;
     }
+
+
+TEST(math_check, DISABLED_line_nub_surface_intersect)
+    {
+    bool bAnswer=true;
+
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.assign(3,SGM::Point3D(0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
+    aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
+    aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
+    aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+    aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
+    aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
+    aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
+    aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
+    SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    // Test with a line that hits the saddle point.
+
+    SGM::Point3D Pos0(0,0,0.0),Pos1(2,2,0.0);
+    SGM::Curve LineID1=SGM::CreateLine(rResult,Pos0,Pos1-Pos0);
+
+    std::vector<SGM::Point3D> aHits1;
+    std::vector<SGM::IntersectionType> aTypes1;
+    size_t nHits1=SGM::IntersectCurveAndSurface(rResult,LineID1,NUBSurfaceID,aHits1,aTypes1);
+
+    if(nHits1!=1)
+        {
+        bAnswer=false;
+        }
+    else if(aTypes1[0]!=SGM::IntersectionType::TangentType)
+        {
+        bAnswer=false;
+        }
+    size_t Index1;
+    for(Index1=0;Index1<nHits1;++Index1)
+        {
+        SGM::Point3D const &Pos=aHits1[Index1];
+        SGM::Point3D CPos1,CPos2;
+        SGM::CurveInverse(rResult,LineID1,Pos,&CPos1);
+        SGM::SurfaceInverse(rResult,NUBSurfaceID,Pos,&CPos2);
+        double dDist=CPos1.Distance(CPos2);
+        if(SGM_ZERO<dDist)
+            {
+            bAnswer=false;
+            }
+        }
+    SGM::DeleteEntity(rResult,LineID1);
+
+    // Test with a line that hits two points.
+
+    SGM::Point3D Pos2(0,0,0.5),Pos3(2,2,0.5);
+    SGM::Curve LineID2=SGM::CreateLine(rResult,Pos2,Pos3-Pos2);
+
+    std::vector<SGM::Point3D> aHits2;
+    std::vector<SGM::IntersectionType> aTypes2;
+    size_t nHits2=SGM::IntersectCurveAndSurface(rResult,LineID2,NUBSurfaceID,aHits2,aTypes2);
+
+    if(nHits2!=2)
+        {
+        bAnswer=false;
+        }
+    for(Index1=0;Index1<nHits2;++Index1)
+        {
+        SGM::Point3D const &Pos=aHits2[Index1];
+        SGM::Point3D CPos1,CPos2;
+        SGM::CurveInverse(rResult,LineID2,Pos,&CPos1);
+        SGM::SurfaceInverse(rResult,NUBSurfaceID,Pos,&CPos2);
+        double dDist=CPos1.Distance(CPos2);
+        if(SGM_ZERO<dDist)
+            {
+            bAnswer=false;
+            }
+        }
+    SGM::DeleteEntity(rResult,LineID2);;
+
+    // Test with a line that just misses the saddle but within tolernace.
+
+    SGM::Point3D Pos4(2,0,0.0001),Pos5(0,2,0.0001);
+    SGM::Curve LineID3=SGM::CreateLine(rResult,Pos4,Pos5-Pos4);
+
+    std::vector<SGM::Point3D> aHits3;
+    std::vector<SGM::IntersectionType> aTypes3;
+    double dTestTol=0.001;
+    size_t nHits3=SGM::IntersectCurveAndSurface(rResult,LineID3,NUBSurfaceID,aHits3,aTypes3,nullptr,nullptr,dTestTol);
+
+    if(nHits3!=1)
+        {
+        bAnswer=false;
+        }
+    else if(aTypes3[0]!=SGM::IntersectionType::TangentType)
+        {
+        bAnswer=false;
+        }
+    for(Index1=0;Index1<nHits3;++Index1)
+        {
+        SGM::Point3D const &Pos=aHits3[Index1];
+        SGM::Point3D CPos1,CPos2;
+        SGM::CurveInverse(rResult,LineID3,Pos,&CPos1);
+        SGM::SurfaceInverse(rResult,NUBSurfaceID,Pos,&CPos2);
+        double dDist=CPos1.Distance(CPos2);
+        if(dTestTol<dDist)
+            {
+            bAnswer=false;
+            }
+        }
+    SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
+    SGM::DeleteEntity(rResult,LineID3);
+    SGM::DeleteEntity(rResult,NUBSurfaceID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+
+    EXPECT_TRUE(bAnswer);
+    }
+
 #endif
 
