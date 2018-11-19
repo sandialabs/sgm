@@ -216,50 +216,50 @@ static bool TestTriangle(SGM::Point2D const &A,
     return 0<dTest;
     }
 
-static bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
-                         std::vector<SGM::UnitVector3D> const &aNormals,
-                         unsigned int                          a0,
-                         unsigned int                          b0,
-                         unsigned int                          c0,
-                         unsigned int                          a1,
-                         unsigned int                          b1,
-                         unsigned int                          c1)
-    {
-    SGM::Point3D const &A0=aPoints3D[a0];
-    SGM::Point3D const &B0=aPoints3D[b0];
-    SGM::Point3D const &C0=aPoints3D[c0];
-    SGM::Point3D const &A1=aPoints3D[a1];
-    SGM::Point3D const &B1=aPoints3D[b1];
-    SGM::Point3D const &C1=aPoints3D[c1];
-    SGM::UnitVector3D const NA0=aNormals[a0];
-    SGM::UnitVector3D const NB0=aNormals[b0];
-    SGM::UnitVector3D const NC0=aNormals[c0];
-    SGM::UnitVector3D const NA1=aNormals[a1];
-    SGM::UnitVector3D const NB1=aNormals[b1];
-    SGM::UnitVector3D const NC1=aNormals[c1];
-    SGM::UnitVector3D T0Norm=(B0-A0)*(C0-A0);
-    SGM::UnitVector3D T1Norm=(B1-A1)*(C1-A1);
-    double dDot0=NA0%T0Norm;
-    double dDot1=NB0%T0Norm;
-    double dDot2=NC0%T0Norm;
-    double dDot3=NA1%T1Norm;
-    double dDot4=NB1%T1Norm;
-    double dDot5=NC1%T1Norm;
-    double dTol=0.90630778703664996324255265675432; // cos(25) degrees
-    if(dDot0<dTol || dDot1<dTol || dDot2<dTol || dDot3<dTol || dDot4<dTol || dDot5<dTol)
-        {
-        return false;
-        }
-    return true;
-    }
+//static bool AreNormalsOK(std::vector<SGM::Point3D>      const &aPoints3D,
+//                         std::vector<SGM::UnitVector3D> const &aNormals,
+//                         unsigned int                          a0,
+//                         unsigned int                          b0,
+//                         unsigned int                          c0,
+//                         unsigned int                          a1,
+//                         unsigned int                          b1,
+//                         unsigned int                          c1)
+//    {
+//    SGM::Point3D const &A0=aPoints3D[a0];
+//    SGM::Point3D const &B0=aPoints3D[b0];
+//    SGM::Point3D const &C0=aPoints3D[c0];
+//    SGM::Point3D const &A1=aPoints3D[a1];
+//    SGM::Point3D const &B1=aPoints3D[b1];
+//    SGM::Point3D const &C1=aPoints3D[c1];
+//    SGM::UnitVector3D const NA0=aNormals[a0];
+//    SGM::UnitVector3D const NB0=aNormals[b0];
+//    SGM::UnitVector3D const NC0=aNormals[c0];
+//    SGM::UnitVector3D const NA1=aNormals[a1];
+//    SGM::UnitVector3D const NB1=aNormals[b1];
+//    SGM::UnitVector3D const NC1=aNormals[c1];
+//    SGM::UnitVector3D T0Norm=(B0-A0)*(C0-A0);
+//    SGM::UnitVector3D T1Norm=(B1-A1)*(C1-A1);
+//    double dDot0=NA0%T0Norm;
+//    double dDot1=NB0%T0Norm;
+//    double dDot2=NC0%T0Norm;
+//    double dDot3=NA1%T1Norm;
+//    double dDot4=NB1%T1Norm;
+//    double dDot5=NC1%T1Norm;
+//    double dTol=0.90630778703664996324255265675432; // cos(25) degrees
+//    if(dDot0<dTol || dDot1<dTol || dDot2<dTol || dDot3<dTol || dDot4<dTol || dDot5<dTol)
+//        {
+//        return false;
+//        }
+//    return true;
+//    }
 
 static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
                           std::vector<unsigned int>            &aTriangles,
                           std::vector<unsigned int>            &aAdjacencies,
                           unsigned int                          nTri,
                           unsigned int                          nEdge,
-                          std::vector<SGM::Point3D>      const *pPoints3D,
-                          std::vector<SGM::UnitVector3D> const *pNormals,
+                          std::vector<SGM::Point3D>      const *,//pPoints3D,
+                          std::vector<SGM::UnitVector3D> const *,//pNormals,
                           std::vector<size_t>            const *aTris,
                           SGM::BoxTree                         *Tree)
     {
@@ -339,13 +339,13 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
         unsigned int nT2=aAdjacencies[nTri+2];
         if(nEdge==0)
             {
-            if(pPoints3D)
-                {
-                if(AreNormalsOK(*pPoints3D,*pNormals,g,c,a,g,b,c)==false)
-                    {
-                    return false;
-                    }
-                }
+            //if(pPoints3D)
+            //    {
+            //    if(AreNormalsOK(*pPoints3D,*pNormals,g,c,a,g,b,c)==false)
+            //        {
+            //        return false;
+            //        }
+            //    }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=c;
             aTriangles[nTri+2]=a;
@@ -383,13 +383,13 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             }
         else if(nEdge==1)
             {
-            if(pPoints3D)
-                {
-                if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,c,a)==false)
-                    {
-                    return false;
-                    }
-                }
+            //if(pPoints3D)
+            //    {
+            //    if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,c,a)==false)
+            //        {
+            //        return false;
+            //        }
+            //    }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=a;
             aTriangles[nTri+2]=b;
@@ -427,13 +427,13 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             }
         else
             {
-            if(pPoints3D)
-                {
-                if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,b,c)==false)
-                    {
-                    return false;
-                    }
-                }
+            //if(pPoints3D)
+            //    {
+            //    if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,b,c)==false)
+            //        {
+            //        return false;
+            //        }
+            //    }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=a;
             aTriangles[nTri+2]=b;

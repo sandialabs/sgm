@@ -46,6 +46,32 @@ TEST(math_check, plane_circle_intersect)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(math_check, DISABLED_cylinder_circle_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,1),1);
+    SGM::Curve CircleID1=SGM::CreateCircle(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID2=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID3=SGM::CreateCircle(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,0,1),1);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    EXPECT_EQ( SGM::IntersectCurveAndSurface(rResult,CircleID1,CylinderID,aPoints,aTypes), 2);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndSurface(rResult,CircleID2,CylinderID,aPoints,aTypes);
+    EXPECT_EQ(aTypes[0],SGM::IntersectionType::CoincidentType);
+
+    aPoints.clear();
+    aTypes.clear();
+    EXPECT_EQ( SGM::IntersectCurveAndSurface(rResult,CircleID3,CylinderID,aPoints,aTypes), 1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, find_comps_1d)
 {
     std::vector<unsigned int> aSegments;
