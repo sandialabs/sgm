@@ -21,6 +21,22 @@
 
 #include "test_utility.h"
 
+TEST(math_check, face_color_test )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::ChangeColor(rResult,FaceID,255,0,0);
+    int nRed,nGreen,nBlue;
+    SGM::GetColor(rResult,FaceID,nRed,nGreen,nBlue);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, unite_bodies_peninsula )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -29,6 +45,8 @@ TEST(math_check, unite_bodies_peninsula )
     SGM::Body DiskID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
     SGM::Body DiskID2=SGM::CreateDisk(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0),1);
     SGM::UniteBodies(rResult,DiskID1,DiskID2);
+
+    // TODO part needs to check.  PRS
 
     SGMTesting::ReleaseTestThing(pThing);
 }
