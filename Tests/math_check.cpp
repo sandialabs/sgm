@@ -14,11 +14,28 @@
 #include "SGMTopology.h"
 #include "SGMModify.h"
 #include "SGMDisplay.h"
+#include "SGMAttribute.h"
 
 #define SGM_TIMER 
 #include "Timer.h"
 
 #include "test_utility.h"
+
+TEST(math_check, thing_tests)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Attribute AttributeID=SGM::CreateAttribute(rResult,"Test");
+    SGM::Thing ThingID;
+    SGM::AddAttribute(rResult,ThingID,AttributeID);
+    std::set<SGM::Attribute> sAttributes;
+    SGM::GetAttributes(rResult,ThingID,sAttributes);
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),ThingID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(math_check, graph_branch_tests)
 {

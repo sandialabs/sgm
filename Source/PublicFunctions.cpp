@@ -613,6 +613,18 @@ void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
     pComplex->ReduceToUsedPoints();
     }
 
+std::vector<SGM::Entity> SGM::FindTopLevelEntities(SGM::Result &rResult)
+    {
+    std::vector<SGMInternal::entity *> aEnts=rResult.GetThing()->GetTopLevelEntities();
+    std::vector<SGM::Entity> aAnswer;
+    aAnswer.reserve(aEnts.size());
+    for(auto pEnt : aEnts)
+        {
+        aAnswer.push_back(SGM::Entity(pEnt->GetID()));
+        }
+    return aAnswer;
+    }
+
 void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies,

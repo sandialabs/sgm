@@ -18,6 +18,8 @@ namespace SGM
 //
 //////////////////////////////////////////////////////////////////////////////
 
+    SGM_EXPORT std::vector<SGM::Entity> FindTopLevelEntities(SGM::Result &rResult);
+
     SGM_EXPORT void FindBodies(SGM::Result         &rResult,
                                SGM::Entity   const &EntityID,
                                std::set<SGM::Body> &sBodies,
