@@ -74,6 +74,7 @@ namespace SGM
         FaceOnLeftType,
         FaceOnRightType,
         FaceOnBothSidesType,
+        FaceOnUnknown,
         };
 
     enum EdgeSeamType

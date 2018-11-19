@@ -476,29 +476,12 @@ bool edge::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool vertex::Check(SGM::Result              &rResult,
-                   SGM::CheckOptions  const &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const
+bool vertex::Check(SGM::Result              &,//rResult,
+                   SGM::CheckOptions  const &,//Options,
+                   std::vector<std::string> &,//aCheckStrings,
+                   bool                      /*bChildern*/) const
     {
     bool bAnswer=true;
-
-    if(m_sEdges.empty())
-        {
-        bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Vertex %lu does not point to an edge\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
-        }
-
-    if(bChildern)
-        {
-        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
-            {
-            bAnswer=false;
-            }
-        }
-
     return bAnswer;
     }
 

@@ -20,6 +20,21 @@
 
 #include "test_utility.h"
 
+TEST(math_check, check_bad_bodies)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    rResult.SetDebugFlag(5); // Make a bad body in CreateBlock.
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, closest_point_on_things)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

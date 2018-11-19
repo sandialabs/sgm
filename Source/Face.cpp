@@ -658,6 +658,10 @@ void face::SetSurface(surface *pSurface)
 SGM::EdgeSideType face::GetSideType(edge const *pEdge) const 
     {
     std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mSideType.find((edge *)pEdge);
+    if(iter==m_mSideType.end())
+        {
+        return SGM::EdgeSideType::FaceOnUnknown;
+        }
     return iter->second;
     }
 
