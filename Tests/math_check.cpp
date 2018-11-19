@@ -20,6 +20,16 @@
 
 #include "test_utility.h"
 
+TEST(math_check, sortable_planes)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::RunInternalTest(rResult,4);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, check_bad_bodies)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

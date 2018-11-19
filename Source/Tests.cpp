@@ -350,6 +350,33 @@ bool RunInternalTest(SGM::Result &rResult,
             bAnswer=false;
             }
         }
+    else if(nTestNumber==4) // SortablePlane testing
+        {
+        std::vector<SGM::Point3D> aPoints1,aPoints2;
+        aPoints1.push_back(SGM::Point3D(0,0,0));
+        aPoints1.push_back(SGM::Point3D(1,0,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints2.push_back(SGM::Point3D(0,0,1));
+        aPoints2.push_back(SGM::Point3D(1,0,1));
+        aPoints2.push_back(SGM::Point3D(0,1,1));
+
+        SGMInternal::SortablePlane SP1(aPoints1);
+        SGMInternal::SortablePlane SP2(aPoints2);
+
+        SP1.SetMinTolerance(0.01);
+
+        bool bTest=SP1<SP2;
+        bTest=(SP1==SP2);
+
+        SP1.Origin();
+        SP1.Normal();
+        SP1.Tolerance();
+
+        SGM::Vector3D Offset;
+        bTest=SP1.Parallel(SP2,Offset,0.001);
+
+        bAnswer=true;
+        }
 
     return bAnswer;
     }
