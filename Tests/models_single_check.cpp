@@ -76,6 +76,24 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(models_single_check, import_Closed_Kelvin_BCC_4_4_4)
+{
+    const char* file_name = "Closed_Kelvin_BCC_4_4_4.sgm";
+    SCOPED_TRACE(file_name);
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Complex> sComplexes;
+    SGM::Thing ThingID;
+    SGM::FindComplexes(rResult,ThingID,sComplexes);
+    SGM::Complex ComplexID=*(sComplexes.begin());
+    SGM::CoverComplex(rResult,ComplexID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(models_single_check, import_check_OUO_Cone_definition)
     {
     const char* file_name = "OUO_Cone_definition.stp";
