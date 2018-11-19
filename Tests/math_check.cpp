@@ -2354,7 +2354,7 @@ TEST(math_check, find_holes_stl)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-/*
+
 TEST(math_check, unite_spheres) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -2367,7 +2367,7 @@ TEST(math_check, unite_spheres)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-*/
+
 TEST(math_check, NUB_curve_inverse) 
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -2174,7 +2174,7 @@ std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
         }
     return aAnswer;
     }
-/*
+
 void SGM::UniteBodies(SGM::Result &rResult,
                       SGM::Body   &ReturnedBodyID,
                       SGM::Body   &DeletedBodyID)
@@ -2183,7 +2183,6 @@ void SGM::UniteBodies(SGM::Result &rResult,
     SGMInternal::body *pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
     SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
     }
-*/
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {
