@@ -257,11 +257,7 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
                           std::vector<unsigned int>            &aTriangles,
                           std::vector<unsigned int>            &aAdjacencies,
                           unsigned int                          nTri,
-                          unsigned int                          nEdge,
-                          std::vector<SGM::Point3D>      const *,//pPoints3D,
-                          std::vector<SGM::UnitVector3D> const *,//pNormals,
-                          std::vector<size_t>            const *aTris,
-                          SGM::BoxTree                         *Tree)
+                          unsigned int                          nEdge)
     {
     unsigned int a=aTriangles[nTri];
     unsigned int b=aTriangles[nTri+1];
@@ -339,13 +335,6 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
         unsigned int nT2=aAdjacencies[nTri+2];
         if(nEdge==0)
             {
-            //if(pPoints3D)
-            //    {
-            //    if(AreNormalsOK(*pPoints3D,*pNormals,g,c,a,g,b,c)==false)
-            //        {
-            //        return false;
-            //        }
-            //    }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=c;
             aTriangles[nTri+2]=a;
@@ -359,27 +348,6 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTB;
             aAdjacencies[nT+1]=nT1;
             aAdjacencies[nT+2]=nTri;
-
-            if(aTris)
-                {
-                void const *pTri1=&(*aTris)[nTri/3];
-                void const *pTri2=&(*aTris)[nT/3];
-                Tree->Erase(pTri1);
-                Tree->Erase(pTri2);
-                std::vector<SGM::Point3D> aPos;
-                aPos.reserve(3);
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
-                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
-                SGM::Interval3D Box1(aPos);
-                aPos.clear();
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
-                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
-                SGM::Interval3D Box2(aPos);
-                Tree->Insert(pTri1,Box1);
-                Tree->Insert(pTri2,Box2);
-                }
             }
         else if(nEdge==1)
             {
@@ -403,37 +371,9 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTB;
             aAdjacencies[nT+1]=nT2;
             aAdjacencies[nT+2]=nTri;
-
-            if(aTris)
-                {
-                void const *pTri1=&(*aTris)[nTri/3];
-                void const *pTri2=&(*aTris)[nT/3];
-                Tree->Erase(pTri1);
-                Tree->Erase(pTri2);
-                std::vector<SGM::Point3D> aPos;
-                aPos.reserve(3);
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
-                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
-                SGM::Interval3D Box1(aPos);
-                aPos.clear();
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
-                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
-                SGM::Interval3D Box2(aPos);
-                Tree->Insert(pTri1,Box1);
-                Tree->Insert(pTri2,Box2);
-                }
             }
         else
             {
-            //if(pPoints3D)
-            //    {
-            //    if(AreNormalsOK(*pPoints3D,*pNormals,g,a,b,g,b,c)==false)
-            //        {
-            //        return false;
-            //        }
-            //    }
             aTriangles[nTri]=g;
             aTriangles[nTri+1]=a;
             aTriangles[nTri+2]=b;
@@ -447,27 +387,6 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
             aAdjacencies[nT]=nTri;
             aAdjacencies[nT+1]=nT1;
             aAdjacencies[nT+2]=nTA;
-
-            if(aTris)
-                {
-                void const *pTri1=&(*aTris)[nTri/3];
-                void const *pTri2=&(*aTris)[nT/3];
-                Tree->Erase(pTri1);
-                Tree->Erase(pTri2);
-                std::vector<SGM::Point3D> aPos;
-                aPos.reserve(3);
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(A.m_u,A.m_v,0.0));
-                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
-                SGM::Interval3D Box1(aPos);
-                aPos.clear();
-                aPos.push_back(SGM::Point3D(G.m_u,G.m_v,0.0));
-                aPos.push_back(SGM::Point3D(B.m_u,B.m_v,0.0));
-                aPos.push_back(SGM::Point3D(C.m_u,C.m_v,0.0));
-                SGM::Interval3D Box2(aPos);
-                Tree->Insert(pTri1,Box1);
-                Tree->Insert(pTri2,Box2);
-                }
             }
         FixBackPointers(nT,aTriangles,aAdjacencies);
         FixBackPointers(nTri,aTriangles,aAdjacencies);
@@ -503,11 +422,7 @@ static bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints2D,
 
 void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
                           std::vector<unsigned int>            &aTriangles,
-                          std::vector<unsigned int>            &aAdjacencies,
-                          std::vector<SGM::Point3D>      const *pPoints3D,
-                          std::vector<SGM::UnitVector3D> const *pNormals,
-                          std::vector<size_t>            const *aTris,
-                          SGM::BoxTree                         *pTree)
+                          std::vector<unsigned int>            &aAdjacencies)
     {
     size_t nTriangles=aTriangles.size();
     bool bFlipped=true;
@@ -524,15 +439,15 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints2D,
         bFlipped=false;
         for(Index1=0;Index1<(unsigned int)nTriangles;Index1+=3)
             {
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,0,pPoints3D,pNormals,aTris,pTree))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,0))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,1,pPoints3D,pNormals,aTris,pTree))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,1))
                 {
                 bFlipped=true;
                 }
-            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,2,pPoints3D,pNormals,aTris,pTree))
+            if(FlipTriangles(aPoints2D,aTriangles,aAdjacencies,Index1,2))
                 {
                 bFlipped=true;
                 }
