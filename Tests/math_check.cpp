@@ -481,6 +481,9 @@ TEST(math_check, revolve_surface_save_step)
     
     SGM::TranslatorOptions TranslatorOpts;
     SGM::SaveSTEP(rResult,"revolve_sheet.stp",SGM::Thing(),TranslatorOpts);
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::ReadFile(rResult,"revolve_sheet.stp",aEntities,aLog,TranslatorOpts);
 
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
