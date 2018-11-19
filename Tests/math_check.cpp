@@ -20,6 +20,32 @@
 
 #include "test_utility.h"
 
+TEST(math_check, plane_circle_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Surface PlaneID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    SGM::Surface PlaneID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Surface PlaneID3=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(1,0,0));
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    EXPECT_EQ( SGM::IntersectCurveAndSurface(rResult,CircleID,PlaneID1,aPoints,aTypes), 2);
+
+    aPoints.clear();
+    aTypes.clear();
+    SGM::IntersectCurveAndSurface(rResult,CircleID,PlaneID2,aPoints,aTypes);
+    EXPECT_EQ(aTypes[0],SGM::IntersectionType::CoincidentType);
+
+    aPoints.clear();
+    aTypes.clear();
+    EXPECT_EQ( SGM::IntersectCurveAndSurface(rResult,CircleID,PlaneID3,aPoints,aTypes), 1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, find_comps_1d)
 {
     std::vector<unsigned int> aSegments;
