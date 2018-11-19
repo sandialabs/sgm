@@ -21,7 +21,21 @@
 
 #include "test_utility.h"
 
-TEST(math_check, unite_faces_atoll)
+TEST(math_check, unite_bodies_island )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Body DiskID2=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0),0.5);
+    SGM::UniteBodies(rResult,DiskID1,DiskID2);
+
+    // TODO part needs to check.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face_atoll)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
