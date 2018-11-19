@@ -19,7 +19,8 @@ namespace SGM
 
     SGM_EXPORT size_t GetAttributes(SGM::Result         &rResult,
                                     SGM::Entity   const &EntityID,
-                                    std::set<Attribute> &sAttributes);
+                                    std::set<Attribute> &sAttributes,
+                                    bool                 bTopLevel=false);
     
     SGM_EXPORT void DeleteEntity(SGM::Result &rResult,
                                  SGM::Entity &EntityID);

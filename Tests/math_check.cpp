@@ -29,6 +29,13 @@ TEST(math_check, point_curve)
     SGM::Point3D Pos(0,0,0);
     SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos);
     EXPECT_TRUE(SGM::GetPointCurveData(rResult,CurveID,Pos));
+    
+    SGM::Curve CurveID2=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
+    EXPECT_TRUE(SGM::SameCurve(rResult,CurveID,CurveID2,SGM_MIN_TOL));
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),CurveID);
+    EXPECT_FALSE(SGM::SameCurve(rResult,CurveID,CurveID2,SGM_MIN_TOL));
+
+    SGM::CurveInverse(rResult,CurveID,Pos);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -351,6 +358,19 @@ TEST(math_check, closest_point)
     ++iter;
     SGM::Face FaceID3=*iter;
 
+    // Public interface tests
+
+    SGM::GetFaceTriangles(rResult,FaceID1);
+    SGM::GetFacePoints3D(rResult,FaceID1);
+    SGM::GetFaceNormals(rResult,FaceID1);
+    SGM::FindBody(rResult,FaceID1);
+    SGM::GetType(rResult,FaceID1);
+    std::set<SGM::Entity> sOwners;
+    SGM::GetOwners(rResult,FaceID1,sOwners);
+    SGM::GetFileType("test.stp");
+    SGM::GetSidesOfFace(rResult,FaceID1);
+    SGM::IsFaceFlipped(rResult,FaceID1);
+
     SGM::Point3D CPos1,CPos2,CPos3;
     SGM::Entity Ent1,Ent2,Ent3;
     SGM::FindClosestPointOnEntity(rResult,Pos,FaceID1,CPos1,Ent1);
@@ -375,6 +395,9 @@ TEST(math_check, rectangle)
     bool bTest1=SGM::NearEqual(dLength,4.0,SGM_ZERO,false);
     EXPECT_TRUE(bTest1);
 
+    SGM::GetComplexPoints(rResult,RectangleID);
+    SGM::GetComplexSegments(rResult,RectangleID);
+
     EXPECT_TRUE(SGM::IsCycle(rResult,RectangleID));
     SGM::Point3D Origin;
     SGM::UnitVector3D Normal;
@@ -386,6 +409,10 @@ TEST(math_check, rectangle)
     double dArea=SGM::FindComplexArea(rResult,FilledID);
     bool bTest2=SGM::NearEqual(dArea,1.0,SGM_ZERO,false);
     EXPECT_TRUE(bTest2);
+
+    SGM::GetComplexTriangles(rResult,RectangleID);
+    SGM::MergePoints(rResult,RectangleID,SGM_MIN_TOL);
+    SGM::FindTriangleAreas(rResult,RectangleID);
 
     SGM::FindDegenerateTriangles(rResult,FilledID);
     SGM::GetBoundingBox(rResult,FilledID);
@@ -1769,6 +1796,12 @@ TEST(math_check, sphere_area)
     std::vector<SGM::EdgeSideType> aTypes;
     aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
     SGM::Body BodyID=SGM::CreateSheetBody(rResult,SurfaceID,aEdges,aTypes);
+
+    // Public interface tests.
+
+    SGM::GetEdgePoints(rResult,EdgeID);
+    SGM::GetToleranceOfEdge(rResult,EdgeID);
+    SGM::GetDomainOfEdge(rResult,EdgeID);
 
     double dRadius;
     SGM::GetCircleData(rResult,CurveID,Center,Norm,XAxis,YAxis,dRadius);

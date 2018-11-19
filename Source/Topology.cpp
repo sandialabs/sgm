@@ -206,18 +206,6 @@ void FindVolumes(SGM::Result        &,//rResult,
         }
     }
 
-void FindAttributes(SGM::Result                         &,//rResult,
-                    entity                        const *pEntity,
-                    std::set<attribute *,EntityCompare> &sAttributes,
-                    bool                                 )//bTopLevel)
-    {
-    if(pEntity==nullptr)
-        {
-        return;
-        }
-    sAttributes=pEntity->GetAttributes();
-    }
-
 void FindFaces(SGM::Result                    &,//rResult,
                entity                   const *pEntity,
                std::set<face *,EntityCompare> &sFaces,

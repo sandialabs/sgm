@@ -58,6 +58,11 @@ void FindCurves(SGM::Result                     &rResult,
                 std::set<curve *,EntityCompare> &sCurves,
                 bool                             bTopLevel=false);
 
+void FindAttribute(SGM::Result                         &rResult,
+                   entity                        const *pEntity,
+                   std::set<attribute *,EntityCompare> &sBodies,
+                   bool                                 bTopLevel);
+
 // Returns the number of edges that are adjacent to both pVertex1, and
 // pVertex2.  If pFace is not nullptr, then only edges on pFace are 
 // returned.
@@ -124,17 +129,6 @@ void Merge(SGM::Result &rResult,
 
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces);
-
-//////////////////////////////////////////////////////////////////////////////
-//
-//  Other functions put here for now.
-//
-//////////////////////////////////////////////////////////////////////////////
-
-void FindAttributes(SGM::Result                         &rResult,
-                    entity                        const *pEntity,
-                    std::set<attribute *,EntityCompare> &sAttributes,
-                    bool                                 bTopLevel=false);
 
 }
 #endif // TOPOLOGY_H

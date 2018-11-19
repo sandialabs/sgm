@@ -1429,7 +1429,7 @@ void ModelData::rebuild_tree()
     add_attributes_to_tree(ThingItem, ThingID);
 
     std::set<SGM::Attribute> top_level_attributes;
-    SGM::FindAttributes(dPtr->mResult, SGM::Thing(), top_level_attributes, true);
+    SGM::GetAttributes(dPtr->mResult, SGM::Thing(), top_level_attributes, true);
     for (const SGM::Attribute &top_attribute : top_level_attributes)
         {
         add_attribute_to_tree(ThingItem, top_attribute);

@@ -390,15 +390,27 @@ SGM::EntityType SGM::GetType(SGM::Result       &rResult,
 
 size_t SGM::GetAttributes(SGM::Result         &rResult,
                           SGM::Entity   const &EntityID,
-                          std::set<Attribute> &sAttributes)
+                          std::set<Attribute> &sAttributes,
+                          bool                 bTopLevel)
     {
     SGMInternal::entity const *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::attribute *,SGMInternal::EntityCompare> const &sTempAttributes=pEntity->GetAttributes();
-    auto iter=sTempAttributes.begin();
-    while(iter!=sTempAttributes.end())
+    if(bTopLevel)
         {
-        sAttributes.insert(SGM::Attribute((*iter)->GetID()));
-        ++iter;
+        std::unordered_set<SGMInternal::attribute *> usAttributes=rResult.GetThing()->GetAttributes(true);
+        for(auto pAttribute : usAttributes)
+            {
+            sAttributes.insert(SGM::Attribute(pAttribute->GetID()));
+            }
+        }
+    else
+        {
+        std::set<SGMInternal::attribute *,SGMInternal::EntityCompare> const &sTempAttributes=pEntity->GetAttributes();
+        auto iter=sTempAttributes.begin();
+        while(iter!=sTempAttributes.end())
+            {
+            sAttributes.insert(SGM::Attribute((*iter)->GetID()));
+            ++iter;
+            }
         }
     return sAttributes.size();
     }
@@ -715,23 +727,6 @@ SGM::Attribute SGM::CreateAttribute(SGM::Result       &rResult,
     {
     SGMInternal::attribute *pAttribute=new SGMInternal::attribute(rResult,Name);
     return {pAttribute->GetID()};
-    }
-
-
-void SGM::FindAttributes(SGM::Result              &rResult,
-                         SGM::Entity        const &EntityID,
-                         std::set<SGM::Attribute> &sAttributes,
-                         bool                      bTopLevel)
-    {
-    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
-    std::set<SGMInternal::attribute *,SGMInternal::EntityCompare> sAttribute;
-    FindAttributes(rResult,pEntity,sAttribute,bTopLevel);
-    std::set<SGMInternal::attribute *>::iterator iter=sAttribute.begin();
-    while(iter!=sAttribute.end())
-        {
-        sAttributes.insert(SGM::Attribute((*iter)->GetID()));
-        ++iter;
-        }
     }
 
 void SGM::FindFaces(SGM::Result         &rResult,

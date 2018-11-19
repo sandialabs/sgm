@@ -35,11 +35,6 @@ SGM_EXPORT void AddAttribute(SGM::Result    &rResult,
                              SGM::Entity    &EntityID,
                              SGM::Attribute &AttributeID);
 
-SGM_EXPORT void FindAttributes(SGM::Result              &rResult,
-                               SGM::Entity        const &EntityID,
-                               std::set<SGM::Attribute> &sAttribute,
-                               bool                      bTopLevel=false);
-
 SGM_EXPORT SGM::EntityType GetAttributeType(SGM::Result          &rResult,
                                             SGM::Attribute const &AttributeID);
 

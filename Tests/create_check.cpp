@@ -189,7 +189,7 @@ TEST(create_check, create_attributes)
     SGM::AddAttribute(rResult,BodyID,AttributeID5);
 
     std::set<SGM::Attribute> sAttributes;
-    SGM::FindAttributes(rResult,BodyID,sAttributes);
+    SGM::GetAttributes(rResult,BodyID,sAttributes);
     EXPECT_EQ(sAttributes.size(),5);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
