@@ -81,22 +81,6 @@ bool surface::IsSame(surface const *,double ) const
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-double AreaIntegrand(SGM::Point2D const &uv,void const *pData)
-    {
-    surface const *pSurface=(surface const *)pData;
-    SGM::Vector3D VecU,VecV;
-    pSurface->Evaluate(uv,nullptr,&VecU,&VecV);
-    return (VecU*VecV).Magnitude();
-    }
-
-double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
-                                             SGM::Point2D const &PosA,
-                                             SGM::Point2D const &PosB,
-                                             SGM::Point2D const &PosC) const
-    {
-    return IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
-    }
-
 SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
                                     SGM::Point3D const &Pos) const
     {
