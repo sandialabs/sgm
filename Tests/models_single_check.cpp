@@ -117,7 +117,7 @@ TEST(models_single_check, import_check_glom4_0001_Bbat)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, import_points_text_file)
+TEST(models_single_check, DISABLED_import_points_text_file)
 {
     const char* file_name = "points.txt";
     SCOPED_TRACE(file_name);
