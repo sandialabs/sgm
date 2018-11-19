@@ -20,6 +20,32 @@
 
 #include "test_utility.h"
 
+TEST(math_check, sgm_file_complex)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    std::vector<unsigned int> aTriangles,aSegments;
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    SGM::CreateComplex(rResult,aPoints,aSegments,aTriangles);
+
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult,"GTestFile.sgm",SGM::Thing(),Options);
+    std::vector<std::string> aLog;
+    std::vector<SGM::Entity> aEntities;
+    SGM::ReadFile(rResult,"GTestFile.sgm",aEntities,aLog,Options);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, sortable_planes)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
