@@ -20,6 +20,30 @@
 
 #include "test_utility.h"
 
+TEST(math_check, closest_point_on_things)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Volume> sVolume;
+    SGM::FindVolumes(rResult,BlockID,sVolume);
+    SGM::Volume VolumeID=*(sVolume.begin());
+    std::set<SGM::Vertex> sVertices;
+    SGM::FindVertices(rResult,BlockID,sVertices);
+    SGM::Vertex VertexID=*(sVertices.begin());
+
+    SGM::Point3D ClosePos;
+    SGM::Entity ClosestEntity;
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),VolumeID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(5,5,5),VolumeID,ClosePos,ClosestEntity,false);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),VertexID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),BlockID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),SGM::Thing(),ClosePos,ClosestEntity);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, points_in_volumes)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

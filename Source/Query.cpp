@@ -1,11 +1,14 @@
 #include "SGMInterrogate.h"
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
+
 #include "Topology.h"
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Query.h"
 #include "Surface.h"
+#include "Interrogate.h"
+
 #include <cfloat>
 
 namespace SGMInternal
@@ -118,57 +121,86 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
         }
     }
 
-void FindClosestPointOnVolume(SGM::Result        &,//rResult,
-                              SGM::Point3D const &,//Point,
-                              volume       const *,//pVolume,
-                              SGM::Point3D       &,//ClosestPoint,
-                              entity            *&,//pCloseEntity,
+void FindClosestPointOnVolume(SGM::Result        &rResult,
+                              SGM::Point3D const &Point,
+                              volume       const *pVolume,
+                              SGM::Point3D       &ClosestPoint,
+                              entity            *&pCloseEntity,
                               bool                bBoundary)
     {
+    std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
+    SGM::Point3D TestPos;
+    entity *TestEnt;
+    double dMinDist=std::numeric_limits<double>::max();
+    for(auto pFace : sFaces)
+        {
+        FindClosestPointOnFace(rResult,Point,pFace,TestPos,TestEnt);
+        double dDist=Point.DistanceSquared(TestPos);
+        if(dDist<dMinDist)
+            {
+            dMinDist=dDist;
+            ClosestPoint=TestPos;
+            pCloseEntity=TestEnt;
+            }
+        }
     if(bBoundary==false)
         {
-        // Test for point in volume.
-        throw;
-        }
-    else
-        {
-        
+        if(PointInVolume(rResult,Point,pVolume))
+            {
+            if(dMinDist<SGM_ZERO)
+                {
+                ClosestPoint=Point;
+                pCloseEntity=(entity *)pVolume;
+                }
+            }
         }
     }
 
-void FindClosestPointOnBody(SGM::Result        &,//rResult,
-                            SGM::Point3D const &,//Point,
-                            body         const *,//pBody,
-                            SGM::Point3D       &,//ClosestPoint,
-                            entity            *&,//pCloseEntity,
+void FindClosestPointOnBody(SGM::Result        &rResult,
+                            SGM::Point3D const &Point,
+                            body         const *pBody,
+                            SGM::Point3D       &ClosestPoint,
+                            entity            *&pCloseEntity,
                             bool                bBoundary)
     {
-    if(bBoundary==false)
+    std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
+    SGM::Point3D TestPos;
+    entity *TestEnt;
+    double dMinDist=std::numeric_limits<double>::max();
+    for(auto pVolume : sVolumes)
         {
-        // Test for point in volumes.
-        throw;
-        }
-    else
-        {
-        
+        FindClosestPointOnVolume(rResult,Point,pVolume,TestPos,TestEnt,bBoundary);
+        double dDist=Point.DistanceSquared(TestPos);
+        if(dDist<dMinDist)
+            {
+            dMinDist=dDist;
+            ClosestPoint=TestPos;
+            pCloseEntity=TestEnt;
+            }
         }
     }
 
-void FindClosestPointOnThing(SGM::Result        &,//rResult,
-                             SGM::Point3D const &,//Point,
-                             thing        const *,//pThing,
-                             SGM::Point3D       &,//ClosestPoint,
-                             entity            *&,//pCloseEntity,
+void FindClosestPointOnThing(SGM::Result        &rResult,
+                             SGM::Point3D const &Point,
+                             thing        const *pThing,
+                             SGM::Point3D       &ClosestPoint,
+                             entity            *&pCloseEntity,
                              bool                bBoundary)
     {
-    if(bBoundary==false)
+    std::unordered_set<body *> sBodies=pThing->GetBodies(true);
+    SGM::Point3D TestPos;
+    entity *TestEnt;
+    double dMinDist=std::numeric_limits<double>::max();
+    for(auto pBody : sBodies)
         {
-        // Test for point in volumes.
-        throw;
-        }
-    else
-        {
-        
+        FindClosestPointOnBody(rResult,Point,pBody,TestPos,TestEnt,bBoundary);
+        double dDist=Point.DistanceSquared(TestPos);
+        if(dDist<dMinDist)
+            {
+            dMinDist=dDist;
+            ClosestPoint=TestPos;
+            pCloseEntity=TestEnt;
+            }
         }
     }
 
