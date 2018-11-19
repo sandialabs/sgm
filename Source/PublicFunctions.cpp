@@ -2159,7 +2159,6 @@ void SGM::ReduceToVolumes(SGM::Result           &rResult,
         }
     }
 
-/*
 std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
                                               SGM::Edge   &EdgeID,
                                               SGM::Face   &FaceID)
@@ -2175,7 +2174,7 @@ std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
         }
     return aAnswer;
     }
-
+/*
 void SGM::UniteBodies(SGM::Result &rResult,
                       SGM::Body   &ReturnedBodyID,
                       SGM::Body   &DeletedBodyID)
