@@ -117,6 +117,14 @@ TEST(models_single_check, import_check_glom4_0001_Bbat)
     expect_import_check_success(file_name);
 }
 
+TEST(models_single_check, import_points_text_file)
+{
+    const char* file_name = "points.txt";
+    SCOPED_TRACE(file_name);
+    expect_import_check_success(file_name);
+}
+
+
 TEST(models_single_check, import_check_glom4_0002_Bknob) 
 {
     const char* file_name = "Glom4/0002-_Bknob.stp";
