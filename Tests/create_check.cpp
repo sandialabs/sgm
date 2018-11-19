@@ -208,4 +208,15 @@ TEST(create_check, miscellaneous_entity)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(create_check, visitors_get_box)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    EXPECT_TRUE(SGM::RunInternalTest(rResult,3));
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+
 

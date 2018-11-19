@@ -243,6 +243,13 @@ namespace SGMInternal {
         return sEntities.size();
     }
 
+    template <class VISITOR>
+    inline void thing::VisitEntities(VISITOR &typeVisitor)
+        {
+        for (auto &iter: m_mAllEntities)
+            iter.second->Accept(typeVisitor);
+        }
+
     //
     // topology
     //
@@ -277,7 +284,7 @@ namespace SGMInternal {
     { return new assembly(rResult,*this); }
 
     inline SGM::Interval3D const &assembly::GetBox(SGM::Result &) const
-    { throw std::logic_error("not implemented for assembly"); }
+    { return m_Box; }
 
     inline bool assembly::IsTopLevel() const
     { return m_sOwners.empty(); }
@@ -310,7 +317,7 @@ namespace SGMInternal {
     { return new reference(rResult,*this); }
 
     inline SGM::Interval3D const &reference::GetBox(SGM::Result &) const
-    { throw std::logic_error("not implemented for reference"); }
+    { return m_Box; }
 
     inline bool reference::IsTopLevel() const
     { return m_sOwners.empty(); }
@@ -584,16 +591,16 @@ namespace SGMInternal {
     { return m_sOwners.empty(); }
 
     inline SGM::Interval3D const &attribute::GetBox(SGM::Result &) const
-    { throw std::logic_error("not implemented yet for attribute"); }
+    { return m_Box; }
 
     inline void attribute::ReplacePointers(std::map<entity *,entity *> const &)
     { throw std::logic_error("not implemented yet for attribute"); }
 
     inline void attribute::ResetBox(SGM::Result&) const
-    { throw std::logic_error("not implemented yet for attribute"); }
+    { /* do nothing */ }
 
     inline void attribute::TransformBox(SGM::Result &, SGM::Transform3D const &)
-    { throw std::logic_error("not implemented yet for attribute"); }
+    { /* do nothing */ }
 
     inline std::string const &attribute::GetName() const
     {return m_Name;}
