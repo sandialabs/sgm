@@ -67,6 +67,15 @@ TEST(math_check, check_bad_bodies)
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings);
+
+    SGM::Assembly ID1;
+    SGM::Reference ID2;
+    SGM::Complex ID3;
+    SGM::Body ID4;
+    ID1.m_ID*=1;
+    ID2.m_ID*=1;
+    ID3.m_ID*=1;
+    ID4.m_ID*=1;
     
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -186,7 +195,8 @@ TEST(math_check, point_curve)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Pos(0,0,0);
-    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos);
+    SGM::Interval1D Domain(0,1);
+    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos,&Domain);
     EXPECT_TRUE(SGM::GetPointCurveData(rResult,CurveID,Pos));
     
     SGM::Curve CurveID2=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
@@ -194,7 +204,14 @@ TEST(math_check, point_curve)
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),CurveID);
     EXPECT_FALSE(SGM::SameCurve(rResult,CurveID,CurveID2,SGM_MIN_TOL));
 
-    SGM::CurveInverse(rResult,CurveID,Pos);
+    SGM::Point3D ClosePos;
+    double dGuess1=-1,dGuess2=0.5,dGuess3=2;
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess1);
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess2);
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess3);
+    SGM::Point3D xyz;
+    SGM::Vector3D Vec1,Vec2;
+    SGM::EvaluateCurve(rResult,CurveID,0,&xyz,&Vec1,&Vec2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

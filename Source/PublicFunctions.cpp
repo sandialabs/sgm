@@ -2238,10 +2238,11 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
 }
 
 
-SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
-                                 SGM::Point3D &Pos)
+SGM::Curve SGM::CreatePointCurve(SGM::Result           &rResult,
+                                 SGM::Point3D          &Pos,
+                                 SGM::Interval1D const *pDomain)
 {
-    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
+    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos,pDomain);
     return {pCurve->GetID()};
 }
 

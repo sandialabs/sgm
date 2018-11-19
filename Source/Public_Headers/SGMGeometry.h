@@ -79,8 +79,9 @@ SGM_EXPORT SGM::Curve CreateHermitCurve(SGM::Result                      &rResul
                                         std::vector<SGM::Vector3D> const &aVectors,
                                         std::vector<double>        const &aParams);
 
-SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
-                                       SGM::Point3D &Pos);
+SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result           &rResult,
+                                       SGM::Point3D          &Pos,
+                                       SGM::Interval1D const *pDomain=nullptr);
 
 // Fits a conic curve to five points returning a line, circle, ellipse, parabola or hyperbola.
 
