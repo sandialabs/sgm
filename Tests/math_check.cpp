@@ -1916,6 +1916,14 @@ TEST(math_check, NURB_surface)
     SGM::Surface SurfID=SGM::CreateNURBSurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
     bool bAnswer=SGM::TestSurface(rResult,SurfID,SGM::Point2D(0.245,0.678));
 
+    // Code to test saving a NURB surface
+    // turn on FindUMultiplicity and FindVMultiplicity
+    //
+    // std::vector<SGM::Edge> aEdges;
+    // std::vector<SGM::EdgeSideType> aTypes;
+    // SGM::CreateFaceFromSurface(rResult,SurfID,aEdges,aTypes);
+    // SGM::SaveSTEP(rResult,"Gtest_NURB_Surface_Test.stp",SGM::Thing(),SGM::TranslatorOptions());
+
     SGM::Point3D Pos0,Pos1,Pos2;
     SGM::EvaluateSurface(rResult,SurfID,SGM::Point2D(0.145,0.578),&Pos0);
     SGM::EvaluateSurface(rResult,SurfID,SGM::Point2D(0.245,0.678),&Pos1);
