@@ -695,9 +695,11 @@ TEST(surface_check, plane)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Origin(10,11,12);
-    SGM::UnitVector3D XAxis(1,2,3);
+    SGM::UnitVector3D XAxis(1,2,3),ZAxis;
     SGM::UnitVector3D YAxis=XAxis.Orthogonal();
     SGM::Surface PlaneID=SGM::CreatePlane(rResult,Origin,Origin+XAxis,Origin+YAxis);
+
+    SGM::GetPlaneData(rResult,PlaneID,Origin,XAxis,YAxis,ZAxis);  
 
     bool bAnswer=SGM::TestSurface(rResult,PlaneID,SGM::Point2D(0.5,0.2));
     SGM::DeleteEntity(rResult,PlaneID);
@@ -714,10 +716,12 @@ TEST(surface_check, sphere)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Origin(10,11,12);
-    SGM::UnitVector3D XAxis(1,2,3);
+    SGM::UnitVector3D XAxis(1,2,3),ZAxis;
     SGM::UnitVector3D YAxis=XAxis.Orthogonal();
     double dRadius=2.5;
     SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,Origin,dRadius,&XAxis,&YAxis);
+
+    SGM::GetSphereData(rResult,SphereID,Origin,XAxis,YAxis,ZAxis,dRadius);
 
     double dU=SGM::GetDomainOfSurface(rResult,SphereID).m_UDomain.MidPoint();
     SGM::FindUParamCurve(rResult,SphereID,dU);
@@ -747,6 +751,10 @@ TEST(surface_check, cylinder)
     double dRadius=2.5;
     SGM::Surface SphereID=SGM::CreateCylinderSurface(rResult,Bottom,Top,dRadius);
 
+    SGM::Point3D Origin;
+    SGM::UnitVector3D XAxis,YAxis,ZAxis;
+    SGM::GetCylinderData(rResult,SphereID,Origin,XAxis,YAxis,ZAxis,dRadius);
+
     bool bAnswer=SGM::TestSurface(rResult,SphereID,SGM::Point2D(0.5,0.2));
     SGM::DeleteEntity(rResult,SphereID);
     SGMTesting::ReleaseTestThing(pThing);
@@ -762,8 +770,12 @@ TEST(surface_check, torus)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Origin(0,0,0);
-    SGM::UnitVector3D ZAxis(0,0,1);
+    SGM::UnitVector3D ZAxis(0,0,1),XAxis,YAxis;
     SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,Origin,ZAxis,2,5,true);
+
+    SGM::TorusKindType nKind;
+    double dMinorRadius,dMajorRadius;
+    SGM::GetTorusData(rResult,TorusID,Origin,XAxis,YAxis,ZAxis,dMinorRadius,dMajorRadius,nKind);
 
     bool bAnswer=SGM::TestSurface(rResult,TorusID,SGM::Point2D(0.5,0.2));
 
@@ -795,6 +807,10 @@ TEST(surface_check, cone)
     SGM::Point3D Origin(10,11,12);
     SGM::UnitVector3D ZAxis(1,2,3);
     SGM::Surface ConeID=SGM::CreateConeSurface(rResult,Origin,ZAxis,2,0.4);
+
+    SGM::UnitVector3D XAxis,YAxis;
+    double dHalfAngle,dRadius;
+    SGM::GetConeData(rResult,ConeID,Origin,XAxis,YAxis,ZAxis,dHalfAngle,dRadius);
 
     bool bAnswer=SGM::TestSurface(rResult,ConeID,SGM::Point2D(0.5,0.2));
     SGM::DeleteEntity(rResult,ConeID);
@@ -1311,6 +1327,8 @@ TEST(math_check, intersect_line_and_revolve)
     SGM::Point3D AxisOrigin(-1,0,0);
     SGM::UnitVector3D Axis(1,0,0);
     SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
+
+    SGM::GetRevolveData(rResult,RevolveID,AxisOrigin,Axis,CurveID);
 
     double dU=SGM::GetDomainOfSurface(rResult,RevolveID).m_UDomain.MidPoint();
     SGM::FindUParamCurve(rResult,RevolveID,dU);
@@ -2483,6 +2501,8 @@ TEST(math_check, create_nub_surface)
     aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
     aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
     SGM::Surface NUBSurfID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::GetNUBSurfaceData(rResult,NUBSurfID,aaPoints,aUKnots,aVKnots);
 
     bool bAnswer=SGM::TestSurface(rResult,NUBSurfID,SGM::Point2D(0.3,0.2));
     
@@ -4792,6 +4812,8 @@ TEST(math_check, line_nurb_surface_intersect)
     aaPoints[2][1]=SGM::Point4D(2.0,1.0,0.0,1);
     aaPoints[2][2]=SGM::Point4D(2.0,2.0,1.0,1);
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::GetNURBSurfaceData(rResult,NUBSurfaceID,aaPoints,aUKnots,aVKnots);
 
     // Test with a line that hits two points.
 
