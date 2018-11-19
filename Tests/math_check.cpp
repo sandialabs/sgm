@@ -20,6 +20,20 @@
 
 #include "test_utility.h"
 
+TEST(math_check, points_in_volumes)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    std::vector<std::vector<SGM::Volume> > aaVolumeIDs;
+    SGM::PointsInVolumes(rResult,aPoints,aaVolumeIDs);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, plane_circle_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -44,6 +58,17 @@ TEST(math_check, plane_circle_intersect)
     EXPECT_EQ( SGM::IntersectCurveAndSurface(rResult,CircleID,PlaneID3,aPoints,aTypes), 1);
 
     SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, vector_angle_and_transforms)
+{
+    SGM::UnitVector3D UVec1(0,0,1),UVec2(1,0,0);
+    EXPECT_TRUE(SGM::NearEqual(UVec1.Angle(UVec2),SGM_HALF_PI,SGM_MIN_TOL,false));
+
+    SGM::Vector3D Vec(0,0,1);
+    SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
+    Vec*=Trans;
+    UVec1*=Trans;
 }
 
 TEST(math_check, DISABLED_cylinder_circle_intersect)
