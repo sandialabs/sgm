@@ -20,6 +20,19 @@
 
 #include "test_utility.h"
 
+
+TEST(math_check, point_curve)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Pos(0,0,0);
+    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos);
+    EXPECT_TRUE(SGM::GetPointCurveData(rResult,CurveID,Pos));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, remove_duplicates)
 {
     std::vector<SGM::Point3D> aPoints;
@@ -301,6 +314,9 @@ TEST(math_check, extrude_hermit)
     aParams.push_back(12);
     SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
+
+    SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
+
     SGM::UnitVector3D Axis(0,0,1);
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
@@ -1306,6 +1322,9 @@ TEST(math_check, intersect_line_and_revolve)
     SGM::UnitVector3D uDirection1(0,0,1);
     SGM::Curve Line1ID = SGM::CreateLine(rResult, LineOrigin1, uDirection1);
 
+    SGM::Point3D Origin;
+    SGM::GetLineData(rResult,Line1ID,Origin,Axis);
+
     std::vector<SGM::Point3D> aPoints1;
     std::vector<SGM::IntersectionType> aTypes1;
     double dTolerance = SGM_MIN_TOL;
@@ -1659,6 +1678,8 @@ TEST(math_check, NURB_curve)
     SGM::Curve CurveID=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
     bool bAnswer=SGM::TestCurve(rResult,CurveID,1.234);
 
+    SGM::GetNURBCurveData(rResult,CurveID,aControlPoints,aKnots);
+
     SGM::Point3D Pos0,Pos1,Pos2;
     SGM::EvaluateCurve(rResult,CurveID,1,&Pos0);
     SGM::EvaluateCurve(rResult,CurveID,2,&Pos1);
@@ -1721,7 +1742,7 @@ TEST(math_check, sphere_area)
     bool bAnswer=true;
 
     SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D Norm(1,1,1);
+    SGM::UnitVector3D Norm(1,1,1),XAxis,YAxis;
     SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Norm,1.0);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
     SGM::Surface SurfaceID=SGM::CreateSphereSurface(rResult,Center,1.0);
@@ -1730,6 +1751,9 @@ TEST(math_check, sphere_area)
     std::vector<SGM::EdgeSideType> aTypes;
     aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
     SGM::Body BodyID=SGM::CreateSheetBody(rResult,SurfaceID,aEdges,aTypes);
+
+    double dRadius;
+    SGM::GetCircleData(rResult,CurveID,Center,Norm,XAxis,YAxis,dRadius);
 
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,BodyID,sFaces);
@@ -3566,10 +3590,13 @@ TEST(math_check, ellipse_merge)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0);
+    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0),Normal;
     double dXRadius=1,dYRadius=2;
     SGM::Curve CurveID=SGM::CreateEllipse(rResult,Center,XAxis,YAxis,dXRadius,dYRadius);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    double dA,dB;
+    SGM::GetEllipseData(rResult,CurveID,Center,XAxis,YAxis,Normal,dA,dB);
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
@@ -3634,11 +3661,13 @@ TEST(math_check, parabola_merge)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0);
+    SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0),Normal;
     double dA=1.0;
     SGM::Curve CurveID=SGM::CreateParabola(rResult,Center,XAxis,YAxis,dA);
     SGM::Interval1D Domain(-10,10);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+
+    SGM::GetParabolaData(rResult,CurveID,Center,XAxis,YAxis,Normal,dA);
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
@@ -3678,10 +3707,13 @@ TEST(math_check, hyperbola_merge)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0);
+    SGM::UnitVector3D XAxis(0,1,0),YAxis(1,0,0),Normal;
     SGM::Curve CurveID=SGM::CreateHyperbola(rResult,Center,XAxis,YAxis,1,1);
     SGM::Interval1D Domain(-10,10);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
+
+    double dA,dB;
+    SGM::GetHyperbolaData(rResult,CurveID,Center,XAxis,YAxis,Normal,dA,dB); 
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
@@ -3761,6 +3793,10 @@ TEST(math_check, NUB_curve_merge)
     aPoints1.emplace_back(2,2,0);
 
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+    std::vector<SGM::Point3D> aControlPoints;
+    std::vector<double> aKnots;
+    SGM::GetNUBCurveData(rResult,CurveID,aControlPoints,aKnots);
 
     SGM::Point3D Pos0;
     double dt=SGM::GetDomainOfCurve(rResult,CurveID).MidPoint();
