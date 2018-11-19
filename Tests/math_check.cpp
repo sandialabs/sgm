@@ -21,6 +21,25 @@
 
 #include "test_utility.h"
 
+TEST(math_check, unite_faces_atoll)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,DiskID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),0.5);
+    SGM::Edge EdgeID1=SGM::CreateEdge(rResult,CircleID);
+    SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+
+    SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, imprint_edge_on_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
