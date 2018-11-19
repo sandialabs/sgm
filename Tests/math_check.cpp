@@ -734,18 +734,21 @@ TEST(math_check, cylinder_copy_transform)
     SGM::TransformEntity(rResult,Trans,CylinderID);
     SGM::CopyEntity(rResult,CylinderID);
 
-    SGM::Surface SurfID=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    SGM::Surface SurfID1=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    SGM::Surface SurfID2=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    bool bTest=SGM::SameSurface(rResult,SurfID1,SurfID2,SGM_MIN_TOL);
+    EXPECT_TRUE(bTest);
     SGM::Point2D uvGuess1(0,0);
-    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
+    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID1,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
     bool bTest1=SGM::NearEqual(uv1.m_u,0,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest1);
     SGM::Point2D uvGuess2(SGM_TWO_PI,0);
-    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
+    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID1,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
     bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest2);
 
-    double dU=SGM::GetDomainOfSurface(rResult,SurfID).m_UDomain.MidPoint();
-    SGM::FindUParamCurve(rResult,SurfID,dU);
+    double dU=SGM::GetDomainOfSurface(rResult,SurfID1).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SurfID1,dU);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
