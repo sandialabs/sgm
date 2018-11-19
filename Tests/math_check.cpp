@@ -20,6 +20,13 @@
 
 #include "test_utility.h"
 
+TEST(math_check, find_comps_1d)
+{
+    std::vector<unsigned int> aSegments;
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    EXPECT_EQ(SGM::FindComponents1D(aSegments),1);
+    }
 
 TEST(math_check, point_curve)
 {
@@ -99,7 +106,7 @@ TEST(math_check, find_min_edge_length_3D)
     EXPECT_TRUE(SGM::NearEqual(dMin,1,SGM_ZERO,false));
 }
 
-TEST(math_check, matrix_multiply_2D)
+TEST(math_check, matrix_multiply)
 {
     double aMatrix1[2][2];
     double aMatrix2[2][2];
@@ -117,6 +124,19 @@ TEST(math_check, matrix_multiply_2D)
     EXPECT_TRUE(SGM::NearEqual(aAnswer[0][1],10,SGM_ZERO,false));
     EXPECT_TRUE(SGM::NearEqual(aAnswer[1][0],15,SGM_ZERO,false));
     EXPECT_TRUE(SGM::NearEqual(aAnswer[1][1],22,SGM_ZERO,false));
+
+    double aMatrix3[3][3];
+    double aAnswer2[3][3];
+    aMatrix1[0][0]=1;
+    aMatrix1[0][1]=2;
+    aMatrix1[0][2]=2;
+    aMatrix1[1][0]=3;
+    aMatrix1[1][1]=4;
+    aMatrix1[1][2]=2;
+    aMatrix1[2][0]=3;
+    aMatrix1[2][1]=4;
+    aMatrix1[2][2]=2;
+    SGM::FindProduct3D(aMatrix3,aMatrix3,aAnswer2);
 }
 
 //TEST(math_check, polynomial_fit)
