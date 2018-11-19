@@ -3560,6 +3560,17 @@ TEST(math_check, body_copy_with_attribute)
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
+TEST(math_check, create_disk) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::GetPointsOfBody(rResult,BodyID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 
 TEST(math_check, wire_body) 
 {
@@ -3576,7 +3587,19 @@ TEST(math_check, wire_body)
     int nRed=0,nGreen=0,nBlue=0;
     SGM::GetColor(rResult,WireID,nRed,nGreen,nBlue);
     EXPECT_EQ(nRed,255);
-    
+
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Edge EdgeID2=SGM::CreateEdge(rResult,CurveID);
+    sEdges.clear();
+    sEdges.insert(EdgeID2);
+    SGM::Body WireID2=SGM::CreateWireBody(rResult,sEdges);
+    SGM::CoverPlanarWire(rResult,WireID2);
+
+    std::vector<SGM::Edge> aEdges;
+    SGM::FindCloseEdges(rResult,SGM::Point3D(1,0,0),WireID2,20,aEdges);
+    aEdges.clear();
+    SGM::FindWireEdges(rResult,WireID2,sEdges);
+
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
@@ -3996,6 +4019,8 @@ TEST(math_check, intersect_sphere_sphere)
     SGM::Surface SphereID2=SGM::CreateSphereSurface(rResult,SGM::Point3D(1,0,0),1);
     std::vector<SGM::Curve> aCurves;
     SGM::IntersectSurfaces(rResult,SphereID1,SphereID2,aCurves);
+
+    SGM::GetSurfaceType(rResult,SphereID1);
 
     EXPECT_EQ(aCurves.size(),1);
 
