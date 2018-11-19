@@ -80,7 +80,7 @@ TEST(math_check, thing_tests)
     SGM::Thing ThingID;
     SGM::AddAttribute(rResult,ThingID,AttributeID);
     std::set<SGM::Attribute> sAttributes;
-    SGM::GetAttributes(rResult,ThingID,sAttributes);
+    SGM::GetAttributes(rResult,ThingID,sAttributes,true);
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),ThingID);
 
     SGMTesting::ReleaseTestThing(pThing);
