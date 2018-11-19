@@ -20,6 +20,33 @@
 
 #include "test_utility.h"
 
+TEST(math_check, graph_branch_tests)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Graph EdgeGraph(rResult,sFaces,true);
+    SGM::Face FaceID=*(sFaces.begin());
+    size_t nVert=FaceID.m_ID;
+    EdgeGraph.GetStar(nVert);
+    std::vector<SGM::Graph> aBranches;
+    EdgeGraph.FindBranches(aBranches);
+
+    std::set<size_t> sVertices;
+    sVertices.insert(0);
+    sVertices.insert(1);
+    std::set<SGM::GraphEdge> sEdges;
+    sEdges.insert(SGM::GraphEdge(0,1,1,true));
+    SGM::Graph DirectedGraph(sVertices,sEdges);
+    std::vector<size_t> aSources;
+    DirectedGraph.FindSources(aSources);
+        
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, sgm_file_complex)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
