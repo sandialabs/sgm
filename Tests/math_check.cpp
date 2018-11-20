@@ -21,6 +21,27 @@
 
 #include "test_utility.h"
 
+TEST(math_check, public_math_functions)
+{
+    SGM::SAFEasin(-1.1);
+    SGM::SAFEasin(1.1);
+    SGM::SAFEasin(0);
+    SGM::SignedArea(SGM::Point2D(0,0),SGM::Point2D(1,0),SGM::Point2D(0,1));
+    SGM::CenterOfMass(SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0.5,0.1,0.1));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    SGM::Point3D Origin;
+    SGM::UnitVector3D Axis;
+    SGM::FindLeastSquareLine3D(aPoints,Origin,Axis);
+
+    std::vector<double> aRoots1,aRoots2,aRoots3;
+    SGM::Quartic(1.0/4,1.0/3,-1.0/2,-1,0,aRoots1,SGM_MIN_TOL);
+    SGM::Quartic(-1,1,1,1,1,aRoots2,SGM_MIN_TOL);
+    SGM::Quartic(0,1,1,1,1,aRoots3,SGM_MIN_TOL);
+}
+
 TEST(math_check, tangent_imprint_case )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
