@@ -21,6 +21,32 @@
 
 #include "test_utility.h"
 
+TEST(math_check, circle_circle_tangent_intersections )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve CircleID1=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID2=SGM::CreateCircle(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID3=SGM::CreateCircle(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(1,0,0),1);
+
+    std::vector<SGM::Point3D> aPoints1,aPoints2,aPoints3,aPoints4;
+    std::vector<SGM::IntersectionType> aTypes1,aTypes2,aTypes3,aTypes4;
+    SGM::IntersectCurves(rResult,CircleID1,CircleID2,aPoints1,aTypes1);
+    SGM::IntersectCurves(rResult,CircleID1,CircleID3,aPoints2,aTypes2);
+    EXPECT_EQ(aPoints1.size(),1);
+    EXPECT_EQ(aPoints2.size(),1);
+
+    SGM::Point3D Pos(1,0,0);
+    SGM::Curve PointID=SGM::CreatePointCurve(rResult,Pos);
+    SGM::IntersectCurves(rResult,CircleID1,PointID,aPoints3,aTypes3);
+    EXPECT_EQ(aPoints3.size(),1);
+    SGM::IntersectCurves(rResult,PointID,CircleID1,aPoints4,aTypes4);
+    EXPECT_EQ(aPoints4.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, remove_duplicates_2d )
 {
     std::vector<SGM::Point2D> aPoints;

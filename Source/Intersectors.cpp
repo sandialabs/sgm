@@ -2221,6 +2221,21 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
             {
             return IntersectCircleAndCircle(rResult,pCircle,(circle const *)pCurve,aPoints,aTypes,dTolerance);
             }
+        case SGM::PointCurveType:
+            {
+            PointCurve const *pPointCurve=(PointCurve const *)pCurve;
+            SGM::Point3D const &Pos=pPointCurve->m_Pos;
+            SGM::Point3D CPos;
+            pCircle->Inverse(Pos,&CPos);
+            size_t nAnswer=0;
+            if(Pos.Distance(CPos)<dTolerance)
+                {
+                aPoints.push_back(CPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                nAnswer=1;
+                }
+            return nAnswer;
+            }
         default:
             {
             throw;
@@ -2243,6 +2258,19 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
 
       switch(pCurve1->GetCurveType())
          {
+         case SGM::PointCurveType:
+             {
+             PointCurve const *pPointCurve=(PointCurve const *)pCurve1;
+             SGM::Point3D const &Pos=pPointCurve->m_Pos;
+             SGM::Point3D CPos;
+             pCurve2->Inverse(Pos,&CPos);
+             if(Pos.Distance(CPos)<dTolerance)
+                 {
+                 aPoints.push_back(CPos);
+                 aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                 }
+             break;
+             }
          case SGM::LineType:
              {
              line const *pLine=(line const *)pCurve1;
@@ -2278,19 +2306,6 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
              }
          case SGM::NURBCurveType:
              {
-             break;
-             }
-         case SGM::PointCurveType:
-             {
-             PointCurve const *pPointCurve=(PointCurve const *)pCurve2;
-             SGM::Point3D const &Pos=pPointCurve->m_Pos;
-             SGM::Point3D CPos;
-             pCurve1->Inverse(Pos,&CPos);
-             if(Pos.Distance(CPos)<dTolerance)
-                 {
-                 aPoints.push_back(CPos);
-                 aTypes.push_back(SGM::IntersectionType::CoincidentType);
-                 }
              break;
              }
          default:
