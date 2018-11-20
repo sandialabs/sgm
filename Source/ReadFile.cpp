@@ -464,6 +464,94 @@ inline void ParseBodyTransform(char const *pLineAfterStepTag,
     FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
     }
 
+inline void ParseContextDependentShapeRepresentation(char const *pLineAfterStepTag,
+                                                     STEPLineData &STEPData)
+{
+//#1287 = CONTEXT_DEPENDENT_SHAPE_REPRESENTATION ( #1840, #153 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseRepresentationRelationship(char const *pLineAfterStepTag,
+                                            STEPLineData &STEPData)
+{
+//#1840 =( REPRESENTATION_RELATIONSHIP ('NONE','NONE', #814, #1941 ) REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION ( #179 )SHAPE_REPRESENTATION_RELATIONSHIP( ) );
+
+    // parse shape representation tags
+    const char *pos = FindIndicesGroup(pLineAfterStepTag, STEPData.m_aIDs);
+    pos = SkipWord(pos, "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION", 47);
+
+    // parse transformation tag
+    pos = FindIndex(pos, STEPData.m_aIDs);
+
+    // not parsing shape representation relationship
+}
+
+inline void ParseItemDefinedTransformation(char const *pLineAfterStepTag,
+                                           STEPLineData &STEPData)
+{
+//#179 = ITEM_DEFINED_TRANSFORMATION ( 'NONE', 'NONE', #2671,  #786 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinitionShape(char const *pLineAfterStepTag,
+                                        STEPLineData &STEPData)
+{
+//#153 = PRODUCT_DEFINITION_SHAPE ( 'NONE', 'NONE',  #2882 ) ;
+    FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinition(char const *pLineAfterStepTag,
+                                   STEPLineData &STEPData)
+{
+//#820 = PRODUCT_DEFINITION ( 'UNKNOWN', '', #1716, #2669 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinitionFormationWithSpecifiedSource(char const *pLineAfterStepTag,
+                                                               STEPLineData &STEPData)
+{
+//#1430 = PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE ( 'ANY', '', #2542, .NOT_KNOWN. ) ;
+    FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProduct(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+//#2542 = PRODUCT ( '2 Box Drawer', '2 Box Drawer', '', ( #505 ) ) ;
+    std::string sProductID, sProductDescription;
+
+    const char *pos = FindSingleQuotedString(pLineAfterStepTag, sProductID);
+    STEPData.m_aStrings.emplace_back(sProductID);
+
+    pos = FindSingleQuotedString(pos, sProductDescription);
+    STEPData.m_aStrings.emplace_back(sProductDescription);
+
+    // not parsing list of context tags
+}
+
+inline void ParseNextAssemblyUsageOccurrence(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #635 = NEXT_ASSEMBLY_USAGE_OCCURRENCE ( 'NAUO1', ' ', ' ', #152, #621, $ ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeDefinitionRepresentation(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #40 = SHAPE_DEFINITION_REPRESENTATION ( #95, #57 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeRepresentation(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #283 = SHAPE_REPRESENTATION ( 'smallbox', ( #350 ), #384 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeRepresentationRelationship(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #63 = SHAPE_REPRESENTATION_RELATIONSHIP ( 'NONE' , 'NONE' ,  #57, #618 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
 // Parse the STEP line number (ID) and STEP tag string
 // Return the position in the string after the STEP tag string
 // Return nullptr if no STEP line number was found.
@@ -618,6 +706,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
             ParseCone(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
+        case STEPTag::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION:
+            {
+            ParseContextDependentShapeRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
         case STEPTag::CYLINDRICAL_SURFACE:
             {
             ParseCylinder(pLineAfterStepTag, stepLine.m_STEPLineData);
@@ -673,6 +766,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
             ParseBodyTransform(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
+        case STEPTag::ITEM_DEFINED_TRANSFORMATION:
+            {
+            ParseItemDefinedTransformation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
         case STEPTag::LINE:
             {
             ParseLine(pLineAfterStepTag, stepLine.m_STEPLineData);
@@ -686,6 +784,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
         case STEPTag::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
             {
             ParseBodyTransform(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::NEXT_ASSEMBLY_USAGE_OCCURRENCE:
+            {
+            ParseNextAssemblyUsageOccurrence(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
         case STEPTag::OPEN_SHELL:
@@ -706,6 +809,46 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
         case STEPTag::PLANE:
             {
             ParsePlane(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT:
+            {
+            ParseProduct(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION:
+            {
+            ParseProductDefinition(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
+            {
+            ParseProductDefinitionFormationWithSpecifiedSource(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION_SHAPE:
+            {
+            ParseProductDefinitionShape(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::REPRESENTATION_RELATIONSHIP:
+            {
+            ParseRepresentationRelationship(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_DEFINITION_REPRESENTATION:
+            {
+            ParseShapeDefinitionRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_REPRESENTATION:
+            {
+            ParseShapeRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_REPRESENTATION_RELATIONSHIP:
+            {
+            ParseShapeRepresentationRelationship(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
         case STEPTag::SHELL_BASED_SURFACE_MODEL:

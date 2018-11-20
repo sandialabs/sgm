@@ -8,8 +8,11 @@
 #include "ReadFile.h"
 #include "Surface.h"
 #include "Topology.h"
+#include "SGMTransform.h"
 
 #include <numeric>
+
+#include <iostream>
 
 namespace SGMInternal
 {
@@ -369,7 +372,8 @@ vertex *CreateVertexFromSTEP(SGM::Result &rResult,
 void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
                             IDEntityMapType     const &mIDToEntityMap,
                             std::set<entity *>        &sEntities,
-                            std::vector<size_t>       &aBodies)
+                            std::vector<size_t>       &aBodies,
+                            BodyToTransformMapType    &mBodyToTransforms)
     {
     size_t nBodies = aBodies.size();
     for (size_t Index1 = 0; Index1 < nBodies; ++Index1)
@@ -386,8 +390,25 @@ void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
         std::vector<size_t> const &aIDs = SLD.m_aIDs;
         size_t nID = aIDs.size();
 
-        // size_t nTrans=aIDs[nLastVolume];
-        // TODO: Transform the body here.
+        // next to last ID is the axes for the body
+        size_t nTransformID = aIDs[nID-2];
+        STEPLineData const &SLDA = mSTEPData.at(nTransformID);
+        SGM::Point3D Center;
+        SGM::UnitVector3D XAxis, ZAxis;
+        GetAxesFromSTEP(SLDA, mSTEPData, Center, ZAxis, XAxis);
+
+        if (!SGM::NearEqual(Center, SGM::Point3D(0.,0.,0.), SGM_MIN_TOL) &&
+            !SGM::NearEqual(ZAxis, SGM::UnitVector3D(0.,0.,1.), SGM_MIN_TOL) &&
+            !SGM::NearEqual(XAxis, SGM::UnitVector3D(1.,0.,0.), SGM_MIN_TOL) )
+            {
+            std::cout << "Body Axes" << std::endl;
+            std::cout << "Center " << Center.m_x << " " << Center.m_y << " " << Center.m_z << std::endl;
+            std::cout << "ZAxis " << ZAxis.m_x << " " << ZAxis.m_y << " " << ZAxis.m_z << std::endl;
+            std::cout << "XAxis " << XAxis.m_x << " " << XAxis.m_y << " " << XAxis.m_z << std::endl;
+
+            SGM::Transform3D BodyTransform(XAxis, ZAxis*XAxis, ZAxis, SGM::Vector3D(Center));
+            mBodyToTransforms.emplace(std::pair<body*, SGM::Transform3D>(pBody, BodyTransform));
+            }
 
         for (size_t Index2 = 0; Index2 < nID; ++Index2)
             {
@@ -766,6 +787,142 @@ void ConnectSheetBodies(SGM::Result         &,//rResult,
         }
     }
 
+void ApplyBodyTransforms(SGM::Result &rResult,
+                         BodyToTransformMapType &mBodyToTransforms)
+    {
+        for (auto BodyAndTransform : mBodyToTransforms)
+        {
+            body *pBody = BodyAndTransform.first;
+            SGM::Transform3D &transform = BodyAndTransform.second;
+            TransformEntity(rResult, transform, pBody);
+        }
+    }
+
+typedef std::unordered_map<std::string, STEPTag> STEPTagMapType;
+typedef std::unordered_map<size_t, STEPLineData> STEPLineDataMapType;
+typedef std::unordered_map<size_t, entity *> IDEntityMapType;
+typedef std::unordered_map<body *, SGM::Transform3D> BodyToTransformMapType;
+
+void FlattenAssemblies(SGM::Result &rResult,
+                    size_t maxSTEPLineNumber,
+                    STEPLineDataMapType &mSTEPData,
+                    IDEntityMapType mIDToEntityMap,
+                    std::set<entity *> sEntities)
+{
+    struct ShapeDefRep_AssemblyData
+    {
+      ShapeDefRep_AssemblyData(size_t SDRid, size_t PDid, size_t SRid) :
+        ShapeDefRepID(SDRid), ProdDefID(PDid), ShapeRepID(SRid) {}
+      size_t ShapeDefRepID;
+      size_t ProdDefID;
+      size_t ShapeRepID;
+    };
+    std::vector<ShapeDefRep_AssemblyData> SDRentities;
+
+    struct ShapeRepRelation_AssemblyData
+    {
+      ShapeRepRelation_AssemblyData(size_t SRRid, size_t SRid, size_t brepid) :
+        ShapeRepRelationID(SRRid), ShapeRepID(SRid), BrepID(brepid) {}
+      size_t ShapeRepRelationID;
+      size_t ShapeRepID;
+      size_t BrepID;
+    };
+    std::vector<ShapeRepRelation_AssemblyData> SRRentities;
+
+    struct ContextDepShapeRep_AssemblyData
+    {
+      ContextDepShapeRep_AssemblyData(size_t CDShapeRepID, size_t AsmPDid, size_t PartPDid,
+                                      size_t AsmSRid, size_t PartSRid, size_t transfid) :
+        ContextDepShapeRepID(CDShapeRepID), AsmProdDefID(AsmPDid), PartProdDefID(PartPDid),
+        AsmShapeRepID(AsmSRid), PartShapeRepID(PartSRid), TransformID(transfid) {}
+      size_t ContextDepShapeRepID;
+      size_t AsmProdDefID;
+      size_t PartProdDefID;
+      size_t AsmShapeRepID;
+      size_t PartShapeRepID;
+      size_t TransformID;
+    };
+    std::vector<ContextDepShapeRep_AssemblyData> CDSRentities;
+
+    // get line ids for CONTEXT_DEPENDENT_SHAPE_REPRESENTATION, SHAPE_DEFINITION_REPRESENTATION,
+    // and SHAPE_REPRESENTATION_RELATIONSHIP
+    for (size_t nID = 1; nID <= maxSTEPLineNumber; ++nID)
+    {
+        auto DataIter = mSTEPData.find(nID);
+        if (DataIter == mSTEPData.end())
+        {
+            continue; // skip a STEP #ID that is not used
+        }
+
+        STEPLineData &stepLineData = DataIter->second;
+
+        if (stepLineData.m_nSTEPTag == STEPTag::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION)
+        {
+            size_t PDSid = stepLineData.m_aIDs[1];
+            STEPLineData &PDSLineData = mSTEPData.at(PDSid);
+
+            size_t NAUOccurenceID = PDSLineData.m_aIDs[0];
+            STEPLineData &NAUOLineData = mSTEPData.at(NAUOccurenceID);
+
+            size_t RRid = stepLineData.m_aIDs[0];
+            STEPLineData &RRLineData = mSTEPData.at(RRid);
+
+            CDSRentities.emplace_back(ContextDepShapeRep_AssemblyData(nID, NAUOLineData.m_aIDs[0],
+              NAUOLineData.m_aIDs[1], RRLineData.m_aIDs[0], RRLineData.m_aIDs[1], RRLineData.m_aIDs[2]));
+        }
+        else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_DEFINITION_REPRESENTATION)
+        {
+            size_t PDSid = stepLineData.m_aIDs[0];
+            STEPLineData &PDSLineData = mSTEPData.at(PDSid);
+            SDRentities.emplace_back(ShapeDefRep_AssemblyData(nID, PDSLineData.m_aIDs[0], stepLineData.m_aIDs[1]));
+        }
+        else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_REPRESENTATION_RELATIONSHIP)
+        {
+            SRRentities.emplace_back(ShapeRepRelation_AssemblyData(nID, stepLineData.m_aIDs[0], stepLineData.m_aIDs[1]));
+        }
+    }
+
+    for (size_t iIndex=0; iIndex<CDSRentities.size(); ++iIndex)
+    {
+        for (size_t iSRR=0; iSRR<SRRentities.size(); ++iSRR)
+        {
+                // get the transf
+            if (SRRentities[iSRR].ShapeRepID == CDSRentities[iIndex].PartShapeRepID)
+            {
+                // make a copy of the Body
+                entity* pEntity = mIDToEntityMap.at(SRRentities[iSRR].BrepID); 
+                if (pEntity->GetType() == SGM::BodyType)
+                {
+                    entity *pCopy = CopyEntity(rResult, pEntity);
+
+                    STEPLineData &TransformLineData = mSTEPData.at(CDSRentities[iIndex].TransformID);
+                    size_t AxisID1 = TransformLineData.m_aIDs[0];
+                    STEPLineData STEPLineData1 = mSTEPData.at(AxisID1);
+                    size_t AxisID2 = TransformLineData.m_aIDs[1];
+                    STEPLineData STEPLineData2 = mSTEPData.at(AxisID2);
+
+                    SGM::Point3D Center1, Center2;
+                    SGM::UnitVector3D XAxis1, XAxis2;
+                    SGM::UnitVector3D ZAxis1, ZAxis2;
+                    GetAxesFromSTEP(STEPLineData1, mSTEPData, Center1, ZAxis1, XAxis1);
+                    GetAxesFromSTEP(STEPLineData2, mSTEPData, Center2, ZAxis2, XAxis2);
+
+                    SGM::Transform3D transform1(XAxis1, SGM::UnitVector3D(ZAxis1*XAxis1), ZAxis1, SGM::Vector3D(Center1));
+                    SGM::Transform3D transform2(XAxis2, SGM::UnitVector3D(ZAxis2*XAxis2), ZAxis2, SGM::Vector3D(Center2));
+
+                    SGM::Transform3D T2Inverse;
+                    transform2.Inverse(T2Inverse);
+
+                    SGM::Transform3D transform = T2Inverse * transform1;
+
+                    TransformEntity(rResult, transform, pCopy);
+
+                    sEntities.insert(pCopy);
+                }
+            }
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -781,6 +938,7 @@ void CreateEntities(SGM::Result &rResult,
     std::set<entity *> sEntities;
     std::vector<size_t> aBodies, aVolumes, aFaces, aEdges;
     std::vector<body *> aSheetBodies;
+    BodyToTransformMapType mBodyToTransforms;
 
     // Create entities in a specific order by STEP #ID line number,
     // from 1 to maxSTEPLineNumber.
@@ -946,7 +1104,7 @@ void CreateEntities(SGM::Result &rResult,
             }
         }
 
-    ConnectVolumesToBodies(mSTEPData,mIDToEntityMap,sEntities,aBodies);
+    ConnectVolumesToBodies(mSTEPData,mIDToEntityMap,sEntities,aBodies,mBodyToTransforms);
 
     ConnectFacesAndEdgesToVolumes(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges,aVolumes);
 
@@ -955,6 +1113,10 @@ void CreateEntities(SGM::Result &rResult,
     ConnectCurvesAndVerticesToEdges(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges);
 
     ConnectSheetBodies(rResult,aSheetBodies);
+
+    ApplyBodyTransforms(rResult, mBodyToTransforms);
+
+    FlattenAssemblies(rResult, maxSTEPLineNumber, mSTEPData, mIDToEntityMap, sEntities);
 
     // push set of entities into vector
     // TODO: could the caller just live with us returning the set? why copy to vector?
