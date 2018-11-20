@@ -21,6 +21,24 @@
 
 #include "test_utility.h"
 
+TEST(math_check, point_in_face_vertex_one_edge_case )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    SGM::Edge EdgeID=*(sEdges.begin());
+    SGM::ImprintPoint(rResult,SGM::Point3D(1,0,0),EdgeID);
+    SGM::PointInEntity(rResult,SGM::Point3D(0.5,0,0),FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, step_save_wire_body )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
