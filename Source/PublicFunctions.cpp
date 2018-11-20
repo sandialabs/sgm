@@ -883,6 +883,36 @@ double SGM::GetToleranceOfEdge(SGM::Result     &rResult,
     return pEdge->GetTolerance();
     }
 
+size_t SGM::FindAdjacentFaces(SGM::Result            &rResult,
+                              SGM::Face        const &FaceID,
+                              std::vector<SGM::Face> &aFaces)
+    {
+    SGMInternal::face const *pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    std::set<SGMInternal::face *,SGMInternal::EntityCompare> sFaces;
+    size_t nAnswer=SGMInternal::FindAdjacentFaces(rResult,pFace,sFaces);
+    for(SGMInternal::face *pFace : sFaces)
+        {
+        aFaces.push_back(SGM::Face(pFace->GetID()));
+        }
+    return nAnswer;
+    }
+
+size_t SGM::FindCommonEdgesFromFaces(SGM::Result            &rResult,
+                                     SGM::Face        const &FaceID1,   
+                                     SGM::Face        const &FaceID2,   
+                                     std::vector<SGM::Edge> &aEdges)
+    {
+    SGMInternal::face const *pFace1=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID1.m_ID);
+    SGMInternal::face const *pFace2=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID2.m_ID);
+    std::vector<SGMInternal::edge *> aedges;
+    size_t nAnswer=SGMInternal::FindCommonEdgesFromFaces(rResult,pFace1,pFace2,aedges);
+    for(SGMInternal::edge *pEdge : aedges)
+        {
+        aEdges.push_back(SGM::Edge(pEdge->GetID()));
+        }
+    return nAnswer;
+    }
+
 SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,
                                             SGM::Edge const &EdgeID)
     {

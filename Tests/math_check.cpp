@@ -21,6 +21,40 @@
 
 #include "test_utility.h"
 
+TEST(math_check, find_adjacent_faces )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    auto iter=sFaces.begin();
+    SGM::Face FaceID1=*iter;
+    std::vector<SGM::Face> aFaces;
+    EXPECT_EQ(SGM::FindAdjacentFaces(rResult,FaceID1,aFaces),5);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, find_common_edges )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    auto iter=sFaces.begin();
+    SGM::Face FaceID1=*iter;
+    ++iter;
+    SGM::Face FaceID2=*iter;
+    std::vector<SGM::Edge> aEdges;
+    EXPECT_EQ(SGM::FindCommonEdgesFromFaces(rResult,FaceID1,FaceID2,aEdges),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, lemon_torus )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

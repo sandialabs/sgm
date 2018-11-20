@@ -106,6 +106,24 @@ namespace SGM
     SGM_EXPORT double GetToleranceOfEdge(SGM::Result     &rResult,
                                          SGM::Edge const &EdgeID);
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Other Topology Functions.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+    // Returns all faces including the given one that share a vertex or
+    // edge with the given face.
+
+    SGM_EXPORT size_t FindAdjacentFaces(SGM::Result            &rResult,
+                                        SGM::Face        const &FaceID,
+                                        std::vector<SGM::Face> &aFaces);
+
+    SGM_EXPORT size_t FindCommonEdgesFromFaces(SGM::Result            &rResult,
+                                               SGM::Face        const &FaceID1,   
+                                               SGM::Face        const &FaceID2,   
+                                               std::vector<SGM::Edge> &aEdges);
+
     } // End of SGM namespace
 
 #endif // SGM_TOPOLOGY_CLASSES_H
