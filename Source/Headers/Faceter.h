@@ -74,11 +74,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
 
 void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies,
-                   std::vector<SGM::Point3D>      const *pPoint3D=nullptr,
-                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
-                   std::vector<size_t>            const *aTris=nullptr,
-                   SGM::BoxTree                         *Tree=nullptr);
+                   std::vector<unsigned int>            &aAdjacencies);
 
 
 //  Devides all triangles into four triangles in the following way;
