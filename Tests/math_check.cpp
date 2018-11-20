@@ -21,6 +21,35 @@
 
 #include "test_utility.h"
 
+TEST(math_check, lemon_torus )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,0.25,false);
+
+    SGM::Point3D Pos(0.25,0,0.1),ClosePos;
+    SGM::Point2D GuessUV(SGM_TWO_PI,0);
+    SGM::Point2D uv=SGM::SurfaceInverse(rResult,SurfID,Pos,&ClosePos,&GuessUV);
+    EXPECT_TRUE(SGM::NearEqual(uv.m_u,SGM_TWO_PI,SGM_ZERO,false));
+
+    SGM::Point2D GuessUV2(0,0);
+    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,Pos,&ClosePos,&GuessUV2);
+    EXPECT_TRUE(SGM::NearEqual(uv2.m_u,0,SGM_ZERO,false));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, pinched_torus )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, face_color_test )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

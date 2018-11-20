@@ -241,37 +241,27 @@ SGM::Point2D torus::Inverse(SGM::Point3D const &Pos,
         {
         // Check for points on the axis, and on the seam.
 
-        if(m_Domain.m_UDomain.InInterval(dU,SGM_ZERO)==false)
+        SGM::Vector3D TestVec=Pos-m_Center;
+        if( SGM::NearEqual(TestVec%m_YAxis,0,SGM_MIN_TOL,false) )
             {
-            if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
-                SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+            double dXDot=TestVec%m_XAxis;
+            if( SGM_MIN_TOL<dXDot)
                 {
-                dU=m_Domain.m_UDomain.m_dMax;
+                // On seam.
+                if(SGM_HALF_PI<pGuess->m_u)
+                    {
+                    dU=SGM_TWO_PI;
+                    }
+                else
+                    {
+                    dU=0.0;
+                    }
                 }
-            else if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false) &&
-                     SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+            else if(-SGM_MIN_TOL<dXDot)
                 {
-                dU=m_Domain.m_UDomain.m_dMin;
+                // On axis.
+                dU=pGuess->m_u;
                 }
-            }
-        if( m_nKind!=SGM::TorusKindType::LemonType &&
-            m_nKind!=SGM::TorusKindType::AppleType &&
-            m_Domain.m_VDomain.InInterval(dV,SGM_ZERO)==false)
-            {
-            if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false) &&
-                SGM::NearEqual(dV,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
-                {
-                dV=m_Domain.m_VDomain.m_dMax;
-                }
-            else if( SGM::NearEqual(pGuess->m_v,m_Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false) &&
-                     SGM::NearEqual(dV,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
-                {
-                dV=m_Domain.m_VDomain.m_dMin;
-                }
-            }
-        else if(SGM::NearEqual(fabs(SGM::UnitVector3D(Pos-m_Center)%m_ZAxis),1.0,SGM_MIN_TOL,false))
-            {
-            dU=pGuess->m_u;
             }
         }
 
