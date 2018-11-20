@@ -644,6 +644,7 @@ bool RunInternalTest(SGM::Result &rResult,
         // call a visitor that gets bounding boxes and transforms the bounding boxes
         SGMInternal::UnitTestGetBoxVisitor boxVisitor(rResult, Deform);
         pThing->VisitEntities(boxVisitor);
+        pThing->Accept(boxVisitor);
         }
     else if(nTestNumber==4) // SortablePlane testing
         {
