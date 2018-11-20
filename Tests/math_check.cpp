@@ -548,6 +548,8 @@ TEST(math_check, revolve_surface_save_step)
     SGM::UnitVector3D Axis(1,0,0);
     SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
 
+    SGM::SaveSGM(rResult,"GTest_revolve_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
+
     std::vector<SGM::Edge> aEdges;
     std::vector<SGM::EdgeSideType> aTypes;
     SGM::Body BodyID=SGM::CreateSheetBody(rResult,RevolveID,aEdges,aTypes);
@@ -666,11 +668,15 @@ TEST(math_check, extrude_hermit)
     SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
 
+    SGM::SaveSGM(rResult,"GTest_hermite_test.sgm",CurveID,SGM::TranslatorOptions());
+
     SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
 
     SGM::UnitVector3D Axis(0,0,1);
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
+
+    SGM::SaveSGM(rResult,"GTest_extrude_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
     EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
@@ -4971,6 +4977,8 @@ TEST(math_check, plane_cone_intersection_point)
     SGM::IntersectSurfaces(rResult,PlaneID,ConeID,aCurves);
     EXPECT_TRUE(SGM::GetCurveType(rResult,aCurves[0])==SGM::EntityType::PointCurveType);
 
+    SGM::SaveSGM(rResult,"GTest_point_curve_test.sgm",aCurves[0],SGM::TranslatorOptions());
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -5160,6 +5168,8 @@ TEST(math_check, line_nub_surface_intersect)
     aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
     aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::SaveSGM(rResult,"GTest_NUB_surface_test.sgm",NUBSurfaceID,SGM::TranslatorOptions());
 
     // Test with a line that hits two points.
 
