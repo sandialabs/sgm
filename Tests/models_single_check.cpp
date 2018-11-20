@@ -76,6 +76,20 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(models_single_check, inport_txt_points)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::string sFile=get_models_path();
+    sFile+="/Points.txt";
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::ReadFile(rResult,sFile,aEntities,aLog,SGM::TranslatorOptions());
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(models_single_check, scan_directory)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
