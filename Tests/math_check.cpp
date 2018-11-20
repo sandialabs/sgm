@@ -21,6 +21,20 @@
 
 #include "test_utility.h"
 
+TEST(math_check, step_save_wire_body )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,0));
+    std::set<SGM::Edge> sEdges;
+    sEdges.insert(EdgeID);
+    SGM::CreateWireBody(rResult,sEdges);
+    SGM::SaveSTEP(rResult,"Gtest_wire_save.stp",SGM::Thing(),SGM::TranslatorOptions());
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, three_surface_intersect )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
