@@ -69,6 +69,13 @@ inline std::string get_models_file_path(std::string const &file_name)
     return full_path.string();
 }
 
+// return a path to the models directory
+inline std::string get_models_path()
+{
+    static const FilePath models_directory(SGM_MODELS_DIRECTORY);
+    return models_directory.string();
+}
+
 // return a full path to a given file name in the models directory
 inline std::string get_models_ouo_file_path(std::string const &file_name)
 {

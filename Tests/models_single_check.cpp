@@ -76,6 +76,18 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(models_single_check, scan_directory)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    std::string sDirectory=get_models_path();
+    sDirectory+="/ScanTest";
+    std::string sOutputName=sDirectory;
+    sOutputName+="Output.txt";
+    SGM::ScanDirectory(rResult,sDirectory,sOutputName);
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(models_single_check, import_flexyhose)
 {
     const char* file_name = "flexyhose.stp";
