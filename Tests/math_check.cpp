@@ -21,6 +21,34 @@
 
 #include "test_utility.h"
 
+TEST(math_check, three_surface_intersect )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Surface SurfID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
+    SGM::Surface SurfID3=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    SGM::IntersectThreeSurfaces(rResult,SurfID1,SurfID2,SurfID3,aPoints);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, tangent_spheres_intersect )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID1=SGM::CreateSphereSurface(rResult,SGM::Point3D(0,0,0),1);
+    SGM::Surface SurfID2=SGM::CreateSphereSurface(rResult,SGM::Point3D(2,0,0),1);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfID1,SurfID2,aCurves);
+    EXPECT_EQ(aCurves.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, circle_circle_tangent_intersections )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

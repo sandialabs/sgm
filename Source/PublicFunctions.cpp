@@ -2277,6 +2277,17 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
     return SGMInternal::IntersectEdgeAndPlane(rResult, pEdge, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
 }
 
+void SGM::IntersectThreeSurfaces(SGM::Result                &rResult,
+                                 SGM::Surface         const &SurfaceID1,
+                                 SGM::Surface         const &SurfaceID2,
+                                 SGM::Surface         const &SurfaceID3,
+                                 std::vector<SGM::Point3D>  &aPoints)
+{
+    SGMInternal::surface *pSurf1 = (SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID1.m_ID);
+    SGMInternal::surface *pSurf2 = (SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID2.m_ID);
+    SGMInternal::surface *pSurf3 = (SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID3.m_ID);
+    return SGMInternal::IntersectThreeSurfaces(rResult,pSurf1,pSurf2,pSurf3,aPoints);
+}
 
 SGM::Curve SGM::CreatePointCurve(SGM::Result           &rResult,
                                  SGM::Point3D          &Pos,
