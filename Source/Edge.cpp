@@ -31,8 +31,11 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
                 // Only use the edge boxes.
                 auto startVertex = GetStart();
                 auto endVertex = GetEnd();
-                SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
-                m_Box.Stretch(box);
+                if(startVertex && endVertex)
+                    {
+                    SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
+                    m_Box.Stretch(box);
+                    }
                 break;
                 }
             default:

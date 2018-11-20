@@ -500,6 +500,28 @@ body *CreateBlock(SGM::Result        &rResult,
         pEdge47->SetCurve(pLine47);
         }
 
+    if(rResult.GetDebugFlag()==5)   // Create a bad part for testing
+        {
+        pVolume->SetBody(nullptr);
+        std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
+        face *pFace=*(sFaces.begin());
+        pFace->SetVolume(nullptr);
+        std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+        edge *pEdge=*(sEdges.begin());
+        pEdge->RemoveFace(pFace);
+        pEdge->GetStart()->RemoveEdge(pEdge);
+        pEdge->GetEnd()->RemoveEdge(pEdge);
+        auto iter=sEdges.begin();
+        ++iter;
+        edge *pEdge1=*iter;
+        ++iter;
+        edge *pEdge2=*iter;
+        pFace->RemoveEdge(rResult,pEdge1);
+        pFace->AddEdge(rResult,pEdge1,SGM::EdgeSideType::FaceOnLeftType);
+        pEdge2->SetStart(nullptr);
+        pEdge2->SetEnd(nullptr);
+        }
+
     return pBody;
     }
 

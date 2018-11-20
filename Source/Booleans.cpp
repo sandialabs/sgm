@@ -94,8 +94,6 @@ vertex *ImprintPoint(SGM::Result        &rResult,
     return pAnswer;
     }
 
-} // End of SGMInternal namespace.
-#if 0
 void TrimCurveWithFaces(SGM::Result               &rResult,
                         curve                     *pCurve,
                         face                const *pFace0,
@@ -814,4 +812,4 @@ void UniteBodies(SGM::Result &rResult,
     }
 
 } // End of SGMInternal namespace.
-#endif
+

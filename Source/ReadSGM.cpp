@@ -366,9 +366,13 @@ int FindSides(std::vector<std::string> const &aArgs)
     size_t Index1;
     for(Index1=2;Index1<nArgs;++Index1)
         {
-        if(aArgs[Index1]=="Sides")
+        if(aArgs[Index1]=="DoubleSided")
             {
-            return GetInt(aArgs[Index1+1]);
+            return 2;
+            }
+        else if(aArgs[Index1]=="Membrane")
+            {
+            return 0;
             }
         }
     return 1;

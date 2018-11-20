@@ -899,79 +899,6 @@ void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
     mSTEPTagMap.emplace("VIEW_VOLUME", STEPTag::VIEW_VOLUME);
     }
 
-    void SplitFile(FILE *pFile,
-                   std::string const &)//FileName)
-    {
-        // Read the file.
-
-        std::set<std::string> sBadTags;
-        sBadTags.insert("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION");
-        sBadTags.insert("STYLED_ITEM");
-        sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
-        sBadTags.insert("SURFACE_STYLE_USAGE");
-        sBadTags.insert("SURFACE_SIDE_STYLE");
-        sBadTags.insert("SURFACE_STYLE_FILL_AREA");
-        sBadTags.insert("FILL_AREA_STYLE");
-        sBadTags.insert("FILL_AREA_STYLE_COLOUR");
-        sBadTags.insert("COLOUR_RGB");
-        sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
-        sBadTags.insert("CURVE_STYLE");
-        sBadTags.insert("DRAUGHTING_PRE_DEFINED_CURVE_FONT");
-        sBadTags.insert("APPLICATION_PROTOCOL_DEFINITION");
-        sBadTags.insert("PRODUCT_DEFINITION_CONTEXT");
-        sBadTags.insert("PRODUCT_CATEGORY_RELATIONSHIP");
-        sBadTags.insert("PRODUCT_CATEGORY");
-        sBadTags.insert("PRODUCT_RELATED_PRODUCT_CATEGORY");
-
-        std::map<int, std::vector<size_t> > aIDMap;
-        std::string sFileLine;
-        while (ReadFileLine(pFile, sFileLine))
-            {
-            std::vector<size_t> aIDs;
-            if (sFileLine.front() == '#')
-                {
-                std::string sTag;
-                char *pLine = const_cast<char *>(sFileLine.c_str());
-                const char *pLineAfterStepTag = FindStepTag(pLine, sTag);
-                if (sTag.empty())
-                    throw std::runtime_error(sFileLine);
-                if (sBadTags.find(sTag) == sBadTags.end())
-                    {
-                    size_t nLineNumber;
-                    ReadIndex(pLine + 1, &nLineNumber);
-                    FindIndicesAll(pLineAfterStepTag, aIDs);
-                    aIDMap[(int) nLineNumber] = aIDs;
-                    }
-                }
-            sFileLine.clear();
-            }
-        fclose(pFile);
-
-        // Create a directed graph.
-
-        std::set<size_t> sVertices;
-        std::set<SGM::GraphEdge> sEdges;
-        size_t nCount = 0;
-        for (auto MapIter : aIDMap)
-            {
-            size_t nLine = (size_t) MapIter.first;
-            sVertices.insert(nLine);
-            std::vector<size_t> const &aIDs = MapIter.second;
-            for (auto nID : aIDs)
-                {
-                sEdges.insert(SGM::GraphEdge(nLine, nID, nCount, true));
-                ++nCount;
-                }
-            }
-        SGM::Graph graph(sVertices, sEdges);
-
-        std::vector<size_t> aSources;
-        graph.FindSources(aSources);
-
-        std::vector<SGM::Graph> aComponents;
-        graph.FindComponents(aComponents);
-    }
-
 // Given a input file stream, get a map of (#ID->STEPLineData)
 // Return value is the maximum STEP line number (#ID) in the map
 
@@ -1025,16 +952,6 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         //throw open_error;
         return 0;
         }
-
-
-    // Split the file.
-
-    //TODO: make SPlitFile work with std::ifstream
-    //    if(Options.m_bSplitFile)
-    //        {
-    //        SplitFile(pFile,FileName);
-    //        return 0;
-    //        }
 
     // Set up the STEP Tag map
 

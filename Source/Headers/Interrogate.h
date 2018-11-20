@@ -15,6 +15,11 @@ bool PointInEntity(SGM::Result        &rResult,
                    entity       const *pEntity,
                    double              dTolerance=SGM_MIN_TOL);
 
+bool PointInVolume(SGM::Result        &rResult,
+                   SGM::Point3D const &Point,
+                   volume       const *pVolume,
+                   double              dTolerance=SGM_MIN_TOL);
+
 void PointsInVolumes(SGM::Result                         &rResult,
                      std::vector<SGM::Point3D>     const &aPoints,
                      std::vector<std::vector<volume *> > &aaVolumes,

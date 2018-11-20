@@ -613,6 +613,18 @@ void SGM::ReduceToUsedPoints(SGM::Result  &rResult,
     pComplex->ReduceToUsedPoints();
     }
 
+std::vector<SGM::Entity> SGM::FindTopLevelEntities(SGM::Result &rResult)
+    {
+    std::vector<SGMInternal::entity *> aEnts=rResult.GetThing()->GetTopLevelEntities();
+    std::vector<SGM::Entity> aAnswer;
+    aAnswer.reserve(aEnts.size());
+    for(auto pEnt : aEnts)
+        {
+        aAnswer.push_back(SGM::Entity(pEnt->GetID()));
+        }
+    return aAnswer;
+    }
+
 void SGM::FindBodies(SGM::Result         &rResult,
                      SGM::Entity   const &EntityID,
                      std::set<SGM::Body> &sBodies,
@@ -2147,7 +2159,6 @@ void SGM::ReduceToVolumes(SGM::Result           &rResult,
         }
     }
 
-/*
 std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
                                               SGM::Edge   &EdgeID,
                                               SGM::Face   &FaceID)
@@ -2172,7 +2183,6 @@ void SGM::UniteBodies(SGM::Result &rResult,
     SGMInternal::body *pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
     SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
     }
-*/
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {
@@ -2238,10 +2248,11 @@ size_t SGM::IntersectEdgeAndPlane(SGM::Result                        &rResult,
 }
 
 
-SGM::Curve SGM::CreatePointCurve(SGM::Result  &rResult,
-                                 SGM::Point3D &Pos)
+SGM::Curve SGM::CreatePointCurve(SGM::Result           &rResult,
+                                 SGM::Point3D          &Pos,
+                                 SGM::Interval1D const *pDomain)
 {
-    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos);
+    SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos,pDomain);
     return {pCurve->GetID()};
 }
 

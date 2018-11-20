@@ -36,7 +36,7 @@ void expect_import_success(std::string const &file_name, SGM::Result &rResult)
     std::string file_path = get_models_file_path(file_name);
     SGM::ReadFile(rResult, file_path, entities, log, options);
     auto resultType = rResult.GetResult();
-    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+    ASSERT_EQ(resultType, SGM::ResultTypeOK);
 }
 
 
@@ -73,6 +73,43 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGM::Result rResult(pThing);
     expect_import_ouo_success(ouo_file_name, rResult);
     expect_check_success(rResult);
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_single_check, import_flexyhose)
+{
+    const char* file_name = "flexyhose.stp";
+    SCOPED_TRACE(file_name);
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string file_path = get_models_file_path(file_name);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+
+    // TODO this parts needs to check also.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_single_check, import_Closed_Kelvin_BCC_4_4_4)
+{
+    const char* file_name = "Closed_Kelvin_BCC_4_4_4.sgm";
+    SCOPED_TRACE(file_name);
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    expect_import_success(file_name, rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Complex> sComplexes;
+    SGM::Thing ThingID;
+    SGM::FindComplexes(rResult,ThingID,sComplexes);
+    SGM::Complex ComplexID=*(sComplexes.begin());
+    SGM::CoverComplex(rResult,ComplexID);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 

@@ -455,16 +455,25 @@ bool RunInternalTest(SGM::Result &rResult,
         }
     else if(nTestNumber==3) // Entity Visitor/Accept interface
         {
-        std::vector<SGMInternal::entity*> aEntities;
-        SGM::Point3D thePoint3D(0.0,0.0,0.0);
-        SGM::UnitVector3D theUnitVector3D(1.0,0.0,0.0);
-        SGM::UnitVector3D otherUnitVector3D(0.0,1.0,0.0);
-        std::vector<int> aIntVector(3,1);
-        std::vector<SGM::Point3D> aPoint3D = {{0,0,0},{1,0,0},{0,2,0},{0,0,3}};
-        std::vector<SGM::Vector3D> aVector3D = {{1,0,0},{0,1,0},{0,0,1},{1,1,1}};
-        std::vector<SGM::Point4D> aPoint4D = {{1,0,0,1},{0,1,0,1},{0,0,1,1},{1,1,1,1}};
-        std::vector<double> aDoubleVector(4,1.0);
-        
+        std::vector<SGMInternal::entity *> aEntities;
+        SGM::Point3D thePoint3D(0.0, 0.0, 0.0);
+        SGM::UnitVector3D theUnitVector3D(1.0, 0.0, 0.0);
+        SGM::UnitVector3D otherUnitVector3D(0.0, 1.0, 0.0);
+        std::vector<int> aIntVector(3, 1);
+        std::vector<SGM::Point3D> aPoint3D = {{0, 0, 0},
+                                              {1, 0, 0},
+                                              {0, 2, 0},
+                                              {0, 0, 3}};
+        std::vector<SGM::Vector3D> aVector3D = {{1, 0, 0},
+                                                {0, 1, 0},
+                                                {0, 0, 1},
+                                                {1, 1, 1}};
+        std::vector<SGM::Point4D> aPoint4D = {{1, 0, 0, 1},
+                                              {0, 1, 0, 1},
+                                              {0, 0, 1, 1},
+                                              {1, 1, 1, 1}};
+        std::vector<double> aDoubleVector(4, 1.0);
+
         // create one of everything
         SGMInternal::thing *pThing = rResult.GetThing();
         auto *pAssembly = new SGMInternal::assembly(rResult);
@@ -491,7 +500,8 @@ bool RunInternalTest(SGM::Result &rResult,
         aEntities.push_back(pCircle);
         auto *pEllipse = new SGMInternal::ellipse(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0, 2.0);
         aEntities.push_back(pEllipse);
-        auto *pHyperbola = new SGMInternal::hyperbola(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0, 2.0);
+        auto *pHyperbola = new SGMInternal::hyperbola(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0,
+                                                      2.0);
         aEntities.push_back(pHyperbola);
         auto *pParabola = new SGMInternal::parabola(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0);
         aEntities.push_back(pParabola);
@@ -499,25 +509,26 @@ bool RunInternalTest(SGM::Result &rResult,
         aEntities.push_back(pHermite);
         auto *pNUBcurve = new SGMInternal::NUBcurve(rResult, aPoint3D, aDoubleVector);
         aEntities.push_back(pNUBcurve);
-        auto *pNURBcurve = new SGMInternal::NURBcurve(rResult,aPoint4D, aDoubleVector);
+        auto *pNURBcurve = new SGMInternal::NURBcurve(rResult, aPoint4D, aDoubleVector);
         aEntities.push_back(pNURBcurve);
         auto *pPointCurve = new SGMInternal::PointCurve(rResult, thePoint3D);
         aEntities.push_back(pPointCurve);
-        auto *pTorusKnot = new SGMInternal::TorusKnot(rResult,thePoint3D,theUnitVector3D,otherUnitVector3D,1.0,3.0,1,3);
+        auto *pTorusKnot = new SGMInternal::TorusKnot(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0, 3.0,
+                                                      1, 3);
         aEntities.push_back(pTorusKnot);
         auto *pPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
         aEntities.push_back(pPlane);
-        auto *pCylinder = new SGMInternal::cylinder(rResult,thePoint3D,theUnitVector3D,1.0);
+        auto *pCylinder = new SGMInternal::cylinder(rResult, thePoint3D, theUnitVector3D, 1.0);
         aEntities.push_back(pCylinder);
-        auto *pCone = new SGMInternal::cone(rResult,thePoint3D,theUnitVector3D,1.0,45);
+        auto *pCone = new SGMInternal::cone(rResult, thePoint3D, theUnitVector3D, 1.0, 45);
         aEntities.push_back(pCone);
-        auto *pSphere = new SGMInternal::sphere(rResult,thePoint3D,1.0);
+        auto *pSphere = new SGMInternal::sphere(rResult, thePoint3D, 1.0);
         aEntities.push_back(pSphere);
-        auto *pTorus = new SGMInternal::torus(rResult,thePoint3D,theUnitVector3D,1.0,2.0,false);
+        auto *pTorus = new SGMInternal::torus(rResult, thePoint3D, theUnitVector3D, 1.0, 2.0, false);
         aEntities.push_back(pTorus);
-        auto *pRevolve = new SGMInternal::revolve(rResult,thePoint3D,theUnitVector3D,pLine);
+        auto *pRevolve = new SGMInternal::revolve(rResult, thePoint3D, theUnitVector3D, pLine);
         aEntities.push_back(pRevolve);
-        auto *pExtrude = new SGMInternal::extrude(rResult,theUnitVector3D,pLine);
+        auto *pExtrude = new SGMInternal::extrude(rResult, theUnitVector3D, pLine);
         aEntities.push_back(pExtrude);
         //auto *pOffset = new SGMInternal::offset(rResult,1.0,thePlane);
         //aEntities.push_back(pOffset);
@@ -528,43 +539,43 @@ bool RunInternalTest(SGM::Result &rResult,
         pFace->SetSurface(pSphere);
 
         // create NUBsurface
-        std::vector<double> aUKnots = {0,0,0,1,1,1};
-        std::vector<double> aVKnots=aUKnots;
+        std::vector<double> aUKnots = {0, 0, 0, 1, 1, 1};
+        std::vector<double> aVKnots = aUKnots;
         std::vector<std::vector<SGM::Point3D> > aaPoints3D;
         std::vector<SGM::Point3D> aPoints;
-        aPoints.assign(3,SGM::Point3D(0,0,0));
+        aPoints.assign(3, SGM::Point3D(0, 0, 0));
         aaPoints3D.push_back(aPoints);
         aaPoints3D.push_back(aPoints);
         aaPoints3D.push_back(aPoints);
-        aaPoints3D[0][0]=SGM::Point3D(0.0,0.0,1.0);
-        aaPoints3D[0][1]=SGM::Point3D(0.0,1.0,0.0);
-        aaPoints3D[0][2]=SGM::Point3D(0.0,2.0,-1.0);
-        aaPoints3D[1][0]=SGM::Point3D(1.0,0.0,0.0);
-        aaPoints3D[1][1]=SGM::Point3D(1.0,1.0,0.0);
-        aaPoints3D[1][2]=SGM::Point3D(1.0,2.0,0.0);
-        aaPoints3D[2][0]=SGM::Point3D(2.0,0.0,-1.0);
-        aaPoints3D[2][1]=SGM::Point3D(2.0,1.0,0.0);
-        aaPoints3D[2][2]=SGM::Point3D(2.0,2.0,1.0);
-        auto *pNUBsurface = new SGMInternal::NUBsurface(rResult,aaPoints3D,aUKnots,aVKnots);
+        aaPoints3D[0][0] = SGM::Point3D(0.0, 0.0, 1.0);
+        aaPoints3D[0][1] = SGM::Point3D(0.0, 1.0, 0.0);
+        aaPoints3D[0][2] = SGM::Point3D(0.0, 2.0, -1.0);
+        aaPoints3D[1][0] = SGM::Point3D(1.0, 0.0, 0.0);
+        aaPoints3D[1][1] = SGM::Point3D(1.0, 1.0, 0.0);
+        aaPoints3D[1][2] = SGM::Point3D(1.0, 2.0, 0.0);
+        aaPoints3D[2][0] = SGM::Point3D(2.0, 0.0, -1.0);
+        aaPoints3D[2][1] = SGM::Point3D(2.0, 1.0, 0.0);
+        aaPoints3D[2][2] = SGM::Point3D(2.0, 2.0, 1.0);
+        auto *pNUBsurface = new SGMInternal::NUBsurface(rResult, aaPoints3D, aUKnots, aVKnots);
         aEntities.push_back(pNUBsurface);
 
         // create NURBsurface
         std::vector<std::vector<SGM::Point4D> > aaPoints4D;
         std::vector<SGM::Point4D> aPoints4D;
-        aPoints4D.assign(3,SGM::Point4D(0,0,0,1));
+        aPoints4D.assign(3, SGM::Point4D(0, 0, 0, 1));
         aaPoints4D.push_back(aPoints4D);
         aaPoints4D.push_back(aPoints4D);
         aaPoints4D.push_back(aPoints4D);
-        aaPoints4D[0][0]=SGM::Point4D(0.0,0.0,1.0,1);
-        aaPoints4D[0][1]=SGM::Point4D(0.0,1.0,0.0,1);
-        aaPoints4D[0][2]=SGM::Point4D(0.0,2.0,-1.0,1);
-        aaPoints4D[1][0]=SGM::Point4D(1.0,0.0,0.0,1);
-        aaPoints4D[1][1]=SGM::Point4D(1.0,1.0,0.0,1);
-        aaPoints4D[1][2]=SGM::Point4D(1.0,2.0,0.0,1);
-        aaPoints4D[2][0]=SGM::Point4D(2.0,0.0,-1.0,1);
-        aaPoints4D[2][1]=SGM::Point4D(2.0,1.0,0.0,1);
-        aaPoints4D[2][2]=SGM::Point4D(2.0,2.0,1.0,1);
-        auto *pNURBsurface = new SGMInternal::NURBsurface(rResult,aaPoints4D,aUKnots,aVKnots);
+        aaPoints4D[0][0] = SGM::Point4D(0.0, 0.0, 1.0, 1);
+        aaPoints4D[0][1] = SGM::Point4D(0.0, 1.0, 0.0, 1);
+        aaPoints4D[0][2] = SGM::Point4D(0.0, 2.0, -1.0, 1);
+        aaPoints4D[1][0] = SGM::Point4D(1.0, 0.0, 0.0, 1);
+        aaPoints4D[1][1] = SGM::Point4D(1.0, 1.0, 0.0, 1);
+        aaPoints4D[1][2] = SGM::Point4D(1.0, 2.0, 0.0, 1);
+        aaPoints4D[2][0] = SGM::Point4D(2.0, 0.0, -1.0, 1);
+        aaPoints4D[2][1] = SGM::Point4D(2.0, 1.0, 0.0, 1);
+        aaPoints4D[2][2] = SGM::Point4D(2.0, 2.0, 1.0, 1);
+        auto *pNURBsurface = new SGMInternal::NURBsurface(rResult, aaPoints4D, aUKnots, aVKnots);
         aEntities.push_back(pNURBsurface);
 
         // call the visitor the base class Visitor class that does nothing
@@ -572,15 +583,42 @@ bool RunInternalTest(SGM::Result &rResult,
         pThing->VisitEntities(basicVisitor);
 
         // a transform that is not just a scale or translation
-        SGM::Vector4D XAxis4D = {3,2,2,7};
-        SGM::Vector4D YAxis4D = {2,3,2,7};
-        SGM::Vector4D ZAxis4D = {2,2,3,7};
-        SGM::Vector4D Translate4D = {1,2,3,4};
-        SGM::Transform3D Deform(XAxis4D,YAxis4D,ZAxis4D,Translate4D);
+        SGM::Vector4D XAxis4D = {3, 2, 2, 7};
+        SGM::Vector4D YAxis4D = {2, 3, 2, 7};
+        SGM::Vector4D ZAxis4D = {2, 2, 3, 7};
+        SGM::Vector4D Translate4D = {1, 2, 3, 4};
+        SGM::Transform3D Deform(XAxis4D, YAxis4D, ZAxis4D, Translate4D);
 
         // call a visitor that gets bounding boxes and transforms the bounding boxes
         SGMInternal::UnitTestGetBoxVisitor boxVisitor(rResult, Deform);
         pThing->VisitEntities(boxVisitor);
+        }
+    else if(nTestNumber==4) // SortablePlane testing
+        {
+        std::vector<SGM::Point3D> aPoints1,aPoints2;
+        aPoints1.push_back(SGM::Point3D(0,0,0));
+        aPoints1.push_back(SGM::Point3D(1,0,0));
+        aPoints1.push_back(SGM::Point3D(0,1,0));
+        aPoints2.push_back(SGM::Point3D(0,0,1));
+        aPoints2.push_back(SGM::Point3D(1,0,1));
+        aPoints2.push_back(SGM::Point3D(0,1,1));
+
+        SGMInternal::SortablePlane SP1(aPoints1);
+        SGMInternal::SortablePlane SP2(aPoints2);
+
+        SP1.SetMinTolerance(0.01);
+
+        bool bTest=SP1<SP2;
+        bTest=(SP1==SP2);
+
+        SP1.Origin();
+        SP1.Normal();
+        SP1.Tolerance();
+
+        SGM::Vector3D Offset;
+        bTest=SP1.Parallel(SP2,Offset,0.001);
+
+        bAnswer=true;
         }
 
     return bAnswer;

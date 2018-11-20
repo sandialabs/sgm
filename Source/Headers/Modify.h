@@ -11,11 +11,9 @@
 namespace SGMInternal
 {
 
-/*
 void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody);
-*/
 
 void ReduceToVolumes(SGM::Result                      &rResult,
                      body                             *pBody,

@@ -119,11 +119,6 @@ class surface : public entity
 
         SGM::Interval2D const &GetDomain() const;
 
-        double FindAreaOfParametricTriangle(SGM::Result        &rResult,
-                                            SGM::Point2D const &PosA,
-                                            SGM::Point2D const &PosB,
-                                            SGM::Point2D const &PosC) const;
-
         void SnapToDomain(SGM::Point2D &uv) const;
 
         // Returns the two-dimensional unit vector in the parameters space 

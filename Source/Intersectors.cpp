@@ -1306,7 +1306,7 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
     //  IsEmpty, one point tangent or not, two points.
 
     // A point is on a cone with apex at the origin and axis the positive 
-    // z-axis if and only if x^2+y^2=(cos(half angle)/sin(half angle))^2*z^2.
+    // z-axis if and only if x^2+y^2=(sin(half angle)/cos(half angle))^2*z^2.
 
     SGM::Point3D Apex=pCone->FindApex();
     SGM::UnitVector3D XVec=pCone->m_XAxis;

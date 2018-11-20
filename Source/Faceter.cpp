@@ -3981,12 +3981,14 @@ void FacetFace(SGM::Result                    &rResult,
             aPoints2D.push_back(SGM::Point2D(0,0));
             aPoints2D.push_back(SGM::Point2D(1,0));
             aPoints2D.push_back(SGM::Point2D(0,1));
+
             aPoints3D.push_back(SGM::Point3D(0,0,0));
             aPoints3D.push_back(SGM::Point3D(1,0,0));
+            aPoints3D.push_back(SGM::Point3D(101,-100,100));
+            aPoints3D.push_back(SGM::Point3D(4,0,0));
+            aPoints3D.push_back(SGM::Point3D(2,0,0));
             aPoints3D.push_back(SGM::Point3D(100,-100,100));
-            aPoints3D.push_back(SGM::Point3D(0,0,0));
-            aPoints3D.push_back(SGM::Point3D(1,0,0));
-            aPoints3D.push_back(SGM::Point3D(100,-100,100));
+
             aNormals.push_back(SGM::UnitVector3D(1,2,3));
             aNormals.push_back(SGM::UnitVector3D(1,2,3));
             aTriangles.push_back(0);

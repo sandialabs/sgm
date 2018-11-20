@@ -38,7 +38,7 @@ namespace SGMInternal
         double aData[5];
         };
 
-    SGM::Vector3D Snap(SGM::Vector3D const &Vec);
+    //SGM::Vector3D Snap(SGM::Vector3D const &Vec);
     
     // Returns the definite integral of the given function, f, from a to b.  
     // The integration is numerically performed using Romberg integration.

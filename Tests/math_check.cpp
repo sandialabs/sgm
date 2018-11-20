@@ -14,11 +14,218 @@
 #include "SGMTopology.h"
 #include "SGMModify.h"
 #include "SGMDisplay.h"
+#include "SGMAttribute.h"
 
 #define SGM_TIMER 
 #include "Timer.h"
 
 #include "test_utility.h"
+
+TEST(math_check, face_color_test )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::ChangeColor(rResult,FaceID,255,0,0);
+    int nRed,nGreen,nBlue;
+    SGM::GetColor(rResult,FaceID,nRed,nGreen,nBlue);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, unite_bodies_peninsula )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Body DiskID2=SGM::CreateDisk(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0),1);
+    SGM::UniteBodies(rResult,DiskID1,DiskID2);
+
+    // TODO part needs to check.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, unite_bodies_island )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Body DiskID2=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0),0.5);
+    SGM::UniteBodies(rResult,DiskID1,DiskID2);
+
+    // TODO part needs to check.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face_atoll)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,DiskID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),0.5);
+    SGM::Edge EdgeID1=SGM::CreateEdge(rResult,CircleID);
+    SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+
+    SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,DiskID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,2,0),SGM::Point3D(0,-2,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+    SGM::Merge(rResult,DiskID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, thing_tests)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Attribute AttributeID=SGM::CreateAttribute(rResult,"Test");
+    SGM::Thing ThingID;
+    SGM::AddAttribute(rResult,ThingID,AttributeID);
+    std::set<SGM::Attribute> sAttributes;
+    SGM::GetAttributes(rResult,ThingID,sAttributes,true);
+    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),ThingID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, graph_branch_tests)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Graph EdgeGraph(rResult,sFaces,true);
+    SGM::Face FaceID=*(sFaces.begin());
+    size_t nVert=FaceID.m_ID;
+    EdgeGraph.GetStar(nVert);
+    std::vector<SGM::Graph> aBranches;
+    EdgeGraph.FindBranches(aBranches);
+
+    std::set<size_t> sVertices;
+    sVertices.insert(0);
+    sVertices.insert(1);
+    std::set<SGM::GraphEdge> sEdges;
+    sEdges.insert(SGM::GraphEdge(0,1,1,true));
+    SGM::Graph DirectedGraph(sVertices,sEdges);
+    std::vector<size_t> aSources;
+    DirectedGraph.FindSources(aSources);
+        
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sgm_file_complex)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    std::vector<unsigned int> aTriangles,aSegments;
+    aTriangles.push_back(0);
+    aTriangles.push_back(1);
+    aTriangles.push_back(2);
+    aSegments.push_back(0);
+    aSegments.push_back(1);
+    SGM::CreateComplex(rResult,aPoints,aSegments,aTriangles);
+
+    SGM::TranslatorOptions Options;
+    SGM::SaveSGM(rResult,"GTestFile.sgm",SGM::Thing(),Options);
+    std::vector<std::string> aLog;
+    std::vector<SGM::Entity> aEntities;
+    SGM::ReadFile(rResult,"GTestFile.sgm",aEntities,aLog,Options);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sortable_planes)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::RunInternalTest(rResult,4);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, check_bad_bodies)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    rResult.SetDebugFlag(5); // Make a bad body in CreateBlock.
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings);
+
+    SGM::Assembly ID1;
+    SGM::Reference ID2;
+    SGM::Complex ID3;
+    SGM::Body ID4;
+    ID1.m_ID*=1;
+    ID2.m_ID*=1;
+    ID3.m_ID*=1;
+    ID4.m_ID*=1;
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, closest_point_on_things)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Volume> sVolume;
+    SGM::FindVolumes(rResult,BlockID,sVolume);
+    SGM::Volume VolumeID=*(sVolume.begin());
+    std::set<SGM::Vertex> sVertices;
+    SGM::FindVertices(rResult,BlockID,sVertices);
+    SGM::Vertex VertexID=*(sVertices.begin());
+
+    SGM::Point3D ClosePos;
+    SGM::Entity ClosestEntity;
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),VolumeID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(5,5,5),VolumeID,ClosePos,ClosestEntity,false);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),VertexID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),BlockID,ClosePos,ClosestEntity);
+    SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),SGM::Thing(),ClosePos,ClosestEntity);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(math_check, points_in_volumes)
 {
@@ -111,7 +318,8 @@ TEST(math_check, point_curve)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Pos(0,0,0);
-    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos);
+    SGM::Interval1D Domain(0,1);
+    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,Pos,&Domain);
     EXPECT_TRUE(SGM::GetPointCurveData(rResult,CurveID,Pos));
     
     SGM::Curve CurveID2=SGM::Curve(SGM::CopyEntity(rResult,CurveID).m_ID);
@@ -119,7 +327,14 @@ TEST(math_check, point_curve)
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),CurveID);
     EXPECT_FALSE(SGM::SameCurve(rResult,CurveID,CurveID2,SGM_MIN_TOL));
 
-    SGM::CurveInverse(rResult,CurveID,Pos);
+    SGM::Point3D ClosePos;
+    double dGuess1=-1,dGuess2=0.5,dGuess3=2;
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess1);
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess2);
+    SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess3);
+    SGM::Point3D xyz;
+    SGM::Vector3D Vec1,Vec2;
+    SGM::EvaluateCurve(rResult,CurveID,0,&xyz,&Vec1,&Vec2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -310,6 +525,9 @@ TEST(math_check, revolve_surface_save_step)
     
     SGM::TranslatorOptions TranslatorOpts;
     SGM::SaveSTEP(rResult,"revolve_sheet.stp",SGM::Thing(),TranslatorOpts);
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::ReadFile(rResult,"revolve_sheet.stp",aEntities,aLog,TranslatorOpts);
 
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
@@ -546,18 +764,21 @@ TEST(math_check, cylinder_copy_transform)
     SGM::TransformEntity(rResult,Trans,CylinderID);
     SGM::CopyEntity(rResult,CylinderID);
 
-    SGM::Surface SurfID=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    SGM::Surface SurfID1=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    SGM::Surface SurfID2=SGM::CreateCylinderSurface(rResult,Pos0,Pos1,1.0);
+    bool bTest=SGM::SameSurface(rResult,SurfID1,SurfID2,SGM_MIN_TOL);
+    EXPECT_TRUE(bTest);
     SGM::Point2D uvGuess1(0,0);
-    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
+    SGM::Point2D uv1=SGM::SurfaceInverse(rResult,SurfID1,SGM::Point3D(1,0,0),nullptr,&uvGuess1);
     bool bTest1=SGM::NearEqual(uv1.m_u,0,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest1);
     SGM::Point2D uvGuess2(SGM_TWO_PI,0);
-    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
+    SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID1,SGM::Point3D(1,0,0),nullptr,&uvGuess2);
     bool bTest2=SGM::NearEqual(uv2.m_u,SGM_TWO_PI,SGM_MIN_TOL,false);
     EXPECT_TRUE(bTest2);
 
-    double dU=SGM::GetDomainOfSurface(rResult,SurfID).m_UDomain.MidPoint();
-    SGM::FindUParamCurve(rResult,SurfID,dU);
+    double dU=SGM::GetDomainOfSurface(rResult,SurfID1).m_UDomain.MidPoint();
+    SGM::FindUParamCurve(rResult,SurfID1,dU);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1742,6 +1963,14 @@ TEST(math_check, NURB_surface)
     SGM::Surface SurfID=SGM::CreateNURBSurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
     bool bAnswer=SGM::TestSurface(rResult,SurfID,SGM::Point2D(0.245,0.678));
 
+    // Code to test saving a NURB surface
+    // turn on FindUMultiplicity and FindVMultiplicity
+    //
+    // std::vector<SGM::Edge> aEdges;
+    // std::vector<SGM::EdgeSideType> aTypes;
+    // SGM::CreateFaceFromSurface(rResult,SurfID,aEdges,aTypes);
+    // SGM::SaveSTEP(rResult,"Gtest_NURB_Surface_Test.stp",SGM::Thing(),SGM::TranslatorOptions());
+
     SGM::Point3D Pos0,Pos1,Pos2;
     SGM::EvaluateSurface(rResult,SurfID,SGM::Point2D(0.145,0.578),&Pos0);
     SGM::EvaluateSurface(rResult,SurfID,SGM::Point2D(0.245,0.678),&Pos1);
@@ -2202,7 +2431,7 @@ TEST(math_check, find_holes_stl)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-/*
+
 TEST(math_check, unite_spheres) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -2215,7 +2444,7 @@ TEST(math_check, unite_spheres)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
-*/
+
 TEST(math_check, NUB_curve_inverse) 
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

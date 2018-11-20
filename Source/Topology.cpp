@@ -748,53 +748,9 @@ void OrderLoopEdges(SGM::Result                          &rResult,
         {
         pVertex = nStartSide==SGM::FaceOnRightType ? pStartEdge->GetStart() : pStartEdge->GetEnd();
         }
-    edge *pNextEdge=FindNextEdge(rResult,pFace,pStartEdge,pVertex);
-    SGM::EdgeSideType nNextType=pFace->GetSideType(pNextEdge);
-    if(nNextType==SGM::FaceOnBothSidesType)
+    if(edge *pNextEdge=FindNextEdge(rResult,pFace,pStartEdge,pVertex))
         {
-        if(bFlipped)
-            {
-            if(pNextEdge->GetStart()!=pVertex)
-                {
-                nNextType=SGM::FaceOnLeftType;
-                }
-            else 
-                {
-                nNextType=SGM::FaceOnRightType;
-                }
-            }
-        else
-            {
-            if(pNextEdge->GetStart()!=pVertex)
-                {
-                nNextType=SGM::FaceOnRightType;
-                }
-            else 
-                {
-                nNextType=SGM::FaceOnLeftType;
-                }
-            }
-        }
-    while(pNextEdge!=pStartEdge || nNextType!=nStartSide)
-        {
-        vertex *pLastVertex=pVertex;
-        aTempEdges.push_back(pNextEdge);
-        aTempFlips.push_back(nNextType);
-        if(pNextEdge->GetStart()==pLastVertex)
-            {
-            pVertex=pNextEdge->GetEnd();
-            }
-        else
-            {
-            pVertex=pNextEdge->GetStart();
-            }
-
-        pNextEdge=FindNextEdge(rResult,pFace,pNextEdge,pVertex);
-        if(pNextEdge==nullptr)
-            {
-            break;
-            }
-        nNextType=pFace->GetSideType(pNextEdge);
+        SGM::EdgeSideType nNextType=pFace->GetSideType(pNextEdge);
         if(nNextType==SGM::FaceOnBothSidesType)
             {
             if(bFlipped)
@@ -817,6 +773,52 @@ void OrderLoopEdges(SGM::Result                          &rResult,
                 else 
                     {
                     nNextType=SGM::FaceOnLeftType;
+                    }
+                }
+            }
+        while(pNextEdge!=pStartEdge || nNextType!=nStartSide)
+            {
+            vertex *pLastVertex=pVertex;
+            aTempEdges.push_back(pNextEdge);
+            aTempFlips.push_back(nNextType);
+            if(pNextEdge->GetStart()==pLastVertex)
+                {
+                pVertex=pNextEdge->GetEnd();
+                }
+            else
+                {
+                pVertex=pNextEdge->GetStart();
+                }
+
+            pNextEdge=FindNextEdge(rResult,pFace,pNextEdge,pVertex);
+            if(pNextEdge==nullptr)
+                {
+                break;
+                }
+            nNextType=pFace->GetSideType(pNextEdge);
+            if(nNextType==SGM::FaceOnBothSidesType)
+                {
+                if(bFlipped)
+                    {
+                    if(pNextEdge->GetStart()!=pVertex)
+                        {
+                        nNextType=SGM::FaceOnLeftType;
+                        }
+                    else 
+                        {
+                        nNextType=SGM::FaceOnRightType;
+                        }
+                    }
+                else
+                    {
+                    if(pNextEdge->GetStart()!=pVertex)
+                        {
+                        nNextType=SGM::FaceOnRightType;
+                        }
+                    else 
+                        {
+                        nNextType=SGM::FaceOnLeftType;
+                        }
                     }
                 }
             }

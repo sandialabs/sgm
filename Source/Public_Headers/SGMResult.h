@@ -64,6 +64,7 @@ class Result
         // 2 make no face facets.
         // 3 return bad curve tests.
         // 4 return bad surface tests.
+        // 5 make blocks with bad topology connections.
 
     private:
 
