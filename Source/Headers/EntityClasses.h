@@ -293,6 +293,9 @@ class thing : public entity
 
         void SetConcurrentInactive() const;
 
+        template <class VISITOR>
+        void VisitEntities(VISITOR &typeVisitor);
+
     private:
 
         template <class ENTITY_TYPE, class ENTITY_SET>

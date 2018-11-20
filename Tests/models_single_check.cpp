@@ -36,7 +36,7 @@ void expect_import_success(std::string const &file_name, SGM::Result &rResult)
     std::string file_path = get_models_file_path(file_name);
     SGM::ReadFile(rResult, file_path, entities, log, options);
     auto resultType = rResult.GetResult();
-    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+    ASSERT_EQ(resultType, SGM::ResultTypeOK);
 }
 
 

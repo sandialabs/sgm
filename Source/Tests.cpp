@@ -212,9 +212,112 @@ bool TestCurve(SGM::Result              &rResult,
         }
 
     return bAnswer;
-    }  
-  
-} // SGMIntneral namespace
+    }
+
+    // for testing EntityVisitor and Box functions
+    struct UnitTestGetBoxVisitor : EntityVisitor
+        {
+        SGM::Transform3D m_Transform3D;
+    
+        UnitTestGetBoxVisitor() = delete;
+
+        explicit UnitTestGetBoxVisitor(SGM::Result &rResult, SGM::Transform3D const &transform3D) : 
+            EntityVisitor(rResult), m_Transform3D(transform3D)
+            {}
+
+        void Visit(thing &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(assembly &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(attribute &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(body &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(complex &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(edge &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(face &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(reference &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(vertex &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(volume &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(line &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(circle &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(ellipse &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(hyperbola &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(parabola &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(hermite &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(NUBcurve &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(NURBcurve &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(PointCurve &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(TorusKnot &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(plane &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(cylinder &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(cone &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(sphere &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(torus &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(revolve &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(extrude &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(offset &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(NUBsurface &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        void Visit(NURBsurface &x) override
+            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+
+        };
+
+} // SGMInternal namespace
 
 
 namespace SGM
@@ -349,6 +452,146 @@ bool RunInternalTest(SGM::Result &rResult,
             {
             bAnswer=false;
             }
+        }
+    else if(nTestNumber==3) // Entity Visitor/Accept interface
+        {
+        std::vector<SGMInternal::entity *> aEntities;
+        SGM::Point3D thePoint3D(0.0, 0.0, 0.0);
+        SGM::UnitVector3D theUnitVector3D(1.0, 0.0, 0.0);
+        SGM::UnitVector3D otherUnitVector3D(0.0, 1.0, 0.0);
+        std::vector<int> aIntVector(3, 1);
+        std::vector<SGM::Point3D> aPoint3D = {{0, 0, 0},
+                                              {1, 0, 0},
+                                              {0, 2, 0},
+                                              {0, 0, 3}};
+        std::vector<SGM::Vector3D> aVector3D = {{1, 0, 0},
+                                                {0, 1, 0},
+                                                {0, 0, 1},
+                                                {1, 1, 1}};
+        std::vector<SGM::Point4D> aPoint4D = {{1, 0, 0, 1},
+                                              {0, 1, 0, 1},
+                                              {0, 0, 1, 1},
+                                              {1, 1, 1, 1}};
+        std::vector<double> aDoubleVector(4, 1.0);
+
+        // create one of everything
+        SGMInternal::thing *pThing = rResult.GetThing();
+        auto *pAssembly = new SGMInternal::assembly(rResult);
+        aEntities.push_back(pAssembly);
+        auto *pAttribute = new SGMInternal::IntegerAttribute(rResult, "None", aIntVector);
+        aEntities.push_back(pAttribute);
+        auto *pBody = new SGMInternal::body(rResult);
+        aEntities.push_back(pBody);
+        auto *pComplex = new SGMInternal::complex(rResult);
+        aEntities.push_back(pComplex);
+        auto *pEdge = new SGMInternal::edge(rResult);
+        aEntities.push_back(pEdge);
+        auto *pFace = new SGMInternal::face(rResult);
+        aEntities.push_back(pFace);
+        auto *pReference = new SGMInternal::reference(rResult);
+        aEntities.push_back(pReference);
+        auto *pVertex = new SGMInternal::vertex(rResult, thePoint3D);
+        aEntities.push_back(pVertex);
+        auto *pVolume = new SGMInternal::volume(rResult);
+        aEntities.push_back(pVolume);
+        auto *pLine = new SGMInternal::line(rResult, thePoint3D, thePoint3D);
+        aEntities.push_back(pLine);
+        auto *pCircle = new SGMInternal::circle(rResult, thePoint3D, theUnitVector3D, 1.0);
+        aEntities.push_back(pCircle);
+        auto *pEllipse = new SGMInternal::ellipse(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0, 2.0);
+        aEntities.push_back(pEllipse);
+        auto *pHyperbola = new SGMInternal::hyperbola(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0,
+                                                      2.0);
+        aEntities.push_back(pHyperbola);
+        auto *pParabola = new SGMInternal::parabola(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0);
+        aEntities.push_back(pParabola);
+        auto *pHermite = new SGMInternal::hermite(rResult, aPoint3D, aVector3D, aDoubleVector);
+        aEntities.push_back(pHermite);
+        auto *pNUBcurve = new SGMInternal::NUBcurve(rResult, aPoint3D, aDoubleVector);
+        aEntities.push_back(pNUBcurve);
+        auto *pNURBcurve = new SGMInternal::NURBcurve(rResult, aPoint4D, aDoubleVector);
+        aEntities.push_back(pNURBcurve);
+        auto *pPointCurve = new SGMInternal::PointCurve(rResult, thePoint3D);
+        aEntities.push_back(pPointCurve);
+        auto *pTorusKnot = new SGMInternal::TorusKnot(rResult, thePoint3D, theUnitVector3D, otherUnitVector3D, 1.0, 3.0,
+                                                      1, 3);
+        aEntities.push_back(pTorusKnot);
+        auto *pPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
+        aEntities.push_back(pPlane);
+        auto *pCylinder = new SGMInternal::cylinder(rResult, thePoint3D, theUnitVector3D, 1.0);
+        aEntities.push_back(pCylinder);
+        auto *pCone = new SGMInternal::cone(rResult, thePoint3D, theUnitVector3D, 1.0, 45);
+        aEntities.push_back(pCone);
+        auto *pSphere = new SGMInternal::sphere(rResult, thePoint3D, 1.0);
+        aEntities.push_back(pSphere);
+        auto *pTorus = new SGMInternal::torus(rResult, thePoint3D, theUnitVector3D, 1.0, 2.0, false);
+        aEntities.push_back(pTorus);
+        auto *pRevolve = new SGMInternal::revolve(rResult, thePoint3D, theUnitVector3D, pLine);
+        aEntities.push_back(pRevolve);
+        auto *pExtrude = new SGMInternal::extrude(rResult, theUnitVector3D, pLine);
+        aEntities.push_back(pExtrude);
+        //auto *pOffset = new SGMInternal::offset(rResult,1.0,thePlane);
+        //aEntities.push_back(pOffset);
+
+        pEdge->SetCurve(pLine);
+        pEdge->SetStart(pVertex);
+        pEdge->SetEnd(pVertex);
+        pFace->SetSurface(pSphere);
+
+        // create NUBsurface
+        std::vector<double> aUKnots = {0, 0, 0, 1, 1, 1};
+        std::vector<double> aVKnots = aUKnots;
+        std::vector<std::vector<SGM::Point3D> > aaPoints3D;
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.assign(3, SGM::Point3D(0, 0, 0));
+        aaPoints3D.push_back(aPoints);
+        aaPoints3D.push_back(aPoints);
+        aaPoints3D.push_back(aPoints);
+        aaPoints3D[0][0] = SGM::Point3D(0.0, 0.0, 1.0);
+        aaPoints3D[0][1] = SGM::Point3D(0.0, 1.0, 0.0);
+        aaPoints3D[0][2] = SGM::Point3D(0.0, 2.0, -1.0);
+        aaPoints3D[1][0] = SGM::Point3D(1.0, 0.0, 0.0);
+        aaPoints3D[1][1] = SGM::Point3D(1.0, 1.0, 0.0);
+        aaPoints3D[1][2] = SGM::Point3D(1.0, 2.0, 0.0);
+        aaPoints3D[2][0] = SGM::Point3D(2.0, 0.0, -1.0);
+        aaPoints3D[2][1] = SGM::Point3D(2.0, 1.0, 0.0);
+        aaPoints3D[2][2] = SGM::Point3D(2.0, 2.0, 1.0);
+        auto *pNUBsurface = new SGMInternal::NUBsurface(rResult, aaPoints3D, aUKnots, aVKnots);
+        aEntities.push_back(pNUBsurface);
+
+        // create NURBsurface
+        std::vector<std::vector<SGM::Point4D> > aaPoints4D;
+        std::vector<SGM::Point4D> aPoints4D;
+        aPoints4D.assign(3, SGM::Point4D(0, 0, 0, 1));
+        aaPoints4D.push_back(aPoints4D);
+        aaPoints4D.push_back(aPoints4D);
+        aaPoints4D.push_back(aPoints4D);
+        aaPoints4D[0][0] = SGM::Point4D(0.0, 0.0, 1.0, 1);
+        aaPoints4D[0][1] = SGM::Point4D(0.0, 1.0, 0.0, 1);
+        aaPoints4D[0][2] = SGM::Point4D(0.0, 2.0, -1.0, 1);
+        aaPoints4D[1][0] = SGM::Point4D(1.0, 0.0, 0.0, 1);
+        aaPoints4D[1][1] = SGM::Point4D(1.0, 1.0, 0.0, 1);
+        aaPoints4D[1][2] = SGM::Point4D(1.0, 2.0, 0.0, 1);
+        aaPoints4D[2][0] = SGM::Point4D(2.0, 0.0, -1.0, 1);
+        aaPoints4D[2][1] = SGM::Point4D(2.0, 1.0, 0.0, 1);
+        aaPoints4D[2][2] = SGM::Point4D(2.0, 2.0, 1.0, 1);
+        auto *pNURBsurface = new SGMInternal::NURBsurface(rResult, aaPoints4D, aUKnots, aVKnots);
+        aEntities.push_back(pNURBsurface);
+
+        // call the visitor the base class Visitor class that does nothing
+        SGMInternal::EntityVisitor basicVisitor;
+        pThing->VisitEntities(basicVisitor);
+
+        // a transform that is not just a scale or translation
+        SGM::Vector4D XAxis4D = {3, 2, 2, 7};
+        SGM::Vector4D YAxis4D = {2, 3, 2, 7};
+        SGM::Vector4D ZAxis4D = {2, 2, 3, 7};
+        SGM::Vector4D Translate4D = {1, 2, 3, 4};
+        SGM::Transform3D Deform(XAxis4D, YAxis4D, ZAxis4D, Translate4D);
+
+        // call a visitor that gets bounding boxes and transforms the bounding boxes
+        SGMInternal::UnitTestGetBoxVisitor boxVisitor(rResult, Deform);
+        pThing->VisitEntities(boxVisitor);
         }
     else if(nTestNumber==4) // SortablePlane testing
         {

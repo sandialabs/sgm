@@ -482,15 +482,15 @@ TEST(math_check, matrix_multiply)
 
     double aMatrix3[3][3];
     double aAnswer2[3][3];
-    aMatrix1[0][0]=1;
-    aMatrix1[0][1]=2;
-    aMatrix1[0][2]=2;
-    aMatrix1[1][0]=3;
-    aMatrix1[1][1]=4;
-    aMatrix1[1][2]=2;
-    aMatrix1[2][0]=3;
-    aMatrix1[2][1]=4;
-    aMatrix1[2][2]=2;
+    aMatrix3[0][0]=1;
+    aMatrix3[0][1]=2;
+    aMatrix3[0][2]=2;
+    aMatrix3[1][0]=3;
+    aMatrix3[1][1]=4;
+    aMatrix3[1][2]=2;
+    aMatrix3[2][0]=3;
+    aMatrix3[2][1]=4;
+    aMatrix3[2][2]=2;
     SGM::FindProduct3D(aMatrix3,aMatrix3,aAnswer2);
 }
 
