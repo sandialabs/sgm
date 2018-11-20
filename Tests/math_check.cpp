@@ -21,6 +21,15 @@
 
 #include "test_utility.h"
 
+TEST(math_check, remove_duplicates_2d )
+{
+    std::vector<SGM::Point2D> aPoints;
+    aPoints.push_back(SGM::Point2D(0,0));
+    aPoints.push_back(SGM::Point2D(0,0));
+    SGM::RemoveDuplicates2D(aPoints,SGM_ZERO);
+    EXPECT_EQ(aPoints.size(),1);
+}
+
 TEST(math_check, find_adjacent_faces )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
