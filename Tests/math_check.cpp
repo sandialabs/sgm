@@ -21,6 +21,26 @@
 
 #include "test_utility.h"
 
+
+TEST(math_check, public_functions_tests )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Vertex> sVertex;
+    SGM::FindVertices(rResult,BodyID,sVertex);
+    SGM::Vertex VertexID=*(sVertex.begin());
+    SGM::GetPointOfVertex(rResult,VertexID);
+    SGM::FindTopLevelEntities(rResult);
+    std::vector<SGM::Face> aFaces;
+    SGM::FindCloseFaces(rResult,SGM::Point3D(0,0,0),BodyID,10,aFaces);
+    SGM::Attribute AttributeID=SGM::CreateAttribute(rResult,"Test");
+    SGM::GetAttributeName(rResult,AttributeID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, point_in_face_vertex_one_edge_case )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
