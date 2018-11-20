@@ -90,3 +90,20 @@ TEST(boxtree_check, replace)
     auto contentsCopy = box_tree_other.FindAll();
     EXPECT_EQ(contents, contentsCopy);
 }
+
+TEST(boxtree_check, erase_enclosed)
+    {
+    BoxTree boxTree;
+    // build a tree with a handful of (object,bbox) items
+    std::vector<Point3D> points;
+    for (int i = 0; i < 2; ++i)
+        {
+        points.emplace_back((double)i*1, (double)i*2, (double)i*3);
+        Point3D &point = points.back();
+        boxTree.Insert(&point, Interval3D(point));
+        }
+    // erase the points
+    Interval3D bound(-0.1,0.1,-0.1,0.1,-0.1,0.1);
+    boxTree.EraseEnclosed(bound);
+    EXPECT_EQ(boxTree.Size(),1);
+    }
