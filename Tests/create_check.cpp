@@ -210,6 +210,8 @@ TEST(create_check, miscellaneous_entity)
 
     // other thing member functions
     EXPECT_TRUE(pThing->IsTopLevel());
+    pThing->SetConcurrentActive();
+    pThing->SetConcurrentInactive();
 
     SGMTesting::ReleaseTestThing(pThing);
     }

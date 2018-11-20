@@ -293,55 +293,6 @@ inline bool FindEntityBoxData(SGM::Result &rResult, entity *e)
 //
 // Provide Visit() functions for types that have cached data.
 
-struct EdgeBoxVisitor : EntityVisitor
-    {
-    EdgeBoxVisitor() = delete;
-
-    explicit EdgeBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(edge &e) override
-        { FindEntityBoxData(*pResult, &e); }
-    };
-
-struct FaceBoxVisitor : EntityVisitor
-    {
-    FaceBoxVisitor() = delete;
-
-    explicit FaceBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(face &f) override
-        { FindEntityBoxData(*pResult, &f); }
-    };
-
-struct ComplexBoxVisitor : EntityVisitor
-    {
-    ComplexBoxVisitor() = delete;
-
-    explicit ComplexBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(complex &c) override
-        { FindEntityBoxData(*pResult, &c); }
-    };
-
-struct VolumeBoxVisitor : EntityVisitor
-    {
-    VolumeBoxVisitor() = delete;
-
-    explicit VolumeBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(volume &v) override
-        { FindEntityBoxData(*pResult, &v); }
-    };
-
-
 struct SurfacePointsVisitor : EntityVisitor
     {
     inline void Visit(torus &s) override
@@ -390,7 +341,56 @@ inline void SerialFindBoxData(SGM::Result &rResult, SET const &sTypes)
         FindEntityBoxData(rResult, pEntity);
     }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef SGM_MULTITHREADED
+
+struct EdgeBoxVisitor : EntityVisitor
+    {
+    EdgeBoxVisitor() = delete;
+
+    explicit EdgeBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(edge &e) override
+        { FindEntityBoxData(*pResult, &e); }
+    };
+
+struct FaceBoxVisitor : EntityVisitor
+    {
+    FaceBoxVisitor() = delete;
+
+    explicit FaceBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(face &f) override
+        { FindEntityBoxData(*pResult, &f); }
+    };
+
+struct ComplexBoxVisitor : EntityVisitor
+    {
+    ComplexBoxVisitor() = delete;
+
+    explicit ComplexBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(complex &c) override
+        { FindEntityBoxData(*pResult, &c); }
+    };
+
+struct VolumeBoxVisitor : EntityVisitor
+    {
+    VolumeBoxVisitor() = delete;
+
+    explicit VolumeBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(volume &v) override
+        { FindEntityBoxData(*pResult, &v); }
+    };
 
 template<class TYPE>
 inline void FillJobEntities(thing::iterator<TYPE *> &iter,
