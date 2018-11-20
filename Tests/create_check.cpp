@@ -169,6 +169,9 @@ TEST(create_check, create_attributes)
     std::vector<int> aIntegers(3,1);
     SGM::Attribute AttributeID2=SGM::CreateIntegerAttribute(rResult,"IntegerAttributeTestName",aIntegers);
     EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID2),SGM::EntityType::IntegerAttributeType);
+    std::vector<int> const &aVectorIntData = SGM::GetIntegerAttributeData(rResult,AttributeID2);
+    for (size_t i = 0; i < 3; ++i)
+        EXPECT_EQ(aVectorIntData[i], aIntegers[i]);
 
     std::vector<double> aDoubles(3,1.0);
     SGM::Attribute AttributeID3=SGM::CreateDoubleAttribute(rResult,"DoubleAttributeTestName",aDoubles);
@@ -205,6 +208,9 @@ TEST(create_check, miscellaneous_entity)
     // cloning a thing is not currently allowed
     EXPECT_THROW(pThing->Clone(rResult), std::logic_error);
 
+    // other thing member functions
+    EXPECT_TRUE(pThing->IsTopLevel());
+
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -218,5 +224,14 @@ TEST(create_check, visitors_get_box)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(create_check, create_offset)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    EXPECT_TRUE(SGM::RunInternalTest(rResult,5));
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 

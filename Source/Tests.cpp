@@ -474,12 +474,54 @@ bool RunInternalTest(SGM::Result &rResult,
                                               {1, 1, 1, 1}};
         std::vector<double> aDoubleVector(4, 1.0);
 
+
+        std::vector<std::string> aCheckStrings;
+        SGM::CheckOptions checkOptions;
+        std::map<SGMInternal::entity*,SGMInternal::entity*> replace_map;
+
         // create one of everything
         SGMInternal::thing *pThing = rResult.GetThing();
+
+        // other random thing member functions
+        try { pThing->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
         auto *pAssembly = new SGMInternal::assembly(rResult);
         aEntities.push_back(pAssembly);
+        auto *pCloneAssembly = pAssembly->Clone(rResult);
+        pCloneAssembly->IsTopLevel();
+        pCloneAssembly->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneAssembly->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
         auto *pAttribute = new SGMInternal::IntegerAttribute(rResult, "None", aIntVector);
         aEntities.push_back(pAttribute);
+        auto *pCloneAttribute = pAttribute->Clone(rResult);
+        pCloneAttribute->IsTopLevel();
+        pCloneAttribute->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneAttribute->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
+        std::vector<double> aDoubles(3,1.0);
+        auto *pDoubleAttribute = new SGMInternal::DoubleAttribute(rResult,"DoubleAttributeTestName",aDoubles);
+        aEntities.push_back(pDoubleAttribute);
+        auto *pCloneDoubleAttribute = pDoubleAttribute->Clone(rResult);
+        pCloneDoubleAttribute->IsTopLevel();
+        pCloneDoubleAttribute->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneAttribute->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
+        std::vector<char> aChars(3,'c');
+        auto *pCharAttribute = new SGMInternal::CharAttribute(rResult,"CharAttributeTestName",aChars);
+        aEntities.push_back(pCharAttribute);
+        auto *pCloneCharAttribute = pCharAttribute->Clone(rResult);
+        pCloneCharAttribute->IsTopLevel();
+        pCloneCharAttribute->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneAttribute->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
+        auto *pStringAttribute = new SGMInternal::StringAttribute(rResult,"StringAttributeTestName","string_test");
+        aEntities.push_back(pStringAttribute);
+        auto *pCloneStringAttribute = pStringAttribute->Clone(rResult);
+        pCloneStringAttribute->IsTopLevel();
+        pCloneStringAttribute->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneAttribute->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
         auto *pBody = new SGMInternal::body(rResult);
         aEntities.push_back(pBody);
         auto *pComplex = new SGMInternal::complex(rResult);
@@ -488,8 +530,14 @@ bool RunInternalTest(SGM::Result &rResult,
         aEntities.push_back(pEdge);
         auto *pFace = new SGMInternal::face(rResult);
         aEntities.push_back(pFace);
+
         auto *pReference = new SGMInternal::reference(rResult);
         aEntities.push_back(pReference);
+        auto *pCloneReference = pReference->Clone(rResult);
+        pCloneReference->IsTopLevel();
+        pCloneReference->Check(rResult,checkOptions, aCheckStrings, false);
+        try { pCloneReference->ReplacePointers(replace_map); } catch (const std::logic_error&) {}
+
         auto *pVertex = new SGMInternal::vertex(rResult, thePoint3D);
         aEntities.push_back(pVertex);
         auto *pVolume = new SGMInternal::volume(rResult);
@@ -530,8 +578,11 @@ bool RunInternalTest(SGM::Result &rResult,
         aEntities.push_back(pRevolve);
         auto *pExtrude = new SGMInternal::extrude(rResult, theUnitVector3D, pLine);
         aEntities.push_back(pExtrude);
-        //auto *pOffset = new SGMInternal::offset(rResult,1.0,thePlane);
-        //aEntities.push_back(pOffset);
+
+        auto *pOtherPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
+        aEntities.push_back(pOtherPlane);
+        auto *pOffset = new SGMInternal::offset(rResult, 1.0, pOtherPlane);
+        aEntities.push_back(pOffset);
 
         pEdge->SetCurve(pLine);
         pEdge->SetStart(pVertex);
@@ -581,6 +632,7 @@ bool RunInternalTest(SGM::Result &rResult,
         // call the visitor the base class Visitor class that does nothing
         SGMInternal::EntityVisitor basicVisitor;
         pThing->VisitEntities(basicVisitor);
+        basicVisitor.Visit(*pThing);
 
         // a transform that is not just a scale or translation
         SGM::Vector4D XAxis4D = {3, 2, 2, 7};
@@ -596,12 +648,12 @@ bool RunInternalTest(SGM::Result &rResult,
     else if(nTestNumber==4) // SortablePlane testing
         {
         std::vector<SGM::Point3D> aPoints1,aPoints2;
-        aPoints1.push_back(SGM::Point3D(0,0,0));
-        aPoints1.push_back(SGM::Point3D(1,0,0));
-        aPoints1.push_back(SGM::Point3D(0,1,0));
-        aPoints2.push_back(SGM::Point3D(0,0,1));
-        aPoints2.push_back(SGM::Point3D(1,0,1));
-        aPoints2.push_back(SGM::Point3D(0,1,1));
+        aPoints1.emplace_back(SGM::Point3D(0,0,0));
+        aPoints1.emplace_back(SGM::Point3D(1,0,0));
+        aPoints1.emplace_back(SGM::Point3D(0,1,0));
+        aPoints2.emplace_back(SGM::Point3D(0,0,1));
+        aPoints2.emplace_back(SGM::Point3D(1,0,1));
+        aPoints2.emplace_back(SGM::Point3D(0,1,1));
 
         SGMInternal::SortablePlane SP1(aPoints1);
         SGMInternal::SortablePlane SP2(aPoints2);
@@ -619,6 +671,62 @@ bool RunInternalTest(SGM::Result &rResult,
         bTest=SP1.Parallel(SP2,Offset,0.001);
 
         bAnswer=true;
+        }
+    else if(nTestNumber==5) // temporary offset surface testing
+        {
+        // this test can be removed once offset surface is completely implemented
+        std::vector<SGMInternal::entity *> aEntities;
+        SGM::Point3D thePoint3D(0.0, 0.0, 0.0);
+        SGM::UnitVector3D theUnitVector3D(1.0, 0.0, 0.0);
+
+        SGMInternal::thing *pThing = rResult.GetThing();
+        auto *pPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
+        aEntities.push_back(pPlane);
+        auto *pOffset = new SGMInternal::offset(rResult, 1.0, pPlane);
+        aEntities.push_back(pOffset);
+        auto *pOffsetClone = pOffset->Clone(rResult);
+        aEntities.push_back(pOffsetClone);
+
+        try {
+            pOffset->WriteSGM(rResult, nullptr, SGM::TranslatorOptions());
+        } catch (const std::logic_error&) {}
+
+        try {
+            SGM::Point2D thePoint2D(0.0, 0.0);
+            pOffset->Evaluate(thePoint2D,&thePoint3D);
+        } catch (const std::logic_error&) {}
+
+        try {
+            std::set<SGMInternal::entity*,SGMInternal::EntityCompare> sChildren;
+            pOffset->FindAllChildren(sChildren);
+        }  catch (const std::logic_error&) {}
+
+        try {
+            pOffset->Inverse(thePoint3D);
+            }  catch (const std::logic_error&) {}
+
+        try {
+            SGM::Transform3D theTransform3D;
+            pOffset->Transform(theTransform3D);
+            }  catch (const std::logic_error&) {}
+
+        try {
+            pOffset->UParamLine(rResult, 0.0);
+            }  catch (const std::logic_error&) {}
+        try {
+            pOffset->VParamLine(rResult, 0.0);
+            }  catch (const std::logic_error&) {}
+
+        try {
+            pOffset->IsSame(pOffset,0.0);
+            }  catch (const std::logic_error&) {}
+
+        pOffset->GetSurface();
+
+        auto *pOtherPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
+        aEntities.push_back(pOtherPlane);
+
+        pOffset->SetSurface(pPlane);
         }
 
     return bAnswer;

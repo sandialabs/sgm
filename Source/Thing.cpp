@@ -114,6 +114,13 @@ void thing::SeverOwners(entity *pEntity)
                     pExtrude->m_pCurve = nullptr;
                     break;
                     }
+                case SGM::OffsetType:
+                    {
+                    auto pOffset = reinterpret_cast<offset *>(pEntity);
+                    pOffset->m_pSurface->RemoveOwner(this);
+                    pOffset->m_pSurface = nullptr;
+                    break;
+                    }
                 default:
                     {
                     break;

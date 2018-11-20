@@ -64,7 +64,7 @@ namespace SGMInternal {
     { m_sOwners.insert(pEntity); }
 
     inline void entity::RemoveOwner(entity *pEntity)
-    { m_sOwners.erase(pEntity); }
+    { m_sOwners.erase(pEntity); } // if the entity is in the set, remove it
 
     inline std::set<entity *, EntityCompare> const &entity::GetOwners() const
     { return m_sOwners; }

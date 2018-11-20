@@ -757,14 +757,51 @@ class offset : public surface
     {
     public:
 
-        offset (SGM::Result & rResult,
-                double value,
-                surface *pSurface);
+        offset(SGM::Result &rResult, double distance, surface *pSurface);
 
-        offset(SGM::Result &rResult, extrude const &other);
+        offset(SGM::Result &rResult, offset const &other);
 
         ~offset() override;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        offset* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        surface *GetSurface() const;
+
+        void SetSurface(surface *pSurface);
+
+    public:
+
+        surface    *m_pSurface;
+        double      m_dDistance;
     };
 
 bool TestSurface(SGM::Result                &rResult,
