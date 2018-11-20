@@ -21,6 +21,20 @@
 
 #include "test_utility.h"
 
+TEST(math_check, tangent_imprint_case )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(-1,-1,0),SGM::Point3D(1,-1,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(math_check, public_functions_tests )
 {
