@@ -21,6 +21,190 @@
 
 #include "test_utility.h"
 
+TEST(math_check, public_math_functions)
+{
+    SGM::SAFEasin(-1.1);
+    SGM::SAFEasin(1.1);
+    SGM::SAFEasin(0);
+    SGM::SignedArea(SGM::Point2D(0,0),SGM::Point2D(1,0),SGM::Point2D(0,1));
+    SGM::CenterOfMass(SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0.5,0.1,0.1));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    SGM::Point3D Origin;
+    SGM::UnitVector3D Axis;
+    SGM::FindLeastSquareLine3D(aPoints,Origin,Axis);
+
+    std::vector<double> aRoots1,aRoots2,aRoots3;
+    SGM::Quartic(1.0/4,1.0/3,-1.0/2,-1,0,aRoots1,SGM_MIN_TOL);
+    SGM::Quartic(-1,1,1,1,1,aRoots2,SGM_MIN_TOL);
+    SGM::Quartic(0,1,1,1,1,aRoots3,SGM_MIN_TOL);
+}
+
+TEST(math_check, tangent_imprint_case )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(-1,-1,0),SGM::Point3D(1,-1,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, public_functions_tests )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Vertex> sVertex;
+    SGM::FindVertices(rResult,BodyID,sVertex);
+    SGM::Vertex VertexID=*(sVertex.begin());
+    SGM::GetPointOfVertex(rResult,VertexID);
+    SGM::FindTopLevelEntities(rResult);
+    std::vector<SGM::Face> aFaces;
+    SGM::FindCloseFaces(rResult,SGM::Point3D(0,0,0),BodyID,10,aFaces);
+    SGM::Attribute AttributeID=SGM::CreateAttribute(rResult,"Test");
+    SGM::GetAttributeName(rResult,AttributeID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, point_in_face_vertex_one_edge_case )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,BodyID,sEdges);
+    SGM::Edge EdgeID=*(sEdges.begin());
+    SGM::ImprintPoint(rResult,SGM::Point3D(1,0,0),EdgeID);
+    SGM::PointInEntity(rResult,SGM::Point3D(0.5,0,0),FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, step_save_wire_body )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,0));
+    std::set<SGM::Edge> sEdges;
+    sEdges.insert(EdgeID);
+    SGM::CreateWireBody(rResult,sEdges);
+    SGM::SaveSTEP(rResult,"Gtest_wire_save.stp",SGM::Thing(),SGM::TranslatorOptions());
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, three_surface_intersect )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Surface SurfID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
+    SGM::Surface SurfID3=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    SGM::IntersectThreeSurfaces(rResult,SurfID1,SurfID2,SurfID3,aPoints);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, tangent_spheres_intersect )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID1=SGM::CreateSphereSurface(rResult,SGM::Point3D(0,0,0),1);
+    SGM::Surface SurfID2=SGM::CreateSphereSurface(rResult,SGM::Point3D(2,0,0),1);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfID1,SurfID2,aCurves);
+    EXPECT_EQ(aCurves.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, circle_circle_tangent_intersections )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve CircleID1=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID2=SGM::CreateCircle(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve CircleID3=SGM::CreateCircle(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(1,0,0),1);
+
+    std::vector<SGM::Point3D> aPoints1,aPoints2,aPoints3,aPoints4;
+    std::vector<SGM::IntersectionType> aTypes1,aTypes2,aTypes3,aTypes4;
+    SGM::IntersectCurves(rResult,CircleID1,CircleID2,aPoints1,aTypes1);
+    SGM::IntersectCurves(rResult,CircleID1,CircleID3,aPoints2,aTypes2);
+    EXPECT_EQ(aPoints1.size(),1);
+    EXPECT_EQ(aPoints2.size(),1);
+
+    SGM::Point3D Pos(1,0,0);
+    SGM::Curve PointID=SGM::CreatePointCurve(rResult,Pos);
+    SGM::IntersectCurves(rResult,CircleID1,PointID,aPoints3,aTypes3);
+    EXPECT_EQ(aPoints3.size(),1);
+    SGM::IntersectCurves(rResult,PointID,CircleID1,aPoints4,aTypes4);
+    EXPECT_EQ(aPoints4.size(),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, remove_duplicates_2d )
+{
+    std::vector<SGM::Point2D> aPoints;
+    aPoints.push_back(SGM::Point2D(0,0));
+    aPoints.push_back(SGM::Point2D(0,0));
+    SGM::RemoveDuplicates2D(aPoints,SGM_ZERO);
+    EXPECT_EQ(aPoints.size(),1);
+}
+
+TEST(math_check, find_adjacent_faces )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    auto iter=sFaces.begin();
+    SGM::Face FaceID1=*iter;
+    std::vector<SGM::Face> aFaces;
+    EXPECT_EQ(SGM::FindAdjacentFaces(rResult,FaceID1,aFaces),5);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, find_common_edges )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    auto iter=sFaces.begin();
+    SGM::Face FaceID1=*iter;
+    ++iter;
+    SGM::Face FaceID2=*iter;
+    std::vector<SGM::Edge> aEdges;
+    EXPECT_EQ(SGM::FindCommonEdgesFromFaces(rResult,FaceID1,FaceID2,aEdges),1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, lemon_torus )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -80,6 +80,12 @@ namespace SGM
                                             std::vector<SGM::IntersectionType> &aTypes,
                                             double                              dTolerance = SGM_ZERO);
 
+    SGM_EXPORT void IntersectThreeSurfaces(SGM::Result                &rResult,
+                                           SGM::Surface         const &SurfaceID1,
+                                           SGM::Surface         const &SurfaceID2,
+                                           SGM::Surface         const &SurfaceID3,
+                                           std::vector<SGM::Point3D>  &aPoints);
+
 } // End of SGM namespace
 
 #endif // SGM_INTERSECTOR_H
