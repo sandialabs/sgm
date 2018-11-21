@@ -38,7 +38,8 @@ SGM_EXPORT SGM::Curve CreateParabola(SGM::Result             &rResult,
                                      SGM::Point3D      const &Center,
                                      SGM::UnitVector3D const &XAxis,
                                      SGM::UnitVector3D const &YAxis,
-                                     double                   dA);
+                                     double                   dA,
+                                     SGM::Interval1D   const *pDomain=nullptr);
 
 SGM_EXPORT SGM::Curve CreateHyperbola(SGM::Result             &rResult,
                                       SGM::Point3D      const &Center,
@@ -80,7 +81,7 @@ SGM_EXPORT SGM::Curve CreateHermitCurve(SGM::Result                      &rResul
                                         std::vector<double>        const &aParams);
 
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result           &rResult,
-                                       SGM::Point3D          &Pos,
+                                       SGM::Point3D    const &Pos,
                                        SGM::Interval1D const *pDomain=nullptr);
 
 // Fits a conic curve to five points returning a line, circle, ellipse, parabola or hyperbola.

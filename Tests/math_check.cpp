@@ -21,6 +21,50 @@
 
 #include "test_utility.h"
 
+TEST(math_check, bounded_parabola_plane_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Interval1D Domain(-1,1);
+    SGM::Curve CurveID=SGM::CreateParabola(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0),SGM::UnitVector3D(0,1,0),1,&Domain);
+    SGM::Surface SurfID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndSurface(rResult,CurveID,SurfID,aPoints,aTypes);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+
+TEST(math_check, circle_and_line_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurves(rResult,CircleID,LineID,aPoints,aTypes);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, point_curve_surface_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Curve CurveID=SGM::CreatePointCurve(rResult,SGM::Point3D(0,0,0));
+    SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    SGM::IntersectCurveAndSurface(rResult,CurveID,PlaneID,aPoints,aTypes);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, measure_volume)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

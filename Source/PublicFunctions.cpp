@@ -1112,9 +1112,14 @@ SGM::Curve SGM::CreateParabola(SGM::Result             &rResult,
                                SGM::Point3D      const &Center,
                                SGM::UnitVector3D const &XAxis,
                                SGM::UnitVector3D const &YAxis,
-                               double                   dA)
+                               double                   dA,
+                               SGM::Interval1D   const *pDomain)
     {
     SGMInternal::curve *pCurve=new SGMInternal::parabola(rResult,Center,XAxis,YAxis,dA);
+    if(pDomain)
+        {
+        pCurve->SetDomain(*pDomain);
+        }
     return {pCurve->GetID()};
     }
 
@@ -2292,7 +2297,7 @@ void SGM::IntersectThreeSurfaces(SGM::Result                &rResult,
 }
 
 SGM::Curve SGM::CreatePointCurve(SGM::Result           &rResult,
-                                 SGM::Point3D          &Pos,
+                                 SGM::Point3D    const &Pos,
                                  SGM::Interval1D const *pDomain)
 {
     SGMInternal::curve *pCurve=new SGMInternal::PointCurve(rResult,Pos,pDomain);
