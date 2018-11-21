@@ -21,6 +21,53 @@
 
 #include "test_utility.h"
 
+TEST(math_check, imprint_face_on_face_through_vertex)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateDisk(rResult,SGM::Point3D(10,10,0),SGM::UnitVector3D(1,-1,0),1);
+    SGM::UniteBodies(rResult,BodyID2,BodyID1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face_vertex_hit)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::Edge EdgeID1=SGM::CreateLinearEdge(rResult,SGM::Point3D(6,6,0),SGM::Point3D(10,10,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face_atoll_flipped)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body DiskID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,DiskID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,-1),0.5);
+    SGM::Edge EdgeID1=SGM::CreateEdge(rResult,CircleID);
+    SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+
+    SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, bounded_parabola_plane_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
