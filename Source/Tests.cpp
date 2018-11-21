@@ -306,8 +306,9 @@ bool TestCurve(SGM::Result              &rResult,
         void Visit(extrude &x) override
             { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
-        void Visit(offset &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+        // PRS_MISSING_C_FILE
+        //void Visit(offset &x) override
+        //    { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(NUBsurface &x) override
             { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
@@ -579,10 +580,11 @@ bool RunInternalTest(SGM::Result &rResult,
         auto *pExtrude = new SGMInternal::extrude(rResult, theUnitVector3D, pLine);
         aEntities.push_back(pExtrude);
 
-        auto *pOtherPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
-        aEntities.push_back(pOtherPlane);
-        auto *pOffset = new SGMInternal::offset(rResult, 1.0, pOtherPlane);
-        aEntities.push_back(pOffset);
+        // PRS_MISSING_C_FILE
+        //auto *pOtherPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
+        //aEntities.push_back(pOtherPlane);
+        //auto *pOffset = new SGMInternal::offset(rResult, 1.0, pOtherPlane);
+        //aEntities.push_back(pOffset);
 
         pEdge->SetCurve(pLine);
         pEdge->SetStart(pVertex);
@@ -673,6 +675,15 @@ bool RunInternalTest(SGM::Result &rResult,
 
         bAnswer=true;
         }
+    else if(nTestNumber==5)
+        {
+        SGMInternal::thing *pThing=rResult.GetThing();
+        pThing->SetConcurrentActive();
+        pThing->SetConcurrentInactive();
+
+        bAnswer=true;
+        }
+    /* Missing C file.
     else if(nTestNumber==5) // temporary offset surface testing
         {
         // this test can be removed once offset surface is completely implemented
@@ -680,7 +691,6 @@ bool RunInternalTest(SGM::Result &rResult,
         SGM::Point3D thePoint3D(0.0, 0.0, 0.0);
         SGM::UnitVector3D theUnitVector3D(1.0, 0.0, 0.0);
 
-        SGMInternal::thing *pThing = rResult.GetThing();
         auto *pPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
         aEntities.push_back(pPlane);
         auto *pOffset = new SGMInternal::offset(rResult, 1.0, pPlane);
@@ -729,7 +739,7 @@ bool RunInternalTest(SGM::Result &rResult,
 
         pOffset->SetSurface(pPlane);
         }
-
+    */
     return bAnswer;
     }
 

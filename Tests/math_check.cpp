@@ -352,6 +352,18 @@ TEST(math_check, graph_branch_tests)
     SGM::Graph DirectedGraph(sVertices,sEdges);
     std::vector<size_t> aSources;
     DirectedGraph.FindSources(aSources);
+
+    sVertices.insert(2);
+    sVertices.insert(3);
+    sVertices.insert(4);
+    sEdges.clear();
+    sEdges.insert(SGM::GraphEdge(0,1,1));
+    sEdges.insert(SGM::GraphEdge(2,1,1));
+    sEdges.insert(SGM::GraphEdge(2,3,1));
+    sEdges.insert(SGM::GraphEdge(2,4,1));
+    SGM::Graph BranchedGraph(sVertices,sEdges);
+    std::vector<SGM::Graph> aBranches2;
+    BranchedGraph.FindBranches(aBranches2);
         
     SGMTesting::ReleaseTestThing(pThing);
 }
