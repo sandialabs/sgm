@@ -21,6 +21,138 @@
 
 #include "test_utility.h"
 
+TEST(math_check, singular_in_V_NURBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point4D> > aaPoints;
+    std::vector<SGM::Point4D> aPoints;
+    aPoints.assign(3,SGM::Point4D(0,0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[0][1]=SGM::Point4D(1.0,0.0,0.0,0.0);
+    aaPoints[0][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    aaPoints[1][0]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point4D(1.0,1.0,0.0,0.0);
+    aaPoints[1][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    aaPoints[2][0]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[2][1]=SGM::Point4D(1.0,2.0,0.0,0.0);
+    aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_U_NURBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point4D> > aaPoints;
+    std::vector<SGM::Point4D> aPoints;
+    aPoints.assign(3,SGM::Point4D(0,0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[0][1]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[0][2]=SGM::Point4D(0.0,0.0,0.0,0.0);
+    aaPoints[1][0]=SGM::Point4D(1.0,0.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point4D(1.0,1.0,0.0,0.0);
+    aaPoints[1][2]=SGM::Point4D(1.0,2.0,0.0,0.0);
+    aaPoints[2][0]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    aaPoints[2][1]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
+    SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_V_NUBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.assign(3,SGM::Point3D(0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[0][1]=SGM::Point3D(1.0,0.0,0.0);
+    aaPoints[0][2]=SGM::Point3D(2.0,0.0,0.0);
+    aaPoints[1][0]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+    aaPoints[1][2]=SGM::Point3D(2.0,0.0,0.0);
+    aaPoints[2][0]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[2][1]=SGM::Point3D(1.0,2.0,0.0);
+    aaPoints[2][2]=SGM::Point3D(2.0,0.0,0.0);
+    SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_U_NUBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots,aVKnots;
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(0.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aUKnots.push_back(1.0);
+    aVKnots=aUKnots;
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.assign(3,SGM::Point3D(0,0,0));
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints.push_back(aPoints);
+    aaPoints[0][0]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[0][1]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[0][2]=SGM::Point3D(0.0,0.0,0.0);
+    aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
+    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
+    aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
+    aaPoints[2][0]=SGM::Point3D(2.0,0.0,0.0);
+    aaPoints[2][1]=SGM::Point3D(2.0,0.0,0.0);
+    aaPoints[2][2]=SGM::Point3D(2.0,0.0,0.0);
+    SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, imprint_face_on_face_through_vertex)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
