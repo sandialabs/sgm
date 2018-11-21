@@ -48,7 +48,7 @@ class sphere;
 class torus;
 class revolve;
 class extrude;
-//class offset; PRS_MISSING_C_FILE
+class offset; 
 class NUBsurface;
 class NURBsurface;
 
@@ -95,7 +95,7 @@ struct EntityVisitor {
     virtual void Visit(torus&) {}
     virtual void Visit(revolve&) {}
     virtual void Visit(extrude&) {}
-    // virtual void Visit(offset&) {} PRS_MISSING_C_FILE
+    virtual void Visit(offset&) {} 
     virtual void Visit(NUBsurface&) {}
     virtual void Visit(NURBsurface&) {}
 };

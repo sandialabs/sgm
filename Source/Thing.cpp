@@ -114,14 +114,13 @@ void thing::SeverOwners(entity *pEntity)
                     pExtrude->m_pCurve = nullptr;
                     break;
                     }
-                // PRS_MISSING_C_FILE
-                //case SGM::OffsetType:
-                //    {
-                //    auto pOffset = reinterpret_cast<offset *>(pEntity);
-                //    pOffset->m_pSurface->RemoveOwner(this);
-                //    pOffset->m_pSurface = nullptr;
-                //    break;
-                //    }
+                case SGM::OffsetType:
+                    {
+                    auto pOffset = reinterpret_cast<offset *>(pEntity);
+                    pOffset->m_pSurface->RemoveOwner(this);
+                    pOffset->m_pSurface = nullptr;
+                    break;
+                    }
                 default:
                     {
                     break;

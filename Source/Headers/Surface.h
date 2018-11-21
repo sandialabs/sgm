@@ -752,7 +752,6 @@ class extrude : public surface
         SGM::UnitVector3D  m_vAxis;
     };
 
-/* The code needs to be checked in. PRS_MISSING_C_FILE
 class offset : public surface
     {
     public:
@@ -803,7 +802,6 @@ class offset : public surface
         surface    *m_pSurface;
         double      m_dDistance;
     };
-*/
 
 bool TestSurface(SGM::Result                &rResult,
                  SGMInternal::surface const *pSurface,

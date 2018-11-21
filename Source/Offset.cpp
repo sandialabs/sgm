@@ -54,7 +54,7 @@ void offset::SetSurface(surface *pSurface)
 //    m_Domain.m_UDomain=pSurface->GetDomain();
     }
 
-bool offset::IsSame(surface const *pOther,double dTolerance) const
+bool offset::IsSame(surface const *pOther,double /*dTolerance*/) const
     {
     if (pOther->GetSurfaceType() != m_SurfaceType)
         {
@@ -63,7 +63,7 @@ bool offset::IsSame(surface const *pOther,double dTolerance) const
     throw std::logic_error("Derived class of surface must override IsSame()");
     }
 
-void offset::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+void offset::FindAllChildren(std::set<entity *, EntityCompare> &/*sChildren*/) const
     {
     throw std::logic_error("Derived class of surface must override FindAllChildren()");
     }
