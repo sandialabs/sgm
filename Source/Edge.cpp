@@ -220,24 +220,11 @@ void edge::FixDomain(SGM::Result &rResult)
         {
         double dStart=m_pCurve->Inverse(m_pStart->GetPoint());
         double dEnd=m_pCurve->Inverse(m_pEnd->GetPoint());
-        m_Domain=SGM::Interval1D(dStart,dEnd);
+        SetDomain(rResult,SGM::Interval1D(dStart,dEnd));
         }
     else
         {
-        m_Domain=m_pCurve->GetDomain();
-        }
-    if(m_aPoints3D.empty()==false)
-        {
-        m_aPoints3D.clear();
-        m_aParams.clear();
-        m_Box.Reset();
-        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
-            {
-            face *pFace=*iter;
-            pFace->ClearFacets(rResult);
-            ++iter;
-            }
+        SetDomain(rResult,m_pCurve->GetDomain());
         }
     }
 

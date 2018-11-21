@@ -21,6 +21,18 @@
 
 #include "test_utility.h"
 
+TEST(math_check, measure_volume)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    double dVolume=SGM::FindVolume(rResult,BodyID,false);
+    EXPECT_TRUE(SGM::NearEqual(dVolume,1000,SGM_MIN_TOL,false));
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, color_inheritance)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -112,6 +124,9 @@ TEST(math_check, point_in_face_vertex_one_edge_case )
     SGM::FindEdges(rResult,BodyID,sEdges);
     SGM::Edge EdgeID=*(sEdges.begin());
     SGM::ImprintPoint(rResult,SGM::Point3D(1,0,0),EdgeID);
+    SGM::PointInEntity(rResult,SGM::Point3D(0.5,0,0),FaceID);
+
+    SGM::ImprintPoint(rResult,SGM::Point3D(-1,0,0),EdgeID);
     SGM::PointInEntity(rResult,SGM::Point3D(0.5,0,0),FaceID);
 
     SGMTesting::ReleaseTestThing(pThing);

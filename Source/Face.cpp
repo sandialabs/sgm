@@ -331,7 +331,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 return InAngle(uvC,uvA,uvB,uv);
@@ -375,7 +375,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 if(nSideType1==SGM::FaceOnLeftType)
