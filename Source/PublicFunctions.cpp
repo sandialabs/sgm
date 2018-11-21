@@ -1724,7 +1724,8 @@ bool SGM::GetConeData(SGM::Result        &rResult,
                       SGM::UnitVector3D  &YAxis,
                       SGM::UnitVector3D  &ZAxis,  
                       double             &dHalfAngle,
-                      double             &dRadius)
+                      double             &dRadius,
+                      SGM::Point3D       &Apex)
     {
     SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
     if(pSurface->GetSurfaceType()!=SGM::EntityType::ConeType)
@@ -1738,6 +1739,7 @@ bool SGM::GetConeData(SGM::Result        &rResult,
     ZAxis     =pCone->m_ZAxis; 
     dHalfAngle=SAFEacos(pCone->m_dCosHalfAngle);
     dRadius   =pCone->m_dRadius;
+    Apex      =pCone->FindApex();
     return true;
     }
  

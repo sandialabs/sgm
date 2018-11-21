@@ -21,6 +21,29 @@
 
 #include "test_utility.h"
 
+TEST(math_check, color_inheritance)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,BodyID,sVolumes);
+    SGM::Volume VolumeID=*(sVolumes.begin());
+    SGM::ChangeColor(rResult,BodyID,255,0,0);
+    int nRed,nBlue,nGreen;
+    SGM::GetColor(rResult,FaceID,nRed,nGreen,nBlue);
+    EXPECT_EQ(nRed,255);
+    SGM::ChangeColor(rResult,VolumeID,254,0,0);
+    SGM::GetColor(rResult,FaceID,nRed,nGreen,nBlue);
+    EXPECT_EQ(nRed,254);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, public_math_functions)
 {
     SGM::SAFEasin(-1.1);
@@ -1386,7 +1409,13 @@ TEST(surface_check, cone)
 
     SGM::UnitVector3D XAxis,YAxis;
     double dHalfAngle,dRadius;
-    SGM::GetConeData(rResult,ConeID,Origin,XAxis,YAxis,ZAxis,dHalfAngle,dRadius);
+    SGM::Point3D Apex;
+    SGM::GetConeData(rResult,ConeID,Origin,XAxis,YAxis,ZAxis,dHalfAngle,dRadius,Apex);
+
+    SGM::UnitVector3D Vec1,Vec2;
+    double dk1,dk2;
+    SGM::Point2D uv=SGM::SurfaceInverse(rResult,ConeID,Apex);
+    SGM::PrincipleCurvature(rResult,ConeID,uv,Vec1,Vec2,dk1,dk2);
 
     bool bAnswer=SGM::TestSurface(rResult,ConeID,SGM::Point2D(0.5,0.2));
     SGM::DeleteEntity(rResult,ConeID);
@@ -3591,9 +3620,31 @@ TEST(math_check, test_complex_props)
 
     EXPECT_TRUE(bOrigined);
 
+    SGM::MergePoints(rResult,ComplexID,SGM_MIN_TOL);
     bool bManifold=SGM::IsManifold(rResult,ComplexID);
 
     EXPECT_TRUE(bManifold);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,0,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    std::vector<unsigned int> aSegs1,aSegs2;
+    aSegs1.push_back(0);
+    aSegs1.push_back(1);
+    aSegs1.push_back(1);
+    aSegs1.push_back(2);
+    aSegs2.push_back(0);
+    aSegs2.push_back(1);
+    aSegs2.push_back(2);
+    aSegs2.push_back(1);
+    SGM::Complex ComplexID1=SGM::CreateSegments(rResult,aPoints,aSegs1);
+    SGM::Complex ComplexID2=SGM::CreateSegments(rResult,aPoints,aSegs2);
+    bool bOrigined1=SGM::IsOriented(rResult,ComplexID1);
+    bool bOrigined2=SGM::IsOriented(rResult,ComplexID2);
+
+    EXPECT_TRUE(bOrigined1);
+    EXPECT_FALSE(bOrigined2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

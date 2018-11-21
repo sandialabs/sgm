@@ -688,6 +688,9 @@ bool RunInternalTest(SGM::Result &rResult,
         auto *pOffsetClone = pOffset->Clone(rResult);
         aEntities.push_back(pOffsetClone);
 
+        rResult.GetThing()->SetConcurrentActive();
+        rResult.GetThing()->SetConcurrentInactive();
+
         try {
             pOffset->WriteSGM(rResult, nullptr, SGM::TranslatorOptions());
         } catch (const std::logic_error&) {}

@@ -331,7 +331,8 @@ SGM_EXPORT bool GetConeData(SGM::Result        &rResult,
                             SGM::UnitVector3D  &YAxis,
                             SGM::UnitVector3D  &ZAxis,  // Points from center to apex.
                             double             &dHalfAngle,
-                            double             &dRadius);
+                            double             &dRadius,
+                            SGM::Point3D       &Apex);
             
 SGM_EXPORT bool GetSphereData(SGM::Result        &rResult,
                               SGM::Surface const &SurfaceID,
