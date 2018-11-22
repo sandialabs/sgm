@@ -4896,6 +4896,10 @@ TEST(math_check, intersect_sphere_plane)
 
     EXPECT_EQ(aCurves.size(),1);
 
+    aCurves.clear();
+    SGM::IntersectSurfaces(rResult,PlaneID,SphereID,aCurves);
+    EXPECT_EQ(aCurves.size(),1);
+
     SGMTesting::ReleaseTestThing(pThing);
 } 
 

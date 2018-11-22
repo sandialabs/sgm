@@ -2565,16 +2565,16 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectPlaneAndTorus(SGM::Result                & /*rResult*/,
-                              plane                const * /*pPlane*/,
-                              torus                const * /*pTorus*/,
-                              std::vector<curve *>       & /*aCurves*/,
-                              face                 const * /*pFace1*/,
-                              face                 const * /*pFace2*/,
-                              double                       /*dTolerance*/)
-    {
-    return 0;
-    }
+//size_t IntersectPlaneAndTorus(SGM::Result                & /*rResult*/,
+//                              plane                const * /*pPlane*/,
+//                              torus                const * /*pTorus*/,
+//                              std::vector<curve *>       & /*aCurves*/,
+//                              face                 const * /*pFace1*/,
+//                              face                 const * /*pFace2*/,
+//                              double                       /*dTolerance*/)
+//    {
+//    return 0;
+//    }
 
 size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
                                 plane                const *pPlane,
@@ -2606,15 +2606,15 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
             cone const *pCone=(cone const *)pSurface;
             return IntersectPlaneAndCone(rResult,pPlane,pCone,aCurves,pFace1,pFace2,dTolerance);
             }
-        case SGM::EntityType::TorusType:
-            {
-            torus const *pTorus=(torus const *)pSurface;
-            return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
-            }
-        case SGM::EntityType::RevolveType:
-            {
-            throw;
-            }
+        //case SGM::EntityType::TorusType:
+        //    {
+        //    torus const *pTorus=(torus const *)pSurface;
+        //    return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
+        //    }
+        //case SGM::EntityType::RevolveType:
+        //    {
+        //    throw;
+        //    }
         default:
             {
             return IntersectPlaneAndSurface(rResult,pPlane,pSurface,aCurves,pFace1,pFace2,dTolerance);
