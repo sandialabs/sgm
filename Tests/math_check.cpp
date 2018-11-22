@@ -197,7 +197,9 @@ TEST(math_check, imprint_edge_on_face_atoll_flipped)
     SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
     SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
 
-    SGM::GetFacePoints3D(rResult,FaceID);
+    std::vector<std::string> aLog;
+    SGM::CheckOptions Options;
+    SGM::CheckEntity(rResult,FaceID,Options,aLog);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1006,6 +1008,10 @@ TEST(math_check, revolve_surface_save_step)
     SGM::Point3D Origin(-1,0,0);
     SGM::UnitVector3D Axis(1,0,0);
     SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
+
+    std::vector<std::string> aLog1;
+    SGM::CheckOptions Options1;
+    SGM::CheckEntity(rResult,RevolveID,Options1,aLog1);
 
     SGM::SaveSGM(rResult,"GTest_revolve_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
