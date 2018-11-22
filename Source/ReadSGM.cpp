@@ -605,53 +605,53 @@ void ReadCircle(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCircle;
     } 
       
-void ReadEllipse(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadParabola(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadHyperbola(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadNUBCurve(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadNURBCurve(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadPointCurve(SGM::Result              &,//rResult,
-                    std::vector<std::string> &,//aArgs,
-                    std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadHermite(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadTorusKnot(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
+//void ReadEllipse(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadParabola(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadHyperbola(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadNUBCurve(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadNURBCurve(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadPointCurve(SGM::Result              &,//rResult,
+//                    std::vector<std::string> &,//aArgs,
+//                    std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadHermite(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadTorusKnot(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
 
 void ReadPlane(SGM::Result              &rResult,
                std::vector<std::string> &aArgs,
@@ -830,41 +830,41 @@ void ReadTorus(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pTorus;
     }
 
-void ReadNUBSurface(SGM::Result              &,//rResult,
-                    std::vector<std::string> &,//aArgs,
-                    std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadNURBSurface(SGM::Result              &,//rResult,
-                     std::vector<std::string> &,//aArgs,
-                     std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadRevolve(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadExtrude(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadReference(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadAssembly(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
+//void ReadNUBSurface(SGM::Result              &,//rResult,
+//                    std::vector<std::string> &,//aArgs,
+//                    std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadNURBSurface(SGM::Result              &,//rResult,
+//                     std::vector<std::string> &,//aArgs,
+//                     std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadRevolve(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadExtrude(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadReference(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadAssembly(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1085,38 +1085,38 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
             {
             ReadCircle(rResult,aArgs,mEntityMap);
             }
-        else if(aArgs[1]=="Ellipse")
-            {
-            ReadEllipse(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Parabola")
-            {
-            ReadParabola(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Hyperbola")
-            {
-            ReadHyperbola(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NUBCurve")
-            {
-            ReadNUBCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NURBCurve")
-            {
-            ReadNURBCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="PointCurve")
-            {
-            ReadPointCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Hermite")
-            {
-            ReadHermite(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="TorusKnot")
-            {
-            ReadTorusKnot(rResult,aArgs,mEntityMap);
-            }
+        //else if(aArgs[1]=="Ellipse")
+        //    {
+        //    ReadEllipse(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Parabola")
+        //    {
+        //    ReadParabola(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Hyperbola")
+        //    {
+        //    ReadHyperbola(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NUBCurve")
+        //    {
+        //    ReadNUBCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NURBCurve")
+        //    {
+        //    ReadNURBCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="PointCurve")
+        //    {
+        //    ReadPointCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Hermite")
+        //    {
+        //    ReadHermite(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="TorusKnot")
+        //    {
+        //    ReadTorusKnot(rResult,aArgs,mEntityMap);
+        //    }
         else if(aArgs[1]=="Plane")
             {
             ReadPlane(rResult,aArgs,mEntityMap);
@@ -1137,30 +1137,30 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
             {
             ReadTorus(rResult,aArgs,mEntityMap);
             }
-        else if(aArgs[1]=="NUBSurface")
-            {
-            ReadNUBSurface(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NURBSurface")
-            {
-            ReadNURBSurface(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Revolve")
-            {
-            ReadRevolve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Extrude")
-            {
-            ReadExtrude(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Reference")
-            {
-            ReadReference(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Assembly")
-            {
-            ReadAssembly(rResult,aArgs,mEntityMap);
-            }
+        //else if(aArgs[1]=="NUBSurface")
+        //    {
+        //    ReadNUBSurface(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NURBSurface")
+        //    {
+        //    ReadNURBSurface(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Revolve")
+        //    {
+        //    ReadRevolve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Extrude")
+        //    {
+        //    ReadExtrude(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Reference")
+        //    {
+        //    ReadReference(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Assembly")
+        //    {
+        //    ReadAssembly(rResult,aArgs,mEntityMap);
+        //    }
         line.clear();
         }
 

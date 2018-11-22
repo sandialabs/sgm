@@ -197,6 +197,8 @@ TEST(math_check, imprint_edge_on_face_atoll_flipped)
     SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
     SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
 
+    SGM::GetFacePoints3D(rResult,FaceID);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
