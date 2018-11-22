@@ -3866,8 +3866,8 @@ TEST(math_check, test_complex_props)
 
     EXPECT_TRUE(bOrigined);
 
-    SGM::MergePoints(rResult,ComplexID,SGM_MIN_TOL);
-    bool bManifold=SGM::IsManifold(rResult,ComplexID);
+    SGM::Complex SmallComplexID=SGM::MergePoints(rResult,ComplexID,SGM_MIN_TOL);
+    bool bManifold=SGM::IsManifold(rResult,SmallComplexID);
 
     EXPECT_TRUE(bManifold);
 
