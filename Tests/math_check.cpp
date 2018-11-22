@@ -21,6 +21,23 @@
 
 #include "test_utility.h"
 
+TEST(math_check, create_sheet_body_with_edges)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::vector<SGM::Edge> aEdges;
+    aEdges.push_back(EdgeID);
+    std::vector<SGM::EdgeSideType> aTypes;
+    aTypes.push_back(SGM::FaceOnLeftType);
+    SGM::Body BodyID=SGM::CreateSheetBody(rResult,SurfID,aEdges,aTypes);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, singular_in_V_NURBSurface)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -3160,6 +3177,7 @@ TEST(math_check, NUB_curve_through_three_points)
     aPoints.reserve(3);
     aPoints.emplace_back(1,1,0);
     aPoints.emplace_back(2,2,0);
+    aPoints.emplace_back(2.1,1.9,0);
     aPoints.emplace_back(3,1,0);
 
     SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
