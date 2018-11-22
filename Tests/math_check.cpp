@@ -367,8 +367,11 @@ TEST(math_check, step_save_wire_body )
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,0));
     std::set<SGM::Edge> sEdges;
     sEdges.insert(EdgeID);
-    SGM::CreateWireBody(rResult,sEdges);
+    SGM::Body WireID=SGM::CreateWireBody(rResult,sEdges);
     SGM::SaveSTEP(rResult,"Gtest_wire_save.stp",SGM::Thing(),SGM::TranslatorOptions());
+
+    std::set<SGM::Vertex> sVertices;
+    SGM::FindVertices(rResult,WireID,sVertices);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1235,7 +1238,7 @@ TEST(math_check, rectangle)
 
     SGM::Body IDBox=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
     SGM::Complex IDComplexBox=SGM::CreateComplex(rResult,IDBox);
-    SGM::FindSharpEdges(rResult,IDComplexBox,0.1);
+    SGM::FindSharpEdges(rResult,SGM::MergePoints(rResult,IDComplexBox,SGM_MIN_TOL),0.1);
 
     std::vector<SGM::Point3D> aPoints1,aPoints2,aPoints3;
     std::vector<SGM::IntersectionType> aTypes1,aTypes2;
