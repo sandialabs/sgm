@@ -1165,6 +1165,9 @@ TEST(math_check, extrude_hermit)
     SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
 
+    double dGuess=0;
+    SGM::CurveInverse(rResult,CurveID,SGM::Point3D(0,0,0),nullptr,&dGuess);
+
     SGM::SaveSGM(rResult,"GTest_hermite_test.sgm",CurveID,SGM::TranslatorOptions());
 
     SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
@@ -1597,6 +1600,9 @@ TEST(surface_check, sphere)
     SGM::UnitVector3D YAxis=XAxis.Orthogonal();
     double dRadius=2.5;
     SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,Origin,dRadius,&XAxis,&YAxis);
+
+    SGM::Point2D GuessUV(1,2);
+    SGM::SurfaceInverse(rResult,SphereID,Origin,nullptr,&GuessUV);
 
     SGM::GetSphereData(rResult,SphereID,Origin,XAxis,YAxis,ZAxis,dRadius);
 
@@ -2210,6 +2216,9 @@ TEST(math_check, intersect_line_and_revolve)
     SGM::Point3D AxisOrigin(-1,0,0);
     SGM::UnitVector3D Axis(1,0,0);
     SGM::Surface RevolveID = SGM::CreateRevolveSurface(rResult, AxisOrigin, Axis, CurveID);
+
+    SGM::Point2D GuessUV(0,0);
+    SGM::SurfaceInverse(rResult,RevolveID,SGM::Point3D(-2,0.5,0),nullptr,&GuessUV);
 
     SGM::GetRevolveData(rResult,RevolveID,AxisOrigin,Axis,CurveID);
 
@@ -4557,6 +4566,14 @@ TEST(math_check, ellipse_merge)
     double dXRadius=1,dYRadius=2;
     SGM::Curve CurveID=SGM::CreateEllipse(rResult,Center,XAxis,YAxis,dXRadius,dYRadius);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    double dGuess1=0;
+    double dGuess2=SGM_TWO_PI;
+    SGM::Point3D TestPos(1,0,0);
+    double t1=SGM::CurveInverse(rResult,CurveID,TestPos,nullptr,&dGuess1);
+    double t2=SGM::CurveInverse(rResult,CurveID,TestPos,nullptr,&dGuess2);
+    EXPECT_TRUE(SGM::NearEqual(t1,0,SGM_ZERO,false));
+    EXPECT_TRUE(SGM::NearEqual(t2,SGM_TWO_PI,SGM_ZERO,false));
 
     double dA,dB;
     SGM::GetEllipseData(rResult,CurveID,Center,XAxis,YAxis,Normal,dA,dB);
