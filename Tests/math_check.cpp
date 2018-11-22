@@ -67,6 +67,9 @@ TEST(math_check, singular_in_V_NURBSurface)
     aaPoints[2][1]=SGM::Point4D(1.0,2.0,0.0,0.0);
     aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,1);
     
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -100,6 +103,9 @@ TEST(math_check, singular_in_U_NURBSurface)
     aaPoints[2][1]=SGM::Point4D(2.0,0.0,0.0,0.0);
     aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,1);
     
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -133,6 +139,9 @@ TEST(math_check, singular_in_V_NUBSurface)
     aaPoints[2][1]=SGM::Point3D(1.0,2.0,0.0);
     aaPoints[2][2]=SGM::Point3D(2.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,1);
     
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -166,6 +175,9 @@ TEST(math_check, singular_in_U_NUBSurface)
     aaPoints[2][1]=SGM::Point3D(2.0,0.0,0.0);
     aaPoints[2][2]=SGM::Point3D(2.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,1);
     
     SGMTesting::ReleaseTestThing(pThing);
 }

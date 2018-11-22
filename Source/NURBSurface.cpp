@@ -286,7 +286,11 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
                     v=v-v2;
                     }
                 }
-            double denom=1.0/wders[0][0];
+            double denom=1.0;
+            if(SGM_ZERO<fabs(wders[0][0]))
+                {
+                denom/=wders[0][0];
+                }
             values[k][s].m_x=v.m_x*denom;
             values[k][s].m_y=v.m_y*denom;
             values[k][s].m_z=v.m_z*denom;
