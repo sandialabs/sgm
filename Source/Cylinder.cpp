@@ -230,7 +230,8 @@ void cylinder::PrincipleCurvature(SGM::Point2D const &uv,
     Vec2=dV;
     }
 
-void cylinder::Transform(SGM::Transform3D const &Trans)
+void cylinder::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
         m_Origin = Trans * m_Origin;
         m_XAxis = Trans * m_XAxis;

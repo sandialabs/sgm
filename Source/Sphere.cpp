@@ -214,7 +214,8 @@ void sphere::PrincipleCurvature(SGM::Point2D const &uv,
     Vec2=dV;
     }
 
-void sphere::Transform(SGM::Transform3D const &Trans)
+void sphere::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;

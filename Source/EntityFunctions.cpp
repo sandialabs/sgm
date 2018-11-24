@@ -168,13 +168,13 @@ void TransformEntity(SGM::Result            &rResult,
             case SGM::SurfaceType:
                 {
                 surface *pSurface=(surface *)pChildEntity;
-                pSurface->Transform(transform3D);
+                pSurface->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::CurveType:
                 {
                 curve *pCurve=(curve *)pChildEntity;
-                pCurve->Transform(transform3D);
+                pCurve->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::ComplexType:

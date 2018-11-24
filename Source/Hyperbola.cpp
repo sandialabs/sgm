@@ -111,7 +111,8 @@ double hyperbola::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void hyperbola::Transform(SGM::Transform3D const &Trans)
+void hyperbola::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     // f(t)=a*sqrt(1+t^2/b^2)
     m_Center=Trans*m_Center;

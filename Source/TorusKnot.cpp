@@ -140,7 +140,8 @@ double TorusKnot::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void TorusKnot::Transform(SGM::Transform3D const &Trans)
+void TorusKnot::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;

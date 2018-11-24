@@ -167,18 +167,18 @@ SGM::Point2D extrude::Inverse(SGM::Point3D const &Pos,
     }
 
     
-void extrude::Transform(SGM::Transform3D const &Trans)
+void extrude::Transform(SGM::Result            &rResult,
+                        SGM::Transform3D const &Trans)
     {
     m_vAxis=Trans*m_vAxis;
-    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
+    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()>1)
         {
-        m_pCurve->Transform(Trans);
+        curve *pCopy=m_pCurve->Clone(rResult);
+        m_pCurve->RemoveOwner(this);
+        m_pCurve=pCopy;
+        
         }
-    else
-        {
-        //TODO: Make a copy and transform the copy.
-        throw std::logic_error("Missing implementation of Transform() when curve has other owners");
-        }
+    m_pCurve->Transform(rResult,Trans);
     }
 
 curve *extrude::UParamLine(SGM::Result &, double) const

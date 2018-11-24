@@ -83,7 +83,8 @@ SGM::Point2D offset::Inverse(SGM::Point3D const &,
                               SGM::Point2D const *) const
     { throw std::logic_error("Derived class of surface must override Inverse()"); }
 
-void offset::Transform(SGM::Transform3D const &)
+void offset::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &)
     { throw std::logic_error("Derived class of surface must override Transform()"); }
 
 curve *offset::UParamLine(SGM::Result &, double) const

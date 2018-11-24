@@ -713,7 +713,7 @@ bool RunInternalTest(SGM::Result &rResult,
 
         try {
             SGM::Transform3D theTransform3D;
-            pOffset->Transform(theTransform3D);
+            pOffset->Transform(rResult,theTransform3D);
             }  catch (const std::logic_error&) {}
 
         try {

@@ -83,7 +83,8 @@ double PointCurve::Inverse(SGM::Point3D const &,
     return GetDomain().m_dMin;
     }
 
-void PointCurve::Transform(SGM::Transform3D const &Trans)
+void PointCurve::Transform(SGM::Result            &,//rResult,
+                           SGM::Transform3D const &Trans)
     {
     m_Pos=Trans*m_Pos;
     }

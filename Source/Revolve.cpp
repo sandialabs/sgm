@@ -217,7 +217,8 @@ SGM::Point2D revolve::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
     
-void revolve::Transform(SGM::Transform3D const &Trans)
+void revolve::Transform(SGM::Result            &rResult,
+                        SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;
@@ -225,7 +226,7 @@ void revolve::Transform(SGM::Transform3D const &Trans)
     m_ZAxis=Trans*m_ZAxis;
     if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
         {
-        m_pCurve->Transform(Trans);
+        m_pCurve->Transform(rResult,Trans);
         }
     else
         {

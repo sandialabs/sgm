@@ -81,7 +81,8 @@ class curve : public entity
 
         virtual void Negate();
 
-        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+        virtual void Transform(SGM::Result            &rResult,
+                               SGM::Transform3D const &Trans) = 0;
 
         virtual std::vector<double> SpecialFacetParams() const;
 
@@ -146,7 +147,8 @@ class line : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -191,7 +193,8 @@ class circle : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -246,7 +249,8 @@ class NUBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -314,7 +318,8 @@ class NURBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -377,7 +382,8 @@ class PointCurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -418,7 +424,8 @@ class ellipse: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -464,7 +471,8 @@ class hyperbola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -509,7 +517,8 @@ class parabola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -561,7 +570,8 @@ class TorusKnot: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -616,7 +626,8 @@ class hermite: public curve
 
         void Negate() override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,

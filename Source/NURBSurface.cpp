@@ -477,7 +477,8 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
 
-void NURBsurface::Transform(SGM::Transform3D const &Trans)
+void NURBsurface::Transform(SGM::Result            &,//rResult,
+                            SGM::Transform3D const &Trans)
     {
     size_t nSize1 = m_aaControlPoints.size();
     size_t nSize2 = m_aaControlPoints[0].size();

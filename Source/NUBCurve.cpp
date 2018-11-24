@@ -135,7 +135,8 @@ double NUBcurve::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void NUBcurve::Transform(SGM::Transform3D const &Trans)
+void NUBcurve::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
     for (auto & Pos: m_aControlPoints)
         Pos=Trans*Pos;

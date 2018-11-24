@@ -178,7 +178,8 @@ void plane::PrincipleCurvature(SGM::Point2D const   &,
     k2=0;
     }
 
-void plane::Transform(SGM::Transform3D const &Trans)
+void plane::Transform(SGM::Result            &,//rResult,
+                      SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;

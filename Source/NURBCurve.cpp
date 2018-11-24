@@ -159,7 +159,8 @@ std::vector<double> NURBcurve::SpecialFacetParams() const
     return aUniqueKnots;
     }
 
-void NURBcurve::Transform(SGM::Transform3D const &Trans)
+void NURBcurve::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     for (auto & Pos4D : m_aControlPoints)
         {
