@@ -15,7 +15,7 @@ namespace SGMInternal
 
             SortablePlane(std::vector<SGM::Point3D> const &aPoints);
 
-            void SetMinTolerance(double dMinTolerance);
+            void SetTolerance(double dTolerance);
 
             // Planes are shorted so that parallel planes are next to each other.
 

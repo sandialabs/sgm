@@ -660,9 +660,11 @@ bool RunInternalTest(SGM::Result &rResult,
         SGMInternal::SortablePlane SP1(aPoints1);
         SGMInternal::SortablePlane SP2(aPoints2);
 
-        SP1.SetMinTolerance(0.01);
+        SP1.SetTolerance(0.01);
 
         bool bTest=SP1<SP2;
+        bTest=SP2<SP1;
+        bTest=SP1<SP1;
         bTest=(SP1==SP2);
 
         SP1.Origin();
