@@ -180,12 +180,6 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
 
 std::vector<double> const &NUBcurve::GetSeedParams() const
     {
-    if(m_aSeedPoints.empty())
-        {
-        FacetOptions Options;
-        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
-        }
     return m_aSeedParams;
     }
 

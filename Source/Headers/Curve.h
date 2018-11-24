@@ -261,10 +261,6 @@ class NUBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
@@ -274,10 +270,15 @@ class NUBcurve: public curve
 
         std::vector<double> SpecialFacetParams() const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point3D> m_aControlPoints;
-        std::vector<double>       m_aKnots;   
+        std::vector<double>       m_aKnots;  
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -330,10 +331,6 @@ class NURBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
@@ -341,10 +338,15 @@ class NURBcurve: public curve
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point4D> m_aControlPoints;
         std::vector<double>       m_aKnots;   
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;

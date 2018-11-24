@@ -1641,8 +1641,8 @@ bool SGM::GetNUBCurveData(SGM::Result               &rResult,
         return false;
         }
     SGMInternal::NUBcurve const *pNUBCurve=(SGMInternal::NUBcurve const *)pCurve;
-    aControlPoints=pNUBCurve->m_aControlPoints;
-    aKnots        =pNUBCurve->m_aKnots;
+    aControlPoints=pNUBCurve->GetControlPoints();
+    aKnots        =pNUBCurve->GetKnots();
     return true;
     }
   
@@ -1657,8 +1657,8 @@ bool SGM::GetNURBCurveData(SGM::Result               &rResult,
         return false;
         }
     SGMInternal::NURBcurve const *pNURBCurve=(SGMInternal::NURBcurve const *)pCurve;
-    aControlPoints=pNURBCurve->m_aControlPoints;
-    aKnots        =pNURBCurve->m_aKnots;
+    aControlPoints=pNURBCurve->GetControlPoints();
+    aKnots        =pNURBCurve->GetKnots();
     return true;
     }
 
