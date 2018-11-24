@@ -132,7 +132,12 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 
 bool edge::PointInEdge(SGM::Point3D const &Pos,double dTolerance) const
     {
-    double t=m_pCurve->Inverse(Pos);
+    SGM::Point3D CPos;
+    double t=m_pCurve->Inverse(Pos,&CPos);
+    if(dTolerance*dTolerance<Pos.DistanceSquared(CPos))
+        {
+        return false;
+        }
     SnapToDomain(t,dTolerance);
     return m_Domain.InInterval(t,dTolerance);
     }

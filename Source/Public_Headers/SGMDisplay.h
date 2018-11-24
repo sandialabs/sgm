@@ -14,12 +14,18 @@ namespace SGM
     {
     //////////////////////////////////////////////////////////////////////////
     //
-    //  Get Functions
+    //  Edge Display Functions
     //
     //////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT std::vector<SGM::Point3D> const &GetEdgePoints(SGM::Result     &rResult,
                                                               SGM::Edge const &EdgeID);
+
+    //////////////////////////////////////////////////////////////////////////
+    //
+    //  Face Display Functions
+    //
+    //////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT std::vector<SGM::Point3D> const &GetFacePoints3D(SGM::Result     &rResult,
                                                                 SGM::Face const &FaceID);
@@ -32,6 +38,17 @@ namespace SGM
 
     SGM_EXPORT std::vector<SGM::UnitVector3D> const &GetFaceNormals(SGM::Result     &rResult,
                                                                     SGM::Face const &FaceID);
+
+    // Finds the lowest level associated entity for each facet point.
+
+    SGM_EXPORT std::vector<SGM::Entity> FindPointEntities(SGM::Result     &rResult,
+                                                          SGM::Face const &FaceID);
+
+    //////////////////////////////////////////////////////////////////////////
+    //
+    //  Complex Display Functions
+    //
+    //////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT std::vector<SGM::Point3D> const &GetComplexPoints(SGM::Result        &rResult,
                                                                  SGM::Complex const &ComplexID);

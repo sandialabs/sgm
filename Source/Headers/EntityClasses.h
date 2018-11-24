@@ -818,6 +818,8 @@ class face : public topology
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
+        std::vector<SGMInternal::entity *> FindPointEntities(SGM::Result &rResult) const;
+
         surface *GetSurface() const {return m_pSurface;}
 
         // Returns true if the face is on the left as one moves from 

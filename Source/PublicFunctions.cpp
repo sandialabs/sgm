@@ -302,6 +302,20 @@ std::vector<SGM::Point3D> const &SGM::GetFacePoints3D(SGM::Result     &rResult,
     return pFace->GetPoints3D(rResult);
     }
 
+std::vector<SGM::Entity> SGM::FindPointEntities(SGM::Result     &rResult,
+                                               SGM::Face const &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);    
+    std::vector<SGMInternal::entity *> aEnts=pFace->FindPointEntities(rResult);
+    std::vector<SGM::Entity> aAnswer;
+    aAnswer.reserve(aEnts.size());
+    for(auto *pEnt : aEnts)
+        {
+        aAnswer.push_back(SGM::Entity(pEnt->GetID()));
+        }
+    return aAnswer;
+    }
+
 bool SGM::GetColor(SGM::Result       &rResult,
                    SGM::Entity const &EntityID,
                    int               &nRed,

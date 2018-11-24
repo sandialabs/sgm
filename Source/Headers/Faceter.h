@@ -88,7 +88,8 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
 void SubdivideFacets(face                const *pFace,
                      std::vector<SGM::Point3D> &aPoints3D,
                      std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<unsigned int> &aTriangles);
+                     std::vector<unsigned int> &aTriangles,
+                     std::vector<entity *>     &aEntities);
 
 void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
                   std::vector<SGM::Point2D>       &aPoints,
