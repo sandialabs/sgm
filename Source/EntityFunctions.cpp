@@ -134,6 +134,7 @@ void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity)
     {
+    pEntity->TransformBox(rResult,transform3D);
     std::set<entity *,EntityCompare> sChildren;
     pEntity->FindAllChildren(sChildren);
     sChildren.insert(pEntity);

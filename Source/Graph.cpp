@@ -367,14 +367,16 @@ size_t FindLower(size_t                                 nStart,
     {
     size_t nStartDist=mDistance[nStart];
     std::vector<size_t> aAdj=mNeighbors[nStart];
-    for(size_t nAnswer : aAdj)
+    size_t nAnswer=nStart;
+    for(size_t nTest : aAdj)
         {
-        if(mDistance[nAnswer]<nStartDist)
+        if(mDistance[nTest]<nStartDist)
             {
-            return nAnswer;
+            nAnswer=nTest;
+            break;
             }
         }
-    return nStart;
+    return nAnswer;
     }
 
 SGM::Graph SGM::Graph::FindMinCycle(SGM::GraphEdge &GE) const
