@@ -1550,6 +1550,15 @@ bool SGM::IsSurfaceSingularLowV(SGM::Result        &rResult,
     return pSurface->SingularLowV();
     }
 
+bool SGM::IsSingularity(SGM::Result        &rResult,
+                        SGM::Surface const &SurfaceID,
+                        SGM::Point2D const &uv,
+                        double              dTolerance)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->IsSingularity(uv,dTolerance);
+    }
+
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,

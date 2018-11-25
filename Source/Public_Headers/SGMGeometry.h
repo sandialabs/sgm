@@ -242,6 +242,11 @@ SGM_EXPORT bool IsSurfaceSingularLowU(SGM::Result        &rResult,
 SGM_EXPORT bool IsSurfaceSingularLowV(SGM::Result        &rResult,
                                       SGM::Surface const &SurfaceID);
 
+SGM_EXPORT bool IsSingularity(SGM::Result        &rResult,
+                              SGM::Surface const &SurfaceID,
+                              SGM::Point2D const &uv,
+                              double              dTolerance);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Get Curve Data

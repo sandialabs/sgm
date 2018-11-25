@@ -109,6 +109,7 @@ TEST(math_check, singular_in_U_NURBSurface)
 
     EXPECT_TRUE(SGM::IsSurfaceSingularHighU(rResult,NUBSurfaceID));
     EXPECT_TRUE(SGM::IsSurfaceSingularLowU(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSingularity(rResult,NUBSurfaceID,SGM::Point2D(0,0),SGM_MIN_TOL));
 
     SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
     SGM::FindUParamCurve(rResult,NUBSurfaceID,1);
