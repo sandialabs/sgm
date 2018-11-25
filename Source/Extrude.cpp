@@ -174,9 +174,10 @@ void extrude::Transform(SGM::Result            &rResult,
     if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()>1)
         {
         curve *pCopy=m_pCurve->Clone(rResult);
+        pCopy->RemoveAllOwners();
+        pCopy->AddOwner(this);
         m_pCurve->RemoveOwner(this);
         m_pCurve=pCopy;
-        
         }
     m_pCurve->Transform(rResult,Trans);
     }

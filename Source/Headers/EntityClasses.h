@@ -163,6 +163,8 @@ public:
 
     void RemoveColor(SGM::Result &rResult);
 
+    void RemoveAllOwners();
+
 protected:
 
     size_t                                       m_ID;
@@ -175,8 +177,6 @@ protected:
     // Only to be called from the thing constructor.
 
     entity();
-
-    void RemoveAllOwners();
 
     void OwnerAndAttributeReplacePointers(std::map<entity *, entity *> const &mEntityMap);
 

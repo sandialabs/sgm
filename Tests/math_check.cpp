@@ -1174,8 +1174,11 @@ TEST(math_check, extrude_hermit)
 
     SGM::UnitVector3D Axis(0,0,1);
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    SGM::Surface SurfIDCopy=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(6,1)));
-
+    SGM::Point2D uv(0,0);
+    SGM::SurfaceInverse(rResult,SurfID,SGM::Point3D(0,0,0),nullptr,&uv);
+    
     SGM::SaveSGM(rResult,"GTest_extrude_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
