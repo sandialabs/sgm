@@ -68,6 +68,9 @@ TEST(math_check, singular_in_V_NURBSurface)
     aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
 
+    EXPECT_TRUE(SGM::IsSurfaceSingularHighV(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSurfaceSingularLowV(rResult,NUBSurfaceID));
+
     SGM::FindVParamCurve(rResult,NUBSurfaceID,0);
     SGM::FindVParamCurve(rResult,NUBSurfaceID,1);
     
@@ -103,6 +106,9 @@ TEST(math_check, singular_in_U_NURBSurface)
     aaPoints[2][1]=SGM::Point4D(2.0,0.0,0.0,0.0);
     aaPoints[2][2]=SGM::Point4D(2.0,0.0,0.0,0.0);
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    EXPECT_TRUE(SGM::IsSurfaceSingularHighU(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSurfaceSingularLowU(rResult,NUBSurfaceID));
 
     SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
     SGM::FindUParamCurve(rResult,NUBSurfaceID,1);

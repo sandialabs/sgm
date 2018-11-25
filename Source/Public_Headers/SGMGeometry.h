@@ -227,6 +227,21 @@ SGM_EXPORT bool SameCurve(SGM::Result      &rResult,
                           SGM::Curve const &CurveID2,
                           double            dTolerance);
 
+SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
+                                                     SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularHighU(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+ 
+SGM_EXPORT bool IsSurfaceSingularHighV(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowU(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowV(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Get Curve Data
@@ -306,10 +321,7 @@ SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
 
 SGM_EXPORT SGM::EntityType GetSurfaceType(SGM::Result        &rResult,
                                           SGM::Surface const &SurfaceID);
-
-SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
-                                                     SGM::Surface const &SurfaceID);
-             
+            
 SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Surface const &SurfaceID,
                              SGM::Point3D       &Origin,

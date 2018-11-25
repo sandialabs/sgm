@@ -1522,6 +1522,34 @@ SGM::Interval2D const &SGM::GetDomainOfSurface(SGM::Result        &rResult,
     return pSurface->GetDomain();
     }
 
+bool SGM::IsSurfaceSingularHighU(SGM::Result        &rResult,
+                                 SGM::Surface const &SurfaceID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->SingularHighU();
+    }
+
+bool SGM::IsSurfaceSingularHighV(SGM::Result        &rResult,
+                                 SGM::Surface const &SurfaceID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->SingularHighV();
+    }
+
+bool SGM::IsSurfaceSingularLowU(SGM::Result        &rResult,
+                                SGM::Surface const &SurfaceID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->SingularLowU();
+    }
+
+bool SGM::IsSurfaceSingularLowV(SGM::Result        &rResult,
+                                SGM::Surface const &SurfaceID)
+    {
+    SGMInternal::surface const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    return pSurface->SingularLowV();
+    }
+
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,
