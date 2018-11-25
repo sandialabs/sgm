@@ -734,6 +734,14 @@ bool RunInternalTest(SGM::Result &rResult,
 
         pOffset->SetSurface(pPlane);
         }
+    else if(nTestNumber==6) // SnapToDomain testing
+        {
+        SGM::UnitVector3D ZAxis(0,0,1);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,SGM::Point3D(0,0,0),ZAxis,1.0,3.0,false);
+        SGM::Point2D uv1(10,10),uv2(-10,-10);
+        pTorus->SnapToDomain(uv1);
+        pTorus->SnapToDomain(uv2);
+        }
     
     return bAnswer;
     }

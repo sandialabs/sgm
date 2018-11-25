@@ -5672,6 +5672,16 @@ TEST(math_check, entity_free_intersections)
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
+TEST(math_check, internal_surface_tests) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    EXPECT_TRUE(SGM::RunInternalTest(rResult,6));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 TEST(math_check, line_cone_intersect_empty)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
