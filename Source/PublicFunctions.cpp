@@ -941,6 +941,20 @@ SGM::Interval1D const &SGM::GetDomainOfEdge(SGM::Result     &rResult,
     return pEdge->GetDomain();
     }
 
+SGM::Point3D SGM::GetStartPointOfEdge(SGM::Result     &rResult,
+                                      SGM::Edge const &EdgeID)
+    {
+    SGMInternal::edge const *pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pEdge->FindStartPoint();
+    }
+
+SGM::Point3D SGM::GetEndPointOfEdge(SGM::Result     &rResult,
+                                    SGM::Edge const &EdgeID)
+    {
+    SGMInternal::edge const *pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pEdge->FindEndPoint();
+    }
+
 SGM::Point3D const &SGM::GetPointOfVertex(SGM::Result       &rResult,
                                           SGM::Vertex const &VertexID)
     {

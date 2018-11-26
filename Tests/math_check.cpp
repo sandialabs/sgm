@@ -28,6 +28,8 @@ TEST(math_check, edge_params)
 
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,1,1));
     SGM::GetEdgeParams(rResult,EdgeID);
+    SGM::GetStartPointOfEdge(rResult,EdgeID);
+    SGM::GetEndPointOfEdge(rResult,EdgeID);
     
     SGMTesting::ReleaseTestThing(pThing);
 }
