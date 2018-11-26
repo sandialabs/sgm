@@ -633,6 +633,7 @@ bool RunInternalTest(SGM::Result &rResult,
         SGMInternal::EntityVisitor basicVisitor;
         pThing->VisitEntities(basicVisitor);
         basicVisitor.Visit(*pThing);
+        pThing->Accept(basicVisitor);
 
         // a transform that is not just a scale or translation
         SGM::Vector4D XAxis4D = {3, 2, 2, 7};
@@ -644,6 +645,7 @@ bool RunInternalTest(SGM::Result &rResult,
         // call a visitor that gets bounding boxes and transforms the bounding boxes
         SGMInternal::UnitTestGetBoxVisitor boxVisitor(rResult, Deform);
         pThing->VisitEntities(boxVisitor);
+        boxVisitor.Visit(*pThing);
         pThing->Accept(boxVisitor);
         }
     else if(nTestNumber==4) // SortablePlane testing
