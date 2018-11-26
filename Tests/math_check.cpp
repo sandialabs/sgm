@@ -21,6 +21,29 @@
 
 #include "test_utility.h"
 
+TEST(math_check, plane_param_line)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Interval2D Domain(0,1,0,1);
+    SGM::SetDomainOfSurface(rResult,SurfID,Domain);
+    size_t Index1;
+    for(Index1=0;Index1<5;++Index1)
+        {
+        double dU=Domain.m_UDomain.MidPoint(Index1/4.0);
+        SGM::Curve CurveIDU=SGM::FindUParamCurve(rResult,SurfID,dU);
+        SGM::CreateEdge(rResult,CurveIDU);
+        
+        double dV=Domain.m_VDomain.MidPoint(Index1/4.0);
+        SGM::Curve CurveIDV=SGM::FindVParamCurve(rResult,SurfID,dV);
+        SGM::CreateEdge(rResult,CurveIDV);
+        }
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, sphere_param_line)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

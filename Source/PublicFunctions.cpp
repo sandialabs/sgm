@@ -1522,6 +1522,14 @@ SGM::Interval2D const &SGM::GetDomainOfSurface(SGM::Result        &rResult,
     return pSurface->GetDomain();
     }
 
+void SGM::SetDomainOfSurface(SGM::Result           &rResult,
+                             SGM::Surface          &SurfaceID,
+                             SGM::Interval2D const &Domain)
+    {
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    pSurface->SetDomain(Domain);
+    }
+
 bool SGM::IsSurfaceSingularHighU(SGM::Result        &rResult,
                                  SGM::Surface const &SurfaceID)
     {

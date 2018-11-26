@@ -52,6 +52,9 @@ inline bool surface::SingularHighV() const
 inline SGM::Interval2D const &surface::GetDomain() const
     {return m_Domain;}
 
+inline void surface::SetDomain(SGM::Interval2D const &Domain)
+    { m_Domain=Domain;}
+
 } // namespace SGMInternal
 
 #endif // SGM_INTERNAL_SURFACE_INL

@@ -120,6 +120,8 @@ class surface : public entity
 
         SGM::Interval2D const &GetDomain() const;
 
+        void SetDomain(SGM::Interval2D const &Domain);
+
         void SnapToDomain(SGM::Point2D &uv) const;
 
         // Returns the two-dimensional unit vector in the parameters space 

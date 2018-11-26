@@ -230,6 +230,10 @@ SGM_EXPORT bool SameCurve(SGM::Result      &rResult,
 SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
                                                      SGM::Surface const &SurfaceID);
 
+SGM_EXPORT void SetDomainOfSurface(SGM::Result           &rResult,
+                                   SGM::Surface          &SurfaceID,
+                                   SGM::Interval2D const &Domain);
+
 SGM_EXPORT bool IsSurfaceSingularHighU(SGM::Result        &rResult,
                                        SGM::Surface const &SurfaceID);
  
