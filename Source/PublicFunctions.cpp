@@ -352,6 +352,13 @@ std::vector<SGM::Point3D> const &SGM::GetEdgePoints(SGM::Result     &rResult,
     return pEdge->GetFacets(rResult);
     }
 
+std::vector<double> const &SGM::GetEdgeParams(SGM::Result     &rResult,
+                                              SGM::Edge const &EdgeID)
+    {
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);    
+    return pEdge->GetParams(rResult);
+    }
+
 std::vector<SGM::UnitVector3D> const &SGM::GetFaceNormals(SGM::Result     &rResult,
                                                           SGM::Face const &FaceID)
     {

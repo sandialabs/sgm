@@ -21,6 +21,9 @@ namespace SGM
     SGM_EXPORT std::vector<SGM::Point3D> const &GetEdgePoints(SGM::Result     &rResult,
                                                               SGM::Edge const &EdgeID);
 
+    SGM_EXPORT std::vector<double> const &GetEdgeParams(SGM::Result     &rResult,
+                                                        SGM::Edge const &EdgeID);
+
     //////////////////////////////////////////////////////////////////////////
     //
     //  Face Display Functions

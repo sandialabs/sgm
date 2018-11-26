@@ -21,6 +21,17 @@
 
 #include "test_utility.h"
 
+TEST(math_check, edge_params)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,1,1));
+    SGM::GetEdgeParams(rResult,EdgeID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, plane_param_line)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
