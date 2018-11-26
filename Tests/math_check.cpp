@@ -321,6 +321,7 @@ TEST(math_check, point_curve_surface_intersect)
     SGM::Result rResult(pThing);
 
     SGM::Curve CurveID=SGM::CreatePointCurve(rResult,SGM::Point3D(0,0,0));
+    SGM::CurveInverse(rResult,CurveID,SGM::Point3D(0,0,0));
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
