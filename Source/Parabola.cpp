@@ -76,7 +76,8 @@ double parabola::Inverse(SGM::Point3D const &Pos,
     return ParabolaInverse(m_Center, m_XAxis, m_YAxis, m_dA, Pos, ClosePos, nullptr);
     }
 
-void parabola::Transform(SGM::Transform3D const &Trans)
+void parabola::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;

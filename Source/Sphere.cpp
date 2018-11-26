@@ -214,7 +214,8 @@ void sphere::PrincipleCurvature(SGM::Point2D const &uv,
     Vec2=dV;
     }
 
-void sphere::Transform(SGM::Transform3D const &Trans)
+void sphere::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;
@@ -225,20 +226,27 @@ void sphere::Transform(SGM::Transform3D const &Trans)
 
 curve* sphere::UParamLine(SGM::Result &rResult, double dU) const
     {
-    SGM::Point2D uv(dU,0);
-    SGM::Point3D Pos;
-    Evaluate(uv,&Pos);
+    double dCos=cos(dU);
+    double dSin=sin(dU);
     SGM::Point3D const &Center=m_Center;
-    SGM::UnitVector3D const &ZAxis=m_ZAxis;
+    SGM::UnitVector3D XAxis=dCos*m_XAxis+dSin*m_YAxis;
+    SGM::UnitVector3D ZAxis=XAxis*m_ZAxis;
     double dRadius=m_dRadius;
-    SGM::UnitVector3D XAxis=Pos-Center;
-    SGM::UnitVector3D Normal=XAxis*ZAxis;
     SGM::Interval2D const &Domain=GetDomain();
-    return new circle(rResult,Center,Normal,dRadius,&XAxis,&Domain.m_VDomain);
+    return new circle(rResult,Center,ZAxis,dRadius,&XAxis,&Domain.m_VDomain);
     }
 
-curve *sphere::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
+curve *sphere::VParamLine(SGM::Result &rResult, double dV) const
+    { 
+    double dCos=cos(dV);
+    double dSin=sin(dV);
+    double dRadius=m_dRadius*dCos;
+    SGM::Point3D const &Center=m_Center+m_ZAxis*(m_dRadius*dSin);
+    SGM::Interval2D const &Domain=GetDomain();
+    SGM::UnitVector3D XAxis=dCos*m_XAxis+dSin*m_YAxis;
+    curve *pCurve=new circle(rResult,Center,m_ZAxis,dRadius,&XAxis,&Domain.m_UDomain);
+    return pCurve; 
+    }
 
 
 }

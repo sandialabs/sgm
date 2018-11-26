@@ -15,68 +15,29 @@ SortablePlane::SortablePlane(std::vector<SGM::Point3D> const &aPoints)
     {
     SGM::Point3D Origin,Zero(0,0,0);
     SGM::UnitVector3D XVec,YVec,ZVec;
-    if(SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec))
+    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+    SGM::Point3D XYZ=Zero-ZVec*((Zero-Origin)%ZVec);
+    double dDist=Zero.Distance(XYZ);
+    if((Origin-Zero)%ZVec<0)
         {
-        SGM::Point3D XYZ=Zero-ZVec*((Zero-Origin)%ZVec);
-        double dDist=Zero.Distance(XYZ);
-        if((Origin-Zero)%ZVec<0)
+        ZVec.Negate();
+        }
+    aData[0]=ZVec.m_x;
+    aData[1]=ZVec.m_y;
+    aData[2]=ZVec.m_z;
+    aData[3]=dDist;
+    double dTol=SGM_ZERO;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double dOffPlane=fabs((aPoints[Index1]-XYZ)%ZVec);
+        if(dTol<dOffPlane)
             {
-            ZVec.Negate();
-            }
-        aData[0]=ZVec.m_x;
-        aData[1]=ZVec.m_y;
-        aData[2]=ZVec.m_z;
-        aData[3]=dDist;
-        double dTol=SGM_ZERO;
-        size_t nPoints=aPoints.size();
-        size_t Index1;
-        for(Index1=0;Index1<nPoints;++Index1)
-            {
-            double dOffPlane=fabs((aPoints[Index1]-XYZ)%ZVec);
-            if(dTol<dOffPlane)
-                {
-                dTol=dOffPlane;
-                }
-            }
-        aData[4]=dTol;
-        bool bFlip=false;
-        if(aData[3]<dTol)
-            {
-            if(fabs(aData[0])<-dTol)
-                {
-                bFlip=true;
-                }
-            else if(aData[0]<dTol)
-                {
-                if(fabs(aData[1])<-dTol)
-                    {
-                    bFlip=true;
-                    }
-                else if(aData[1]<dTol)
-                    {
-                    if(fabs(aData[2])<-dTol)
-                        {
-                        bFlip=true;
-                        }
-                    }
-                }
-            }
-        if(bFlip)
-            {
-            aData[0]=-aData[0];
-            aData[1]=-aData[1];
-            aData[2]=-aData[2];
-            aData[3]=-aData[3];
+            dTol=dOffPlane;
             }
         }
-    else
-        {
-        aData[0]=0;
-        aData[1]=0;
-        aData[2]=0;
-        aData[3]=0;
-        aData[4]=0;
-        }
+    aData[4]=dTol;
     }
 
 bool SortablePlane::Parallel(SortablePlane const &Other,
@@ -94,12 +55,9 @@ bool SortablePlane::Parallel(SortablePlane const &Other,
     return false;
     }
 
-void SortablePlane::SetMinTolerance(double dMinTolerance)
+void SortablePlane::SetTolerance(double dTolerance)
     {
-    if(aData[4]>dMinTolerance)
-        {
-        aData[4]=dMinTolerance;
-        }
+    aData[4]=dTolerance;
     }
 
 bool SortablePlane::operator==(SortablePlane const &SPlane) const

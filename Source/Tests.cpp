@@ -23,6 +23,7 @@
 #include "FacetToBRep.h"
 #include "Primitive.h"
 #include "Mathematics.h"
+#include "Surface.h"
 
 #include <string>
 #include <vector>
@@ -661,9 +662,11 @@ bool RunInternalTest(SGM::Result &rResult,
         SGMInternal::SortablePlane SP1(aPoints1);
         SGMInternal::SortablePlane SP2(aPoints2);
 
-        SP1.SetMinTolerance(0.01);
+        SP1.SetTolerance(0.01);
 
         bool bTest=SP1<SP2;
+        bTest=SP2<SP1;
+        bTest=SP1<SP1;
         bTest=(SP1==SP2);
 
         SP1.Origin();
@@ -682,13 +685,15 @@ bool RunInternalTest(SGM::Result &rResult,
         SGM::Point3D thePoint3D(0.0, 0.0, 0.0);
         SGM::UnitVector3D theUnitVector3D(1.0, 0.0, 0.0);
 
-        SGMInternal::thing *pThing = rResult.GetThing();
         auto *pPlane = new SGMInternal::plane(rResult, thePoint3D, theUnitVector3D);
         aEntities.push_back(pPlane);
         auto *pOffset = new SGMInternal::offset(rResult, 1.0, pPlane);
         aEntities.push_back(pOffset);
         auto *pOffsetClone = pOffset->Clone(rResult);
         aEntities.push_back(pOffsetClone);
+
+        rResult.GetThing()->SetConcurrentActive();
+        rResult.GetThing()->SetConcurrentInactive();
 
         try {
             pOffset->WriteSGM(rResult, nullptr, SGM::TranslatorOptions());
@@ -710,7 +715,7 @@ bool RunInternalTest(SGM::Result &rResult,
 
         try {
             SGM::Transform3D theTransform3D;
-            pOffset->Transform(theTransform3D);
+            pOffset->Transform(rResult,theTransform3D);
             }  catch (const std::logic_error&) {}
 
         try {
@@ -731,7 +736,15 @@ bool RunInternalTest(SGM::Result &rResult,
 
         pOffset->SetSurface(pPlane);
         }
-
+    else if(nTestNumber==6) // SnapToDomain testing
+        {
+        SGM::UnitVector3D ZAxis(0,0,1);
+        SGMInternal::torus *pTorus=new SGMInternal::torus(rResult,SGM::Point3D(0,0,0),ZAxis,1.0,3.0,false);
+        SGM::Point2D uv1(10,10),uv2(-10,-10);
+        pTorus->SnapToDomain(uv1);
+        pTorus->SnapToDomain(uv2);
+        }
+    
     return bAnswer;
     }
 

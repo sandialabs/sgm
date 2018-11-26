@@ -266,7 +266,8 @@ void hermite::Negate()
     SGM::FindLengths3D(m_aPoints,m_aParams);
     }
 
-void hermite::Transform(SGM::Transform3D const &Trans)
+void hermite::Transform(SGM::Result            &,//rResult,
+                        SGM::Transform3D const &Trans)
     {
     for (auto & Pos: m_aPoints)
         Pos=Trans*Pos;

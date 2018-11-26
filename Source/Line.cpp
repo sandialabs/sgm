@@ -92,7 +92,8 @@ double line::Inverse(SGM::Point3D const  &Pos,
     return t;
     }
 
-void line::Transform(SGM::Transform3D const &Trans)
+void line::Transform(SGM::Result            &,//rResult,
+                     SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_Axis=Trans*m_Axis;

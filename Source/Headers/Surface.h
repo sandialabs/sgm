@@ -74,7 +74,8 @@ class surface : public entity
                                         double             &k1,
                                         double             &k2) const;
 
-        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+        virtual void Transform(SGM::Result            &rResult,
+                               SGM::Transform3D const &Trans) = 0;
 
         virtual curve *UParamLine(SGM::Result &rResult,double dU) const = 0;
 
@@ -118,6 +119,8 @@ class surface : public entity
         bool IsSingularity(SGM::Point2D const &uv,double dTolerance) const;
 
         SGM::Interval2D const &GetDomain() const;
+
+        void SetDomain(SGM::Interval2D const &Domain);
 
         void SnapToDomain(SGM::Point2D &uv) const;
 
@@ -193,7 +196,8 @@ class plane : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -258,7 +262,8 @@ class cylinder : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -320,7 +325,8 @@ class cone : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -382,7 +388,8 @@ class sphere : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -437,7 +444,8 @@ class torus : public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -497,7 +505,8 @@ class NUBsurface: public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -585,7 +594,8 @@ class NURBsurface: public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -675,7 +685,8 @@ class revolve : public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -729,7 +740,8 @@ class extrude : public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -751,7 +763,6 @@ class extrude : public surface
         SGM::Point3D       m_Origin;
         SGM::UnitVector3D  m_vAxis;
     };
-
 
 class offset : public surface
     {
@@ -786,7 +797,8 @@ class offset : public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 

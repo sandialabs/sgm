@@ -91,6 +91,12 @@ namespace SGM
     SGM_EXPORT SGM::Interval1D const &GetDomainOfEdge(SGM::Result     &rResult,
                                                       SGM::Edge const &EdgeID);
 
+    SGM_EXPORT SGM::Point3D GetStartPointOfEdge(SGM::Result     &rResult,
+                                                SGM::Edge const &EdgeID);
+
+    SGM_EXPORT SGM::Point3D GetEndPointOfEdge(SGM::Result     &rResult,
+                                              SGM::Edge const &EdgeID);
+
     SGM_EXPORT SGM::Point3D const &GetPointOfVertex(SGM::Result       &rResult,
                                                     SGM::Vertex const &VertexID);
 

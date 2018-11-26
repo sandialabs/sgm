@@ -39,12 +39,6 @@ surface::surface(SGM::Result &rResult, surface const &other) :
         m_bSingularHighV(other.m_bSingularHighV)
 {}
 
-
-surface *surface::Clone(SGM::Result &) const
-    {
-    return nullptr; // default if not overridden by derived class
-    }
-
 void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
     // do nothing, derived classes can override
@@ -68,16 +62,7 @@ void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// surface virtual member functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
-bool surface::IsSame(surface const *,double ) const
-    { return false; } // Derived classes may override
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// surface other member functions
+// surface member functions
 //
 ///////////////////////////////////////////////////////////////////////////////
 

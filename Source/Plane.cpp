@@ -6,6 +6,7 @@
 
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Curve.h"
 
 namespace SGMInternal
 {
@@ -167,10 +168,10 @@ SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
     }
 
 void plane::PrincipleCurvature(SGM::Point2D const   &,
-                                 SGM::UnitVector3D  &Vec1,
-                                 SGM::UnitVector3D  &Vec2,
-                                 double             &k1,
-                                 double             &k2) const
+                               SGM::UnitVector3D  &Vec1,
+                               SGM::UnitVector3D  &Vec2,
+                               double             &k1,
+                               double             &k2) const
     {
     Vec1=m_XAxis;
     Vec2=m_YAxis;
@@ -178,7 +179,8 @@ void plane::PrincipleCurvature(SGM::Point2D const   &,
     k2=0;
     }
 
-void plane::Transform(SGM::Transform3D const &Trans)
+void plane::Transform(SGM::Result            &,//rResult,
+                      SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;
@@ -186,11 +188,17 @@ void plane::Transform(SGM::Transform3D const &Trans)
     m_ZAxis=Trans*m_ZAxis;
     }
 
-curve *plane::UParamLine(SGM::Result &, double) const
-    { return nullptr; } // no curve
+curve *plane::UParamLine(SGM::Result &rResult, double dU) const
+    {
+    curve *pCurve=new line(rResult,m_Origin+dU*m_XAxis,m_YAxis);
+    pCurve->SetDomain(m_Domain.m_VDomain);
+    return pCurve;
+    }
 
-curve *plane::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
-
-
+curve *plane::VParamLine(SGM::Result &rResult, double dV) const
+    { 
+    curve *pCurve=new line(rResult,m_Origin+dV*m_YAxis,m_XAxis);
+    pCurve->SetDomain(m_Domain.m_UDomain);
+    return pCurve;
+    }
 }

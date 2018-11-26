@@ -200,6 +200,64 @@ std::vector<SGM::UnitVector3D> const &face::GetNormals(SGM::Result &rResult) con
     return m_aNormals;
     }
 
+entity *FindClosestEdgeOrVertex(SGM::Result                          &rResult,
+                                SGM::Point3D                   const &Pos,
+                                std::set<edge *,EntityCompare> const &m_sEdges)
+    {
+    entity *pAnswer=nullptr;
+    for(edge *pEdge : m_sEdges)
+        {
+        double dTol=std::max(SGM_MIN_TOL,pEdge->GetTolerance());
+        if(pEdge->GetBox(rResult).InInterval(Pos,dTol))
+            {
+            if(pEdge->GetEnd() && SGM::NearEqual(Pos.DistanceSquared(pEdge->GetEnd()->GetPoint()),0,SGM_ZERO,false))
+                {
+                pAnswer=pEdge->GetEnd();
+                break;
+                }
+            if(pEdge->GetStart() && SGM::NearEqual(Pos.DistanceSquared(pEdge->GetStart()->GetPoint()),0,SGM_ZERO,false))
+                {
+                pAnswer=pEdge->GetStart();
+                break;
+                }
+            if(pEdge->PointInEdge(Pos,dTol))
+                {
+                pAnswer=pEdge;
+                break;
+                }
+            }
+        }
+    return pAnswer;
+    }
+
+std::vector<entity *> face::FindPointEntities(SGM::Result &rResult) const
+    {
+    if(m_aPoints2D.empty())
+        {
+        FacetOptions Options;
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
+        }
+
+    std::vector<unsigned int> aBoundary;
+    std::set<unsigned int> sInterior;
+    SGM::FindBoundary(m_aTriangles,aBoundary,sInterior);
+    std::vector<entity *> aAnswer;
+    aAnswer.assign(m_aPoints3D.size(),(entity *)this);
+
+    for(unsigned int Index : aBoundary)
+        {
+        if(aAnswer[Index]==this)
+            {
+            if(entity *pEnt=FindClosestEdgeOrVertex(rResult,m_aPoints3D[Index],m_sEdges))
+                {
+                aAnswer[Index]=pEnt;
+                }
+            }
+        }
+
+    return aAnswer;
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        SGM::Point3D       *ClosePos,    // The closest point.
@@ -331,7 +389,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 return InAngle(uvC,uvA,uvB,uv);
@@ -375,7 +433,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 if(nSideType1==SGM::FaceOnLeftType)
@@ -464,38 +522,16 @@ void face::ClearFacets(SGM::Result &rResult) const
 
 double face::FindArea(SGM::Result &rResult) const
     {
-    // Method one. 
-    // Using Romberg integration on a reduced set of parametric triangles.
-
-    //SGMInternal::FacetOptions Options;
-    //Options.m_bParametric=true;
-    //std::vector<SGM::Point2D> aPoints2D;
-    //std::vector<SGM::Point3D> aPoints3D;
-    //std::vector<unsigned int> aTriangles;
-    //std::vector<SGM::UnitVector3D> aNormals;
-    //std::vector<entity *> aEntities;
-    //SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
-    //size_t nTriangles=aTriangles.size();
-    //double dMethod1=0;
-    //size_t Index1;
-    //for(Index1=0;Index1<nTriangles;Index1+=3)
-    //    {
-    //    size_t a=aTriangles[Index1];
-    //    size_t b=aTriangles[Index1+1];
-    //    size_t c=aTriangles[Index1+2];
-    //    SGM::Point2D const &PosA=aPoints2D[a];
-    //    SGM::Point2D const &PosB=aPoints2D[b];
-    //    SGM::Point2D const &PosC=aPoints2D[c];
-    //    dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
-    //    }
-
-    // Method two.  
     // Refining the full set of parametric triangles twice and taking their area.
 
     this->GetPoints2D(rResult);
     std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
     std::vector<unsigned int> aTriangles=m_aTriangles;
+    std::vector<entity *> aEnts=FindPointEntities(rResult);
+
+    //SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
+    //new complex(rResult,aPoints3D,aTriangles);
 
     double dDiff=SGM_MAX;
     double dOldArea=SGM_MAX;
@@ -504,7 +540,7 @@ double face::FindArea(SGM::Result &rResult) const
     size_t nCount=0;
     while(SGM_MIN_TOL<dDiff && nCount<5)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
         double dArea1=TriangleArea(aPoints3D,aTriangles);
         dArea2=(4*dArea1-dArea0)/3;
         dArea0=dArea1;
@@ -514,7 +550,6 @@ double face::FindArea(SGM::Result &rResult) const
         }
 
     return dArea2;
-    //return std::max(dMethod1,dArea2);
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
@@ -549,10 +584,11 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         }
 
     double dVolume=dAnswer0;
+    std::vector<entity *> aEnts=FindPointEntities(rResult);
     size_t Index1;
     for(Index1=0;Index1<2;++Index1)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
         if(m_bFlipped)
             {

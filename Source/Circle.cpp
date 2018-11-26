@@ -131,7 +131,8 @@ double circle::Inverse(SGM::Point3D const &Pos,
     return t;
     }
 
-void circle::Transform(SGM::Transform3D const &Trans)
+void circle::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_Normal=Trans*m_Normal;

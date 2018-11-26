@@ -102,6 +102,45 @@ TEST(models_single_check, scan_directory)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(models_single_check, import_vertex3)
+{
+    const char* file_name = "vertex3.stp";
+    SCOPED_TRACE(file_name);
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+     
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string file_path = get_models_file_path(file_name);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+
+    // TODO this parts needs to check also.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_single_check, import_torus_apple)
+{
+    const char* file_name = "Working On/Torus Apple.stp";
+    SCOPED_TRACE(file_name);
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+     
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string file_path = get_models_file_path(file_name);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+
+    // TODO this parts needs to check also.  PRS
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+
 TEST(models_single_check, import_flexyhose)
 {
     const char* file_name = "flexyhose.stp";

@@ -38,7 +38,8 @@ SGM_EXPORT SGM::Curve CreateParabola(SGM::Result             &rResult,
                                      SGM::Point3D      const &Center,
                                      SGM::UnitVector3D const &XAxis,
                                      SGM::UnitVector3D const &YAxis,
-                                     double                   dA);
+                                     double                   dA,
+                                     SGM::Interval1D   const *pDomain=nullptr);
 
 SGM_EXPORT SGM::Curve CreateHyperbola(SGM::Result             &rResult,
                                       SGM::Point3D      const &Center,
@@ -80,7 +81,7 @@ SGM_EXPORT SGM::Curve CreateHermitCurve(SGM::Result                      &rResul
                                         std::vector<double>        const &aParams);
 
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result           &rResult,
-                                       SGM::Point3D          &Pos,
+                                       SGM::Point3D    const &Pos,
                                        SGM::Interval1D const *pDomain=nullptr);
 
 // Fits a conic curve to five points returning a line, circle, ellipse, parabola or hyperbola.
@@ -226,6 +227,30 @@ SGM_EXPORT bool SameCurve(SGM::Result      &rResult,
                           SGM::Curve const &CurveID2,
                           double            dTolerance);
 
+SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
+                                                     SGM::Surface const &SurfaceID);
+
+SGM_EXPORT void SetDomainOfSurface(SGM::Result           &rResult,
+                                   SGM::Surface          &SurfaceID,
+                                   SGM::Interval2D const &Domain);
+
+SGM_EXPORT bool IsSurfaceSingularHighU(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+ 
+SGM_EXPORT bool IsSurfaceSingularHighV(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowU(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowV(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSingularity(SGM::Result        &rResult,
+                              SGM::Surface const &SurfaceID,
+                              SGM::Point2D const &uv,
+                              double              dTolerance);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Get Curve Data
@@ -305,10 +330,7 @@ SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
 
 SGM_EXPORT SGM::EntityType GetSurfaceType(SGM::Result        &rResult,
                                           SGM::Surface const &SurfaceID);
-
-SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
-                                                     SGM::Surface const &SurfaceID);
-             
+            
 SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Surface const &SurfaceID,
                              SGM::Point3D       &Origin,
@@ -331,7 +353,8 @@ SGM_EXPORT bool GetConeData(SGM::Result        &rResult,
                             SGM::UnitVector3D  &YAxis,
                             SGM::UnitVector3D  &ZAxis,  // Points from center to apex.
                             double             &dHalfAngle,
-                            double             &dRadius);
+                            double             &dRadius,
+                            SGM::Point3D       &Apex);
             
 SGM_EXPORT bool GetSphereData(SGM::Result        &rResult,
                               SGM::Surface const &SurfaceID,

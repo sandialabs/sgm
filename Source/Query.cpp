@@ -147,7 +147,7 @@ void FindClosestPointOnVolume(SGM::Result        &rResult,
         {
         if(PointInVolume(rResult,Point,pVolume))
             {
-            if(dMinDist<SGM_ZERO)
+            if(SGM_MIN_TOL<dMinDist)
                 {
                 ClosestPoint=Point;
                 pCloseEntity=(entity *)pVolume;

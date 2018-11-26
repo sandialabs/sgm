@@ -97,10 +97,10 @@ bool body::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool complex::Check(SGM::Result              &rResult,
-                    SGM::CheckOptions  const &Options,
+bool complex::Check(SGM::Result              &,//rResult,
+                    SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &aCheckStrings,
-                    bool                      bChildern) const
+                    bool                      /*bChildern*/) const
     {
     bool bAnswer=true;
 
@@ -153,13 +153,13 @@ bool complex::Check(SGM::Result              &rResult,
             }
         }
 
-    if(bChildern)
-        {
-        if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
-            {
-            bAnswer=false;
-            }
-        }
+    //if(bChildern)
+    //    {
+    //    if(CheckChildern(rResult,this,Options,aCheckStrings)==false)
+    //        {
+    //        bAnswer=false;
+    //        }
+    //    }
 
     return bAnswer;
     }

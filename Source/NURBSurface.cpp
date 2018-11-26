@@ -286,7 +286,11 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
                     v=v-v2;
                     }
                 }
-            double denom=1.0/wders[0][0];
+            double denom=1.0;
+            if(SGM_ZERO<fabs(wders[0][0]))
+                {
+                denom/=wders[0][0];
+                }
             values[k][s].m_x=v.m_x*denom;
             values[k][s].m_y=v.m_y*denom;
             values[k][s].m_z=v.m_z*denom;
@@ -473,7 +477,8 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
 
-void NURBsurface::Transform(SGM::Transform3D const &Trans)
+void NURBsurface::Transform(SGM::Result            &,//rResult,
+                            SGM::Transform3D const &Trans)
     {
     size_t nSize1 = m_aaControlPoints.size();
     size_t nSize2 = m_aaControlPoints[0].size();

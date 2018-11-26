@@ -81,7 +81,8 @@ class curve : public entity
 
         virtual void Negate();
 
-        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+        virtual void Transform(SGM::Result            &rResult,
+                               SGM::Transform3D const &Trans) = 0;
 
         virtual std::vector<double> SpecialFacetParams() const;
 
@@ -146,7 +147,8 @@ class line : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -191,7 +193,8 @@ class circle : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -246,7 +249,8 @@ class NUBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -261,10 +265,6 @@ class NUBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
@@ -274,10 +274,15 @@ class NUBcurve: public curve
 
         std::vector<double> SpecialFacetParams() const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point3D> m_aControlPoints;
-        std::vector<double>       m_aKnots;   
+        std::vector<double>       m_aKnots;  
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -313,7 +318,8 @@ class NURBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -330,10 +336,6 @@ class NURBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
@@ -341,10 +343,15 @@ class NURBcurve: public curve
 
         virtual bool IsSame(curve const *pOther,double dTolerance) const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point4D> m_aControlPoints;
         std::vector<double>       m_aKnots;   
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -375,7 +382,8 @@ class PointCurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -416,7 +424,8 @@ class ellipse: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -462,7 +471,8 @@ class hyperbola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -507,7 +517,8 @@ class parabola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -559,7 +570,8 @@ class TorusKnot: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -614,7 +626,8 @@ class hermite: public curve
 
         void Negate() override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,

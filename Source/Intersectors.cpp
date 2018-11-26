@@ -2006,6 +2006,34 @@ size_t IntersectNUBCurveAndSurface(SGM::Result                        &rResult,
     return aPoints.size();
     }
 
+size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
+                                 SGM::Point3D                 const &PlaneOrigin,
+                                 SGM::UnitVector3D            const &PlaneNormal,
+                                 double                              dTolerance,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes)
+{
+    IntersectParabolaAndPlane(pParabola->m_Center, pParabola->m_XAxis, pParabola->m_YAxis, pParabola->m_dA,
+                              PlaneOrigin, PlaneNormal, dTolerance, aPoints, aTypes);
+    if ((2 == aPoints.size()) &&
+        (SGM::IntersectionType::CoincidentType == aTypes[0]) && (SGM::IntersectionType::CoincidentType == aTypes[1]))
+    {
+        if(pParabola->GetDomain().IsBounded())
+        {
+            aPoints.clear();
+            aTypes.clear();
+            SGM::Point3D Pos;
+            pParabola->Evaluate(pParabola->GetDomain().m_dMin, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+            pParabola->Evaluate(pParabola->GetDomain().m_dMax, &Pos);
+            aPoints.push_back(Pos);
+            aTypes.push_back(SGM::IntersectionType::CoincidentType);
+        }
+    }
+    return aPoints.size();
+}
+
 size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                 curve                        const *pCurve,
                                 surface                      const *pSurface,
@@ -2039,6 +2067,12 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             }
         case SGM::ParabolaType:
             {
+            parabola const *pParabola=(parabola const *)pCurve;
+            if(pSurface->GetSurfaceType()==SGM::EntityType::PlaneType)
+                {
+                plane const *pPlane=(plane const *)pSurface;
+                IntersectParabolaAndPlane(pParabola,pPlane->m_Origin,pPlane->m_ZAxis,dTolerance,aPoints,aTypes);
+                }
             break;
             }
         case SGM::HyperbolaType:
@@ -2531,16 +2565,16 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
     return aCurves.size();
     }
 
-size_t IntersectPlaneAndTorus(SGM::Result                & /*rResult*/,
-                              plane                const * /*pPlane*/,
-                              torus                const * /*pTorus*/,
-                              std::vector<curve *>       & /*aCurves*/,
-                              face                 const * /*pFace1*/,
-                              face                 const * /*pFace2*/,
-                              double                       /*dTolerance*/)
-    {
-    return 0;
-    }
+//size_t IntersectPlaneAndTorus(SGM::Result                & /*rResult*/,
+//                              plane                const * /*pPlane*/,
+//                              torus                const * /*pTorus*/,
+//                              std::vector<curve *>       & /*aCurves*/,
+//                              face                 const * /*pFace1*/,
+//                              face                 const * /*pFace2*/,
+//                              double                       /*dTolerance*/)
+//    {
+//    return 0;
+//    }
 
 size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
                                 plane                const *pPlane,
@@ -2572,15 +2606,15 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
             cone const *pCone=(cone const *)pSurface;
             return IntersectPlaneAndCone(rResult,pPlane,pCone,aCurves,pFace1,pFace2,dTolerance);
             }
-        case SGM::EntityType::TorusType:
-            {
-            torus const *pTorus=(torus const *)pSurface;
-            return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
-            }
-        case SGM::EntityType::RevolveType:
-            {
-            throw;
-            }
+        //case SGM::EntityType::TorusType:
+        //    {
+        //    torus const *pTorus=(torus const *)pSurface;
+        //    return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,pFace1,pFace2,dTolerance);
+        //    }
+        //case SGM::EntityType::RevolveType:
+        //    {
+        //    throw;
+        //    }
         default:
             {
             return IntersectPlaneAndSurface(rResult,pPlane,pSurface,aCurves,pFace1,pFace2,dTolerance);
@@ -3038,16 +3072,6 @@ void IntersectThreeSurfaces(SGM::Result               &rResult,
         rResult.GetThing()->DeleteEntity(pCurve);
         }
     }
-
-size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
-                              curve                        const *pCurve,
-                              plane                        const *pPlane,
-                              std::vector<SGM::Point3D>          &aPoints,
-                              std::vector<SGM::IntersectionType> &aTypes,
-                              double                              dTolerance)
-{
-    return IntersectCurveAndPlane(rResult, pCurve, pPlane->m_Origin, pPlane->m_ZAxis, aPoints, aTypes, dTolerance);
-}
 
 size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
                               curve                        const *pCurve,
@@ -3542,34 +3566,6 @@ size_t IntersectParabolaAndPlane(SGM::Point3D                 const &Center,
         IntersectCoplanarLineAndParabola(LineOrigin,LineDirection,SGM::Interval1D(-SGM_MAX,SGM_MAX),
                                          Center,XAxis,YAxis,dA,dTolerance,aPoints,aTypes);
         }
-    return aPoints.size();
-}
-
-size_t IntersectParabolaAndPlane(parabola                     const *pParabola,
-                                 SGM::Point3D                 const &PlaneOrigin,
-                                 SGM::UnitVector3D            const &PlaneNormal,
-                                 double                              dTolerance,
-                                 std::vector<SGM::Point3D>          &aPoints,
-                                 std::vector<SGM::IntersectionType> &aTypes)
-{
-    IntersectParabolaAndPlane(pParabola->m_Center, pParabola->m_XAxis, pParabola->m_YAxis, pParabola->m_dA,
-                              PlaneOrigin, PlaneNormal, dTolerance, aPoints, aTypes);
-    if ((2 == aPoints.size()) &&
-        (SGM::IntersectionType::CoincidentType == aTypes[0]) && (SGM::IntersectionType::CoincidentType == aTypes[1]))
-    {
-        if(pParabola->GetDomain().IsBounded())
-        {
-            aPoints.clear();
-            aTypes.clear();
-            SGM::Point3D Pos;
-            pParabola->Evaluate(pParabola->GetDomain().m_dMin, &Pos);
-            aPoints.push_back(Pos);
-            aTypes.push_back(SGM::IntersectionType::CoincidentType);
-            pParabola->Evaluate(pParabola->GetDomain().m_dMax, &Pos);
-            aPoints.push_back(Pos);
-            aTypes.push_back(SGM::IntersectionType::CoincidentType);
-        }
-    }
     return aPoints.size();
 }
 

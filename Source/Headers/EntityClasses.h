@@ -48,7 +48,7 @@ class sphere;
 class torus;
 class revolve;
 class extrude;
-class offset;
+class offset; 
 class NUBsurface;
 class NURBsurface;
 
@@ -95,7 +95,7 @@ struct EntityVisitor {
     virtual void Visit(torus&) {}
     virtual void Visit(revolve&) {}
     virtual void Visit(extrude&) {}
-    virtual void Visit(offset&) {}
+    virtual void Visit(offset&) {} 
     virtual void Visit(NUBsurface&) {}
     virtual void Visit(NURBsurface&) {}
 };
@@ -163,6 +163,8 @@ public:
 
     void RemoveColor(SGM::Result &rResult);
 
+    void RemoveAllOwners();
+
 protected:
 
     size_t                                       m_ID;
@@ -175,8 +177,6 @@ protected:
     // Only to be called from the thing constructor.
 
     entity();
-
-    void RemoveAllOwners();
 
     void OwnerAndAttributeReplacePointers(std::map<entity *, entity *> const &mEntityMap);
 
@@ -817,6 +817,8 @@ class face : public topology
         std::vector<unsigned int> const &GetTriangles(SGM::Result &rResult) const;
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
+
+        std::vector<SGMInternal::entity *> FindPointEntities(SGM::Result &rResult) const;
 
         surface *GetSurface() const {return m_pSurface;}
 

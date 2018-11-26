@@ -666,7 +666,7 @@ bool complex::IsOriented() const
         for(Index1=0;Index1<nSize;++Index1)
             {
             unsigned int nWhere=m_aSegments[Index1];
-            unsigned int nCount=aCountsIn[nWhere];
+            unsigned int nCount=aCounts[nWhere];
             if(nCount==2 && (aCountsIn[nWhere]!=1 || aCountsOut[nWhere]!=1))
                 {
                 return false;

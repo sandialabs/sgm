@@ -149,10 +149,6 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
             IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aPoints,aTypes,nullptr,pEdge,dTolerance);
             for(SGM::Point3D Pos : aPoints)
                 {
-                if(pLimitEdge && pLimitEdge->PointInEdge(Pos,dTolerance)==false)
-                    {
-                    continue;
-                    }
                 aHits.push_back(Pos);
                 double dParam=pCurve->Inverse(Pos);
                 if(pEdge->GetStart() && Pos.DistanceSquared(pEdge->GetStart()->GetPoint())<dTolSquared)
@@ -241,10 +237,6 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
     if(mHitMap0.empty() && aHits.size()==1)
         {
         aIsolated[0]=false;
-        aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
-        }
-    else if(aHits.empty() && pCurve->GetClosed())
-        {
         aEdges.push_back(CreateEdge(rResult,pCurve,nullptr));
         }
 

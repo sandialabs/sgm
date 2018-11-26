@@ -159,7 +159,8 @@ std::vector<double> NURBcurve::SpecialFacetParams() const
     return aUniqueKnots;
     }
 
-void NURBcurve::Transform(SGM::Transform3D const &Trans)
+void NURBcurve::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     for (auto & Pos4D : m_aControlPoints)
         {
@@ -211,12 +212,6 @@ std::vector<SGM::Point3D> const &NURBcurve::GetSeedPoints() const
 
 std::vector<double> const &NURBcurve::GetSeedParams() const
     {
-    if(m_aSeedPoints.empty())
-        {
-        FacetOptions Options;
-        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
-        }
     return m_aSeedParams;
     }
 

@@ -137,6 +137,8 @@ TEST(create_check, create_torus_knot)
     SGM::TransformEntity(rResult, Trans, IDCurve2);
     SGM::Edge Edge2 = SGM::CreateEdge(rResult, IDCurve2);
 
+    SGM::Curve IDCurveCopy=SGM::Curve(SGM::CopyEntity(rResult,IDCurve).m_ID);
+    EXPECT_TRUE(SGM::SameCurve(rResult,IDCurve,IDCurveCopy,SGM_MIN_TOL));
     EXPECT_FALSE(SGM::SameCurve(rResult,IDCurve,IDCurve2,SGM_MIN_TOL));
 
     SGM::UnitVector3D Normal = XAxis * YAxis;
@@ -210,9 +212,7 @@ TEST(create_check, miscellaneous_entity)
 
     // other thing member functions
     EXPECT_TRUE(pThing->IsTopLevel());
-    pThing->SetConcurrentActive();
-    pThing->SetConcurrentInactive();
-
+    
     SGMTesting::ReleaseTestThing(pThing);
     }
 

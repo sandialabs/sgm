@@ -132,7 +132,12 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 
 bool edge::PointInEdge(SGM::Point3D const &Pos,double dTolerance) const
     {
-    double t=m_pCurve->Inverse(Pos);
+    SGM::Point3D CPos;
+    double t=m_pCurve->Inverse(Pos,&CPos);
+    if(dTolerance*dTolerance<Pos.DistanceSquared(CPos))
+        {
+        return false;
+        }
     SnapToDomain(t,dTolerance);
     return m_Domain.InInterval(t,dTolerance);
     }
@@ -220,24 +225,11 @@ void edge::FixDomain(SGM::Result &rResult)
         {
         double dStart=m_pCurve->Inverse(m_pStart->GetPoint());
         double dEnd=m_pCurve->Inverse(m_pEnd->GetPoint());
-        m_Domain=SGM::Interval1D(dStart,dEnd);
+        SetDomain(rResult,SGM::Interval1D(dStart,dEnd));
         }
     else
         {
-        m_Domain=m_pCurve->GetDomain();
-        }
-    if(m_aPoints3D.empty()==false)
-        {
-        m_aPoints3D.clear();
-        m_aParams.clear();
-        m_Box.Reset();
-        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
-            {
-            face *pFace=*iter;
-            pFace->ClearFacets(rResult);
-            ++iter;
-            }
+        SetDomain(rResult,m_pCurve->GetDomain());
         }
     }
 
