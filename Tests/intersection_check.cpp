@@ -1193,11 +1193,12 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
 
     SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
+    const double dTolerance = SGM_FIT_SMALL;
+
     // coincident plane
     SGM::Point3D PlaneOrigin(1,0,0);
     SGM::UnitVector3D PlaneNorm (-1,0,0);
 
-    double dTolerance = SGM_FIT_SMALL;
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurveAndPlane(rResult, NURBcurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
@@ -1217,6 +1218,31 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
       SGM::EvaluateCurve(rResult, NURBcurve, Domain.m_dMax, &ExpectedPos2);
       EXPECT_TRUE(SGM::NearEqual(ExpectedPos1, aPoints[0], dTolerance));
       EXPECT_TRUE(SGM::NearEqual(ExpectedPos2, aPoints[1], dTolerance));
+    }
+
+    // bcarnes: this test below will fail
+    // it is a simpler version of the single intersection point
+    // using the line that intersects the given plane and the plane of the NURB
+    if (0) {
+      // line at intersection of planes x=1 and z=(sqrt(2)/2.0-1)
+      SGM::Point3D Origin(1,0,(sqrt(2)/2.0-1));
+      SGM::UnitVector3D Axis(0,1,0);
+      SGM::Curve line = SGM::CreateLine(rResult, Origin, Axis);
+
+      std::vector<SGM::Point3D> aPoints;
+      std::vector<SGM::IntersectionType> aTypes;
+
+      SGM::IntersectCurves(rResult, NURBcurve, line, aPoints, aTypes, NULL, NULL, dTolerance);
+
+      EXPECT_EQ(aPoints.size(), 1);
+      EXPECT_EQ(aTypes.size(), 1);
+      if (aTypes.size() > 0)
+          EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
+      if (aPoints.size() > 0)
+      {
+        SGM::Point3D ExpectedPos(1, sqrt(2)/2.0, (sqrt(2)/2.0-1.0));
+        EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
+      }
     }
 
     // single intersection point
