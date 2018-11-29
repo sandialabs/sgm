@@ -72,13 +72,6 @@ macro(sgm_project_setup)
 
 
 
-  if(NOT CMAKE_INSTALL_BINARY_DIR)
-    SET(CMAKE_INSTALL_BINARY_DIR "lib")
-  endif()
-  if(NOT CMAKE_INSTALL_INCLUDE_DIR)
-    SET(CMAKE_INSTALL_INCLUDE_DIR "include")
-  endif()
-
   # Increase warning level
   if(CMAKE_C_COMPILER_ID MATCHES GNU OR CMAKE_C_COMPILER_ID MATCHES Clang)
     if(NOT CMAKE_C_FLAGS MATCHES Wall)
