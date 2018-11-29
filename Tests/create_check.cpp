@@ -185,6 +185,8 @@ TEST(create_check, create_attributes)
 
     SGM::Attribute AttributeID5=SGM::CreateStringAttribute(rResult,"StringAttributeTestName","string_test");
     EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID5),SGM::EntityType::StringAttributeType);
+    std::string testname = SGM::GetStringAttributeData(rResult,AttributeID5);
+    EXPECT_EQ(testname, "string_test");
 
     SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
     SGM::AddAttribute(rResult,BodyID,AttributeID1);
