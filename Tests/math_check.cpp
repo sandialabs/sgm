@@ -2630,6 +2630,43 @@ TEST(math_check, NURB_surface)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(DISABLED_math_check, NURB_curve_tangent)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point4D> aControlPoints;
+    aControlPoints.emplace_back(1,0,0,1);
+    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(1,1,-1,1);
+    aControlPoints.emplace_back(1,1,-2,sqrt(2)/2);
+    aControlPoints.emplace_back(1,0,-2,1);
+    aControlPoints.emplace_back(1,-1,-2,sqrt(2)/2);
+    aControlPoints.emplace_back(1,-1,-3,1);
+
+    std::vector<double> aKnots;
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+
+    SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
+
+    SGM::Point3D Pos;
+    SGM::Vector3D Vec;
+    SGM::EvaluateCurve(rResult,NURBcurve,SGM_PI*0.25,&Pos,&Vec);
+    //std::cout << Pos << " " << Vec << std::endl;
+
+    SGM::Vector3D Tangent(0,1/sqrt(2),-1/sqrt(2));
+    EXPECT_NEAR((Vec-Tangent).Magnitude(),0,SGM_MIN_TOL);
+}
+
 TEST(math_check, NURB_curve)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
