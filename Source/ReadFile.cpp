@@ -543,6 +543,9 @@ inline void ParseShapeDefinitionRepresentation(char const *pLineAfterStepTag, ST
 inline void ParseShapeRepresentation(char const *pLineAfterStepTag, STEPLineData &STEPData)
 {
 // #283 = SHAPE_REPRESENTATION ( 'smallbox', ( #350 ), #384 ) ;
+    std::string sName;
+    FindSingleQuotedString(pLineAfterStepTag, sName);
+    STEPData.m_aStrings.emplace_back(sName);
     FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
 }
 

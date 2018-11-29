@@ -1522,6 +1522,13 @@ std::vector<int> const &SGM::GetIntegerAttributeData(SGM::Result          &rResu
     return pAttribute->GetData();
     }
 
+std::string const &SGM::GetStringAttributeData(SGM::Result          &rResult,
+                                                     SGM::Attribute const &AttributeID)
+    {
+    SGMInternal::StringAttribute const *pAttribute=(SGMInternal::StringAttribute const *)(rResult.GetThing()->FindEntity(AttributeID.m_ID));
+    return pAttribute->GetData();
+    }
+
 SGM::Interval1D const &SGM::GetDomainOfCurve(SGM::Result      &rResult,
                                              SGM::Curve const &CurveID)
     {
