@@ -1,5 +1,5 @@
 #include "MainWindow.hpp"
-#include "MainWindow.moc"
+#include "moc_MainWindow.cpp"
 #include "ui_MainWindow.h"
 
 #include <QApplication>
