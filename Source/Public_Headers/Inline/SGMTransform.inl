@@ -86,6 +86,29 @@ namespace SGM {
         m_Matrix[3] = Translate;
     }
 
+// Returns the transform from one set of axes to another.
+
+    inline Transform3D::Transform3D(UnitVector3D const &XAxis1,
+                                    UnitVector3D const &YAxis1,
+                                    UnitVector3D const &ZAxis1,
+                                    Point3D      const &Center1,
+                                    UnitVector3D const &XAxis2,
+                                    UnitVector3D const &YAxis2,
+                                    UnitVector3D const &ZAxis2,
+                                    Point3D      const &Center2)
+    {
+        SGM::Transform3D Transform1(XAxis1, YAxis1, ZAxis1, SGM::Vector3D(Center1));
+        SGM::Transform3D Transform2(XAxis2, YAxis2, ZAxis2, SGM::Vector3D(Center2));
+
+        SGM::Transform3D T2Inverse;
+        Transform2.Inverse(T2Inverse);
+
+        SGM::Transform3D Trans = T2Inverse * Transform1;
+
+        for (size_t iIndex=0; iIndex<4; ++iIndex)
+            m_Matrix[iIndex] = Trans.m_Matrix[iIndex];
+    }
+
     inline double SGM::Transform3D::Scale(SGM::UnitVector3D const &Direction) const
     {
         return ((*this)*Vector3D(Direction)).Magnitude();

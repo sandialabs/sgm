@@ -57,6 +57,17 @@ namespace SGM {
                     Vector4D const &ZAxis,
                     Vector4D const &Translate);
 
+        // Returns the transform from one set of axes to another.
+
+        Transform3D(UnitVector3D const &XAxis1,
+                    UnitVector3D const &YAxis1,
+                    UnitVector3D const &ZAxis1,
+                    Point3D      const &Center1,
+                    UnitVector3D const &XAxis2,
+                    UnitVector3D const &YAxis2,
+                    UnitVector3D const &ZAxis2,
+                    Point3D      const &Center2);
+                    
         // true if transformation does not include any non-uniform scale or rotation or shear or reflection
 
         bool IsScaleAndTranslate() const;

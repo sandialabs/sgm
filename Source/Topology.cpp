@@ -15,6 +15,8 @@ namespace SGMInternal
 
 void topology::TransformBox(SGM::Result& rResult, SGM::Transform3D const &transform3D)
 {
+    if (m_Box.IsEmpty())
+        return;
     if (!transform3D.IsScaleAndTranslate())
         ResetBox(rResult);
     else

@@ -184,6 +184,18 @@ void TransformEntity(SGM::Result            &rResult,
                 pComplex->Transform(transform3D);
                 break;
                 }
+            case SGM::BodyType:
+                {
+                body *pBody = (body *)pChildEntity;
+                pBody->TransformBox(rResult, transform3D);
+                break;
+                }
+            case SGM::VolumeType:
+                {
+                volume *pVolume= (volume *)pChildEntity;
+                pVolume->TransformBox(rResult, transform3D);
+                break;
+                }
             default:
                 break;
             }

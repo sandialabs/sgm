@@ -330,7 +330,7 @@ namespace SGM {
 
     inline Point3D Interval3D::MidPoint(double dXFraction, double dYFraction, double dZFraction) const
     {
-        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_XDomain.MidPoint(dYFraction),m_XDomain.MidPoint(dZFraction));
+        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_YDomain.MidPoint(dYFraction),m_ZDomain.MidPoint(dZFraction));
     }
 
     inline Interval3D Interval3D::Extend(double tolerance) const
