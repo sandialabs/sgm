@@ -2630,7 +2630,7 @@ TEST(math_check, NURB_surface)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(DISABLED_math_check, NURB_curve_tangent)
+TEST(math_check, NURB_curve_tangent)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -2661,10 +2661,12 @@ TEST(DISABLED_math_check, NURB_curve_tangent)
     SGM::Point3D Pos;
     SGM::Vector3D Vec;
     SGM::EvaluateCurve(rResult,NURBcurve,SGM_PI*0.25,&Pos,&Vec);
-    //std::cout << Pos << " " << Vec << std::endl;
 
-    SGM::Vector3D Tangent(0,1/sqrt(2),-1/sqrt(2));
-    EXPECT_NEAR((Vec-Tangent).Magnitude(),0,SGM_MIN_TOL);
+    SGM::Point3D ExpectedPos(1,sqrt(2)/2,-1+sqrt(2)/2);
+    EXPECT_NEAR((ExpectedPos-Pos).Magnitude(),0,SGM_MIN_TOL);
+
+    SGM::Vector3D ExpectedVec(0,1/sqrt(2),-1/sqrt(2));
+    EXPECT_NEAR((SGM::UnitVector3D(Vec)-ExpectedVec).Magnitude(),0,SGM_MIN_TOL);
 }
 
 TEST(math_check, NURB_curve)

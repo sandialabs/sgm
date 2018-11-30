@@ -48,7 +48,7 @@ NURBcurve *NURBcurve::Clone(SGM::Result &rResult) const
     { return new NURBcurve(rResult, *this); }
 
 // evaluate basis to get position, or derivative
-inline void NURBEvaluateBasis(std::vector<SGM::Point4D> const &aControlPoints,
+void NURBEvaluateBasis(std::vector<SGM::Point4D> const &aControlPoints,
                               double const                    *aBasis,
                               size_t                           nStart,
                               size_t                           nDegree,
