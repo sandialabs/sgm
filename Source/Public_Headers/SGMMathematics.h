@@ -21,7 +21,7 @@ namespace SGM
     //
     /////////////////////////////////////////////////////////////////////////
 
-    SGM_EXPORT bool FindLeastSquarePlane(std::vector<SGM::Point3D> const &aPoints,
+    SGM_EXPORT bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                                          Point3D                         &Origin,
                                          UnitVector3D                    &XVec,
                                          UnitVector3D                    &YVec,
@@ -29,7 +29,7 @@ namespace SGM
 
     // Returns the min and max X, Y, and Z value with Origin at (0,0,0).
 
-    SGM_EXPORT SGM::Interval3D FindOrientedBox(std::vector<SGM::Point3D> const &aPoints,
+    SGM_EXPORT Interval3D FindOrientedBox(std::vector<Point3D> const &aPoints,
                                                Point3D                   const &Origin,
                                                UnitVector3D              const &XVec,
                                                UnitVector3D              const &YVec,
@@ -75,22 +75,22 @@ namespace SGM
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
-    SGM_EXPORT double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
-                                       SGM::Point3D              const &Pos);
+    SGM_EXPORT double DistanceToPoints(std::vector<Point3D> const &aPoints,
+                                       Point3D              const &Pos);
 
-    SGM_EXPORT void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
+    SGM_EXPORT void RemoveDuplicates2D(std::vector<Point2D> &aPoints,
                                        double                     dTolerance);
 
     // Optionaly a box may be given that the points must be in also.
 
-    SGM_EXPORT void RemoveDuplicates3D(std::vector<SGM::Point3D> &aPoints,
+    SGM_EXPORT void RemoveDuplicates3D(std::vector<Point3D> &aPoints,
                                        double                     dTolerance,
-                                       SGM::Interval3D     const *Box=nullptr);
+                                       Interval3D     const *Box=nullptr);
 
     // Returns the Hausdarff distance between the two point sets.
 
-    SGM_EXPORT double HausdorffDistance(std::vector<SGM::Point3D> const &aPoints1,
-                                        std::vector<SGM::Point3D> const &aPoints2);
+    SGM_EXPORT double HausdorffDistance(std::vector<Point3D> const &aPoints1,
+                                        std::vector<Point3D> const &aPoints2);
 
     /////////////////////////////////////////////////////////////////////////
     //
@@ -136,7 +136,7 @@ namespace SGM
 
     // Coverts a polygon from a vector of indices to a vector of points.
 
-    std::vector<SGM::Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
+    std::vector<Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
                                                std::vector<unsigned int> const &aPolygon);
 
     // Merges the indices of close points, within dTolerance, in aPolygon.
@@ -294,12 +294,12 @@ namespace SGM
     // flags may be given that tell is a point is to be imprinted or not, with false
     // meaning to skip the imprinting of the point.
 
-    SGM_EXPORT bool InsertPolygon(SGM::Result                &rResult,
+    SGM_EXPORT bool InsertPolygon(Result                &rResult,
                                   std::vector<Point2D> const &aPolygon,
                                   std::vector<Point2D>       &aPoints2D,
                                   std::vector<unsigned int>  &aTriangles,
                                   std::vector<unsigned int>  &aPolygonIndices,
-                                  SGM::Surface               *pSurfaceID=nullptr,
+                                  Surface               *pSurfaceID=nullptr,
                                   std::vector<Point3D>       *pPoints3D=nullptr,
                                   std::vector<UnitVector3D>  *pNormals=nullptr,
                                   std::vector<bool>          *pImprintFlag=nullptr);
@@ -330,7 +330,7 @@ namespace SGM
     // point cannot be removed.  The function also returns the indices of the triangles 
     // that were removed or changed, and the point indices of the triangels that were replaced.
 
-    SGM_EXPORT bool RemovePointFromTriangles(SGM::Result               &rResult,
+    SGM_EXPORT bool RemovePointFromTriangles(Result               &rResult,
                                              unsigned int               nRemoveIndex,
                                              std::vector<Point2D>      &aPoints2D,
                                              std::vector<unsigned int> &aTriangles,
@@ -344,7 +344,7 @@ namespace SGM
     // reduced to only the used points.  Moreover, if dMinDist is not zero, then interior points
     // that are within dMinDist of the boundary are also removed. 
 
-    SGM_EXPORT void RemoveOutsideTriangles(SGM::Result                                   &rResult,
+    SGM_EXPORT void RemoveOutsideTriangles(Result                                   &rResult,
                                            std::vector<std::vector<unsigned int> > const &aaPolygons,
                                            std::vector<Point2D>                          &aPoints2D,
                                            std::vector<unsigned int>                     &aTriangles,
@@ -735,10 +735,10 @@ namespace SGM
     // center.  If nRefine is positive then the triangles are sphericaly refined.
 
     SGM_EXPORT void CreateIcosahedron(double                     dCircumscribedRadius,
-                                      SGM::Point3D        const &Center,
-                                      SGM::UnitVector3D   const &ZAxis,
-                                      SGM::UnitVector3D   const &XAxis,
-                                      std::vector<SGM::Point3D> &aPoints3D,
+                                      Point3D        const &Center,
+                                      UnitVector3D   const &ZAxis,
+                                      UnitVector3D   const &XAxis,
+                                      std::vector<Point3D> &aPoints3D,
                                       std::vector<unsigned int> &aTriangles,
                                       int                        nRefine=0);
 
@@ -750,10 +750,10 @@ namespace SGM
     // center.   If nRefine is positive then the triangles are sphericaly refined.
 
     SGM_EXPORT void CreateOctahedron(double                     dCircumscribedRadius,
-                                     SGM::Point3D        const &Center,
-                                     SGM::UnitVector3D   const &ZAxis,
-                                     SGM::UnitVector3D   const &XAxis,
-                                     std::vector<SGM::Point3D> &aPoints3D,
+                                     Point3D        const &Center,
+                                     UnitVector3D   const &ZAxis,
+                                     UnitVector3D   const &XAxis,
+                                     std::vector<Point3D> &aPoints3D,
                                      std::vector<unsigned int> &aTriangles,
                                      int                        nRefine=0);
     } // End of SGM namespace
