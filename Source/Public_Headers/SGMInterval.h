@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <algorithm>
+#include <math.h>
 
 #include "sgm_export.h"
 
