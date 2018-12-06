@@ -30,13 +30,29 @@ namespace SGMInternal {
         {
         }
 
+//bool IsInThing(SGM::Result &rResult, entity const &other)
+//{
+//    thing* pThing = rResult.GetThing();
+//    if (pThing)
+//    {
+//        entity *pEntity = pThing->FindEntity(other.GetID());
+//        return (&other == pEntity);
+//    }
+//    else
+//    {
+//        return false;
+//    }
+//}
     inline entity::entity(SGM::Result &rResult, entity const &other) :
             m_ID(IDFromThing(rResult)),
             m_Type(other.m_Type),
             m_Box(),
             m_sOwners(other.m_sOwners),
             m_sAttributes(other.m_sAttributes)
-    {}
+    {
+        //// make sure we are copying within the same thing
+        //assert(IsInThing(rResult, other));
+    }
 
     inline size_t entity::IDFromThing(SGM::Result &rResult)
         {

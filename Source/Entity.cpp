@@ -35,10 +35,10 @@ void entity::OwnerAndAttributeReplacePointers(std::map<entity *,entity *> const 
             {
             m_sFixedAttributes.insert((attribute *)MapValue->second);
             }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
+        //else
+        //    {
+        //    m_sFixedAttributes.insert(pAttribute);
+        //    }
         }
     m_sAttributes=m_sFixedAttributes;
 
@@ -50,10 +50,10 @@ void entity::OwnerAndAttributeReplacePointers(std::map<entity *,entity *> const 
             {
             m_sFixedOwners.insert((attribute *)MapValue->second);
             }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
+        //else
+        //    {
+        //    m_sFixedOwners.insert(pEntity);
+        //    }
         }
     m_sOwners=m_sFixedOwners;
     }

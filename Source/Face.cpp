@@ -98,10 +98,10 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSeamType[(edge *)MapValue->second]=SeamType.second;
             }
-        else
-            {
-            m_sFixedSeamType[SeamType.first]=SeamType.second;
-            }
+        //else
+        //    {
+        //    m_sFixedSeamType[SeamType.first]=SeamType.second;
+        //    }
         }
     m_mSeamType=m_sFixedSeamType;
 
@@ -113,10 +113,10 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSideType[(edge *)MapValue->second]=SideType.second;
             }
-        else
-            {
-            m_sFixedSideType[SideType.first]=SideType.second;
-            }
+        //else
+        //    {
+        //    m_sFixedSideType[SideType.first]=SideType.second;
+        //    }
         }
     m_mSideType=m_sFixedSideType;
 
@@ -146,10 +146,10 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
     OwnerAndAttributeReplacePointers(mEntityMap);

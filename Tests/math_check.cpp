@@ -1089,7 +1089,7 @@ TEST(math_check, save_step_primitives)
 }
 
 
-TEST(math_check, revolve_surface_save_step)
+TEST(DISABLED_math_check, revolve_surface_save_step)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1214,7 +1214,7 @@ TEST(math_check, revolve_surface_test)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, extrude_hermit)
+TEST(DISABLED_math_check, extrude_hermite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1248,16 +1248,24 @@ TEST(math_check, extrude_hermit)
     SGM::SaveSGM(rResult,"GTest_extrude_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,SurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     SGM::CopyEntity(rResult,CurveID);
+
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
     
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 

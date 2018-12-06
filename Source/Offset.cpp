@@ -21,11 +21,9 @@ offset::offset(SGM::Result &rResult, double distance, surface *pSurface) :
 
 offset::offset(SGM::Result &rResult, offset const &other) :
         surface(rResult, SGM::OffsetType),
-        m_pSurface(nullptr),
+        m_pSurface(other.m_pSurface),
         m_dDistance(other.m_dDistance)
     {
-    if (other.m_pSurface)
-        SetSurface(other.m_pSurface->Clone(rResult));
     }
 
 offset::~offset()
@@ -67,6 +65,17 @@ void offset::FindAllChildren(std::set<entity *, EntityCompare> &/*sChildren*/) c
     {
     throw std::logic_error("Derived class of surface must override FindAllChildren()");
     }
+
+void offset::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+{
+    surface::ReplacePointers(mEntityMap);
+
+    auto MapValue=mEntityMap.find(m_pSurface);
+    if(MapValue!=mEntityMap.end())
+        m_pSurface = dynamic_cast<surface *>(MapValue->second);
+    else
+        throw std::runtime_error("offset ReplacePointers did not find a curve in the map");
+}
 
 void offset::Evaluate(SGM::Point2D const &,
                        SGM::Point3D       *,

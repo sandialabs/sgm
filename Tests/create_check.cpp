@@ -7,6 +7,7 @@
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
 #include "SGMAttribute.h"
+#include "SGMInterval.h"
 
 #include "test_utility.h"
 
@@ -238,4 +239,25 @@ TEST(create_check, create_offset)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(create_check, edge_copy)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    SGM::Point3D Origin(0,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Curve LineID = SGM::CreateLine(rResult, Origin, Axis);
+
+    SGM::Interval1D Interval1(0,1);
+    SGM::Interval1D Interval2(2,3);
+    SGM::Edge EdgeID1 = SGM::CreateEdge(rResult, LineID, &Interval1);
+    SGM::Edge EdgeID2 = SGM::CreateEdge(rResult, LineID, &Interval2);
+
+    SGM::Entity Edge1Copy = SGM::CopyEntity(rResult, EdgeID1);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}

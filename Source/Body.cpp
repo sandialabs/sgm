@@ -26,10 +26,10 @@ void body::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedVolumes.insert((volume *)MapValue->second);
             }
-        else
-            {
-            m_sFixedVolumes.insert(pVolume);
-            }
+        //else
+        //    {
+        //    m_sFixedVolumes.insert(pVolume);
+        //    }
         }
     m_sVolumes=m_sFixedVolumes;
 

@@ -118,10 +118,10 @@ void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
 
@@ -133,10 +133,10 @@ void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedFaces.insert((face *)MapValue->second);
             }
-        else
-            {
-            m_sFixedFaces.insert(pFace);
-            }
+        //else
+        //    {
+        //    m_sFixedFaces.insert(pFace);
+        //    }
         }
     m_sFaces=m_sFixedFaces;
     OwnerAndAttributeReplacePointers(mEntityMap);

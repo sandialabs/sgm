@@ -69,12 +69,10 @@ bool extrude::IsSame(surface const *pOther,double dTolerance) const
 
 extrude::extrude(SGM::Result &rResult, extrude const &other) :
         surface(rResult, other),
-        m_pCurve(nullptr),
+        m_pCurve(other.m_pCurve),
         m_Origin(other.m_Origin),
         m_vAxis(other.m_vAxis)
     {
-    if (other.m_pCurve)
-        SetCurve(other.m_pCurve->Clone(rResult));
     }
 
 extrude* extrude::Clone(SGM::Result &rResult) const
@@ -84,6 +82,17 @@ void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
     {
     sChildren.insert(m_pCurve);
     }
+
+void extrude::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+{
+    surface::ReplacePointers(mEntityMap);
+
+    auto MapValue=mEntityMap.find(m_pCurve);
+    if(MapValue!=mEntityMap.end())
+        m_pCurve = dynamic_cast<curve *>(MapValue->second);
+    else
+        throw std::runtime_error("extrude ReplacePointers did not find a curve in the map");
+}
 
 void extrude::Evaluate(SGM::Point2D const &uv,
                        SGM::Point3D       *Pos,
