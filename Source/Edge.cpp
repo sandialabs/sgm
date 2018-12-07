@@ -85,10 +85,10 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedFaces.insert((face *)MapValue->second);
             }
-        else
-            {
-            m_sFixedFaces.insert(pFace);
-            }
+        //else
+        //    {
+        //    m_sFixedFaces.insert(pFace);
+        //    }
         }
     m_sFaces=m_sFixedFaces;
 

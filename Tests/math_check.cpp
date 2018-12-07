@@ -1089,7 +1089,7 @@ TEST(math_check, save_step_primitives)
 }
 
 
-TEST(math_check, revolve_surface_save_step)
+TEST(DISABLED_math_check, revolve_surface_save_step)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1214,7 +1214,7 @@ TEST(math_check, revolve_surface_test)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, extrude_hermit)
+TEST(DISABLED_math_check, extrude_hermite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -1248,16 +1248,24 @@ TEST(math_check, extrude_hermit)
     SGM::SaveSGM(rResult,"GTest_extrude_test.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,SurfID).m_ID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     EXPECT_TRUE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,SurfID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SurfID,SurfID2,SGM_MIN_TOL));
 
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     SGM::CopyEntity(rResult,CurveID);
+
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
     
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -2629,6 +2637,45 @@ TEST(math_check, NURB_surface)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
+
+TEST(math_check, NURB_curve_tangent)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point4D> aControlPoints;
+    aControlPoints.emplace_back(1,0,0,1);
+    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
+    aControlPoints.emplace_back(1,1,-1,1);
+    aControlPoints.emplace_back(1,1,-2,sqrt(2)/2);
+    aControlPoints.emplace_back(1,0,-2,1);
+    aControlPoints.emplace_back(1,-1,-2,sqrt(2)/2);
+    aControlPoints.emplace_back(1,-1,-3,1);
+
+    std::vector<double> aKnots;
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(0);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_HALF_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+    aKnots.push_back(SGM_PI*1.5);
+
+    SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
+
+    SGM::Point3D Pos;
+    SGM::Vector3D Vec;
+    SGM::EvaluateCurve(rResult,NURBcurve,SGM_PI*0.25,&Pos,&Vec);
+
+    SGM::Point3D ExpectedPos(1,sqrt(2)/2,-1+sqrt(2)/2);
+    EXPECT_NEAR((ExpectedPos-Pos).Magnitude(),0,SGM_MIN_TOL);
+
+    SGM::Vector3D ExpectedVec(0,1/sqrt(2),-1/sqrt(2));
+    EXPECT_NEAR((SGM::UnitVector3D(Vec)-ExpectedVec).Magnitude(),0,SGM_MIN_TOL);
+}
 
 TEST(math_check, NURB_curve)
     {

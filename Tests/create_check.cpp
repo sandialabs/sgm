@@ -7,6 +7,7 @@
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
 #include "SGMAttribute.h"
+#include "SGMInterval.h"
 
 #include "test_utility.h"
 
@@ -185,6 +186,8 @@ TEST(create_check, create_attributes)
 
     SGM::Attribute AttributeID5=SGM::CreateStringAttribute(rResult,"StringAttributeTestName","string_test");
     EXPECT_EQ(SGM::GetAttributeType(rResult,AttributeID5),SGM::EntityType::StringAttributeType);
+    std::string testname = SGM::GetStringAttributeData(rResult,AttributeID5);
+    EXPECT_EQ(testname, "string_test");
 
     SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
     SGM::AddAttribute(rResult,BodyID,AttributeID1);
@@ -236,6 +239,29 @@ TEST(create_check, create_offset)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(create_check, edge_copy)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Point3D Origin(0,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Curve LineID = SGM::CreateLine(rResult, Origin, Axis);
+
+    SGM::Interval1D Interval1(0,1);
+    SGM::Interval1D Interval2(2,3);
+    SGM::Edge EdgeID1 = SGM::CreateEdge(rResult, LineID, &Interval1);
+    SGM::Edge EdgeID2 = SGM::CreateEdge(rResult, LineID, &Interval2);
+
+    SGM::Entity Edge1Copy = SGM::CopyEntity(rResult, EdgeID1);
+
+    std::vector<std::string> aLog;
+    SGM::CheckOptions CheckOptions;
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(create_check, enum_type_names)
     {
     EXPECT_ANY_THROW(SGM::EntityTypeName((SGM::EntityType)-1));
@@ -277,3 +303,4 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("DoubleAttribute",SGM::EntityTypeName(SGM::DoubleAttributeType));
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
+

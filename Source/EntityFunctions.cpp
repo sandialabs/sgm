@@ -134,7 +134,6 @@ void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity)
     {
-    pEntity->TransformBox(rResult,transform3D);
     std::set<entity *,EntityCompare> sChildren;
     pEntity->FindAllChildren(sChildren);
     sChildren.insert(pEntity);
@@ -184,8 +183,29 @@ void TransformEntity(SGM::Result            &rResult,
                 pComplex->Transform(transform3D);
                 break;
                 }
-            default:
+            case SGM::BodyType:
+                {
+                body *pBody = (body *)pChildEntity;
+                pBody->TransformBox(rResult, transform3D);
                 break;
+                }
+            case SGM::VolumeType:
+                {
+                volume *pVolume= (volume *)pChildEntity;
+                pVolume->TransformBox(rResult, transform3D);
+                break;
+                }
+            case SGM::ThingType:
+                {
+                thing *pThing = (thing *)pChildEntity;
+                pThing->TransformBox(rResult, transform3D);
+                break;
+                }
+            default:
+                {
+                throw std::logic_error("Unhandled entity type in TransformEntity");
+                break;
+                }
             }
         ++iter;
         }

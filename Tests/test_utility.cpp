@@ -82,6 +82,18 @@ namespace SGMTesting {
             SGM::DeleteThing(pThing);
     }
 
+    bool CheckEntityAndPrintLog(SGM::Result rResult, SGM::Entity EntityID)
+    {
+        std::vector<std::string> aLog;
+        SGM::CheckOptions CheckOptions;
+        bool bAnswer = SGM::CheckEntity(rResult, EntityID, CheckOptions, aLog);
+
+        for (auto LogString : aLog)
+        {
+            std::cout << LogString << std::endl;
+        }
+        return bAnswer;
+    }
 }
 
 std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNameKeep)(const std::string &))

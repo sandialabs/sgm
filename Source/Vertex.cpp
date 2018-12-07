@@ -42,10 +42,10 @@ void vertex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
     OwnerAndAttributeReplacePointers(mEntityMap);

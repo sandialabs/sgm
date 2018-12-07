@@ -44,6 +44,8 @@ SGM_EXPORT std::string const &GetAttributeName(SGM::Result          &rResult,
 SGM_EXPORT std::vector<int> const &GetIntegerAttributeData(SGM::Result          &rResult,
                                                            SGM::Attribute const &AttributeID);
 
+SGM_EXPORT std::string const &GetStringAttributeData(SGM::Result          &rResult,
+                                                     SGM::Attribute const &AttributeID);
 
 } // End SGM namespace
 

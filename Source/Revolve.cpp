@@ -57,7 +57,7 @@ revolve::~revolve()
 
 revolve::revolve(SGM::Result &rResult, revolve const &other) :
         surface(rResult, other),
-        m_pCurve(nullptr),
+        m_pCurve(other.m_pCurve),
         m_Origin(other.m_Origin),
         m_XAxis(other.m_XAxis),
         m_YAxis(other.m_YAxis),
@@ -74,6 +74,17 @@ void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
     {
     sChildren.insert(m_pCurve);
     }
+
+void revolve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+{
+    surface::ReplacePointers(mEntityMap);
+
+    auto MapValue=mEntityMap.find(m_pCurve);
+    if(MapValue!=mEntityMap.end())
+        m_pCurve = dynamic_cast<curve *>(MapValue->second);
+    else
+        throw std::runtime_error("revolve ReplacePointers did not find a curve in the map");
+}
 
 void revolve::Evaluate(SGM::Point2D const &uv,
                        SGM::Point3D       *Pos,
@@ -263,7 +274,7 @@ void revolve::SetCurve(curve *pCurve)
     m_XAxis = start - m_Origin;
     m_YAxis = m_ZAxis * m_XAxis;
 
-    this->m_bClosedV = pCurve->GetClosed();
+    m_bClosedV = pCurve->GetClosed();
     m_Domain.m_VDomain = pCurve->GetDomain();
     }
 }

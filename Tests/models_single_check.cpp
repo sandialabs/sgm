@@ -5,6 +5,7 @@
 #include "SGMTopology.h"
 #include "SGMComplex.h"
 #include "SGMIntersector.h"
+#include "SGMEntityFunctions.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -520,3 +521,60 @@ TEST(intersection_check, intersect_line_and_extrude)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
+TEST(assembly_check, import_one_level_assembly)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    expect_import_success("2box.STEP", rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Body> sBodies;
+    bool bTopLevel = true;
+    SGM::FindBodies(rResult, SGM::Thing(), sBodies, bTopLevel);
+    EXPECT_EQ(sBodies.size(), 2);
+
+    SGM::Interval3D BodyBoxes[2];
+    BodyBoxes[0] = SGM::Interval3D(0.0,2.5,0.0,1.7,0.0,0.5);
+    BodyBoxes[1] = SGM::Interval3D(0.0,0.5,0.0,.25,.5,.9);
+    
+    std::set<SGM::Body>::iterator iter = sBodies.begin();
+    for (size_t iIndex=0; iIndex<sBodies.size(); ++iIndex)
+    {
+      SGM::Interval3D box = SGM::GetBoundingBox(rResult, *iter);
+      EXPECT_TRUE(box == BodyBoxes[iIndex]);
+      iter++;
+    }
+
+    SGMTesting::ReleaseTestThing(pThing); 
+}
+
+TEST(assembly_check, import_two_level_assembly)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    expect_import_success("box-smbox-2box.STEP", rResult);
+    expect_check_success(rResult);
+
+    std::set<SGM::Body> sBodies;
+    bool bTopLevel = true;
+    SGM::FindBodies(rResult, SGM::Thing(), sBodies, bTopLevel);
+    EXPECT_EQ(sBodies.size(), 4);
+
+    SGM::Interval3D BodyBoxes[4];
+    BodyBoxes[0] = SGM::Interval3D(0.0,0.5,0.0,0.25,1.5,1.9);
+    BodyBoxes[1] = SGM::Interval3D(0.0,2.5,0.0,1.7,1.0,1.5);
+    BodyBoxes[2] = SGM::Interval3D(1.0,1.4,1.45,1.7,0.5,1.0);
+    BodyBoxes[3] = SGM::Interval3D(0.0,2.5,0.0,1.7,0.0,0.5);
+    
+    std::set<SGM::Body>::iterator iter = sBodies.begin();
+    for (size_t iIndex=0; iIndex<sBodies.size(); ++iIndex)
+    {
+      SGM::Interval3D box = SGM::GetBoundingBox(rResult, *iter);
+      EXPECT_TRUE(box == BodyBoxes[iIndex]);
+      iter++;
+    }
+
+    SGMTesting::ReleaseTestThing(pThing); 
+}

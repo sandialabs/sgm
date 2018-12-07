@@ -1193,11 +1193,12 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
 
     SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
+    const double dTolerance = SGM_FIT_SMALL;
+
     // coincident plane
     SGM::Point3D PlaneOrigin(1,0,0);
     SGM::UnitVector3D PlaneNorm (-1,0,0);
 
-    double dTolerance = SGM_FIT_SMALL;
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurveAndPlane(rResult, NURBcurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);

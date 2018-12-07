@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <algorithm>
+#include <math.h>
 
 #include "sgm_export.h"
 
@@ -50,7 +51,8 @@ namespace SGM {
         ~Interval1D() = default;
 
         bool operator==(const Interval1D &other) const
-        { return (m_dMin == other.m_dMin && m_dMax == other.m_dMax); }
+        { return ((fabs(m_dMin-other.m_dMin)<SGM_INTERVAL_TOLERANCE) &&
+                  (fabs(m_dMax-other.m_dMax)<SGM_INTERVAL_TOLERANCE)); }
 
         // Sets the interval to be empty (like the default constructor).
 

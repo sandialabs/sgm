@@ -1354,6 +1354,12 @@ void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent, SGM::Attribute At
         {
         case SGM::StringAttributeType:
             {
+            if (Name == "Name")
+                {
+                auto data_item = new QTreeWidgetItem(attribute_item);
+                std::string name = SGM::GetStringAttributeData(dPtr->mResult, AttributeID);
+                data_item->setText(0, name.c_str());
+                }
             break;
             }
         case SGM::IntegerAttributeType:

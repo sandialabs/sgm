@@ -36,7 +36,7 @@ namespace SGMInternal {
             m_Box(),
             m_sOwners(other.m_sOwners),
             m_sAttributes(other.m_sAttributes)
-    {}
+    { }
 
     inline size_t entity::IDFromThing(SGM::Result &rResult)
         {

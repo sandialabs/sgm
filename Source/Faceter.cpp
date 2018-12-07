@@ -712,7 +712,10 @@ static bool SplitAtSeams(SGM::Result                     & ,
             {
             SGM::Interval1D const &Domain=pSurface->GetDomain().m_UDomain;
             double dGap=Domain.Length()*0.5;
-            curve *pSeam=pSurface->UParamLine(EmptyResult,Domain.m_dMin);
+
+            // make sure pSeam gets deleted because it is not owned by a Thing
+            std::shared_ptr<curve> pSeam(pSurface->UParamLine(EmptyResult,Domain.m_dMin));
+
             for(Index1=0;Index1<nParams;++Index1)
                 {
                 Node const &Node0=aNodes[Index1];
@@ -722,7 +725,7 @@ static bool SplitAtSeams(SGM::Result                     & ,
                     {
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
-                    FindCrossingPoint(pSeam,pCurve,Pos,t);
+                    FindCrossingPoint(pSeam.get(),pCurve,Pos,t);
                     pEdge->SnapToDomain(t,SGM_MIN_TOL);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
@@ -740,7 +743,7 @@ static bool SplitAtSeams(SGM::Result                     & ,
             {
             SGM::Interval1D const &Domain=pSurface->GetDomain().m_VDomain;
             double dGap=Domain.Length()*0.5;
-            curve *pSeam=pSurface->VParamLine(EmptyResult,Domain.m_dMin);
+            std::shared_ptr<curve> pSeam(pSurface->VParamLine(EmptyResult,Domain.m_dMin));
             for(Index1=0;Index1<nParams;++Index1)
                 {
                 Node const &Node0=aNodes[Index1];
@@ -750,7 +753,7 @@ static bool SplitAtSeams(SGM::Result                     & ,
                     {
                     SGM::Point3D Pos=Node0.m_Pos;
                     double t=Node0.m_t;
-                    FindCrossingPoint(pSeam,pCurve,Pos,t);
+                    FindCrossingPoint(pSeam.get(),pCurve,Pos,t);
                     pEdge->SnapToDomain(t,SGM_MIN_TOL);
                     if(SGM_MIN_TOL<fabs(t-Node0.m_t) && SGM_MIN_TOL<fabs(t-Node1.m_t))
                         {
@@ -2305,20 +2308,18 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
     double dMidU=Box.m_UDomain.MidPoint();
     double dMidV=Box.m_VDomain.MidPoint();
     SGM::Result EmptyResult(nullptr);
-    curve *pUParam=pFace->GetSurface()->UParamLine(EmptyResult,dMidU);
-    curve *pVParam=pFace->GetSurface()->VParamLine(EmptyResult,dMidV);
+    std::shared_ptr<curve> pUParam(pFace->GetSurface()->UParamLine(EmptyResult,dMidU));
+    std::shared_ptr<curve> pVParam(pFace->GetSurface()->VParamLine(EmptyResult,dMidV));
     FacetOptions TempOptions;
     TempOptions.m_dEdgeAngleTol=Options.m_dFaceAngleTol;
     std::vector<SGM::Point3D> aTempPoints3D;
-    FacetCurve(pVParam,Box.m_UDomain,TempOptions,aTempPoints3D,aUValues);
+    FacetCurve(pVParam.get(),Box.m_UDomain,TempOptions,aTempPoints3D,aUValues);
     if(pFace->GetSurface()->GetSurfaceType()==SGM::RevolveType)
         {
         TempOptions.m_dEdgeAngleTol=Options.m_dEdgeAngleTol;
         }
     aTempPoints3D.clear();
-    FacetCurve(pUParam,Box.m_VDomain,TempOptions,aTempPoints3D,aVValues);
-    delete pUParam;
-    delete pVParam;
+    FacetCurve(pUParam.get(),Box.m_VDomain,TempOptions,aTempPoints3D,aVValues);
     size_t Index1;
 
     // Expand U and V values to that they are not hit by bondary curves.
