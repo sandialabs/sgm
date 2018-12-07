@@ -31,7 +31,7 @@ class surface : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const = 0;
+                   bool                      bChildren) const override = 0;
 
         surface *Clone(SGM::Result &rResult) const override = 0;
 
@@ -177,10 +177,10 @@ class plane : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         plane *Clone(SGM::Result &rResult) const override;
 
@@ -246,10 +246,10 @@ class cylinder : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         cylinder *Clone(SGM::Result &rResult) const override;
 
@@ -312,10 +312,10 @@ class cone : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         cone *Clone(SGM::Result &rResult) const override;
 
@@ -382,10 +382,10 @@ class sphere : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         sphere *Clone(SGM::Result &rResult) const override;
 
@@ -448,10 +448,10 @@ class torus : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         torus* Clone(SGM::Result &rResult) const override;
 
@@ -517,10 +517,10 @@ class NUBsurface: public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         NUBsurface* Clone(SGM::Result &rResult) const override;
 
@@ -611,10 +611,10 @@ class NURBsurface: public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         NURBsurface* Clone(SGM::Result &rResult) const override;
 
@@ -705,10 +705,10 @@ class revolve : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         revolve* Clone(SGM::Result &rResult) const override;
 
@@ -727,7 +727,7 @@ class revolve : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         SGM::Point2D Inverse(SGM::Point3D const &Pos,
                              SGM::Point3D       *ClosePos=nullptr,
@@ -767,10 +767,10 @@ class extrude : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         extrude* Clone(SGM::Result &rResult) const override;
 
@@ -831,10 +831,10 @@ class offset : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildren) const;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         offset* Clone(SGM::Result &rResult) const override;
 
@@ -853,7 +853,7 @@ class offset : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap);
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         SGM::Point2D Inverse(SGM::Point3D const &,
                              SGM::Point3D       *ClosePos=nullptr,

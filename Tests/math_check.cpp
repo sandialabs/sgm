@@ -275,7 +275,7 @@ TEST(math_check, imprint_edge_on_face_vertex_hit)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, imprint_edge_on_face_atoll_flipped)
+TEST(math_check, DISABLED_imprint_edge_on_face_atoll_flipped)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -291,9 +291,7 @@ TEST(math_check, imprint_edge_on_face_atoll_flipped)
     SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(0.5,0,0),SGM::Point3D(1,0,0));
     SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
 
-    std::vector<std::string> aLog;
-    SGM::CheckOptions Options;
-    SGM::CheckEntity(rResult,FaceID,Options,aLog);
+    SGMTesting::CheckEntityAndPrintLog(rResult,FaceID);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
