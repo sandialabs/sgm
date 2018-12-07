@@ -13,6 +13,9 @@ namespace SGM
     SGM_EXPORT SGM::EntityType GetType(SGM::Result       &rResult,
                                        SGM::Entity const &EntityID);
 
+    SGM_EXPORT const char* EntityTypeName(SGM::EntityType entityType);
+
+
     SGM_EXPORT size_t GetOwners(SGM::Result       &rResult,
                                 SGM::Entity const &EntityID,
                                 std::set<Entity>  &sOwners);

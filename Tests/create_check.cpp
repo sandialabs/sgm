@@ -236,4 +236,44 @@ TEST(create_check, create_offset)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(create_check, enum_type_names)
+    {
+    EXPECT_ANY_THROW(SGM::EntityTypeName((SGM::EntityType)-1));
 
+    EXPECT_STREQ("assembly",SGM::EntityTypeName(SGM::AssemblyType));
+    EXPECT_STREQ("reference",SGM::EntityTypeName(SGM::ReferenceType));
+    EXPECT_STREQ("complex",SGM::EntityTypeName(SGM::ComplexType));
+    EXPECT_STREQ("body",SGM::EntityTypeName(SGM::BodyType));
+    EXPECT_STREQ("volume",SGM::EntityTypeName(SGM::VolumeType));
+    EXPECT_STREQ("face",SGM::EntityTypeName(SGM::FaceType));
+    EXPECT_STREQ("edge",SGM::EntityTypeName(SGM::EdgeType));
+    EXPECT_STREQ("vertex",SGM::EntityTypeName(SGM::VertexType));
+    EXPECT_STREQ("curve",SGM::EntityTypeName(SGM::CurveType));
+    EXPECT_STREQ("line",SGM::EntityTypeName(SGM::LineType));
+    EXPECT_STREQ("circle",SGM::EntityTypeName(SGM::CircleType));
+    EXPECT_STREQ("ellipse",SGM::EntityTypeName(SGM::EllipseType));
+    EXPECT_STREQ("parabola",SGM::EntityTypeName(SGM::ParabolaType));
+    EXPECT_STREQ("hyperbola",SGM::EntityTypeName(SGM::HyperbolaType));
+    EXPECT_STREQ("NUBcurve",SGM::EntityTypeName(SGM::NUBCurveType));
+    EXPECT_STREQ("NURBcurve",SGM::EntityTypeName(SGM::NURBCurveType));
+    EXPECT_STREQ("PointCurve",SGM::EntityTypeName(SGM::PointCurveType));
+    EXPECT_STREQ("helix",SGM::EntityTypeName(SGM::HelixCurveType));
+    EXPECT_STREQ("hermite",SGM::EntityTypeName(SGM::HermiteCurveType));
+    EXPECT_STREQ("torus",SGM::EntityTypeName(SGM::TorusKnotCurveType));
+    EXPECT_STREQ("surface",SGM::EntityTypeName(SGM::SurfaceType));
+    EXPECT_STREQ("plane",SGM::EntityTypeName(SGM::PlaneType));
+    EXPECT_STREQ("cylinder",SGM::EntityTypeName(SGM::CylinderType));
+    EXPECT_STREQ("cone",SGM::EntityTypeName(SGM::ConeType));
+    EXPECT_STREQ("sphere",SGM::EntityTypeName(SGM::SphereType));
+    EXPECT_STREQ("torus",SGM::EntityTypeName(SGM::TorusType));
+    EXPECT_STREQ("NUBsurface",SGM::EntityTypeName(SGM::NUBSurfaceType));
+    EXPECT_STREQ("NURBsurface",SGM::EntityTypeName(SGM::NURBSurfaceType));
+    EXPECT_STREQ("revolve",SGM::EntityTypeName(SGM::RevolveType));
+    EXPECT_STREQ("extrude",SGM::EntityTypeName(SGM::ExtrudeType));
+    EXPECT_STREQ("offset",SGM::EntityTypeName(SGM::OffsetType));
+    EXPECT_STREQ("attribute",SGM::EntityTypeName(SGM::AttributeType));
+    EXPECT_STREQ("StringAttribute",SGM::EntityTypeName(SGM::StringAttributeType));
+    EXPECT_STREQ("IntegerAttribute",SGM::EntityTypeName(SGM::IntegerAttributeType));
+    EXPECT_STREQ("DoubleAttribute",SGM::EntityTypeName(SGM::DoubleAttributeType));
+    EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
+    }

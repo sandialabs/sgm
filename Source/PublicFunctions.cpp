@@ -409,6 +409,87 @@ SGM::EntityType SGM::GetType(SGM::Result       &rResult,
     return pEntity->GetType();
     }
 
+const char* SGM::EntityTypeName(SGM::EntityType entityType)
+    {
+    switch(entityType)
+        {
+        case SGM::AssemblyType:
+            return "assembly";
+        case SGM::ReferenceType:
+            return "reference";
+        case SGM::ComplexType:
+            return "complex";
+        case SGM::BodyType:
+            return "body";
+        case SGM::VolumeType:
+            return "volume";
+        case SGM::FaceType:
+            return "face";
+        case SGM::EdgeType:
+            return "edge";
+        case SGM::VertexType:
+            return "vertex";
+        case SGM::CurveType:
+            return "curve";
+        case SGM::LineType:
+            return "line";
+        case SGM::CircleType:
+            return "circle";
+        case SGM::EllipseType:
+            return "ellipse";
+        case SGM::ParabolaType:
+            return "parabola";
+        case SGM::HyperbolaType:
+            return "hyperbola";
+        case SGM::NUBCurveType:
+            return "NUBcurve";
+        case SGM::NURBCurveType:
+            return "NURBcurve";
+        case SGM::PointCurveType:
+            return "PointCurve";
+        case SGM::HelixCurveType:
+            return "helix";
+        case SGM::HermiteCurveType:
+            return "hermite";
+        case SGM::TorusKnotCurveType:
+            return "torus";
+        case SGM::SurfaceType:
+            return "surface";
+        case SGM::PlaneType:
+            return "plane";
+        case SGM::CylinderType:
+            return "cylinder";
+        case SGM::ConeType:
+            return "cone";
+        case SGM::SphereType:
+            return "sphere";
+        case SGM::TorusType:
+            return "torus";
+        case SGM::NUBSurfaceType:
+            return "NUBsurface";
+        case SGM::NURBSurfaceType:
+            return "NURBsurface";
+        case SGM::RevolveType:
+            return "revolve";
+        case SGM::ExtrudeType:
+            return "extrude";
+        case SGM::OffsetType:
+            return "offset";
+        case SGM::AttributeType:
+            return "attribute";
+        case SGM::StringAttributeType:
+            return "StringAttribute";
+        case SGM::IntegerAttributeType:
+            return "IntegerAttribute";
+        case SGM::DoubleAttributeType:
+            return "DoubleAttribute";
+        case SGM::CharAttributeType:
+            return "CharAttribute";
+        default:
+            throw std::logic_error("unknown SGM::EntityType has no associated name implemented");
+        }
+    }
+
 size_t SGM::GetAttributes(SGM::Result         &rResult,
                           SGM::Entity   const &EntityID,
                           std::set<Attribute> &sAttributes,
