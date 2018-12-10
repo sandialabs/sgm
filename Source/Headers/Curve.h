@@ -42,6 +42,8 @@ class curve : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &) const override;
 
         bool IsTopLevel() const override;

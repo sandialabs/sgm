@@ -44,6 +44,15 @@ void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
     // do nothing, derived classes can override
     }
 
+void surface::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (auto pFace : m_sFaces)
+    {
+      sParents.emplace(pFace);
+    }
+    entity::GetParents(sParents);
+}
+
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.

@@ -7,6 +7,17 @@
 #include "Topology.h"
 
 #include <set>
+//#include <cstdio>
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#else
+#define snprintf snprintf
+#endif
+
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
 
 namespace SGMInternal
 {
@@ -14,6 +25,21 @@ namespace SGMInternal
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity)
     {
+    // if this entity still has parents, don't delete it
+    std::set<entity *, EntityCompare> sParents;
+    pEntity->GetParents(sParents);
+
+    if (sParents.size())
+    {
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"%s %lu cannot be deleted because it has parents.",
+                 typeid(*pEntity).name(), pEntity->GetID());
+        rResult.SetResult(SGM::ResultTypeDeleteWillCorruptModel);
+        std::string const sMessage(Buffer);
+        rResult.SetMessage(sMessage);
+        return;
+    }
+
     auto pThing = rResult.GetThing();
     std::set<entity *,EntityCompare> sChildren;
     pEntity->FindAllChildren(sChildren);
@@ -130,74 +156,130 @@ entity *CopyEntity(SGM::Result &rResult,
     return pAnswer;
     }
 
+void MakeClonesForIndependence(SGM::Result &rResult,
+                               std::set<entity *,EntityCompare> const &sFamily,
+                               std::map<entity *,entity *> &mIndependentCopies)
+{
+    for (auto pEntity : sFamily)
+    {
+        std::set<entity *, EntityCompare> sParents; 
+        pEntity->GetParents(sParents);
+
+        bool bIndependent = true;
+        for (auto pParent : sParents)
+        {
+            if (sFamily.find(pParent) == sFamily.end())
+            {
+              bIndependent = false;
+            }
+        }
+
+        if (bIndependent)
+        {
+            mIndependentCopies[pEntity]=pEntity;
+        }
+        else
+        {
+            mIndependentCopies[pEntity]=pEntity->Clone(rResult);
+        }
+    }
+}
+
+
 void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity)
     {
-    std::set<entity *,EntityCompare> sChildren;
-    pEntity->FindAllChildren(sChildren);
-    sChildren.insert(pEntity);
-    std::set<entity *,EntityCompare>::iterator iter=sChildren.begin();
-    while(iter!=sChildren.end())
+    if (pEntity->GetType() == SGM::ThingType)
+    {
+        throw std::logic_error("Unhandled entity type in TransformEntity");
+    }
+        
+
+
+    std::set<entity *,EntityCompare> sFamily;
+    pEntity->FindAllChildren(sFamily);
+    sFamily.insert(pEntity);
+
+    std::map<entity *,entity *> mIndependentCopies;
+    MakeClonesForIndependence(rResult, sFamily, mIndependentCopies);
+
+    for(auto pEntry : mIndependentCopies)
+    {
+        pEntry.second->ReplacePointers(mIndependentCopies);
+    }
+
+    for(auto pEntry : mIndependentCopies)
+    {
+        // make original entity that was cloned independent of anyone being transformed
+        entity *pOriginal = pEntry.first;
+        entity *pClone = pEntry.second;
+        if (pOriginal != pClone)
         {
-        entity *pChildEntity=*iter;
-        switch(pChildEntity->GetType())
+            pOriginal->RemoveParentsInSet(sFamily);
+        }
+    }
+
+    for (auto pEntry : mIndependentCopies)
+        {
+        entity *pIndependent=pEntry.second;
+        switch(pIndependent->GetType())
             {
             case SGM::FaceType:
                 {
-                face *pFace=(face *)pChildEntity;
+                face *pFace=(face *)pIndependent;
                 pFace->TransformBox(rResult, transform3D);
                 pFace->TransformFacets(transform3D);
                 break;
                 }
             case SGM::EdgeType:
                 {
-                edge *pEdge=(edge *)pChildEntity;
+                edge *pEdge=(edge *)pIndependent;
                 pEdge->TransformBox(rResult, transform3D);
                 pEdge->TransformFacets(transform3D);
                 break;
                 }
             case SGM::VertexType:
                 {
-                vertex *pVertex=(vertex *)pChildEntity;
+                vertex *pVertex=(vertex *)pIndependent;
                 pVertex->TransformBox(rResult, transform3D);
                 pVertex->TransformData(transform3D);
                 break;
                 }
             case SGM::SurfaceType:
                 {
-                surface *pSurface=(surface *)pChildEntity;
+                surface *pSurface=(surface *)pIndependent;
                 pSurface->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::CurveType:
                 {
-                curve *pCurve=(curve *)pChildEntity;
+                curve *pCurve=(curve *)pIndependent;
                 pCurve->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::ComplexType:
                 {
-                complex *pComplex=(complex *)pChildEntity;
+                complex *pComplex=(complex *)pIndependent;
                 pComplex->TransformBox(rResult, transform3D);
                 pComplex->Transform(transform3D);
                 break;
                 }
             case SGM::BodyType:
                 {
-                body *pBody = (body *)pChildEntity;
+                body *pBody = (body *)pIndependent;
                 pBody->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::VolumeType:
                 {
-                volume *pVolume= (volume *)pChildEntity;
+                volume *pVolume= (volume *)pIndependent;
                 pVolume->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::ThingType:
                 {
-                thing *pThing = (thing *)pChildEntity;
+                thing *pThing = (thing *)pIndependent;
                 pThing->TransformBox(rResult, transform3D);
                 break;
                 }
@@ -207,7 +289,6 @@ void TransformEntity(SGM::Result            &rResult,
                 break;
                 }
             }
-        ++iter;
         }
     }
 

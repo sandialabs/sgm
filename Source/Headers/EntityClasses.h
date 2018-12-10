@@ -125,6 +125,10 @@ public:
 
     virtual void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
 
+    virtual void GetParents(std::set<entity *, EntityCompare> &sParents) const;
+
+    virtual void RemoveParentsInSet(std::set<entity *,EntityCompare> sFamily);
+
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
 
     virtual void ResetBox(SGM::Result &rResult) const = 0;
@@ -700,6 +704,8 @@ class volume : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
@@ -774,6 +780,8 @@ class face : public topology
                    bool                      bChildern) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
@@ -909,6 +917,8 @@ class edge : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -936,7 +946,7 @@ class edge : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void AddFace(face *pFace) {m_sFaces.insert(pFace);}
+        void AddFace(face *pFace) {assert(nullptr == m_pVolume); m_sFaces.insert(pFace);}
 
         void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 
@@ -1032,6 +1042,8 @@ class vertex : public topology
         vertex *Clone(SGM::Result &rResult) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &) const override { }
+
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 

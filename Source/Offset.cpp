@@ -74,7 +74,7 @@ void offset::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     if(MapValue!=mEntityMap.end())
         m_pSurface = dynamic_cast<surface *>(MapValue->second);
     else
-        throw std::runtime_error("offset ReplacePointers did not find a curve in the map");
+        throw std::runtime_error("offset ReplacePointers did not find a surface in the map");
 }
 
 void offset::Evaluate(SGM::Point2D const &,

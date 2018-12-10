@@ -10,6 +10,15 @@ namespace SGMInternal {
     inline void curve::FindAllChildren(std::set<entity *, EntityCompare> &) const
     { /* do nothing, derived classes may override */ }
 
+    inline void curve::GetParents(std::set<entity *, EntityCompare> &sParents) const
+    {
+        for (auto pEdge : m_sEdges)
+        {
+          sParents.emplace(pEdge);
+        }
+        entity::GetParents(sParents);
+    }
+
     inline SGM::Interval3D const &curve::GetBox(SGM::Result &) const
     { return m_Box; } // default box is max extent, derived class may override
 

@@ -63,8 +63,6 @@ revolve::revolve(SGM::Result &rResult, revolve const &other) :
         m_YAxis(other.m_YAxis),
         m_ZAxis(other.m_ZAxis)
     {
-    if (other.m_pCurve)
-        SetCurve(other.m_pCurve->Clone(rResult));
     }
 
 revolve* revolve::Clone(SGM::Result &rResult) const
@@ -228,22 +226,22 @@ SGM::Point2D revolve::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
     
-void revolve::Transform(SGM::Result            &rResult,
+void revolve::Transform(SGM::Result            &,//rResult,
                         SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;
     m_YAxis=Trans*m_YAxis;
     m_ZAxis=Trans*m_ZAxis;
-    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
-        {
-        m_pCurve->Transform(rResult,Trans);
-        }
-    else
-        {
-        //TODO: Make a copy and transform the copy.
-        throw std::logic_error("Missing implementation of Transform() when curve has other owners");
-        }
+    //if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
+    //    {
+    //    m_pCurve->Transform(rResult,Trans);
+    //    }
+    //else
+    //    {
+    //    //TODO: Make a copy and transform the copy.
+    //    throw std::logic_error("Missing implementation of Transform() when curve has other owners");
+    //    }
     }
 
 curve *revolve::UParamLine(SGM::Result &rResult, double) const

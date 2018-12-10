@@ -97,6 +97,7 @@ namespace SGM
         ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
         ResultTypeUnknownEntityID,  // No matching entity for given ID.
         ResultTypeInconsistentData, // Inside polygons are not inside outside polygons.
+        ResultTypeDeleteWillCorruptModel, // Deleting an entity would corrupt the database
         };
 
     enum LogType

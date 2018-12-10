@@ -27,6 +27,12 @@ void volume::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
         }
     }
 
+void volume::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    sParents.emplace(m_pBody);
+    entity::GetParents(sParents);
+}
+
 body *volume::GetBody() const
     {
     return m_pBody;

@@ -98,4 +98,21 @@ bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
 void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
     }
+
+void entity::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (entity *pOwner : m_sOwners)
+    {
+      sParents.emplace(pOwner);
+    }
+}
+
+void entity::RemoveParentsInSet(std::set<entity *,EntityCompare> sEntities)
+{
+    for (entity *pOwner : sEntities)
+    {
+        m_sOwners.erase(pOwner);
+    }
+}
+
 }
