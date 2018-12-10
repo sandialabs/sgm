@@ -107,7 +107,7 @@ void entity::GetParents(std::set<entity *, EntityCompare> &sParents) const
     }
 }
 
-void entity::RemoveParentsInSet(std::set<entity *,EntityCompare> sEntities)
+void entity::RemoveParentsInSet(std::set<entity *,EntityCompare> const &sEntities)
 {
     for (entity *pOwner : sEntities)
     {

@@ -190,96 +190,104 @@ void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity)
     {
+    std::set<entity *,EntityCompare> sEntityToTransform;
     if (pEntity->GetType() == SGM::ThingType)
     {
-        throw std::logic_error("Unhandled entity type in TransformEntity");
+        pEntity->FindAllChildren(sEntityToTransform);
+        sEntityToTransform.emplace(pEntity);
     }
-        
-
-
-    std::set<entity *,EntityCompare> sFamily;
-    pEntity->FindAllChildren(sFamily);
-    sFamily.insert(pEntity);
-
-    std::map<entity *,entity *> mIndependentCopies;
-    MakeClonesForIndependence(rResult, sFamily, mIndependentCopies);
-
-    for(auto pEntry : mIndependentCopies)
+    else
     {
-        pEntry.second->ReplacePointers(mIndependentCopies);
-    }
+        std::set<entity *,EntityCompare> sFamily;
+        pEntity->FindAllChildren(sFamily);
+        sFamily.insert(pEntity);
 
-    for(auto pEntry : mIndependentCopies)
-    {
-        // make original entity that was cloned independent of anyone being transformed
-        entity *pOriginal = pEntry.first;
-        entity *pClone = pEntry.second;
-        if (pOriginal != pClone)
+        std::map<entity *,entity *> mIndependentCopies;
+        MakeClonesForIndependence(rResult, sFamily, mIndependentCopies);
+
+        for(auto pEntry : mIndependentCopies)
         {
-            pOriginal->RemoveParentsInSet(sFamily);
+            // this needs to happen whether an entry was cloned or not
+            pEntry.second->ReplacePointers(mIndependentCopies);
+        }
+
+        for(auto pEntry : mIndependentCopies)
+        {
+            // make original entity that was cloned independent of anyone being transformed
+            entity *pOriginal = pEntry.first;
+            entity *pClone = pEntry.second;
+            if (pOriginal != pClone)
+            {
+                pOriginal->RemoveParentsInSet(sFamily);
+            }
+        }
+
+        for(auto pEntry : mIndependentCopies)
+        {
+            entity *pIndependent = pEntry.second;
+            sEntityToTransform.emplace(pIndependent);
         }
     }
 
-    for (auto pEntry : mIndependentCopies)
+    for (auto pEntry : sEntityToTransform)
         {
-        entity *pIndependent=pEntry.second;
-        switch(pIndependent->GetType())
+        switch(pEntry->GetType())
             {
             case SGM::FaceType:
                 {
-                face *pFace=(face *)pIndependent;
+                face *pFace=(face *)pEntry;
                 pFace->TransformBox(rResult, transform3D);
                 pFace->TransformFacets(transform3D);
                 break;
                 }
             case SGM::EdgeType:
                 {
-                edge *pEdge=(edge *)pIndependent;
+                edge *pEdge=(edge *)pEntry;
                 pEdge->TransformBox(rResult, transform3D);
                 pEdge->TransformFacets(transform3D);
                 break;
                 }
             case SGM::VertexType:
                 {
-                vertex *pVertex=(vertex *)pIndependent;
+                vertex *pVertex=(vertex *)pEntry;
                 pVertex->TransformBox(rResult, transform3D);
                 pVertex->TransformData(transform3D);
                 break;
                 }
             case SGM::SurfaceType:
                 {
-                surface *pSurface=(surface *)pIndependent;
+                surface *pSurface=(surface *)pEntry;
                 pSurface->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::CurveType:
                 {
-                curve *pCurve=(curve *)pIndependent;
+                curve *pCurve=(curve *)pEntry;
                 pCurve->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::ComplexType:
                 {
-                complex *pComplex=(complex *)pIndependent;
+                complex *pComplex=(complex *)pEntry;
                 pComplex->TransformBox(rResult, transform3D);
                 pComplex->Transform(transform3D);
                 break;
                 }
             case SGM::BodyType:
                 {
-                body *pBody = (body *)pIndependent;
+                body *pBody = (body *)pEntry;
                 pBody->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::VolumeType:
                 {
-                volume *pVolume= (volume *)pIndependent;
+                volume *pVolume= (volume *)pEntry;
                 pVolume->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::ThingType:
                 {
-                thing *pThing = (thing *)pIndependent;
+                thing *pThing = (thing *)pEntry;
                 pThing->TransformBox(rResult, transform3D);
                 break;
                 }

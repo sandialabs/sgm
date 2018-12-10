@@ -48,10 +48,6 @@ void thing::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     }
 }
 
-void thing::GetParents(std::set<entity *, EntityCompare> &sParents) const;
-
-void thing::RemoveParentsInSet(std::set<entity *,EntityCompare> sFamily);
-
 SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

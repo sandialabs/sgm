@@ -119,7 +119,7 @@ public:
     virtual bool Check(SGM::Result              &rResult,
                        SGM::CheckOptions const  &Options,
                        std::vector<std::string> &aCheckStrings,
-                       bool                      bChildern) const = 0;
+                       bool                      bChildren) const = 0;
 
     virtual entity *Clone(SGM::Result &rResult) const = 0;
 
@@ -127,7 +127,7 @@ public:
 
     virtual void GetParents(std::set<entity *, EntityCompare> &sParents) const;
 
-    virtual void RemoveParentsInSet(std::set<entity *,EntityCompare> sFamily);
+    virtual void RemoveParentsInSet(std::set<entity *,EntityCompare> const &sFamily);
 
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
 
@@ -208,7 +208,7 @@ class thing : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         thing *Clone(SGM::Result &) const override
         { throw std::logic_error("not allowed"); }
@@ -216,6 +216,12 @@ class thing : public entity
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool IsTopLevel() const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
+
+        void GetParents(std::set<entity *, EntityCompare> &) const {return;}
+
+        void RemoveParentsInSet(std::set<entity *,EntityCompare> ) {return;}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
@@ -370,7 +376,7 @@ class assembly : public topology
         virtual bool Check(SGM::Result              &rResult,
                            SGM::CheckOptions const  &Options,
                            std::vector<std::string> &aCheckStrings,
-                           bool                      bChildern) const override;
+                           bool                      bChildren) const override;
     };
 
 class reference : public topology
@@ -406,7 +412,7 @@ class reference : public topology
         virtual bool Check(SGM::Result              &rResult,
                            SGM::CheckOptions const  &Options,
                            std::vector<std::string> &aCheckStrings,
-                           bool                      bChildern) const override;
+                           bool                      bChildren) const override;
     };
 
 class body : public topology
@@ -430,7 +436,7 @@ class body : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         body *Clone(SGM::Result &rResult) const override;
 
@@ -517,7 +523,7 @@ class complex : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         complex *Clone(SGM::Result &rResult) const override;
 
@@ -698,7 +704,7 @@ class volume : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         volume *Clone(SGM::Result &) const override;
 
@@ -777,7 +783,7 @@ class face : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
@@ -913,7 +919,7 @@ class edge : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
@@ -1037,7 +1043,7 @@ class vertex : public topology
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildern) const override;
+                   bool                      bChildren) const override;
 
         vertex *Clone(SGM::Result &rResult) const override;
 

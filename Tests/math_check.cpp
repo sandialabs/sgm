@@ -5490,10 +5490,21 @@ TEST(math_check, testing_the_thing)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
-    SGM::GetBoundingBox(rResult,SGM::Thing());
+    SGM::Body BodyID = SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Interval3D ThingBox1 = SGM::GetBoundingBox(rResult,SGM::Thing());
+    SGM::Interval3D BlockBox1 = SGM::GetBoundingBox(rResult,BodyID);
+    EXPECT_TRUE(SGM::NearEqual(BlockBox1.MidPoint(), ThingBox1.MidPoint(), SGM_MIN_TOL));
+
     SGM::Entity EntID=SGM::Thing();
-    SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),EntID);
+    SGM::Vector3D MoveVector(1,1,1);
+    SGM::Transform3D Translation(MoveVector);
+    SGM::TransformEntity(rResult,Translation,EntID);
+    SGM::Interval3D ThingBox2 = SGM::GetBoundingBox(rResult,SGM::Thing());
+    EXPECT_TRUE(SGM::NearEqual(ThingBox2.MidPoint(), ThingBox1.MidPoint() + MoveVector, SGM_MIN_TOL));
+
+    // make sure the Block's box also got updated
+    SGM::Interval3D BlockBox2 = SGM::GetBoundingBox(rResult, BodyID);
+    EXPECT_TRUE(SGM::NearEqual(ThingBox2.MidPoint(), BlockBox2.MidPoint(), SGM_MIN_TOL));
     
     SGMTesting::ReleaseTestThing(pThing);
 } 

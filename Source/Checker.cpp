@@ -9,14 +9,13 @@
 namespace SGMInternal
 {
 
-<<<<<<< HEAD
 // A convenience for writing, for example, "face 5", or "NUBcurve 23".
 
 inline std::ostream& operator<<(std::ostream& out, const entity *pEntity)
     {
     return out << SGM::EntityTypeName(pEntity->GetType()) << " " << pEntity->GetID();
     }
-=======
+
 void CheckPreexistingConditions(SGM::Result              &rResult,
                                 std::vector<std::string> &aCheckStrings)
 {
@@ -38,7 +37,6 @@ void CheckPreexistingConditions(SGM::Result              &rResult,
       return;
     }
 }
->>>>>>> in checker, check incoming result for errors
 
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
@@ -60,10 +58,10 @@ bool CheckChildren(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings)
     {
-    std::set<entity *,EntityCompare> sChildern;
-    pEntity->FindAllChildren(sChildern);
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
     bool bAnswer=true;
-    for(auto pChild : sChildern)
+    for(auto pChild : sChildren)
         {
         if(pChild->Check(rResult,Options,aCheckStrings,false)==false)
             {
@@ -592,7 +590,7 @@ bool curve::Check(SGM::Result              &rResult,
 bool surface::CheckImplementation(SGM::Result              &rResult,
                                   SGM::CheckOptions  const &Options,
                                   std::vector<std::string> &aCheckStrings,
-                                  bool                      bChildern) const
+                                  bool                      bChildren) const
     {
     SGM::Point2D uv=m_Domain.MidPoint();
     if(!m_sFaces.empty())
@@ -615,7 +613,7 @@ bool surface::CheckImplementation(SGM::Result              &rResult,
 
     bAnswer = CheckOwnersHaveChild((entity*)this, aCheckStrings) && bAnswer;
 
-    if(bChildern)
+    if(bChildren)
         {
         bAnswer = CheckChildren(rResult,this,Options,aCheckStrings) && bAnswer;
         }
