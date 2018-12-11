@@ -2427,7 +2427,7 @@ TEST(math_check, intersect_nubcurve_and_plane)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(math_check, DISABLED_body_volumes)
+TEST(math_check, body_volumes)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -2455,14 +2455,12 @@ TEST(math_check, DISABLED_body_volumes)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(math_check, DISABLED_point_in_body)
+TEST(math_check, point_in_body)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     // Test Point in Body
-
-    bool bAnswer=true;
 
     SGM::Point3D Bottom(0,0,0),Top(0,0,2);
     double dRadius=1.0;
@@ -2472,16 +2470,8 @@ TEST(math_check, DISABLED_point_in_body)
     SGM::Point3D Pos2(0,0,1);
     bool bInBody2=SGM::PointInEntity(rResult,Pos2,BodyID);
 
-    if(bInBody1==false)
-        {
-        bAnswer=false;
-        }
-    if(bInBody2==true)
-        {
-        bAnswer=false;
-        }
-
-    EXPECT_TRUE(bAnswer);
+    EXPECT_FALSE(bInBody1);
+    EXPECT_TRUE(bInBody2);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
