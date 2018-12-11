@@ -1226,7 +1226,7 @@ TEST(math_check, extrude_hermite)
     aVectors.push_back(SGM::Vector3D(1,1,0));
     aParams.push_back(0);
     aParams.push_back(12);
-    SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
+    SGM::Curve CurveID=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
 
     double dGuess=0;
@@ -4855,7 +4855,7 @@ TEST(math_check,hermite_merge)
     aVectors.push_back(SGM::Vector3D(1,1,0));
     aParams.push_back(0);
     aParams.push_back(12);
-    SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
+    SGM::Curve CurveID=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
 
     SGM::Point3D Pos0;
     SGM::EvaluateCurve(rResult,CurveID,6,&Pos0);
@@ -5967,7 +5967,7 @@ TEST(math_check, line_extrude_intersect_conicident)
     aVectors.push_back(SGM::Vector3D(1,1,0));
     aParams.push_back(0);
     aParams.push_back(12);
-    SGM::Curve CurveID=SGM::CreateHermitCurve(rResult,aPoints,aVectors,aParams);
+    SGM::Curve CurveID=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
     SGM::UnitVector3D Axis(0,0,1);
     SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
 

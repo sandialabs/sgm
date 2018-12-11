@@ -75,10 +75,10 @@ SGM_EXPORT SGM::Curve CreateNURBCurve(SGM::Result                     &rResult,
                                       std::vector<SGM::Point4D> const &aControlPoints,
                                       std::vector<double>       const &aKnots);
 
-SGM_EXPORT SGM::Curve CreateHermitCurve(SGM::Result                      &rResult,
-                                        std::vector<SGM::Point3D>  const &aPoints,
-                                        std::vector<SGM::Vector3D> const &aVectors,
-                                        std::vector<double>        const &aParams);
+SGM_EXPORT SGM::Curve CreateHermiteCurve(SGM::Result                      &rResult,
+                                         std::vector<SGM::Point3D>  const &aPoints,
+                                         std::vector<SGM::Vector3D> const &aVectors,
+                                         std::vector<double>        const &aParams);
 
 SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result           &rResult,
                                        SGM::Point3D    const &Pos,

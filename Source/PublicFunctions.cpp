@@ -1478,10 +1478,10 @@ SGM::Curve SGM::CreateNURBCurve(SGM::Result                     &rResult,
     return {pNURB->GetID()};
     }
 
-SGM::Curve SGM::CreateHermitCurve(SGM::Result                      &rResult,
-                                  std::vector<SGM::Point3D>  const &aPoints,
-                                  std::vector<SGM::Vector3D> const &aVectors,
-                                  std::vector<double>        const &aParams)
+SGM::Curve SGM::CreateHermiteCurve(SGM::Result                      &rResult,
+                                   std::vector<SGM::Point3D>  const &aPoints,
+                                   std::vector<SGM::Vector3D> const &aVectors,
+                                   std::vector<double>        const &aParams)
     {
     SGMInternal::hermite *pHermite=new SGMInternal::hermite(rResult,aPoints,aVectors,aParams);
     return {pHermite->GetID()};
