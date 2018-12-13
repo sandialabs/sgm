@@ -10,6 +10,9 @@
 
 #include "test_utility.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+
 TEST(intersection_check, intersect_ellipse_and_plane)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -93,7 +96,7 @@ TEST(intersection_check, intersect_ellipse_and_plane)
     }
 
     // plane tangent to the ellipse
-    SGM::Point3D PosOnEllipse;
+    SGM::Point3D PosOnEllipse{};
     SGM::Vector3D Tangent;
     double dUvalue = SGM_PI/5.0;
     SGM::EvaluateCurve(rResult, EllipseCurve2, dUvalue, &PosOnEllipse, &Tangent);
@@ -108,9 +111,9 @@ TEST(intersection_check, intersect_ellipse_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnEllipse, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // plane misses ellipse by slightly more than tolerance
@@ -132,9 +135,9 @@ TEST(intersection_check, intersect_ellipse_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnEllipse, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // simple case for easier debugging
@@ -181,9 +184,9 @@ TEST(intersection_check, intersect_line_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     // coincident intersection
@@ -290,9 +293,9 @@ TEST(intersection_check, intersect_circle_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnCircle, aPoints[0], dTolerance));
 
     // plane misses by just more than tolerance
@@ -314,9 +317,9 @@ TEST(intersection_check, intersect_circle_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnCircle, aPoints[0], dTolerance));
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -359,7 +362,7 @@ TEST(intersection_check, intersect_parabola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     // single tangent intersection point
@@ -377,9 +380,9 @@ TEST(intersection_check, intersect_parabola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(aPoints[0], Pos, dTolerance));
 
     // two intersection points
@@ -417,9 +420,9 @@ TEST(intersection_check, intersect_parabola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // tangent just within tolerance - tilt the plane
@@ -433,9 +436,9 @@ TEST(intersection_check, intersect_parabola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
 
@@ -459,9 +462,9 @@ TEST(intersection_check, intersect_parabola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(Center2, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -526,9 +529,9 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(-10, 20.099751, 0), aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     // hyperbola in y-z plane, not aligned with axes
@@ -568,9 +571,9 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnHyperbola, aPoints[0], dTolerance));
 
     // tangent offset less than tolerance
@@ -582,9 +585,9 @@ TEST(intersection_check, intersect_hyperbola_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(PosOnHyperbola, aPoints[0], dTolerance));
 
     // tangent offset more than tolerance
@@ -857,9 +860,9 @@ TEST(intersection_check, intersect_planar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(0,1,0.1), aPoints[0], dTolerance));
 
     // coincident plane
@@ -938,9 +941,9 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(1,6,0), aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     // tangent intersection - touches without crossing plane
@@ -963,9 +966,9 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(0,-1,-1), aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // single intersection point
@@ -975,10 +978,9 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
     SGM::Vector3D Curvature = SGM::CurveCurvature(rResult, NUBcurveID2, 0.3);
     double dA = Curvature.Magnitude() * 0.5;
 
-    SGM::Curve ParabolaID = SGM::CreateParabola(rResult, CurvePos, CurveTangent, Curvature, dA);
+    /* SGM::Curve ParabolaID = */ SGM::CreateParabola(rResult, CurvePos, CurveTangent, Curvature, dA);
     //SGM::Interval1D Domain(-5,5);
     //SGM::CreateEdge(rResult, ParabolaID, &Domain);
-
 
     PlaneOrigin = SGM::Point3D(CurvePos.m_x,0,0);
     PlaneNormal = SGM::UnitVector3D(-1,0,0);
@@ -991,9 +993,9 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
     // two intersection points
@@ -1042,7 +1044,7 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 2);
     EXPECT_EQ(aTypes.size(), 2);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
     if (aTypes.size() > 1)
     {
@@ -1073,9 +1075,9 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(CurvePos, aPoints[0], dTolerance));
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
 
     // near miss - outside tolerance
@@ -1135,9 +1137,9 @@ TEST(intersection_check, intersect_pointcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
 
     PlaneOrigin = Origin + 0.1*PlaneNorm;
@@ -1157,9 +1159,9 @@ TEST(intersection_check, intersect_pointcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::CoincidentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(Pos, aPoints[0], dTolerance));
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -1230,9 +1232,9 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
     {
       SGM::Point3D ExpectedPos(1, sqrt(2)/2.0, (sqrt(2)/2.0-1.0));
       EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
@@ -1266,9 +1268,9 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::TangentType);
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
         EXPECT_TRUE(SGM::NearEqual(SGM::Point3D(1, sqrt(2)/2.0, (sqrt(2)/2.0-1.0)), aPoints[0], dTolerance));
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -1322,11 +1324,11 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 1);
     EXPECT_EQ(aTypes.size(), 1);
-    if (aTypes.size() > 0)
+    if (!aTypes.empty())
     {
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
     }
-    if (aPoints.size() > 0)
+    if (!aPoints.empty())
     {
         EXPECT_TRUE(SGM::NearEqual(aPoints[0].m_x, 1.5, dTolerance, false));
         EXPECT_TRUE(SGM::NearEqual(aPoints[0].m_y, -1.0, dTolerance, false));
@@ -1407,8 +1409,6 @@ TEST(intersection_check, intersect_line_and_cylinder)
     double dTolerance = SGM_MIN_TOL;
     const bool bUseWholeLine = false;
 
-    SGM::Interval1D Domain(1.e-6,1.e12);
-
     RayFire(rResult,Origin,Axis, BodyID, aPoints, aTypes, dTolerance, bUseWholeLine);
 
     EXPECT_EQ(aPoints.size(), 1);
@@ -1419,14 +1419,14 @@ TEST(intersection_check, intersect_line_and_cylinder)
     EXPECT_TRUE(SGM::NearEqual(ExpectedPos, aPoints[0], dTolerance));
     EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
 
-    SGM::Curve LineID = SGM::CreateLine(rResult, Origin, Axis);
+    /* SGM::Curve LineID = */ SGM::CreateLine(rResult, Origin, Axis);
     //SGM::Interval1D LineInterval(0.0, 10.0); 
     //SGM::CreateEdge(rResult, LineID, &LineInterval);
 
-    SGM::Curve PointCurveID = SGM::CreatePointCurve(rResult, aPoints[0]);
+    /* SGM::Curve PointCurveID = */ SGM::CreatePointCurve(rResult, aPoints[0]);
     //SGM::CreateEdge(rResult, PointCurveID);
 
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
-
+#pragma clang diagnostic pop

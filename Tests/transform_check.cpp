@@ -7,6 +7,8 @@
 
 #include "test_utility.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(transform_check, translate_copies)
 {
@@ -82,3 +84,5 @@ TEST(transform_check, translate_thing)
 
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+#pragma clang diagnostic pop

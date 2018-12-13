@@ -441,7 +441,7 @@ namespace SGMInternal {
             m_sEdges(other.m_sEdges),
             m_pBody(other.m_pBody)
     {
-    if(other.m_FaceTree.IsEmpty()==false)
+    if(!other.m_FaceTree.IsEmpty())
         {
         m_FaceTree=other.m_FaceTree;
         }

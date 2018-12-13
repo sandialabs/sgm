@@ -324,7 +324,7 @@ namespace SGM
 
     inline Point2D MidPoint(Point2D const &Pos0,Point2D const &Pos1,double dFraction=0.5);
 
-    inline bool NearEqual(double d1,double d2,double dTolerance,bool bPercent);
+    inline bool NearEqual(double d1,double d2,double dTolerance,bool bRelative);
 
     inline bool NearEqual(Point2D const &Pos1,Point2D const &Pos2,double dTolerance);
 

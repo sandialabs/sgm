@@ -22,18 +22,22 @@ class SGM_EXPORT GraphEdge
     {
     public:
 
-    explicit GraphEdge(size_t nStart=0,
-                       size_t nEnd=0,
-                       size_t nID=0,
-                       bool   bOneWay=false):
-        m_nStart(nStart),m_nEnd(nEnd),m_nID(nID),m_bOneWay(bOneWay) {}
+    GraphEdge() = default;
 
-        bool operator<(GraphEdge const &) const;
+    GraphEdge(size_t nStart, size_t nEnd, size_t nID) :
+            m_nStart(nStart), m_nEnd(nEnd), m_nID(nID), m_bOneWay(false)
+        {}
 
-        size_t m_nStart;
-        size_t m_nEnd;
-        size_t m_nID;
-        bool   m_bOneWay;
+    GraphEdge(size_t nStart, size_t nEnd, size_t nID, bool bOneWay) :
+            m_nStart(nStart), m_nEnd(nEnd), m_nID(nID), m_bOneWay(bOneWay)
+        {}
+
+    bool operator<(GraphEdge const &) const;
+
+    size_t m_nStart;
+    size_t m_nEnd;
+    size_t m_nID;
+    bool m_bOneWay;
     };
 
 class SGM_EXPORT Graph

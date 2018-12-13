@@ -83,9 +83,9 @@ TEST(Boolean_check, Splitter_Island_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, Imprinting_Attol_Bridge_Edge)
+TEST(Boolean_check, Imprinting_Atoll_Bridge_Edge)
     {
-    // Imprinting an attol edge on a face.
+    // Imprinting an atoll edge on a face.
     
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -117,8 +117,6 @@ TEST(Boolean_check, Imprinting_Attol_Bridge_Edge)
 
 TEST(Boolean_check, Sphere_Sphere_Imprint1)
     {
-    // Imprinting an attol edge on a face.
-    
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
@@ -150,8 +148,6 @@ TEST(Boolean_check, Sphere_Sphere_Imprint1)
 
 TEST(Boolean_check, Sphere_Sphere_Imprint2)
     {
-    // Imprinting an attol edge on a face.
-    
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
@@ -183,8 +179,6 @@ TEST(Boolean_check, Sphere_Sphere_Imprint2)
 
 TEST(Boolean_check, Sphere_Sphere_Unite)
     {
-    // Imprinting an attol edge on a face.
-    
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 

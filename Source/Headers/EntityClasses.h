@@ -330,7 +330,7 @@ class topology : public entity
 
 protected:
 
-        mutable SGM::Interval3D m_Box;
+        mutable SGM::Interval3D m_Box; // TODO: this box should go away because it is defined in class entity
 };
 
 class assembly : public topology
@@ -363,10 +363,10 @@ class assembly : public topology
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildern) const override;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
     };
 
 class reference : public topology
@@ -399,10 +399,10 @@ class reference : public topology
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool Check(SGM::Result              &rResult,
-                           SGM::CheckOptions const  &Options,
-                           std::vector<std::string> &aCheckStrings,
-                           bool                      bChildern) const override;
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
     };
 
 class body : public topology

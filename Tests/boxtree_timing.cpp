@@ -139,7 +139,7 @@ public:
     }
 };
 
-
+/*
 void constructor_timing()
 {
     std::cout << std::endl <<"*** Timing Constructors of Trivial Objects *** " << std::endl << std::flush;
@@ -280,6 +280,7 @@ void sse_timing()
     SGM_TIMER_SUM();
     }
 #endif
+ */
 
 int main(int /*argc*/, char ** /*argv*/)
 {

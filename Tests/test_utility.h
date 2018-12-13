@@ -155,7 +155,7 @@ std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNa
 // Get current date/time, format is YYYY-MM-DD HH:mm:ss
 inline const std::string current_date_time()
 {
-    time_t     now = time(0);
+    time_t     now = time(nullptr);
     struct tm  tstruct{};
     char       buf[80];
 #ifdef _MSC_VER

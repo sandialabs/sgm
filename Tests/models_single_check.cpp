@@ -77,6 +77,9 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+
 TEST(models_single_check, inport_txt_points)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -538,7 +541,7 @@ TEST(assembly_check, import_one_level_assembly)
     BodyBoxes[0] = SGM::Interval3D(0.0,2.5,0.0,1.7,0.0,0.5);
     BodyBoxes[1] = SGM::Interval3D(0.0,0.5,0.0,.25,.5,.9);
     
-    std::set<SGM::Body>::iterator iter = sBodies.begin();
+    auto iter = sBodies.begin();
     for (size_t iIndex=0; iIndex<sBodies.size(); ++iIndex)
     {
       SGM::Interval3D box = SGM::GetBoundingBox(rResult, *iter);
@@ -568,7 +571,7 @@ TEST(assembly_check, import_two_level_assembly)
     BodyBoxes[2] = SGM::Interval3D(1.0,1.4,1.45,1.7,0.5,1.0);
     BodyBoxes[3] = SGM::Interval3D(0.0,2.5,0.0,1.7,0.0,0.5);
     
-    std::set<SGM::Body>::iterator iter = sBodies.begin();
+    auto iter = sBodies.begin();
     for (size_t iIndex=0; iIndex<sBodies.size(); ++iIndex)
     {
       SGM::Interval3D box = SGM::GetBoundingBox(rResult, *iter);
@@ -578,3 +581,5 @@ TEST(assembly_check, import_two_level_assembly)
 
     SGMTesting::ReleaseTestThing(pThing); 
 }
+
+#pragma clang diagnostic pop

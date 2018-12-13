@@ -10,6 +10,9 @@ using SGM::Point3D;
 using SGM::Ray3D;
 using SGM::BoxTree;
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+
 TEST(boxtree_check, intersect_single_item_tree)
 {
     BoxTree boxTree;
@@ -107,3 +110,5 @@ TEST(boxtree_check, erase_enclosed)
     boxTree.EraseEnclosed(bound);
     EXPECT_EQ(boxTree.Size(),1);
     }
+
+#pragma clang diagnostic pop

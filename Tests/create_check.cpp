@@ -11,6 +11,9 @@
 
 #include "test_utility.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+
 TEST(create_check, create_parabola)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -251,12 +254,10 @@ TEST(create_check, edge_copy)
     SGM::Interval1D Interval1(0,1);
     SGM::Interval1D Interval2(2,3);
     SGM::Edge EdgeID1 = SGM::CreateEdge(rResult, LineID, &Interval1);
-    SGM::Edge EdgeID2 = SGM::CreateEdge(rResult, LineID, &Interval2);
+    /* SGM::Edge EdgeID2 = */ SGM::CreateEdge(rResult, LineID, &Interval2);
 
-    SGM::Entity Edge1Copy = SGM::CopyEntity(rResult, EdgeID1);
+    /* SGM::Entity Edge1Copy = */ SGM::CopyEntity(rResult, EdgeID1);
 
-    std::vector<std::string> aLog;
-    SGM::CheckOptions CheckOptions;
     EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -304,3 +305,4 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
 
+#pragma clang diagnostic pop

@@ -10,6 +10,8 @@
 
 #include "test_utility.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(volume_check, volume_of_block)
 {
@@ -46,3 +48,5 @@ TEST(volume_check, volume_of_block)
 //        SGM::DeleteThing(pThing);
 //    EXPECT_TIMEOUT_END(1)
 //}
+
+#pragma clang diagnostic pop

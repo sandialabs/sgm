@@ -56,6 +56,31 @@ inline void BoxTreeInsert(SGM::Result &rResult, SGM::BoxTree& rTree, InputIt fir
         rTree.Insert(*iter,(*iter)->GetBox(rResult));
     }
 
+// Example:
+// std::set<face*,Compare> faceSet = pSurface->GetFaces();
+// std::set<entity*,Compare> entitySet = container_cast(faceSet);
+
+template<class SourceContainer>
+class ContainerConverter
+    {
+    const SourceContainer& m_SourceContainer;
+
+public:
+    explicit ContainerConverter(const SourceContainer& s) : m_SourceContainer(s) {}
+
+    template<class TargetContainer>
+    inline operator TargetContainer() const
+        {
+        return TargetContainer(m_SourceContainer.begin(), m_SourceContainer.end());
+        }
+    };
+
+template<class Container>
+inline ContainerConverter<Container> container_cast(const Container& c)
+    {
+    return ContainerConverter<Container>(c);
+    }
+
 }  // End of SGMInternal namespace
 
 #endif // SGM_INTERNAL_ENTITY_FUNCTIONS_H

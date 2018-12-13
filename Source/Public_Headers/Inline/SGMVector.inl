@@ -546,9 +546,9 @@ namespace SGM {
                        Pos0.m_v*(1.0-dFraction)+Pos1.m_v*dFraction);
     }
 
-    inline bool NearEqual(double d1,double d2,double dTolerance,bool bPercent)
+    inline bool NearEqual(double d1,double d2,double dTolerance,bool bRelative)
     {
-        if(bPercent)
+        if(bRelative)
             {
             double dAverage=fabs(d1+d2)*0.5;
             if(dAverage<SGM_ZERO)
