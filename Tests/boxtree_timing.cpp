@@ -109,6 +109,7 @@ void boxtree_timing()
     SGM_TIMER_SUM();
 }
 
+/*
 class ObjectConstructorDefault
 {
 public:
@@ -139,7 +140,7 @@ public:
     }
 };
 
-/*
+
 void constructor_timing()
 {
     std::cout << std::endl <<"*** Timing Constructors of Trivial Objects *** " << std::endl << std::flush;

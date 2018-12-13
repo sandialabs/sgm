@@ -39,6 +39,8 @@ class surface : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
 
         bool IsTopLevel() const override;

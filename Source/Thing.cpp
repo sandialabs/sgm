@@ -40,6 +40,14 @@ thing::~thing()
         }
     }
 
+void thing::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+{
+    for (auto Entry : m_mAllEntities)
+    {
+        sChildren.emplace(Entry.second);
+    }
+}
+
 SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

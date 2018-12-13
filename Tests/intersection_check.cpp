@@ -905,7 +905,7 @@ TEST(intersection_check, intersect_planar_NUBcurve_and_plane)
         EXPECT_EQ(aTypes[0], SGM::IntersectionType::PointType);
         EXPECT_EQ(aTypes[1], SGM::IntersectionType::PointType);
     }
-    if (aPoints.size())
+    if (!aPoints.empty())
     {
         // just checking the first point
         EXPECT_TRUE(SGM::NearEqual(aInterpolate[0], aPoints[0], dTolerance));
@@ -1250,8 +1250,8 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
 
     EXPECT_EQ(aPoints.size(), 3);
     EXPECT_EQ(aTypes.size(), 3);
-    for (int i=0; i<aTypes.size(); ++i)
-        EXPECT_EQ(aTypes[i], SGM::IntersectionType::PointType);
+    for (auto const &Type : aTypes)
+        EXPECT_EQ(Type, SGM::IntersectionType::PointType);
 
     // tangent intersection point
     PlaneOrigin = SGM::Point3D(5, sqrt(2)/2.0, (sqrt(2)/2.0-1.0));

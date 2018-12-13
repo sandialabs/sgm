@@ -16,6 +16,28 @@ inline std::ostream& operator<<(std::ostream& out, const entity *pEntity)
     return out << SGM::EntityTypeName(pEntity->GetType()) << " " << pEntity->GetID();
     }
 
+void CheckPreexistingConditions(SGM::Result              &rResult,
+                                std::vector<std::string> &aCheckStrings)
+{
+    switch(rResult.GetResult())
+    {
+    case SGM::ResultTypeOK:
+    {
+        return;
+        break;
+    }
+    case SGM::ResultTypeDeleteWillCorruptModel:
+    {
+        aCheckStrings.emplace_back(rResult.Message().c_str());
+        aCheckStrings.emplace_back("An invalid delete was attempted but not performed.  Clearing Result.");
+        rResult.SetResult(SGM::ResultTypeOK);
+        return;
+    }
+    default:
+      return;
+    }
+}
+
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
                   std::vector<std::string> &aCheckStrings,
@@ -36,10 +58,10 @@ bool CheckChildren(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings)
     {
-    std::set<entity *,EntityCompare> sChildern;
-    pEntity->FindAllChildren(sChildern);
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
     bool bAnswer=true;
-    for(auto pChild : sChildern)
+    for(auto pChild : sChildren)
         {
         if(pChild->Check(rResult,Options,aCheckStrings,false)==false)
             {
@@ -568,7 +590,7 @@ bool curve::Check(SGM::Result              &rResult,
 bool surface::CheckImplementation(SGM::Result              &rResult,
                                   SGM::CheckOptions  const &Options,
                                   std::vector<std::string> &aCheckStrings,
-                                  bool                      bChildern) const
+                                  bool                      bChildren) const
     {
     SGM::Point2D uv=m_Domain.MidPoint();
     if(!m_sFaces.empty())
@@ -591,7 +613,7 @@ bool surface::CheckImplementation(SGM::Result              &rResult,
 
     bAnswer = CheckOwnersHaveChild((entity*)this, aCheckStrings) && bAnswer;
 
-    if(bChildern)
+    if(bChildren)
         {
         bAnswer = CheckChildren(rResult,this,Options,aCheckStrings) && bAnswer;
         }

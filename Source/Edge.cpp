@@ -19,6 +19,19 @@ void edge::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
         sChildren.insert(end);
     }
 
+void edge::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (auto pFace : m_sFaces)
+    {
+      sParents.emplace(pFace);
+    }
+    if ((m_sFaces.size() == 0) && (m_pVolume != nullptr))
+    {
+        sParents.emplace(m_pVolume);
+    }
+    entity::GetParents(sParents);
+}
+
 SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())

@@ -10,6 +10,15 @@
 namespace SGMInternal
 {
 
+void vertex::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (auto pEdge : m_sEdges)
+    {
+      sParents.emplace(pEdge);
+    }
+    entity::GetParents(sParents);
+}
+
 SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
     {
     if (m_Box.IsEmpty())
