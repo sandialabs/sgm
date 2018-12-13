@@ -8,6 +8,7 @@
 #include "SGMTransform.h"
 #include "SGMAttribute.h"
 #include "SGMInterval.h"
+#include "SGMTopology.h"
 
 #include "test_utility.h"
 
@@ -304,5 +305,42 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("DoubleAttribute",SGM::EntityTypeName(SGM::DoubleAttributeType));
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
+
+TEST(create_check, create_and_delete)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
+    std::vector<SGM::Point3D> aControlPoints;
+    aControlPoints.emplace_back(1  ,1  ,0);
+    aControlPoints.emplace_back(1.1,1.1,0);
+    aControlPoints.emplace_back(2  ,2.8,0);
+    aControlPoints.emplace_back(2.8,1.1,0);
+    aControlPoints.emplace_back(3  ,1  ,0);
+    SGM::Curve NUBID=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints,aKnots);
+
+    SGM::Surface ExtrudeID1 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
+    SGM::Surface ExtrudeID2 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
+
+    SGM::DeleteEntity(rResult, ExtrudeID1);
+
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
+
+    //SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(3,4,5));
+
+    //std::set<SGM::Volume> sVolumes;
+    //std::set<SGM::Face> sFaces;
+    //std::set<SGM::Edge> sEdges;
+    //std::set<SGM::Vertex> sVertices;
+    //SGM::FindVolumes(rResult, BodyID, sVolumes);
+    //SGM::FindFaces(rResult, BodyID, sFaces);
+    //SGM::FindEdges(rResult, BodyID, sEdges);
+    //SGM::FindVertices(rResult, BodyID, sVertices);
+
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 #pragma clang diagnostic pop
