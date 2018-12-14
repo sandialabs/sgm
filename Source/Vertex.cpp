@@ -26,6 +26,30 @@ SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
     return m_Box;
     }
 
+void vertex::RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &sParents)
+{
+    std::set<edge *,EntityCompare> sEdges=GetEdges();
+    for(auto pEdge : sEdges)
+        {
+        if (sParents.find(pEdge) != sParents.end())
+            {
+            if (pEdge->GetStart() == this)
+                pEdge->SetStart(nullptr);
+            if (pEdge->GetEnd() == this)
+                pEdge->SetEnd(nullptr);
+            RemoveEdge(pEdge);
+            }
+        }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
+
+void vertex::RemoveParents(SGM::Result &rResult)
+{
+    // no children, so the vertex function is the same as SeverRelations
+    SeverRelations(rResult);
+}
+
 void vertex::SeverRelations(SGM::Result &)
     {
     std::set<edge *,EntityCompare> sEdges=GetEdges();

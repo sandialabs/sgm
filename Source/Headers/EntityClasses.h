@@ -127,7 +127,12 @@ public:
 
     virtual void GetParents(std::set<entity *, EntityCompare> &sParents) const;
 
-    virtual void RemoveParentsInSet(std::set<entity *,EntityCompare> const &sFamily);
+    virtual void RemoveParentsInSet(SGM::Result &rResult,
+                                    std::set<entity *,EntityCompare> const &sFamily);
+
+    virtual void RemoveParents(SGM::Result &rResult);
+
+    virtual void DisconnectOwnedEntity(entity const *pEntity) = 0;
 
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
 
@@ -221,7 +226,12 @@ class thing : public entity
 
         void GetParents(std::set<entity *, EntityCompare> &) const override {}
 
-        void RemoveParentsInSet(std::set<entity *,EntityCompare> ) {}
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {return;}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
@@ -338,6 +348,14 @@ class topology : public entity
 
         void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) override;
 
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &sParents) override
+          {entity::RemoveParentsInSet(rResult, sParents);}
+
+        void RemoveParents(SGM::Result &rResult) override {entity::RemoveParents(rResult);}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
 protected:
 
         mutable SGM::Interval3D m_Box; // TODO: this box should go away because it is defined in class entity
@@ -366,6 +384,13 @@ class assembly : public topology
         SGM::Interval3D const &GetBox(SGM::Result &) const override;
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {return;}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
@@ -402,6 +427,13 @@ class reference : public topology
         SGM::Interval3D const &GetBox(SGM::Result &) const override;
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {return;}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
@@ -445,6 +477,13 @@ class body : public topology
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {return;}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -530,6 +569,13 @@ class complex : public topology
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {return;}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &) override;
 
@@ -716,6 +762,13 @@ class volume : public topology
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
 
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void RemoveParents(SGM::Result &rResult) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void ResetBox(SGM::Result &) const override;
@@ -792,6 +845,13 @@ class face : public topology
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void RemoveParents(SGM::Result &rResult) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -927,6 +987,13 @@ class edge : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void RemoveParents(SGM::Result &rResult) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
@@ -1053,6 +1120,13 @@ class vertex : public topology
 
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void RemoveParents(SGM::Result &rResult) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
@@ -1111,6 +1185,13 @@ class attribute : public entity
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void RemoveParents(SGM::Result &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 

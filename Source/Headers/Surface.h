@@ -45,6 +45,13 @@ class surface : public entity
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void RemoveParents(SGM::Result &rResult) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void ResetBox(SGM::Result &) const override;
@@ -731,6 +738,8 @@ class revolve : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity *)m_pCurve) m_pCurve = nullptr;}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         SGM::Point2D Inverse(SGM::Point3D const &Pos,
@@ -792,6 +801,8 @@ class extrude : public surface
                       SGM::Vector3D      *Dvv=nullptr) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity*)m_pCurve) m_pCurve = nullptr;}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -856,6 +867,8 @@ class offset : public surface
                       SGM::Vector3D      *Dvv=nullptr) const override;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity*)m_pSurface) m_pSurface = nullptr;}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 

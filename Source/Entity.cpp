@@ -107,12 +107,23 @@ void entity::GetParents(std::set<entity *, EntityCompare> &sParents) const
     }
 }
 
-void entity::RemoveParentsInSet(std::set<entity *,EntityCompare> const &sEntities)
+void entity::RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare> const &sEntities)
 {
     for (entity *pOwner : sEntities)
     {
+        pOwner->DisconnectOwnedEntity(this);
         m_sOwners.erase(pOwner);
     }
+}
+
+void entity::RemoveParents(SGM::Result &)
+{
+    for (auto pOwner : m_sOwners)
+    {
+        pOwner->DisconnectOwnedEntity(this);
+    }
+    m_sOwners.clear();
 }
 
 }

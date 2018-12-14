@@ -70,6 +70,27 @@ bool volume::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
+void volume::RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &sParents)
+{
+    if (sParents.find(GetBody()) != sParents.end())
+    {
+        GetBody()->RemoveVolume(this);
+        SetBody(nullptr);
+    }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
+
+void volume::RemoveParents(SGM::Result &rResult)
+{
+    if(GetBody())
+    {
+        GetBody()->RemoveVolume(this);
+        SetBody(nullptr);
+    }
+    topology::RemoveParents(rResult);
+}
+
 void volume::SeverRelations(SGM::Result &)
     {
     if(GetBody())

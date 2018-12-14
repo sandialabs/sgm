@@ -22,7 +22,7 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-void UnhookEntity(SGM::Result &,//rResult,
+void UnhookEntity(SGM::Result &rResult,
                   entity      *pEntity,
                   std::set<entity *,EntityCompare> &sUnhooked)
 {
@@ -61,35 +61,34 @@ void UnhookEntity(SGM::Result &,//rResult,
     // make list of non-shared children to unhook
     // set difference sUnhooked = sAllChildren - sSharedChildren
     std::set_difference(sAllChildren.begin(), sAllChildren.end(), sSharedChildren.begin(), sSharedChildren.end(), 
-                        std::inserter(sUnhooked, sUnhooked.begin()));
+                        std::inserter(sUnhooked, sUnhooked.begin()), EntityCompare());
 
     // unhook shared children from entities to unhook
     sUnhooked.emplace(pEntity);
     for (auto pShared : sSharedChildren)
     {
-        pShared->RemoveParentsInSet(sUnhooked);
+        pShared->RemoveParentsInSet(rResult, sUnhooked);
     }
-
-    pEntity->RemoveParents();
+    pEntity->RemoveParents(rResult);
 }
 
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity)
     {
-    // if this entity still has parents, don't delete it
-    std::set<entity *, EntityCompare> sParents;
-    pEntity->GetParents(sParents);
+    //// if this entity still has parents, don't delete it
+    //std::set<entity *, EntityCompare> sParents;
+    //pEntity->GetParents(sParents);
 
-    if (!sParents.empty())
-    {
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"%s %lu cannot be deleted because it has parents.",
-                 typeid(*pEntity).name(), pEntity->GetID());
-        rResult.SetResult(SGM::ResultTypeDeleteWillCorruptModel);
-        std::string const sMessage(Buffer);
-        rResult.SetMessage(sMessage);
-        return;
-    }
+    //if (sParents.size())
+    //{
+    //    char Buffer[1000];
+    //    snprintf(Buffer,sizeof(Buffer),"%s %lu cannot be deleted because it has parents.",
+    //             typeid(*pEntity).name(), pEntity->GetID());
+    //    rResult.SetResult(SGM::ResultTypeDeleteWillCorruptModel);
+    //    std::string const sMessage(Buffer);
+    //    rResult.SetMessage(sMessage);
+    //    return;
+    //}
 
     std::set<entity *, EntityCompare> sUnhooked;
     UnhookEntity(rResult, pEntity, sUnhooked);
@@ -98,6 +97,9 @@ void DeleteEntity(SGM::Result &rResult,
     for(auto pDelete : sUnhooked)
         {
         pDelete->SeverRelations(rResult);
+        }
+    for(auto pDelete : sUnhooked)
+        {
         pThing->DeleteEntity(pDelete);
         }
 
@@ -280,7 +282,7 @@ void TransformEntity(SGM::Result            &rResult,
             entity *pClone = pEntry.second;
             if (pOriginal != pClone)
             {
-                pOriginal->RemoveParentsInSet(sFamily);
+                pOriginal->RemoveParentsInSet(rResult, sFamily);
             }
         }
 

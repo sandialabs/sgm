@@ -82,7 +82,10 @@ namespace SGMInternal {
     inline void entity::RemoveAllOwners()
     {
         for (entity *pOwner : m_sOwners)
-            pOwner->RemoveOwner(this);
+        {
+            pOwner->DisconnectOwnedEntity(this);
+        }
+        m_sOwners.clear();
     }
 
     inline void entity::SeverRelations(SGM::Result &)

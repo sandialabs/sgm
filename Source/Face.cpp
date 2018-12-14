@@ -80,6 +80,28 @@ bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
+void face::RemoveParentsInSet(SGM::Result &rResult,
+                              std::set<entity *,EntityCompare>  const &sParents)
+{
+    if (sParents.find(GetVolume()) != sParents.end())
+    {
+        GetVolume()->RemoveFace(this);
+        SetVolume(nullptr);        
+    }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
+
+void face::RemoveParents(SGM::Result &rResult)
+{
+    if(GetVolume())
+    {
+        GetVolume()->RemoveFace(this);
+        SetVolume(nullptr);
+    }
+    topology::RemoveParents(rResult);
+}
+
+
 void face::SeverRelations(SGM::Result &)
     {
     if(GetVolume())
