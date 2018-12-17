@@ -72,20 +72,35 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
 void edge::RemoveParentsInSet(SGM::Result &rResult,
                               std::set<entity *,EntityCompare>  const &sParents)
 {
+    if (!sParents.empty())
+      return;
+
     std::set<face *,EntityCompare> sFaces=GetFaces();
-    for(auto pFace : sFaces)
+    if (!sFaces.empty())
     {
-        if (sFaces.find(pFace) != sFaces.end())
+        std::vector<face *> aFacesToRemove;
+        
+        for(auto pFace : sFaces)
         {
-            pFace->RemoveEdge(rResult,this);
+            if (sFaces.find(pFace) != sFaces.end())
+            {
+                pFace->RemoveEdge(rResult,this);
+                aFacesToRemove.emplace_back(pFace);
+            }
+        }
+        for(auto pFace : aFacesToRemove)
+        {
             sFaces.erase(pFace);
         }
     }
 
-    if(sParents.find(m_pVolume) != sParents.end())
+    if (m_pVolume)
     {
-        m_pVolume->RemoveEdge(this);
-        m_pVolume = nullptr;
+        if(sParents.find(m_pVolume) != sParents.end())
+        {
+            m_pVolume->RemoveEdge(this);
+            m_pVolume = nullptr;
+        }
     }
     topology::RemoveParentsInSet(rResult, sParents);
 }

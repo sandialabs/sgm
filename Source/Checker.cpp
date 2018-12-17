@@ -643,6 +643,17 @@ bool extrude::Check(SGM::Result              &rResult,
                    bool                      bChildren) const
 {
     bool bAnswer = true;
+
+    if (nullptr == m_pCurve)
+    {
+        std::stringstream ss;
+        ss << "Extrude " << GetID() << " has a NULL curve pointer.";
+        aCheckStrings.emplace_back(ss.str());
+        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+        bAnswer = false;
+        return bAnswer;
+    }
+
     if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
     {
         bAnswer = false;
@@ -678,6 +689,17 @@ bool offset::Check(SGM::Result              &rResult,
                    bool                      bChildren) const
 {
     bool bAnswer = true;
+
+    if (nullptr == m_pSurface)
+    {
+        std::stringstream ss;
+        ss << "Offset " << GetID() << " has a NULL surface pointer.";
+        aCheckStrings.emplace_back(ss.str());
+        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+        bAnswer = false;
+        return bAnswer;
+    }
+
     if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
     {
         bAnswer = false;
@@ -700,11 +722,22 @@ bool plane::Check(SGM::Result              &rResult,
 }
 
 bool revolve::Check(SGM::Result              &rResult,
-                   SGM::CheckOptions const  &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const
+                    SGM::CheckOptions const  &Options,
+                    std::vector<std::string> &aCheckStrings,
+                    bool                      bChildren) const
 {
     bool bAnswer = true;
+
+    if (nullptr == m_pCurve)
+    {
+        std::stringstream ss;
+        ss << "Revolve " << GetID() << " has a NULL curve pointer.";
+        aCheckStrings.emplace_back(ss.str());
+        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+        bAnswer = false;
+        return bAnswer;
+    }
+
     if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
     {
         bAnswer = false;

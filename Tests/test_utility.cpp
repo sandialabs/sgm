@@ -82,7 +82,7 @@ namespace SGMTesting {
             SGM::DeleteThing(pThing);
     }
 
-    bool CheckEntityAndPrintLog(SGM::Result rResult, SGM::Entity EntityID)
+    bool CheckEntityAndPrintLog(SGM::Result &rResult, SGM::Entity EntityID)
     {
         std::vector<std::string> aLog;
         SGM::CheckOptions CheckOptions;

@@ -213,7 +213,7 @@ namespace SGMTesting {
     void ReleaseTestThing(SGMInternal::thing* pThing);
 
     // check an entity and then print out the log messages
-    bool CheckEntityAndPrintLog(SGM::Result rResult, SGM::Entity EntityID);
+    bool CheckEntityAndPrintLog(SGM::Result &rResult, SGM::Entity EntityID);
 }
 
 #endif //SGM_TEST_UTILITY_H

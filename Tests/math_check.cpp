@@ -1214,9 +1214,39 @@ TEST(math_check, extrude_hermite)
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
     
-    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+    EXPECT_FALSE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeSurfaceMissingChild);
 
     SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, revolve_hermite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Vector3D> aVectors;
+    std::vector<double> aParams;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(10,0,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aVectors.push_back(SGM::Vector3D(1,1,0));
+    aParams.push_back(0);
+    aParams.push_back(12);
+    SGM::Curve CurveID=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
+
+    double dGuess=0;
+    SGM::CurveInverse(rResult,CurveID,SGM::Point3D(0,0,0),nullptr,&dGuess);
+
+    SGM::SaveSGM(rResult,"GTest_hermite_test.sgm",CurveID,SGM::TranslatorOptions());
+
+    SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
+
+    SGM::UnitVector3D Axis(0,0,1);
+    SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    SGM::Surface SurfIDCopy=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
 }
 
 TEST(math_check, closest_point)

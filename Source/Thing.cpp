@@ -111,22 +111,31 @@ void thing::SeverOwners(entity *pEntity)
                 case SGM::RevolveType:
                     {
                     auto pRevolve = reinterpret_cast<revolve *>(pEntity);
-                    pRevolve->m_pCurve->RemoveOwner(this);
-                    pRevolve->m_pCurve = nullptr;
+                    if (pRevolve->m_pCurve)
+                        {
+                        pRevolve->m_pCurve->RemoveOwner(this);
+                        pRevolve->m_pCurve = nullptr;
+                        }
                     break;
                     }
                 case SGM::ExtrudeType:
                     {
                     auto pExtrude = reinterpret_cast<extrude *>(pEntity);
-                    pExtrude->m_pCurve->RemoveOwner(this);
-                    pExtrude->m_pCurve = nullptr;
+                    if (pExtrude->m_pCurve)
+                        {
+                        pExtrude->m_pCurve->RemoveOwner(this);
+                        pExtrude->m_pCurve = nullptr;
+                        }
                     break;
                     }
                 case SGM::OffsetType:
                     {
                     auto pOffset = reinterpret_cast<offset *>(pEntity);
-                    pOffset->m_pSurface->RemoveOwner(this);
-                    pOffset->m_pSurface = nullptr;
+                    if (pOffset->m_pSurface)
+                        {
+                        pOffset->m_pSurface->RemoveOwner(this);
+                        pOffset->m_pSurface = nullptr;
+                        }
                     break;
                     }
                 default:
