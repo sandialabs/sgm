@@ -1,5 +1,5 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "google-default-arguments"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "google-default-arguments"
 #ifndef SURFACE_H
 #define SURFACE_H
 
@@ -904,4 +904,4 @@ bool TestSurface(SGM::Result                &rResult,
 
 #endif // SURFACE_H
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop

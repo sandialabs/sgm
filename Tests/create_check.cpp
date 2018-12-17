@@ -12,8 +12,8 @@
 
 #include "test_utility.h"
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(create_check, create_parabola)
     {
@@ -343,4 +343,4 @@ TEST(create_check, create_and_delete)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop

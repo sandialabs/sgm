@@ -15,8 +15,8 @@
 #define SEED_POINT_EDGE_ANGLE_TOL 0.08726646259971647884618453842443 // 5 degrees.
 #define SEED_POINT_HALF_ANGLE_TANGENT 0.04363323129985823942309226921222  //tangent of half-angle = 2.5 degrees
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "google-default-arguments"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "google-default-arguments"
 
 namespace SGMInternal
 {
@@ -716,7 +716,7 @@ double ParabolaInverse(SGM::Point3D      const &Center,
 
 #include "Inline/Curve.inl"
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop
 
 #endif // SGM_INTERNAL_CURVE_H
 

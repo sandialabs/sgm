@@ -20,8 +20,8 @@
 
 #include "test_utility.h"
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(math_check, edge_params)
 {
@@ -5245,4 +5245,4 @@ TEST(math_check, line_extrude_intersect_conicident)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop

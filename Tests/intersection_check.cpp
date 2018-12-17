@@ -10,8 +10,8 @@
 
 #include "test_utility.h"
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(intersection_check, intersect_ellipse_and_plane)
 {
@@ -1429,4 +1429,4 @@ TEST(intersection_check, intersect_line_and_cylinder)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop

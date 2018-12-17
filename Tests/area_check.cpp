@@ -11,8 +11,8 @@
 
 #include "test_utility.h"
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(area_check, area_of_sphere_single_face)
 {
@@ -35,4 +35,4 @@ TEST(area_check, area_of_sphere_single_face)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop

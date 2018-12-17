@@ -9,8 +9,8 @@ using SGM::UnitVector3D;
 using SGM::Interval3D;
 using SGM::Ray3D;
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
 
 TEST(interval_check, box_ray_intersections) {
 
@@ -191,4 +191,4 @@ TEST(interval_check, box_segment_intersections) {
     EXPECT_FALSE(bbox.IntersectsSegment({3.0,3.0,0.0+1.1e-12}, {3.0,3.0,1.0})); // barely outside
 }
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop
