@@ -1311,9 +1311,9 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
                       SGM::CheckOptions  const &Options,
                       std::vector<std::string> &aCheckStrings)
     {
-    SGMInternal::CheckPreexistingConditions(rResult, aCheckStrings);
-    if (rResult.GetResult() != ResultTypeOK)
-        return false;
+    //SGMInternal::CheckPreexistingConditions(rResult, aCheckStrings);
+    //if (rResult.GetResult() != ResultTypeOK)
+    //    return false;
 
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);

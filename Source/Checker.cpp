@@ -16,27 +16,28 @@ inline std::ostream& operator<<(std::ostream& out, const entity *pEntity)
     return out << SGM::EntityTypeName(pEntity->GetType()) << " " << pEntity->GetID();
     }
 
-void CheckPreexistingConditions(SGM::Result              &rResult,
-                                std::vector<std::string> &aCheckStrings)
-{
-    switch(rResult.GetResult())
-    {
-    case SGM::ResultTypeOK:
-    {
-        return;
-        break;
-    }
-    case SGM::ResultTypeDeleteWillCorruptModel:
-    {
-        aCheckStrings.emplace_back(rResult.Message().c_str());
-        aCheckStrings.emplace_back("An invalid delete was attempted but not performed.  Clearing Result.");
-        rResult.SetResult(SGM::ResultTypeOK);
-        return;
-    }
-    default:
-      return;
-    }
-}
+// TODO - bring this back if we decide to prevent deleting an entity with parents
+//void CheckPreexistingConditions(SGM::Result              &rResult,
+//                                std::vector<std::string> &aCheckStrings)
+//{
+//    switch(rResult.GetResult())
+//    {
+//    case SGM::ResultTypeOK:
+//    {
+//        return;
+//        break;
+//    }
+//    case SGM::ResultTypeDeleteWillCorruptModel:
+//    {
+//        aCheckStrings.emplace_back(rResult.Message().c_str());
+//        aCheckStrings.emplace_back("An invalid delete was attempted but not performed.  Clearing Result.");
+//        rResult.SetResult(SGM::ResultTypeOK);
+//        return;
+//    }
+//    default:
+//      return;
+//    }
+//}
 
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
@@ -683,34 +684,35 @@ bool NURBsurface::Check(SGM::Result              &rResult,
     return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
 }
 
-bool offset::Check(SGM::Result              &rResult,
-                   SGM::CheckOptions const  &Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const
+bool offset::Check(SGM::Result              &,//rResult,
+                   SGM::CheckOptions const  &,//Options,
+                   std::vector<std::string> &,//aCheckStrings,
+                   bool                      ) const//bChildren) const
 {
-    bool bAnswer = true;
+    return false;
+    //bool bAnswer = true;
 
-    if (nullptr == m_pSurface)
-    {
-        std::stringstream ss;
-        ss << "Offset " << GetID() << " has a NULL surface pointer.";
-        aCheckStrings.emplace_back(ss.str());
-        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
-        bAnswer = false;
-        return bAnswer;
-    }
+    //if (nullptr == m_pSurface)
+    //{
+    //    std::stringstream ss;
+    //    ss << "Offset " << GetID() << " has a NULL surface pointer.";
+    //    aCheckStrings.emplace_back(ss.str());
+    //    rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+    //    bAnswer = false;
+    //    return bAnswer;
+    //}
 
-    if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
-    {
-        bAnswer = false;
-    }
+    //if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
+    //{
+    //    bAnswer = false;
+    //}
 
-    if (!CheckChildHasOwner(m_pSurface, this, aCheckStrings))
-    {
-        bAnswer = false;
-    }
+    //if (!CheckChildHasOwner(m_pSurface, this, aCheckStrings))
+    //{
+    //    bAnswer = false;
+    //}
 
-    return bAnswer;
+    //return bAnswer;
 }
 
 bool plane::Check(SGM::Result              &rResult,
