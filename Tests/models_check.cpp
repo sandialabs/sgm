@@ -115,7 +115,7 @@ void concatenate_log_files()
             auto file_name_only = file_path_object.RemoveFileName();
             std::string file_name = erase_directory(file_path);
             std::string PassedFileName="c:/sgm-models/Passed/"+file_name;
-            int nError = rename(file_path.c_str(),PassedFileName.c_str())
+            int nError = rename(file_path.c_str(),PassedFileName.c_str());
             if(nError)
                 {
                 perror("bad thing");
