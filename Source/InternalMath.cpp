@@ -106,11 +106,7 @@ bool SortablePlane::operator<(SortablePlane const &SPlane) const
                 }
             else
                 {
-                if(aData[3]<SPlane.aData[3]-dTol)
-                    {
-                    return true;
-                    }
-                return false;
+                return aData[3] < SPlane.aData[3] - dTol;
                 }
             }
         }
@@ -125,7 +121,7 @@ SGM::Point3D SortablePlane::Origin() const
 
 SGM::UnitVector3D SortablePlane::Normal() const
     {
-    return SGM::UnitVector3D(aData[0],aData[1],aData[2]);
+    return {aData[0],aData[1],aData[2]};
     }
 
 double SortablePlane::Tolerance() const
@@ -161,10 +157,8 @@ double SortablePlane::Tolerance() const
 
 typedef double (*SGMIntegrand)(SGM::Point2D const &uv,void const *pData);
 
-class Integrate2DData
+struct Integrate2DData
     {
-    public:
-
         SGMIntegrand     m_f;
         double           m_y;
         double           m_dTolerance;
@@ -174,14 +168,14 @@ class Integrate2DData
 
 double Integrate2DFx(double x,void const *pData)
     {
-    Integrate2DData *XYData=(Integrate2DData *)pData;
+    auto *XYData=(Integrate2DData *)pData;
     SGM::Point2D uv(x,XYData->m_y);
     return XYData->m_f(uv,XYData->m_Data);
     }
 
 double Integrate2DFy(double y,void const *pData)
     {
-    Integrate2DData *pSubData=(Integrate2DData *)pData;
+    auto *pSubData=(Integrate2DData *)pData;
     pSubData->m_y=y;
     return Integrate1D(Integrate2DFx,pSubData->m_Domain,pData,pSubData->m_dTolerance);
     }
@@ -202,14 +196,14 @@ class IntegrateTetraData
 
 double IntegrateTetraX(double x,void const *pData)
     {
-    IntegrateTetraData *XYData=(IntegrateTetraData *)pData;
+    auto *XYData=(IntegrateTetraData *)pData;
     SGM::Point2D uv(x,XYData->m_y);
     return XYData->m_f(uv,XYData->m_Data);
     }
 
 double IntegrateTetraY(double y,void const *pData)
     {
-    IntegrateTetraData *pSubData=(IntegrateTetraData *)pData;
+    auto *pSubData=(IntegrateTetraData *)pData;
     pSubData->m_y=y;
     SGM::Point2D const &PosA=pSubData->m_PosA;
     SGM::Point2D const &PosB=pSubData->m_PosB;
@@ -269,7 +263,7 @@ double Integrate1D(double f(double x, void const *pData),
                    void const *pData,
                    double dTolerance)
     {
-    std::vector<std::vector<double> > aaData;
+    std::vector<std::vector<double>> aaData;
     double dAnswer = 0;
     double dh = Domain.Length();
     double a = Domain.m_dMin;

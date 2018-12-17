@@ -13,9 +13,9 @@ NUBsurface::NUBsurface(SGM::Result                                   &rResult,
                        std::vector<double>                     const &aUKnots,
                        std::vector<double>                     const &aVKnots):
         surface(rResult,SGM::NUBSurfaceType),
-        m_aaControlPoints(std::move(aControlPoints)),
-        m_aUKnots(std::move(aUKnots)),
-        m_aVKnots(std::move(aVKnots))
+        m_aaControlPoints(aControlPoints),
+        m_aUKnots(aUKnots),
+        m_aVKnots(aVKnots)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
@@ -93,7 +93,7 @@ bool NUBsurface::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    NUBsurface const *pNUB2=(NUBsurface const *)pOther;
+    auto pNUB2=(NUBsurface const *)pOther;
     if(m_aUKnots.size()!=pNUB2->m_aUKnots.size())
         {
         return false;

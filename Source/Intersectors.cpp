@@ -1,17 +1,13 @@
 #include <cfloat>
 #include <cmath>
 #include <vector>
-#include <algorithm>
 #include <list>
 
 #include "SGMVector.h"
-#include "SGMInterval.h"
-#include "SGMSegment.h"
 #include "SGMTransform.h"
 #include "SGMIntersector.h"
 
 #include "Intersectors.h"
-#include "EntityClasses.h"
 #include "FacetToBRep.h"
 #include "Topology.h"
 
@@ -221,15 +217,15 @@ size_t RayFireFace(SGM::Result                        &rResult,
             else
                 {
                 std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
-                std::vector<SGM::Point3D> aTempPoints;
-                std::vector<SGM::IntersectionType> aTempTypes;
+                std::vector<SGM::Point3D> aRayFirePoints;
+                std::vector<SGM::IntersectionType> aRayFireTypes;
                 for(edge *pEdge : sEdges)
                     {
-                    RayFireEdge(rResult,Origin,Axis,pEdge,aTempPoints,aTempTypes,dTolerance,bUseWholeLine);
-                    size_t nTempPoints=aTempPoints.size();
+                    RayFireEdge(rResult,Origin,Axis,pEdge,aRayFirePoints,aRayFireTypes,dTolerance,bUseWholeLine);
+                    size_t nTempPoints=aRayFirePoints.size();
                     for(Index2=0;Index2<nTempPoints;++Index2)
                         {
-                        aAllPoints.push_back(aTempPoints[Index2]);
+                        aAllPoints.push_back(aRayFirePoints[Index2]);
                         aAllTypes.push_back(SGM::CoincidentType);
                         }
                     }
@@ -266,22 +262,19 @@ size_t RayFireVolume(SGM::Result                        &rResult,
     SGM::Ray3D Ray(Origin,Axis);
     std::vector<SGM::BoxTree::BoundedItemType> aHitFaces=FaceTree.FindIntersectsRay(Ray,dTolerance);
 
-    std::vector<SGM::BoxTree::BoundedItemType>::iterator FaceIter=aHitFaces.begin();
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
-    size_t Index1;
-    while(FaceIter!=aHitFaces.end())
+    for (auto boundedItem : aHitFaces)
         {
-        face *pFace=(face *)(FaceIter->first);
+        face * pFace = (face*)boundedItem.first;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
         size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
+        for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
             }
-        ++FaceIter;
         }
 
     size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
@@ -302,28 +295,38 @@ size_t RayFireBody(SGM::Result                        &rResult,
     // Find all ray hits for all volumes.
 
     std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
-    std::set<volume *,EntityCompare>::const_iterator iter=sVolumes.begin();
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
-    size_t Index1;
-    while(iter!=sVolumes.end())
+    for (auto pVolume : sVolumes)
         {
-        volume *pVolume=*iter;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
         size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
+        for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
             }
-        ++iter;
         }
 
     size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
+    }
+
+inline void MovePointsAndTypes(std::vector<SGM::Point3D>          &aSubPoints,
+                               std::vector<SGM::IntersectionType> &aSubTypes,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes)
+    {
+    aPoints.reserve(aPoints.size() + aSubPoints.size());
+    aPoints.insert(aPoints.end(), aSubPoints.begin(), aSubPoints.end());
+    aSubPoints.clear();
+
+    aTypes.reserve(aTypes.size() + aSubTypes.size());
+    aTypes.insert(aTypes.end(), aSubTypes.begin(), aSubTypes.end());
+    aSubTypes.clear();
     }
 
 size_t RayFireThing(SGM::Result                        &rResult,
@@ -337,80 +340,45 @@ size_t RayFireThing(SGM::Result                        &rResult,
     {
     // Find all top level bodies, volumes, complexes, and faces.
 
+    aPoints.clear();
+    aTypes.clear();
+
+    std::vector<SGM::Point3D> aSubPoints;
+    std::vector<SGM::IntersectionType> aSubTypes;
+
     std::set<body *,EntityCompare> sBodies;
     FindBodies(rResult,pThing,sBodies,true);
-    std::set<body *,EntityCompare>::const_iterator BodyIter=sBodies.begin();
-    std::vector<SGM::Point3D> aAllPoints;
-    std::vector<SGM::IntersectionType> aAllTypes;
-    size_t Index1;
-    while(BodyIter!=sBodies.end())
+    for (auto pBody : sBodies)
         {
-        body *pBody=*BodyIter;
-        std::vector<SGM::Point3D> aSubPoints;
-        std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
-            {
-            aAllPoints.push_back(aSubPoints[Index1]);
-            aAllTypes.push_back(aSubTypes[Index1]);
-            }
-        ++BodyIter;
+        RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
         }
-    
+
     std::set<volume *,EntityCompare> sVolumes;
     FindVolumes(rResult,pThing,sVolumes,true);
-    std::set<volume *,EntityCompare>::const_iterator VolumeIter=sVolumes.begin();
-    while(VolumeIter!=sVolumes.end())
+    for (auto pVolume : sVolumes)
         {
-        volume *pVolume=*VolumeIter;
-        std::vector<SGM::Point3D> aSubPoints;
-        std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
-            {
-            aAllPoints.push_back(aSubPoints[Index1]);
-            aAllTypes.push_back(aSubTypes[Index1]);
-            }
-        ++VolumeIter;
+        RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
         }
 
     std::set<complex *,EntityCompare> sComplexes;
     FindComplexes(rResult,pThing,sComplexes,true);
-    std::set<complex *,EntityCompare>::const_iterator ComplexIter=sComplexes.begin();
-    while(ComplexIter!=sComplexes.end())
+    for (auto pComplex : sComplexes)
         {
-        complex *pComplex=*ComplexIter;
-        std::vector<SGM::Point3D> aSubPoints;
-        std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireComplex(rResult,Origin,Axis,pComplex,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
-            {
-            aAllPoints.push_back(aSubPoints[Index1]);
-            aAllTypes.push_back(aSubTypes[Index1]);
-            }
-        ++ComplexIter;
+        RayFireComplex(rResult,Origin,Axis,pComplex,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
         }
     
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces,true);
-    std::set<face *,EntityCompare>::const_iterator FaceIter=sFaces.begin();
-    while(FaceIter!=sFaces.end())
+    for (auto pFace : sFaces)
         {
-        face *pFace=*FaceIter;
-        std::vector<SGM::Point3D> aSubPoints;
-        std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        for(Index1=0;Index1<nHits;++Index1)
-            {
-            aAllPoints.push_back(aSubPoints[Index1]);
-            aAllTypes.push_back(aSubTypes[Index1]);
-            }
-        ++FaceIter;
+        RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
-    aPoints=aAllPoints;
-    aTypes=aAllTypes;
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes);
     return nAnswer;
     }
 
@@ -742,7 +710,7 @@ size_t IntersectLineAndCircle(SGM::Point3D                 const &Origin,
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
-    else if(aPoints2.size()==1 && SGM::NearEqual(aPoints2[0],Center,SGM_ZERO)==false)
+    else if(aPoints2.size()==1 && !SGM::NearEqual(aPoints2[0], Center, SGM_ZERO))
         {
         SGM::UnitVector3D UVec=aPoints2[0]-Center;
         SGM::Point3D Pos=Center+UVec*dRadius;
@@ -1969,12 +1937,12 @@ size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
         {
         case SGM::EntityType::PlaneType:
             {
-            plane const *pPlane=(plane const *)pSurface;
+            auto pPlane=(plane const *)pSurface;
             IntersectCircleAndPlane(Center,Normal,dRadius,pPlane->m_Origin,pPlane->m_ZAxis,dTolerance,aPoints,aTypes);
             }
         case SGM::EntityType::CylinderType:
             {
-            cylinder const *pCylinder=(cylinder const *)pSurface;
+            auto pCylinder=(cylinder const *)pSurface;
             IntersectCircleAndCylinder(Center,Normal,dRadius,pCylinder,dTolerance,aPoints,aTypes);
             }
         default:
@@ -1996,7 +1964,7 @@ size_t IntersectNUBCurveAndSurface(SGM::Result                        &rResult,
         {
         case SGM::PlaneType:
             {
-            plane const *pPlane =(plane const *)pSurface; 
+            auto pPlane =(plane const *)pSurface;
             IntersectNUBCurveAndPlane(rResult, pNUBcurve, pPlane->m_Origin, pPlane->m_ZAxis, aPoints, aTypes, dTolerance);
             break;
             }
@@ -2054,7 +2022,7 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             }
         case SGM::CircleType:
             {
-            circle const *pCircle=(circle const *)pCurve;
+            auto pCircle=(circle const *)pCurve;
             SGM::Point3D const &Center=pCircle->m_Center;
             SGM::UnitVector3D const &Normal=pCircle->m_Normal;
             double dRadius=pCircle->m_dRadius;
@@ -2067,10 +2035,10 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             }
         case SGM::ParabolaType:
             {
-            parabola const *pParabola=(parabola const *)pCurve;
+            auto pParabola=(parabola const *)pCurve;
             if(pSurface->GetSurfaceType()==SGM::EntityType::PlaneType)
                 {
-                plane const *pPlane=(plane const *)pSurface;
+                auto pPlane=(plane const *)pSurface;
                 IntersectParabolaAndPlane(pParabola,pPlane->m_Origin,pPlane->m_ZAxis,dTolerance,aPoints,aTypes);
                 }
             break;
@@ -2081,7 +2049,7 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             }
         case SGM::NUBCurveType:
             {
-            NUBcurve const *pNUB = (NUBcurve const *)pCurve;
+            auto pNUB = (NUBcurve const *)pCurve;
             IntersectNUBCurveAndSurface(rResult, pNUB, pSurface, aPoints, aTypes, dTolerance);
             break;
             }
@@ -2091,7 +2059,7 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             }
         case SGM::PointCurveType:
             {
-            PointCurve const *pPointCurve=(PointCurve const *)pCurve;
+            auto pPointCurve=(PointCurve const *)pCurve;
             SGM::Point3D const &Pos=pPointCurve->m_Pos;
             SGM::Point3D CPos;
             pSurface->Inverse(Pos,&CPos);
@@ -2241,7 +2209,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
         {
         case SGM::LineType:
             {
-            line const *pLine=(line const *)pCurve;
+            auto pLine=(line const *)pCurve;
             SGM::Interval1D Domain=pCurve->GetDomain();
             if(pEdge2)
                 {
@@ -2257,7 +2225,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
             }
         case SGM::PointCurveType:
             {
-            PointCurve const *pPointCurve=(PointCurve const *)pCurve;
+            auto pPointCurve=(PointCurve const *)pCurve;
             SGM::Point3D const &Pos=pPointCurve->m_Pos;
             SGM::Point3D CPos;
             pCircle->Inverse(Pos,&CPos);
@@ -2294,7 +2262,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
          {
          case SGM::PointCurveType:
              {
-             PointCurve const *pPointCurve=(PointCurve const *)pCurve1;
+             auto pPointCurve=(PointCurve const *)pCurve1;
              SGM::Point3D const &Pos=pPointCurve->m_Pos;
              SGM::Point3D CPos;
              pCurve2->Inverse(Pos,&CPos);
@@ -2307,7 +2275,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
              }
          case SGM::LineType:
              {
-             line const *pLine=(line const *)pCurve1;
+             auto pLine=(line const *)pCurve1;
              SGM::Interval1D Domain=pCurve1->GetDomain();
              if(pEdge1)
                  {
@@ -2318,7 +2286,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
              }
          case SGM::CircleType:
              {
-             circle const *pCircle=(circle const *)pCurve1;
+             auto pCircle=(circle const *)pCurve1;
              IntersectCircleAndCurve(rResult,pCircle,pCurve2,aPoints,aTypes,pEdge1,pEdge2,dTol);
              break;
              }
@@ -2588,22 +2556,22 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
         {
         case SGM::EntityType::PlaneType:
             {
-            plane const *pPlane2=(plane const *)pSurface;
+            auto pPlane2=(plane const *)pSurface;
             return IntersectPlaneAndPlane(rResult,pPlane,pPlane2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::SphereType:
             {
-            sphere const *pSphere=(sphere const *)pSurface;
+            auto pSphere=(sphere const *)pSurface;
             return IntersectPlaneAndSphere(rResult,pPlane,pSphere,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::CylinderType:
             {
-            cylinder const *pCylinder=(cylinder const *)pSurface;
+            auto pCylinder=(cylinder const *)pSurface;
             return IntersectPlaneAndCylinder(rResult,pPlane,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::ConeType:
             {
-            cone const *pCone=(cone const *)pSurface;
+            auto pCone=(cone const *)pSurface;
             return IntersectPlaneAndCone(rResult,pPlane,pCone,aCurves,pFace1,pFace2,dTolerance);
             }
         //case SGM::EntityType::TorusType:
@@ -2781,17 +2749,17 @@ size_t IntersectSphereAndSurface(SGM::Result                &rResult,
         {
         case SGM::EntityType::PlaneType:
             {
-            plane const *pPlane=(plane const *)pSurface;
+            auto pPlane=(plane const *)pSurface;
             return IntersectPlaneAndSphere(rResult,pPlane,pSphere,aCurves,pFace2,pFace1,dTolerance);
             }
         case SGM::EntityType::SphereType:
             {
-            sphere const *pSphere2=(sphere const *)pSurface;
+            auto pSphere2=(sphere const *)pSurface;
             return IntersectSphereAndSphere(rResult,pSphere,pSphere2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::CylinderType:
             {
-            cylinder const *pCylinder=(cylinder const *)pSurface;
+            auto pCylinder=(cylinder const *)pSurface;
             return IntersectSphereAndCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         default:
@@ -2814,7 +2782,7 @@ size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
         {
         case SGM::EntityType::SphereType:
             {
-            sphere const *pSphere=(sphere const *)pSurface;
+            auto pSphere=(sphere const *)pSurface;
             return IntersectSphereAndCylinder(rResult,pSphere,pCylinder,aCurves,pFace1,pFace2,dTolerance);
             }
         default:
@@ -2836,17 +2804,17 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
         {
         case SGM::EntityType::PlaneType:
             {
-            plane const *pPlane=(plane const *)pSurface1;
+            auto pPlane=(plane const *)pSurface1;
             return IntersectPlaneAndSurface(rResult,pPlane,pSurface2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::SphereType:
             {
-            sphere const *pSphere=(sphere const *)pSurface1;
+            auto pSphere=(sphere const *)pSurface1;
             return IntersectSphereAndSurface(rResult,pSphere,pSurface2,aCurves,pFace1,pFace2,dTolerance);
             }
         case SGM::EntityType::CylinderType:
             {
-            cylinder const *pCylinder=(cylinder const *)pSurface1;
+            auto pCylinder=(cylinder const *)pSurface1;
             return IntersectCylinderAndSurface(rResult,pCylinder,pSurface2,aCurves,pFace1,pFace2,dTolerance);
             }
         default:
@@ -2954,7 +2922,7 @@ hermite *WalkFromTo(SGM::Result        &rResult,
     double dWalkFraction=0.5; 
     bool bWalk=true;
     double dScale=0.5;
-    while(bWalk)
+    while(bWalk)  //TODO: bWalk does not seem to be updated inside the loop [KDCOPPS]
         {
         // Find how far to walk.
 
@@ -3021,8 +2989,8 @@ hermite *WalkFromTo(SGM::Result        &rResult,
         lNodes.emplace_back(aParams[Index1],aPoints[Index1],aTangents[Index1]);
         }
     double dLength=aParams.back();
-    std::list<HermiteNode>::iterator iter=lNodes.begin();
-    std::list<HermiteNode>::iterator LastIter=iter;
+    auto iter=lNodes.begin();
+    auto LastIter=iter;
     ++iter;
     while(iter!=lNodes.end())
         {
@@ -3085,51 +3053,51 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
         {
         case SGM::LineType:
             {
-            line const *pLine = (line const *)pCurve;
+            auto pLine = (line const *)pCurve;
             IntersectLineAndPlane(pLine->m_Origin, pLine->m_Axis, SGM::Interval1D(-SGM_MAX, SGM_MAX),
                                   PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::CircleType:
             {
-            circle const *pCircle=(circle const *)pCurve;
+            auto pCircle=(circle const *)pCurve;
             IntersectCircleAndPlane(pCircle->m_Center, pCircle->m_Normal, pCircle->m_dRadius, 
                                     PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::EllipseType:
             {
-            ellipse const *pEllipse=(ellipse const *)pCurve;
+            auto pEllipse=(ellipse const *)pCurve;
             IntersectEllipseAndPlane(pEllipse, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::ParabolaType:
             {
-            parabola const *pParabola = (parabola const *)pCurve;
+            auto pParabola = (parabola const *)pCurve;
             IntersectParabolaAndPlane(pParabola, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::HyperbolaType:
             {
-            hyperbola const *pHyperbola = (hyperbola const *)pCurve;
+            auto pHyperbola = (hyperbola const *)pCurve;
             IntersectHyperbolaAndPlane(pHyperbola, PlaneOrigin, PlaneNorm, dTolerance, aPoints, aTypes);
             break;
             }
         case SGM::NUBCurveType:
             {
-            NUBcurve const *pNUBCurve = (NUBcurve const *)pCurve;
+            auto pNUBCurve = (NUBcurve const *)pCurve;
             IntersectNUBCurveAndPlane(rResult, pNUBCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
             break;
             }
         case SGM::NURBCurveType:
             {
-            NURBcurve const *pNURBCurve = (NURBcurve const *)pCurve;
+            auto pNURBCurve = (NURBcurve const *)pCurve;
             IntersectNURBCurveAndPlane(rResult, pNURBCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
             break;
             }
         case SGM::PointCurveType:
             {
-            PointCurve const *pPointCurve=(PointCurve const *)pCurve;
+            auto pPointCurve=(PointCurve const *)pCurve;
             SGM::Point3D const &Pos=pPointCurve->m_Pos;
             double dDist = (Pos-PlaneOrigin)%PlaneNorm;
             if(fabs(dDist)<dTolerance)
@@ -3305,14 +3273,14 @@ void FindCurvePlaneIntersections(curve                                  const *p
                 {
                     Pos = aParabolaPoints[0];
                 }
-                else if (aParabolaPoints.size() == 0)
+                else if (aParabolaPoints.empty())
                 {
                     // check the distance of the point to the plane
                     double Dist = (CPos - PlaneOrigin) % PlaneNorm;
                     if (fabs(Dist) < dTolerance)
                     {
-                        double dCurveT=pCurve->Inverse(Pos);
-                        aRefinedPoints.emplace_back(dCurveT,Pos);
+                        double dCurveTInverse=pCurve->Inverse(Pos);
+                        aRefinedPoints.emplace_back(dCurveTInverse,Pos);
                     }
                     break;
                 }
@@ -3345,15 +3313,15 @@ void FindCurvePlaneIntersections(curve                                  const *p
             {
                 if (dDist<dTolerance)
                 {
-                    double dCurveT=pCurve->Inverse(Pos);
-                    aRefinedPoints.emplace_back(dCurveT,Pos);
+                    double dCurveTInverse=pCurve->Inverse(Pos);
+                    aRefinedPoints.emplace_back(dCurveTInverse,Pos);
                 }
                 break;
             }
             if(nCount==nCountLimit-1 && dDist<dTolerance)
             {
-                double dCurveT=pCurve->Inverse(Pos);
-                aRefinedPoints.emplace_back(dCurveT,Pos);
+                double dCurveTInverse=pCurve->Inverse(Pos);
+                aRefinedPoints.emplace_back(dCurveTInverse,Pos);
                 break;
             }
             dOldDist=dDist;
@@ -3461,9 +3429,9 @@ size_t IntersectNURBCurveAndPlane(SGM::Result                         &,//rResul
     std::vector<SGM::Point4D> const &aControlPoints4D = pCurve->GetControlPoints();
 
     std::vector<SGM::Point3D> aControlPoints3D;
+    aControlPoints3D.reserve(aControlPoints4D.size());
     for (SGM::Point4D Pos4D : aControlPoints4D)
-        aControlPoints3D.push_back(SGM::Point3D(Pos4D.m_x, Pos4D.m_y, Pos4D.m_z));
-
+        aControlPoints3D.emplace_back(Pos4D.m_x, Pos4D.m_y, Pos4D.m_z);
 
     if (SGM::ArePointsCoplanar(aControlPoints3D, dTolerance, &CurvePlaneOrigin, &CurvePlaneNormal))
     {

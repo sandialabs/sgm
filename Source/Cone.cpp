@@ -183,12 +183,12 @@ bool cone::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    cone const *pCone2=(cone const *)pOther;
-    if(SGM::NearEqual(m_dCosHalfAngle,pCone2->m_dCosHalfAngle,dTolerance,false)==false)
+    auto pCone2=(cone const *)pOther;
+    if(!SGM::NearEqual(m_dCosHalfAngle, pCone2->m_dCosHalfAngle, dTolerance, false))
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(m_ZAxis%pCone2->m_ZAxis,1.0,dTolerance,false)==false)
+    else if(!SGM::NearEqual(m_ZAxis % pCone2->m_ZAxis, 1.0, dTolerance, false))
         {
         bAnswer=false;
         }
@@ -196,7 +196,7 @@ bool cone::IsSame(surface const *pOther,double dTolerance) const
         {
         SGM::Point3D const &Pos1=FindApex();
         SGM::Point3D const &Pos2=pCone2->FindApex();
-        if(SGM::NearEqual(Pos1.Distance(Pos2),0.0,dTolerance,false)==false)
+        if(!SGM::NearEqual(Pos1.Distance(Pos2), 0.0, dTolerance, false))
             {
             bAnswer=false;
             }

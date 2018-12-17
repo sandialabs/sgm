@@ -212,7 +212,7 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
 
 double DerivativeMagnitude(double t,void const *pData)
     {
-    curve const *pCurve=(curve const*)pData;
+    auto pCurve=(curve const*)pData;
     SGM::Vector3D Vec;
     pCurve->Evaluate(t,nullptr,&Vec);
     return Vec.Magnitude();

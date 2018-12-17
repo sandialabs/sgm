@@ -219,7 +219,7 @@ bool NUBcurve::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    NUBcurve const *pNUB2=(NUBcurve const *)pOther;
+    auto const *pNUB2=(NUBcurve const *)pOther;
     if(m_aKnots.size()!=pNUB2->m_aKnots.size())
         {
         return false;

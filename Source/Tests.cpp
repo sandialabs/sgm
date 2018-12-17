@@ -449,7 +449,7 @@ bool RunInternalTest(SGM::Result &rResult,
         SGMInternal::IntersectLineAndPlane(SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),Domain5,
                                            SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),
                                            SGM_MIN_TOL,aPoints,aTypes);
-        if(aPoints.size()!=0)
+        if(!aPoints.empty())
             {
             bAnswer=false;
             }

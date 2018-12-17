@@ -56,7 +56,7 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
         aMatrix.push_back(-uv.m_u*uv.m_u);
         aaMatrix.push_back(aMatrix);
         }
-    if(SGM::LinearSolve(aaMatrix)==false)
+    if(!SGM::LinearSolve(aaMatrix))
         {
         return false;
         }

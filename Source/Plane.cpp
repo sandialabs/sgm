@@ -85,7 +85,7 @@ bool plane::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    plane const *pPlane2=(plane const *)pOther;
+    auto pPlane2=(plane const *)pOther;
     if(SGM::NearEqual(m_Origin,pPlane2->m_Origin,dTolerance)==false)
         {
         bAnswer=false;

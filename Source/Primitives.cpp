@@ -13,7 +13,7 @@ edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
                  SGM::Interval1D const *pDomain)
     {
-    edge *pEdge=new edge(rResult);
+    auto pEdge=new edge(rResult);
     pEdge->SetCurve(pCurve);
     SGM::Interval1D Domain;
     if(pDomain)
@@ -716,7 +716,7 @@ NUBcurve *CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
     SGM::Interval1D Domain(0.0,1.0);
     
     // From "The NURBs Book" Algorithm A9.2, page 373.
-    assert(aPoints.size() > 0);
+    assert(!aPoints.empty());
     size_t nPoints=aPoints.size()-1;
     std::vector<SGM::Point3D> aControlPoints(nPoints+3,SGM::Point3D(0,0,0));
     aControlPoints[0]=aPoints[0];

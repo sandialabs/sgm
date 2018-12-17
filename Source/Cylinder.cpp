@@ -193,13 +193,13 @@ bool cylinder::IsSame(surface const *pOther,double dTolerance) const
         }
 
     bool bAnswer=true;
-    cylinder const *pCylinder1=(cylinder const *)this;
-    cylinder const *pCylinder2=(cylinder const *)pOther;
-    if(SGM::NearEqual(pCylinder1->m_dRadius,pCylinder2->m_dRadius,dTolerance,false)==false)
+    auto pCylinder1= this;
+    auto pCylinder2=(cylinder const *)pOther;
+    if(!SGM::NearEqual(pCylinder1->m_dRadius, pCylinder2->m_dRadius, dTolerance, false))
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(fabs(pCylinder1->m_ZAxis%pCylinder2->m_ZAxis),1.0,dTolerance,false)==false)
+    else if(!SGM::NearEqual(fabs(pCylinder1->m_ZAxis % pCylinder2->m_ZAxis), 1.0, dTolerance, false))
         {
         bAnswer=false;
         }
@@ -208,7 +208,7 @@ bool cylinder::IsSame(surface const *pOther,double dTolerance) const
         SGM::Point3D const &Pos1=pCylinder1->m_Origin;
         SGM::Point3D const &Pos2=pCylinder2->m_Origin;
         SGM::UnitVector3D const &Axis1=pCylinder1->m_ZAxis;
-        if(SGM::NearEqual(Pos2.Distance(Pos1+Axis1*((Pos2-Pos1)%Axis1)),0.0,dTolerance,false)==false)
+        if(!SGM::NearEqual(Pos2.Distance(Pos1 + Axis1 * ((Pos2 - Pos1) % Axis1)), 0.0, dTolerance, false))
             {
             bAnswer=false;
             }

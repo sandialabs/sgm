@@ -40,7 +40,7 @@ namespace SGM {
         /**
          * Assignment operator.
          */
-        BoxTree& operator=( const BoxTree& other );
+        BoxTree& operator=( const BoxTree &rhs);
 
         /**
          * Destroy the tree and free all resources.

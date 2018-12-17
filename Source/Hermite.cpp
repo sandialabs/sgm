@@ -230,7 +230,7 @@ bool hermite::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    hermite const *pHermite=(hermite const *)pOther;
+    auto pHermite=(hermite const *)pOther;
     if(m_aParams.size()!=pHermite->m_aParams.size())
         {
         return false;
@@ -239,15 +239,15 @@ bool hermite::IsSame(curve const *pOther,double dTolerance) const
     size_t nParams=m_aParams.size();
     for(Index1=0;Index1<nParams;++Index1)
         {
-        if(SGM::NearEqual(m_aParams[Index1],pHermite->m_aParams[Index1],dTolerance,false)==false)
+        if(!SGM::NearEqual(m_aParams[Index1], pHermite->m_aParams[Index1], dTolerance, false))
             {
             return false;
             }
-        if(SGM::NearEqual(m_aPoints[Index1],pHermite->m_aPoints[Index1],dTolerance)==false)
+        if(!SGM::NearEqual(m_aPoints[Index1], pHermite->m_aPoints[Index1], dTolerance))
             {
             return false;
             }
-        if(SGM::NearEqual(m_aTangents[Index1],pHermite->m_aTangents[Index1],dTolerance)==false)
+        if(!SGM::NearEqual(m_aTangents[Index1], pHermite->m_aTangents[Index1], dTolerance))
             {
             return false;
             }

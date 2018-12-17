@@ -72,7 +72,7 @@ public:
     explicit ContainerConverter(const SourceContainer& s) : m_SourceContainer(s) {}
 
     template<class TargetContainer>
-    inline operator TargetContainer() const
+    inline explicit operator TargetContainer() const
         {
         return TargetContainer(m_SourceContainer.begin(), m_SourceContainer.end());
         }

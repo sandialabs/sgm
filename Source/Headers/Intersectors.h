@@ -31,8 +31,8 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    body                         const *pBody,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
-                   double                       const dTolerance,
-                   bool                               bUseWholeLine=false);
+                   double                              dTolerance,
+                   bool                                bUseWholeLine=false);
 
 size_t RayFireVolume(SGM::Result                        &rResult,
                      SGM::Point3D                 const &Origin,
@@ -40,8 +40,8 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      volume                       const *pVolume,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
-                     double                       const dTolerance,
-                     bool                               bUseWholeLine=false);
+                     double                              dTolerance,
+                     bool                                bUseWholeLine=false);
 
 size_t IntersectSegment(SGM::Result               &rResult,
                         SGM::Segment3D      const &Segment,
@@ -56,7 +56,7 @@ size_t IntersectCurves(SGM::Result                        &rResult,
                        std::vector<SGM::IntersectionType> &aTypes,
                        edge                         const *pEdge1,
                        edge                         const *pEdge2,
-                       double                       const dTolerance);
+                       double                              dTolerance);
 
 size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                 curve                        const *pCurve,

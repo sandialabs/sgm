@@ -1025,17 +1025,17 @@ TEST(math_check, partial_order)
     EXPECT_EQ(nGenerations,2);
 
     std::vector<size_t> aDecendents;
-    size_t nDecendents=SGM::FindDecendents(sPartialOrder,0,aDecendents);
+    size_t nDecendents= SGM::FindDescendants(sPartialOrder, 0, aDecendents);
     EXPECT_EQ(nDecendents,3);
 
     std::vector<size_t> aChildren;
-    size_t nChildern=SGM::FindChildern(sPartialOrder,0,aChildren);
+    size_t nChildern= SGM::FindChildren(sPartialOrder, 0, aChildren);
     EXPECT_EQ(nChildern,2);
 
     std::vector<size_t> aKeep;
     aKeep.push_back(0);
     aKeep.push_back(2);
-    SGM::SubsetPartailOrder(aKeep,sPartialOrder);
+    SGM::SubsetPartialOrder(aKeep, sPartialOrder);
     EXPECT_EQ(sPartialOrder.size(),1);
 
     

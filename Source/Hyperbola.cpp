@@ -24,32 +24,28 @@ bool hyperbola::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    hyperbola const *pCurve2=(hyperbola const *)pOther;
-    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+    auto pCurve2=(hyperbola const *)pOther;
+    if(!SGM::NearEqual(m_Center, pCurve2->m_Center, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_XAxis, pCurve2->m_XAxis, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_YAxis, pCurve2->m_YAxis, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+    if(!SGM::NearEqual(m_Normal, pCurve2->m_Normal, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_dA,pCurve2->m_dA,dTolerance,false)==false)
+    if(!SGM::NearEqual(m_dA, pCurve2->m_dA, dTolerance, false))
         {
         return false;
         }
-    if(SGM::NearEqual(m_dB,pCurve2->m_dB,dTolerance,false)==false)
-        {
-        return false;
-        }
-    return true;
+    return SGM::NearEqual(m_dB, pCurve2->m_dB, dTolerance, false);
     }
 
 hyperbola::hyperbola(SGM::Result &rResult, hyperbola const &other):

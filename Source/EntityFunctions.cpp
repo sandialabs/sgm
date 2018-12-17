@@ -29,7 +29,7 @@ void DeleteEntity(SGM::Result &rResult,
     std::set<entity *, EntityCompare> sParents;
     pEntity->GetParents(sParents);
 
-    if (sParents.size())
+    if (!sParents.empty())
     {
         char Buffer[1000];
         snprintf(Buffer,sizeof(Buffer),"%s %lu cannot be deleted because it has parents.",
@@ -51,14 +51,14 @@ void DeleteEntity(SGM::Result &rResult,
         {
         case SGM::FaceType:
             {
-            face *pFace=(face *)pEntity;
+            auto pFace=(face *)pEntity;
             for (auto pChild : sChildren) 
                 {
                 switch(pChild->GetType())
                     {
                     case SGM::EdgeType:
                         {
-                        edge *pEdge=(edge *)pChild;
+                        auto pEdge=(edge *)pChild;
                         if(pEdge->GetFaces().size()==1)
                             {
                             aDelete.push_back(pChild);
@@ -67,7 +67,7 @@ void DeleteEntity(SGM::Result &rResult,
                         }
                     case SGM::VertexType:
                         {
-                        vertex *pVertex=(vertex *)pChild;
+                        auto *pVertex=(vertex *)pChild;
                         std::set<face *,EntityCompare> sFaces;
                         FindFaces(rResult,pVertex,sFaces);
                         if(sFaces.size()==1)
@@ -78,7 +78,7 @@ void DeleteEntity(SGM::Result &rResult,
                         }
                     case SGM::CurveType:
                         {
-                        curve *pCurve=(curve *)pChild;
+                        auto *pCurve=(curve *)pChild;
                         std::set<face *,EntityCompare> sFaces;
                         FindFaces(rResult,pCurve,sFaces);
                         if(sFaces.size()==1)
@@ -89,7 +89,7 @@ void DeleteEntity(SGM::Result &rResult,
                         }
                     case SGM::SurfaceType:
                         {
-                        surface *pSurface=(surface *)pChild;
+                        auto *pSurface=(surface *)pChild;
                         std::set<face *,EntityCompare> sFaces;
                         FindFaces(rResult,pSurface,sFaces);
                         if(sFaces.size()==1)
@@ -235,59 +235,59 @@ void TransformEntity(SGM::Result            &rResult,
             {
             case SGM::FaceType:
                 {
-                face *pFace=(face *)pEntry;
+                auto pFace=(face *)pEntry;
                 pFace->TransformBox(rResult, transform3D);
                 pFace->TransformFacets(transform3D);
                 break;
                 }
             case SGM::EdgeType:
                 {
-                edge *pEdge=(edge *)pEntry;
+                auto pEdge=(edge *)pEntry;
                 pEdge->TransformBox(rResult, transform3D);
                 pEdge->TransformFacets(transform3D);
                 break;
                 }
             case SGM::VertexType:
                 {
-                vertex *pVertex=(vertex *)pEntry;
+                auto pVertex=(vertex *)pEntry;
                 pVertex->TransformBox(rResult, transform3D);
                 pVertex->TransformData(transform3D);
                 break;
                 }
             case SGM::SurfaceType:
                 {
-                surface *pSurface=(surface *)pEntry;
+                auto pSurface=(surface *)pEntry;
                 pSurface->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::CurveType:
                 {
-                curve *pCurve=(curve *)pEntry;
+                auto pCurve=(curve *)pEntry;
                 pCurve->Transform(rResult,transform3D);
                 break;
                 }
             case SGM::ComplexType:
                 {
-                complex *pComplex=(complex *)pEntry;
+                auto pComplex=(complex *)pEntry;
                 pComplex->TransformBox(rResult, transform3D);
                 pComplex->Transform(transform3D);
                 break;
                 }
             case SGM::BodyType:
                 {
-                body *pBody = (body *)pEntry;
+                auto pBody = (body *)pEntry;
                 pBody->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::VolumeType:
                 {
-                volume *pVolume= (volume *)pEntry;
+                auto pVolume= (volume *)pEntry;
                 pVolume->TransformBox(rResult, transform3D);
                 break;
                 }
             case SGM::ThingType:
                 {
-                thing *pThing = (thing *)pEntry;
+                auto pThing = (thing *)pEntry;
                 pThing->TransformBox(rResult, transform3D);
                 break;
                 }

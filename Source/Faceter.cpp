@@ -55,8 +55,8 @@ edge *FindEdge(entity *pEntA,entity *pEntB)
     else if( pEntA->GetType()==SGM::VertexType &&
              pEntB->GetType()==SGM::VertexType)
         {
-        vertex *pVertexA=(vertex *)pEntA;
-        vertex *pVertexB=(vertex *)pEntB;
+        auto pVertexA=(vertex *)pEntA;
+        auto pVertexB=(vertex *)pEntB;
         std::set<edge *,EntityCompare> const &sEdgesA=pVertexA->GetEdges();
         std::set<edge *,EntityCompare> const &sEdgesB=pVertexB->GetEdges();
         for(edge *pEdge : sEdgesA)
@@ -452,7 +452,7 @@ class FacetNode
     public:
 
     FacetNode(double              dParam,
-              SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {}
+              SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos),m_uv() {}
 
     double       m_dParam;
     SGM::Point3D m_Pos;
@@ -464,7 +464,7 @@ class FacetNodeNormal
     public:
 
     FacetNodeNormal(double              dParam,
-                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos) {m_bSingular=false;}
+                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos),m_Norm(),m_bSingular(false) {}
 
     double            m_dParam;
     SGM::Point3D      m_Pos;
@@ -484,7 +484,7 @@ void FacetCurve(curve               const *pCurve,
         case SGM::LineType:
             {
             SGM::Point3D Start,End;
-            line const *pLine=(line const *)pCurve;
+            auto pLine=(line const *)pCurve;
             pLine->Evaluate(Domain.m_dMin,&Start);
             pLine->Evaluate(Domain.m_dMax,&End);
             aPoints3D.reserve(2);
@@ -496,7 +496,7 @@ void FacetCurve(curve               const *pCurve,
             }
         case SGM::CircleType:
             {
-            circle const *pCircle=(circle const *)pCurve;
+            auto pCircle=(circle const *)pCurve;
             double dRadius=pCircle->GetRadius();
             double dDomainLength=Domain.Length();
             double dAngle=Options.m_dEdgeAngleTol;
@@ -532,7 +532,7 @@ void FacetCurve(curve               const *pCurve,
             }
         case SGM::TorusKnotCurveType:
             {
-            TorusKnot const *pTorusKnot=(TorusKnot const *)pCurve;
+            auto pTorusKnot=(TorusKnot const *)pCurve;
             double dRadius=pTorusKnot->m_dMinorRadius;
             size_t nA=pTorusKnot->m_nA;
             size_t nB=pTorusKnot->m_nB;
@@ -602,8 +602,8 @@ void FacetCurve(curve               const *pCurve,
             while(bRefine)
                 {
                 bRefine=false;
-                std::list<FacetNode>::iterator LastIter=lNodes.begin();
-                std::list<FacetNode>::iterator iter=lNodes.begin();
+                auto LastIter=lNodes.begin();
+                auto iter=lNodes.begin();
                 ++iter;
                 while(iter!=lNodes.end())
                     {
@@ -642,12 +642,10 @@ void FacetCurve(curve               const *pCurve,
             size_t nNodes=lNodes.size();
             aPoints3D.reserve(nNodes);
             aParams.reserve(nNodes);
-            std::list<FacetNode>::iterator iter2=lNodes.begin();
-            while(iter2!=lNodes.end())
+            for (auto node : lNodes)
                 {
-                aPoints3D.push_back(iter2->m_Pos);
-                aParams.push_back(iter2->m_dParam);
-                ++iter2;
+                aPoints3D.push_back(node.m_Pos);
+                aParams.push_back(node.m_dParam);
                 }
             }
         }
@@ -855,18 +853,18 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
 
     bool bSplit = false;
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
-    std::list<FacetNodeNormal>::iterator iter=lNodes.begin();
-    std::list<FacetNodeNormal>::iterator LastIter=iter;
+    auto iter=lNodes.begin();
+    auto LastIter=iter;
     ++iter;
     size_t nCount=0;
     size_t nMaxSplit=1000;
     while(iter!=lNodes.end())
         {
         double dotProd = iter->m_Norm%LastIter->m_Norm;
-        if(iter->m_bSingular==false && LastIter->m_bSingular==false && dotProd<dDotTol)
+        if(!iter->m_bSingular && !LastIter->m_bSingular && dotProd < dDotTol)
             {
             bool bSplitThisTime = SplitFacet(pCurve,pSurface,LastIter,iter,lNodes);
-            if (bSplitThisTime == false)
+            if (!bSplitThisTime)
                 {
                 ++LastIter;
                 ++iter;
@@ -892,7 +890,7 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
         {
         aPoints3D.clear();
         aParams.clear();
-        std::list<FacetNodeNormal>::iterator iterNodeSplit=lNodes.begin();
+        auto iterNodeSplit=lNodes.begin();
         while(iterNodeSplit!=lNodes.end())
             {
             aPoints3D.push_back(iterNodeSplit->m_Pos);
@@ -922,15 +920,13 @@ void FacetEdge(SGM::Result               &rResult,
     std::vector<SGM::Point3D> aCrossPoints;
     std::set<surface *,EntityCompare> sSurfaces;
     FindSurfaces(rResult,pEdge,sSurfaces);
-    std::set<surface *,EntityCompare>::iterator iter=sSurfaces.begin();
     bool bFound=false;
-    while(iter!=sSurfaces.end())
+    for (auto pSurface : sSurfaces)
         {
-        if(SplitAtSeams(rResult,*iter,pEdge,pCurve,aPoints3D,aParams,aCrosses,aCrossPoints))
+        if(SplitAtSeams(rResult,pSurface,pEdge,pCurve,aPoints3D,aParams,aCrosses,aCrossPoints))
             {
             bFound=true;
             }
-        ++iter;
         }
 
     // Split facets at the seams of their surfaces.
@@ -947,19 +943,19 @@ void FacetEdge(SGM::Result               &rResult,
             {
             SGM::Point3D const &Pos=aCrossPoints[Index1];
             double dParam=aCrosses[Index1];
-            aParamAndPos.push_back(SGM::Point4D(dParam,Pos.m_x,Pos.m_y,Pos.m_z));
+            aParamAndPos.emplace_back(dParam,Pos.m_x,Pos.m_y,Pos.m_z);
             }
         std::sort(aParamAndPos.begin(),aParamAndPos.end());
         std::sort(aCrosses.begin(),aCrosses.end());
         aEnds.push_back(aCrosses.front());
         SGM::Point4D Pos4D=aParamAndPos.front();
-        aEndPoints.push_back(SGM::Point3D(Pos4D.m_y,Pos4D.m_z,Pos4D.m_w));
+        aEndPoints.emplace_back(Pos4D.m_y,Pos4D.m_z,Pos4D.m_w);
         for(Index1=1;Index1<nCrosses;++Index1)
             {
             if(SGM_MIN_TOL<aCrosses[Index1]-aCrosses[Index1-1])
                 {
                 SGM::Point4D Pos4DIndex=aParamAndPos[Index1];
-                aEndPoints.push_back(SGM::Point3D(Pos4DIndex.m_y,Pos4DIndex.m_z,Pos4DIndex.m_w));
+                aEndPoints.emplace_back(Pos4DIndex.m_y,Pos4DIndex.m_z,Pos4DIndex.m_w);
                 aEnds.push_back(aCrosses[Index1]);
                 }
             }
@@ -989,11 +985,9 @@ void FacetEdge(SGM::Result               &rResult,
 
     // Subdivide facets by surface normals.
 
-    iter=sSurfaces.begin();
-    while(iter!=sSurfaces.end())
+    for (auto pSurface : sSurfaces)
         {
-        SplitWithSurfaceNormals(rResult,Options,*iter,pCurve,aPoints3D,aParams);
-        ++iter;
+        SplitWithSurfaceNormals(rResult,Options,pSurface,pCurve,aPoints3D,aParams);
         }
     }
 
@@ -1001,7 +995,7 @@ class SplitData
     {
     public:
 
-        SplitData() {}
+        SplitData() = default;
 
         SplitData(double dParam,size_t nPolygon,size_t nSpan):
             m_dParam(dParam),m_nPolygon(nPolygon),m_nSpan(nSpan) {}
@@ -1670,10 +1664,10 @@ static bool FindPolygons(std::vector<Node>                       &aNodes,
         }
     for(Index1=0;Index1<nNodes;++Index1)
         {
-        if(aNodes[Index1].m_bMark==false)
+        if(!aNodes[Index1].m_bMark)
             {
             std::vector<unsigned int> aPolygon;
-            if(FindPolygon(aNodes,Index1,aPolygon)==false)
+            if(!FindPolygon(aNodes, Index1, aPolygon))
                 {
                 return false;
                 }
@@ -1791,18 +1785,14 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     if(nLoops)
         {
         //AddNodesAtSingularites(rResult,pFace,Options,aNodes);
-        if(FindSeamCrossings(pFace,aNodes)==false)
+        if(!FindSeamCrossings(pFace, aNodes))
             {
             return false;
             }
         }
-     
-    if(FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags)==false)
-        {
-        return false;
-        }
 
-    return true;
+    return FindPolygons(aNodes, aPoints2D, aPoints3D, aaPolygons, pImprintFlags);
+
     }
 
 static void FindNormals(face                     const *pFace,
@@ -1856,8 +1846,8 @@ static void FindNormalsAndPoints(face                     const *pFace,
             uv.m_v=DomainV.m_dMax;
             }
         pSurface->Evaluate(uv,&Pos,nullptr,nullptr,&Norm);
-        aNormals.emplace_back(std::move(Norm));
-        aPoints3D.emplace_back(std::move(Pos));
+        aNormals.emplace_back(Norm);
+        aPoints3D.emplace_back(Pos);
         }
     }
 
@@ -2217,8 +2207,8 @@ static bool AngleGrid(SGM::Result                                   &rResult,
         {
         std::vector<unsigned int> aPolygonIndices;
         std::vector<bool> aFlags=ShuffleFlags(*pImprintFlag,aaPolygons[Index1]);
-        if(SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aScaledPolygonPoints,aaPolygons[Index1]),
-            aScaled,aTriangles,aPolygonIndices,nullptr,nullptr,nullptr,&aFlags)==false)
+        if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
+                               aScaled, aTriangles, aPolygonIndices, nullptr, nullptr, nullptr, &aFlags))
             {
             return false;
             }
@@ -2260,8 +2250,8 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
         if(aImprintFlags)
             {
             std::vector<bool> aFlags=ShuffleFlags(*aImprintFlags,aaPolygons[Index1]);
-            if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
-                aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals,&aFlags)==false)
+            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+                                   aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, &aFlags))
                 {
                 aPoints2D.clear();
                 aTriangles.clear();
@@ -2272,8 +2262,8 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
             }
         else
             {
-            if( SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
-                aPoints2D,aTriangles,aPolygonIndices,pSurfaceID,pPoints3D,pNormals,nullptr)==false)
+            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+                                   aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, nullptr))
                 {
                 aPoints2D.clear();
                 aTriangles.clear();
@@ -2323,13 +2313,13 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
     size_t Index1;
 
     // Expand U and V values to that they are not hit by bondary curves.
-    if(pSurf->ClosedInU()==false)
+    if(!pSurf->ClosedInU())
         {
         double dLength=Box.m_UDomain.Length()/aUValues.size();
         aUValues[0]-=dLength;
         aUValues[aUValues.size()-1]+=dLength;
         }
-    if(pSurf->ClosedInV()==false)
+    if(!pSurf->ClosedInV())
         {
         double dLength=Box.m_VDomain.Length()/aVValues.size();
         aVValues[0]-=dLength;
@@ -2344,10 +2334,10 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        SGM::Surface SurfID(pFace->GetSurface()->GetID());
+        SGM::Surface PolygonSurfaceID(pFace->GetSurface()->GetID());
         std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
         SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
-            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+            aPoints2D,aTriangles,aPolygonIndices,&PolygonSurfaceID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,SGM_FIT,&aPoints3D,&aNormals);
@@ -2536,22 +2526,26 @@ void FacetFace(SGM::Result                    &rResult,
         {
         if(rResult.GetDebugFlag()==1)
             {
-            aPoints2D.push_back(SGM::Point2D(0,0));
-            aPoints2D.push_back(SGM::Point2D(1,0));
-            aPoints2D.push_back(SGM::Point2D(0,1));
-            aPoints2D.push_back(SGM::Point2D(0,0));
-            aPoints2D.push_back(SGM::Point2D(1,0));
-            aPoints2D.push_back(SGM::Point2D(0,1));
+            aPoints2D.reserve(6);
+            aPoints2D.emplace_back(0,0);
+            aPoints2D.emplace_back(1,0);
+            aPoints2D.emplace_back(0,1);
+            aPoints2D.emplace_back(0,0);
+            aPoints2D.emplace_back(1,0);
+            aPoints2D.emplace_back(0,1);
 
-            aPoints3D.push_back(SGM::Point3D(0,0,0));
-            aPoints3D.push_back(SGM::Point3D(1,0,0));
-            aPoints3D.push_back(SGM::Point3D(101,-100,100));
-            aPoints3D.push_back(SGM::Point3D(4,0,0));
-            aPoints3D.push_back(SGM::Point3D(2,0,0));
-            aPoints3D.push_back(SGM::Point3D(100,-100,100));
+            aPoints3D.reserve(6);
+            aPoints3D.emplace_back(0,0,0);
+            aPoints3D.emplace_back(1,0,0);
+            aPoints3D.emplace_back(101,-100,100);
+            aPoints3D.emplace_back(4,0,0);
+            aPoints3D.emplace_back(2,0,0);
+            aPoints3D.emplace_back(100,-100,100);
 
-            aNormals.push_back(SGM::UnitVector3D(1,2,3));
-            aNormals.push_back(SGM::UnitVector3D(1,2,3));
+            aNormals.emplace_back(1,2,3);
+            aNormals.emplace_back(1,2,3);
+
+            aTriangles.reserve(6);
             aTriangles.push_back(0);
             aTriangles.push_back(1);
             aTriangles.push_back(2);
@@ -2569,7 +2563,7 @@ void FacetFace(SGM::Result                    &rResult,
     std::vector<unsigned int> aAdjacencies;
     std::vector<std::vector<unsigned int> > aaPolygons;
     std::vector<bool> aImprintFlags;
-    if(FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags)==false)
+    if(!FacetFaceLoops(rResult, pFace, aPoints2D, aPoints3D, aaPolygons, nullptr, &aImprintFlags))
         {
         return;
         }
@@ -2601,14 +2595,14 @@ void FacetFace(SGM::Result                    &rResult,
             }
         case SGM::SphereType:
             {
-            sphere const *pSphere=(sphere const *)(pFace->GetSurface());
+            auto const *pSphere=(sphere const *)(pFace->GetSurface());
             std::vector<SGM::Point2D> aPolygonPoints=aPoints2D;
             aPoints2D.clear();
             SGM::CreateOctahedron(pSphere->m_dRadius,
                 pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
                 aPoints3D,aTriangles,4); 
             FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
-            if(aaPolygons.size())
+            if(!aaPolygons.empty())
                 {
                 double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.25;
                 SGM::Surface SurfID=pSphere->GetID();
@@ -2622,7 +2616,7 @@ void FacetFace(SGM::Result                    &rResult,
             // Angle based uniform grid.
 
             std::vector<SGM::Point2D> aGridUVs;
-            if(AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,aaPolygons,aGridUVs,aTriangles,&aImprintFlags)==false)
+            if(!AngleGrid(rResult, pFace->GetSurface(), Options, aPoints2D, aaPolygons, aGridUVs, aTriangles, &aImprintFlags))
                 {
                 aTriangles.clear();
                 return;

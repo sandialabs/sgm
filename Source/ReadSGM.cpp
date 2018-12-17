@@ -18,7 +18,7 @@
 #include <utility>
 #include <string>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -233,9 +233,9 @@ void GetIDs(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aIDs.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(auto aArgumentString : aArgs)
         {
-        aIDs.push_back(GetID(aStr));
+        aIDs.push_back(GetID(aArgumentString));
         }
     }
 
@@ -245,9 +245,9 @@ void GetInts(std::string const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(auto aArgumentString : aArgs)
         {
-        aInts.push_back(GetInt(aStr));
+        aInts.push_back(GetInt(aArgumentString));
         }
     }
 
@@ -257,9 +257,9 @@ void GetSizes(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(auto aArgumentString : aArgs)
         {
-        aInts.push_back(GetInt(aStr));
+        aInts.push_back(GetInt(aArgumentString));
         }
     }
 
@@ -269,9 +269,9 @@ void GetUnsignedInts(std::string         const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(auto aArgumentString : aArgs)
         {
-        aInts.push_back(GetUnsignedInt(aStr));
+        aInts.push_back(GetUnsignedInt(aArgumentString));
         }
     }
 

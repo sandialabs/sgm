@@ -84,7 +84,7 @@ bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
         {
         if (attr->GetName() == "SGM Color")
             {
-            IntegerAttribute *pIntegerAttribute = (IntegerAttribute *)(attr);
+            auto pIntegerAttribute = (IntegerAttribute *)(attr);
             std::vector<int> const &aData = pIntegerAttribute->GetData();
             nRed = aData[0];
             nGreen = aData[1];

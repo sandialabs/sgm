@@ -90,7 +90,7 @@ bool body::IsSheetBody(SGM::Result &rResult) const
     {
     std::set<edge *,EntityCompare> sEdges;
     FindWireEdges(rResult,this,sEdges);
-    if(sEdges.size())
+    if(!sEdges.empty())
         {
         return false;
         }
@@ -106,28 +106,20 @@ bool body::IsSheetBody(SGM::Result &rResult) const
             }
         ++iter;
         }
-    if(!sFaces.empty())
-        {
-        return true;
-        }
-    return false;
+    return !sFaces.empty();
     }
 
 bool body::IsWireBody(SGM::Result &rResult) const
     {
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,this,sFaces);
-    if(sFaces.size())
+    if(!sFaces.empty())
         {
         return false;
         }
     std::set<edge *,EntityCompare> sEdges;
     FindWireEdges(rResult,this,sEdges);
-    if(sEdges.size())
-        {
-        return true;
-        }
-    return false;
+    return !sEdges.empty();
     }
 
 }

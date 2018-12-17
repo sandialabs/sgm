@@ -281,7 +281,7 @@ bool torus::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    torus const *pTorus2=(torus const *)pOther;
+    auto pTorus2=(torus const *)pOther;
     if(SGM::NearEqual(m_dMajorRadius,pTorus2->m_dMajorRadius,dTolerance,false)==false)
         {
         bAnswer=false;

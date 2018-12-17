@@ -975,14 +975,14 @@ Point2D CenterOfMass(Point2D const &A,
                      Point2D const &B,
                      Point2D const &C)
     {
-    return SGM::Point2D((A.m_u+B.m_u+C.m_u)/3.0,(A.m_v+B.m_v+C.m_v)/3.0);
+    return {(A.m_u+B.m_u+C.m_u)/3.0,(A.m_v+B.m_v+C.m_v)/3.0};
     }
 
 Point3D CenterOfMass(Point3D const &A,
                      Point3D const &B,
                      Point3D const &C)
     {
-    return SGM::Point3D((A.m_x+B.m_x+C.m_x)/3.0,(A.m_y+B.m_y+C.m_y)/3.0,(A.m_z+B.m_z+C.m_z)/3.0);
+    return {(A.m_x+B.m_x+C.m_x)/3.0,(A.m_y+B.m_y+C.m_y)/3.0,(A.m_z+B.m_z+C.m_z)/3.0};
     }
 
 bool InCircumcircle(SGM::Point2D const &A,
@@ -2576,11 +2576,12 @@ void RemoveOutsideTriangles(SGM::Result                                   &rResu
         for(std::vector<unsigned int> const &aPolygon : aaPolygons)
             {
             size_t nPolygon=aPolygon.size();
+            aSegments.reserve(aSegments.size() + nPolygon);
             for(Index2=0;Index2<nPolygon;++Index2)
                 {
                 SGM::Point2D const &Pos0=aPoints2D[aPolygon[Index2]];
                 SGM::Point2D const &Pos1=aPoints2D[aPolygon[(Index2+1)%nPolygon]];
-                aSegments.push_back(SGM::Segment2D(Pos0,Pos1));
+                aSegments.emplace_back(Pos0,Pos1);
                 sBoundary.insert(aPolygon[Index2]);
                 }
             }
@@ -2615,7 +2616,7 @@ void RemoveOutsideTriangles(SGM::Result                                   &rResu
                 double dDist=std::numeric_limits<unsigned int>::max();
                 for(auto hit : aHits)
                     {
-                    SGM::Segment2D const *pSeg=(SGM::Segment2D const *)(hit.first);
+                    auto pSeg=(SGM::Segment2D const *)(hit.first);
                     double dTestDist=pSeg->Distance(Pos2D);
                     if(dTestDist<dDist)
                         {
@@ -3036,7 +3037,7 @@ SGM::UnitVector3D UnitVectorSolve(std::vector<std::vector<double> > aaMat)
         aaSubmat.push_back(aRow0);
         aaSubmat.push_back(aRow1);
         LinearSolve(aaSubmat);
-        return SGM::UnitVector3D(1,aaSubmat[0].back(),aaSubmat[1].back());
+        return {1,aaSubmat[0].back(),aaSubmat[1].back()};
         }
     else if(dFY<dFY && dFZ<dFX)
         {
@@ -3052,7 +3053,7 @@ SGM::UnitVector3D UnitVectorSolve(std::vector<std::vector<double> > aaMat)
         aaSubmat.push_back(aRow0);
         aaSubmat.push_back(aRow1);
         LinearSolve(aaSubmat);
-        return SGM::UnitVector3D(aaSubmat[0].back(),1,aaSubmat[1].back());
+        return {aaSubmat[0].back(),1,aaSubmat[1].back()};
         }
     else
         {
@@ -3068,7 +3069,7 @@ SGM::UnitVector3D UnitVectorSolve(std::vector<std::vector<double> > aaMat)
         aaSubmat.push_back(aRow0);
         aaSubmat.push_back(aRow1);
         LinearSolve(aaSubmat);
-        return SGM::UnitVector3D(aaSubmat[0].back(),aaSubmat[1].back(),1);
+        return {aaSubmat[0].back(),aaSubmat[1].back(),1};
         }
     }
 
@@ -3505,57 +3506,48 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
     size_t FindMaximalElements(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
                                     std::vector<size_t> &aMaximalElements)
     {
-        std::set<size_t> sParents, sChildern;
-        std::set<std::pair<size_t, size_t> >::const_iterator iter = sPartialOrder.begin();
-        while (iter != sPartialOrder.end())
+        std::set<size_t> sParents, sChildren;
+        for (auto pair : sPartialOrder)
             {
-            sParents.insert(iter->second);
-            ++iter;
+            sParents.insert(pair.second);
             }
-        iter = sPartialOrder.begin();
-        while (iter != sPartialOrder.end())
+        for (auto pair : sPartialOrder)
             {
-            size_t a = iter->first;
-            size_t b = iter->second;
+            size_t a = pair.first;
+            size_t b = pair.second;
             if (a != b)
                 {
-                sChildern.insert(a);
+                sChildren.insert(a);
                 }
-            ++iter;
             }
-        std::set<size_t>::iterator Piter = sParents.begin();
-        while (Piter != sParents.end())
+        for (auto pParent : sParents)
             {
-            size_t p = *Piter;
-            if (sChildern.find(p) == sChildern.end())
+            if (sChildren.find(pParent) == sChildren.end())
                 {
-                aMaximalElements.push_back(p);
+                aMaximalElements.push_back(pParent);
                 }
-            ++Piter;
             }
         std::sort(aMaximalElements.begin(), aMaximalElements.end());
         return aMaximalElements.size();
     }
 
-    size_t FindDecendents(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
-                               size_t nParent,
-                               std::vector<size_t> &aDecendents)
+    size_t FindDescendants(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
+                           size_t                                      nParent,
+                           std::vector<size_t>                        &aDescendants)
     {
-        std::set<std::pair<size_t, size_t> >::const_iterator iter = sPartialOrder.begin();
-        while (iter != sPartialOrder.end())
+        for (auto partialOrder : sPartialOrder)
             {
-            if (iter->second == nParent)
+            if (partialOrder.second == nParent)
                 {
-                aDecendents.push_back(iter->first);
+                aDescendants.push_back(partialOrder.first);
                 }
-            ++iter;
             }
-        std::sort(aDecendents.begin(), aDecendents.end());
-        return aDecendents.size();
+        std::sort(aDescendants.begin(), aDescendants.end());
+        return aDescendants.size();
     }
 
-    void SubsetPartailOrder(std::vector<size_t> const &aKeep,
-                                 std::set<std::pair<size_t, size_t> > &sPartialOrder)
+    void SubsetPartialOrder(std::vector<size_t>                 const &aKeep,
+                            std::set<std::pair<size_t, size_t>>       &sPartialOrder)
     {
         std::set<std::pair<size_t, size_t> > sNewOrder;
         std::set<size_t> sKeep;
@@ -3565,30 +3557,28 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
             {
             sKeep.insert(aKeep[Index1]);
             }
-        std::set<std::pair<size_t, size_t> >::const_iterator iter = sPartialOrder.begin();
-        while (iter != sPartialOrder.end())
+        for (auto partialOrder : sPartialOrder)
             {
-            size_t a = iter->first;
-            size_t b = iter->second;
+            size_t a = partialOrder.first;
+            size_t b = partialOrder.second;
             if (sKeep.find(a) != sKeep.end() && sKeep.find(b) != sKeep.end())
                 {
                 sNewOrder.insert(std::pair<size_t, size_t>(a, b));
                 }
-            ++iter;
             }
         sPartialOrder = sNewOrder;
     }
 
-    size_t FindChildern(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
-                             size_t nParent,
-                             std::vector<size_t> &aChildern)
+    size_t FindChildren(std::set<std::pair<size_t, size_t>> const &sPartialOrder,
+                        size_t                                     nParent,
+                        std::vector<size_t>                       &aChildren)
     {
-        std::vector<size_t> aDecendents;
-        FindDecendents(sPartialOrder, nParent, aDecendents);
-        std::set<std::pair<size_t, size_t> > sDecendents = sPartialOrder;
-        SubsetPartailOrder(aDecendents, sDecendents);
-        FindMaximalElements(sPartialOrder, aChildern);
-        return aChildern.size();
+        std::vector<size_t> aDescendants;
+        FindDescendants(sPartialOrder, nParent, aDescendants);
+        std::set<std::pair<size_t, size_t> > sDescendants = sPartialOrder;
+        SubsetPartialOrder(aDescendants, sDescendants);
+        FindMaximalElements(sPartialOrder, aChildren);
+        return aChildren.size();
     }
 
     size_t FindDecendentsOfGroup(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
@@ -3602,7 +3592,7 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
             {
             sParents.insert(aParents[Index1]);
             }
-        std::set<std::pair<size_t, size_t> >::const_iterator iter = sPartialOrder.begin();
+        auto iter = sPartialOrder.begin();
         while (iter != sPartialOrder.end())
             {
             if (sParents.find(iter->second) != sParents.end())
@@ -3634,7 +3624,7 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                 {
                 aParents = aGeneration;
                 aaGenerations.push_back(aGeneration);
-                SubsetPartailOrder(aDecendents, sOrder);
+                SubsetPartialOrder(aDecendents, sOrder);
                 bFound = true;
                 }
             }

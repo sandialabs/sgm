@@ -1217,7 +1217,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
                 nVertexCount=0;
                 }
             }
-        complex *pComplex=new complex(rResult,aPoints,aTriangles);
+        auto pComplex=new complex(rResult, aPoints, aTriangles);
         aEntities.push_back(pComplex);
         }
     fclose(pFile);
@@ -1230,7 +1230,7 @@ size_t ReadSTLFile(SGM::Result                  &rResult,
         size_t Index1;
         for(Index1=0;Index1<nEntities;++Index1)
             {
-            complex *pComplex=(complex *)aEntities[Index1]; 
+            auto pComplex=(complex *)aEntities[Index1];
             complex *pMergedComplex=pComplex->Merge(rResult,SGM_ZERO);
             rResult.GetThing()->DeleteEntity(pComplex);
             aNewEnts.push_back(pMergedComplex);

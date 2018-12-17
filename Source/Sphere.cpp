@@ -188,7 +188,7 @@ bool sphere::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    sphere const *pSphere2=(sphere const *)pOther;
+    auto pSphere2=(sphere const *)pOther;
     if(SGM::NearEqual(m_dRadius,pSphere2->m_dRadius,dTolerance,false)==false)
         {
         bAnswer=false;

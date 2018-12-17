@@ -33,7 +33,7 @@ bool revolve::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    revolve const *pRevolve2=(revolve const *)pOther;
+    auto pRevolve2=(revolve const *)pOther;
     if(SGM::NearEqual(m_Origin,pRevolve2->m_Origin,dTolerance)==false)
         {
         return false;

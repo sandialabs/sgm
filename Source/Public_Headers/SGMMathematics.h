@@ -434,9 +434,9 @@ namespace SGM
     // such that a<b if and only if <a,b> is in the set, find the decendents of
     // a given nParent element.  An element a is a decendent of b if a<b.
 
-    SGM_EXPORT size_t FindDecendents(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
-                          size_t                                     nParent,
-                          std::vector<size_t>                       &aDecendents);
+    SGM_EXPORT size_t FindDescendants(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
+                                      size_t nParent,
+                                      std::vector<size_t> &aDescendants);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
     // such that a<b if and only if <a,b> is in the set, find the decendents of
@@ -451,9 +451,9 @@ namespace SGM
     // a given nParent element.  An element c is a child of p if c<p and
     // there does not exist an element e such that a<e and e<b.
 
-    SGM_EXPORT size_t FindChildern(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
-                        size_t                                     nParent,
-                        std::vector<size_t>                       &aChildern);
+    SGM_EXPORT size_t FindChildren(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
+                                   size_t nParent,
+                                   std::vector<size_t> &aChildren);
 
     // Returns all the decendents by their generation from a given nParent.
 
@@ -463,8 +463,8 @@ namespace SGM
 
     // Subsets a partial order to the only contain the given elements.
 
-    SGM_EXPORT void SubsetPartailOrder(std::vector<size_t>           const &aKeep,
-                            std::set<std::pair<size_t,size_t> > &sPartialOrder);
+    SGM_EXPORT void SubsetPartialOrder(std::vector<size_t> const &aKeep,
+                                       std::set<std::pair<size_t, size_t> > &sPartialOrder);
 
     ///////////////////////////////////////////////////////////////////////////
     //

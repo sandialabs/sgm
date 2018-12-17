@@ -219,9 +219,9 @@ class thing : public entity
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        void GetParents(std::set<entity *, EntityCompare> &) const override {return;}
+        void GetParents(std::set<entity *, EntityCompare> &) const override {}
 
-        void RemoveParentsInSet(std::set<entity *,EntityCompare> ) {return;}
+        void RemoveParentsInSet(std::set<entity *,EntityCompare> ) {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 

@@ -383,7 +383,7 @@ bool NURBsurface::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    NURBsurface const *pNURB2=(NURBsurface const *)pOther;
+    auto pNURB2=(NURBsurface const *)pOther;
     if(m_aUKnots.size()!=pNURB2->m_aUKnots.size())
         {
         return false;

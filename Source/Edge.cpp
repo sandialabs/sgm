@@ -25,7 +25,7 @@ void edge::GetParents(std::set<entity *, EntityCompare> &sParents) const
     {
       sParents.emplace(pFace);
     }
-    if ((m_sFaces.size() == 0) && (m_pVolume != nullptr))
+    if (m_sFaces.empty() && m_pVolume != nullptr)
     {
         sParents.emplace(m_pVolume);
     }
@@ -250,17 +250,14 @@ void edge::SetDomain(SGM::Result           &rResult,
                      SGM::Interval1D const &Domain)
     {
     m_Domain=Domain;
-    if(m_aPoints3D.empty()==false)
+    if(!m_aPoints3D.empty())
         {
         m_aPoints3D.clear();
         m_aParams.clear();
         m_Box.Reset();
-        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
+        for (auto pFace : m_sFaces)
             {
-            face *pFace=*iter;
             pFace->ClearFacets(rResult);
-            ++iter;
             }
         }
     }

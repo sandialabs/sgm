@@ -26,8 +26,8 @@ bool PointCurve::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    PointCurve const *pCurve2=(PointCurve const *)pOther;
-    if(SGM::NearEqual(m_Pos,pCurve2->m_Pos,dTolerance)==false)
+    auto pPointCurve=(PointCurve const *)pOther;
+    if(SGM::NearEqual(m_Pos,pPointCurve->m_Pos,dTolerance)==false)
         {
         return false;
         }

@@ -176,7 +176,7 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
             aaControlPoints.emplace_back(std::move(aControlPoints));
             }
         //TODO: overload NUBsurface constructor to take r-values and call std::move
-        pSurface = new NURBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
+        pSurface = new NURBsurface(rResult, aaControlPoints,std::move(aUKnots),std::move(aVKnots));
         }
 
     return pSurface;

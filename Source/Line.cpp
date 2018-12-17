@@ -32,7 +32,7 @@ bool line::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    line const *pLine2=(line const *)pOther;
+    auto *pLine2=(line const *)pOther;
     if(SGM::NearEqual(m_Origin,pLine2->m_Origin,dTolerance)==false)
         {
         return false;

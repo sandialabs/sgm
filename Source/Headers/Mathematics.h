@@ -13,7 +13,7 @@ namespace SGMInternal
             // Note that if the given points do not form a well
             // defined plane, then Tolerance will be zero.
 
-            SortablePlane(std::vector<SGM::Point3D> const &aPoints);
+            explicit SortablePlane(std::vector<SGM::Point3D> const &aPoints);
 
             void SetTolerance(double dTolerance);
 

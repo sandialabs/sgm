@@ -51,20 +51,16 @@ bool extrude::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    extrude const *pExtrude2=(extrude const *)pOther;
-    if(SGM::NearEqual(m_Origin,pExtrude2->m_Origin,dTolerance)==false)
+    auto pExtrude2=(extrude const *)pOther;
+    if(!SGM::NearEqual(m_Origin, pExtrude2->m_Origin, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_vAxis,pExtrude2->m_vAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_vAxis, pExtrude2->m_vAxis, dTolerance))
         {
         return false;
         }
-    if(m_pCurve->IsSame(pExtrude2->m_pCurve,dTolerance)==false)
-        {
-        return false;
-        }
-    return true;
+    return m_pCurve->IsSame(pExtrude2->m_pCurve, dTolerance);
     }
 
 extrude::extrude(SGM::Result &rResult, extrude const &other) :
@@ -126,6 +122,7 @@ void extrude::Evaluate(SGM::Point2D const &uv,
         }
     if(Du)
         {
+        assert(pDuCurve != nullptr);
         *Du=*pDuCurve;
         }
     if(Dv)
@@ -134,10 +131,12 @@ void extrude::Evaluate(SGM::Point2D const &uv,
         }
     if(Norm)
         {
+        assert(pDuCurve != nullptr);
         *Norm=(*pDuCurve)*m_vAxis;
         }
     if(Duu)
         {
+        assert(pDuuCurve != nullptr);
         *Duu=*pDuuCurve;
         }
     if(Duv)

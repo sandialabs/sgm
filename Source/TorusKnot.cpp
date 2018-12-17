@@ -160,7 +160,7 @@ bool TorusKnot::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    TorusKnot const *pTorusKnot2=(TorusKnot const *)pOther;
+    auto pTorusKnot2=(TorusKnot const *)pOther;
     if(m_nA!=pTorusKnot2->m_nA)
         {
         return false;

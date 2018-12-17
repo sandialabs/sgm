@@ -264,7 +264,7 @@ SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
     SGM::UnitVector3D UDu=Du,VDv=Dv;
     double du=UDu%Vec;
     double dv=VDv%Vec;
-    return SGM::UnitVector2D(du,dv);
+    return {du,dv};
     }
 
 

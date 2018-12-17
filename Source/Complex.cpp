@@ -115,7 +115,7 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
     for(Index1=0;Index1<nPoints3D;++Index1)
         {
         SGM::Vector3D Vec=aPoints3D[Index1]-Origin;
-        aPoints2D.push_back(SGM::Point2D(XVec%Vec,YVec%Vec));
+        aPoints2D.emplace_back(XVec%Vec,YVec%Vec);
         }
 
     // Find the largest polygon and flip things if it has negative area.
@@ -156,7 +156,7 @@ complex *CoverPlanarSet(SGM::Result                  &rResult,
 
 complex *complex::Cover(SGM::Result &rResult) const
     {
-    if(m_aTriangles.size())
+    if(!m_aTriangles.empty())
         {
         // The boundary of triangles version.
 
@@ -284,7 +284,8 @@ void complex::ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
             size_t nWhere=(size_t)((unsigned int *)Hit.first-&m_aSegments[0]);
             SGM::Point3D A=m_aPoints[m_aSegments[nWhere]];
             SGM::Point3D B=m_aPoints[m_aSegments[nWhere+1]];
-            if(SGM::Segment3D(A,B).PointOnSegment(Pos,dTolerance))
+            SGM::Segment3D segment(A,B);
+            if(segment.PointOnSegment(Pos,dTolerance))
                 {
                 if(A.DistanceSquared(Pos)<dToleranceSquared)
                     {
@@ -407,7 +408,7 @@ bool complex::FindPolygon(std::vector<unsigned int> &aPolygon) const
     {
     std::vector<unsigned int> aAdjacences;
     SGM::FindAdjacences1D(m_aSegments,aAdjacences);
-    if(m_aSegments.size())
+    if(!m_aSegments.empty())
         {
         unsigned int nStart=m_aSegments[0];
         unsigned int nNext=m_aSegments[1];
@@ -477,7 +478,7 @@ double complex::FindAverageEdgeLength(double *dMaxEdgeLength) const
 
 bool complex::IsConnected() const
     {
-    if(m_aSegments.size())
+    if(!m_aSegments.empty())
         {
         std::set<size_t> sVertices;
         std::set<SGM::GraphEdge> sEdges;
@@ -605,7 +606,7 @@ bool complex::IsManifold() const
 bool complex::IsOriented() const
     {
     unsigned int Index1;
-    if(m_aTriangles.size())
+    if(!m_aTriangles.empty())
         {
         std::vector<unsigned int> aAdjacences;
         size_t nTriangles=SGM::FindAdjacences2D(m_aTriangles,aAdjacences);
@@ -649,7 +650,7 @@ bool complex::IsOriented() const
                 }
             }
         }
-    if(m_aSegments.size())
+    if(!m_aSegments.empty())
         {
         unsigned int nSize=(unsigned int)m_aSegments.size();
         std::vector<unsigned int> aCounts,aCountsIn,aCountsOut;
@@ -679,7 +680,7 @@ bool complex::IsOriented() const
 std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
     {
     std::vector<complex *> aAnswer;
-    if(m_aSegments.size())
+    if(!m_aSegments.empty())
         {
         std::set<size_t> sVertices;
         std::set<SGM::GraphEdge> sEdges;
@@ -711,7 +712,7 @@ std::vector<complex *> complex::FindComponents(SGM::Result &rResult) const
                 aSegments.push_back((unsigned int)(GEdge.m_nStart));
                 aSegments.push_back((unsigned int)(GEdge.m_nEnd));
                 }
-            complex *pComplex=new complex(rResult,aSegments,aPoints);
+            auto *pComplex=new complex(rResult,aSegments,aPoints);
             pComplex->ReduceToUsedPoints();
             aAnswer.push_back(pComplex);
             }
@@ -746,7 +747,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
     for(Index1=0;Index1<nPoints;++Index1)
         {
         SGM::Point3D const &Pos=m_aPoints[Index1];
-        aOrdered.push_back({Pos,Index1});
+        aOrdered.emplace_back(Pos,Index1);
         }
     std::sort(aOrdered.begin(),aOrdered.end());
     std::vector<size_t> mMap;
@@ -788,7 +789,7 @@ complex *complex::Merge(SGM::Result &rResult,double dTolerance) const
         aNewTriangles.push_back((unsigned int)mMap[m_aTriangles[Index1]]);
         }
 
-    complex *pAnswer=new complex(rResult,m_aPoints,aNewSegments,aNewTriangles);
+    auto *pAnswer=new complex(rResult,m_aPoints,aNewSegments,aNewTriangles);
     pAnswer->ReduceToUsedPoints();
     return pAnswer;
 #if 0
@@ -880,7 +881,7 @@ complex *complex::Merge(SGM::Result                  &rResult,
             aTriangles.push_back(aTempTriangles[Index2]+nOffset);
             }
         }
-    complex *pAnswer=new complex(rResult,aPoints,aSegments,aTriangles);
+    auto *pAnswer=new complex(rResult,aPoints,aSegments,aTriangles);
     pAnswer->ReduceToUsedPoints();
     return pAnswer;
     }
@@ -899,7 +900,7 @@ std::vector<SGM::UnitVector3D> complex::FindTriangleNormals() const
         SGM::Point3D const &A=m_aPoints[a];
         SGM::Point3D const &B=m_aPoints[b];
         SGM::Point3D const &C=m_aPoints[c];
-        aNormals.push_back((B-A)*(C-A));
+        aNormals.emplace_back((B-A)*(C-A));
         }
     return aNormals;
     }
@@ -960,7 +961,7 @@ complex * complex::SplitByPlane(SGM::Result             &rResult,
             aSegments.push_back(b);
             }
         }
-    complex *pAnswer=new complex(rResult,aSegments,m_aPoints);
+    auto *pAnswer=new complex(rResult,aSegments,m_aPoints);
     pAnswer->ReduceToUsedPoints();
     return pAnswer;
     }
@@ -1081,7 +1082,7 @@ complex *complex::FindDegenerateTriangles(SGM::Result &rResult) const
             }
         }
     complex *pAnswer=nullptr;
-    if(aTriangles.size())
+    if(!aTriangles.empty())
         {
         pAnswer=new complex(rResult,m_aPoints,aTriangles);
         pAnswer->ReduceToUsedPoints();
@@ -1148,9 +1149,9 @@ size_t complex::FindHoles(SGM::Result            &rResult,
     // Find the bottom holes.
 
     std::vector<complex *> aBottomHoles;
-    complex *pBottom=new complex(rResult,m_aPoints,aBottom);
+    auto *pBottom=new complex(rResult,m_aPoints,aBottom);
     pBottom->ReduceToUsedPoints();
-    complex *pBottomBoundary=pBottom->FindBoundary(rResult);
+    auto pBottomBoundary=pBottom->FindBoundary(rResult);
     rResult.GetThing()->DeleteEntity(pBottom);
     std::vector<complex *> aBottomComps=pBottomBoundary->FindComponents(rResult);
     rResult.GetThing()->DeleteEntity(pBottomBoundary);
@@ -1185,7 +1186,7 @@ size_t complex::FindHoles(SGM::Result            &rResult,
     // Find the top holes.
 
     std::vector<complex *> aTopHoles;
-    complex *pTop=new complex(rResult,m_aPoints,aTop);
+    auto *pTop=new complex(rResult,m_aPoints,aTop);
     pTop->ReduceToUsedPoints();
     complex *pTopBoundary=pTop->FindBoundary(rResult);
     rResult.GetThing()->DeleteEntity(pTop);
@@ -1224,18 +1225,18 @@ size_t complex::FindHoles(SGM::Result            &rResult,
     std::set<complex *> sKeep;
     for(Index1=0;Index1<nBottomHoles;++Index1)
         {
-        complex *pBottom=aBottomHoles[Index1];
-        SGM::Interval3D Box=pBottom->GetBox(rResult);
+        complex *pBottomHole=aBottomHoles[Index1];
+        SGM::Interval3D Box=pBottomHole->GetBox(rResult);
         double dTol1=Box.Diagonal();
         for(Index2=0;Index2<nTopHoles;++Index2)
             {
-            complex *pTop=aTopHoles[Index2];
+            complex *pTopHole=aTopHoles[Index2];
             double dTol2=Box.Diagonal();
-            double dHD=SGM::HausdorffDistance(pBottom->GetPoints(),pTop->GetPoints());
+            double dHD=SGM::HausdorffDistance(pBottomHole->GetPoints(),pTopHole->GetPoints());
             if(dHD<std::min(dTol1,dTol2))
                 {
-                aHoles.push_back(pBottom);
-                sKeep.insert(pBottom);
+                aHoles.push_back(pBottomHole);
+                sKeep.insert(pBottomHole);
                 break;
                 }
             }
@@ -1245,16 +1246,16 @@ size_t complex::FindHoles(SGM::Result            &rResult,
 
     for(Index1=0;Index1<nBottomHoles;++Index1)
         {
-        complex *pBottom=aBottomHoles[Index1];
-        if(sKeep.find(pBottom)==sKeep.end())
+        complex *pBottomHole=aBottomHoles[Index1];
+        if(sKeep.find(pBottomHole)==sKeep.end())
             {
-            rResult.GetThing()->DeleteEntity(pBottom);
+            rResult.GetThing()->DeleteEntity(pBottomHole);
             }
         }
     for(Index1=0;Index1<nTopHoles;++Index1)
         {
-        complex *pTop=aTopHoles[Index1];
-        rResult.GetThing()->DeleteEntity(pTop);
+        complex *pTopHole=aTopHoles[Index1];
+        rResult.GetThing()->DeleteEntity(pTopHole);
         }
     
     return aHoles.size();
@@ -1313,7 +1314,7 @@ complex *complex::FindSharpEdges(SGM::Result &rResult,
                 }
             }
         }
-    complex *pAnswer=new complex(rResult,aEdges,m_aPoints);
+    auto *pAnswer=new complex(rResult,aEdges,m_aPoints);
     pAnswer->ReduceToUsedPoints();
     return pAnswer;
     }
@@ -1323,61 +1324,86 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     {
     double dTolerance=FindAverageEdgeLength()*SGM_FIT;
     SGM::Interval3D Box=GetBox(rResult);
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.reserve(4);
     if(Box.m_XDomain.Length()<dTolerance)
         {
+        complex * pComplex;
         if(UpDirection.m_x<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            std::vector<SGM::Point3D> aPoints = 
+                {
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            std::vector<SGM::Point3D> aPoints =
+                {
+                    {Box.m_XDomain.m_dMin, Box.m_YDomain.m_dMin, Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMin, Box.m_YDomain.m_dMax, Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMin, Box.m_YDomain.m_dMax, Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin, Box.m_YDomain.m_dMin, Box.m_ZDomain.m_dMin}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
-        return new complex(rResult,aPoints,false);
+        return pComplex;
         }
     if(Box.m_YDomain.Length()<dTolerance)
         {
+        complex * pComplex;
         if(UpDirection.m_y<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            std::vector<SGM::Point3D> aPoints =
+                {
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax));
+            std::vector<SGM::Point3D> aPoints =
+                {
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMax}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
-        return new complex(rResult,aPoints,false);
+        return pComplex;
         }
     if(Box.m_ZDomain.Length()<dTolerance)
         {
+        complex * pComplex;
         if(UpDirection.m_z<0)
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
+            std::vector<SGM::Point3D> aPoints =
+                {
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
         else
             {
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
-            aPoints.push_back(SGM::Point3D(Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin));
+            std::vector<SGM::Point3D> aPoints =
+                {
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMax,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMax,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin},
+                    {Box.m_XDomain.m_dMin,Box.m_YDomain.m_dMin,Box.m_ZDomain.m_dMin}
+                };
+            pComplex = new complex(rResult,aPoints,false);
             }
-        return new complex(rResult,aPoints,false);
+        return pComplex;
         }
     else
         {
@@ -1388,7 +1414,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
 bool complex::IsLinear(unsigned int &nStart,
                        unsigned int &nEnd) const
     {
-    unsigned int nSize=(unsigned int)m_aSegments.size();
+    auto nSize=(unsigned int)m_aSegments.size();
     unsigned int Index1;
     std::vector<unsigned int> aCounts;
     aCounts.assign(m_aPoints.size(),0);
@@ -1428,7 +1454,7 @@ bool complex::IsLinear(unsigned int &nStart,
             nEnd=m_aSegments[Index1+1];
             }
         }
-    if(bFoundStart==false || bFoundEnd==false)
+    if(!bFoundStart || !bFoundEnd)
         {
         nStart=aEnds[0];
         nEnd=aEnds[1];
@@ -1461,7 +1487,7 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
             aKeep.push_back(pComp);
             }
         }
-    if(aMerge.size())
+    if(!aMerge.empty())
         {
         complex *pRectangle=CreateOrientedBoundingBox(rResult,UpVec);
         double dTolerance=FindAverageEdgeLength()*SGM_FIT;
@@ -1486,7 +1512,7 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
                 }
             }
         std::vector<SGM::Point3D> aEmpty;
-        complex *pEmpty=new complex(rResult,aEmpty);
+        auto pEmpty=new complex(rResult, aEmpty);
         complex *pGroup=pEmpty->Merge(rResult,aMerge);
         rResult.GetThing()->DeleteEntity(pEmpty);
         aKeep.push_back(pGroup->Merge(rResult,SGM_ZERO));

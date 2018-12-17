@@ -148,7 +148,7 @@ bool circle::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    circle const *pCurve2=(circle const *)pOther;
+    auto pCurve2=(circle const *)pOther;
     if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
         {
         return false;

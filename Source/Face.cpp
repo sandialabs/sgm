@@ -280,7 +280,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     // Find the closest edge or vertex.
 
     SGM::Point3D Pos,CPos,TPos;
-    entity *pEntity= (entity *)this;
+    auto pEntity= (entity *)this;
     double dDist=DBL_MAX;
     if(ClosePos)
         {
@@ -290,10 +290,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         m_pSurface->Evaluate(uv,&Pos);
         }
-    std::set<edge *,EntityCompare>::iterator iter=m_sEdges.begin();
-    while(iter!=m_sEdges.end())
+    for (auto pEdge : m_sEdges)
         {
-        edge *pEdge=*iter;
         entity *pTempEnt=nullptr;
         FindClosestPointOnEdge3D(rResult,Pos,pEdge,TPos,pTempEnt);
         double dTempDist=Pos.DistanceSquared(TPos);
@@ -303,7 +301,6 @@ bool face::PointInFace(SGM::Result        &rResult,
             pEntity=pTempEnt;
             CPos=TPos;
             }
-        ++iter;
         }
 
     // Find the parameter line to check sided-ness from.
@@ -314,8 +311,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
-        edge *pEdge=(edge *)pEntity;
-        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
+        auto pEdge=(edge *)pEntity;
+        auto EdgeTypeIter=m_mSideType.find(pEdge);
         SGM::Point2D Buv=EvaluateParamSpace(pEdge,EdgeTypeIter->second,CPos);
 
         SGM::Vector3D VecU,VecV,Vec;
@@ -350,7 +347,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     else // The vertex case.
         {
         SGM::Point2D Buv=m_pSurface->Inverse(CPos);
-        vertex *pVertex=(vertex *)pEntity;
+        auto pVertex=(vertex *)pEntity;
         SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)
             {
@@ -631,17 +628,17 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         {
         SGM::Graph const &comp=aComponents[Index1];
         std::set<SGM::GraphEdge> const &sGEdges=comp.GetEdges();
-        std::set<edge *,EntityCompare> sEdges;
-        std::set<SGM::GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
+        std::set<edge *,EntityCompare> sLoopEdges;
+        auto GEdgeIter=sGEdges.begin();
         while(GEdgeIter!=sGEdges.end())
             {
             size_t ID=GEdgeIter->m_nID;
-            sEdges.insert((edge *)pThing->FindEntity(ID));
+            sLoopEdges.insert((edge *)pThing->FindEntity(ID));
             ++GEdgeIter;
             }
         std::vector<edge *> aEdges;
         std::vector<SGM::EdgeSideType> aFlips;
-        OrderLoopEdges(rResult,this,sEdges,aEdges,aFlips);
+        OrderLoopEdges(rResult,this,sLoopEdges,aEdges,aFlips);
         aaTempLoops.push_back(aEdges);
         aaTempFlipped.push_back(aFlips);
         }
@@ -699,7 +696,7 @@ void face::SetSurface(surface *pSurface)
 
 SGM::EdgeSideType face::GetSideType(edge const *pEdge) const 
     {
-    std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mSideType.find((edge *)pEdge);
+    auto iter=m_mSideType.find((edge *)pEdge);
     if(iter==m_mSideType.end())
         {
         return SGM::EdgeSideType::FaceOnUnknown;

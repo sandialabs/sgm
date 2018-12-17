@@ -157,12 +157,9 @@ void volume::AddEdge(edge *pEdge)
 double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
     double dAnswer=0;
-    std::set<face *,EntityCompare>::const_iterator iter=m_sFaces.begin();
-    while(iter!=m_sFaces.end())
+    for (auto pFace : m_sFaces)
         {
-        face *pFace=*iter;
         dAnswer+=pFace->FindVolume(rResult,bApproximate);
-        ++iter;
         }
     return dAnswer/6;
     }
@@ -200,13 +197,10 @@ size_t volume::FindShells(SGM::Result                                  &rResult,
         {
         std::set<face *,EntityCompare> sShell;
         SGM::Graph const &Comp=aComps[Index1];
-        std::set<size_t> const &sFaces=Comp.GetVertices();
-        std::set<size_t>::const_iterator Iter=sFaces.begin();
-        while(Iter!=sFaces.end())
+        std::set<size_t> const &sGraphVertices=Comp.GetVertices();
+        for (size_t ID : sGraphVertices)
             {
-            size_t ID=*Iter;
             sShell.insert((face *)(pThing->FindEntity(ID)));
-            ++Iter;
             }
         aShells.push_back(sShell);
         }
