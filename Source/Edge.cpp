@@ -78,20 +78,20 @@ void edge::RemoveParentsInSet(SGM::Result &rResult,
     std::set<face *,EntityCompare> sFaces=GetFaces();
     if (!sFaces.empty())
     {
-        std::vector<face *> aFacesToRemove;
+        std::set<face *, EntityCompare> sRemainingFaces;
         
         for(auto pFace : sFaces)
         {
             if (sFaces.find(pFace) != sFaces.end())
             {
                 pFace->RemoveEdge(rResult,this);
-                aFacesToRemove.emplace_back(pFace);
+            }
+            else
+            {
+                sRemainingFaces.emplace(pFace);
             }
         }
-        for(auto pFace : aFacesToRemove)
-        {
-            sFaces.erase(pFace);
-        }
+        m_sFaces = sRemainingFaces;
     }
 
     if (m_pVolume)
@@ -281,8 +281,12 @@ void edge::SetCurve(curve *pCurve)
         {
         m_pCurve->RemoveEdge(this);
         }
+    // allow setting curve to nullptr for disconnecting during a delete operation
     m_pCurve=pCurve;
-    m_pCurve->AddEdge(this);
+    if (m_pCurve != nullptr)
+        {
+        m_pCurve->AddEdge(this);
+        }
     }
 
 void edge::FixDomain(SGM::Result &rResult)

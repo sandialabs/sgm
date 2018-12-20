@@ -133,6 +133,8 @@ TEST(Boolean_check, Sphere_Sphere_Imprint1)
     SGM::IntersectSurfaces(rResult,SurfID1,SurfID2,aCurves);
 
     SGM::DeleteEntity(rResult,Sphere2);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
+
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,Sphere1,sFaces);
@@ -164,6 +166,8 @@ TEST(Boolean_check, Sphere_Sphere_Imprint2)
     SGM::IntersectSurfaces(rResult,SurfID1,SurfID2,aCurves);
 
     SGM::DeleteEntity(rResult,Sphere1);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
+
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,Sphere2,sFaces);

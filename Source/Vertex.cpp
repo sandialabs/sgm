@@ -29,6 +29,7 @@ SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
 void vertex::RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &sParents)
 {
+    std::set<edge *,EntityCompare> sRemainingEdges;
     std::set<edge *,EntityCompare> sEdges=GetEdges();
     for(auto pEdge : sEdges)
         {
@@ -40,7 +41,12 @@ void vertex::RemoveParentsInSet(SGM::Result &rResult,
                 pEdge->SetEnd(nullptr);
             RemoveEdge(pEdge);
             }
+        else
+            {
+            sRemainingEdges.emplace(pEdge);
+            }
         }
+    m_sEdges = sRemainingEdges;
     topology::RemoveParentsInSet(rResult, sParents);
 }
 

@@ -21,17 +21,15 @@ TEST(create_check, create_parabola)
     SGM::Result rResult(pThing);
 
     double dTolerance = SGM_MIN_TOL;
-    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Point3D> aPoints {{0.0, 0.0, 0.0},
+                                       {1.0, 2.0, 0.0},
+                                       {-1.0, 2.0, 0.0},
+                                       {2.0, 8.0, 0.0},
+                                       {-3.0, 18.0, 0.0}};
     aPoints.reserve(5);
 
     // y=ax^2 parabola
     // a=2
-
-    aPoints.emplace_back(0.0, 0.0, 0.0);
-    aPoints.emplace_back(1.0, 2.0, 0.0);
-    aPoints.emplace_back(-1.0, 2.0, 0.0);
-    aPoints.emplace_back(2.0, 8.0, 0.0);
-    aPoints.emplace_back(-3.0, 18.0, 0.0);
 
     SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
@@ -41,10 +39,12 @@ TEST(create_check, create_parabola)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
     
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -76,10 +76,12 @@ TEST(create_check, create_hyperbola)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -112,10 +114,12 @@ TEST(create_check, create_ellipse)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -305,42 +309,5 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("DoubleAttribute",SGM::EntityTypeName(SGM::DoubleAttributeType));
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
-
-TEST(create_check, create_and_delete)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
-    std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.emplace_back(1  ,1  ,0);
-    aControlPoints.emplace_back(1.1,1.1,0);
-    aControlPoints.emplace_back(2  ,2.8,0);
-    aControlPoints.emplace_back(2.8,1.1,0);
-    aControlPoints.emplace_back(3  ,1  ,0);
-    SGM::Curve NUBID=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints,aKnots);
-
-    SGM::Surface ExtrudeID1 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
-    SGM::Surface ExtrudeID2 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
-
-    SGM::DeleteEntity(rResult, ExtrudeID1);
-
-    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
-
-
-    //SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(3,4,5));
-
-    //std::set<SGM::Volume> sVolumes;
-    //std::set<SGM::Face> sFaces;
-    //std::set<SGM::Edge> sEdges;
-    //std::set<SGM::Vertex> sVertices;
-    //SGM::FindVolumes(rResult, BodyID, sVolumes);
-    //SGM::FindFaces(rResult, BodyID, sFaces);
-    //SGM::FindEdges(rResult, BodyID, sEdges);
-    //SGM::FindVertices(rResult, BodyID, sVertices);
-
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
 
 //#pragma clang diagnostic pop
