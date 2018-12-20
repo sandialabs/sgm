@@ -153,6 +153,18 @@ void TransformEntity(SGM::Result            &rResult,
     }
     else
     {
+        if (!pEntity->IsTopLevel())
+        {
+            char Buffer[1000];
+            snprintf(Buffer,sizeof(Buffer),"%s %lu is not a top level entity and cannot be transformed",
+                     typeid(*pEntity).name(), pEntity->GetID());
+            rResult.SetResult(SGM::ResultTypeCannotTransform);
+            std::string const sMessage(Buffer);
+            rResult.SetMessage(sMessage);
+            return;
+        }
+
+        
         std::set<entity *,EntityCompare> sFamily;
         pEntity->FindAllChildren(sFamily);
         sFamily.insert(pEntity);

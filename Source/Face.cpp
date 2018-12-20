@@ -24,6 +24,7 @@ namespace SGMInternal
 void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     sChildren.insert(GetSurface());
+    GetSurface()->FindAllChildren(sChildren);
     for (auto pEdge : GetEdges())
         {
         sChildren.insert(pEdge);

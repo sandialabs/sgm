@@ -1102,7 +1102,7 @@ TEST(math_check, revolve_surface_save_step)
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,RevolveID).m_ID);
     EXPECT_TRUE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
-    SGM::TransformEntity(rResult,Trans,RevolveID);
+    SGM::TransformEntity(rResult,Trans,BodyID);
     EXPECT_FALSE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
 
     SGMTesting::ReleaseTestThing(pThing);
