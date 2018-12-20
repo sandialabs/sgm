@@ -48,8 +48,6 @@ class surface : public entity
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
 
-        void RemoveParents(SGM::Result &rResult) override;
-
         void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;

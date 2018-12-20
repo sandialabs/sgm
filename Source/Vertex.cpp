@@ -50,12 +50,6 @@ void vertex::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void vertex::RemoveParents(SGM::Result &rResult)
-{
-    // no children, so the vertex function is the same as SeverRelations
-    SeverRelations(rResult);
-}
-
 void vertex::SeverRelations(SGM::Result &)
     {
     std::set<edge *,EntityCompare> sEdges=GetEdges();

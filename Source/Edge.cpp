@@ -105,24 +105,6 @@ void edge::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void edge::RemoveParents(SGM::Result &rResult)
-{
-    std::set<face *,EntityCompare> sFaces=GetFaces();
-    for(auto pFace : sFaces)
-    {
-        pFace->RemoveEdge(rResult,this);
-    }
-    sFaces.clear();
-
-    if(m_pVolume)
-        {
-        m_pVolume->RemoveEdge(this);
-        m_pVolume = nullptr;
-        }
-    topology::RemoveParents(rResult);
-}
-
-
 void edge::SeverRelations(SGM::Result &rResult)
     {
     std::set<face *,EntityCompare> sFaces=GetFaces();

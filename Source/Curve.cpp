@@ -47,16 +47,6 @@ void curve::RemoveParentsInSet(SGM::Result &rResult,
     entity::RemoveParentsInSet(rResult, sToRemove);
 }
 
-void curve::RemoveParents(SGM::Result &rResult)
-{
-    for(auto pEdge : m_sEdges)
-    {
-        pEdge->SetCurve(nullptr);
-    }
-    m_sEdges.clear();
-    entity::RemoveParents(rResult);
-}
-
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.

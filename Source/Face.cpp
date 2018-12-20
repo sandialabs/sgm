@@ -92,17 +92,6 @@ void face::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void face::RemoveParents(SGM::Result &rResult)
-{
-    if(GetVolume())
-    {
-        GetVolume()->RemoveFace(this);
-        SetVolume(nullptr);
-    }
-    topology::RemoveParents(rResult);
-}
-
-
 void face::SeverRelations(SGM::Result &)
     {
     if(GetVolume())

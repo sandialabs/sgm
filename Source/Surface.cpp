@@ -72,16 +72,6 @@ void surface::RemoveParentsInSet(SGM::Result &rResult,
     entity::RemoveParentsInSet(rResult, sParents);
 }
 
-void surface::RemoveParents(SGM::Result &rResult)
-{
-    for (auto pFace : m_sFaces)
-    {
-        pFace->SetSurface(nullptr);
-    }
-    m_sFaces.clear();
-    entity::RemoveParents(rResult);
-}
-
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.

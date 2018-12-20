@@ -130,8 +130,6 @@ public:
     virtual void RemoveParentsInSet(SGM::Result &rResult,
                                     std::set<entity *,EntityCompare> const &sFamily);
 
-    virtual void RemoveParents(SGM::Result &rResult);
-
     virtual void DisconnectOwnedEntity(entity const *pEntity) = 0;
 
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
@@ -228,8 +226,6 @@ class thing : public entity
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {return;}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -352,8 +348,6 @@ class topology : public entity
                                 std::set<entity *,EntityCompare>  const &sParents) override
           {entity::RemoveParentsInSet(rResult, sParents);}
 
-        void RemoveParents(SGM::Result &rResult) override {entity::RemoveParents(rResult);}
-
         void DisconnectOwnedEntity(entity const *) override {}
 
 protected:
@@ -387,8 +381,6 @@ class assembly : public topology
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {return;}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -430,8 +422,6 @@ class reference : public topology
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {return;}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -480,8 +470,6 @@ class body : public topology
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {return;}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -572,8 +560,6 @@ class complex : public topology
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {return;}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -765,8 +751,6 @@ class volume : public topology
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
 
-        void RemoveParents(SGM::Result &rResult) override;
-
         void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -848,8 +832,6 @@ class face : public topology
 
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
-
-        void RemoveParents(SGM::Result &rResult) override;
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -990,8 +972,6 @@ class edge : public topology
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
 
-        void RemoveParents(SGM::Result &rResult) override;
-
         void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -1123,8 +1103,6 @@ class vertex : public topology
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
 
-        void RemoveParents(SGM::Result &rResult) override;
-
         void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
@@ -1188,8 +1166,6 @@ class attribute : public entity
 
         void RemoveParentsInSet(SGM::Result &,
                                 std::set<entity *,EntityCompare>  const &) override {}
-
-        void RemoveParents(SGM::Result &) override {}
 
         void DisconnectOwnedEntity(entity const *) override {}
 

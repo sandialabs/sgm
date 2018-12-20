@@ -51,8 +51,6 @@ class curve : public entity
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &sToRemove) override;
 
-        void RemoveParents(SGM::Result &rResult) override;
-
         void DisconnectOwnedEntity(entity const *) override {}
 
         SGM::Interval3D const &GetBox(SGM::Result &) const override;

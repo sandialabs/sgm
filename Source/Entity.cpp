@@ -117,13 +117,4 @@ void entity::RemoveParentsInSet(SGM::Result &,
     }
 }
 
-void entity::RemoveParents(SGM::Result &)
-{
-    for (auto pOwner : m_sOwners)
-    {
-        pOwner->DisconnectOwnedEntity(this);
-    }
-    m_sOwners.clear();
-}
-
 }
