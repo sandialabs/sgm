@@ -1380,6 +1380,26 @@ SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
     return {pEdge->GetID()};
     }
 
+SGM::Edge SGM::CreateEdge(SGM::Result &rResult,
+                          SGM::Curve  &CurveID,
+                          SGM::Vertex &Start,
+                          SGM::Vertex &End)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
+    auto pStart=(SGMInternal::vertex *)pThing->FindEntity(Start.m_ID);
+    auto pEnd=(SGMInternal::vertex *)pThing->FindEntity(End.m_ID);
+    if (pStart == pEnd)
+    {
+        if (!pCurve->GetClosed())
+        {
+            throw std::logic_error("Matching start and end vertices requires a closed curve");
+        }
+    }
+    SGMInternal::edge *pEdge=SGMInternal::CreateEdge(rResult, pCurve, pStart, pEnd);
+    return {pEdge->GetID()};
+    }
+
 SGM::Edge SGM::CreateLinearEdge(SGM::Result        &rResult,
                                 SGM::Point3D const &StartPos,
                                 SGM::Point3D const &EndPos)
@@ -2563,3 +2583,10 @@ SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
     SGMInternal::curve *pCurve=pSurface->VParamLine(rResult,dV);
     return {pCurve->GetID()};
     }
+
+SGM::Vertex SGM::CreateVertex(SGM::Result        &rResult,
+                         SGM::Point3D const &Pos)
+{
+    SGMInternal::vertex *pVertex = SGMInternal::CreateVertex(rResult, Pos);
+    return pVertex->GetID();
+}

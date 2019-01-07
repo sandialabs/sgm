@@ -49,9 +49,7 @@ class curve : public entity
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
         void RemoveParentsInSet(SGM::Result &rResult,
-                                std::set<entity *,EntityCompare>  const &) override;
-
-        void RemoveParents(SGM::Result &rResult) override;
+                                std::set<entity *,EntityCompare>  const &sToRemove) override;
 
         void DisconnectOwnedEntity(entity const *) override {}
 

@@ -546,6 +546,15 @@ bool vertex::Check(SGM::Result              &,//rResult,
                    bool                      /*bChildren*/) const
     {
     bool bAnswer=true;
+    for (auto pEdge : m_sEdges)
+        {
+        if ((pEdge->GetStart() != this) && (pEdge->GetEnd() != this))
+            {
+            bAnswer = false;
+            std::stringstream ss;
+            ss << this << " points to " << pEdge << " but the edge does not point back to the vertex";
+            }
+        }
     return bAnswer;
     }
 

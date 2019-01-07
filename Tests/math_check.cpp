@@ -576,7 +576,7 @@ TEST(math_check, revolve_surface_save_step)
     SGM::Surface SurfID2=SGM::Surface(SGM::CopyEntity(rResult,RevolveID).m_ID);
     EXPECT_TRUE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
-    SGM::TransformEntity(rResult,Trans,RevolveID);
+    SGM::TransformEntity(rResult,Trans,BodyID);
     EXPECT_FALSE(SGM::SameSurface(rResult,RevolveID,SurfID2,SGM_MIN_TOL));
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -641,6 +641,8 @@ TEST(math_check, revolve_surface_test)
     SGM::DeleteEntity(rResult,NUBID1);
     SGM::DeleteEntity(rResult,NUBID2);
 
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -687,9 +689,10 @@ TEST(math_check, extrude_hermite)
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
+    rResult.ClearMessage();
     
-    EXPECT_FALSE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeSurfaceMissingChild);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -709,8 +712,9 @@ TEST(math_check, revolve_hermite)
     SGM::Surface SurfID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
 
     SGM::DeleteEntity(rResult, CurveID);
-    EXPECT_FALSE(SGMTesting::CheckEntityAndPrintLog(rResult, SurfID));
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeSurfaceMissingChild);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
+    rResult.ClearMessage();
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SurfID));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1090,8 +1094,10 @@ TEST(surface_check, sphere)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,SphereID);
     EXPECT_FALSE(SGM::SameSurface(rResult,SphereID,SurfID2,SGM_MIN_TOL));
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGM::DeleteEntity(rResult,SphereID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -1137,6 +1143,7 @@ TEST(surface_check, torus)
     SGM::Transform3D Trans(SGM::Vector3D(1,1,1));
     SGM::TransformEntity(rResult,Trans,TorusID);
     EXPECT_FALSE(SGM::SameSurface(rResult,TorusID,SurfID2,SGM_MIN_TOL));
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
     
     double dU=SGM::GetDomainOfSurface(rResult,TorusID).m_UDomain.MidPoint();
     SGM::FindUParamCurve(rResult,TorusID,dU);
@@ -1145,6 +1152,7 @@ TEST(surface_check, torus)
     SGM::FindVParamCurve(rResult,TorusID,dV);
 
     SGM::DeleteEntity(rResult,TorusID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -1217,6 +1225,7 @@ TEST(curve_check, line)
     EXPECT_TRUE(SGM::TestCurve(rResult,LineID,0.5));
     SGM::DeleteEntity(rResult,LineID);
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -1243,6 +1252,7 @@ TEST(curve_check, circle)
     EXPECT_TRUE(SGM::TestCurve(rResult,CircleID,0.45));
     SGM::DeleteEntity(rResult,CircleID);
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -2788,6 +2798,7 @@ TEST(math_check, delete_face_from_block)
     SGM::FindFaces(rResult,BlockID,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
     SGM::DeleteEntity(rResult,FaceID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
 
     std::vector<std::string> aLog;
     SGM::CheckOptions CheckOptions;
@@ -3996,17 +4007,15 @@ TEST(math_check, checking_the_checker)
     SGM::Face FaceID=*(sFaces.begin());
     SGM::Volume VolumeID=SGM::FindVolume(rResult,FaceID);
     SGM::DeleteEntity(rResult,FaceID);
-    SGM::CheckOptions Options;
-    std::vector<std::string> aCheckStrings;
-    EXPECT_FALSE(SGM::CheckEntity(rResult,VolumeID,Options,aCheckStrings));
-    EXPECT_FALSE(SGM::CheckEntity(rResult,SGM::Thing(),Options,aCheckStrings));
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult,VolumeID));
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult,SGM::Thing()));
 
     // Check for empty bodies.
 
     SGM::DeleteEntity(rResult,VolumeID);
-    SGM::CheckOptions Options2;
-    std::vector<std::string> aCheckStrings2;
-    EXPECT_FALSE(SGM::CheckEntity(rResult,BodyID,Options2,aCheckStrings2));
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult,SGM::Thing()));
 
     // Bad segments in a complex.
 
@@ -4181,8 +4190,9 @@ TEST(math_check, find_sharp_edges)
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,BodyID,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
-    SGM::DeleteEntity(rResult,FaceID);
-    SGM::Complex ComplexID=SGM::CreateComplex(rResult,BodyID);
+    //SGM::DeleteEntity(rResult,FaceID);
+    //SGM::Complex ComplexID=SGM::CreateComplex(rResult,BodyID);
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,FaceID);
     SGM::FindSharpEdges(rResult,ComplexID,0.1,true);
     
     SGMTesting::ReleaseTestThing(pThing);

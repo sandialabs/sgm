@@ -60,6 +60,44 @@ edge *CreateEdge(SGM::Result        &rResult,
     return pEdge;
     }
 
+edge *CreateEdge(SGM::Result &rResult,
+                 curve       *pCurve,
+                 vertex      *pStart,
+                 vertex      *pEnd)
+    {
+    edge *pEdge=new edge(rResult);
+    pEdge->SetCurve(pCurve);
+    SGM::Interval1D domain;
+    if (pStart != nullptr)
+    {
+        pEdge->SetStart(pStart);
+        double uStart = pCurve->Inverse(pStart->GetPoint());
+        if (pEnd != nullptr)
+        {
+            pEdge->SetEnd(pEnd);
+
+            if (pEnd != pStart)
+            {
+                double uEnd = pCurve->Inverse(pEnd->GetPoint());
+                pEdge->SetDomain(rResult, SGM::Interval1D(uStart, uEnd));
+            }
+            else
+            {
+                pEdge->SetDomain(rResult,pCurve->GetDomain());
+            }
+        }
+        else
+        {
+            throw std::logic_error("Unhandled case in CreateEdge - start but no end vertex given");
+        }
+    }
+    else
+    {
+        pEdge->SetDomain(rResult,pCurve->GetDomain());
+    }
+    return pEdge;
+    }
+
 body *CreateWireBody(SGM::Result            &rResult,
                      std::set<edge *> const &sEdges)
     {
@@ -1197,5 +1235,12 @@ surface *CreateExtrudeSurface(SGM::Result             &rResult,
     surface *pExtrude=new extrude(rResult,Axis,pCurve);
     return pExtrude;
     }
+
+vertex *CreateVertex(SGM::Result        &rResult,
+                     SGM::Point3D const &Pos)
+{
+    vertex *pVertex = new vertex(rResult, Pos);
+    return pVertex;
+}
 
 } // end namespace SGMInternal

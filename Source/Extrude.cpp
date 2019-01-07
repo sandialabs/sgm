@@ -180,15 +180,6 @@ void extrude::Transform(SGM::Result            &,//rResult,
     {
     m_Origin=Trans*m_Origin;
     m_vAxis=Trans*m_vAxis;
-    //if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()>1)
-    //    {
-    //    curve *pCopy=m_pCurve->Clone(rResult);
-    //    pCopy->RemoveAllOwners();
-    //    pCopy->AddOwner(this);
-    //    m_pCurve->RemoveOwner(this);
-    //    m_pCurve=pCopy;
-    //    }
-    //m_pCurve->Transform(rResult,Trans);
     }
 
 curve *extrude::UParamLine(SGM::Result &, double) const

@@ -24,6 +24,7 @@ namespace SGMInternal
 void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     sChildren.insert(GetSurface());
+    GetSurface()->FindAllChildren(sChildren);
     for (auto pEdge : GetEdges())
         {
         sChildren.insert(pEdge);
@@ -90,17 +91,6 @@ void face::RemoveParentsInSet(SGM::Result &rResult,
     }
     topology::RemoveParentsInSet(rResult, sParents);
 }
-
-void face::RemoveParents(SGM::Result &rResult)
-{
-    if(GetVolume())
-    {
-        GetVolume()->RemoveFace(this);
-        SetVolume(nullptr);
-    }
-    topology::RemoveParents(rResult);
-}
-
 
 void face::SeverRelations(SGM::Result &)
     {

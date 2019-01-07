@@ -31,6 +31,7 @@ TEST(area_check, area_of_sphere_single_face)
     EXPECT_TRUE(SGM::NearEqual(dArea,4*SGM_PI,SGM_MIN_TOL,false));
 
     SGM::DeleteEntity(rResult,UnitSphereID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

@@ -56,25 +56,20 @@ void surface::GetParents(std::set<entity *, EntityCompare> &sParents) const
 void surface::RemoveParentsInSet(SGM::Result &rResult,
                         std::set<entity *,EntityCompare>  const &sParents)
 {
+    std::set<face *, EntityCompare> sRemainingFaces;
     for (auto pFace : m_sFaces)
     {
         if (sParents.find(pFace) != sParents.end())
         {
             pFace->SetSurface(nullptr);
-            m_sFaces.erase(pFace);
+        }
+        else
+        {
+            sRemainingFaces.emplace(pFace);
         }
     }
+    m_sFaces = sRemainingFaces;
     entity::RemoveParentsInSet(rResult, sParents);
-}
-
-void surface::RemoveParents(SGM::Result &rResult)
-{
-    for (auto pFace : m_sFaces)
-    {
-        pFace->SetSurface(nullptr);
-    }
-    m_sFaces.clear();
-    entity::RemoveParents(rResult);
 }
 
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
