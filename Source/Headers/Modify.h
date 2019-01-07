@@ -54,6 +54,10 @@ vertex *ImprintPoint(SGM::Result        &rResult,
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
                            edge               *pEdge);
+
+void MergeVerices(SGM::Result &rResult,
+                  vertex      *pKeepVertex,
+                  vertex      *pDeleteVertex);
 }
 
 #endif

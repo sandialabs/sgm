@@ -1912,19 +1912,6 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
     return aPoints.size();
     }
 
-size_t IntersectCircleAndCylinder(SGM::Point3D                 const &/*Center*/,
-                                  SGM::UnitVector3D            const &/*Normal*/,
-                                  double                              /*dRadius*/,
-                                  cylinder                     const * /*pCylinder*/,
-                                  double                              /*dTolerance*/,
-                                  std::vector<SGM::Point3D>          &/*aPoints*/,
-                                  std::vector<SGM::IntersectionType> &/*aTypes*/)
-    {
-    // Intersect the circle's plane and the cylinder, then
-    // intersect the line(s), circle, or ellipse with the circle.
-    return 0;
-    }
-
 size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
                                  SGM::UnitVector3D            const &Normal,
                                  double                              dRadius,
@@ -2129,17 +2116,16 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
      return aPoints.size();
      }
 
-size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
-                                circle                       const *pCircle1,
-                                circle                       const *pCircle2,
-                                std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes,
-                                double                              dTolerance)
+ size_t IntersectCircleAndCircle(SGM::Point3D                 const &Center1,
+                                 SGM::Point3D                 const &Center2,
+                                 SGM::UnitVector3D            const &Norm1,
+                                 SGM::UnitVector3D            const &Norm2,
+                                 double                              dRadius1,
+                                 double                              dRadius2,
+                                 std::vector<SGM::Point3D>          &aPoints,
+                                 std::vector<SGM::IntersectionType> &aTypes,
+                                 double                              dTolerance)
     {
-    SGM::Point3D const &Center1=pCircle1->m_Center;
-    SGM::Point3D const &Center2=pCircle2->m_Center;
-    SGM::UnitVector3D const &Norm1=pCircle1->m_Normal;
-    SGM::UnitVector3D const &Norm2=pCircle2->m_Normal;
     SGM::Vector3D Vec=Center1-Center2;
     double dDist1=Vec%Norm1;
     double dDist2=Vec%Norm2;
@@ -2147,24 +2133,22 @@ size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
         {
         // Circle1 and Circle2 are in the same plane.
 
-        double dR1=pCircle1->m_dRadius;
-        double dR2=pCircle2->m_dRadius;
         double dDist=Center1.Distance(Center2);
-        if(dDist+dR1+dTolerance<dR2 || dDist+dR2+dTolerance<dR1)
+        if(dDist+dRadius1+dTolerance<dRadius2 || dDist+dRadius2+dTolerance<dRadius1)
             {
             // One circle lies inside the other.
             }
-        else if(SGM::NearEqual(dR1+dR2,dDist,dTolerance,false))
+        else if(SGM::NearEqual(dRadius1+dRadius2,dDist,dTolerance,false))
             {
-            double dB=(dR1*dR1-dR2*dR2)/(2*dDist);
+            double dB=(dRadius1*dRadius1-dRadius2*dRadius2)/(2*dDist);
             SGM::UnitVector3D Norm=Center1-Center2;
             aPoints.push_back(Center2+Norm*dB);
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
-        else if(dDist<dR1+dR2)
+        else if(dDist<dRadius1+dRadius2)
             {
-            double dR2Squared=dR2*dR2;
-            double dB=(dR2Squared-dR1*dR1)/(2*dDist);
+            double dR2Squared=dRadius2*dRadius2;
+            double dB=(dR2Squared-dRadius1*dRadius1)/(2*dDist);
             SGM::UnitVector3D Norm=Center1-Center2;
             double dRadius=sqrt(dR2Squared-dB*dB);
             SGM::Point3D Pos=Center2+Norm*dB;
@@ -2179,21 +2163,53 @@ size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
         {
         std::vector<SGM::Point3D> aHits;
         std::vector<SGM::IntersectionType> aTemp;
-        size_t nHits=IntersectCircleAndPlane(Center1,Norm1,pCircle1->m_dRadius,Center2,Norm2,dTolerance,aHits,aTemp);
+        size_t nHits=IntersectCircleAndPlane(Center1,Norm1,dRadius1,Center2,Norm2,dTolerance,aHits,aTemp);
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
             SGM::Point3D const &Hit=aHits[Index1];
-            SGM::Point3D CPos;
-            pCircle1->Inverse(Hit,&CPos);
-            if(Hit.Distance(CPos)<dTolerance)
+            if(Center1.Distance(Hit)<dTolerance)
                 {
-                aPoints.push_back(CPos);
+                aPoints.push_back(Hit);
                 aTypes.push_back(SGM::IntersectionType::PointType);
                 }
             }
         }
     return aPoints.size();
+    }
+
+size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
+                                circle                       const *pCircle1,
+                                circle                       const *pCircle2,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                double                              dTolerance)
+    {
+    return IntersectCircleAndCircle(pCircle1->m_Center,pCircle2->m_Center,
+                                    pCircle1->m_Normal,pCircle2->m_Normal,
+                                    pCircle1->m_dRadius,pCircle2->m_dRadius,
+                                    aPoints,aTypes,dTolerance);
+    }
+
+size_t IntersectCircleAndCylinder(SGM::Point3D                 const &Center,
+                                  SGM::UnitVector3D            const &Normal,
+                                  double                              dRadius,
+                                  cylinder                     const *pCylinder,
+                                  double                              dTolerance,
+                                  std::vector<SGM::Point3D>          &aPoints,
+                                  std::vector<SGM::IntersectionType> &aTypes)
+    {
+    // Test to see if the circle's normal and the cylinders normal match.
+    if(SGM::NearEqual(fabs(Normal%pCylinder->m_ZAxis),1.0,dTolerance,false))
+        {
+        return IntersectCircleAndCircle(Center,pCylinder->m_Origin,
+                                        Normal,pCylinder->m_ZAxis,
+                                        dRadius,pCylinder->m_dRadius,
+                                        aPoints,aTypes,dTolerance);
+        }
+    // Intersect the circle's plane and the cylinder, then
+    // intersect the line(s), circle, or ellipse with the circle.
+    return 0;
     }
 
 size_t IntersectCircleAndCurve(SGM::Result                        &rResult,

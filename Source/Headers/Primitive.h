@@ -84,6 +84,9 @@ face *CreateFaceFromSurface(SGM::Result                    &rResult,
                             std::vector<edge *>            &aEdges,
                             std::vector<SGM::EdgeSideType> &aTypes);
 
+body *CoverPlanarWire(SGM::Result &rResult,
+                      body        *pPlanarWire);
+
 body *CreateDisk(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,
                  SGM::UnitVector3D const &Normal,

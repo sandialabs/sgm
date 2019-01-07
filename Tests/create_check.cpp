@@ -15,6 +15,60 @@
 //#pragma clang diagnostic push
 //#pragma ide diagnostic ignored "cert-err58-cpp"
 
+TEST(create_check, create_cylinder_from_entities)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Create a cylinder about the Z-axis with bottom at (0,0,0), 
+    // top at (0,0,2) and radius 1.0, by making all the topology and geometry.
+
+    // Create the topology.
+
+    SGM::Body BodyID=SGM::CreateBody(rResult);
+    SGM::Volume VolumeID=SGM::CreateVolume(rResult);
+    SGM::Face TopFaceID=SGM::CreateFace(rResult);
+    SGM::Face SideFaceID=SGM::CreateFace(rResult);
+    SGM::Face BottomFaceID=SGM::CreateFace(rResult);
+    SGM::Edge TopEdge=SGM::CreateEdge(rResult);
+    SGM::Edge BottomEdge=SGM::CreateEdge(rResult);
+
+    // Create the curves.
+
+    SGM::Point3D TopCenter(0,0,2),BottomCenter(0,0,0);
+    SGM::UnitVector3D Axis(0,0,1);
+    double dRadius=1.0;
+    SGM::Curve TopCurve=SGM::CreateCircle(rResult,TopCenter,Axis,dRadius);
+    SGM::Curve BottomCurve=SGM::CreateCircle(rResult,BottomCenter,Axis,dRadius);
+
+    // Create the surfaces.
+
+    SGM::Surface TopSurface=SGM::CreatePlane(rResult,TopCenter,
+        TopCenter+SGM::Vector3D(1,0,0),TopCenter+SGM::Vector3D(0,1,0));
+    SGM::Surface BottomSurface=SGM::CreatePlane(rResult,BottomCenter,
+        BottomCenter+SGM::Vector3D(1,0,0),BottomCenter+SGM::Vector3D(0,1,0));
+    SGM::Surface SideSurface=SGM::CreateCylinderSurface(rResult,BottomCenter,TopCenter,dRadius);
+
+    // Hook things up.
+
+    SGM::AddVolumeToBody(rResult,VolumeID,BodyID);
+    SGM::AddFaceToVolume(rResult,TopFaceID,VolumeID);
+    SGM::AddFaceToVolume(rResult,SideFaceID,VolumeID);
+    SGM::AddFaceToVolume(rResult,BottomFaceID,VolumeID);
+    SGM::AddEdgeToFace(rResult,TopEdge,SGM::EdgeSideType::FaceOnLeftType,TopFaceID);
+    SGM::AddEdgeToFace(rResult,BottomEdge,SGM::EdgeSideType::FaceOnRightType,BottomFaceID);
+    SGM::AddEdgeToFace(rResult,TopEdge,SGM::EdgeSideType::FaceOnRightType,SideFaceID);
+    SGM::AddEdgeToFace(rResult,BottomEdge,SGM::EdgeSideType::FaceOnLeftType,SideFaceID);
+    SGM::SetCurveOfEdge(rResult,TopCurve,TopEdge);
+    SGM::SetCurveOfEdge(rResult,BottomCurve,BottomEdge);
+    SGM::SetSurfaceOfFace(rResult,TopSurface,TopFaceID);
+    SGM::SetSurfaceOfFace(rResult,BottomSurface,BottomFaceID);
+    SGM::SetSurfaceOfFace(rResult,SideSurface,SideFaceID);
+    SGM::SetFlippedOfFace(rResult,true,BottomFaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
 TEST(create_check, create_parabola)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -249,27 +249,34 @@ SGM::Interval1D const &edge::GetDomain() const
     if(m_Domain.IsEmpty())
         {
         SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
-        m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
-        m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
-        if(m_Domain.IsEmpty())
+        if(m_pStart)
             {
-            if(m_pCurve->GetClosed())
+            m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
+            m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
+            if(m_Domain.IsEmpty())
                 {
-                if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                if(m_pCurve->GetClosed())
                     {
-                    m_Domain.m_dMax=CurveDomain.m_dMax;
-                    }
-                else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
-                    {
-                    m_Domain.m_dMin=CurveDomain.m_dMin;
+                    if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMax=CurveDomain.m_dMax;
+                        }
+                    else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMin=CurveDomain.m_dMin;
+                        }
                     }
                 }
+            if( m_Domain.Length()<SGM_ZERO && 
+                m_pStart==m_pEnd && 
+                m_pCurve->GetCurveType()!=SGM::PointCurveType)
+                {
+                m_Domain=m_pCurve->GetDomain();
+                }
             }
-        if( m_Domain.Length()<SGM_ZERO && 
-            m_pStart==m_pEnd && 
-            m_pCurve->GetCurveType()!=SGM::PointCurveType)
+        else
             {
-            m_Domain=m_pCurve->GetDomain();
+            m_Domain=CurveDomain;
             }
         }
     return m_Domain;
