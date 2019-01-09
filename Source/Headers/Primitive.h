@@ -64,9 +64,6 @@ edge *CreateEdge(SGM::Result &rResult,
                  vertex      *pStart,
                  vertex      *pEnd);
 
-vertex *CreateVertex(SGM::Result        &rResult,
-                     SGM::Point3D const &Pos);
-
 body *CreateWireBody(SGM::Result            &rResult,
                      std::set<edge *> const &sEdges);
 

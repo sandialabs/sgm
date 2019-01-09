@@ -1698,6 +1698,14 @@ SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
     return {pPlane->GetID()};
     }
 
+SGM::Surface SGM::CreatePlane(SGM::Result             &rResult,
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Normal)
+    {
+    auto pPlane = new SGMInternal::plane(rResult,Origin,Normal);
+    return {pPlane->GetID()};
+    }
+
 SGM::Surface SGM::CreatePlaneFromOriginAndNormal(SGM::Result             &rResult,
                                                  SGM::Point3D      const &Origin,
                                                  SGM::UnitVector3D const &Normal)
@@ -2584,9 +2592,3 @@ SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
     return {pCurve->GetID()};
     }
 
-SGM::Vertex SGM::CreateVertex(SGM::Result        &rResult,
-                         SGM::Point3D const &Pos)
-{
-    SGMInternal::vertex *pVertex = SGMInternal::CreateVertex(rResult, Pos);
-    return pVertex->GetID();
-}

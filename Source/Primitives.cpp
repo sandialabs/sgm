@@ -30,7 +30,15 @@ edge *CreateEdge(SGM::Result           &rResult,
         }
     
     pEdge->SetDomain(rResult,Domain);
-    if( pCurve->GetClosed()==false ||
+    if( pCurve->GetCurveType()==SGM::EntityType::PointCurveType)
+        {
+        SGM::Point3D Pos;
+        pCurve->Evaluate(Domain.m_dMin,&Pos);
+        vertex *pVertex=new vertex(rResult,Pos);
+        pEdge->SetStart(pVertex);
+        pEdge->SetEnd(pVertex);
+        }
+    else if( pCurve->GetClosed()==false ||
         SGM::NearEqual(pCurve->GetDomain().Length(),Domain.Length(),SGM_MIN_TOL,false)==false)
         {
         SGM::Point3D StartPos,EndPos;
@@ -1235,12 +1243,5 @@ surface *CreateExtrudeSurface(SGM::Result             &rResult,
     surface *pExtrude=new extrude(rResult,Axis,pCurve);
     return pExtrude;
     }
-
-vertex *CreateVertex(SGM::Result        &rResult,
-                     SGM::Point3D const &Pos)
-{
-    vertex *pVertex = new vertex(rResult, Pos);
-    return pVertex;
-}
 
 } // end namespace SGMInternal

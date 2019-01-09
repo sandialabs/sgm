@@ -134,14 +134,6 @@ SGM_EXPORT SGM::Complex CreateComplex(SGM::Result                     &rResult,
                                       std::vector<unsigned int> const &aSegments,
                                       std::vector<unsigned int> const &aTriangles);
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Zerp Dimensional Creation Functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
-SGM_EXPORT SGM::Vertex CreateVertex(SGM::Result        &rResult,
-                                    SGM::Point3D const &Pos);
 
     } // End of SGM namespace
 

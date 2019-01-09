@@ -337,6 +337,7 @@ bool face::Check(SGM::Result              &rResult,
                 }
             }
         }
+    nDoubleEdges/=2;
 
     if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
         {
