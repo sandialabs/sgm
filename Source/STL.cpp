@@ -62,7 +62,7 @@ void SaveSTL(SGM::Result                  &rResult,
 
     std::set<complex *,EntityCompare> sComplexes;
     FindComplexes(rResult,pEntity,sComplexes);
-    std::set<complex *,EntityCompare>::iterator ComplexIter=sComplexes.begin();
+    auto ComplexIter=sComplexes.begin();
     while(ComplexIter!=sComplexes.end())
         {
         complex *pComplex=*ComplexIter;
@@ -96,7 +96,7 @@ void SaveSTL(SGM::Result                  &rResult,
 
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pEntity,sFaces);
-    std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
+    auto FaceIter=sFaces.begin();
     while(FaceIter!=sFaces.end())
         {
         if(Options.m_b2D==false)
@@ -168,13 +168,13 @@ inline void ParseSTLVertex(std::string &Line, std::vector<SGM::Point3D> &aPoints
     char *pos = const_cast<char *>(FindWord(Line.c_str(), "vertex", 6));
     if (pos != nullptr)
         {
-        float x = (float) std::strtod(pos, &pos); // note: strtod seems faster than strtof
+        double x = std::strtod(pos, &pos);
         assert(errno != ERANGE);
         if (x == 0.0) x = 0.0; // convert negative zero to positive zero
-        float y = (float) std::strtod(pos, &pos);
+        double y = std::strtod(pos, &pos);
         assert(errno != ERANGE);
         if (y == 0.0) y = 0.0; // convert negative zero to positive zero
-        float z = (float) std::strtod(pos, &pos);
+        double z = std::strtod(pos, &pos);
         assert(errno != ERANGE);
         if (z == 0.0) z = 0.0; // convert negative zero to positive zero
         aPoints.emplace_back(x, y, z);
@@ -193,16 +193,10 @@ complex* ParseSTLCreateComplex(SGM::Result &rResult,
         }
     else
         {
-        // Points are as read, convert to Point3D
-        std::vector<SGM::Point3D> aPoints;
-        aPoints.reserve(aPoints.size());
-        for (auto & Point : aPoints)
-            aPoints.emplace_back(Point[0],Point[1],Point[2]);
-
-        // and triangles are just the range [0, Npoints).
+        // triangles are just the range [0, N_points).
         std::vector<unsigned> aTriangles(aPoints.size());
         std::iota(aTriangles.begin(), aTriangles.end(), 0);
-        pComplex = new complex(rResult, std::move(aPoints), std::move(aTriangles));
+        pComplex = new complex(rResult, aPoints, std::move(aTriangles));
         }
     return pComplex;
     }
@@ -294,7 +288,7 @@ void QueueSTLParseChunks(std::ifstream &inputFileStream,
 bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures,
                         std::vector<SGM::Point3D> &aPoints)
     {
-    bool isAtEnd;
+    bool isAtEnd = false;
 
     // sync up results and if needed consolidate results of the jobs
     for (auto &&future: futures)

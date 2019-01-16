@@ -880,7 +880,7 @@ void ReadAssemblyData(size_t                                             maxSTEP
         else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_REPRESENTATION)
         {
             std::string name;
-            if (stepLineData.m_aStrings.size())
+            if (!stepLineData.m_aStrings.empty())
             {
                 name = stepLineData.m_aStrings[0];
             }
@@ -899,9 +899,9 @@ void ReadTransformData(size_t                     TransformID,
 {
     STEPLineData const &TransformLineData = mSTEPData.at(TransformID);
     size_t AxisID1 = TransformLineData.m_aIDs[0];
-    STEPLineData STEPLineData1 = mSTEPData.at(AxisID1);
+    STEPLineData const &STEPLineData1 = mSTEPData.at(AxisID1);
     size_t AxisID2 = TransformLineData.m_aIDs[1];
-    STEPLineData STEPLineData2 = mSTEPData.at(AxisID2);
+    STEPLineData const &STEPLineData2 = mSTEPData.at(AxisID2);
 
     SGM::Point3D Center1, Center2;
     SGM::UnitVector3D XAxis1, XAxis2;
@@ -923,7 +923,7 @@ void InstantiateBodiesForLeafAssemblyNodes(SGM::Result &rResult,
                                            BodyToTransformMapType                             &mBodyToTransforms,
                                            std::set<entity *>                                 &sEntities)
 {
-    if (AsmParentNode.aCDSRChildren.size() == 0) // leaf node
+    if (AsmParentNode.aCDSRChildren.empty()) // leaf node
     {
         size_t STEPBrepID = AsmParentNode.BrepID;
         entity *pEntity = mIDToEntityMap.at(STEPBrepID);

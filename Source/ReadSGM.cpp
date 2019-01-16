@@ -31,7 +31,7 @@ class SGMData
     {
     public:
 
-    SGMData() {}
+    SGMData() = default;
 
     entity              *pEntity;
     std::vector<size_t> aOwners;
@@ -216,7 +216,7 @@ SGM::Point3D GetPoint3D(std::string const &aStr)
     double x,y,z;
     char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
-    return SGM::Point3D(x,y,z);
+    return {x,y,z};
     }
 
 SGM::UnitVector3D GetUnitVector3D(std::string const &aStr)
@@ -224,7 +224,7 @@ SGM::UnitVector3D GetUnitVector3D(std::string const &aStr)
     double x,y,z;
     char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
-    return SGM::UnitVector3D(x,y,z);
+    return {x,y,z};
     }
 
 void GetIDs(std::string   const &aStr,
@@ -233,7 +233,7 @@ void GetIDs(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aIDs.reserve(nArgs);
-    for(auto aArgumentString : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
         aIDs.push_back(GetID(aArgumentString));
         }
@@ -245,7 +245,7 @@ void GetInts(std::string const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aArgumentString : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
         aInts.push_back(GetInt(aArgumentString));
         }
@@ -257,7 +257,7 @@ void GetSizes(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aArgumentString : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
         aInts.push_back(GetInt(aArgumentString));
         }
@@ -269,7 +269,7 @@ void GetUnsignedInts(std::string         const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aArgumentString : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
         aInts.push_back(GetUnsignedInt(aArgumentString));
         }

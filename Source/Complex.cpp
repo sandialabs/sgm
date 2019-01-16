@@ -529,13 +529,11 @@ void complex::ReduceToUsedPoints(std::vector<SGM::Point3D> const &aPoints,
         }
 
     // rewrite segments and triangles according to map
-    for(unsigned i = 0; i < aSegments.size(); ++i)
         {
-        aSegments[i] = aOldToNew[aSegments[i]];
-        }
-    for(unsigned i = 0; i < aTriangles.size(); ++i)
-        {
-        aTriangles[i] = aOldToNew[aTriangles[i]];
+        for (unsigned &iSegment : aSegments)
+            iSegment = aOldToNew[iSegment];
+        for (unsigned &iTriangle : aTriangles)
+            iTriangle = aOldToNew[iTriangle];
         }
     }
 

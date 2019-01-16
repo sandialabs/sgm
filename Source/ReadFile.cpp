@@ -484,7 +484,7 @@ inline void ParseRepresentationRelationship(char const *pLineAfterStepTag,
     pos = SkipWord(pos, "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION", 47);
 
     // parse transformation tag
-    pos = FindIndex(pos, STEPData.m_aIDs);
+    /* pos = */ FindIndex(pos, STEPData.m_aIDs);
 
     // not parsing shape representation relationship
 }
@@ -525,7 +525,7 @@ inline void ParseProduct(char const *pLineAfterStepTag, STEPLineData &STEPData)
     const char *pos = FindSingleQuotedString(pLineAfterStepTag, sProductID);
     STEPData.m_aStrings.emplace_back(sProductID);
 
-    pos = FindSingleQuotedString(pos, sProductDescription);
+    /* pos = */ FindSingleQuotedString(pos, sProductDescription);
     STEPData.m_aStrings.emplace_back(sProductDescription);
 
     // not parsing list of context tags

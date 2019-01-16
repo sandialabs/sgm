@@ -357,7 +357,7 @@ namespace SGM
 
     inline bool NearEqual(Point4D const &Pos1,Point4D const &Pos2,double dTolerance);
 
-    inline bool NearEqual(Vector3D const &Pos1,Vector3D const &Pos2,double dTolerance);
+    inline bool NearEqual(Vector3D const &Vec1,Vector3D const &Vec2,double dTolerance);
 
 } // End of SGM namespace
 

@@ -2591,16 +2591,16 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
         SGM::Point3D Center=TorusCenter-PlaneNormal*((TorusCenter-PlaneOrigin)%PlaneNormal);
         if(fabs(dPlaneDistFromCenter)<pTorus->m_dMinorRadius+dTolerance)
             {
-            SGM::Point3D Center=TorusCenter-PlaneNormal*dPlaneDistFromCenter;
+            SGM::Point3D Center2=TorusCenter-PlaneNormal*dPlaneDistFromCenter;
             if(SGM::NearEqual(fabs(dPlaneDistFromCenter),pTorus->m_dMinorRadius,dTolerance,false))
                 {
-                aCurves.push_back(new circle(rResult,Center,PlaneNormal,pTorus->m_dMajorRadius));
+                aCurves.push_back(new circle(rResult,Center2,PlaneNormal,pTorus->m_dMajorRadius));
                 }
             else
                 {
                 double dOffset=sqrt(pTorus->m_dMinorRadius*pTorus->m_dMinorRadius-dPlaneDistFromCenter*dPlaneDistFromCenter);
-                aCurves.push_back(new circle(rResult,Center,PlaneNormal,pTorus->m_dMajorRadius+dOffset));
-                aCurves.push_back(new circle(rResult,Center,PlaneNormal,pTorus->m_dMajorRadius-dOffset));
+                aCurves.push_back(new circle(rResult,Center2,PlaneNormal,pTorus->m_dMajorRadius+dOffset));
+                aCurves.push_back(new circle(rResult,Center2,PlaneNormal,pTorus->m_dMajorRadius-dOffset));
                 }
             }
         }

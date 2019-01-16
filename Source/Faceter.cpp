@@ -183,12 +183,12 @@ class Node
 
         Node() {m_bMark=false,m_bImprint=true;}
 
-        size_t               m_nNext;
-        size_t               m_nPrevious;
-        SGM::Point2D         m_uv;
-        SGM::Point3D         m_Pos;
-        double               m_t;
-        SGMInternal::entity *m_Entity;
+        size_t               m_nNext{};
+        size_t               m_nPrevious{};
+        SGM::Point2D         m_uv{};
+        SGM::Point3D         m_Pos{};
+        double               m_t{};
+        SGMInternal::entity *m_Entity{};
         bool                 m_bMark;
         bool                 m_bImprint;
     };
@@ -1007,13 +1007,13 @@ class SplitData
         size_t m_nSpan;
     };
 
-class MergeData
-    {
-    public:
-
-        SplitData m_Split1;
-        SplitData m_Split2;
-    };
+//class MergeData
+//    {
+//    public:
+//
+//        SplitData m_Split1;
+//        SplitData m_Split2;
+//    };
 
 static size_t AddNode(std::vector<Node>  &aNodes,
                       face         const *pFace,

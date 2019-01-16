@@ -215,7 +215,7 @@ bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
             }
         }
 
-    // Temp code for debuging.
+#ifdef _DEBUG // code for debugging with MSVS C++
     SGM::Point2D AB=SGM::MidPoint(A,B);
     SGM::Point2D BC=SGM::MidPoint(B,C);
     SGM::Point2D CA=SGM::MidPoint(C,A);
@@ -228,6 +228,7 @@ bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
         int b=0;
         b*=1;
         }
+#endif
 
     return true;
     }
@@ -1811,17 +1812,17 @@ bool InsertPolygon(Result                     &rResult,
                 bFound=true;
                 break;
                 }
-            else if(SGM::Segment2D(A,B).Distance(D)<dTol)
+            else if((SGM::Segment2D(A,B).Distance(D))<dTol)
                 {
                 aEdges.push_back(0);
                 aFacetTris.push_back(nHitTri);
                 }
-            else if(SGM::Segment2D(B,C).Distance(D)<dTol)
+            else if((SGM::Segment2D(B,C).Distance(D))<dTol)
                 {
                 aEdges.push_back(1);
                 aFacetTris.push_back(nHitTri);
                 }
-            else if(SGM::Segment2D(C,A).Distance(D)<dTol)
+            else if((SGM::Segment2D(C,A).Distance(D))<dTol)
                 {
                 aEdges.push_back(2);
                 aFacetTris.push_back(nHitTri);
@@ -2086,7 +2087,7 @@ void TriangulatePolygonSubSub(std::vector<SGM::Point2D> const &aPoints,
         }
     for(Index1=0;Index1<nPolygon-2;++Index1)
         {
-        std::set<std::pair<double, unsigned> >::iterator iter = sAngles.begin();
+        auto iter = sAngles.begin();
         while(iter!=sAngles.end())
             {
             std::pair<double, unsigned> Angle = *iter;

@@ -99,9 +99,9 @@ class raw_buffer {
     void* ptr;
 public:
     //! Try to obtain buffer of given size.
-    raw_buffer( size_t bytes ) : ptr( operator new(bytes,std::nothrow) ) {}
+    explicit raw_buffer( size_t bytes ) : ptr( operator new(bytes,std::nothrow) ) {}
     //! True if buffer was successfully obtained, zero otherwise.
-    operator bool() const {return ptr;}
+    explicit operator bool() const {return (bool)ptr;}
     //! Return pointer to buffer, or  NULL if buffer could not be obtained.
     void* get() const {return ptr;}
     //! Destroy buffer
