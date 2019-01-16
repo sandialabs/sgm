@@ -1,6 +1,9 @@
 #ifndef SGM_INTERNAL_ENTITY_CLASSES_INL
 #define SGM_INTERNAL_ENTITY_CLASSES_INL
 
+#include <iostream>
+#include <iomanip>
+
 namespace SGMInternal {
 
     //
@@ -91,6 +94,15 @@ namespace SGMInternal {
     inline void entity::SeverRelations(SGM::Result &)
     { RemoveAllOwners(); } // default implementation
 
+    inline void entity::Swap(entity& other)
+    {
+        std::swap(m_ID,other.m_ID);
+        std::swap(m_Type,other.m_Type);
+        m_Box.Swap(other.m_Box);
+        m_sOwners.swap(other.m_sOwners);
+        m_sAttributes.swap(other.m_sAttributes);
+    }
+
     //
     // thing
     //
@@ -160,75 +172,75 @@ namespace SGMInternal {
 
     template<>
     inline thing::iterator<body*> thing::Begin<body*>(bool bTopLevel) const
-    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::BodyType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<body*> thing::End<body*>(bool bTopLevel) const
-    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::BodyType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<volume*> thing::Begin<volume*>(bool bTopLevel) const
-    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::VolumeType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<volume*> thing::End<volume*>(bool bTopLevel) const
-    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::VolumeType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<face*> thing::Begin<face*>(bool bTopLevel) const
-    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::FaceType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<face*> thing::End<face*>(bool bTopLevel) const
-    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::FaceType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<edge*> thing::Begin<edge*>(bool bTopLevel) const
-    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::EdgeType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<edge*> thing::End<edge*>(bool bTopLevel) const
-    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::EdgeType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<vertex*> thing::Begin<vertex*>(bool bTopLevel) const
-    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::VertexType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<vertex*> thing::End<vertex*>(bool bTopLevel) const
-    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::VertexType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<complex*> thing::Begin<complex*>(bool bTopLevel) const
-    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::ComplexType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<complex*> thing::End<complex*>(bool bTopLevel) const
-    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::ComplexType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<surface*> thing::Begin<surface*>(bool bTopLevel) const
-    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::SurfaceType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<surface*> thing::End<surface*>(bool bTopLevel) const
-    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::SurfaceType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<curve*> thing::Begin<curve*>(bool bTopLevel) const
-    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::CurveType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<curve*> thing::End<curve*>(bool bTopLevel) const
-    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::CurveType, m_mAllEntities.cend(), bTopLevel}; }
 
     template<>
     inline thing::iterator<attribute*> thing::Begin<attribute*>(bool bTopLevel) const
-    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities, bTopLevel); }
+    { return {SGM::EntityType::AttributeType, m_mAllEntities, bTopLevel}; }
 
     template<>
     inline thing::iterator<attribute*> thing::End<attribute*>(bool bTopLevel) const
-    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities.cend(), bTopLevel); }
+    { return {SGM::EntityType::AttributeType, m_mAllEntities.cend(), bTopLevel}; }
 
     template <typename ENTITY_TYPE, typename ENTITY_SET>
     inline size_t thing::GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const
@@ -269,6 +281,12 @@ namespace SGMInternal {
     inline void topology::ResetBox(SGM::Result &rResult) const
     { m_Box.Reset(); rResult.GetThing()->ResetBox(rResult); }
 
+    inline void topology::Swap(topology &other)
+    {
+    entity::Swap(other);
+    m_Box.Swap(other.m_Box);
+    }
+
     //
     // assembly
     //
@@ -300,6 +318,9 @@ namespace SGMInternal {
                                 std::vector<std::string> &,
                                 bool) const 
     {return true;}
+
+    inline void assembly::Swap(assembly &other)
+    { topology::Swap(other); }
 
     //
     // reference 
@@ -333,6 +354,9 @@ namespace SGMInternal {
                                  std::vector<std::string> &,
                                  bool) const 
     {return true;}
+    
+    inline void reference::Swap(reference &other)
+    { topology::Swap(other); }
 
     //
     // body
@@ -357,6 +381,13 @@ namespace SGMInternal {
     inline bool body::IsTopLevel() const
     { return m_sOwners.empty(); }
 
+    inline void body::Swap(body &other)
+    { 
+        topology::Swap(other);
+        m_sVolumes.swap(other.m_sVolumes);
+        m_aPoints.swap(other.m_aPoints);
+    }
+
     //
     // complex
     //
@@ -367,7 +398,9 @@ namespace SGMInternal {
             m_aSegments(other.m_aSegments),
             m_aTriangles(other.m_aTriangles),
             m_Tree(other.m_Tree)
-    {}
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
 
     inline complex::complex(SGM::Result &rResult) :
             topology(rResult, SGM::EntityType::ComplexType),
@@ -377,8 +410,8 @@ namespace SGMInternal {
             m_Tree()
     {}
 
-    inline complex::complex(SGM::Result &rResult,
-                     std::vector<SGM::Point3D> const &aPoints) :
+    inline complex::complex(SGM::Result                     &rResult,
+                            std::vector<SGM::Point3D> const &aPoints) :
             topology(rResult, SGM::EntityType::ComplexType),
             m_aPoints(aPoints),
             m_aSegments(),
@@ -386,36 +419,112 @@ namespace SGMInternal {
             m_Tree()
     {}
 
-    inline complex::complex(SGM::Result                     &rResult,
-                     std::vector<unsigned int> const &aSegments,
+    inline complex::complex(SGM::Result              &rResult,
+                     std::vector<unsigned>     const &aSegments,
                      std::vector<SGM::Point3D> const &aPoints) :
             topology(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(aSegments),
-            m_aTriangles(),
-            m_Tree()
-    {}
+        m_aPoints(aPoints),
+        m_aSegments(aSegments),
+        m_aTriangles(),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
 
-    inline complex::complex(SGM::Result                     &rResult,
-                     std::vector<SGM::Point3D> const &aPoints,
-                     std::vector<unsigned int> const &aTriangles) :
+    inline complex::complex(SGM::Result                &rResult,
+                            std::vector<unsigned>     &&aSegments,
+                            std::vector<SGM::Point3D> const &aPoints) :
             topology(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(),
-            m_aTriangles(aTriangles),
-            m_Tree()
-    {}
+        m_aPoints(aPoints),
+        m_aSegments(std::move(aSegments)),
+        m_aTriangles(),
+        m_Tree()
+    {
+    assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
 
-    inline complex::complex(SGM::Result                     &rResult,
-                     std::vector<SGM::Point3D> const &aPoints,
-                     std::vector<unsigned int> const &aSegments,
-                     std::vector<unsigned int> const &aTriangles) :
+    inline complex::complex(SGM::Result            &rResult,
+                        std::vector<unsigned>     &&aSegments,
+                        std::vector<SGM::Point3D> &&aPoints) :
             topology(rResult, SGM::EntityType::ComplexType),
-            m_aPoints(aPoints),
-            m_aSegments(aSegments),
-            m_aTriangles(aTriangles),
-            m_Tree()
-    {}
+        m_aPoints(std::move(aPoints)),
+        m_aSegments(std::move(aSegments)),
+        m_aTriangles(),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+    
+    inline complex::complex(SGM::Result              &rResult,
+                     std::vector<SGM::Point3D> const &aPoints,
+                     std::vector<unsigned>     const &aTriangles) :
+            topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(),
+        m_aTriangles(aTriangles),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+
+    inline complex::complex(SGM::Result                      &rResult,
+                            std::vector<SGM::Point3D> const  &aPoints,
+                            std::vector<unsigned>           &&aTriangles) :
+            topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(),
+        m_aTriangles(std::move(aTriangles)),
+        m_Tree()
+    {
+    assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+
+    inline complex::complex(SGM::Result                &rResult,
+                            std::vector<SGM::Point3D> &&aPoints,
+                            std::vector<unsigned>     &&aTriangles) :
+            topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(std::move(aPoints)),
+        m_aSegments(),
+        m_aTriangles(std::move(aTriangles)),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+
+    inline complex::complex(SGM::Result              &rResult,
+                     std::vector<SGM::Point3D> const &aPoints,
+                     std::vector<unsigned> const     &aSegments,
+                     std::vector<unsigned> const     &aTriangles) :
+            topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(aPoints),
+        m_aSegments(aSegments),
+        m_aTriangles(aTriangles),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+
+    inline complex::complex(SGM::Result            &rResult,
+                        std::vector<SGM::Point3D> &&aPoints,
+                        std::vector<unsigned>     &&aSegments,
+                        std::vector<unsigned>     &&aTriangles) :
+            topology(rResult, SGM::EntityType::ComplexType),
+        m_aPoints(std::move(aPoints)),
+        m_aSegments(std::move(aSegments)),
+        m_aTriangles(std::move(aTriangles)),
+        m_Tree()
+    {
+        assert(CheckIndexMax(rResult,m_aPoints.size()));
+    }
+
+    inline void complex::Swap(complex& other) // nothrow
+    {
+        topology::Swap(other);
+        m_aPoints.swap(other.m_aPoints);
+        m_aSegments.swap(other.m_aSegments);
+        m_aTriangles.swap(other.m_aTriangles);
+        m_Tree.Swap(other.m_Tree);
+    }
 
     inline void complex::Accept(EntityVisitor &v)
     { v.Visit(*this); }
@@ -425,6 +534,17 @@ namespace SGMInternal {
 
     inline bool complex::IsTopLevel() const
     { return m_sOwners.empty(); }
+
+    inline bool complex::CheckIndexMax(SGM::Result &rResult, size_t aPointsSize) const
+        {
+        if (aPointsSize >= (size_t)std::numeric_limits<unsigned>::max())
+            {
+            rResult.SetResult(SGM::ResultType::ResultTypeMaxRangeExceeded);
+            rResult.SetMessage("Number of points in Complex with triangles must be less than <unsigned>::max().");
+            return false;
+            }
+        return true;
+        }
 
     //
     // volume
@@ -458,6 +578,15 @@ namespace SGMInternal {
 
     inline bool volume::IsTopLevel() const
     {return m_pBody==nullptr && m_sOwners.empty();}
+    
+    inline void volume::Swap(volume &other)
+    {
+        topology::Swap(other);
+        m_sFaces.swap(other.m_sFaces);
+        m_sEdges.swap(other.m_sEdges);
+        std::swap(m_pBody,other.m_pBody);
+        m_FaceTree.Swap(other.m_FaceTree);
+    }
 
     //
     // face
@@ -495,6 +624,22 @@ namespace SGMInternal {
     inline bool face::IsTopLevel() const
     { return m_pVolume==nullptr && m_sOwners.empty(); }
 
+    inline void face::Swap(face &other)
+    {
+        topology::Swap(other);
+        m_sEdges.swap(other.m_sEdges);
+        m_mSideType.swap(other.m_mSideType);
+        std::swap(m_pVolume,other.m_pVolume);
+        std::swap(m_pSurface,other.m_pSurface);
+        std::swap(m_bFlipped,other.m_bFlipped);
+        std::swap(m_nSides,other.m_nSides);
+        m_aPoints3D.swap(other.m_aPoints3D);
+        m_aNormals.swap(other.m_aNormals);
+        m_aTriangles.swap(other.m_aTriangles);
+        m_aPoints2D.swap(other.m_aPoints2D);
+        m_mSeamType.swap(other.m_mSeamType);
+    }
+
     //
     // edge
     //
@@ -526,6 +671,21 @@ namespace SGMInternal {
     
     inline bool edge::IsTopLevel() const
     { return m_sFaces.empty() && m_pVolume==nullptr && m_sOwners.empty(); }
+    
+    inline void edge::Swap(SGMInternal::edge &other)
+    {
+        topology::Swap(other);
+        std::swap(m_pStart,other.m_pStart);
+        std::swap(m_pEnd,other.m_pEnd);
+        m_sFaces.swap(other.m_sFaces);
+        std::swap(m_pVolume,other.m_pVolume);
+        std::swap(m_pCurve,other.m_pCurve);
+
+        m_aPoints3D.swap(other.m_aPoints3D);
+        m_aParams.swap(other.m_aParams);
+        m_Domain.Swap(other.m_Domain);
+        std::swap(m_dTolerance,other.m_dTolerance);
+    }
 
     //
     // vertex
@@ -550,6 +710,13 @@ namespace SGMInternal {
 
     inline bool vertex::IsTopLevel() const
     { return m_sEdges.empty() && m_sOwners.empty(); }
+
+    inline void vertex::Swap(vertex &other)
+    {
+        topology::Swap(other);
+        m_Pos.Swap(other.m_Pos);
+        m_sEdges.swap(other.m_sEdges);
+    }
 
     inline volume *vertex::GetVolume() const
         {
@@ -611,6 +778,12 @@ namespace SGMInternal {
     inline SGM::EntityType attribute::GetAttributeType() const
     {return m_AttributeType;}
 
+    inline void attribute::Swap(attribute &other)
+    {
+        m_Name.swap(other.m_Name);
+        std::swap(m_AttributeType,other.m_AttributeType);
+    }
+
     //
     // StringAttribute
     //
@@ -626,6 +799,12 @@ namespace SGMInternal {
 
     inline StringAttribute *StringAttribute::Clone(SGM::Result &rResult) const
     { return new StringAttribute(rResult, *this); }
+
+    inline void StringAttribute::Swap(StringAttribute &other)
+    {
+        attribute::Swap(other);
+        m_Data.swap(other.m_Data);
+    }
     
     //
     // IntegerAttribute
@@ -644,6 +823,12 @@ namespace SGMInternal {
     inline IntegerAttribute *IntegerAttribute::Clone(SGM::Result &rResult) const
     { return new IntegerAttribute(rResult, *this); }
 
+    inline void IntegerAttribute::Swap(IntegerAttribute &other)
+    {
+        attribute::Swap(other);
+        m_aData.swap(other.m_aData);
+    }
+
     //
     // DoubleAttribute
     //
@@ -660,6 +845,12 @@ namespace SGMInternal {
     inline DoubleAttribute* DoubleAttribute::Clone(SGM::Result &rResult) const
     { return new DoubleAttribute(rResult, *this); }
 
+    inline void DoubleAttribute::Swap(DoubleAttribute &other)
+    {
+        attribute::Swap(other);
+        m_aData.swap(other.m_aData);
+    }
+
     //
     // CharAttribute
     //
@@ -675,6 +866,12 @@ namespace SGMInternal {
 
     inline CharAttribute *CharAttribute::Clone(SGM::Result &rResult) const
     { return new CharAttribute(rResult, *this); }
+
+    inline void CharAttribute::Swap(CharAttribute &other)
+    {
+        attribute::Swap(other);
+        m_aData.swap(other.m_aData);
+    }
 
 } // namespace SGMInternal
 

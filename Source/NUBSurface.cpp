@@ -8,14 +8,31 @@
 
 namespace SGMInternal
 {
-NUBsurface::NUBsurface(SGM::Result                                   &rResult,
-                       std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
-                       std::vector<double>                     const &aUKnots,
-                       std::vector<double>                     const &aVKnots):
+NUBsurface::NUBsurface(SGM::Result                                  &rResult,
+                       std::vector<std::vector<SGM::Point3D>> const &aControlPoints,
+                       std::vector<double>                    const &aUKnots,
+                       std::vector<double>                    const &aVKnots):
         surface(rResult,SGM::NUBSurfaceType),
         m_aaControlPoints(aControlPoints),
         m_aUKnots(aUKnots),
         m_aVKnots(aVKnots)
+    {
+    Construct(rResult);
+    }
+
+NUBsurface::NUBsurface(SGM::Result                             &rResult,
+                       std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
+                       std::vector<double>                    &&aUKnots,
+                       std::vector<double>                    &&aVKnots):
+    surface(rResult,SGM::NUBSurfaceType),
+    m_aaControlPoints(std::move(aControlPoints)),
+    m_aUKnots(std::move(aUKnots)),
+    m_aVKnots(std::move(aVKnots))
+    {
+    Construct(rResult);
+    }
+
+void NUBsurface::Construct(SGM::Result &rResult)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();

@@ -7,6 +7,7 @@
 #include "Topology.h"
 
 #include <set>
+#include <SGMTransform.h>
 //#include <cstdio>
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -249,6 +250,62 @@ void CloneSharedChildren(SGM::Result &rResult,
     }
 }
 
+//struct FacePointsVisitor : EntityVisitor
+//    {
+//    FacePointsVisitor() = delete;
+//
+//    explicit FacePointsVisitor(SGM::Result &rResult) : EntityVisitor(rResult)
+//        {}
+//
+//    inline void Visit(face &f) override
+//        { FindFacePointsData(*pResult, &f); }
+//    };
+
+
+struct TransformVisitor: EntityVisitor
+    {
+    SGM::Transform3D m_Transform3D;
+    
+    TransformVisitor() = delete;
+    
+    explicit TransformVisitor(SGM::Result &rResult,
+                              SGM::Transform3D const &transform3D) : 
+        EntityVisitor(rResult), m_Transform3D(transform3D)
+        {}
+
+    inline void Visit(thing &t)    override { t.TransformBox(*pResult, m_Transform3D); }
+    //inline void Visit(assembly &)  override { /* TODO: handle assembly transform */ }
+    //inline void Visit(attribute &) override { /* do nothing */ }
+    inline void Visit(body &b)     override { b.TransformBox(*pResult, m_Transform3D); }
+    inline void Visit(complex &c)  override { c.TransformBox(*pResult, m_Transform3D); c.Transform(m_Transform3D); }
+
+    inline void Visit(edge &e)   override { e.TransformBox(*pResult, m_Transform3D); e.TransformFacets(m_Transform3D); }
+    inline void Visit(face &f)   override { f.TransformBox(*pResult, m_Transform3D); f.TransformFacets(m_Transform3D); }
+    inline void Visit(vertex &v) override { v.TransformBox(*pResult, m_Transform3D); v.TransformData(m_Transform3D); }
+    inline void Visit(volume &v) override { v.TransformBox(*pResult, m_Transform3D); }
+
+    inline void Visit(line &c)        override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(circle &c)      override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(ellipse &c)     override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(hyperbola &c)   override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(parabola &c)    override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(hermite &c)     override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(NUBcurve &c)    override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(NURBcurve &c)   override { c.Transform(*pResult, m_Transform3D); }
+    inline void Visit(PointCurve &c)  override { c.Transform(*pResult, m_Transform3D); }
+    
+    inline void Visit(TorusKnot &s)   override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(plane &s)       override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(cylinder &s)    override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(cone &s)        override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(sphere &s)      override { s.Transform(*pResult, m_Transform3D); } 
+    inline void Visit(torus &s)       override { s.Transform(*pResult, m_Transform3D); } 
+    inline void Visit(revolve &s)     override { s.Transform(*pResult, m_Transform3D); } 
+    inline void Visit(extrude &s)     override { s.Transform(*pResult, m_Transform3D); } 
+    inline void Visit(offset &s)      override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(NUBsurface &s)  override { s.Transform(*pResult, m_Transform3D); }
+    inline void Visit(NURBsurface &s) override { s.Transform(*pResult, m_Transform3D); }
+    };
 
 void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
@@ -293,74 +350,11 @@ void TransformEntity(SGM::Result            &rResult,
         }
     }
 
+    TransformVisitor transformVisitor(rResult, transform3D);
+
     for (auto pEntry : sEntityToTransform)
         {
-        switch(pEntry->GetType())
-            {
-            case SGM::FaceType:
-                {
-                auto pFace=(face *)pEntry;
-                pFace->TransformBox(rResult, transform3D);
-                pFace->TransformFacets(transform3D);
-                break;
-                }
-            case SGM::EdgeType:
-                {
-                auto pEdge=(edge *)pEntry;
-                pEdge->TransformBox(rResult, transform3D);
-                pEdge->TransformFacets(transform3D);
-                break;
-                }
-            case SGM::VertexType:
-                {
-                auto pVertex=(vertex *)pEntry;
-                pVertex->TransformBox(rResult, transform3D);
-                pVertex->TransformData(transform3D);
-                break;
-                }
-            case SGM::SurfaceType:
-                {
-                auto pSurface=(surface *)pEntry;
-                pSurface->Transform(rResult,transform3D);
-                break;
-                }
-            case SGM::CurveType:
-                {
-                auto pCurve=(curve *)pEntry;
-                pCurve->Transform(rResult,transform3D);
-                break;
-                }
-            case SGM::ComplexType:
-                {
-                auto pComplex=(complex *)pEntry;
-                pComplex->TransformBox(rResult, transform3D);
-                pComplex->Transform(transform3D);
-                break;
-                }
-            case SGM::BodyType:
-                {
-                auto pBody = (body *)pEntry;
-                pBody->TransformBox(rResult, transform3D);
-                break;
-                }
-            case SGM::VolumeType:
-                {
-                auto pVolume= (volume *)pEntry;
-                pVolume->TransformBox(rResult, transform3D);
-                break;
-                }
-            case SGM::ThingType:
-                {
-                auto pThing = (thing *)pEntry;
-                pThing->TransformBox(rResult, transform3D);
-                break;
-                }
-            default:
-                {
-                throw std::logic_error("Unhandled entity type in TransformEntity");
-                break;
-                }
-            }
+        pEntry->Accept(transformVisitor);
         }
     }
 

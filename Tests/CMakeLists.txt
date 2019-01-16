@@ -15,6 +15,7 @@ set(SGM_GTEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_utility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/area_check.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/transform_check.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/complex_check.cpp
     )
 
 # add source variable in parent scope to be able to build viewer with gtests

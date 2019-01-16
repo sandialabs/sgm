@@ -11,6 +11,7 @@
 
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "sgm_export.h"
@@ -44,9 +45,10 @@ class SGM_EXPORT Graph
     {
     public:
 
-        Graph(std::set<size_t> &sVertices,std::set<GraphEdge> &sEdges):m_sVertices(sVertices),m_sEdges(sEdges) {}
+        Graph(std::set<size_t> sVertices, std::set<GraphEdge> sEdges)
+            : m_sVertices(std::move(sVertices)), m_sEdges(std::move(sEdges)), m_mNeighbors() {}
 
-        // If an edge is closed, then a non-simple graph is returned and extra vertices may  
+        // If an edge is closed, then a non-simple graph is returned and extra vertices may
         // be added with potentially invalid IDs if the closed edge(s) do not have vertices.
 
         Graph(SGM::Result               &rResult,
@@ -77,9 +79,9 @@ class SGM_EXPORT Graph
 
         bool IsCycle() const;
 
-        Graph FindMinCycle(GraphEdge &GE) const;
+        Graph FindMinCycle(GraphEdge const &GE) const;
 
-        Graph FindLargestMinCycle() const;
+        void FindLargestMinCycleVertices(std::vector<size_t> &aVertices) const;
 
         bool OrderVertices(std::vector<size_t> &aVertices) const;
 
@@ -94,7 +96,48 @@ class SGM_EXPORT Graph
 
         // Given a vertex m_mNeighbors returns a vector of adjacent vertices.
 
-        mutable std::map<size_t,std::vector<size_t> > m_mNeighbors;
+        mutable std::map<size_t,std::vector<size_t>> m_mNeighbors;
+
+        Graph() = default; // used only internally
+
+        std::unordered_map<size_t,size_t> FindLevelDistanceMap(SGM::GraphEdge const &GE) const;
+
+        void FindLowestBranchEdge(SGM::GraphEdge                    const &GE,
+                                  std::unordered_map<size_t,size_t> const &mDistance,
+                                  SGM::GraphEdge                          &LowestBranchEdge,
+                                  size_t                                  &nLowestEdge,
+                                  std::vector<size_t>                     &aEPath1,
+                                  std::vector<size_t>                     &aEPath2) const;
+
+        void FindLowestBranchVertex(std::unordered_map<size_t,size_t> const &mDistance,
+                                    SGM::GraphEdge                    const &GE,
+                                    size_t                                  &nLowestVertex,
+                                    std::vector<size_t>                     &aVPath1,
+                                    std::vector<size_t>                     &aVPath2) const;
+
     };
+
+inline bool SGM::GraphEdge::operator<(SGM::GraphEdge const &GEdge) const
+    {
+    if(m_nStart<GEdge.m_nStart)
+        {
+        return true;
+        }
+    else if(m_nStart==GEdge.m_nStart)
+        {
+        if(m_nEnd<GEdge.m_nEnd)
+            {
+            return true;
+            }
+        else if(m_nEnd==GEdge.m_nEnd)
+            {
+            if(m_nID<GEdge.m_nID)
+                {
+                return true;
+                }
+            }
+        }
+    return false;
+    }
 }
 #endif // SGM_GRAPH_H

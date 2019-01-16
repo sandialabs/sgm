@@ -1,3 +1,0 @@
-// Tests the methods of a Cone.;
-RunCPPTest(7);
-

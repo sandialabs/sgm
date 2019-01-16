@@ -10,14 +10,31 @@
 
 namespace SGMInternal
 {
-NURBsurface::NURBsurface(SGM::Result                                   &rResult,
-                         std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
-                         std::vector<double>                     const &aUKnots,
-                         std::vector<double>                     const &aVKnots):
+NURBsurface::NURBsurface(SGM::Result                                  &rResult,
+                         std::vector<std::vector<SGM::Point4D>> const &aaControlPoints,
+                         std::vector<double>                    const &aUKnots,
+                         std::vector<double>                    const &aVKnots):
         surface(rResult,SGM::NURBSurfaceType),
         m_aaControlPoints(aaControlPoints),
         m_aUKnots(aUKnots),
         m_aVKnots(aVKnots)
+    {
+    Construct(rResult);
+    }
+
+NURBsurface::NURBsurface(SGM::Result                             &rResult,
+                         std::vector<std::vector<SGM::Point4D>> &&aaControlPoints,
+                         std::vector<double>                    &&aUKnots,
+                         std::vector<double>                    &&aVKnots):
+    surface(rResult,SGM::NURBSurfaceType),
+    m_aaControlPoints(std::move(aaControlPoints)),
+    m_aUKnots(std::move(aUKnots)),
+    m_aVKnots(std::move(aVKnots))
+    {
+    Construct(rResult);
+    }
+
+void NURBsurface::Construct(SGM::Result &rResult)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();

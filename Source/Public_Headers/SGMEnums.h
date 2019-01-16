@@ -99,6 +99,7 @@ namespace SGM
         ResultTypeInconsistentData, // Inside polygons are not inside outside polygons.
         ResultTypeDeleteWillCorruptModel, // Deleting an entity would corrupt the database
         ResultTypeSurfaceMissingChild,    // extrude, revolve, or offset surface is missing curve or surface pointer
+        ResultTypeMaxRangeExceeded // max size of container too large, for example, a number larger than max unsigned
         };
 
     enum LogType

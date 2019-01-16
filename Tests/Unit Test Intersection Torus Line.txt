@@ -1,3 +1,0 @@
-// Tests torus line intersection;
-RunCPPTest(22);
-

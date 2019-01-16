@@ -6,12 +6,15 @@
 #include "EntityFunctions.h"
 #include "FileFunctions.h"
 #include "ReadFile.h"
+#include "STL.h"
 #include "Topology.h"
+#include "OrderPoints.h"
 
 //#define SGM_TIMER
 #include "Timer.h"
 
 #include <fstream>
+#include <future>
 #include <iostream>
 
 #ifdef _MSC_VER
@@ -1162,82 +1165,17 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 size_t ReadSTLFile(SGM::Result                  &rResult,
                    std::string            const &FileName,
                    thing                        *,//pThing,
-                   std::vector<entity *>        &aEntities,
+                   std::vector<entity*>         &aEntities,
                    std::vector<std::string>     &,//aLog,
                    SGM::TranslatorOptions const &Options)
     {
-    // Open the file.
-
-    FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==nullptr)
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage("Could not open " + FileName);
-        return 0;
-        }
-
-    // Read the complexes and triangles.
-
-    while(ReadToString(pFile,"solid"))
-        {
-        std::vector<SGM::Point3D> aPoints;
-        std::vector<unsigned int> aTriangles;
-        size_t nCount=0,nSolidCount=0,nVertexCount=0;;
-        char solid[6]="solid";
-        char vertex[7]="vertex";
-        char data;
-        while(fread(&data,1,1,pFile))
-            {
-            if(data==solid[nSolidCount])
-                {
-                ++nSolidCount;
-                if(nSolidCount==5)
-                    {
-                    break;
-                    }
-                }
-            else
-                {
-                nSolidCount=0;
-                }
-
-            if(data==vertex[nVertexCount])
-                {
-                ++nVertexCount;
-                if(nVertexCount==6)
-                    {
-                    double x,y,z;
-                    fscanf(pFile,"%lf %lf %lf",&x,&y,&z);
-                    aPoints.emplace_back(x,y,z);
-                    aTriangles.push_back((unsigned int)nCount++);
-                    }
-                }
-            else
-                {
-                nVertexCount=0;
-                }
-            }
-        auto pComplex=new complex(rResult, aPoints, aTriangles);
-        aEntities.push_back(pComplex);
-        }
-    fclose(pFile);
-
-    if(Options.m_bMerge)
-        {
-        size_t nEntities=aEntities.size();
-        std::vector<entity *> aNewEnts;
-        aNewEnts.reserve(nEntities);
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
-            {
-            auto pComplex=(complex *)aEntities[Index1];
-            complex *pMergedComplex=pComplex->Merge(rResult,SGM_ZERO);
-            rResult.GetThing()->DeleteEntity(pComplex);
-            aNewEnts.push_back(pMergedComplex);
-            }
-        aEntities=aNewEnts;
-        }
-    return aEntities.size();
+    size_t nPrevious = aEntities.size();
+#ifdef SGM_MULTITHREADED
+    ParseSTLTextConcurrent(rResult, FileName, aEntities, Options.m_bMerge);
+#else
+    ParseSTLTextSerial(rResult, FileName, aEntities, Options.m_bMerge);
+#endif
+    return aEntities.size() - nPrevious;
     }
 
 }

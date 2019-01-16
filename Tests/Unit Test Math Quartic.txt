@@ -1,3 +1,0 @@
-// Test Quartic;
-RunCPPTest(1);
-

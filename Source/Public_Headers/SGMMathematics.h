@@ -231,7 +231,7 @@ namespace SGM
                                  Point2D const &C);
     
     // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
-    // FindAdjacences2D return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
+    // FindAdjacencies return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
     // such that Tab0 is the index of the start of the triangle in aTriangles
     // that is adjacent to the first triangle along the edge ab.
     // If more than one triangle is adjacent to the first triangle along the same
@@ -240,8 +240,8 @@ namespace SGM
     // adjacent to it then the vector aAdjacency will have the value 
     // std::numeric_limits<unsigned int>::max() for that edges.
 
-    SGM_EXPORT size_t FindAdjacences2D(std::vector<unsigned int> const &aTriangles,
-                                       std::vector<unsigned int>       &aAdjacences);
+    SGM_EXPORT size_t FindAdjacencies2D(std::vector<unsigned int> const &aTriangles,
+                                        std::vector<unsigned int> &aAdjacences);
 
     // Given segments in the form <a0,b0,a1,b1,b2,c2,...>
     // FindAdjacences1D returns a verctor of the form <Sa0,Sb0,Sa1,Sb1,...>

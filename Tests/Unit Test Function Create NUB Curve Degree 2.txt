@@ -1,4 +1,0 @@
-// Tests the NUBCurve from a vector of 3 points;
-// to make a degree two NUB;
-RunCPPTest(18);
-

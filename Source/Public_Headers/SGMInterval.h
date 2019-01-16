@@ -116,6 +116,8 @@ namespace SGM {
 
         bool Stretch(const Interval1D &other);
 
+        void Swap(Interval1D &other);
+
     public:
 
         double m_dMin;
@@ -196,6 +198,8 @@ namespace SGM {
         Point2D UpperRight() const;
 
         Point2D MidPoint(double dUFraction = 0.5, double dVFraction = 0.5) const;
+
+        void Swap(Interval2D &other);
 
     public:
 
@@ -323,6 +327,8 @@ namespace SGM {
 
         double Diagonal() const;
 
+        void Swap(Interval3D &other);
+
     public:
 
         Interval1D m_XDomain;
@@ -336,7 +342,7 @@ namespace SGM {
 
         // returns 0 == intersection, -1 == in negative half-space, 1 == positive half-space
         int IntersectsPlaneImpl(Point3D const &c, UnitVector3D const &u, double tolerance) const;
-    };
+        };
 
     ///////////////////////////////////////////////////////////////////////////
     //

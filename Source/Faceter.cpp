@@ -85,7 +85,7 @@ void SubdivideFacets(face                const *pFace,
     aPoints2D.reserve(nTriangles+2*nPoints-2);
     aEntities.reserve(nTriangles+2*nPoints-2);
     std::vector<unsigned int> aAdjacences;
-    SGM::FindAdjacences2D(aTriangles,aAdjacences);
+    SGM::FindAdjacencies2D(aTriangles, aAdjacences);
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
@@ -2276,7 +2276,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist,pPoints3D,pNormals);
     //std::vector<unsigned int> aAdjacences;
-    //SGM::FindAdjacences2D(aTriangles,aAdjacences);
+    //SGM::FindAdjacencies(aTriangles,aAdjacences);
     //DelaunayFlips(aPoints2D,aTriangles,aAdjacences,pPoints3D,pNormals);
     return true;
     }

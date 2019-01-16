@@ -1,6 +1,0 @@
-// Tests "Web Cut Sphere.stp" with FindCloseEdges and FindCloseFaces;
-ReadFile("STEP Parts/Web Cut Sphere.stp",EntityList);
-nEdges=FindCloseEdges(5.7735,5.7735,5.7735,EntityList[0],0.001,Edges0);
-CompareSizes(nEdges,9);
-nFaces=FindCloseFaces(5.7735,5.7735,5.7735,EntityList[0],0.001,Faces0);
-CompareSizes(nFaces,9);

@@ -1,3 +1,0 @@
-// Tests the methods of a NUBSurface.;
-RunCPPTest(20);
-

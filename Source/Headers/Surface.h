@@ -517,10 +517,15 @@ class NUBsurface: public surface
     {
     public:
 
-        NUBsurface(SGM::Result                                   &rResult,
-                   std::vector<std::vector<SGM::Point3D> > const &aControlPoints,
-                   std::vector<double>                     const &aUKnots,
-                   std::vector<double>                     const &aVKnots);
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D>> const &aControlPoints,
+                   std::vector<double>                    const &aUKnots,
+                   std::vector<double>                    const &aVKnots);
+
+        NUBsurface(SGM::Result                             &rResult,
+                   std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
+                   std::vector<double>                    &&aUKnots,
+                   std::vector<double>                    &&aVKnots);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
@@ -605,6 +610,9 @@ class NUBsurface: public surface
         std::vector<SGM::Point2D> m_aSeedParams;
         size_t                    m_nUParams;
         size_t                    m_nVParams;
+
+    private:
+        void Construct(SGM::Result &rResult);
     };
 
 class NURBsurface: public surface
@@ -615,6 +623,11 @@ class NURBsurface: public surface
                     std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
                     std::vector<double>                     const &aUKnots,
                     std::vector<double>                     const &aVKnots);
+
+        NURBsurface(SGM::Result                             &rResult,
+                    std::vector<std::vector<SGM::Point4D>> &&aaControlPoints,
+                    std::vector<double>                    &&aUKnots,
+                    std::vector<double>                    &&aVKnots);
 
         NURBsurface(SGM::Result &rResult, NURBsurface const &other);
 
@@ -699,6 +712,10 @@ class NURBsurface: public surface
         std::vector<SGM::Point2D> m_aSeedParams;
         size_t                    m_nUParams;
         size_t                    m_nVParams;
+
+    private:
+
+        void Construct(SGM::Result &rResult);
     };
 
 class revolve : public surface
