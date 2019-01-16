@@ -3,6 +3,7 @@
 
 #include "SGMVector.h"
 #include "SGMEntityClasses.h"
+#include "SGMEnums.h"
 
 #include <vector>
 #include <set>
@@ -111,6 +112,68 @@ namespace SGM
 
     SGM_EXPORT double GetToleranceOfEdge(SGM::Result     &rResult,
                                          SGM::Edge const &EdgeID);
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  General Topology Creation and Hooking up Functions.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+    SGM_EXPORT SGM::Body CreateBody(SGM::Result &rResult);
+
+    SGM_EXPORT SGM::Volume CreateVolume(SGM::Result &rResult);
+
+    SGM_EXPORT SGM::Face CreateFace(SGM::Result &rResult);
+
+    SGM_EXPORT SGM::Edge CreateEdge(SGM::Result &rResult);
+
+    SGM_EXPORT SGM::Vertex CreateVertex(SGM::Result        &rResult,
+                                        SGM::Point3D const &Pos);
+
+    SGM_EXPORT void AddVolumeToBody(SGM::Result &rResult,
+                                    SGM::Volume &VolumeID,
+                                    SGM::Body   &BodyID);
+
+    SGM_EXPORT void SetPointsOfBody(SGM::Result                     &rResult,
+                                    std::vector<SGM::Point3D> const &aPoints,
+                                    SGM::Body                       &BodyID);
+
+    SGM_EXPORT void AddFaceToVolume(SGM::Result &rResult,
+                                    SGM::Face   &FaceID,
+                                    SGM::Volume &VolumeID);
+
+    SGM_EXPORT void AddEdgeToVolume(SGM::Result &rResult,
+                                    SGM::Edge   &EdgeID,
+                                    SGM::Body   &VolumeID);
+
+    SGM_EXPORT void SetSurfaceOfFace(SGM::Result  &rResult,
+                                     SGM::Surface &SurfaceID,
+                                     SGM::Face    &FaceID);
+
+    SGM_EXPORT void SetSidesOfFace(SGM::Result  &rResult,
+                                   int           nSides,        
+                                   SGM::Face    &FaceID);
+
+    SGM_EXPORT void SetFlippedOfFace(SGM::Result  &rResult,
+                                     bool          bFlipped,        
+                                     SGM::Face    &FaceID);
+
+    SGM_EXPORT void AddEdgeToFace(SGM::Result       &rResult,
+                                  SGM::Edge         &EdgeID,
+                                  SGM::EdgeSideType  nType,
+                                  SGM::Face         &FaceID);
+
+    SGM_EXPORT void SetStartOfEdge(SGM::Result &rResult,
+                                   SGM::Vertex &VertexID,
+                                   SGM::Edge   &EdgeID);
+
+    SGM_EXPORT void SetEndOfEdge(SGM::Result &rResult,
+                                 SGM::Vertex &VertexID,
+                                 SGM::Edge   &EdgeID);
+
+    SGM_EXPORT void SetCurveOfEdge(SGM::Result &rResult,
+                                   SGM::Curve  &CurveID,
+                                   SGM::Edge   &EdgeID);
 
 //////////////////////////////////////////////////////////////////////////////
 //

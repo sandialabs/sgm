@@ -36,8 +36,8 @@ void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity);
 
-void CheckPreexistingConditions(SGM::Result              &rResult,
-                                std::vector<std::string> &aCheckStrings);
+//void CheckPreexistingConditions(SGM::Result              &rResult,
+//                                std::vector<std::string> &aCheckStrings);
 
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,

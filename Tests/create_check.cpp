@@ -15,23 +15,75 @@
 //#pragma clang diagnostic push
 //#pragma ide diagnostic ignored "cert-err58-cpp"
 
+TEST(create_check, create_cylinder_from_entities)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    // Create a cylinder about the Z-axis with bottom at (0,0,0), 
+    // top at (0,0,2) and radius 1.0, by making all the topology and geometry.
+
+    // Create the topology.
+
+    SGM::Body BodyID=SGM::CreateBody(rResult);
+    SGM::Volume VolumeID=SGM::CreateVolume(rResult);
+    SGM::Face TopFaceID=SGM::CreateFace(rResult);
+    SGM::Face SideFaceID=SGM::CreateFace(rResult);
+    SGM::Face BottomFaceID=SGM::CreateFace(rResult);
+    SGM::Edge TopEdge=SGM::CreateEdge(rResult);
+    SGM::Edge BottomEdge=SGM::CreateEdge(rResult);
+
+    // Create the curves.
+
+    SGM::Point3D TopCenter(0,0,2),BottomCenter(0,0,0);
+    SGM::UnitVector3D Axis(0,0,1);
+    double dRadius=1.0;
+    SGM::Curve TopCurve=SGM::CreateCircle(rResult,TopCenter,Axis,dRadius);
+    SGM::Curve BottomCurve=SGM::CreateCircle(rResult,BottomCenter,Axis,dRadius);
+
+    // Create the surfaces.
+
+    SGM::Surface TopSurface=SGM::CreatePlane(rResult,TopCenter,
+        TopCenter+SGM::Vector3D(1,0,0),TopCenter+SGM::Vector3D(0,1,0));
+    SGM::Surface BottomSurface=SGM::CreatePlane(rResult,BottomCenter,
+        BottomCenter+SGM::Vector3D(1,0,0),BottomCenter+SGM::Vector3D(0,1,0));
+    SGM::Surface SideSurface=SGM::CreateCylinderSurface(rResult,BottomCenter,TopCenter,dRadius);
+
+    // Hook things up.
+
+    SGM::AddVolumeToBody(rResult,VolumeID,BodyID);
+    SGM::AddFaceToVolume(rResult,TopFaceID,VolumeID);
+    SGM::AddFaceToVolume(rResult,SideFaceID,VolumeID);
+    SGM::AddFaceToVolume(rResult,BottomFaceID,VolumeID);
+    SGM::AddEdgeToFace(rResult,TopEdge,SGM::EdgeSideType::FaceOnLeftType,TopFaceID);
+    SGM::AddEdgeToFace(rResult,BottomEdge,SGM::EdgeSideType::FaceOnRightType,BottomFaceID);
+    SGM::AddEdgeToFace(rResult,TopEdge,SGM::EdgeSideType::FaceOnRightType,SideFaceID);
+    SGM::AddEdgeToFace(rResult,BottomEdge,SGM::EdgeSideType::FaceOnLeftType,SideFaceID);
+    SGM::SetCurveOfEdge(rResult,TopCurve,TopEdge);
+    SGM::SetCurveOfEdge(rResult,BottomCurve,BottomEdge);
+    SGM::SetSurfaceOfFace(rResult,TopSurface,TopFaceID);
+    SGM::SetSurfaceOfFace(rResult,BottomSurface,BottomFaceID);
+    SGM::SetSurfaceOfFace(rResult,SideSurface,SideFaceID);
+    SGM::SetFlippedOfFace(rResult,true,BottomFaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
 TEST(create_check, create_parabola)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     double dTolerance = SGM_MIN_TOL;
-    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Point3D> aPoints {{0.0, 0.0, 0.0},
+                                       {1.0, 2.0, 0.0},
+                                       {-1.0, 2.0, 0.0},
+                                       {2.0, 8.0, 0.0},
+                                       {-3.0, 18.0, 0.0}};
     aPoints.reserve(5);
 
     // y=ax^2 parabola
     // a=2
-
-    aPoints.emplace_back(0.0, 0.0, 0.0);
-    aPoints.emplace_back(1.0, 2.0, 0.0);
-    aPoints.emplace_back(-1.0, 2.0, 0.0);
-    aPoints.emplace_back(2.0, 8.0, 0.0);
-    aPoints.emplace_back(-3.0, 18.0, 0.0);
 
     SGM::Curve CurveID=SGM::FindConic(rResult,aPoints,dTolerance);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,0.1));
@@ -41,10 +93,12 @@ TEST(create_check, create_parabola)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
     
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -76,10 +130,12 @@ TEST(create_check, create_hyperbola)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -112,10 +168,12 @@ TEST(create_check, create_ellipse)
     SGM::TransformEntity(rResult,Trans,CopyID);
     EXPECT_TRUE(SGM::TestCurve(rResult,CopyID,0.1));
     SGM::DeleteEntity(rResult,CopyID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
     SGM::DeleteEntity(rResult,CurveID);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -305,42 +363,5 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("DoubleAttribute",SGM::EntityTypeName(SGM::DoubleAttributeType));
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
-
-TEST(create_check, create_and_delete)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
-    std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.emplace_back(1  ,1  ,0);
-    aControlPoints.emplace_back(1.1,1.1,0);
-    aControlPoints.emplace_back(2  ,2.8,0);
-    aControlPoints.emplace_back(2.8,1.1,0);
-    aControlPoints.emplace_back(3  ,1  ,0);
-    SGM::Curve NUBID=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints,aKnots);
-
-    SGM::Surface ExtrudeID1 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
-    SGM::Surface ExtrudeID2 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
-
-    SGM::DeleteEntity(rResult, ExtrudeID1);
-
-    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
-
-
-    //SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(3,4,5));
-
-    //std::set<SGM::Volume> sVolumes;
-    //std::set<SGM::Face> sFaces;
-    //std::set<SGM::Edge> sEdges;
-    //std::set<SGM::Vertex> sVertices;
-    //SGM::FindVolumes(rResult, BodyID, sVolumes);
-    //SGM::FindFaces(rResult, BodyID, sFaces);
-    //SGM::FindEdges(rResult, BodyID, sEdges);
-    //SGM::FindVertices(rResult, BodyID, sVertices);
-
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
 
 //#pragma clang diagnostic pop

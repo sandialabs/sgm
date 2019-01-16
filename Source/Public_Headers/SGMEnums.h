@@ -97,7 +97,8 @@ namespace SGM
         ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
         ResultTypeUnknownEntityID,  // No matching entity for given ID.
         ResultTypeInconsistentData, // Inside polygons are not inside outside polygons.
-        ResultTypeDeleteWillCorruptModel, // Deleting an entity would corrupt the database
+        ResultTypeCannotDelete,     // Cannot delete an entity if it has parents
+        ResultTypeCannotTransform,  // Cannot transform an entity if it has parents
         ResultTypeSurfaceMissingChild,    // extrude, revolve, or offset surface is missing curve or surface pointer
         ResultTypeMaxRangeExceeded // max size of container too large, for example, a number larger than max unsigned
         };

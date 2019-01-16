@@ -81,16 +81,6 @@ void volume::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void volume::RemoveParents(SGM::Result &rResult)
-{
-    if(GetBody())
-    {
-        GetBody()->RemoveVolume(this);
-        SetBody(nullptr);
-    }
-    topology::RemoveParents(rResult);
-}
-
 void volume::SeverRelations(SGM::Result &)
     {
     if(GetBody())

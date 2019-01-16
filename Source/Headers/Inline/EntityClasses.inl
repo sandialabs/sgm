@@ -72,9 +72,11 @@ namespace SGMInternal {
     inline std::set<entity *, EntityCompare> const &entity::GetOwners() const
     { return m_sOwners; }
 
+    inline void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
+    { }
+
     inline void entity::AddAttribute(attribute *pEntity)
-    { m_sAttributes.insert(pEntity); 
-    pEntity->AddOwner(this);}
+    { m_sAttributes.insert(pEntity); pEntity->AddOwner(this);}
 
     inline void entity::RemoveAttribute(attribute *pEntity)
     { m_sAttributes.erase(pEntity); }

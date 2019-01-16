@@ -982,6 +982,125 @@ double SGM::GetToleranceOfEdge(SGM::Result     &rResult,
     return pEdge->GetTolerance();
     }
 
+SGM::Body SGM::CreateBody(SGM::Result &rResult)
+    {
+    SGMInternal::body *pBody=new SGMInternal::body(rResult);
+    return pBody->GetID();
+    }
+
+SGM::Volume SGM::CreateVolume(SGM::Result &rResult)
+    {
+    SGMInternal::volume *pVolume=new SGMInternal::volume(rResult);
+    return pVolume->GetID();
+    }
+
+SGM::Face SGM::CreateFace(SGM::Result &rResult)
+    {
+    SGMInternal::face *pFace=new SGMInternal::face(rResult);
+    return pFace->GetID();
+    }
+
+SGM::Edge SGM::CreateEdge(SGM::Result &rResult)
+    {
+    SGMInternal::edge *pEdge=new SGMInternal::edge(rResult);
+    return pEdge->GetID();
+    }
+
+SGM::Vertex SGM::CreateVertex(SGM::Result        &rResult,
+                              SGM::Point3D const &Pos)
+    {
+    SGMInternal::vertex *pVertex=new SGMInternal::vertex(rResult,Pos);
+    return pVertex->GetID();
+    }
+
+void SGM::AddVolumeToBody(SGM::Result &rResult,
+                          SGM::Volume &VolumeID,
+                          SGM::Body   &BodyID)
+    {
+    SGMInternal::body *pBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+    SGMInternal::volume *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
+    pBody->AddVolume(pVolume);
+    }
+
+void SGM::SetPointsOfBody(SGM::Result                     &rResult,
+                          std::vector<SGM::Point3D> const &aPoints,
+                          SGM::Body                       &BodyID)
+    {
+    SGMInternal::body *pBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+    pBody->SetPoints(aPoints);
+    }
+
+void SGM::AddFaceToVolume(SGM::Result &rResult,
+                          SGM::Face   &FaceID,
+                          SGM::Volume &VolumeID)
+    {
+    SGMInternal::volume *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    pVolume->AddFace(pFace);
+    }
+
+void SGM::SetSurfaceOfFace(SGM::Result  &rResult,
+                           SGM::Surface &SurfaceID,
+                           SGM::Face    &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    SGMInternal::surface *pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
+    pFace->SetSurface(pSurface);
+    }
+
+void SGM::SetSidesOfFace(SGM::Result  &rResult,
+                         int           nSides,        
+                         SGM::Face    &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    pFace->SetSides(nSides);
+    }
+
+void SGM::SetFlippedOfFace(SGM::Result  &rResult,
+                           bool          bFlipped,        
+                           SGM::Face    &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    pFace->SetFlipped(bFlipped);
+    }
+
+void SGM::AddEdgeToFace(SGM::Result       &rResult,
+                        SGM::Edge         &EdgeID,
+                        SGM::EdgeSideType  nType,
+                        SGM::Face         &FaceID)
+    {
+    SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    pFace->AddEdge(rResult,pEdge,nType);
+    }
+
+void SGM::SetStartOfEdge(SGM::Result &rResult,
+                         SGM::Vertex &VertexID,
+                         SGM::Edge   &EdgeID)
+    {
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::vertex *pVertex=(SGMInternal::vertex *)rResult.GetThing()->FindEntity(VertexID.m_ID);
+    pEdge->SetStart(pVertex);
+    }
+
+void SGM::SetEndOfEdge(SGM::Result &rResult,
+                       SGM::Vertex &VertexID,
+                       SGM::Edge   &EdgeID)
+    {
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::vertex *pVertex=(SGMInternal::vertex *)rResult.GetThing()->FindEntity(VertexID.m_ID);
+    pEdge->SetEnd(pVertex);
+    }
+
+void SGM::SetCurveOfEdge(SGM::Result &rResult,
+                         SGM::Curve  &CurveID,
+                         SGM::Edge   &EdgeID)
+    {
+    SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    SGMInternal::curve *pCurve=(SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    pEdge->SetCurve(pCurve);
+    }
+
 size_t SGM::FindAdjacentFaces(SGM::Result            &rResult,
                               SGM::Face        const &FaceID,
                               std::vector<SGM::Face> &aFaces)
@@ -1271,6 +1390,26 @@ SGM::Edge SGM::CreateEdge(SGM::Result           &rResult,
     return {pEdge->GetID()};
     }
 
+SGM::Edge SGM::CreateEdge(SGM::Result &rResult,
+                          SGM::Curve  &CurveID,
+                          SGM::Vertex &Start,
+                          SGM::Vertex &End)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pCurve=(SGMInternal::curve *)pThing->FindEntity(CurveID.m_ID);
+    auto pStart=(SGMInternal::vertex *)pThing->FindEntity(Start.m_ID);
+    auto pEnd=(SGMInternal::vertex *)pThing->FindEntity(End.m_ID);
+    if (pStart == pEnd)
+    {
+        if (!pCurve->GetClosed())
+        {
+            throw std::logic_error("Matching start and end vertices requires a closed curve");
+        }
+    }
+    SGMInternal::edge *pEdge=SGMInternal::CreateEdge(rResult, pCurve, pStart, pEnd);
+    return {pEdge->GetID()};
+    }
+
 SGM::Edge SGM::CreateLinearEdge(SGM::Result        &rResult,
                                 SGM::Point3D const &StartPos,
                                 SGM::Point3D const &EndPos)
@@ -1321,9 +1460,9 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
                       SGM::CheckOptions  const &Options,
                       std::vector<std::string> &aCheckStrings)
     {
-    SGMInternal::CheckPreexistingConditions(rResult, aCheckStrings);
-    if (rResult.GetResult() != ResultTypeOK)
-        return false;
+    //SGMInternal::CheckPreexistingConditions(rResult, aCheckStrings);
+    //if (rResult.GetResult() != ResultTypeOK)
+    //    return false;
 
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
@@ -1566,6 +1705,14 @@ SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
                               SGM::Point3D const &YPos)
     {
     auto pPlane = new SGMInternal::plane(rResult,Origin,XPos,YPos);
+    return {pPlane->GetID()};
+    }
+
+SGM::Surface SGM::CreatePlane(SGM::Result             &rResult,
+                              SGM::Point3D      const &Origin,
+                              SGM::UnitVector3D const &Normal)
+    {
+    auto pPlane = new SGMInternal::plane(rResult,Origin,Normal);
     return {pPlane->GetID()};
     }
 
@@ -2044,49 +2191,10 @@ void SGM::SaveSTL(SGM::Result                  &rResult,
 SGM::Body SGM::CoverPlanarWire(SGM::Result &rResult,
                                SGM::Body   &PlanarWireID)
     {
-    // Create the new body
-
-    SGMInternal::thing  *pThing=rResult.GetThing();
-    SGMInternal::entity *pEntity=pThing->FindEntity(PlanarWireID.m_ID);
-    auto   pBody=new SGMInternal::body(rResult);
-    auto pVolume=new SGMInternal::volume(rResult);
-    auto   pFace=new SGMInternal::face(rResult);
-    pVolume->AddFace(pFace);
-    pBody->AddVolume(pVolume);
-
-    // Copy the bounding edges
-
-    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
-    std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertices;
-    std::map<SGMInternal::vertex const *,SGMInternal::vertex *> mVertices;
-    FindEdges(rResult,pEntity,sEdges);
-    FindVertices(rResult,pEntity,sVertices);
-    for (auto pVertex : sVertices)
-        {
-        mVertices[pVertex]=pVertex->Clone(rResult);
-        }
-    for (auto pEdge : sEdges)
-        {
-        SGMInternal::curve const *pCurve=pEdge->GetCurve();
-        SGMInternal::vertex const *pStart=pEdge->GetStart();
-        SGMInternal::vertex const *pEnd=pEdge->GetEnd();
-        SGMInternal::vertex *pNewStart=mVertices[pStart];
-        SGMInternal::vertex *pNewEnd=mVertices[pEnd];
-        SGMInternal::curve *pNewCurve=pCurve->Clone(rResult);
-        SGM::Interval1D const &Domain=pEdge->GetDomain();
-        auto pNewEdge=new SGMInternal::edge(rResult);
-        pNewEdge->SetStart(pNewStart);
-        pNewEdge->SetEnd(pNewEnd);
-        pNewEdge->SetCurve(pNewCurve);
-        pNewEdge->SetDomain(rResult,Domain);
-        pFace->AddEdge(rResult,pNewEdge,SGM::FaceOnLeftType);
-        }
-
-    // Create the plane.
-
-    return {pBody->GetID()};
+    SGMInternal::body *pWireBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(PlanarWireID.m_ID);
+    SGMInternal::body *pCoveredBody=SGMInternal::CoverPlanarWire(rResult,pWireBody);
+    return {pCoveredBody->GetID()};
     }
-
 
 void SGM::FindClosestPointOnEntity(SGM::Result        &rResult,
                                    SGM::Point3D const &Point,
@@ -2493,3 +2601,4 @@ SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
     SGMInternal::curve *pCurve=pSurface->VParamLine(rResult,dV);
     return {pCurve->GetID()};
     }
+

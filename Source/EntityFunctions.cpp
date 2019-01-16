@@ -23,9 +23,9 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-void UnhookEntity(SGM::Result &rResult,
-                  entity      *pEntity,
-                  std::set<entity *,EntityCompare> &sUnhooked)
+void FindChildrenToDeleteAndToKeep(entity                      const *pEntity,
+                                   std::set<entity *, EntityCompare> &aToDelete,
+                                   std::set<entity *, EntityCompare> &aToKeep)
 {
     std::set<entity *,EntityCompare> sAllChildren;
     pEntity->FindAllChildren(sAllChildren);
@@ -37,168 +37,59 @@ void UnhookEntity(SGM::Result &rResult,
         std::set<entity *, EntityCompare> sParents;
         pChild->GetParents(sParents);
 
+        bool bOtherParents = false;
         for (auto pParent : sParents)
         {
             if ((pParent != pEntity) && (sAllChildren.find(pParent) == sAllChildren.end()))
             {
-                sSharedChildren.emplace(pChild);
+                bOtherParents = true;
+                aToKeep.emplace(pChild);
                 break;
             }
         }
-    }
-
-    // make sure we include all children of a shared child
-    for (auto pShared : sSharedChildren)
-    {
-        std::set<entity *,EntityCompare> sGrandChildren;
-        pShared->FindAllChildren(sGrandChildren);
-
-        for (auto pChild : sGrandChildren)
+        if (!bOtherParents)
         {
-            sSharedChildren.emplace(pChild);
+            aToDelete.emplace(pChild);
         }
     }
-
-    // make list of non-shared children to unhook
-    // set difference sUnhooked = sAllChildren - sSharedChildren
-    std::set_difference(sAllChildren.begin(), sAllChildren.end(), sSharedChildren.begin(), sSharedChildren.end(), 
-                        std::inserter(sUnhooked, sUnhooked.begin()), EntityCompare());
-
-    // unhook shared children from entities to unhook
-    sUnhooked.emplace(pEntity);
-    for (auto pShared : sSharedChildren)
-    {
-        pShared->RemoveParentsInSet(rResult, sUnhooked);
-    }
-    pEntity->RemoveParents(rResult);
 }
 
 void DeleteEntity(SGM::Result &rResult,
                   entity      *pEntity)
+{
+    // if this entity still has parents, don't delete it
+    if (!pEntity->IsTopLevel())
     {
-    //// if this entity still has parents, don't delete it
-    //std::set<entity *, EntityCompare> sParents;
-    //pEntity->GetParents(sParents);
-
-    //if (sParents.size())
-    //{
-    //    char Buffer[1000];
-    //    snprintf(Buffer,sizeof(Buffer),"%s %lu cannot be deleted because it has parents.",
-    //             typeid(*pEntity).name(), pEntity->GetID());
-    //    rResult.SetResult(SGM::ResultTypeDeleteWillCorruptModel);
-    //    std::string const sMessage(Buffer);
-    //    rResult.SetMessage(sMessage);
-    //    return;
-    //}
-
-    std::set<entity *, EntityCompare> sUnhooked;
-    UnhookEntity(rResult, pEntity, sUnhooked);
-
-    auto pThing = rResult.GetThing();
-    for(auto pDelete : sUnhooked)
-        {
-        pDelete->SeverRelations(rResult);
-        }
-    for(auto pDelete : sUnhooked)
-        {
-        pThing->DeleteEntity(pDelete);
-        }
-
-    //auto pThing = rResult.GetThing();
-    //std::set<entity *,EntityCompare> sChildren;
-    //pEntity->FindAllChildren(sChildren);
-    //std::vector<entity *> aDelete;
-    //aDelete.push_back(pEntity);
-
-    //// Remove pEntity from its parent and remove all non-shaired childern.
-    //switch(pEntity->GetType())
-    //    {
-    //    case SGM::FaceType:
-    //        {
-    //        face *pFace=(face *)pEntity;
-    //        for (auto pChild : sChildren) 
-    //            {
-    //            switch(pChild->GetType())
-    //                {
-    //                case SGM::EdgeType:
-    //                    {
-    //                    edge *pEdge=(edge *)pChild;
-    //                    if(pEdge->GetFaces().size()==1)
-    //                        {
-    //                        aDelete.push_back(pChild);
-    //                        }
-    //                    break;
-    //                    }
-    //                case SGM::VertexType:
-    //                    {
-    //                    vertex *pVertex=(vertex *)pChild;
-    //                    std::set<face *,EntityCompare> sFaces;
-    //                    FindFaces(rResult,pVertex,sFaces);
-    //                    if(sFaces.size()==1)
-    //                        {
-    //                        aDelete.push_back(pChild);
-    //                        }
-    //                    break;
-    //                    }
-    //                case SGM::CurveType:
-    //                    {
-    //                    curve *pCurve=(curve *)pChild;
-    //                    std::set<face *,EntityCompare> sFaces;
-    //                    FindFaces(rResult,pCurve,sFaces);
-    //                    if(sFaces.size()==1)
-    //                        {
-    //                        aDelete.push_back(pChild);
-    //                        }
-    //                    break;
-    //                    }
-    //                case SGM::SurfaceType:
-    //                    {
-    //                    surface *pSurface=(surface *)pChild;
-    //                    std::set<face *,EntityCompare> sFaces;
-    //                    FindFaces(rResult,pSurface,sFaces);
-    //                    if(sFaces.size()==1)
-    //                        {
-    //                        aDelete.push_back(pChild);
-    //                        }
-    //                    break;
-    //                    }
-    //                default:
-    //                    {
-    //                    aDelete.push_back(pChild);
-    //                    }
-    //                }
-    //            }
-
-    //        // Check to see if the faces sides need to be changed.
-
-    //        if(pFace->GetSides()==1)
-    //            {
-    //            std::set<face *,EntityCompare> sFaces;
-    //            FindFacesOfCell(rResult,pFace,sFaces);
-    //            for(auto pCellFace : sFaces)
-    //                {
-    //                pCellFace->SetSides(pCellFace->GetSides()+1);
-    //                }
-    //            }
-    //        break;
-    //        }
-    //    default:
-    //        {
-    //        for (auto pChild : sChildren) 
-    //            {
-    //            pChild->SeverRelations(rResult);
-    //            aDelete.push_back(pChild);
-    //            }
-    //        break;
-    //        }
-    //    }
-
-    //for(auto pDelete : aDelete)
-    //    {
-    //    pDelete->SeverRelations(rResult);
-    //    pThing->DeleteEntity(pDelete);
-    //    }
+        char Buffer[1000];
+        snprintf(Buffer,sizeof(Buffer),"%s %lu is not a top level entity and cannot be deleted",
+                 typeid(*pEntity).name(), pEntity->GetID());
+        rResult.SetResult(SGM::ResultTypeCannotDelete);
+        std::string const sMessage(Buffer);
+        rResult.SetMessage(sMessage);
+        return;
     }
+
+    std::set<entity *, EntityCompare> sEntitiesToDelete;
+    std::set<entity *, EntityCompare> sEntitiesToKeep;
+    FindChildrenToDeleteAndToKeep(pEntity, sEntitiesToDelete, sEntitiesToKeep);
+    sEntitiesToDelete.emplace(pEntity);
+
+    // unhook entities to keep from any entities being deleted
+    for (auto pToKeep : sEntitiesToKeep)
+    {
+        pToKeep->RemoveParentsInSet(rResult, sEntitiesToDelete);
+    }
+
+    for(auto pDelete : sEntitiesToDelete)
+    {
+        pDelete->SeverRelations(rResult);
+    }
+    auto pThing = rResult.GetThing();
+    for(auto pDelete : sEntitiesToDelete)
+    {
+        pThing->DeleteEntity(pDelete);
+    }
+}
 
 entity *CopyEntity(SGM::Result &rResult,
                    entity      *pEntity)
@@ -319,6 +210,18 @@ void TransformEntity(SGM::Result            &rResult,
     }
     else
     {
+        if (!pEntity->IsTopLevel())
+        {
+            char Buffer[1000];
+            snprintf(Buffer,sizeof(Buffer),"%s %lu is not a top level entity and cannot be transformed",
+                     typeid(*pEntity).name(), pEntity->GetID());
+            rResult.SetResult(SGM::ResultTypeCannotTransform);
+            std::string const sMessage(Buffer);
+            rResult.SetMessage(sMessage);
+            return;
+        }
+
+        
         std::set<entity *,EntityCompare> sFamily;
         pEntity->FindAllChildren(sFamily);
         sFamily.insert(pEntity);

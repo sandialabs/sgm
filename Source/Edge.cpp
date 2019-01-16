@@ -78,20 +78,20 @@ void edge::RemoveParentsInSet(SGM::Result &rResult,
     std::set<face *,EntityCompare> sFaces=GetFaces();
     if (!sFaces.empty())
     {
-        std::vector<face *> aFacesToRemove;
+        std::set<face *, EntityCompare> sRemainingFaces;
         
         for(auto pFace : sFaces)
         {
             if (sFaces.find(pFace) != sFaces.end())
             {
                 pFace->RemoveEdge(rResult,this);
-                aFacesToRemove.emplace_back(pFace);
+            }
+            else
+            {
+                sRemainingFaces.emplace(pFace);
             }
         }
-        for(auto pFace : aFacesToRemove)
-        {
-            sFaces.erase(pFace);
-        }
+        m_sFaces = sRemainingFaces;
     }
 
     if (m_pVolume)
@@ -104,24 +104,6 @@ void edge::RemoveParentsInSet(SGM::Result &rResult,
     }
     topology::RemoveParentsInSet(rResult, sParents);
 }
-
-void edge::RemoveParents(SGM::Result &rResult)
-{
-    std::set<face *,EntityCompare> sFaces=GetFaces();
-    for(auto pFace : sFaces)
-    {
-        pFace->RemoveEdge(rResult,this);
-    }
-    sFaces.clear();
-
-    if(m_pVolume)
-        {
-        m_pVolume->RemoveEdge(this);
-        m_pVolume = nullptr;
-        }
-    topology::RemoveParents(rResult);
-}
-
 
 void edge::SeverRelations(SGM::Result &rResult)
     {
@@ -249,27 +231,34 @@ SGM::Interval1D const &edge::GetDomain() const
     if(m_Domain.IsEmpty())
         {
         SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
-        m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
-        m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
-        if(m_Domain.IsEmpty())
+        if(m_pStart)
             {
-            if(m_pCurve->GetClosed())
+            m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
+            m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
+            if(m_Domain.IsEmpty())
                 {
-                if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                if(m_pCurve->GetClosed())
                     {
-                    m_Domain.m_dMax=CurveDomain.m_dMax;
-                    }
-                else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
-                    {
-                    m_Domain.m_dMin=CurveDomain.m_dMin;
+                    if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMax=CurveDomain.m_dMax;
+                        }
+                    else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMin=CurveDomain.m_dMin;
+                        }
                     }
                 }
+            if( m_Domain.Length()<SGM_ZERO && 
+                m_pStart==m_pEnd && 
+                m_pCurve->GetCurveType()!=SGM::PointCurveType)
+                {
+                m_Domain=m_pCurve->GetDomain();
+                }
             }
-        if( m_Domain.Length()<SGM_ZERO && 
-            m_pStart==m_pEnd && 
-            m_pCurve->GetCurveType()!=SGM::PointCurveType)
+        else
             {
-            m_Domain=m_pCurve->GetDomain();
+            m_Domain=CurveDomain;
             }
         }
     return m_Domain;
@@ -281,8 +270,12 @@ void edge::SetCurve(curve *pCurve)
         {
         m_pCurve->RemoveEdge(this);
         }
+    // allow setting curve to nullptr for disconnecting during a delete operation
     m_pCurve=pCurve;
-    m_pCurve->AddEdge(this);
+    if (m_pCurve != nullptr)
+        {
+        m_pCurve->AddEdge(this);
+        }
     }
 
 void edge::FixDomain(SGM::Result &rResult)

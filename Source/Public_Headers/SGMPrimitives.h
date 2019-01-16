@@ -102,6 +102,11 @@ SGM_EXPORT SGM::Edge CreateEdge(SGM::Result           &rResult,
                                 SGM::Curve            &CurveID,
                                 SGM::Interval1D const *pDomain=nullptr);
 
+SGM_EXPORT SGM::Edge CreateEdge(SGM::Result &rResult,
+                                SGM::Curve  &CurveID,
+                                SGM::Vertex &Start,
+                                SGM::Vertex &End);
+
 SGM_EXPORT SGM::Edge CreateLinearEdge(SGM::Result        &rResult,
                                       SGM::Point3D const &StartPos,
                                       SGM::Point3D const &EndPos);
@@ -128,6 +133,7 @@ SGM_EXPORT SGM::Complex CreateComplex(SGM::Result                     &rResult,
                                       std::vector<SGM::Point3D> const &aPoints,
                                       std::vector<unsigned int> const &aSegments,
                                       std::vector<unsigned int> const &aTriangles);
+
 
     } // End of SGM namespace
 

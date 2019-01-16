@@ -21,27 +21,30 @@ curve::curve(SGM::Result &rResult, curve const &other) :
     {}
 
 void curve::RemoveParentsInSet(SGM::Result &rResult,
-                               std::set<entity *,EntityCompare>  const &sParents)
+                               std::set<entity *,EntityCompare>  const &sToRemove)
 {
+    std::set<edge *, EntityCompare> sRemainingParents;
+    std::vector<edge *> aToDisconnect;
     for(auto pEdge : m_sEdges)
     {
-        if (sParents.find(pEdge) != sParents.end())
+        if (sToRemove.find(pEdge) == sToRemove.end())
         {
-            pEdge->SetCurve(nullptr);
-            m_sEdges.erase(pEdge);
+            sRemainingParents.emplace(pEdge);
+        }
+        else
+        {
+            if (pEdge->GetCurve() == this)
+            {
+                aToDisconnect.emplace_back(pEdge);
+            }
         }
     }
-    entity::RemoveParentsInSet(rResult, sParents);
-}
-
-void curve::RemoveParents(SGM::Result &rResult)
-{
-    for(auto pEdge : m_sEdges)
+    for (auto pEdge : aToDisconnect)
     {
         pEdge->SetCurve(nullptr);
     }
-    m_sEdges.clear();
-    entity::RemoveParents(rResult);
+    m_sEdges = sRemainingParents;
+    entity::RemoveParentsInSet(rResult, sToRemove);
 }
 
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)

@@ -909,8 +909,8 @@ void ReadTransformData(size_t                     TransformID,
     GetAxesFromSTEP(STEPLineData1, mSTEPData, Center1, ZAxis1, XAxis1);
     GetAxesFromSTEP(STEPLineData2, mSTEPData, Center2, ZAxis2, XAxis2);
 
-    Trans = SGM::Transform3D(XAxis1, SGM::UnitVector3D(ZAxis1*XAxis1), ZAxis1, Center1,
-                             XAxis2, SGM::UnitVector3D(ZAxis2*XAxis2), ZAxis2, Center2);
+    Trans = SGM::Transform3D(XAxis2, SGM::UnitVector3D(ZAxis2*XAxis2), ZAxis2, Center2,
+                             XAxis1, SGM::UnitVector3D(ZAxis1*XAxis1), ZAxis1, Center1);
 }
 
 void InstantiateBodiesForLeafAssemblyNodes(SGM::Result &rResult,
