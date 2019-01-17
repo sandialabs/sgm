@@ -280,6 +280,7 @@ complex *complex::Cover(SGM::Result &rResult) const
         size_t nParts=aParts.size();
         size_t Index1;
         std::vector<complex *> aCovers;
+        aCovers.reserve(nParts);
         for(Index1=0;Index1<nParts;++Index1)
             {
             complex *pPart=aParts[Index1];

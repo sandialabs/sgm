@@ -187,18 +187,18 @@ inline bool InTriangleInline(SGM::Point2D const &A,
     }
 
 bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
-             std::vector<unsigned>       &aPolygon,
+             std::vector<unsigned>           &aPolygon,
              std::vector<bool>         const &aCutOff,
-             unsigned                     nEar)
+             unsigned                         nEar,
+             unsigned                         nEarA,
+             unsigned                         nEarB,
+             unsigned                         nEarC)
     {
     if(aCutOff[nEar])
         {
         return false;
         }
     unsigned nPolygon=(unsigned)aPolygon.size();
-    unsigned nEarA=aPolygon[GetPrevious(nEar,aCutOff)];
-    unsigned nEarB=aPolygon[nEar];
-    unsigned nEarC=aPolygon[GetNext(nEar,aCutOff)];
     SGM::Point2D const &A=aPoints[nEarA];
     SGM::Point2D const &B=aPoints[nEarB];
     SGM::Point2D const &C=aPoints[nEarC];
@@ -2092,16 +2092,18 @@ void TriangulatePolygonSubSub(std::vector<SGM::Point2D> const &aPoints,
             {
             std::pair<double, unsigned> Angle = *iter;
             unsigned nEar = Angle.second;
-            if(SGMInternal::GoodEar(aPoints, aPolygon, aCutOff, nEar))
+
+            unsigned nPreviousEarA = SGMInternal::GetPrevious(nEar, aCutOff);
+            unsigned nNextEarC = SGMInternal::GetNext(nEar, aCutOff);
+            unsigned nEarA = aPolygon[nPreviousEarA];
+            unsigned nEarB = aPolygon[nEar];
+            unsigned nEarC = aPolygon[nNextEarC];
+
+            if (SGMInternal::GoodEar(aPoints, aPolygon, aCutOff, nEar, nEarA, nEarB, nEarC))
                 {
-                unsigned nEarA = SGMInternal::GetPrevious(nEar, aCutOff);
-                unsigned nA = aPolygon[nEarA];
-                unsigned nB = aPolygon[nEar];
-                unsigned nEarC = SGMInternal::GetNext(nEar, aCutOff);
-                unsigned nC = aPolygon[nEarC];
-                aTriangles.push_back(nA);
-                aTriangles.push_back(nB);
-                aTriangles.push_back(nC);
+                aTriangles.push_back(nEarA);
+                aTriangles.push_back(nEarB);
+                aTriangles.push_back(nEarC);
 
                 // Fix angles at nEar
 
@@ -2113,19 +2115,19 @@ void TriangulatePolygonSubSub(std::vector<SGM::Point2D> const &aPoints,
 
                 // Fix angles at nEarA
 
-                std::pair<double, unsigned> AngleA(aAngles[nEarA], nEarA);
+                std::pair<double, unsigned> AngleA(aAngles[nPreviousEarA], nPreviousEarA);
                 sAngles.erase(AngleA);
-                AngleA.first = SGMInternal::FindAngle(aPoints, aPolygon, aCutOff, nEarA);
+                AngleA.first = SGMInternal::FindAngle(aPoints, aPolygon, aCutOff, nPreviousEarA);
                 sAngles.insert(AngleA);
-                aAngles[nEarA] = AngleA.first;
+                aAngles[nPreviousEarA] = AngleA.first;
 
                 // Fix angles at nEarC
 
-                std::pair<double, unsigned> AngleC(aAngles[nEarC], nEarC);
+                std::pair<double, unsigned> AngleC(aAngles[nNextEarC], nNextEarC);
                 sAngles.erase(AngleC);
-                AngleC.first = SGMInternal::FindAngle(aPoints, aPolygon, aCutOff, nEarC);
+                AngleC.first = SGMInternal::FindAngle(aPoints, aPolygon, aCutOff, nNextEarC);
                 sAngles.insert(AngleC);
-                aAngles[nEarC] = AngleC.first;
+                aAngles[nNextEarC] = AngleC.first;
 
                 break;
                 }
