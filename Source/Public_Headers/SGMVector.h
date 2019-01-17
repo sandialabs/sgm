@@ -8,7 +8,6 @@
 #include "sgm_export.h"
 #include "SGMEnums.h"
 #include "SGMConstants.h"
-#include "../../ModelViewer/buffer.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //

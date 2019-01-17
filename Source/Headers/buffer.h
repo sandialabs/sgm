@@ -1,5 +1,5 @@
-#ifndef SGM_MODELVIEWER_BUFFER_H
-#define SGM_MODELVIEWER_BUFFER_H
+#ifndef SGM_BUFFER_H
+#define SGM_BUFFER_H
 
 #include <algorithm>
 #include <cstring>
@@ -1166,4 +1166,4 @@ inline void swap(buffer<T, Alloc> &x, buffer<T, Alloc> &y)
     x.swap(y);
 }
 
-#endif //SGM_MODELVIEWER_BUFFER_H
+#endif // SGM_BUFFER_H

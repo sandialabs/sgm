@@ -2,7 +2,7 @@
 #define SGM_ORDERPOINTS_H
 
 #include "SGMVector.h"
-#include "../ModelViewer/buffer.h"
+#include "buffer.h"
 #include "parallel_stable_sort.h"
 
 #include <cmath>

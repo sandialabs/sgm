@@ -9,7 +9,7 @@
 
 #include "EntityClasses.h"
 #include "Mathematics.h"
-#include "../ModelViewer/buffer.h"
+#include "buffer.h"
 #include "OrderPoints.h"
 
 namespace SGMInternal
