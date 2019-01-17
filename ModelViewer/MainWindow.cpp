@@ -1,5 +1,5 @@
 #include "MainWindow.hpp"
-#include "MainWindow.moc"
+#include "moc_MainWindow.cpp"
 #include "ui_MainWindow.h"
 
 #include <QApplication>
@@ -75,12 +75,6 @@ MainWindow::MainWindow(QWidget *parent) :
           this, SLOT(view_background()));
 
   ui->menubar->addMenu(mTestMenu);
-  connect(mTestMenu, SIGNAL(all()),
-          this, SLOT(test_all()));
-  connect(mTestMenu, SIGNAL(number()),
-          this, SLOT(test_number()));
-  connect(mTestMenu, SIGNAL(script()),
-          this, SLOT(test_script()));
   connect(mTestMenu, SIGNAL(check()),
           this, SLOT(test_check()));
 #ifdef VIEWER_WITH_GTEST
@@ -146,6 +140,7 @@ void MainWindow::file_open()
   QString type_filter = tr("SGM files (%1)").arg("*.sgm");
   type_filter += ";;" + tr("STL Files (%1)").arg("*.stl");
   type_filter += ";;" + tr("Step Files (%1)").arg("*.stp *.step");
+  type_filter += ";;" + tr("Text Files (%1)").arg("*.txt");
   type_filter += ";;" + tr("All files").arg("*.*");
 
   // Run the dialog
@@ -258,54 +253,6 @@ void MainWindow::view_background()
     {
     mModel->set_background();
     }
-
-void MainWindow::test_all()
-{
-  QString DirectoryName=QFileDialog::getExistingDirectory(this, tr("Test Directory"), "");
-
-  QString OutputName=QFileDialog::getSaveFileName(this, tr("Output File", ""));
-
-  SGMInternal::thing *pThing=SGM::CreateThing();
-  SGM::Result rResult(pThing);
-  SGM::RunTestDirectory(rResult,DirectoryName.toUtf8().data(),OutputName.toUtf8().data());
-}
-
-void MainWindow::test_number()
-{
-  size_t nTest = (size_t)QInputDialog::getInt(this, tr("Test Number"), tr("C++ Test"));
-  if(mModel->RunCPPTest(nTest))
-      {
-      QMessageBox Msgbox;
-        Msgbox.setText("Passed");
-        Msgbox.exec();
-      }
-  else
-      {
-      QMessageBox Msgbox;
-        Msgbox.setText("Failed");
-        Msgbox.exec();
-      }
-}
-
-void MainWindow::test_script()
-{
-  QString FileName=QFileDialog::getOpenFileName(this, tr("Test Script"), "");
-
-  SGMInternal::thing *pThing=SGM::CreateThing();
-  SGM::Result rResult(pThing);
-  if(SGM::RunTestFile(rResult,"",FileName.toUtf8().data(),""))
-      {
-      QMessageBox Msgbox;
-        Msgbox.setText("Passed");
-        Msgbox.exec();
-      }
-  else
-      {
-      QMessageBox Msgbox;
-        Msgbox.setText("Failed");
-        Msgbox.exec();
-      }
-}
 
 void MainWindow::test_check()
 {

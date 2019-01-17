@@ -1,13 +1,18 @@
+
+#include "SGMGraph.h"
+
 #include "Curve.h"
 #include "EntityFunctions.h"
 #include "FileFunctions.h"
-#include "Graph.h"
 #include "Primitive.h"
 #include "ReadFile.h"
 #include "Surface.h"
 #include "Topology.h"
+#include "SGMTransform.h"
 
 #include <numeric>
+
+#include <iostream>
 
 namespace SGMInternal
 {
@@ -170,7 +175,6 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
                 }
             aaControlPoints.emplace_back(std::move(aControlPoints));
             }
-        //TODO: overload NUBsurface constructor to take r-values and call std::move
         pSurface = new NURBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
         }
 
@@ -367,7 +371,8 @@ vertex *CreateVertexFromSTEP(SGM::Result &rResult,
 void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
                             IDEntityMapType     const &mIDToEntityMap,
                             std::set<entity *>        &sEntities,
-                            std::vector<size_t>       &aBodies)
+                            std::vector<size_t>       &aBodies,
+                            BodyToTransformMapType    &mBodyToTransforms)
     {
     size_t nBodies = aBodies.size();
     for (size_t Index1 = 0; Index1 < nBodies; ++Index1)
@@ -384,8 +389,25 @@ void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
         std::vector<size_t> const &aIDs = SLD.m_aIDs;
         size_t nID = aIDs.size();
 
-        // size_t nTrans=aIDs[nLastVolume];
-        // TODO: Transform the body here.
+        // next to last ID is the axes for the body
+        size_t nTransformID = aIDs[nID-2];
+        STEPLineData const &SLDA = mSTEPData.at(nTransformID);
+        SGM::Point3D Center;
+        SGM::UnitVector3D XAxis, ZAxis;
+        GetAxesFromSTEP(SLDA, mSTEPData, Center, ZAxis, XAxis);
+
+        if (!SGM::NearEqual(Center, SGM::Point3D(0.,0.,0.), SGM_MIN_TOL) &&
+            !SGM::NearEqual(ZAxis, SGM::UnitVector3D(0.,0.,1.), SGM_MIN_TOL) &&
+            !SGM::NearEqual(XAxis, SGM::UnitVector3D(1.,0.,0.), SGM_MIN_TOL) )
+            {
+            std::cout << "Body Axes" << std::endl;
+            std::cout << "Center " << Center.m_x << " " << Center.m_y << " " << Center.m_z << std::endl;
+            std::cout << "ZAxis " << ZAxis.m_x << " " << ZAxis.m_y << " " << ZAxis.m_z << std::endl;
+            std::cout << "XAxis " << XAxis.m_x << " " << XAxis.m_y << " " << XAxis.m_z << std::endl;
+
+            SGM::Transform3D BodyTransform(XAxis, ZAxis*XAxis, ZAxis, SGM::Vector3D(Center));
+            mBodyToTransforms.emplace(std::pair<body*, SGM::Transform3D>(pBody, BodyTransform));
+            }
 
         for (size_t Index2 = 0; Index2 < nID; ++Index2)
             {
@@ -764,6 +786,249 @@ void ConnectSheetBodies(SGM::Result         &,//rResult,
         }
     }
 
+void ApplyBodyTransforms(SGM::Result &rResult,
+                         BodyToTransformMapType &mBodyToTransforms)
+    {
+        for (auto BodyAndTransform : mBodyToTransforms)
+        {
+            body *pBody = BodyAndTransform.first;
+            SGM::Transform3D &transform = BodyAndTransform.second;
+            TransformEntity(rResult, transform, pBody);
+        }
+    }
+
+typedef std::unordered_map<std::string, STEPTag> STEPTagMapType;
+typedef std::unordered_map<size_t, STEPLineData> STEPLineDataMapType;
+typedef std::unordered_map<size_t, entity *> IDEntityMapType;
+typedef std::unordered_map<body *, SGM::Transform3D> BodyToTransformMapType;
+
+// the SHAPE_REPRESENTATION data in STEP represents a node (assembly or part)
+// in the assembly tree
+struct STEPAssemblyNode
+{
+    STEPAssemblyNode(size_t SRID, std::string &name) :
+        ShapeRepID(SRID),
+        BrepID(0),
+        Name(name) {}
+    size_t ShapeRepID;
+    std::vector<size_t> aCDSRParents;
+    std::vector<size_t> aCDSRChildren;
+    size_t BrepID;
+    std::string Name;
+};
+
+// the SHAPE_REPRESENTATION_RELATIONSHIP data ties a SHAPE_REPRESENTATION to a Brep
+struct STEPShapeRepRelationData
+{
+    STEPShapeRepRelationData(size_t SRRid,
+                             size_t SRid,
+                             size_t brepid) :
+        ShapeRepRelationID(SRRid),
+        ShapeRepID(SRid),
+        BrepID(brepid) {}
+    size_t ShapeRepRelationID;
+    size_t ShapeRepID;
+    size_t BrepID;
+};
+
+// the CONTEXT_DEPENDENT_SHAPE_REPRESENTATION and its child REPRESENTATION_RELATIONSHIP
+// represent a "link" between SHAPE_REPRESENTATIONs in the assembly tree
+// and holds the transform that corresponds to the link
+struct STEPContextDepShapeRepData
+{
+    STEPContextDepShapeRepData(size_t CDShapeRepID,
+                                        size_t SRParentID,
+                                        size_t SRChildID,
+                                        size_t TransfID) :
+        ContextDepShapeRepID(CDShapeRepID),
+        ShapeRepParentID(SRParentID),
+        ShapeRepChildID(SRChildID),
+        TransformID(TransfID) {}
+    size_t ContextDepShapeRepID;
+    size_t ShapeRepParentID;
+    size_t ShapeRepChildID;
+    size_t TransformID;
+    SGM::Transform3D Trans;
+};
+
+
+
+void ReadAssemblyData(size_t                                             maxSTEPLineNumber,
+                      STEPLineDataMapType                          const &mSTEPData,
+                      std::map<size_t, STEPContextDepShapeRepData>       &mCDSRLinks,
+                      std::map<size_t, STEPAssemblyNode>                 &mAssemblyNodes,
+                      std::vector<STEPShapeRepRelationData>              &aSRRentities)
+{
+    for (size_t nID = 1; nID <= maxSTEPLineNumber; ++nID)
+    {
+        auto DataIter = mSTEPData.find(nID);
+        if (DataIter == mSTEPData.end())
+        {
+            continue; // skip a STEP #ID that is not used
+        }
+
+        STEPLineData const &stepLineData = DataIter->second;
+
+        if (stepLineData.m_nSTEPTag == STEPTag::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION)
+        {
+            size_t RRid = stepLineData.m_aIDs[0];
+            STEPLineData const &RRLineData = mSTEPData.at(RRid);
+
+            mCDSRLinks.emplace(nID, STEPContextDepShapeRepData(nID, RRLineData.m_aIDs[0],
+              RRLineData.m_aIDs[1], RRLineData.m_aIDs[2]));
+        }
+        else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_REPRESENTATION)
+        {
+            std::string name;
+            if (!stepLineData.m_aStrings.empty())
+            {
+                name = stepLineData.m_aStrings[0];
+            }
+            mAssemblyNodes.emplace(nID, STEPAssemblyNode(nID, name));
+        }
+        else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_REPRESENTATION_RELATIONSHIP)
+        {
+            aSRRentities.emplace_back(STEPShapeRepRelationData(nID, stepLineData.m_aIDs[0], stepLineData.m_aIDs[1]));
+        }
+    }
+}
+
+void ReadTransformData(size_t                     TransformID,
+                       STEPLineDataMapType const &mSTEPData,
+                       SGM::Transform3D          &Trans)
+{
+    STEPLineData const &TransformLineData = mSTEPData.at(TransformID);
+    size_t AxisID1 = TransformLineData.m_aIDs[0];
+    STEPLineData const &STEPLineData1 = mSTEPData.at(AxisID1);
+    size_t AxisID2 = TransformLineData.m_aIDs[1];
+    STEPLineData const &STEPLineData2 = mSTEPData.at(AxisID2);
+
+    SGM::Point3D Center1, Center2;
+    SGM::UnitVector3D XAxis1, XAxis2;
+    SGM::UnitVector3D ZAxis1, ZAxis2;
+    GetAxesFromSTEP(STEPLineData1, mSTEPData, Center1, ZAxis1, XAxis1);
+    GetAxesFromSTEP(STEPLineData2, mSTEPData, Center2, ZAxis2, XAxis2);
+
+    Trans = SGM::Transform3D(XAxis2, SGM::UnitVector3D(ZAxis2*XAxis2), ZAxis2, Center2,
+                             XAxis1, SGM::UnitVector3D(ZAxis1*XAxis1), ZAxis1, Center1);
+}
+
+void InstantiateBodiesForLeafAssemblyNodes(SGM::Result &rResult,
+                                           STEPAssemblyNode                             const &AsmParentNode,
+                                           SGM::Transform3D                             const &ParentTransform,
+                                           std::map<size_t, STEPAssemblyNode>           const &mAssemblyNodes,
+                                           std::map<size_t, STEPContextDepShapeRepData> const &mCDSRLinks,
+                                           STEPLineDataMapType                          const &mSTEPData,
+                                           IDEntityMapType                              const &mIDToEntityMap,
+                                           BodyToTransformMapType                             &mBodyToTransforms,
+                                           std::set<entity *>                                 &sEntities)
+{
+    if (AsmParentNode.aCDSRChildren.empty()) // leaf node
+    {
+        size_t STEPBrepID = AsmParentNode.BrepID;
+        entity *pEntity = mIDToEntityMap.at(STEPBrepID);
+        body *pBody = dynamic_cast<body *>(pEntity);
+        body *pParentBody = nullptr;
+        assert(pBody != nullptr);
+
+        if (mBodyToTransforms.find(pBody) == mBodyToTransforms.end())
+        {
+            // reuse the already created body for the first instance
+            pParentBody = pBody;
+        }
+        else
+        {
+            // copy the brep
+            entity *pCopy = CopyEntity(rResult, pEntity);
+            pParentBody = dynamic_cast<body *>(pCopy);
+            sEntities.emplace(pParentBody);
+        }
+
+        mBodyToTransforms.emplace(pParentBody, ParentTransform);
+        if (!AsmParentNode.Name.empty())
+        {
+            attribute *pName = new StringAttribute(rResult,"Name",AsmParentNode.Name);
+            pBody->AddAttribute(pName);
+        }
+    }
+    else
+    {
+        // keep traversing down to leaf nodes and accumulate transformations
+        for (auto Child : AsmParentNode.aCDSRChildren)
+        {
+            // combine the transform with the parent transform
+            STEPContextDepShapeRepData const &CDSRChild = mCDSRLinks.at(Child);
+            SGM::Transform3D transform = ParentTransform * CDSRChild.Trans;
+
+            //get the child node and continue recursing
+            const STEPAssemblyNode &ChildNode = mAssemblyNodes.at(CDSRChild.ShapeRepChildID);
+            InstantiateBodiesForLeafAssemblyNodes(rResult, ChildNode, transform,
+                                                  mAssemblyNodes, mCDSRLinks, mSTEPData,
+                                                  mIDToEntityMap, mBodyToTransforms, sEntities);
+        }
+    }
+}
+
+
+
+void FlattenAssemblies(SGM::Result &rResult,
+                    size_t maxSTEPLineNumber,
+                    STEPLineDataMapType const &mSTEPData,
+                    IDEntityMapType const &mIDToEntityMap,
+                    std::set<entity *> &sEntities)
+{
+    std::map<size_t, STEPContextDepShapeRepData> mCDSRLinks;
+    std::map<size_t, STEPAssemblyNode> mAssemblyNodes;
+    std::vector<STEPShapeRepRelationData> aSRRentities;
+    ReadAssemblyData(maxSTEPLineNumber, mSTEPData, mCDSRLinks, mAssemblyNodes, aSRRentities);
+
+    // create an assembly node for each shape rep
+    //for (size_t SRID : aShapeRepIDs)
+    //{
+    //    mAssemblyNodes.emplace(SRID, STEPAssemblyNode(SRID));
+    //}
+
+    // Link parents and children and get the transform for the link
+    std::map<size_t, STEPContextDepShapeRepData>::iterator iLink;
+    for (iLink=mCDSRLinks.begin(); iLink!=mCDSRLinks.end(); ++iLink)
+    {
+        STEPContextDepShapeRepData &CDSRData = iLink->second;
+        STEPAssemblyNode &SRParent = mAssemblyNodes.at(CDSRData.ShapeRepParentID);
+        SRParent.aCDSRChildren.emplace_back(CDSRData.ContextDepShapeRepID);
+        STEPAssemblyNode &SRChild = mAssemblyNodes.at(CDSRData.ShapeRepChildID);
+        SRChild.aCDSRParents.emplace_back(CDSRData.ContextDepShapeRepID);
+        ReadTransformData(CDSRData.TransformID, mSTEPData, CDSRData.Trans);
+    }
+
+    // add brep id to the assembly nodes
+    for (auto SRR : aSRRentities)
+    {
+        STEPAssemblyNode &ShapeRep = mAssemblyNodes.at(SRR.ShapeRepID);
+        assert(ShapeRep.aCDSRChildren.empty());
+        ShapeRep.BrepID = SRR.BrepID;
+    }
+
+    // recursively traverse the assembly to all leaf nodes
+    BodyToTransformMapType mBodyToAssemblyTransforms;
+    for (auto Entry : mAssemblyNodes)
+    {
+        STEPAssemblyNode &AsmParentNode = Entry.second;
+        if (AsmParentNode.aCDSRParents.empty()) // top level node
+        {
+            SGM::UnitVector3D XAxis(1.0, 0.0, 0.0);
+            SGM::UnitVector3D YAxis(0.0, 1.0, 0.0);
+            SGM::UnitVector3D ZAxis(0.0, 0.0, 1.0);
+            SGM::Transform3D transform(XAxis, YAxis, ZAxis);
+
+            InstantiateBodiesForLeafAssemblyNodes(rResult, AsmParentNode, transform,
+                                                  mAssemblyNodes, mCDSRLinks, mSTEPData,
+                                                  mIDToEntityMap, mBodyToAssemblyTransforms, sEntities);
+        }
+    }
+
+    // now apply all the assembly transforms
+    ApplyBodyTransforms(rResult, mBodyToAssemblyTransforms);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -779,6 +1044,7 @@ void CreateEntities(SGM::Result &rResult,
     std::set<entity *> sEntities;
     std::vector<size_t> aBodies, aVolumes, aFaces, aEdges;
     std::vector<body *> aSheetBodies;
+    BodyToTransformMapType mBodyToTransforms;
 
     // Create entities in a specific order by STEP #ID line number,
     // from 1 to maxSTEPLineNumber.
@@ -944,7 +1210,7 @@ void CreateEntities(SGM::Result &rResult,
             }
         }
 
-    ConnectVolumesToBodies(mSTEPData,mIDToEntityMap,sEntities,aBodies);
+    ConnectVolumesToBodies(mSTEPData,mIDToEntityMap,sEntities,aBodies,mBodyToTransforms);
 
     ConnectFacesAndEdgesToVolumes(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges,aVolumes);
 
@@ -953,6 +1219,10 @@ void CreateEntities(SGM::Result &rResult,
     ConnectCurvesAndVerticesToEdges(rResult,mSTEPData,mIDToEntityMap,sEntities,aFaces,aEdges);
 
     ConnectSheetBodies(rResult,aSheetBodies);
+
+    ApplyBodyTransforms(rResult, mBodyToTransforms);
+
+    FlattenAssemblies(rResult, maxSTEPLineNumber, mSTEPData, mIDToEntityMap, sEntities);
 
     // push set of entities into vector
     // TODO: could the caller just live with us returning the set? why copy to vector?

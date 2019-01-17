@@ -42,9 +42,8 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
 
     // A=1 -> B*(2xy)+C*(y^2)+D*(2x)+E*(2y)+F*(1)=(-X^2)
 
-    size_t nPoints=aPoints.size();
     size_t Index1;
-    for(Index1=0;Index1<nPoints;++Index1)
+    for(Index1=0;Index1<5;++Index1)
         {
         SGM::Point2D const &uv=aPoints2D[Index1];
         std::vector<double> aMatrix;
@@ -57,17 +56,37 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
         aMatrix.push_back(-uv.m_u*uv.m_u);
         aaMatrix.push_back(aMatrix);
         }
-    if(SGM::LinearSolve(aaMatrix)==false)
+    if(!SGM::LinearSolve(aaMatrix))
         {
         return false;
         }
     aConicParams.reserve(6);
     aConicParams.push_back(1.0);
-    for(Index1=0;Index1<nPoints;++Index1)
+    for(Index1=0;Index1<5;++Index1)
         {
         aConicParams.push_back(aaMatrix[Index1].back());
         }
     return true;
+    }
+
+curve *CheckForLine(SGM::Result                     &rResult,
+                    std::vector<SGM::Point3D> const &aPoints,
+                    double                           dTolerance)
+    {
+    size_t Index1;
+    double dTol=dTolerance*dTolerance;
+    SGM::Point3D Origin=aPoints[0];
+    SGM::Vector3D XVec=aPoints[1]-aPoints[0];
+    for(Index1=0;Index1<5;++Index1)
+        {
+        SGM::Point3D const &Pos=aPoints[Index1];
+        double dDist=(Origin+((Pos-Origin)%XVec)*XVec).DistanceSquared(Pos);
+        if(dTol<=dDist)
+            {
+            return nullptr;
+            }
+        }
+    return new line(rResult,Origin,XVec);
     }
 
 curve *FindConic(SGM::Result                     &rResult,
@@ -202,32 +221,40 @@ curve *FindConic(SGM::Result                     &rResult,
                     // Hyperbola f(t)=a*sqrt(1+t^2/b^2)
                     // x^2/a^2-y^2/b^2=1
 
-                    bool bLow=false,bHigh=false;
-                    double dTest1=0,dTest2=0;
+                    std::swap(a,b);
+                    bool bLowX=false,bHighX=false;
                     for(Index1=0;Index1<5;++Index1)
                         {
                         double x=ax[Index1];
                         if(dTolerance<x)
                             {
-                            bHigh=true;
+                            bHighX=true;
                             }
                         else if(x<-dTolerance)
                             {
-                            bLow=true;
+                            bLowX=true;
                             }
+                        }
+                    bool bLowY=false,bHighY=false;
+                    for(Index1=0;Index1<5;++Index1)
+                        {
                         double y=ay[Index1];
-                        dTest1+=fabs(x*x/(a*a)-y*y/(b*b)-1);
-                        dTest2+=fabs(x*x/(b*b)-y*y/(a*a)-1);
+                        if(dTolerance<y)
+                            {
+                            bHighY=true;
+                            }
+                        else if(y<-dTolerance)
+                            {
+                            bLowY=true;
+                            }
                         }
-                    if(bLow && bHigh)
+                    if(bHighY && bLowY)
                         {
-                        return nullptr; // Not in one sheet.
-                        }
-                    if(dTest2<dTest1)
-                        {
+                        std::swap(XAxis,YAxis);
                         std::swap(a,b);
+                        std::swap(bLowX,bLowY);
                         }
-                    if(bLow)
+                    if(bLowX)
                         {
                         YAxis.Negate();
                         }
@@ -268,21 +295,9 @@ curve *FindConic(SGM::Result                     &rResult,
             }
         else
             {
-            // Check for a single line.
-
-            double dTol=dTolerance*dTolerance;
-            for(Index1=0;Index1<5;++Index1)
-                {
-                SGM::Point3D const &Pos=aPoints[Index1];
-                double dDist=(Origin+((Pos-Origin)%XVec)*XVec).DistanceSquared(Pos);
-                if(dTol<=dDist)
-                    {
-                    return nullptr;
-                    }
-                }
-            return new line(rResult,Origin,XVec);
+            return CheckForLine(rResult,aPoints,dTolerance);
             }
         }
-    return nullptr;
+    return CheckForLine(rResult,aPoints,dTolerance);
     }
 }

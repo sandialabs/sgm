@@ -54,15 +54,12 @@ bool PointInBody(SGM::Result        &rResult,
     {
     bool bAnswer=false;
     std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
-    std::set<volume *,EntityCompare>::const_iterator VolumeIter=sVolumes.begin();
-    while(VolumeIter!=sVolumes.end())
+    for (auto pVolume : sVolumes)
         {
-        volume *pVolume=*VolumeIter;
         if(PointInVolume(rResult,Point,pVolume,dTolerance))
             {
             return true;
             }
-        ++VolumeIter;
         }
     return bAnswer;
     }
@@ -113,7 +110,7 @@ bool PointInEntity(SGM::Result        &rResult,
             }
         case SGM::FaceType:
             {
-            face const *pFace=(face const *)pEntity;
+            auto pFace=(face const *)pEntity;
             SGM::Point3D ClosePos;
             SGM::Point2D uv=pFace->GetSurface()->Inverse(Point,&ClosePos);
             if(Point.Distance(ClosePos)<dTolerance && pFace->PointInFace(rResult,uv))

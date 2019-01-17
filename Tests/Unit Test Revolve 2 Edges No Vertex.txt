@@ -1,3 +1,0 @@
-// Tests revolve surface 2 edges no vertices with STEP export;
-RunCPPTest(37);
-

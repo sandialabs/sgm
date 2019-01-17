@@ -13,6 +13,8 @@
 #include "SGMSharedMutex.h"
 #include "SGMTranslators.h"
 
+#include "OrderPoints.h"
+
 namespace SGMInternal
 {
 
@@ -48,7 +50,7 @@ class sphere;
 class torus;
 class revolve;
 class extrude;
-class offset;
+class offset; 
 class NUBsurface;
 class NURBsurface;
 
@@ -95,7 +97,7 @@ struct EntityVisitor {
     virtual void Visit(torus&) {}
     virtual void Visit(revolve&) {}
     virtual void Visit(extrude&) {}
-    virtual void Visit(offset&) {}
+    virtual void Visit(offset&) {} 
     virtual void Visit(NUBsurface&) {}
     virtual void Visit(NURBsurface&) {}
 };
@@ -119,11 +121,18 @@ public:
     virtual bool Check(SGM::Result              &rResult,
                        SGM::CheckOptions const  &Options,
                        std::vector<std::string> &aCheckStrings,
-                       bool                      bChildren) const;
+                       bool                      bChildren) const = 0;
 
     virtual entity *Clone(SGM::Result &rResult) const = 0;
 
     virtual void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const;
+
+    virtual void GetParents(std::set<entity *, EntityCompare> &sParents) const;
+
+    virtual void RemoveParentsInSet(SGM::Result &rResult,
+                                    std::set<entity *,EntityCompare> const &sFamily);
+
+    virtual void DisconnectOwnedEntity(entity const *pEntity) = 0;
 
     virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
 
@@ -163,6 +172,10 @@ public:
 
     void RemoveColor(SGM::Result &rResult);
 
+    void RemoveAllOwners();
+
+    void Swap(entity& other); // nothrow
+
 protected:
 
     size_t                                       m_ID;
@@ -176,7 +189,7 @@ protected:
 
     entity();
 
-    void RemoveAllOwners();
+    void OwnerAndAttributeReplacePointers(std::map<entity *, entity *> const &mEntityMap);
 
 private:
 
@@ -210,6 +223,15 @@ class thing : public entity
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool IsTopLevel() const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void GetParents(std::set<entity *, EntityCompare> &) const override {}
+
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
@@ -291,6 +313,9 @@ class thing : public entity
 
         void SetConcurrentInactive() const;
 
+        template <class VISITOR>
+        void VisitEntities(VISITOR &typeVisitor);
+
     private:
 
         template <class ENTITY_TYPE, class ENTITY_SET>
@@ -323,9 +348,15 @@ class topology : public entity
 
         void TransformBox(SGM::Result &rResult, SGM::Transform3D const &transform3D) override;
 
+        void ReplacePointers(std::map<entity *, entity *> const &) override = 0;
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
+        void Swap(topology &other);
+
 protected:
 
-        mutable SGM::Interval3D m_Box;
+        mutable SGM::Interval3D m_Box; // TODO: this box should go away because it is defined in class entity
 };
 
 class assembly : public topology
@@ -352,12 +383,24 @@ class assembly : public topology
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
-};
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
+
+        void Swap(assembly &other);
+    };
 
 class reference : public topology
     {
@@ -383,11 +426,23 @@ class reference : public topology
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildern) const override;
+
+        void Swap(reference &other);
     };
 
 class body : public topology
@@ -421,6 +476,11 @@ class body : public topology
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void SeverRelations(SGM::Result &rResult) override;
@@ -449,6 +509,8 @@ class body : public topology
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
+        void Swap(body &other);
+
     private:
 
         std::set<volume *,EntityCompare> m_sVolumes;
@@ -470,20 +532,55 @@ class complex : public topology
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
-                bool                             bFilled);  // Creates a filled or unfilled polygon.
+                double                           dTolerance);              // Merge points and make triangles
 
         complex(SGM::Result                     &rResult,
-                std::vector<unsigned int> const &aSegments,
+                std::vector<SGM::Point3D> const &aPoints,
+                bool                             bFilled);      // Creates a filled or unfilled polygon.
+
+        complex(SGM::Result                &rResult,
+                std::vector<SGM::Point3D> &&aPoints,
+                bool                        bFilled);           // Creates a filled or unfilled polygon, avoids copy.
+
+        complex(SGM::Result                     &rResult,
+                std::vector<unsigned> const     &aSegments,
                 std::vector<SGM::Point3D> const &aPoints);
 
-        complex(SGM::Result                     &rResult,
-                std::vector<SGM::Point3D> const &aPoints,
-                std::vector<unsigned int> const &aTriangles);
+        complex(SGM::Result                      &rResult,            // move constructor avoids copy segments only
+                std::vector<unsigned>           &&aSegments,
+                std::vector<SGM::Point3D> const  &aPoints);
+
+        complex(SGM::Result                &rResult,            // move constructor avoids copies segments & points
+                std::vector<unsigned>     &&aSegments,
+                std::vector<SGM::Point3D> &&aPoints);
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
-                std::vector<unsigned int> const &aSegments,
-                std::vector<unsigned int> const &aTriangles);
+                std::vector<unsigned> const     &aTriangles);
+
+        complex(SGM::Result                      &rResult,
+                std::vector<SGM::Point3D> const  &aPoints,
+                std::vector<unsigned>           &&aTriangles);  // move constructor avoids copy of triangles only
+
+        complex(SGM::Result                &rResult,
+                std::vector<SGM::Point3D> &&aPoints,            // move constructor avoids copies of points & triangles
+                std::vector<unsigned>     &&aTriangles);
+
+        complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned> const     &aSegments,
+                std::vector<unsigned> const     &aTriangles);
+
+        complex(SGM::Result                &rResult,            // move constructor avoids copies
+                std::vector<SGM::Point3D> &&aPoints,
+                std::vector<unsigned>     &&aSegments,
+                std::vector<unsigned>     &&aTriangles);
+
+        complex(SGM::Result &rResult,                           // merge the given points, optional triangles, segments
+                std::vector<SGM::Point3D> const &aPoints,
+                std::vector<unsigned> const     &aSegments,
+                std::vector<unsigned> const     &aTriangles,
+                double                           dTolerance);
 
         complex() = delete;
 
@@ -492,6 +589,8 @@ class complex : public topology
         complex& operator=(const complex&) = delete;
 
         ~complex() override = default;
+
+        void Swap(complex& other); // nothrow
 
         void Accept(EntityVisitor &) override;
 
@@ -506,6 +605,11 @@ class complex : public topology
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *,entity *> const &) override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -514,11 +618,11 @@ class complex : public topology
 
         std::vector<SGM::Point3D> const &GetPoints() const {return m_aPoints;}
 
-        std::vector<unsigned int> const &GetSegments() const {return m_aSegments;}
+        std::vector<unsigned> const &GetSegments() const {return m_aSegments;}
 
-        std::vector<unsigned int> const &GetTriangles() const {return m_aTriangles;}
+        std::vector<unsigned> const &GetTriangles() const {return m_aTriangles;}
 
-        std::vector<unsigned int> &GetTrianglesNonConst() {return m_aTriangles;}
+        std::vector<unsigned> &GetTriangles() {return m_aTriangles;}
 
         // Other methods
 
@@ -575,15 +679,15 @@ class complex : public topology
         // in m_aPoints in order of the given segments.
         // ONLY WORKS on oriented complexes.
 
-        bool FindPolygon(std::vector<unsigned int> &aPolygon) const;
+        bool FindPolygon(std::vector<unsigned> &aPolygon) const;
 
         // Returns true if this complex is linear, and the indexes of the
         // to end points.  If only one end segment is oriented going in and
         // one oriented going out then nStart and nEnd are at the ends with
         // orientation going in the directions of the segments.
 
-        bool IsLinear(unsigned int &nStart,
-                      unsigned int &nEnd) const;
+        bool IsLinear(unsigned &nStart,
+                      unsigned &nEnd) const;
 
         bool IsConnected() const;
 
@@ -607,10 +711,10 @@ class complex : public topology
         // is split only if the split point is not within dTolerance of
         // an existing point.  If a point is not in this complex and not
         // within dTolerance of this complex, then 
-        // std::numeric_limits<unsigned int>::max() is returned in aWhere.
+        // std::numeric_limits<unsigned>::max() is returned in aWhere.
 
         void ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
-                           std::vector<unsigned int>       &aWhere,
+                           std::vector<unsigned>           &aWhere,
                            double                           dTolerance);
 
         // Splits the segments of this complex at the given points.
@@ -643,7 +747,7 @@ class complex : public topology
 
         complex *FindDegenerateTriangles(SGM::Result &rResult) const;
 
-        void ReduceToLargestMinCycle();
+        void ReduceToLargestMinCycle(SGM::Result &rResult);
 
         SGM::BoxTree const &GetTree() const;
         
@@ -651,11 +755,37 @@ class complex : public topology
 
         void FindTree() const;
 
+        bool CheckIndexMax(SGM::Result &rResult, size_t aPointsSize) const;
+
         std::vector<SGM::Point3D> m_aPoints;
-        std::vector<unsigned int> m_aSegments;
-        std::vector<unsigned int> m_aTriangles;
+        std::vector<unsigned> m_aSegments;
+        std::vector<unsigned> m_aTriangles;
 
         mutable SGM::BoxTree      m_Tree;
+
+        void FindTopAndBottomTriangles(std::vector<unsigned int> &aBottom,
+                                       std::vector<unsigned int> &aTop) const;
+
+        void FindSurfaceHoles(SGM::Result                &rResult,
+                              std::vector<unsigned int> &&aSurfaceTriangles,
+                              std::vector<complex *>     &aSurfaceHoles,
+                              bool                        bChangeColor) const;
+
+        void FindMatchingHoles(SGM::Result                  &rResult,
+                               const std::vector<complex *> &aBottomHoles,
+                               const std::vector<complex *> &aTopHoles,
+                               std::vector<complex *>       &aHoles,
+                               std::set<complex *>          &sKeep) const;
+
+        void DeleteHoles(SGM::Result                  &rResult,
+                         std::vector<complex *> const &aBottomHoles,
+                         std::vector<complex *> const &aTopHoles,
+                         std::set<complex *>    const &sKeep) const;
+
+        void ReduceToUsedPoints(std::vector<SGM::Point3D> const &aPoints,
+                                std::vector<SGM::Point3D> &aUsedPoints,
+                                std::vector<unsigned> &aSegments,
+                                std::vector<unsigned> &aTriangles) const;
     };
 
 class volume : public topology
@@ -685,15 +815,24 @@ class volume : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
         void ResetBox(SGM::Result &) const override;
 
         void SeverRelations(SGM::Result &rResult) override;
+
+        void Swap(volume &other);
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -760,9 +899,16 @@ class face : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -773,6 +919,8 @@ class face : public topology
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        void Swap(face &other);
 
         void AddEdge(SGM::Result       &rResult,
                      edge              *pEdge,
@@ -799,9 +947,11 @@ class face : public topology
 
         std::vector<SGM::Point3D> const &GetPoints3D(SGM::Result &rResult) const;
 
-        std::vector<unsigned int> const &GetTriangles(SGM::Result &rResult) const;
+        std::vector<unsigned> const &GetTriangles(SGM::Result &rResult) const;
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
+
+        std::vector<SGMInternal::entity *> FindPointEntities(SGM::Result &rResult) const;
 
         surface *GetSurface() const {return m_pSurface;}
 
@@ -862,7 +1012,7 @@ class face : public topology
 
         mutable std::vector<SGM::Point3D>          m_aPoints3D;
         mutable std::vector<SGM::UnitVector3D>     m_aNormals;
-        mutable std::vector<unsigned int>          m_aTriangles;
+        mutable std::vector<unsigned>              m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
     };
@@ -892,7 +1042,14 @@ class edge : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -903,6 +1060,8 @@ class edge : public topology
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        void Swap(edge &other);
 
         // Set and Remove Methods
 
@@ -919,7 +1078,7 @@ class edge : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void AddFace(face *pFace) {m_sFaces.insert(pFace);}
+        void AddFace(face *pFace) {assert(nullptr == m_pVolume); m_sFaces.insert(pFace);}
 
         void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 
@@ -1016,7 +1175,14 @@ class vertex : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &) const override { }
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -1025,6 +1191,8 @@ class vertex : public topology
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        void Swap(vertex &other);
 
         void AddEdge(edge *pEdge) {m_sEdges.insert(pEdge);}
 
@@ -1037,6 +1205,8 @@ class vertex : public topology
         bool IsTopLevel() const override;
 
         void TransformData(SGM::Transform3D const &Trans);
+
+        volume *GetVolume() const;
 
     private:
 
@@ -1075,6 +1245,11 @@ class attribute : public entity
 
         bool IsTopLevel() const override;
 
+        void RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *,EntityCompare>  const &) override {}
+
+        void DisconnectOwnedEntity(entity const *) override {}
+
         void ReplacePointers(std::map<entity *, entity *> const &) override;
 
         void ResetBox(SGM::Result &rResult) const override;
@@ -1085,9 +1260,11 @@ class attribute : public entity
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        std::string const &GetName() const {return m_Name;}
+        void Swap(attribute &other);
 
-        SGM::EntityType GetAttributeType() const {return m_AttributeType;}
+        std::string const &GetName() const;
+
+        SGM::EntityType GetAttributeType() const;
 
     private:
 
@@ -1116,6 +1293,8 @@ class StringAttribute : public attribute
         ~StringAttribute() override = default;
 
         StringAttribute *Clone(SGM::Result &rResult) const override;
+
+        void Swap(StringAttribute &other);
 
         std::string const &GetData() const {return m_Data;}
 
@@ -1147,6 +1326,8 @@ class IntegerAttribute : public attribute
 
         IntegerAttribute *Clone(SGM::Result &rResult) const override;
 
+        void Swap(IntegerAttribute &other);
+
         std::vector<int> const &GetData() const {return m_aData;}
 
     private:
@@ -1176,6 +1357,8 @@ class DoubleAttribute : public attribute
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
+        void Swap(DoubleAttribute &other);
+
         std::vector<double> const &GetData() const {return m_aData;}
 
     private:
@@ -1204,6 +1387,8 @@ class CharAttribute : public attribute
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
+
+        void Swap(CharAttribute &other);
 
         std::vector<char> const &GetData() const {return m_aData;}
 

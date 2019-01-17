@@ -20,6 +20,9 @@
 
 #include "test_utility.h"
 
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "cert-err58-cpp"
+
 using testing::internal::FilePath;
 
 // absolute path to test/data directory must be defined on compile line with -D
@@ -110,10 +113,10 @@ void concatenate_log_files()
             {
             const testing::internal::FilePath file_path_object(file_path);
             auto file_name_only = file_path_object.RemoveFileName();
-            std::string BaseDir=file_name_only.string();
             std::string file_name = erase_directory(file_path);
             std::string PassedFileName="c:/sgm-models/Passed/"+file_name;
-            if(int nError=rename(file_path.c_str(),PassedFileName.c_str()))
+            int nError = rename(file_path.c_str(),PassedFileName.c_str());
+            if(nError)
                 {
                 perror("bad thing");
                 }
@@ -354,8 +357,8 @@ TEST(DataDirectoriesCheck, import_check_single)
     //std::string file_path = get_models_file_path("Large Files/Globe 01 (Solid).stp"); // hangs in FindCachedData facet face
     //std::string file_path = get_models_file_path("Large Files/Globe (1).stp");
     //std::string file_path = get_models_file_path("Large Files/USSnathonjames01assem.STEP");
-    //std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
-    std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
+    std::string file_path = get_models_file_path("_Assy, Porcupine - 01.STEP");
+    //std::string file_path = get_models_file_path("EPF-E16-4450-50C.STEP");
     //std::string file_path = get_models_file_path("Pencil.STEP");
     //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
     //std::string file_path = get_models_file_path("../sgm-models-ouo/OUO_Cone_definition.stp");
@@ -437,3 +440,5 @@ TEST(ModelDeathTest, sgm_models)
 
     concatenate_log_files();
     }
+
+//#pragma clang diagnostic pop

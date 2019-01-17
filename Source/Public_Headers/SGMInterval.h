@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 #include "sgm_export.h"
 
@@ -13,9 +14,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define SGM_INTERVAL_TOLERANCE 1E-12
-#define SGM_INTERVAL_POS_MAX 1E+12//(std::numeric_limits<double>::max())
-#define SGM_INTERVAL_NEG_MIN -1E+12//(-std::numeric_limits<double>::max())
+#define SGM_INTERVAL_TOLERANCE (1E-12)
+#define SGM_INTERVAL_POS_MAX   (1E+12)//(std::numeric_limits<double>::max())
+#define SGM_INTERVAL_NEG_MIN   (-1E+12)//(-std::numeric_limits<double>::max())
 
 namespace SGM {
 
@@ -50,7 +51,8 @@ namespace SGM {
         ~Interval1D() = default;
 
         bool operator==(const Interval1D &other) const
-        { return (m_dMin == other.m_dMin && m_dMax == other.m_dMax); }
+        { return ((fabs(m_dMin-other.m_dMin)<SGM_INTERVAL_TOLERANCE) &&
+                  (fabs(m_dMax-other.m_dMax)<SGM_INTERVAL_TOLERANCE)); }
 
         // Sets the interval to be empty (like the default constructor).
 
@@ -64,8 +66,8 @@ namespace SGM {
 
         bool IsBounded() const
         {
-            return ( (SGM_INTERVAL_NEG_MIN > m_dMin) &&
-                     (SGM_INTERVAL_POS_MAX < m_dMax) );
+            return ( (SGM_INTERVAL_NEG_MIN < m_dMin) &&
+                     (m_dMax < SGM_INTERVAL_POS_MAX) );
         }
 
         double MidPoint(double dFraction = 0.5) const
@@ -113,6 +115,8 @@ namespace SGM {
         // Returns true if this interval was modified.
 
         bool Stretch(const Interval1D &other);
+
+        void Swap(Interval1D &other);
 
     public:
 
@@ -194,6 +198,8 @@ namespace SGM {
         Point2D UpperRight() const;
 
         Point2D MidPoint(double dUFraction = 0.5, double dVFraction = 0.5) const;
+
+        void Swap(Interval2D &other);
 
     public:
 
@@ -319,6 +325,10 @@ namespace SGM {
 
         bool OnBoundary(SGM::Point3D Pos, double dTol) const;
 
+        double Diagonal() const;
+
+        void Swap(Interval3D &other);
+
     public:
 
         Interval1D m_XDomain;
@@ -332,7 +342,7 @@ namespace SGM {
 
         // returns 0 == intersection, -1 == in negative half-space, 1 == positive half-space
         int IntersectsPlaneImpl(Point3D const &c, UnitVector3D const &u, double tolerance) const;
-    };
+        };
 
     ///////////////////////////////////////////////////////////////////////////
     //

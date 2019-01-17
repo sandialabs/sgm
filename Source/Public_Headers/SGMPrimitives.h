@@ -84,6 +84,11 @@ SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result                    &rResult,
                                      std::vector<SGM::Edge>         &aEdges,
                                      std::vector<SGM::EdgeSideType> &aTypes);
 
+SGM_EXPORT SGM::Face CreateFaceFromSurface(SGM::Result                    &rResult,
+                                           SGM::Surface                   &SurfaceID,
+                                           std::vector<SGM::Edge>         &aEdges,
+                                           std::vector<SGM::EdgeSideType> &aTypes);
+
 SGM_EXPORT SGM::Body CoverPlanarWire(SGM::Result &rResult,
                                      SGM::Body   &PlanarWireID);
 
@@ -96,6 +101,11 @@ SGM_EXPORT SGM::Body CoverPlanarWire(SGM::Result &rResult,
 SGM_EXPORT SGM::Edge CreateEdge(SGM::Result           &rResult,
                                 SGM::Curve            &CurveID,
                                 SGM::Interval1D const *pDomain=nullptr);
+
+SGM_EXPORT SGM::Edge CreateEdge(SGM::Result &rResult,
+                                SGM::Curve  &CurveID,
+                                SGM::Vertex &Start,
+                                SGM::Vertex &End);
 
 SGM_EXPORT SGM::Edge CreateLinearEdge(SGM::Result        &rResult,
                                       SGM::Point3D const &StartPos,
@@ -110,6 +120,9 @@ SGM_EXPORT SGM::Body CreateWireBody(SGM::Result               &rResult,
 SGM_EXPORT SGM::Body CreatePolyLine(SGM::Result                     &rResult,
                                     std::vector<SGM::Point3D> const &aPoints);
 
+SGM_EXPORT SGM::Body CreatePointBody(SGM::Result                  &rResult,
+                                     std::set<SGM::Point3D> const &sPoints);
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Simplicial Complex Creation Functions
@@ -120,6 +133,7 @@ SGM_EXPORT SGM::Complex CreateComplex(SGM::Result                     &rResult,
                                       std::vector<SGM::Point3D> const &aPoints,
                                       std::vector<unsigned int> const &aSegments,
                                       std::vector<unsigned int> const &aTriangles);
+
 
     } // End of SGM namespace
 

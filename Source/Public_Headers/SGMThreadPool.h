@@ -20,7 +20,7 @@ namespace SGM {
         /**
          * Create a pool with the given number of threads (workers) to accept work items.
          */
-        ThreadPool(size_t);
+        explicit ThreadPool(size_t);
 
         /**
          * Add a new work item to the pool.

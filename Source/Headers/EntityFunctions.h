@@ -36,6 +36,9 @@ void TransformEntity(SGM::Result            &rResult,
                      SGM::Transform3D const &transform3D,
                      entity                 *pEntity);
 
+//void CheckPreexistingConditions(SGM::Result              &rResult,
+//                                std::vector<std::string> &aCheckStrings);
+
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,
           HealOptions     const &Options);
@@ -54,6 +57,31 @@ inline void BoxTreeInsert(SGM::Result &rResult, SGM::BoxTree& rTree, InputIt fir
     {
     for (InputIt iter = first; iter != last; ++iter)
         rTree.Insert(*iter,(*iter)->GetBox(rResult));
+    }
+
+// Example:
+// std::set<face*,Compare> faceSet = pSurface->GetFaces();
+// std::set<entity*,Compare> entitySet = container_cast(faceSet);
+
+template<class SourceContainer>
+class ContainerConverter
+    {
+    const SourceContainer& m_SourceContainer;
+
+public:
+    explicit ContainerConverter(const SourceContainer& s) : m_SourceContainer(s) {}
+
+    template<class TargetContainer>
+    inline explicit operator TargetContainer() const
+        {
+        return TargetContainer(m_SourceContainer.begin(), m_SourceContainer.end());
+        }
+    };
+
+template<class Container>
+inline ContainerConverter<Container> container_cast(const Container& c)
+    {
+    return ContainerConverter<Container>(c);
     }
 
 }  // End of SGMInternal namespace

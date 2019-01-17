@@ -1,3 +1,0 @@
-// Test Least Squares Plane;
-RunCPPTest(21);
-

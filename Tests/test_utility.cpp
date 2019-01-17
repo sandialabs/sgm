@@ -9,7 +9,7 @@ using ::testing::TestEventListeners;
 using ::testing::UnitTest;
 
 // list of file extensions of models we try to read
-const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".STP",".step"};
+const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".STP",".step"}; // NOLINT(cert-err58-cpp)
 
 namespace SGMTesting {
 
@@ -82,6 +82,18 @@ namespace SGMTesting {
             SGM::DeleteThing(pThing);
     }
 
+    bool CheckEntityAndPrintLog(SGM::Result &rResult, SGM::Entity EntityID)
+    {
+        std::vector<std::string> aLog;
+        SGM::CheckOptions CheckOptions;
+        bool bAnswer = SGM::CheckEntity(rResult, EntityID, CheckOptions, aLog);
+
+        for (auto const &LogString : aLog)
+        {
+            std::cout << LogString << std::endl;
+        }
+        return bAnswer;
+    }
 }
 
 std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNameKeep)(const std::string &))

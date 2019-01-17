@@ -30,10 +30,6 @@ namespace SGM
                 m_bSplitFile(false)
                 {}
 
-            explicit TranslatorOptions(std::string const &sOptions);
-
-            std::string FindString() const;
-
             bool m_bBinary;        // Output a binary version of the file.
                                    // Default is false.
                                    // Used by STL write.
@@ -70,6 +66,8 @@ namespace SGM
                                    // Default is false;
                                    // Used in STEP read.
         };
+
+    SGM_EXPORT FileType GetFileType(std::string const &sFileName);
 
     SGM_EXPORT size_t ReadFile(SGM::Result                  &rResult,
                                std::string            const &sFileName,

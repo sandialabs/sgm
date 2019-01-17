@@ -8,14 +8,31 @@
 
 namespace SGMInternal
 {
+NUBsurface::NUBsurface(SGM::Result                                  &rResult,
+                       std::vector<std::vector<SGM::Point3D>> const &aControlPoints,
+                       std::vector<double>                    const &aUKnots,
+                       std::vector<double>                    const &aVKnots):
+        surface(rResult,SGM::NUBSurfaceType),
+        m_aaControlPoints(aControlPoints),
+        m_aUKnots(aUKnots),
+        m_aVKnots(aVKnots)
+    {
+    Construct(rResult);
+    }
+
 NUBsurface::NUBsurface(SGM::Result                             &rResult,
                        std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
                        std::vector<double>                    &&aUKnots,
                        std::vector<double>                    &&aVKnots):
-        surface(rResult,SGM::NUBSurfaceType),
-        m_aaControlPoints(std::move(aControlPoints)),
-        m_aUKnots(std::move(aUKnots)),
-        m_aVKnots(std::move(aVKnots))
+    surface(rResult,SGM::NUBSurfaceType),
+    m_aaControlPoints(std::move(aControlPoints)),
+    m_aUKnots(std::move(aUKnots)),
+    m_aVKnots(std::move(aVKnots))
+    {
+    Construct(rResult);
+    }
+
+void NUBsurface::Construct(SGM::Result &rResult)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
@@ -93,7 +110,7 @@ bool NUBsurface::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    NUBsurface const *pNUB2=(NUBsurface const *)pOther;
+    auto pNUB2=(NUBsurface const *)pOther;
     if(m_aUKnots.size()!=pNUB2->m_aUKnots.size())
         {
         return false;
@@ -308,7 +325,8 @@ SGM::Point2D NUBsurface::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
 
-void NUBsurface::Transform(SGM::Transform3D const &Trans)
+void NUBsurface::Transform(SGM::Result            &,//rResult,
+                           SGM::Transform3D const &Trans)
     {
     size_t nSize1=m_aaControlPoints.size();
     size_t nSize2=m_aaControlPoints[0].size();

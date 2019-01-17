@@ -1,7 +1,9 @@
 #include <EntityFunctions.h>
+
+#include "SGMGraph.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
-#include "Graph.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -25,6 +27,12 @@ void volume::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
         }
     }
 
+void volume::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    sParents.emplace(m_pBody);
+    entity::GetParents(sParents);
+}
+
 body *volume::GetBody() const
     {
     return m_pBody;
@@ -36,8 +44,14 @@ SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
         {
         auto sFaces = GetFaces();
         auto sEdges = GetEdges();
-        StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
-        StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
+        if(sEdges.empty()==false)
+            {
+            StretchBox(rResult,m_Box,sEdges.begin(),sEdges.end());
+            }
+        if(sFaces.empty()==false)
+            {
+            StretchBox(rResult,m_Box,sFaces.begin(),sFaces.end());
+            }
         }
     return m_Box;
     }
@@ -55,6 +69,17 @@ bool volume::GetColor(int &nRed,int &nGreen,int &nBlue) const
     else
         return entity::GetColor(nRed,nGreen,nBlue);
     }
+
+void volume::RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &sParents)
+{
+    if (sParents.find(GetBody()) != sParents.end())
+    {
+        GetBody()->RemoveVolume(this);
+        SetBody(nullptr);
+    }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
 
 void volume::SeverRelations(SGM::Result &)
     {
@@ -110,10 +135,10 @@ void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
 
@@ -125,42 +150,13 @@ void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedFaces.insert((face *)MapValue->second);
             }
-        else
-            {
-            m_sFixedFaces.insert(pFace);
-            }
+        //else
+        //    {
+        //    m_sFixedFaces.insert(pFace);
+        //    }
         }
     m_sFaces=m_sFixedFaces;
-
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 void volume::AddEdge(edge *pEdge) 
@@ -172,12 +168,9 @@ void volume::AddEdge(edge *pEdge)
 double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
     double dAnswer=0;
-    std::set<face *,EntityCompare>::const_iterator iter=m_sFaces.begin();
-    while(iter!=m_sFaces.end())
+    for (auto pFace : m_sFaces)
         {
-        face *pFace=*iter;
         dAnswer+=pFace->FindVolume(rResult,bApproximate);
-        ++iter;
         }
     return dAnswer/6;
     }
@@ -197,26 +190,28 @@ SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const
     return m_FaceTree;
     }
 
-size_t volume::FindShells(SGM::Result                    &rResult,
+size_t volume::FindShells(SGM::Result                                  &rResult,
                           std::vector<std::set<face *,EntityCompare> > &aShells) const
     {
     thing *pThing=rResult.GetThing();
-    Graph graph(rResult,m_sFaces,false);
-    std::vector<Graph> aComps;
+    std::set<SGM::Face> sFaces;
+    for(auto pFace : m_sFaces)
+        {
+        sFaces.insert(SGM::Face(pFace->GetID()));
+        }
+    SGM::Graph graph(rResult,sFaces,false);
+    std::vector<SGM::Graph> aComps;
     size_t nShells=graph.FindComponents(aComps);
     aShells.reserve(nShells);
     size_t Index1;
     for(Index1=0;Index1<nShells;++Index1)
         {
         std::set<face *,EntityCompare> sShell;
-        Graph const &Comp=aComps[Index1];
-        std::set<size_t> const &sFaces=Comp.GetVertices();
-        std::set<size_t>::const_iterator Iter=sFaces.begin();
-        while(Iter!=sFaces.end())
+        SGM::Graph const &Comp=aComps[Index1];
+        std::set<size_t> const &sGraphVertices=Comp.GetVertices();
+        for (size_t ID : sGraphVertices)
             {
-            size_t ID=*Iter;
             sShell.insert((face *)(pThing->FindEntity(ID)));
-            ++Iter;
             }
         aShells.push_back(sShell);
         }

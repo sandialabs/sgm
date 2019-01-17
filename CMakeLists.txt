@@ -33,10 +33,14 @@ add_definitions(-DSGM_MODELS_OUO_DIRECTORY=\"${SGM_MODELS_OUO_DIRECTORY}\")
 option(BUILD_MULTITHREADED "Build SGM with multithreaded capabilities." OFF)
 if(BUILD_MULTITHREADED)
   message(STATUS "Build SGM multithreaded")
-  find_package(Threads)
   add_definitions(-DSGM_MULTITHREADED=1)
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+      SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
+      SET(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include")
+      SET(OpenMP_CXX_LIB_NAMES "omp")
+      SET(OpenMP_omp_LIBRARY "/usr/local/opt/llvm/lib/libiomp5.dylib")
+    endif()
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
@@ -44,12 +48,16 @@ if(BUILD_MULTITHREADED)
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     # using Visual Studio C++
   endif()
+  find_package(Threads)
+  find_package(OpenMP)
 endif()
+
 
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
 
 # use the version number from the CMake project in the compile
 add_definitions(-DSGM_PRODUCT_VERSION=${SGM_VERSION}) # not a quoted string, like a float literal
+
 
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)
@@ -83,7 +91,6 @@ endfunction()
 
 # the projects we are building
 add_subdirectory(Source)
-add_subdirectory(Apps)
 add_subdirectory(Tests)
 add_subdirectory(Tests/lib/googletest-release-1.8.0)
 
@@ -97,3 +104,21 @@ install(EXPORT SGM FILE SGMConfig.cmake
         DESTINATION cmake
         COMPONENT Development)
 
+SET(CPACK_PACKAGE_VENDOR "SANDIA")
+SET(CPACK_PACKAGE_VERSION_MAJOR "${SGM_VERSION_MAJOR}")
+SET(CPACK_PACKAGE_VERSION_MINOR "${SGM_VERSION_MINOR}")
+SET(CPACK_PACKAGE_VERSION_PATCH "${SGM_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_LONG "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
+set(CPACK_PACKAGE_EXECUTABLES sgm_viewer SGM)
+
+# which components to install
+SET(CPACK_COMPONENT_RUNTIME_REQUIRED ON)
+SET(CPACK_COMPONENTS_ALL Runtime)
+SET(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "SGM Viewer")
+
+#SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/readme.txt")
+#SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.txt")
+#SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/installer_license.txt")
+
+include(CPack)

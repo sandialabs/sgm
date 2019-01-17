@@ -106,6 +106,13 @@ namespace SGM {
         return result;
     }
 
+    inline void Interval1D::Swap(Interval1D &other)
+    {
+        using std::swap;
+        swap(m_dMax,other.m_dMax);
+        swap(m_dMin,other.m_dMin);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interval2D methods
@@ -248,6 +255,12 @@ namespace SGM {
         return {m_UDomain.MidPoint(dUFraction), m_VDomain.MidPoint(dVFraction)};
     }
 
+    inline void Interval2D::Swap(Interval2D &other)
+    {
+        m_UDomain.Swap(other.m_UDomain);
+        m_VDomain.Swap(other.m_VDomain);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interval3D methods
@@ -262,8 +275,8 @@ namespace SGM {
 
     inline Interval3D::Interval3D(Point3D const &A, Point3D const &B, Point3D const &C) :
             m_XDomain((std::min)(A.m_x, (std::min)(B.m_x, C.m_x)), (std::max)(A.m_x, (std::max)(B.m_x, C.m_x))),
-            m_YDomain((std::min)(A.m_y, (std::min)(B.m_y, C.m_y)), (std::max)(A.m_y, (std::max)(B.m_x, C.m_x))),
-            m_ZDomain((std::min)(A.m_z, (std::min)(B.m_z, C.m_z)), (std::max)(A.m_z, (std::max)(B.m_x, C.m_x)))
+            m_YDomain((std::min)(A.m_y, (std::min)(B.m_y, C.m_y)), (std::max)(A.m_y, (std::max)(B.m_y, C.m_y))),
+            m_ZDomain((std::min)(A.m_z, (std::min)(B.m_z, C.m_z)), (std::max)(A.m_z, (std::max)(B.m_z, C.m_z)))
     {}
 
     inline Interval3D::Interval3D(Point3D const &Pos, double tol) :
@@ -330,7 +343,7 @@ namespace SGM {
 
     inline Point3D Interval3D::MidPoint(double dXFraction, double dYFraction, double dZFraction) const
     {
-        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_XDomain.MidPoint(dYFraction),m_XDomain.MidPoint(dZFraction));
+        return SGM::Point3D(m_XDomain.MidPoint(dXFraction),m_YDomain.MidPoint(dYFraction),m_ZDomain.MidPoint(dZFraction));
     }
 
     inline Interval3D Interval3D::Extend(double tolerance) const
@@ -690,6 +703,14 @@ namespace SGM {
         return *this;
     }
 
+    inline double Interval3D::Diagonal() const
+        {
+        double dX=m_XDomain.Length();
+        double dY=m_YDomain.Length();
+        double dZ=m_ZDomain.Length();
+        return sqrt(dX*dX+dY*dY+dZ*dZ);
+        }
+
     inline bool Interval3D::OnBoundary(SGM::Point3D Pos, double dTol) const
         {
         if(SGM_ZERO<m_XDomain.Length() && m_XDomain.OnBoundary(Pos.m_x,dTol))
@@ -719,6 +740,13 @@ namespace SGM {
                (std::min)(m_YDomain.m_dMax, domain.m_YDomain.m_dMax) &&
                (std::max)(m_ZDomain.m_dMin, domain.m_ZDomain.m_dMin) <=
                (std::min)(m_ZDomain.m_dMax, domain.m_ZDomain.m_dMax);
+    }
+
+    inline void Interval3D::Swap(Interval3D& other) // nothrow
+    {
+        m_XDomain.Swap(other.m_XDomain);
+        m_YDomain.Swap(other.m_YDomain);
+        m_ZDomain.Swap(other.m_ZDomain);
     }
 
 ///////////////////////////////////////////////////////////////////////////////

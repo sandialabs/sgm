@@ -70,7 +70,7 @@ void WriteEntityList(FILE                                   *pFile,
                      std::string                      const &sLable,
                      std::set<entity *,EntityCompare> const *sEntities)
     {
-    if(sEntities->size())
+    if(!sEntities->empty())
         {
         fprintf(pFile,"%s {",sLable.c_str());
         auto iter=sEntities->begin();
@@ -90,7 +90,7 @@ void WriteEntityList(FILE                                   *pFile,
 void WritePoints(FILE                            *pFile,
                  std::vector<SGM::Point3D> const &aPoints)
     {
-    if(aPoints.size())
+    if(!aPoints.empty())
         {
         fprintf(pFile," Points {");
         size_t nPoints=aPoints.size();
@@ -111,7 +111,7 @@ void WritePoints(FILE                            *pFile,
 void WriteVectors(FILE                             *pFile,
                   std::vector<SGM::Vector3D> const &aVectors)
     {
-    if(aVectors.size())
+    if(!aVectors.empty())
         {
         fprintf(pFile,"Vectors {");
         size_t nVectors=aVectors.size();
@@ -148,17 +148,17 @@ void WritePoints4D(FILE                            *pFile,
     }
 
 void WriteUnsignedInts(FILE                            *pFile,
-                       std::string               const &sLable,
-                       std::vector<unsigned int> const &aUnsingedInts)
+                       std::string               const &sLabel,
+                       std::vector<unsigned int> const &aUnsignedInts)
     {
-    if(aUnsingedInts.size())
+    if(!aUnsignedInts.empty())
         {
-        fprintf(pFile,"%s {",sLable.c_str());
-        size_t nUnsingedInts=aUnsingedInts.size();
+        fprintf(pFile,"%s {",sLabel.c_str());
+        size_t nUnsingedInts=aUnsignedInts.size();
         size_t Index1;
         for(Index1=0;Index1<nUnsingedInts;++Index1)
             {
-            fprintf(pFile,"%d",aUnsingedInts[Index1]);
+            fprintf(pFile,"%d",aUnsignedInts[Index1]);
             if(Index1!=nUnsingedInts-1)
                 {
                 fprintf(pFile,",");
@@ -214,11 +214,11 @@ void volume::WriteSGM(SGM::Result                  &rResult,
     {
     fprintf(pFile,"#%lu Volume",GetID());
     entity::WriteSGM(rResult,pFile,Options);
-    if(m_sFaces.size())
+    if(!m_sFaces.empty())
         {
         WriteEntityList(pFile," Faces",(std::set<entity *,EntityCompare> const *)&m_sFaces);
         }
-    if(m_sEdges.size())
+    if(!m_sEdges.empty())
         {
         WriteEntityList(pFile," Edges",(std::set<entity *,EntityCompare> const *)&m_sEdges);
         }
@@ -292,11 +292,11 @@ void attribute::WriteSGM(SGM::Result                  &rResult,
     entity::WriteSGM(rResult,pFile,Options);
     if(m_AttributeType==SGM::AttributeType)
         {
-        fprintf(pFile," Name %s;\n",m_Name.c_str());
+        fprintf(pFile," \"%s\";\n",m_Name.c_str());
         }
     else
         {
-        fprintf(pFile," Name %s ",m_Name.c_str());
+        fprintf(pFile," \"%s\"",m_Name.c_str());
         }
     }
 
@@ -313,7 +313,7 @@ void IntegerAttribute::WriteSGM(SGM::Result                  &rResult,
                                 SGM::TranslatorOptions const &Options) const
     {
     attribute::WriteSGM(rResult,pFile,Options);
-    fprintf(pFile," Integer ");
+    fprintf(pFile," Integer {");
     size_t nInts=m_aData.size();
     size_t Index1;
     for(Index1=0;Index1<nInts;++Index1)
@@ -324,7 +324,7 @@ void IntegerAttribute::WriteSGM(SGM::Result                  &rResult,
             fprintf(pFile,",");
             }
         }
-    fprintf(pFile,"}\n");
+    fprintf(pFile,"};\n");
     }
 
 void DoubleAttribute::WriteSGM(SGM::Result                  &rResult,
@@ -627,7 +627,10 @@ void entity::WriteSGM(SGM::Result                  &/*rResult*/,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &/*Options*/) const
     {
-    WriteEntityList(pFile," Owners",(std::set<entity *,EntityCompare> const *)&m_sOwners);
+    if(m_Type   !=SGM::EntityType::AttributeType)
+        {
+        WriteEntityList(pFile," Owners",(std::set<entity *,EntityCompare> const *)&m_sOwners);
+        }
     WriteEntityList(pFile," Attributes",(std::set<entity *,EntityCompare> const *)&m_sAttributes);
     }
 

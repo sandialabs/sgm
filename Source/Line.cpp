@@ -32,7 +32,7 @@ bool line::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    line const *pLine2=(line const *)pOther;
+    auto *pLine2=(line const *)pOther;
     if(SGM::NearEqual(m_Origin,pLine2->m_Origin,dTolerance)==false)
         {
         return false;
@@ -92,7 +92,8 @@ double line::Inverse(SGM::Point3D const  &Pos,
     return t;
     }
 
-void line::Transform(SGM::Transform3D const &Trans)
+void line::Transform(SGM::Result            &,//rResult,
+                     SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_Axis=Trans*m_Axis;

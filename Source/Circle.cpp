@@ -131,7 +131,8 @@ double circle::Inverse(SGM::Point3D const &Pos,
     return t;
     }
 
-void circle::Transform(SGM::Transform3D const &Trans)
+void circle::Transform(SGM::Result            &,//rResult,
+                       SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_Normal=Trans*m_Normal;
@@ -147,7 +148,7 @@ bool circle::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    circle const *pCurve2=(circle const *)pOther;
+    auto pCurve2=(circle const *)pOther;
     if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
         {
         return false;

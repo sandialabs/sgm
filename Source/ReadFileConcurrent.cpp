@@ -3,11 +3,11 @@
 #include "SGMVector.h"
 #include "SGMTranslators.h"
 #include "SGMThreadPool.h"
+#include "SGMGraph.h"
 
 #include "Curve.h"
 #include "EntityFunctions.h"
 #include "FileFunctions.h"
-#include "Graph.h"
 #include "Primitive.h"
 #include "ReadFile.h"
 #include "Surface.h"

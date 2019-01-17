@@ -72,13 +72,6 @@ macro(sgm_project_setup)
 
 
 
-  if(NOT CMAKE_INSTALL_BINARY_DIR)
-    SET(CMAKE_INSTALL_BINARY_DIR "lib")
-  endif()
-  if(NOT CMAKE_INSTALL_INCLUDE_DIR)
-    SET(CMAKE_INSTALL_INCLUDE_DIR "include")
-  endif()
-
   # Increase warning level
   if(CMAKE_C_COMPILER_ID MATCHES GNU OR CMAKE_C_COMPILER_ID MATCHES Clang)
     if(NOT CMAKE_C_FLAGS MATCHES Wall)
@@ -148,5 +141,27 @@ macro(sgm_project_setup)
   endif(MSVC)
 
   include(GenerateExportHeader)
+
+  # Line Coverage
+  #
+  # Add variable "cmake -DCOVERAGE=ON" to enable the options to the compile, should work with gcc or clang compiler.
+  # and execute the test executables once before "make coverage"
+  if(CMAKE_SYSTEM_NAME MATCHES Linux OR CMAKE_SYSTEM_NAME MATCHES Darwin)
+    if (COVERAGE)
+      SET(COVERAGE_COMPILE_FLAGS "-g -O0 --coverage")
+      SET(COVERAGE_LINK_FLAGS "--coverage")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COVERAGE_COMPILE_FLAGS}" )
+      SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}" )
+    endif (COVERAGE)
+    add_custom_target(coverage
+            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+            COMMAND test ! -e coverage || mv coverage coverage_`date -r coverage +%Y-%m-%d_%H-%M-%S`
+            COMMAND find . -name "*.gcda" -type f -delete        # remove old data files
+            COMMAND ${PROJECT_BINARY_DIR}/bin/sgm_tests          # run tests
+            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source --xml -o coverage.xml
+            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source --html --html-details -o coverage.html
+            COMMENT "Build coverage.html summarizing coverage of tests using gcovr tool."
+            )
+  endif()
 
 endmacro()

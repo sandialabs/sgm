@@ -74,6 +74,7 @@ namespace SGM
         FaceOnLeftType,
         FaceOnRightType,
         FaceOnBothSidesType,
+        FaceOnUnknown,
         };
 
     enum EdgeSeamType
@@ -96,6 +97,10 @@ namespace SGM
         ResultTypeUnknownFileType,  // An unknown file type was sent to ReadFile.
         ResultTypeUnknownEntityID,  // No matching entity for given ID.
         ResultTypeInconsistentData, // Inside polygons are not inside outside polygons.
+        ResultTypeCannotDelete,     // Cannot delete an entity if it has parents
+        ResultTypeCannotTransform,  // Cannot transform an entity if it has parents
+        ResultTypeSurfaceMissingChild,    // extrude, revolve, or offset surface is missing curve or surface pointer
+        ResultTypeMaxRangeExceeded // max size of container too large, for example, a number larger than max unsigned
         };
 
     enum LogType
@@ -109,6 +114,14 @@ namespace SGM
         LogBack,        // Back Face of a block, i.e. +Y.
         LogLeft,        // Left Face of a block, i.e. -X.
         LogRight        // Right Face of a block, i.e. +X.
+        };
+
+    enum FileType
+        {
+        SGMFileType,     // SGM internal file format.
+        STLFileType,     // STL file.
+        STEPFileType,    // STEP file either stp or step.
+        UnknownFileType 
         };
 
     } // End of SGM namespace

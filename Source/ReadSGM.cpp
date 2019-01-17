@@ -2,6 +2,7 @@
 #include "SGMEntityClasses.h"
 #include "SGMTranslators.h"
 #include "SGMInterrogate.h"
+#include "SGMGraph.h"
 
 #include "EntityFunctions.h"
 #include "Topology.h"
@@ -11,12 +12,13 @@
 #include "STEP.h"
 #include "Curve.h"
 #include "Primitive.h"
-#include "Graph.h"
+
+#include "Interrogate.h"
 
 #include <utility>
 #include <string>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -29,7 +31,7 @@ class SGMData
     {
     public:
 
-    SGMData() {}
+    SGMData() = default;
 
     entity              *pEntity;
     std::vector<size_t> aOwners;
@@ -45,21 +47,70 @@ class SGMData
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+bool ReadFilePoint(FILE         *pFile,
+                   SGM::Point3D &Pos)
+    {
+    char data;
+    std::string PosStr;
+    size_t nCount=0;
+    double d[3];
+    while(fread(&data,1,1,pFile))
+        {
+        if(data>32 && data!=',') 
+            {
+            PosStr+=data;
+            }
+        else if(PosStr.empty()==false)
+            {
+            sscanf(PosStr.c_str(),"%lf",&d[nCount]);
+            PosStr.clear();
+            ++nCount;
+            if(nCount==3)
+                {
+                Pos.m_x=d[0];
+                Pos.m_y=d[1];
+                Pos.m_z=d[2];
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
 void FindArguments(std::string        const &line,
                    std::vector<std::string> &aArgs)
     {
     char const *pString=line.c_str();
     size_t nCount=1;
     size_t nStart=0;
+    bool bInString=false;
+    bool bString=false;
     while(pString[nCount])
         {
-        if(pString[nCount]==' ' || pString[nCount]==';')
+        if(pString[nCount]=='"')
+            {
+            bInString=!bInString;
+            ++nCount;
+            bString=true;
+            }
+        if(bInString==false && (pString[nCount]==' ' || pString[nCount]==';'))
             {
             size_t Index1;
             std::string Arg;
-            for(Index1=nStart;Index1<nCount;++Index1)
+            if(bString)
                 {
-                Arg+=pString[Index1];
+                bString=false;
+                for(Index1=nStart+1;Index1+1<nCount;++Index1)
+                    {
+                    Arg+=pString[Index1];
+                    }
+                }
+            else
+                {
+                for(Index1=nStart;Index1<nCount;++Index1)
+                    {
+                    Arg+=pString[Index1];
+                    }
                 }
             nStart=nCount+1;
             aArgs.push_back(Arg);
@@ -165,7 +216,7 @@ SGM::Point3D GetPoint3D(std::string const &aStr)
     double x,y,z;
     char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
-    return SGM::Point3D(x,y,z);
+    return {x,y,z};
     }
 
 SGM::UnitVector3D GetUnitVector3D(std::string const &aStr)
@@ -173,7 +224,7 @@ SGM::UnitVector3D GetUnitVector3D(std::string const &aStr)
     double x,y,z;
     char const *pStr=GetFirstNumberPointer(aStr); 
     sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
-    return SGM::UnitVector3D(x,y,z);
+    return {x,y,z};
     }
 
 void GetIDs(std::string   const &aStr,
@@ -182,9 +233,9 @@ void GetIDs(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aIDs.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
-        aIDs.push_back(GetID(aStr));
+        aIDs.push_back(GetID(aArgumentString));
         }
     }
 
@@ -194,9 +245,9 @@ void GetInts(std::string const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
-        aInts.push_back(GetInt(aStr));
+        aInts.push_back(GetInt(aArgumentString));
         }
     }
 
@@ -206,9 +257,9 @@ void GetSizes(std::string   const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
-        aInts.push_back(GetInt(aStr));
+        aInts.push_back(GetInt(aArgumentString));
         }
     }
 
@@ -218,9 +269,9 @@ void GetUnsignedInts(std::string         const &aStr,
     std::vector<std::string> aArgs;
     size_t nArgs=FindSubArguments(aStr,aArgs);
     aInts.reserve(nArgs);
-    for(auto aStr : aArgs)
+    for(const auto &aArgumentString : aArgs)
         {
-        aInts.push_back(GetUnsignedInt(aStr));
+        aInts.push_back(GetUnsignedInt(aArgumentString));
         }
     }
 
@@ -315,9 +366,13 @@ int FindSides(std::vector<std::string> const &aArgs)
     size_t Index1;
     for(Index1=2;Index1<nArgs;++Index1)
         {
-        if(aArgs[Index1]=="Sides")
+        if(aArgs[Index1]=="DoubleSided")
             {
-            return GetInt(aArgs[Index1+1]);
+            return 2;
+            }
+        else if(aArgs[Index1]=="Membrane")
+            {
+            return 0;
             }
         }
     return 1;
@@ -473,10 +528,23 @@ void ReadVertex(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pVertex;
     } 
       
-void ReadAttribute(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
+void ReadAttribute(SGM::Result              &rResult,
+                   std::vector<std::string> &aArgs,
+                   std::map<size_t,SGMData> &mEntityMap)
     {
+    // #47 Attribute Name "SGM Color" Integer 170,85,255}
+
+    if(aArgs[3]=="Integer")
+        {
+        std::vector<int> aData;
+        GetInts(aArgs[4],aData);
+        attribute *pAttribute=new IntegerAttribute(rResult,aArgs[2],aData);
+        mEntityMap[GetID(aArgs[0])].pEntity=pAttribute;
+        }
+    else
+        {
+        throw; // More attribute types need to be added.
+        }
     } 
        
 void ReadLine(SGM::Result              &rResult,
@@ -537,53 +605,53 @@ void ReadCircle(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCircle;
     } 
       
-void ReadEllipse(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadParabola(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadHyperbola(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadNUBCurve(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadNURBCurve(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadPointCurve(SGM::Result              &,//rResult,
-                    std::vector<std::string> &,//aArgs,
-                    std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadHermite(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-      
-void ReadTorusKnot(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
+//void ReadEllipse(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadParabola(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadHyperbola(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadNUBCurve(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadNURBCurve(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadPointCurve(SGM::Result              &,//rResult,
+//                    std::vector<std::string> &,//aArgs,
+//                    std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadHermite(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//      
+//void ReadTorusKnot(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
 
 void ReadPlane(SGM::Result              &rResult,
                std::vector<std::string> &aArgs,
@@ -645,59 +713,158 @@ void ReadCylinder(SGM::Result              &rResult,
     mEntityMap[GetID(aArgs[0])].pEntity=pCylinder;
     } 
 
-void ReadCone(SGM::Result              &,//rResult,
-              std::vector<std::string> &,//aArgs,
-              std::map<size_t,SGMData> &)//mEntityMap)
+void ReadCone(SGM::Result              &rResult,
+              std::vector<std::string> &aArgs,
+              std::map<size_t,SGMData> &mEntityMap)
     {
+    // #10 Cone Origin (0.0,0.0,0.0) Normal (0.577350269189626,0.577350269189626,0.577350269189626) 
+    // XAxis (-0.707106781186547,0.707106781186547,0.0) Radius 1.00000000000000 HalfAngle 0.0576710048844255;
+
+    double dRadius=0.0;
+    double dHalfAngle=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Origin")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Radius")
+            {
+            dRadius=GetDouble(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="HalfAngle")
+            {
+            dHalfAngle=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    cone *pCone=new cone(rResult,Center,Normal,dRadius,dHalfAngle,&XAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pCone;
     } 
 
-void ReadSphere(SGM::Result              &,//rResult,
-                std::vector<std::string> &,//aArgs,
-                std::map<size_t,SGMData> &)//mEntityMap)
+void ReadSphere(SGM::Result              &rResult,
+                std::vector<std::string> &aArgs,
+                std::map<size_t,SGMData> &mEntityMap)
     {
+    // #3 Sphere Center (0.0,0.0,0.0) Normal (0.0,0.0,1.0) XAxis (1.0,0.0,0.0) Radius 2.00000000000000;
+
+    double dRadius=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Center")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Radius")
+            {
+            dRadius=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    SGM::UnitVector3D YAxis=Normal*XAxis;
+    sphere *pSphere=new sphere(rResult,Center,dRadius,&XAxis,&YAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pSphere;
     } 
 
-void ReadTorus(SGM::Result              &,//rResult,
-               std::vector<std::string> &,//aArgs,
-               std::map<size_t,SGMData> &)//mEntityMap)
+void ReadTorus(SGM::Result              &rResult,
+               std::vector<std::string> &aArgs,
+               std::map<size_t,SGMData> &mEntityMap)
     {
+    // #3 Torus Center (0.0,0.0,0.0) Normal (0.0,0.0,1.0) XAxis (1.0,0.0,0.0)
+    // Minor 1.00000000000000 Major 3.00000000000000;
+
+    double dMinor=0.0;
+    double dMajor=0.0;
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal,XAxis;
+    size_t nArgs=aArgs.size();
+    size_t Index1;
+    for(Index1=2;Index1<nArgs;++Index1)
+        {
+        if(aArgs[Index1]=="Center")
+            {
+            Center=GetPoint3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Normal")
+            {
+            Normal=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="XAxis")
+            {
+            XAxis=GetUnitVector3D(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Minor")
+            {
+            dMinor=GetDouble(aArgs[Index1+1]);
+            }
+        else if(aArgs[Index1]=="Major")
+            {
+            dMajor=GetDouble(aArgs[Index1+1]);
+            }
+        }
+    SGM::UnitVector3D YAxis=Normal*XAxis;
+    bool bApple=true;
+    torus *pTorus=new torus(rResult,Center,Normal,dMinor,dMajor,bApple,&XAxis);
+    mEntityMap[GetID(aArgs[0])].pEntity=pTorus;
     }
 
-void ReadNUBSurface(SGM::Result              &,//rResult,
-                    std::vector<std::string> &,//aArgs,
-                    std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadNURBSurface(SGM::Result              &,//rResult,
-                     std::vector<std::string> &,//aArgs,
-                     std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadRevolve(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadExtrude(SGM::Result              &,//rResult,
-                 std::vector<std::string> &,//aArgs,
-                 std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadReference(SGM::Result              &,//rResult,
-                   std::vector<std::string> &,//aArgs,
-                   std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
-
-void ReadAssembly(SGM::Result              &,//rResult,
-                  std::vector<std::string> &,//aArgs,
-                  std::map<size_t,SGMData> &)//mEntityMap)
-    {
-    } 
+//void ReadNUBSurface(SGM::Result              &,//rResult,
+//                    std::vector<std::string> &,//aArgs,
+//                    std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadNURBSurface(SGM::Result              &,//rResult,
+//                     std::vector<std::string> &,//aArgs,
+//                     std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadRevolve(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadExtrude(SGM::Result              &,//rResult,
+//                 std::vector<std::string> &,//aArgs,
+//                 std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadReference(SGM::Result              &,//rResult,
+//                   std::vector<std::string> &,//aArgs,
+//                   std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
+//
+//void ReadAssembly(SGM::Result              &,//rResult,
+//                  std::vector<std::string> &,//aArgs,
+//                  std::map<size_t,SGMData> &)//mEntityMap)
+//    {
+//    } 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -918,38 +1085,38 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
             {
             ReadCircle(rResult,aArgs,mEntityMap);
             }
-        else if(aArgs[1]=="Ellipse")
-            {
-            ReadEllipse(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Parabola")
-            {
-            ReadParabola(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Hyperbola")
-            {
-            ReadHyperbola(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NUBCurve")
-            {
-            ReadNUBCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NURBCurve")
-            {
-            ReadNURBCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="PointCurve")
-            {
-            ReadPointCurve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Hermite")
-            {
-            ReadHermite(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="TorusKnot")
-            {
-            ReadTorusKnot(rResult,aArgs,mEntityMap);
-            }
+        //else if(aArgs[1]=="Ellipse")
+        //    {
+        //    ReadEllipse(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Parabola")
+        //    {
+        //    ReadParabola(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Hyperbola")
+        //    {
+        //    ReadHyperbola(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NUBCurve")
+        //    {
+        //    ReadNUBCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NURBCurve")
+        //    {
+        //    ReadNURBCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="PointCurve")
+        //    {
+        //    ReadPointCurve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Hermite")
+        //    {
+        //    ReadHermite(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="TorusKnot")
+        //    {
+        //    ReadTorusKnot(rResult,aArgs,mEntityMap);
+        //    }
         else if(aArgs[1]=="Plane")
             {
             ReadPlane(rResult,aArgs,mEntityMap);
@@ -970,30 +1137,30 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
             {
             ReadTorus(rResult,aArgs,mEntityMap);
             }
-        else if(aArgs[1]=="NUBSurface")
-            {
-            ReadNUBSurface(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="NURBSurface")
-            {
-            ReadNURBSurface(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Revolve")
-            {
-            ReadRevolve(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Extrude")
-            {
-            ReadExtrude(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Reference")
-            {
-            ReadReference(rResult,aArgs,mEntityMap);
-            }
-        else if(aArgs[1]=="Assembly")
-            {
-            ReadAssembly(rResult,aArgs,mEntityMap);
-            }
+        //else if(aArgs[1]=="NUBSurface")
+        //    {
+        //    ReadNUBSurface(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="NURBSurface")
+        //    {
+        //    ReadNURBSurface(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Revolve")
+        //    {
+        //    ReadRevolve(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Extrude")
+        //    {
+        //    ReadExtrude(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Reference")
+        //    {
+        //    ReadReference(rResult,aArgs,mEntityMap);
+        //    }
+        //else if(aArgs[1]=="Assembly")
+        //    {
+        //    ReadAssembly(rResult,aArgs,mEntityMap);
+        //    }
         line.clear();
         }
 
@@ -1015,6 +1182,56 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
         }
 
     return aEntities.size();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+//
+//  The main SGM file read function.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+size_t ReadTXTFile(SGM::Result                  &rResult,
+                   std::string            const &FileName,
+                   std::vector<entity *>        &aEntities,
+                   std::vector<std::string>     &,//aLog,
+                   SGM::TranslatorOptions const &)//Options)
+    {
+    // Open the file.
+
+    FILE *pFile = fopen(FileName.c_str(),"rt");
+    if(pFile==nullptr)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        return 0;
+        }
+
+    std::vector<SGM::Point3D> aPoints;
+    std::map<size_t,SGMData> mEntityMap;
+    SGM::Point3D Pos;
+    while(ReadFilePoint(pFile,Pos))
+        {
+        aPoints.push_back(Pos);
+        }
+
+    //////////////////////// TEMP CODE FOR TESTING
+    //
+    //std::vector<SGM::Point3D> aInPoints;
+    //std::set<volume *,EntityCompare> sVolumes;
+    //FindVolumes(rResult,rResult.GetThing(),sVolumes,false);
+    //volume *pVolume=*(sVolumes.begin());
+    //for(auto TestPos : aPoints)
+    //    {
+    //    if(PointInEntity(rResult,TestPos,pVolume))
+    //        {
+    //        aInPoints.push_back(TestPos);
+    //        }
+    //    }
+    //
+    //complex *pComplex=new complex(rResult,aInPoints);
+    
+    complex *pComplex=new complex(rResult,aPoints);
+    aEntities.push_back(pComplex);
+    return 1;
     }
 
 } // End of SGMInternal namespace

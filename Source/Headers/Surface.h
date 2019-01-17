@@ -1,3 +1,5 @@
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "google-default-arguments"
 #ifndef SURFACE_H
 #define SURFACE_H
 
@@ -31,15 +33,22 @@ class surface : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const override;
+                   bool                      bChildren) const override = 0;
 
         surface *Clone(SGM::Result &rResult) const override = 0;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
         SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
 
         bool IsTopLevel() const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
 
@@ -74,7 +83,8 @@ class surface : public entity
                                         double             &k1,
                                         double             &k2) const;
 
-        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+        virtual void Transform(SGM::Result            &rResult,
+                               SGM::Transform3D const &Trans) = 0;
 
         virtual curve *UParamLine(SGM::Result &rResult,double dU) const = 0;
 
@@ -119,10 +129,7 @@ class surface : public entity
 
         SGM::Interval2D const &GetDomain() const;
 
-        double FindAreaOfParametricTriangle(SGM::Result        &rResult,
-                                            SGM::Point2D const &PosA,
-                                            SGM::Point2D const &PosB,
-                                            SGM::Point2D const &PosC) const;
+        void SetDomain(SGM::Interval2D const &Domain);
 
         void SnapToDomain(SGM::Point2D &uv) const;
 
@@ -136,6 +143,12 @@ class surface : public entity
                                    SGM::Point3D const &Pos) const;
 
     protected:
+        // derived classes should call this in their Check override
+        bool CheckImplementation(SGM::Result              &rResult,
+                                 SGM::CheckOptions  const &Options,
+                                 std::vector<std::string> &aCheckStrings,
+                                 bool                      bChildren) const;
+
 
         std::set<face *,EntityCompare> m_sFaces;
         SGM::EntityType                m_SurfaceType;
@@ -163,11 +176,20 @@ class plane : public surface
               SGM::UnitVector3D const &YAxis,
               SGM::UnitVector3D const &ZAxis);
 
+        plane(SGM::Result             &rResult,
+              SGM::Point3D      const &Origin,
+              SGM::UnitVector3D const &ZAxis);
+
         plane(SGM::Result &rResult, plane const &other);
 
         ~plane() override = default;
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         plane *Clone(SGM::Result &rResult) const override;
 
@@ -194,7 +216,8 @@ class plane : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -232,6 +255,11 @@ class cylinder : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         cylinder *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -259,7 +287,8 @@ class cylinder : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -292,6 +321,11 @@ class cone : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         cone *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -321,7 +355,8 @@ class cone : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -356,6 +391,11 @@ class sphere : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         sphere *Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -383,7 +423,8 @@ class sphere : public surface
                                 double             &k1,
                                 double             &k2) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -416,6 +457,11 @@ class torus : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         torus* Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -438,7 +484,8 @@ class torus : public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -468,6 +515,11 @@ class NUBsurface: public surface
     {
     public:
 
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D>> const &aControlPoints,
+                   std::vector<double>                    const &aUKnots,
+                   std::vector<double>                    const &aVKnots);
+
         NUBsurface(SGM::Result                             &rResult,
                    std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
                    std::vector<double>                    &&aUKnots,
@@ -478,6 +530,11 @@ class NUBsurface: public surface
         ~NUBsurface() override = default;
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         NUBsurface* Clone(SGM::Result &rResult) const override;
 
@@ -498,7 +555,8 @@ class NUBsurface: public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -550,14 +608,22 @@ class NUBsurface: public surface
         std::vector<SGM::Point2D> m_aSeedParams;
         size_t                    m_nUParams;
         size_t                    m_nVParams;
+
+    private:
+        void Construct(SGM::Result &rResult);
     };
 
 class NURBsurface: public surface
     {
     public:
 
-        NURBsurface(SGM::Result                            &rResult,
-                    std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
+        NURBsurface(SGM::Result                                   &rResult,
+                    std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                    std::vector<double>                     const &aUKnots,
+                    std::vector<double>                     const &aVKnots);
+
+        NURBsurface(SGM::Result                             &rResult,
+                    std::vector<std::vector<SGM::Point4D>> &&aaControlPoints,
                     std::vector<double>                    &&aUKnots,
                     std::vector<double>                    &&aVKnots);
 
@@ -566,6 +632,11 @@ class NURBsurface: public surface
         ~NURBsurface() override = default;
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         NURBsurface* Clone(SGM::Result &rResult) const override;
 
@@ -586,7 +657,8 @@ class NURBsurface: public surface
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -638,6 +710,10 @@ class NURBsurface: public surface
         std::vector<SGM::Point2D> m_aSeedParams;
         size_t                    m_nUParams;
         size_t                    m_nVParams;
+
+    private:
+
+        void Construct(SGM::Result &rResult);
     };
 
 class revolve : public surface
@@ -654,6 +730,11 @@ class revolve : public surface
         ~revolve() override;
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
 
         revolve* Clone(SGM::Result &rResult) const override;
 
@@ -672,11 +753,16 @@ class revolve : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity *)m_pCurve) m_pCurve = nullptr;}
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
         SGM::Point2D Inverse(SGM::Point3D const &Pos,
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -709,6 +795,11 @@ class extrude : public surface
 
         void Accept(EntityVisitor &v) override { v.Visit(*this); }
 
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
         extrude* Clone(SGM::Result &rResult) const override;
 
         void WriteSGM(SGM::Result                  &rResult,
@@ -726,11 +817,16 @@ class extrude : public surface
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity*)m_pCurve) m_pCurve = nullptr;}
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
         SGM::Point2D Inverse(SGM::Point3D const &Pos,
                              SGM::Point3D       *ClosePos=nullptr,
                              SGM::Point2D const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         curve *UParamLine(SGM::Result &rResult, double dU) const override;
 
@@ -753,19 +849,65 @@ class extrude : public surface
         SGM::UnitVector3D  m_vAxis;
     };
 
-
 class offset : public surface
     {
     public:
 
-        offset (SGM::Result & rResult,
-                double value,
-                surface *pSurface);
+        offset(SGM::Result &rResult, double distance, surface *pSurface);
 
-        offset(SGM::Result &rResult, extrude const &other);
+        offset(SGM::Result &rResult, offset const &other);
 
         ~offset() override;
 
+        void Accept(EntityVisitor &v) override { v.Visit(*this); }
+
+        bool Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const override;
+
+        offset* Clone(SGM::Result &rResult) const override;
+
+        void WriteSGM(SGM::Result                  &rResult,
+                      FILE                         *pFile,
+                      SGM::TranslatorOptions const &Options) const override;
+
+        void Evaluate(SGM::Point2D const &uv,
+                      SGM::Point3D       *Pos,
+                      SGM::Vector3D      *Du=nullptr,
+                      SGM::Vector3D      *Dv=nullptr,
+                      SGM::UnitVector3D  *Norm=nullptr,
+                      SGM::Vector3D      *Duu=nullptr,
+                      SGM::Vector3D      *Duv=nullptr,
+                      SGM::Vector3D      *Dvv=nullptr) const override;
+
+        void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
+
+        void DisconnectOwnedEntity(entity const *pEntity) override {if (pEntity == (entity*)m_pSurface) m_pSurface = nullptr;}
+
+        void ReplacePointers(std::map<entity *,entity *> const &mEntityMap) override;
+
+        SGM::Point2D Inverse(SGM::Point3D const &,
+                             SGM::Point3D       *ClosePos=nullptr,
+                             SGM::Point2D const *pGuess=nullptr) const override;
+
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
+
+        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+
+        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+
+        bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        surface *GetSurface() const;
+
+        void SetSurface(surface *pSurface);
+
+    public:
+
+        surface    *m_pSurface;
+        double      m_dDistance;
     };
 
 bool TestSurface(SGM::Result                &rResult,
@@ -776,3 +918,5 @@ bool TestSurface(SGM::Result                &rResult,
 #include "Inline/Surface.inl"
 
 #endif // SURFACE_H
+
+//#pragma clang diagnostic pop

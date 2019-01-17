@@ -109,6 +109,7 @@ void boxtree_timing()
     SGM_TIMER_SUM();
 }
 
+/*
 class ObjectConstructorDefault
 {
 public:
@@ -280,6 +281,7 @@ void sse_timing()
     SGM_TIMER_SUM();
     }
 #endif
+ */
 
 int main(int /*argc*/, char ** /*argv*/)
 {

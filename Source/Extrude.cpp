@@ -51,30 +51,24 @@ bool extrude::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    extrude const *pExtrude2=(extrude const *)pOther;
-    if(SGM::NearEqual(m_Origin,pExtrude2->m_Origin,dTolerance)==false)
+    auto pExtrude2=(extrude const *)pOther;
+    if(!SGM::NearEqual(m_Origin, pExtrude2->m_Origin, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_vAxis,pExtrude2->m_vAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_vAxis, pExtrude2->m_vAxis, dTolerance))
         {
         return false;
         }
-    if(m_pCurve->IsSame(pExtrude2->m_pCurve,dTolerance)==false)
-        {
-        return false;
-        }
-    return true;
+    return m_pCurve->IsSame(pExtrude2->m_pCurve, dTolerance);
     }
 
 extrude::extrude(SGM::Result &rResult, extrude const &other) :
         surface(rResult, other),
-        m_pCurve(nullptr),
+        m_pCurve(other.m_pCurve),
         m_Origin(other.m_Origin),
         m_vAxis(other.m_vAxis)
     {
-    if (other.m_pCurve)
-        SetCurve(other.m_pCurve->Clone(rResult));
     }
 
 extrude* extrude::Clone(SGM::Result &rResult) const
@@ -84,6 +78,17 @@ void extrude::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
     {
     sChildren.insert(m_pCurve);
     }
+
+void extrude::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+{
+    surface::ReplacePointers(mEntityMap);
+
+    auto MapValue=mEntityMap.find(m_pCurve);
+    if(MapValue!=mEntityMap.end())
+        m_pCurve = dynamic_cast<curve *>(MapValue->second);
+    else
+        throw std::runtime_error("extrude ReplacePointers did not find a curve in the map");
+}
 
 void extrude::Evaluate(SGM::Point2D const &uv,
                        SGM::Point3D       *Pos,
@@ -117,6 +122,7 @@ void extrude::Evaluate(SGM::Point2D const &uv,
         }
     if(Du)
         {
+        assert(pDuCurve != nullptr);
         *Du=*pDuCurve;
         }
     if(Dv)
@@ -125,10 +131,12 @@ void extrude::Evaluate(SGM::Point2D const &uv,
         }
     if(Norm)
         {
+        assert(pDuCurve != nullptr);
         *Norm=(*pDuCurve)*m_vAxis;
         }
     if(Duu)
         {
+        assert(pDuuCurve != nullptr);
         *Duu=*pDuuCurve;
         }
     if(Duv)
@@ -167,18 +175,11 @@ SGM::Point2D extrude::Inverse(SGM::Point3D const &Pos,
     }
 
     
-void extrude::Transform(SGM::Transform3D const &Trans)
+void extrude::Transform(SGM::Result            &,//rResult,
+                        SGM::Transform3D const &Trans)
     {
+    m_Origin=Trans*m_Origin;
     m_vAxis=Trans*m_vAxis;
-    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
-        {
-        m_pCurve->Transform(Trans);
-        }
-    else
-        {
-        //TODO: Make a copy and transform the copy.
-        throw std::logic_error("Missing implementation of Transform() when curve has other owners");
-        }
     }
 
 curve *extrude::UParamLine(SGM::Result &, double) const

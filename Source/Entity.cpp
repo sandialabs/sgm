@@ -1,7 +1,4 @@
 #include "EntityClasses.h"
-#include "EntityFunctions.h"
-#include "Curve.h"
-#include "Surface.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -10,16 +7,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace SGMInternal
 {
-
-bool entity::Check(SGM::Result              &,
-                   SGM::CheckOptions const  &,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      ) const
-{
-    // we do not throw so that checking may continue
-    aCheckStrings.emplace_back("Derived class must override Check()\n");
-    return false;
-}
 
 void entity::ChangeColor(SGM::Result &rResult,
                          int nRed,int nGreen,int nBlue)
@@ -33,6 +20,39 @@ void entity::ChangeColor(SGM::Result &rResult,
     IntegerAttribute *pColor=new IntegerAttribute(rResult,"SGM Color",aData);
     AddAttribute(pColor);
     pColor->AddOwner(this);
+    }
+
+void entity::OwnerAndAttributeReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+    {
+    std::set<attribute *,EntityCompare> m_sFixedAttributes;
+    for(auto pAttribute : m_sAttributes)
+        {
+        auto MapValue=mEntityMap.find(pAttribute);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedAttributes.insert((attribute *)MapValue->second);
+            }
+        //else
+        //    {
+        //    m_sFixedAttributes.insert(pAttribute);
+        //    }
+        }
+    m_sAttributes=m_sFixedAttributes;
+
+    std::set<entity *,EntityCompare> m_sFixedOwners;
+    for(auto pEntity : m_sOwners)
+        {
+        auto MapValue=mEntityMap.find(pEntity);
+        if(MapValue!=mEntityMap.end())
+            {
+            m_sFixedOwners.insert((attribute *)MapValue->second);
+            }
+        //else
+        //    {
+        //    m_sFixedOwners.insert(pEntity);
+        //    }
+        }
+    m_sOwners=m_sFixedOwners;
     }
 
 void entity::RemoveColor(SGM::Result &rResult)
@@ -55,13 +75,13 @@ void entity::RemoveColor(SGM::Result &rResult)
         }
     }
 
-bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
-{
+bool entity::GetColor(int &nRed, int &nGreen, int &nBlue) const
+    {
     for (auto attr : m_sAttributes)
         {
         if (attr->GetName() == "SGM Color")
             {
-            IntegerAttribute *pIntegerAttribute = (IntegerAttribute *)(attr);
+            auto pIntegerAttribute = (IntegerAttribute *) (attr);
             std::vector<int> const &aData = pIntegerAttribute->GetData();
             nRed = aData[0];
             nGreen = aData[1];
@@ -70,9 +90,24 @@ bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
             }
         }
     return false;
-}
-
-void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
-    {
     }
+
+void entity::GetParents(std::set<entity *, EntityCompare> &sParents) const
+    {
+    for (entity *pOwner : m_sOwners)
+        {
+        sParents.emplace(pOwner);
+        }
+    }
+
+void entity::RemoveParentsInSet(SGM::Result &,
+                                std::set<entity *, EntityCompare> const &sEntities)
+    {
+    for (entity *pOwner : sEntities)
+        {
+        pOwner->DisconnectOwnedEntity(this);
+        m_sOwners.erase(pOwner);
+        }
+    }
+
 }

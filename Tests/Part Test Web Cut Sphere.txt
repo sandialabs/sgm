@@ -1,4 +1,0 @@
-// Tests "Web Cut Sphere.stp";
-ReadFile("STEP Parts/Web Cut Sphere.stp",EntityList);
-SaveSTL("STL Parts/Web Cut Sphere.stl",EntityList[0]);
-CompareFiles("STL Parts/Web Cut Sphere.stl","Test Answers/Web Cut Sphere.stl");

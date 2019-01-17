@@ -1,17 +1,20 @@
 #include "SGMVector.h"
 #include "SGMTranslators.h"
+#include "SGMGraph.h"
 
 #include "Curve.h"
 #include "EntityFunctions.h"
 #include "FileFunctions.h"
-#include "Graph.h"
 #include "ReadFile.h"
+#include "STL.h"
 #include "Topology.h"
+#include "OrderPoints.h"
 
-#define SGM_TIMER
+//#define SGM_TIMER
 #include "Timer.h"
 
 #include <fstream>
+#include <future>
 #include <iostream>
 
 #ifdef _MSC_VER
@@ -464,6 +467,97 @@ inline void ParseBodyTransform(char const *pLineAfterStepTag,
     FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
     }
 
+inline void ParseContextDependentShapeRepresentation(char const *pLineAfterStepTag,
+                                                     STEPLineData &STEPData)
+{
+//#1287 = CONTEXT_DEPENDENT_SHAPE_REPRESENTATION ( #1840, #153 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseRepresentationRelationship(char const *pLineAfterStepTag,
+                                            STEPLineData &STEPData)
+{
+//#1840 =( REPRESENTATION_RELATIONSHIP ('NONE','NONE', #814, #1941 ) REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION ( #179 )SHAPE_REPRESENTATION_RELATIONSHIP( ) );
+
+    // parse shape representation tags
+    const char *pos = FindIndicesGroup(pLineAfterStepTag, STEPData.m_aIDs);
+    pos = SkipWord(pos, "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION", 47);
+
+    // parse transformation tag
+    /* pos = */ FindIndex(pos, STEPData.m_aIDs);
+
+    // not parsing shape representation relationship
+}
+
+inline void ParseItemDefinedTransformation(char const *pLineAfterStepTag,
+                                           STEPLineData &STEPData)
+{
+//#179 = ITEM_DEFINED_TRANSFORMATION ( 'NONE', 'NONE', #2671,  #786 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinitionShape(char const *pLineAfterStepTag,
+                                        STEPLineData &STEPData)
+{
+//#153 = PRODUCT_DEFINITION_SHAPE ( 'NONE', 'NONE',  #2882 ) ;
+    FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinition(char const *pLineAfterStepTag,
+                                   STEPLineData &STEPData)
+{
+//#820 = PRODUCT_DEFINITION ( 'UNKNOWN', '', #1716, #2669 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProductDefinitionFormationWithSpecifiedSource(char const *pLineAfterStepTag,
+                                                               STEPLineData &STEPData)
+{
+//#1430 = PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE ( 'ANY', '', #2542, .NOT_KNOWN. ) ;
+    FindIndex(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseProduct(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+//#2542 = PRODUCT ( '2 Box Drawer', '2 Box Drawer', '', ( #505 ) ) ;
+    std::string sProductID, sProductDescription;
+
+    const char *pos = FindSingleQuotedString(pLineAfterStepTag, sProductID);
+    STEPData.m_aStrings.emplace_back(sProductID);
+
+    /* pos = */ FindSingleQuotedString(pos, sProductDescription);
+    STEPData.m_aStrings.emplace_back(sProductDescription);
+
+    // not parsing list of context tags
+}
+
+inline void ParseNextAssemblyUsageOccurrence(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #635 = NEXT_ASSEMBLY_USAGE_OCCURRENCE ( 'NAUO1', ' ', ' ', #152, #621, $ ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeDefinitionRepresentation(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #40 = SHAPE_DEFINITION_REPRESENTATION ( #95, #57 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeRepresentation(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #283 = SHAPE_REPRESENTATION ( 'smallbox', ( #350 ), #384 ) ;
+    std::string sName;
+    FindSingleQuotedString(pLineAfterStepTag, sName);
+    STEPData.m_aStrings.emplace_back(sName);
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
+inline void ParseShapeRepresentationRelationship(char const *pLineAfterStepTag, STEPLineData &STEPData)
+{
+// #63 = SHAPE_REPRESENTATION_RELATIONSHIP ( 'NONE' , 'NONE' ,  #57, #618 ) ;
+    FindIndicesAll(pLineAfterStepTag, STEPData.m_aIDs);
+}
+
 // Parse the STEP line number (ID) and STEP tag string
 // Return the position in the string after the STEP tag string
 // Return nullptr if no STEP line number was found.
@@ -618,6 +712,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
             ParseCone(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
+        case STEPTag::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION:
+            {
+            ParseContextDependentShapeRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
         case STEPTag::CYLINDRICAL_SURFACE:
             {
             ParseCylinder(pLineAfterStepTag, stepLine.m_STEPLineData);
@@ -673,6 +772,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
             ParseBodyTransform(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
+        case STEPTag::ITEM_DEFINED_TRANSFORMATION:
+            {
+            ParseItemDefinedTransformation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
         case STEPTag::LINE:
             {
             ParseLine(pLineAfterStepTag, stepLine.m_STEPLineData);
@@ -686,6 +790,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
         case STEPTag::MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
             {
             ParseBodyTransform(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::NEXT_ASSEMBLY_USAGE_OCCURRENCE:
+            {
+            ParseNextAssemblyUsageOccurrence(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
         case STEPTag::OPEN_SHELL:
@@ -706,6 +815,46 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
         case STEPTag::PLANE:
             {
             ParsePlane(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT:
+            {
+            ParseProduct(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION:
+            {
+            ParseProductDefinition(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
+            {
+            ParseProductDefinitionFormationWithSpecifiedSource(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::PRODUCT_DEFINITION_SHAPE:
+            {
+            ParseProductDefinitionShape(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::REPRESENTATION_RELATIONSHIP:
+            {
+            ParseRepresentationRelationship(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_DEFINITION_REPRESENTATION:
+            {
+            ParseShapeDefinitionRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_REPRESENTATION:
+            {
+            ParseShapeRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::SHAPE_REPRESENTATION_RELATIONSHIP:
+            {
+            ParseShapeRepresentationRelationship(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
         case STEPTag::SHELL_BASED_SURFACE_MODEL:
@@ -899,82 +1048,6 @@ void CreateSTEPTagMap(STEPTagMapType &mSTEPTagMap)
     mSTEPTagMap.emplace("VIEW_VOLUME", STEPTag::VIEW_VOLUME);
     }
 
-    void SplitFile(FILE *pFile,
-                   std::string const &)//FileName)
-    {
-        // Read the file.
-
-        std::set<std::string> sBadTags;
-        sBadTags.insert("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION");
-        sBadTags.insert("STYLED_ITEM");
-        sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
-        sBadTags.insert("SURFACE_STYLE_USAGE");
-        sBadTags.insert("SURFACE_SIDE_STYLE");
-        sBadTags.insert("SURFACE_STYLE_FILL_AREA");
-        sBadTags.insert("FILL_AREA_STYLE");
-        sBadTags.insert("FILL_AREA_STYLE_COLOUR");
-        sBadTags.insert("COLOUR_RGB");
-        sBadTags.insert("PRESENTATION_STYLE_ASSIGNMENT");
-        sBadTags.insert("CURVE_STYLE");
-        sBadTags.insert("DRAUGHTING_PRE_DEFINED_CURVE_FONT");
-        sBadTags.insert("APPLICATION_PROTOCOL_DEFINITION");
-        sBadTags.insert("PRODUCT_DEFINITION_CONTEXT");
-        sBadTags.insert("PRODUCT_CATEGORY_RELATIONSHIP");
-        sBadTags.insert("PRODUCT_CATEGORY");
-        sBadTags.insert("PRODUCT_RELATED_PRODUCT_CATEGORY");
-
-        std::map<int, std::vector<size_t> > aIDMap;
-        std::string sFileLine;
-        while (ReadFileLine(pFile, sFileLine))
-            {
-            std::vector<size_t> aIDs;
-            if (sFileLine.front() == '#')
-                {
-                std::string sTag;
-                char *pLine = const_cast<char *>(sFileLine.c_str());
-                const char *pLineAfterStepTag = FindStepTag(pLine, sTag);
-                if (sTag.empty())
-                    throw std::runtime_error(sFileLine);
-                if (sBadTags.find(sTag) == sBadTags.end())
-                    {
-                    size_t nLineNumber;
-                    ReadIndex(pLine + 1, &nLineNumber);
-                    FindIndicesAll(pLineAfterStepTag, aIDs);
-                    aIDMap[(int) nLineNumber] = aIDs;
-                    }
-                }
-            sFileLine.clear();
-            }
-        fclose(pFile);
-
-        // Create a directed graph.
-
-        std::set<size_t> sVertices;
-        std::set<GraphEdge> sEdges;
-        size_t nCount = 0;
-        for (auto MapIter : aIDMap)
-            {
-            size_t nLine = (size_t) MapIter.first;
-            sVertices.insert(nLine);
-            std::vector<size_t> const &aIDs = MapIter.second;
-            for (auto nID : aIDs)
-                {
-                sEdges.insert(GraphEdge(nLine, nID, nCount, true));
-                ++nCount;
-                }
-            }
-        Graph graph(sVertices, sEdges);
-
-        std::vector<size_t> aSources;
-        graph.FindSources(aSources);
-
-        std::vector<Graph> aComponents;
-        graph.FindComponents(aComponents);
-
-        int a = 0;
-        a *= 1;
-    }
-
 // Given a input file stream, get a map of (#ID->STEPLineData)
 // Return value is the maximum STEP line number (#ID) in the map
 
@@ -1029,16 +1102,6 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         return 0;
         }
 
-
-    // Split the file.
-
-    //TODO: make SPlitFile work with std::ifstream
-    //    if(Options.m_bSplitFile)
-    //        {
-    //        SplitFile(pFile,FileName);
-    //        return 0;
-    //        }
-
     // Set up the STEP Tag map
 
     STEPTagMapType mSTEPTagMap;
@@ -1075,13 +1138,13 @@ size_t ReadStepFile(SGM::Result                  &rResult,
     exit(1);
 #endif // SGM_PROFILE_READER
 
-
+    /*
     if(Options.m_bHeal)
         {
         HealOptions Options;
         Heal(rResult,aEntities,Options);
         }
-
+    */
     if(Options.m_bMerge)
         {
         size_t nEntities=aEntities.size();
@@ -1102,82 +1165,17 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 size_t ReadSTLFile(SGM::Result                  &rResult,
                    std::string            const &FileName,
                    thing                        *,//pThing,
-                   std::vector<entity *>        &aEntities,
+                   std::vector<entity*>         &aEntities,
                    std::vector<std::string>     &,//aLog,
                    SGM::TranslatorOptions const &Options)
     {
-    // Open the file.
-
-    FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==nullptr)
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage("Could not open " + FileName);
-        return 0;
-        }
-
-    // Read the complexes and triangles.
-
-    while(ReadToString(pFile,"solid"))
-        {
-        std::vector<SGM::Point3D> aPoints;
-        std::vector<unsigned int> aTriangles;
-        size_t nCount=0,nSolidCount=0,nVertexCount=0;;
-        char solid[6]="solid";
-        char vertex[7]="vertex";
-        char data;
-        while(fread(&data,1,1,pFile))
-            {
-            if(data==solid[nSolidCount])
-                {
-                ++nSolidCount;
-                if(nSolidCount==5)
-                    {
-                    break;
-                    }
-                }
-            else
-                {
-                nSolidCount=0;
-                }
-
-            if(data==vertex[nVertexCount])
-                {
-                ++nVertexCount;
-                if(nVertexCount==6)
-                    {
-                    double x,y,z;
-                    fscanf(pFile,"%lf %lf %lf",&x,&y,&z);
-                    aPoints.emplace_back(x,y,z);
-                    aTriangles.push_back((unsigned int)nCount++);
-                    }
-                }
-            else
-                {
-                nVertexCount=0;
-                }
-            }
-        complex *pComplex=new complex(rResult,aPoints,aTriangles);
-        aEntities.push_back(pComplex);
-        }
-    fclose(pFile);
-
-    if(Options.m_bMerge)
-        {
-        size_t nEntities=aEntities.size();
-        std::vector<entity *> aNewEnts;
-        aNewEnts.reserve(nEntities);
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
-            {
-            complex *pComplex=(complex *)aEntities[Index1]; 
-            complex *pMergedComplex=pComplex->Merge(rResult,SGM_ZERO);
-            rResult.GetThing()->DeleteEntity(pComplex);
-            aNewEnts.push_back(pMergedComplex);
-            }
-        aEntities=aNewEnts;
-        }
-    return aEntities.size();
+    size_t nPrevious = aEntities.size();
+#ifdef SGM_MULTITHREADED
+    ParseSTLTextConcurrent(rResult, FileName, aEntities, Options.m_bMerge);
+#else
+    ParseSTLTextSerial(rResult, FileName, aEntities, Options.m_bMerge);
+#endif
+    return aEntities.size() - nPrevious;
     }
 
 }

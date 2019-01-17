@@ -1,3 +1,4 @@
+
 #ifndef SGM_INTERNAL_CURVE_H
 #define SGM_INTERNAL_CURVE_H
 
@@ -13,6 +14,9 @@
 
 #define SEED_POINT_EDGE_ANGLE_TOL 0.08726646259971647884618453842443 // 5 degrees.
 #define SEED_POINT_HALF_ANGLE_TANGENT 0.04363323129985823942309226921222  //tangent of half-angle = 2.5 degrees
+
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "google-default-arguments"
 
 namespace SGMInternal
 {
@@ -36,11 +40,18 @@ class curve : public entity
         bool Check(SGM::Result              &rResult,
                    SGM::CheckOptions  const &Options,
                    std::vector<std::string> &aCheckStrings,
-                   bool                      bChildren) const override;
+                   bool                      bChildern) const override;
 
         curve *Clone(SGM::Result &) const override = 0;
 
         void FindAllChildren(std::set<entity *, EntityCompare> &) const override;
+
+        void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
+
+        void RemoveParentsInSet(SGM::Result &rResult,
+                                std::set<entity *,EntityCompare>  const &sToRemove) override;
+
+        void DisconnectOwnedEntity(entity const *) override {}
 
         SGM::Interval3D const &GetBox(SGM::Result &) const override;
 
@@ -81,7 +92,8 @@ class curve : public entity
 
         virtual void Negate();
 
-        virtual void Transform(SGM::Transform3D const &Trans) = 0;
+        virtual void Transform(SGM::Result            &rResult,
+                               SGM::Transform3D const &Trans) = 0;
 
         virtual std::vector<double> SpecialFacetParams() const;
 
@@ -146,7 +158,8 @@ class line : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -191,7 +204,8 @@ class circle : public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -246,7 +260,8 @@ class NUBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -261,23 +276,24 @@ class NUBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
         int Continuity() const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
         std::vector<double> SpecialFacetParams() const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point3D> m_aControlPoints;
-        std::vector<double>       m_aKnots;   
+        std::vector<double>       m_aKnots;  
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -313,7 +329,8 @@ class NURBcurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -330,21 +347,22 @@ class NURBcurve: public curve
         size_t FindMultiplicity(std::vector<int>    &aMultiplicity,
                                 std::vector<double> &aUniqueKnots) const;
 
-        std::vector<SGM::Point3D> const &GetSeedPoints() const;
-
-        std::vector<double> const &GetSeedParams() const;
-
         // Returns the largest integer that the curve is Cn for.  If the curve
         // is C infinity then std::numeric_limits<int>::max() is returned.
 
         int Continuity() const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
-    public:
+        std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+    private:
 
         std::vector<SGM::Point4D> m_aControlPoints;
         std::vector<double>       m_aKnots;   
+
+        // Note that GetSeedPoints must be called before GetSeedParams.
+        std::vector<double> const &GetSeedParams() const;
 
         mutable std::vector<SGM::Point3D> m_aSeedPoints;
         mutable std::vector<double>       m_aSeedParams;
@@ -375,13 +393,14 @@ class PointCurve: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -416,13 +435,14 @@ class ellipse: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -462,13 +482,14 @@ class hyperbola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -507,13 +528,14 @@ class parabola: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -559,13 +581,14 @@ class TorusKnot: public curve
                        SGM::Point3D       *ClosePos=nullptr,
                        double       const *pGuess=nullptr) const override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
@@ -614,7 +637,8 @@ class hermite: public curve
 
         void Negate() override;
 
-        void Transform(SGM::Transform3D const &Trans) override;
+        void Transform(SGM::Result            &rResult,
+                       SGM::Transform3D const &Trans) override;
 
         void WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
@@ -630,7 +654,7 @@ class hermite: public curve
 
         void Concatenate(hermite const *pEndHermite);
 
-        virtual bool IsSame(curve const *pOther,double dTolerance) const override;
+        bool IsSame(curve const *pOther,double dTolerance) const override;
 
     public:
 
@@ -642,7 +666,8 @@ class hermite: public curve
         mutable std::vector<double>       m_aSeedParams;
     };
 
-bool TestCurve(SGMInternal::curve const *pCurve,
+bool TestCurve(SGM::Result              &rResult,
+               SGMInternal::curve const *pCurve,
                double                    t1);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -689,4 +714,7 @@ double ParabolaInverse(SGM::Point3D      const &Center,
 
 #include "Inline/Curve.inl"
 
+//#pragma clang diagnostic pop
+
 #endif // SGM_INTERNAL_CURVE_H
+

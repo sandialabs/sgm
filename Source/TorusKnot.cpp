@@ -140,7 +140,8 @@ double TorusKnot::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void TorusKnot::Transform(SGM::Transform3D const &Trans)
+void TorusKnot::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;
@@ -159,7 +160,7 @@ bool TorusKnot::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    TorusKnot const *pTorusKnot2=(TorusKnot const *)pOther;
+    auto pTorusKnot2=(TorusKnot const *)pOther;
     if(m_nA!=pTorusKnot2->m_nA)
         {
         return false;
@@ -176,7 +177,15 @@ bool TorusKnot::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    else if(SGM::NearEqual(fabs(m_Normal%pTorusKnot2->m_Normal),1.0,dTolerance,false)==false)
+    else if(SGM::NearEqual(m_Normal,pTorusKnot2->m_Normal,dTolerance)==false)
+        {
+        return false;
+        }
+    else if(SGM::NearEqual(m_XAxis,pTorusKnot2->m_XAxis,dTolerance)==false)
+        {
+        return false;
+        }
+    else if(SGM::NearEqual(m_YAxis,pTorusKnot2->m_YAxis,dTolerance)==false)
         {
         return false;
         }

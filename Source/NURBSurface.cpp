@@ -10,14 +10,31 @@
 
 namespace SGMInternal
 {
+NURBsurface::NURBsurface(SGM::Result                                  &rResult,
+                         std::vector<std::vector<SGM::Point4D>> const &aaControlPoints,
+                         std::vector<double>                    const &aUKnots,
+                         std::vector<double>                    const &aVKnots):
+        surface(rResult,SGM::NURBSurfaceType),
+        m_aaControlPoints(aaControlPoints),
+        m_aUKnots(aUKnots),
+        m_aVKnots(aVKnots)
+    {
+    Construct(rResult);
+    }
+
 NURBsurface::NURBsurface(SGM::Result                             &rResult,
-                         std::vector<std::vector<SGM::Point4D>> &&aControlPoints,
+                         std::vector<std::vector<SGM::Point4D>> &&aaControlPoints,
                          std::vector<double>                    &&aUKnots,
                          std::vector<double>                    &&aVKnots):
-        surface(rResult,SGM::NURBSurfaceType),
-        m_aaControlPoints(std::move(aControlPoints)),
-        m_aUKnots(std::move(aUKnots)),
-        m_aVKnots(std::move(aVKnots))
+    surface(rResult,SGM::NURBSurfaceType),
+    m_aaControlPoints(std::move(aaControlPoints)),
+    m_aUKnots(std::move(aUKnots)),
+    m_aVKnots(std::move(aVKnots))
+    {
+    Construct(rResult);
+    }
+
+void NURBsurface::Construct(SGM::Result &rResult)
     {
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
@@ -286,7 +303,11 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
                     v=v-v2;
                     }
                 }
-            double denom=1.0/wders[0][0];
+            double denom=1.0;
+            if(SGM_ZERO<fabs(wders[0][0]))
+                {
+                denom/=wders[0][0];
+                }
             values[k][s].m_x=v.m_x*denom;
             values[k][s].m_y=v.m_y*denom;
             values[k][s].m_z=v.m_z*denom;
@@ -325,53 +346,53 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
         }
     }
 
-size_t NURBsurface::FindUMultiplicity(std::vector<int>    &aMultiplicity,
-                                      std::vector<double> &aUniqueKnots) const
-    {
-    size_t nKnots=m_aUKnots.size();
-    size_t Index1;
-    double dLastKnot=std::numeric_limits<double>::max();
-    for(Index1=0;Index1<nKnots;++Index1)
-        {
-        double dKnot=m_aUKnots[Index1];
-        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
-            {
-            aUniqueKnots.push_back(dKnot);
-            aMultiplicity.push_back(1);
-            }
-        else
-            {
-            size_t nSize=aMultiplicity.size();
-            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
-            }
-        dLastKnot = dKnot;
-        }
-    return aMultiplicity.size();
-    }
+//size_t NURBsurface::FindUMultiplicity(std::vector<int>    &aMultiplicity,
+//                                      std::vector<double> &aUniqueKnots) const
+//    {
+//    size_t nKnots=m_aUKnots.size();
+//    size_t Index1;
+//    double dLastKnot=std::numeric_limits<double>::max();
+//    for(Index1=0;Index1<nKnots;++Index1)
+//        {
+//        double dKnot=m_aUKnots[Index1];
+//        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
+//            {
+//            aUniqueKnots.push_back(dKnot);
+//            aMultiplicity.push_back(1);
+//            }
+//        else
+//            {
+//            size_t nSize=aMultiplicity.size();
+//            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
+//            }
+//        dLastKnot = dKnot;
+//        }
+//    return aMultiplicity.size();
+//    }
 
-size_t NURBsurface::FindVMultiplicity(std::vector<int>    &aMultiplicity,
-                                      std::vector<double> &aUniqueKnots) const
-    {
-    size_t nKnots=m_aVKnots.size();
-    size_t Index1;
-    double dLastKnot=std::numeric_limits<double>::max();
-    for(Index1=0;Index1<nKnots;++Index1)
-        {
-        double dKnot=m_aVKnots[Index1];
-        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
-            {
-            aUniqueKnots.push_back(dKnot);
-            aMultiplicity.push_back(1);
-            }
-        else
-            {
-            size_t nSize=aMultiplicity.size();
-            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
-            }
-        dLastKnot = dKnot;
-        }
-    return aMultiplicity.size();
-    }
+//size_t NURBsurface::FindVMultiplicity(std::vector<int>    &aMultiplicity,
+//                                      std::vector<double> &aUniqueKnots) const
+//    {
+//    size_t nKnots=m_aVKnots.size();
+//    size_t Index1;
+//    double dLastKnot=std::numeric_limits<double>::max();
+//    for(Index1=0;Index1<nKnots;++Index1)
+//        {
+//        double dKnot=m_aVKnots[Index1];
+//        if(!SGM::NearEqual(dLastKnot, dKnot, SGM_ZERO, false))
+//            {
+//            aUniqueKnots.push_back(dKnot);
+//            aMultiplicity.push_back(1);
+//            }
+//        else
+//            {
+//            size_t nSize=aMultiplicity.size();
+//            aMultiplicity[nSize-1]=aMultiplicity[nSize-1]+1;
+//            }
+//        dLastKnot = dKnot;
+//        }
+//    return aMultiplicity.size();
+//    }
 
 bool NURBsurface::IsSame(surface const *pOther,double dTolerance) const
     {
@@ -379,7 +400,7 @@ bool NURBsurface::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    NURBsurface const *pNURB2=(NURBsurface const *)pOther;
+    auto pNURB2=(NURBsurface const *)pOther;
     if(m_aUKnots.size()!=pNURB2->m_aUKnots.size())
         {
         return false;
@@ -473,7 +494,8 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
 
-void NURBsurface::Transform(SGM::Transform3D const &Trans)
+void NURBsurface::Transform(SGM::Result            &,//rResult,
+                            SGM::Transform3D const &Trans)
     {
     size_t nSize1 = m_aaControlPoints.size();
     size_t nSize2 = m_aaControlPoints[0].size();

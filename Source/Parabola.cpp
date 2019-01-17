@@ -45,24 +45,24 @@ bool parabola::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    parabola const *pCurve2=(parabola const *)pOther;
-    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+    auto pParabola=(parabola const *)pOther;
+    if(SGM::NearEqual(m_Center,pParabola->m_Center,dTolerance)==false)
         {
         return false;
         }
-    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+    if(SGM::NearEqual(m_XAxis,pParabola->m_XAxis,dTolerance)==false)
         {
         return false;
         }
-    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+    if(SGM::NearEqual(m_YAxis,pParabola->m_YAxis,dTolerance)==false)
         {
         return false;
         }
-    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+    if(SGM::NearEqual(m_Normal,pParabola->m_Normal,dTolerance)==false)
         {
         return false;
         }
-    if(SGM::NearEqual(m_dA,pCurve2->m_dA,dTolerance,false)==false)
+    if(SGM::NearEqual(m_dA,pParabola->m_dA,dTolerance,false)==false)
         {
         return false;
         }
@@ -76,7 +76,8 @@ double parabola::Inverse(SGM::Point3D const &Pos,
     return ParabolaInverse(m_Center, m_XAxis, m_YAxis, m_dA, Pos, ClosePos, nullptr);
     }
 
-void parabola::Transform(SGM::Transform3D const &Trans)
+void parabola::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
     m_Center=Trans*m_Center;
     m_XAxis=Trans*m_XAxis;

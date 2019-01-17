@@ -40,24 +40,13 @@ thing::~thing()
         }
     }
 
-bool thing::Check(SGM::Result &rResult,
-                  SGM::CheckOptions const &Options,
-                  std::vector<std::string> &aCheckStrings,
-                  bool bChildren) const
+void thing::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
+{
+    for (auto Entry : m_mAllEntities)
     {
-    // TODO: are we doing this right, should we check IsTopLevel()?
-    // TODO: should we use a ThreadPool for checking?
-    // thing *always* checks at least top level children,
-    // and passing bChildren=true will check further down hierarchy
-    bool bAnswer = true;
-
-    for (auto const &iter : m_mAllEntities)
-        {
-        if (!iter.second->Check(rResult, Options, aCheckStrings, bChildren))
-            bAnswer = false;
-        }
-    return bAnswer;
+        sChildren.emplace(Entry.second);
     }
+}
 
 SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
     {
@@ -122,15 +111,31 @@ void thing::SeverOwners(entity *pEntity)
                 case SGM::RevolveType:
                     {
                     auto pRevolve = reinterpret_cast<revolve *>(pEntity);
-                    pRevolve->m_pCurve->RemoveOwner(this);
-                    pRevolve->m_pCurve = nullptr;
+                    if (pRevolve->m_pCurve)
+                        {
+                        pRevolve->m_pCurve->RemoveOwner(this);
+                        pRevolve->m_pCurve = nullptr;
+                        }
                     break;
                     }
                 case SGM::ExtrudeType:
                     {
                     auto pExtrude = reinterpret_cast<extrude *>(pEntity);
-                    pExtrude->m_pCurve->RemoveOwner(this);
-                    pExtrude->m_pCurve = nullptr;
+                    if (pExtrude->m_pCurve)
+                        {
+                        pExtrude->m_pCurve->RemoveOwner(this);
+                        pExtrude->m_pCurve = nullptr;
+                        }
+                    break;
+                    }
+                case SGM::OffsetType:
+                    {
+                    auto pOffset = reinterpret_cast<offset *>(pEntity);
+                    if (pOffset->m_pSurface)
+                        {
+                        pOffset->m_pSurface->RemoveOwner(this);
+                        pOffset->m_pSurface = nullptr;
+                        }
                     break;
                     }
                 default:
@@ -305,55 +310,6 @@ inline bool FindEntityBoxData(SGM::Result &rResult, entity *e)
 //
 // Provide Visit() functions for types that have cached data.
 
-struct EdgeBoxVisitor : EntityVisitor
-    {
-    EdgeBoxVisitor() = delete;
-
-    explicit EdgeBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(edge &e) override
-        { FindEntityBoxData(*pResult, &e); }
-    };
-
-struct FaceBoxVisitor : EntityVisitor
-    {
-    FaceBoxVisitor() = delete;
-
-    explicit FaceBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(face &f) override
-        { FindEntityBoxData(*pResult, &f); }
-    };
-
-struct ComplexBoxVisitor : EntityVisitor
-    {
-    ComplexBoxVisitor() = delete;
-
-    explicit ComplexBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(complex &c) override
-        { FindEntityBoxData(*pResult, &c); }
-    };
-
-struct VolumeBoxVisitor : EntityVisitor
-    {
-    VolumeBoxVisitor() = delete;
-
-    explicit VolumeBoxVisitor(SGM::Result &rResult) :
-            EntityVisitor(rResult)
-        {}
-
-    inline void Visit(volume &v) override
-        { FindEntityBoxData(*pResult, &v); }
-    };
-
-
 struct SurfacePointsVisitor : EntityVisitor
     {
     inline void Visit(torus &s) override
@@ -402,7 +358,56 @@ inline void SerialFindBoxData(SGM::Result &rResult, SET const &sTypes)
         FindEntityBoxData(rResult, pEntity);
     }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef SGM_MULTITHREADED
+
+struct EdgeBoxVisitor : EntityVisitor
+    {
+    EdgeBoxVisitor() = delete;
+
+    explicit EdgeBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(edge &e) override
+        { FindEntityBoxData(*pResult, &e); }
+    };
+
+struct FaceBoxVisitor : EntityVisitor
+    {
+    FaceBoxVisitor() = delete;
+
+    explicit FaceBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(face &f) override
+        { FindEntityBoxData(*pResult, &f); }
+    };
+
+struct ComplexBoxVisitor : EntityVisitor
+    {
+    ComplexBoxVisitor() = delete;
+
+    explicit ComplexBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(complex &c) override
+        { FindEntityBoxData(*pResult, &c); }
+    };
+
+struct VolumeBoxVisitor : EntityVisitor
+    {
+    VolumeBoxVisitor() = delete;
+
+    explicit VolumeBoxVisitor(SGM::Result &rResult) :
+            EntityVisitor(rResult)
+        {}
+
+    inline void Visit(volume &v) override
+        { FindEntityBoxData(*pResult, &v); }
+    };
 
 template<class TYPE>
 inline void FillJobEntities(thing::iterator<TYPE *> &iter,

@@ -26,42 +26,14 @@ void body::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedVolumes.insert((volume *)MapValue->second);
             }
-        else
-            {
-            m_sFixedVolumes.insert(pVolume);
-            }
+        //else
+        //    {
+        //    m_sFixedVolumes.insert(pVolume);
+        //    }
         }
     m_sVolumes=m_sFixedVolumes;
 
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 void body::AddVolume(volume *pVolume) 
@@ -118,7 +90,7 @@ bool body::IsSheetBody(SGM::Result &rResult) const
     {
     std::set<edge *,EntityCompare> sEdges;
     FindWireEdges(rResult,this,sEdges);
-    if(sEdges.size())
+    if(!sEdges.empty())
         {
         return false;
         }
@@ -134,28 +106,20 @@ bool body::IsSheetBody(SGM::Result &rResult) const
             }
         ++iter;
         }
-    if(!sFaces.empty())
-        {
-        return true;
-        }
-    return false;
+    return !sFaces.empty();
     }
 
 bool body::IsWireBody(SGM::Result &rResult) const
     {
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,this,sFaces);
-    if(sFaces.size())
+    if(!sFaces.empty())
         {
         return false;
         }
     std::set<edge *,EntityCompare> sEdges;
     FindWireEdges(rResult,this,sEdges);
-    if(sEdges.size())
-        {
-        return true;
-        }
-    return false;
+    return !sEdges.empty();
     }
 
 }

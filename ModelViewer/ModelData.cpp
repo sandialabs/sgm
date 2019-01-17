@@ -124,6 +124,14 @@ bool ModelData::open_file(const QString &filename)
     std::vector<std::string> log;
     SGM::TranslatorOptions options;
 
+    if(SGM::FileType FileType=SGM::GetFileType(filename.toUtf8().data()))
+        {
+        if(FileType==SGM::STLFileType)
+            {
+            options.m_bMerge=true;
+            }
+        }
+
     SGM::ReadFile(dPtr->mResult, filename.toUtf8().data(), ents, log, options);
 
     rebuild_tree();
@@ -195,16 +203,6 @@ void ModelData::set_background()
 {
     dPtr->mGraphics->set_background(0.0,1.0,0.0,1.0);
     rebuild_graphics();
-}
-
-bool ModelData::RunCPPTest(size_t nTest)
-{
-    bool bAnswer = SGM::RunCPPTest(dPtr->mResult, nTest);
-
-    rebuild_tree();
-    rebuild_graphics();
-
-    return bAnswer;
 }
 
 void ModelData::check(std::vector<std::string> &aLog)
@@ -391,7 +389,7 @@ void ModelData::FindHoles(SGM::Entity EntityID)
 {
     std::vector<SGM::Complex> aHoles;
     SGM::FindHoles(dPtr->mResult, SGM::Complex(EntityID.m_ID), aHoles);
-    SGM::DeleteEntity(dPtr->mResult, EntityID);
+    //SGM::DeleteEntity(dPtr->mResult, EntityID);
 
     rebuild_tree();
     rebuild_graphics();
@@ -464,7 +462,7 @@ void ModelData::Unhook(std::vector<SGM::Entity> &aEnts)
             aFaces.emplace_back(EntityID.m_ID);
             }
         }
-    SGM::UnhookFaces(dPtr->mResult, aFaces);
+    //SGM::UnhookFaces(dPtr->mResult, aFaces);
 
     rebuild_tree();
     rebuild_graphics();
@@ -1356,6 +1354,12 @@ void ModelData::add_attribute_to_tree(QTreeWidgetItem *parent, SGM::Attribute At
         {
         case SGM::StringAttributeType:
             {
+            if (Name == "Name")
+                {
+                auto data_item = new QTreeWidgetItem(attribute_item);
+                std::string name = SGM::GetStringAttributeData(dPtr->mResult, AttributeID);
+                data_item->setText(0, name.c_str());
+                }
             break;
             }
         case SGM::IntegerAttributeType:
@@ -1431,7 +1435,7 @@ void ModelData::rebuild_tree()
     add_attributes_to_tree(ThingItem, ThingID);
 
     std::set<SGM::Attribute> top_level_attributes;
-    SGM::FindAttributes(dPtr->mResult, SGM::Thing(), top_level_attributes, true);
+    SGM::GetAttributes(dPtr->mResult, SGM::Thing(), top_level_attributes, true);
     for (const SGM::Attribute &top_attribute : top_level_attributes)
         {
         add_attribute_to_tree(ThingItem, top_attribute);

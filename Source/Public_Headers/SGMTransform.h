@@ -57,6 +57,17 @@ namespace SGM {
                     Vector4D const &ZAxis,
                     Vector4D const &Translate);
 
+        // Returns the transform from one set of axes to another.
+        
+        Transform3D(UnitVector3D const &XAxisFrom,
+                    UnitVector3D const &YAxisFrom,
+                    UnitVector3D const &ZAxisFrom,
+                    Point3D      const &CenterFrom,
+                    UnitVector3D const &XAxisTo,
+                    UnitVector3D const &YAxisTo,
+                    UnitVector3D const &ZAxisTo,
+                    Point3D      const &CenterTo);
+            
         // true if transformation does not include any non-uniform scale or rotation or shear or reflection
 
         bool IsScaleAndTranslate() const;
@@ -97,13 +108,13 @@ namespace SGM {
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    Point3D operator*(Transform3D const &Trans,Point3D const &Pos);
+    SGM_EXPORT Point3D operator*(Transform3D const &Trans,Point3D const &Pos);
 
-    Vector3D operator*(Transform3D const &Trans, Vector3D const &Vec);
+    SGM_EXPORT Vector3D operator*(Transform3D const &Trans, Vector3D const &Vec);
 
-    UnitVector3D operator*(Transform3D const &Trans, UnitVector3D const &UVec);
+    SGM_EXPORT UnitVector3D operator*(Transform3D const &Trans, UnitVector3D const &UVec);
 
-    Transform3D operator*(Transform3D const &Trans0, Transform3D const &Trans1);
+    SGM_EXPORT Transform3D operator*(Transform3D const &Trans0, Transform3D const &Trans1);
 
 } // End of SGM namespace
 

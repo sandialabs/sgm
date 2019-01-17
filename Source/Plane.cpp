@@ -6,6 +6,7 @@
 
 #include "EntityClasses.h"
 #include "Surface.h"
+#include "Curve.h"
 
 namespace SGMInternal
 {
@@ -28,6 +29,23 @@ plane::plane(SGM::Result             &rResult,
     m_bClosedV=false;
     }
 
+plane::plane(SGM::Result             &rResult,
+             SGM::Point3D      const &Origin,
+             SGM::UnitVector3D const &ZAxis) :
+        surface(rResult,SGM::PlaneType),
+        m_Origin(Origin)
+    {
+    m_ZAxis=ZAxis;
+    m_XAxis=m_ZAxis.Orthogonal();
+    m_YAxis=m_ZAxis*m_XAxis;
+    m_Domain.m_UDomain.m_dMin=-SGM_MAX;
+    m_Domain.m_UDomain.m_dMax=SGM_MAX;
+    m_Domain.m_VDomain.m_dMin=-SGM_MAX;
+    m_Domain.m_VDomain.m_dMax=SGM_MAX;
+    m_bClosedU=false;
+    m_bClosedV=false;
+    }
+
 plane::plane(SGM::Result        &rResult,
              SGM::Point3D const &Origin,
              SGM::Point3D const &XPos,
@@ -35,9 +53,10 @@ plane::plane(SGM::Result        &rResult,
         surface(rResult,SGM::PlaneType),
         m_Origin(Origin),
         m_XAxis(XPos-Origin),
-        m_YAxis(YPos-Origin),
-        m_ZAxis(m_XAxis*m_YAxis)
+        m_YAxis(YPos-Origin)
     {
+    m_YAxis=m_XAxis*m_YAxis*m_XAxis;
+    m_ZAxis=m_XAxis*m_YAxis;
     m_Domain.m_UDomain.m_dMin=-SGM_MAX;
     m_Domain.m_UDomain.m_dMax=SGM_MAX;
     m_Domain.m_VDomain.m_dMin=-SGM_MAX;
@@ -66,7 +85,7 @@ bool plane::IsSame(surface const *pOther,double dTolerance) const
         return false;
         }
     bool bAnswer=true;
-    plane const *pPlane2=(plane const *)pOther;
+    auto pPlane2=(plane const *)pOther;
     if(SGM::NearEqual(m_Origin,pPlane2->m_Origin,dTolerance)==false)
         {
         bAnswer=false;
@@ -149,10 +168,10 @@ SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
     }
 
 void plane::PrincipleCurvature(SGM::Point2D const   &,
-                                 SGM::UnitVector3D  &Vec1,
-                                 SGM::UnitVector3D  &Vec2,
-                                 double             &k1,
-                                 double             &k2) const
+                               SGM::UnitVector3D  &Vec1,
+                               SGM::UnitVector3D  &Vec2,
+                               double             &k1,
+                               double             &k2) const
     {
     Vec1=m_XAxis;
     Vec2=m_YAxis;
@@ -160,7 +179,8 @@ void plane::PrincipleCurvature(SGM::Point2D const   &,
     k2=0;
     }
 
-void plane::Transform(SGM::Transform3D const &Trans)
+void plane::Transform(SGM::Result            &,//rResult,
+                      SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;
@@ -168,11 +188,17 @@ void plane::Transform(SGM::Transform3D const &Trans)
     m_ZAxis=Trans*m_ZAxis;
     }
 
-curve *plane::UParamLine(SGM::Result &, double) const
-    { return nullptr; } // no curve
+curve *plane::UParamLine(SGM::Result &rResult, double dU) const
+    {
+    curve *pCurve=new line(rResult,m_Origin+dU*m_XAxis,m_YAxis);
+    pCurve->SetDomain(m_Domain.m_VDomain);
+    return pCurve;
+    }
 
-curve *plane::VParamLine(SGM::Result &, double) const
-    { return nullptr; }
-
-
+curve *plane::VParamLine(SGM::Result &rResult, double dV) const
+    { 
+    curve *pCurve=new line(rResult,m_Origin+dV*m_YAxis,m_XAxis);
+    pCurve->SetDomain(m_Domain.m_UDomain);
+    return pCurve;
+    }
 }

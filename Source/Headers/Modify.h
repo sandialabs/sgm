@@ -15,6 +15,10 @@ void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody);
 
+void ReduceToVolumes(SGM::Result                      &rResult,
+                     body                             *pBody,
+                     std::set<volume *,EntityCompare> &sVolumes);
+
 // pFace1 may be a nullptr and mHitMap(n) returns the edges or vertices
 // hit by paramters on the curve on face n.
 
@@ -41,11 +45,19 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       entity      *pStartEntity,
                                       entity      *pEndEntity);
 
+vertex *ImprintPoint(SGM::Result        &rResult,
+                     SGM::Point3D const &Pos,
+                     topology           *pTopology);
+
 // Imprints the given point on given edge and returns a vertex at the point.
 
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
                            edge               *pEdge);
+
+void MergeVerices(SGM::Result &rResult,
+                  vertex      *pKeepVertex,
+                  vertex      *pDeleteVertex);
 }
 
 #endif

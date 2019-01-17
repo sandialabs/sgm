@@ -1,41 +1,109 @@
-#include "SGMVector.h"
+#include "SGMEntityFunctions.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
-#include "Primitive.h"
 
-#include <set>
-#include <vector>
-#include <map>
-#include <string>
-#include <cstdio>
-#include <algorithm>
-
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#else
-#define snprintf snprintf
-#endif
-
-#ifdef _MSC_VER
-__pragma(warning(disable: 4996 ))
-#endif
+#include <sstream>
 
 namespace SGMInternal
 {
 
-bool CheckAllChildren(entity const             &parentEntity,
-                      SGM::Result              &rResult,
-                      SGM::CheckOptions  const &Options,
-                      std::vector<std::string> &aCheckStrings)
+// A convenience for writing, for example, "face 5", or "NUBcurve 23".
+
+inline std::ostream& operator<<(std::ostream& out, const entity *pEntity)
     {
-    bool bAnswer=true;
-    std::set<entity *,EntityCompare> sChildren;
-    parentEntity.FindAllChildren(sChildren);
-    for (auto pChild : sChildren)
-        if (!pChild->Check(rResult,Options,aCheckStrings,false))
+    return out << SGM::EntityTypeName(pEntity->GetType()) << " " << pEntity->GetID();
+    }
+
+// TODO - bring this back if we decide to prevent deleting an entity with parents
+//void CheckPreexistingConditions(SGM::Result              &rResult,
+//                                std::vector<std::string> &aCheckStrings)
+//{
+//    switch(rResult.GetResult())
+//    {
+//    case SGM::ResultTypeOK:
+//    {
+//        return;
+//        break;
+//    }
+//    case SGM::ResultTypeDeleteWillCorruptModel:
+//    {
+//        aCheckStrings.emplace_back(rResult.Message().c_str());
+//        aCheckStrings.emplace_back("An invalid delete was attempted but not performed.  Clearing Result.");
+//        rResult.SetResult(SGM::ResultTypeOK);
+//        return;
+//    }
+//    default:
+//      return;
+//    }
+//}
+
+bool thing::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
+                  std::vector<std::string> &aCheckStrings,
+                  bool                      ) const
+    {
+    bool bAnswer = true;
+
+    for (auto const &iter : m_mAllEntities)
+        {
+        if (!iter.second->Check(rResult, Options, aCheckStrings,false))
             bAnswer = false;
+        }
+    return bAnswer;
+    }
+
+bool CheckChildren(SGM::Result              &rResult,
+                   entity             const *pEntity,
+                   SGM::CheckOptions  const &Options,
+                   std::vector<std::string> &aCheckStrings)
+    {
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+    bool bAnswer=true;
+    for(auto pChild : sChildren)
+        {
+        if(pChild->Check(rResult,Options,aCheckStrings,false)==false)
+            {
+            bAnswer=false;
+            }
+        }
+    return bAnswer;
+    }
+
+bool CheckChildHasOwner(entity             const *pChild,
+                        entity             const *pOwner,
+                        std::vector<std::string> &aCheckStrings)
+{
+    bool bAnswer = true;
+    auto const &sOwners = pChild->GetOwners();
+    if (sOwners.find(const_cast<entity *>(pOwner)) == sOwners.end())
+    {
+        std::stringstream ss;
+        ss << pOwner << " owns " << pChild << " but the child does not point back to the owner.";
+        aCheckStrings.emplace_back(ss.str());
+        bAnswer = false;
+    }
+    return bAnswer;
+}
+
+bool CheckOwnersHaveChild(entity const *pChild, std::vector<std::string> &aCheckStrings)
+    {
+    bool bAnswer = true;
+    auto const &sOwners = pChild->GetOwners();
+    for (auto pOwner : sOwners)
+        {
+        std::set<entity *, SGMInternal::EntityCompare> sChildren;
+        pOwner->FindAllChildren(sChildren);
+        if (sChildren.find(const_cast<entity *>(pChild)) == sChildren.end())
+            {
+            std::stringstream ss;
+            ss << pChild << " has owner " << pOwner << " but is not a child of the owner.";
+            aCheckStrings.emplace_back(ss.str());
+            bAnswer = false;
+            }
+        }
     return bAnswer;
     }
 
@@ -53,35 +121,39 @@ bool body::Check(SGM::Result              &rResult,
         if (this!=pVolume->GetBody())
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Volume %lu of Body %lu does not point to its body.\n",pVolume->GetID(),this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << pVolume << " of " << this << " does not point back to this body.";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
 
     if(m_sVolumes.empty() && m_aPoints.empty())
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer, sizeof(Buffer), "Body %lu is empty.\n",this->GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " has no volumes and no points.";
+        aCheckStrings.emplace_back(ss.str());
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
+    if(bChildren)
+        {
+        if(!CheckChildren(rResult,this,Options,aCheckStrings))
+            {
+            bAnswer=false;
+            }
+        }
 
     return bAnswer;
     }
 
-bool complex::Check(SGM::Result              &,//rResult,
+bool complex::Check(SGM::Result              &rResult,
                     SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &aCheckStrings,
-                    bool                      ) const //bChildren)
+                    bool                      /*bChildren*/) const
     {
     bool bAnswer=true;
+
+    bAnswer = CheckIndexMax(rResult,m_aPoints.size());
 
     size_t nPoints=m_aPoints.size();
     size_t Index1;
@@ -91,9 +163,9 @@ bool complex::Check(SGM::Result              &,//rResult,
         if(nPoints<=m_aSegments[Index1])
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %lu has out of bounds segment indexes.\n",this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " has out of bounds segment indexes.";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
     size_t nTriangles=m_aTriangles.size();
@@ -102,9 +174,9 @@ bool complex::Check(SGM::Result              &,//rResult,
         if(nPoints<=m_aTriangles[Index1])
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %lu has out of bounds triangle indexes.\n",this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " has out of bounds triangle indexes.";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
 
@@ -113,9 +185,9 @@ bool complex::Check(SGM::Result              &,//rResult,
         if(m_aSegments[Index1]==m_aSegments[Index1+1])
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %ld has a degenerate segment at index %ld.\n",this->GetID(),Index1);
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " has a degenerate segment at index " << Index1;
+            aCheckStrings.emplace_back(ss.str());
             }
         }
 
@@ -126,11 +198,19 @@ bool complex::Check(SGM::Result              &,//rResult,
             m_aTriangles[Index1+2]==m_aTriangles[Index1+1])
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer, sizeof(Buffer), "Complex %ld has a degenerate triangle at index %ld.\n",this->GetID(),Index1);
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " has a degenerate triangle at index " << Index1;
+            aCheckStrings.emplace_back(ss.str());
             }
         }
+
+    //if(bChildren)
+    //    {
+    //    if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
+    //        {
+    //        bAnswer=false;
+    //        }
+    //    }
 
     return bAnswer;
     }
@@ -144,22 +224,35 @@ bool volume::Check(SGM::Result              &rResult,
 
     // Check to see if all its faces point to it.
 
-    for (auto pFace : m_sFaces)
+    if(m_sFaces.empty())
         {
-        if(this!=pFace->GetVolume())
+        bAnswer=false;
+        std::stringstream ss;
+        ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " is empty.";
+        aCheckStrings.emplace_back(ss.str());
+        }
+    else
+        {
+        for (auto pFace : m_sFaces)
             {
-            bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Face %lu of Volume %lu does not point to its volume.\n",pFace->GetID(),this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            if(this!=pFace->GetVolume())
+                {
+                bAnswer=false;
+                std::stringstream ss;
+                ss << SGM::EntityTypeName(pFace->GetType()) << ' ' << pFace->GetID() << " of " <<
+                      SGM::EntityTypeName(GetType()) << ' ' << GetID() << "does not point back to its volume.";
+                aCheckStrings.emplace_back(ss.str());
+                }
             }
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
+    if(bChildren)
+        {
+        if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
 
     return bAnswer;
     }
@@ -170,18 +263,7 @@ bool face::Check(SGM::Result              &rResult,
                  bool                      bChildren) const
     {
     bool bAnswer=true;
-    size_t nBigTriangleVertices = 30000;
-
-    // Check to see if size of triangles
-
-    if (m_aTriangles.size() > nBigTriangleVertices)
-        {
-        bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Face %lu had more than %lu triangles.\n",GetID(),nBigTriangleVertices/3);
-        aCheckStrings.emplace_back(Buffer);
-        }
-
+    
     // Check to see if all its edges point to it.
 
     for (auto pEdge : m_sEdges)
@@ -189,10 +271,10 @@ bool face::Check(SGM::Result              &rResult,
         auto sFaces=pEdge->GetFaces();
         if(sFaces.find((face *)this)==sFaces.end())
             {
-            bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Edge %lu of face %lu does not point to its face.\n",pEdge->GetID(),this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << SGM::EntityTypeName(pEdge->GetType()) << pEdge->GetID() << " of " <<
+                  SGM::EntityTypeName(GetType()) << GetID() << " does not point back to its face.";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
 
@@ -248,18 +330,23 @@ bool face::Check(SGM::Result              &rResult,
             if(pStart!=pEnd)
                 {
                 bAnswer=false;
-                char Buffer[1000];
-                snprintf(Buffer,sizeof(Buffer),"Vertices of Edge %lu of Face %lu does not match its neighbors.\n",pEdge->GetID(),this->GetID());
-                aCheckStrings.emplace_back(Buffer);
+                std::stringstream ss;
+                ss << "start " << SGM::EntityTypeName(pStart->GetType()) << ' ' << pStart->GetID() << " and " <<
+                      " end "  << SGM::EntityTypeName(pEnd->GetType())   << ' ' << pEnd->GetID() <<
+                      " of "   << SGM::EntityTypeName(pEdge->GetType())  << ' ' << pEdge->GetID() <<
+                      " on "   << SGM::EntityTypeName(GetType())         << ' ' << GetID() << " do not match.";
+                aCheckStrings.emplace_back(ss.str());
                 }
             }
         }
+    nDoubleEdges/=2;
+
     if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"The loops of Face %lu are missing %lu edges.\n",this->GetID(),(nDoubleEdges+m_sEdges.size())-nTotalEdges);
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << "The loops of " << this << " are missing " << (nDoubleEdges+m_sEdges.size())-nTotalEdges << " edges.";
+        aCheckStrings.emplace_back(ss.str());
         }
 
     // Check the facets
@@ -284,9 +371,9 @@ bool face::Check(SGM::Result              &rResult,
             continue;
             }
         SGM::UnitVector3D Norm=TestNorm;
-        double dDotA=Norm%aNormals[a];
-        double dDotB=Norm%aNormals[b];
-        double dDotC=Norm%aNormals[c];
+        double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
+        double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
+        double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
         double dTol=0.70710678118654752440084436210485; // cos(45) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
@@ -309,16 +396,16 @@ bool face::Check(SGM::Result              &rResult,
     if(dMaxAngle!=0)
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Facets of Face %lu differ from surface normal by %lf.\n",this->GetID(),dMaxAngle);
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << "Facets of " << this << " differ from surface normal by angle " << dMaxAngle;
+        aCheckStrings.emplace_back(ss.str());
         }
     if(nTriangles==0)
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Face %lu does not have facets.\n",this->GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " does not have facets.";
+        aCheckStrings.emplace_back(ss.str());
         }
     else 
         {
@@ -327,9 +414,9 @@ bool face::Check(SGM::Result              &rResult,
         if(SGM::AreEdgeConnected(aTemp)==false)
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Face %lu has facets that are not edge connected.\n",this->GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << this << " has facets that are not edge connected.";
+            aCheckStrings.emplace_back(ss.str());
             }
         //std::vector<unsigned int> aBoundary;
         //std::set<unsigned int> sInterior;
@@ -338,17 +425,20 @@ bool face::Check(SGM::Result              &rResult,
         //if(nComps!=nLoops)
         //    {
         //    bAnswer=false;
-        //    char Buffer[1000];
-        //    snprintf(Buffer,sizeof(Buffer),"Face %lu has facets with the wrong number of boundary components.\n",this->GetID());
-        //    aCheckStrings.emplace_back(Buffer);
+        //    std::stringstream ss;
+        //    ss << this << " has facets with boundary components " << nComps << " not equal to " << nLoops << " loops.";
+        //    aCheckStrings.emplace_back(ss.str());
         //    }
         }
 
-    // Check all children.
+    if(bChildren)
+        {
+        if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
 
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
     return bAnswer;
     }
 
@@ -367,17 +457,17 @@ bool edge::Check(SGM::Result              &rResult,
         if(sEdges.find((edge*)this) == sEdges.end())
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"The start Vertex %lu of Edge %lu does not point back to the edge\n",m_pStart->GetID(),GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << "start " << m_pStart << " of " << this << " does not point back to the edge";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
     else if(!m_pCurve->GetClosed() || m_pEnd)
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Edge %lu does not have a start vertex\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " does not have a start vertex";
+        aCheckStrings.emplace_back(ss.str());
         }
     if(m_pEnd)
         {
@@ -385,18 +475,28 @@ bool edge::Check(SGM::Result              &rResult,
         if(sEdges.find((edge*)this) == sEdges.end())
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"The end Vertex %lu of Edge %lu does not point back to the edge\n",m_pEnd->GetID(),GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << "The end " << m_pEnd << " of " << this << " does not point back to the edge";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
     else if(!m_pCurve->GetClosed() || m_pStart)
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Edge %lu does not have an end vertex\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " does not have an end vertex";
+        aCheckStrings.emplace_back(ss.str());
         }
+
+    // check if the curve's edges are connected to the curve
+    auto const &sEdges = m_pCurve->GetEdges();
+    if (sEdges.find(const_cast<edge*>(this)) == sEdges.end())
+    {
+        std::stringstream ss;
+        ss << this << " points to " << m_pCurve << " but the curve does not point back to the edge";
+        aCheckStrings.emplace_back(ss.str());
+        bAnswer = false;
+    }
 
     // Check to see if it is consistently oriented with respect to its faces.
 
@@ -411,9 +511,9 @@ bool edge::Check(SGM::Result              &rResult,
         if(bFlipped1==bFlipped2 && bFlipped1!=SGM::EdgeSideType::FaceOnBothSidesType)
             {
             bAnswer=false;
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"Edge %lu has the same orientation of both faces.\n",GetID());
-            aCheckStrings.emplace_back(Buffer);
+            std::stringstream ss;
+            ss << this << " has the same orientation of both faces.";
+            aCheckStrings.emplace_back(ss.str());
             }
         }
 
@@ -427,59 +527,83 @@ bool edge::Check(SGM::Result              &rResult,
     if(sVolumes.size()>1)
         {
         bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Edge %lu belongs to more than one volume.\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " belongs to more than one volume.";
+        aCheckStrings.emplace_back(ss.str());
         }
 
-    // Check all children.
-
-    if (bChildren)
-        if (!CheckAllChildren(*this, rResult, Options, aCheckStrings))
-            bAnswer = false;
+    if(bChildren)
+        {
+        if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
+            {
+            bAnswer=false;
+            }
+        }
 
     return bAnswer;
     }
 
 bool vertex::Check(SGM::Result              &,//rResult,
                    SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &aCheckStrings,
-                   bool                      /* bChildren */) const
+                   std::vector<std::string> &,//aCheckStrings,
+                   bool                      /*bChildren*/) const
     {
     bool bAnswer=true;
-
-    if(m_sEdges.empty())
+    for (auto pEdge : m_sEdges)
         {
-        bAnswer=false;
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Vertex %lu does not point to an edge\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        if ((pEdge->GetStart() != this) && (pEdge->GetEnd() != this))
+            {
+            bAnswer = false;
+            std::stringstream ss;
+            ss << this << " points to " << pEdge << " but the edge does not point back to the vertex";
+            }
         }
-
     return bAnswer;
     }
 
-bool curve::Check(SGM::Result              &,//rResult,
-                  SGM::CheckOptions  const &,//Options,
+bool curve::Check(SGM::Result              &rResult,
+                  SGM::CheckOptions  const &Options,
                   std::vector<std::string> &aCheckStrings,
-                  bool                      /* bChildren */) const
+                  bool                      bChildren) const
     {
-    bool bAnswer=TestCurve(this,m_Domain.MidPoint());
+    bool bAnswer=TestCurve(rResult,this,m_Domain.MidPoint());
 
     if(!bAnswer)
         {
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Curve %lu does not pass derivative and inverse checks.\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " does not pass derivative and inverse checks.";
+        aCheckStrings.emplace_back(ss.str());
+        }
+
+    // check if the edges are connected
+    if (!m_sEdges.empty())
+    {
+        for (auto pEdge : m_sEdges)
+        {
+            if(!(pEdge->GetCurve() == this))
+            {
+                std::stringstream ss;
+                ss << this << " points to " << pEdge << " but the edge does not point back to the curve.";
+                aCheckStrings.emplace_back(ss.str());
+                bAnswer = false;
+            }
+        }
+    }
+
+    bAnswer = CheckOwnersHaveChild((entity*)this, aCheckStrings) && bAnswer;
+
+    if(bChildren)
+        {
+        bAnswer = CheckChildren(rResult,this,Options,aCheckStrings) && bAnswer;
         }
 
     return bAnswer;
     }
 
-bool surface::Check(SGM::Result              &rResult,
-                    SGM::CheckOptions  const &,
-                    std::vector<std::string> &aCheckStrings,
-                    bool                     /* bChildren */) const
+bool surface::CheckImplementation(SGM::Result              &rResult,
+                                  SGM::CheckOptions  const &Options,
+                                  std::vector<std::string> &aCheckStrings,
+                                  bool                      bChildren) const
     {
     SGM::Point2D uv=m_Domain.MidPoint();
     if(!m_sFaces.empty())
@@ -495,12 +619,166 @@ bool surface::Check(SGM::Result              &rResult,
 
     if(!bAnswer)
         {
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"Surface %lu does not pass derivative and inverse checks.\n",GetID());
-        aCheckStrings.emplace_back(Buffer);
+        std::stringstream ss;
+        ss << this << " does not pass derivative and inverse checks.";
+        aCheckStrings.emplace_back(ss.str());
+        }
+
+    bAnswer = CheckOwnersHaveChild((entity*)this, aCheckStrings) && bAnswer;
+
+    if(bChildren)
+        {
+        bAnswer = CheckChildren(rResult,this,Options,aCheckStrings) && bAnswer;
         }
 
     return bAnswer;
     }
+
+bool cone::Check(SGM::Result              &rResult,
+                 SGM::CheckOptions const  &Options,
+                 std::vector<std::string> &aCheckStrings,
+                 bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool cylinder::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool extrude::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    bool bAnswer = true;
+
+    if (nullptr == m_pCurve)
+    {
+        std::stringstream ss;
+        ss << "Extrude " << GetID() << " has a NULL curve pointer.";
+        aCheckStrings.emplace_back(ss.str());
+        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+        bAnswer = false;
+        return bAnswer;
+    }
+
+    if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
+    {
+        bAnswer = false;
+    }
+
+    if (!CheckChildHasOwner(m_pCurve, this, aCheckStrings))
+    {
+        bAnswer = false;
+    }
+
+    return bAnswer;
+}
+
+bool NUBsurface::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool NURBsurface::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool offset::Check(SGM::Result              &,//rResult,
+                   SGM::CheckOptions const  &,//Options,
+                   std::vector<std::string> &,//aCheckStrings,
+                   bool                      ) const//bChildren) const
+{
+    return false;
+    //bool bAnswer = true;
+
+    //if (nullptr == m_pSurface)
+    //{
+    //    std::stringstream ss;
+    //    ss << "Offset " << GetID() << " has a NULL surface pointer.";
+    //    aCheckStrings.emplace_back(ss.str());
+    //    rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+    //    bAnswer = false;
+    //    return bAnswer;
+    //}
+
+    //if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
+    //{
+    //    bAnswer = false;
+    //}
+
+    //if (!CheckChildHasOwner(m_pSurface, this, aCheckStrings))
+    //{
+    //    bAnswer = false;
+    //}
+
+    //return bAnswer;
+}
+
+bool plane::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool revolve::Check(SGM::Result              &rResult,
+                    SGM::CheckOptions const  &Options,
+                    std::vector<std::string> &aCheckStrings,
+                    bool                      bChildren) const
+{
+    bool bAnswer = true;
+
+    if (nullptr == m_pCurve)
+    {
+        std::stringstream ss;
+        ss << "Revolve " << GetID() << " has a NULL curve pointer.";
+        aCheckStrings.emplace_back(ss.str());
+        rResult.SetResult(SGM::ResultTypeSurfaceMissingChild);
+        bAnswer = false;
+        return bAnswer;
+    }
+
+    if (!surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren))
+    {
+        bAnswer = false;
+    }
+
+    if (!CheckChildHasOwner(m_pCurve, this, aCheckStrings))
+    {
+        bAnswer = false;
+    }
+
+    return bAnswer;
+}
+
+bool sphere::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
+
+bool torus::Check(SGM::Result              &rResult,
+                   SGM::CheckOptions const  &Options,
+                   std::vector<std::string> &aCheckStrings,
+                   bool                      bChildren) const
+{
+    return surface::CheckImplementation(rResult, Options, aCheckStrings, bChildren);
+}
 
 }

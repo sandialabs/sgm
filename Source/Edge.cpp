@@ -19,6 +19,19 @@ void edge::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
         sChildren.insert(end);
     }
 
+void edge::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (auto pFace : m_sFaces)
+    {
+      sParents.emplace(pFace);
+    }
+    if (m_sFaces.empty() && m_pVolume != nullptr)
+    {
+        sParents.emplace(m_pVolume);
+    }
+    entity::GetParents(sParents);
+}
+
 SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
     {
     if (m_Box.IsEmpty())
@@ -31,8 +44,11 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
                 // Only use the edge boxes.
                 auto startVertex = GetStart();
                 auto endVertex = GetEnd();
-                SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
-                m_Box.Stretch(box);
+                if(startVertex && endVertex)
+                    {
+                    SGM::Interval3D box(startVertex->GetPoint(), endVertex->GetPoint());
+                    m_Box.Stretch(box);
+                    }
                 break;
                 }
             default:
@@ -53,6 +69,41 @@ SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
         }
     return m_Box;
     }
+void edge::RemoveParentsInSet(SGM::Result &rResult,
+                              std::set<entity *,EntityCompare>  const &sParents)
+{
+    if (!sParents.empty())
+      return;
+
+    std::set<face *,EntityCompare> sFaces=GetFaces();
+    if (!sFaces.empty())
+    {
+        std::set<face *, EntityCompare> sRemainingFaces;
+        
+        for(auto pFace : sFaces)
+        {
+            if (sFaces.find(pFace) != sFaces.end())
+            {
+                pFace->RemoveEdge(rResult,this);
+            }
+            else
+            {
+                sRemainingFaces.emplace(pFace);
+            }
+        }
+        m_sFaces = sRemainingFaces;
+    }
+
+    if (m_pVolume)
+    {
+        if(sParents.find(m_pVolume) != sParents.end())
+        {
+            m_pVolume->RemoveEdge(this);
+            m_pVolume = nullptr;
+        }
+    }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
 
 void edge::SeverRelations(SGM::Result &rResult)
     {
@@ -63,6 +114,10 @@ void edge::SeverRelations(SGM::Result &rResult)
         GetStart()->RemoveEdge(this);
     if(GetEnd())
         GetEnd()->RemoveEdge(this);
+    if(m_pVolume)
+        {
+        m_pVolume->RemoveEdge(this);
+        }
     RemoveAllOwners();
     }
 
@@ -78,10 +133,10 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedFaces.insert((face *)MapValue->second);
             }
-        else
-            {
-            m_sFixedFaces.insert(pFace);
-            }
+        //else
+        //    {
+        //    m_sFixedFaces.insert(pFace);
+        //    }
         }
     m_sFaces=m_sFixedFaces;
 
@@ -120,41 +175,17 @@ void edge::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             m_pStart=(vertex *)MapValue->second;
             }
         }
-   
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 bool edge::PointInEdge(SGM::Point3D const &Pos,double dTolerance) const
     {
-    double t=m_pCurve->Inverse(Pos);
+    SGM::Point3D CPos;
+    double t=m_pCurve->Inverse(Pos,&CPos);
+    if(dTolerance*dTolerance<Pos.DistanceSquared(CPos))
+        {
+        return false;
+        }
     SnapToDomain(t,dTolerance);
     return m_Domain.InInterval(t,dTolerance);
     }
@@ -200,27 +231,34 @@ SGM::Interval1D const &edge::GetDomain() const
     if(m_Domain.IsEmpty())
         {
         SGM::Interval1D const &CurveDomain=m_pCurve->GetDomain();
-        m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
-        m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
-        if(m_Domain.IsEmpty())
+        if(m_pStart)
             {
-            if(m_pCurve->GetClosed())
+            m_Domain.m_dMin=m_pCurve->Inverse(m_pStart->GetPoint());
+            m_Domain.m_dMax=m_pCurve->Inverse(m_pEnd->GetPoint());
+            if(m_Domain.IsEmpty())
                 {
-                if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                if(m_pCurve->GetClosed())
                     {
-                    m_Domain.m_dMax=CurveDomain.m_dMax;
-                    }
-                else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
-                    {
-                    m_Domain.m_dMin=CurveDomain.m_dMin;
+                    if(SGM::NearEqual(m_Domain.m_dMax,CurveDomain.m_dMin,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMax=CurveDomain.m_dMax;
+                        }
+                    else if(SGM::NearEqual(m_Domain.m_dMin,CurveDomain.m_dMax,SGM_MIN_TOL,false))
+                        {
+                        m_Domain.m_dMin=CurveDomain.m_dMin;
+                        }
                     }
                 }
+            if( m_Domain.Length()<SGM_ZERO && 
+                m_pStart==m_pEnd && 
+                m_pCurve->GetCurveType()!=SGM::PointCurveType)
+                {
+                m_Domain=m_pCurve->GetDomain();
+                }
             }
-        if( m_Domain.Length()<SGM_ZERO && 
-            m_pStart==m_pEnd && 
-            m_pCurve->GetCurveType()!=SGM::PointCurveType)
+        else
             {
-            m_Domain=m_pCurve->GetDomain();
+            m_Domain=CurveDomain;
             }
         }
     return m_Domain;
@@ -232,8 +270,12 @@ void edge::SetCurve(curve *pCurve)
         {
         m_pCurve->RemoveEdge(this);
         }
+    // allow setting curve to nullptr for disconnecting during a delete operation
     m_pCurve=pCurve;
-    m_pCurve->AddEdge(this);
+    if (m_pCurve != nullptr)
+        {
+        m_pCurve->AddEdge(this);
+        }
     }
 
 void edge::FixDomain(SGM::Result &rResult)
@@ -242,24 +284,11 @@ void edge::FixDomain(SGM::Result &rResult)
         {
         double dStart=m_pCurve->Inverse(m_pStart->GetPoint());
         double dEnd=m_pCurve->Inverse(m_pEnd->GetPoint());
-        m_Domain=SGM::Interval1D(dStart,dEnd);
+        SetDomain(rResult,SGM::Interval1D(dStart,dEnd));
         }
     else
         {
-        m_Domain=m_pCurve->GetDomain();
-        }
-    if(m_aPoints3D.empty()==false)
-        {
-        m_aPoints3D.clear();
-        m_aParams.clear();
-        m_Box.Reset();
-        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
-            {
-            face *pFace=*iter;
-            pFace->ClearFacets(rResult);
-            ++iter;
-            }
+        SetDomain(rResult,m_pCurve->GetDomain());
         }
     }
 
@@ -267,17 +296,14 @@ void edge::SetDomain(SGM::Result           &rResult,
                      SGM::Interval1D const &Domain)
     {
     m_Domain=Domain;
-    if(m_aPoints3D.empty()==false)
+    if(!m_aPoints3D.empty())
         {
         m_aPoints3D.clear();
         m_aParams.clear();
         m_Box.Reset();
-        std::set<face *,EntityCompare>::iterator iter=m_sFaces.begin();
-        while(iter!=m_sFaces.end())
+        for (auto pFace : m_sFaces)
             {
-            face *pFace=*iter;
             pFace->ClearFacets(rResult);
-            ++iter;
             }
         }
     }

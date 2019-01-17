@@ -44,6 +44,10 @@ surface *CreateRevolveSurface(SGM::Result             &rResult,
                               SGM::UnitVector3D const &Axis,
                               curve                   *pCurve);
 
+surface *CreateExtrudeSurface(SGM::Result             &rResult,
+                              SGM::UnitVector3D const &Axis,
+                              curve                   *pCurve);
+
 edge *CreateEdge(SGM::Result           &rResult,
                  curve                 *pCurve,
                  SGM::Interval1D const *pDomain);
@@ -53,6 +57,18 @@ edge *CreateEdge(SGM::Result           &rResult,
 edge *CreateEdge(SGM::Result        &rResult,
                  SGM::Point3D const &StartPos,
                  SGM::Point3D const &EndPos);
+
+// returns an edge on a curve with the specified start and end vertex
+edge *CreateEdge(SGM::Result &rResult,
+                 curve       *pCurve,
+                 vertex      *pStart,
+                 vertex      *pEnd);
+
+body *CreateWireBody(SGM::Result            &rResult,
+                     std::set<edge *> const &sEdges);
+
+body *CreatePointBody(SGM::Result                  &rResult,
+                      std::set<SGM::Point3D> const &aPoints);
 
 NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
                          std::vector<SGM::Point3D> const &aPoints,
@@ -68,6 +84,14 @@ body *CreateSheetBody(SGM::Result                    &rResult,
                       surface                        *pSurface,
                       std::vector<edge *>            &aEdges,
                       std::vector<SGM::EdgeSideType> &aTypes);
+
+face *CreateFaceFromSurface(SGM::Result                    &rResult,
+                            surface                        *pSurface,
+                            std::vector<edge *>            &aEdges,
+                            std::vector<SGM::EdgeSideType> &aTypes);
+
+body *CoverPlanarWire(SGM::Result &rResult,
+                      body        *pPlanarWire);
 
 body *CreateDisk(SGM::Result             &rResult,
                  SGM::Point3D      const &Center,

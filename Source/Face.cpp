@@ -1,10 +1,10 @@
 #include "SGMMathematics.h"
 #include "SGMVector.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
-#include "Graph.h"
 #include "Topology.h"
 #include "Surface.h"
 #include "Curve.h"
@@ -24,12 +24,19 @@ namespace SGMInternal
 void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     {
     sChildren.insert(GetSurface());
+    GetSurface()->FindAllChildren(sChildren);
     for (auto pEdge : GetEdges())
         {
         sChildren.insert(pEdge);
         pEdge->FindAllChildren(sChildren);
         }
     }
+
+void face::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    sParents.emplace(m_pVolume);
+    entity::GetParents(sParents);
+}
 
 SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
     {
@@ -74,6 +81,17 @@ bool face::GetColor(int &nRed,int &nGreen,int &nBlue) const
         return entity::GetColor(nRed,nGreen,nBlue);
     }
 
+void face::RemoveParentsInSet(SGM::Result &rResult,
+                              std::set<entity *,EntityCompare>  const &sParents)
+{
+    if (sParents.find(GetVolume()) != sParents.end())
+    {
+        GetVolume()->RemoveFace(this);
+        SetVolume(nullptr);        
+    }
+    topology::RemoveParentsInSet(rResult, sParents);
+}
+
 void face::SeverRelations(SGM::Result &)
     {
     if(GetVolume())
@@ -98,10 +116,10 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSeamType[(edge *)MapValue->second]=SeamType.second;
             }
-        else
-            {
-            m_sFixedSeamType[SeamType.first]=SeamType.second;
-            }
+        //else
+        //    {
+        //    m_sFixedSeamType[SeamType.first]=SeamType.second;
+        //    }
         }
     m_mSeamType=m_sFixedSeamType;
 
@@ -113,10 +131,10 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSideType[(edge *)MapValue->second]=SideType.second;
             }
-        else
-            {
-            m_sFixedSideType[SideType.first]=SideType.second;
-            }
+        //else
+        //    {
+        //    m_sFixedSideType[SideType.first]=SideType.second;
+        //    }
         }
     m_mSideType=m_sFixedSideType;
 
@@ -146,42 +164,13 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
-
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 volume *face::GetVolume() const 
@@ -229,6 +218,64 @@ std::vector<SGM::UnitVector3D> const &face::GetNormals(SGM::Result &rResult) con
     return m_aNormals;
     }
 
+entity *FindClosestEdgeOrVertex(SGM::Result                          &rResult,
+                                SGM::Point3D                   const &Pos,
+                                std::set<edge *,EntityCompare> const &m_sEdges)
+    {
+    entity *pAnswer=nullptr;
+    for(edge *pEdge : m_sEdges)
+        {
+        double dTol=std::max(SGM_MIN_TOL,pEdge->GetTolerance());
+        if(pEdge->GetBox(rResult).InInterval(Pos,dTol))
+            {
+            if(pEdge->GetEnd() && SGM::NearEqual(Pos.DistanceSquared(pEdge->GetEnd()->GetPoint()),0,SGM_ZERO,false))
+                {
+                pAnswer=pEdge->GetEnd();
+                break;
+                }
+            if(pEdge->GetStart() && SGM::NearEqual(Pos.DistanceSquared(pEdge->GetStart()->GetPoint()),0,SGM_ZERO,false))
+                {
+                pAnswer=pEdge->GetStart();
+                break;
+                }
+            if(pEdge->PointInEdge(Pos,dTol))
+                {
+                pAnswer=pEdge;
+                break;
+                }
+            }
+        }
+    return pAnswer;
+    }
+
+std::vector<entity *> face::FindPointEntities(SGM::Result &rResult) const
+    {
+    if(m_aPoints2D.empty())
+        {
+        FacetOptions Options;
+        FacetFace(rResult,this,Options,m_aPoints2D,m_aPoints3D,m_aNormals,m_aTriangles);
+        }
+
+    std::vector<unsigned int> aBoundary;
+    std::set<unsigned int> sInterior;
+    SGM::FindBoundary(m_aTriangles,aBoundary,sInterior);
+    std::vector<entity *> aAnswer;
+    aAnswer.assign(m_aPoints3D.size(),(entity *)this);
+
+    for(unsigned int Index : aBoundary)
+        {
+        if(aAnswer[Index]==this)
+            {
+            if(entity *pEnt=FindClosestEdgeOrVertex(rResult,m_aPoints3D[Index],m_sEdges))
+                {
+                aAnswer[Index]=pEnt;
+                }
+            }
+        }
+
+    return aAnswer;
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        SGM::Point3D       *ClosePos,    // The closest point.
@@ -245,7 +292,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     // Find the closest edge or vertex.
 
     SGM::Point3D Pos,CPos,TPos;
-    entity *pEntity= (entity *)this;
+    auto pEntity= (entity *)this;
     double dDist=DBL_MAX;
     if(ClosePos)
         {
@@ -255,10 +302,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         m_pSurface->Evaluate(uv,&Pos);
         }
-    std::set<edge *,EntityCompare>::iterator iter=m_sEdges.begin();
-    while(iter!=m_sEdges.end())
+    for (auto pEdge : m_sEdges)
         {
-        edge *pEdge=*iter;
         entity *pTempEnt=nullptr;
         FindClosestPointOnEdge3D(rResult,Pos,pEdge,TPos,pTempEnt);
         double dTempDist=Pos.DistanceSquared(TPos);
@@ -268,7 +313,6 @@ bool face::PointInFace(SGM::Result        &rResult,
             pEntity=pTempEnt;
             CPos=TPos;
             }
-        ++iter;
         }
 
     // Find the parameter line to check sided-ness from.
@@ -279,8 +323,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     if(pEntity->GetType()==SGM::EntityType::EdgeType)
         {
-        edge *pEdge=(edge *)pEntity;
-        std::map<edge *,SGM::EdgeSideType>::const_iterator EdgeTypeIter=m_mSideType.find(pEdge);
+        auto pEdge=(edge *)pEntity;
+        auto EdgeTypeIter=m_mSideType.find(pEdge);
         SGM::Point2D Buv=EvaluateParamSpace(pEdge,EdgeTypeIter->second,CPos);
 
         SGM::Vector3D VecU,VecV,Vec;
@@ -315,7 +359,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     else // The vertex case.
         {
         SGM::Point2D Buv=m_pSurface->Inverse(CPos);
-        vertex *pVertex=(vertex *)pEntity;
+        auto pVertex=(vertex *)pEntity;
         SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)
             {
@@ -360,7 +404,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 return InAngle(uvC,uvA,uvB,uv);
@@ -404,7 +448,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                     }
                 else
                     {
-                    throw;  // A case that has not been considered.
+                    return true;
                     }
 
                 if(nSideType1==SGM::FaceOnLeftType)
@@ -493,38 +537,16 @@ void face::ClearFacets(SGM::Result &rResult) const
 
 double face::FindArea(SGM::Result &rResult) const
     {
-    // Method one. 
-    // Using Romberg integration on a reduced set of parametric triangles.
-
-    //SGMInternal::FacetOptions Options;
-    //Options.m_bParametric=true;
-    //std::vector<SGM::Point2D> aPoints2D;
-    //std::vector<SGM::Point3D> aPoints3D;
-    //std::vector<unsigned int> aTriangles;
-    //std::vector<SGM::UnitVector3D> aNormals;
-    //std::vector<entity *> aEntities;
-    //SGMInternal::FacetFace(rResult,this,Options,aPoints2D,aPoints3D,aNormals,aTriangles,aEntities);
-    //size_t nTriangles=aTriangles.size();
-    //double dMethod1=0;
-    //size_t Index1;
-    //for(Index1=0;Index1<nTriangles;Index1+=3)
-    //    {
-    //    size_t a=aTriangles[Index1];
-    //    size_t b=aTriangles[Index1+1];
-    //    size_t c=aTriangles[Index1+2];
-    //    SGM::Point2D const &PosA=aPoints2D[a];
-    //    SGM::Point2D const &PosB=aPoints2D[b];
-    //    SGM::Point2D const &PosC=aPoints2D[c];
-    //    dMethod1+=m_pSurface->FindAreaOfParametricTriangle(rResult,PosA,PosB,PosC);
-    //    }
-
-    // Method two.  
     // Refining the full set of parametric triangles twice and taking their area.
 
     this->GetPoints2D(rResult);
     std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
     std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
     std::vector<unsigned int> aTriangles=m_aTriangles;
+    std::vector<entity *> aEnts=FindPointEntities(rResult);
+
+    //SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
+    //new complex(rResult,aPoints3D,aTriangles);
 
     double dDiff=SGM_MAX;
     double dOldArea=SGM_MAX;
@@ -533,7 +555,7 @@ double face::FindArea(SGM::Result &rResult) const
     size_t nCount=0;
     while(SGM_MIN_TOL<dDiff && nCount<5)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
         double dArea1=TriangleArea(aPoints3D,aTriangles);
         dArea2=(4*dArea1-dArea0)/3;
         dArea0=dArea1;
@@ -543,7 +565,6 @@ double face::FindArea(SGM::Result &rResult) const
         }
 
     return dArea2;
-    //return std::max(dMethod1,dArea2);
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
@@ -578,10 +599,11 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
         }
 
     double dVolume=dAnswer0;
+    std::vector<entity *> aEnts=FindPointEntities(rResult);
     size_t Index1;
     for(Index1=0;Index1<2;++Index1)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles);
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
         double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
         if(m_bFlipped)
             {
@@ -598,8 +620,13 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
-    Graph graph(rResult,m_sEdges);
-    std::vector<Graph> aComponents;
+    std::set<SGM::Edge> sEdges;
+    for(auto pEdge : m_sEdges)
+        {
+        sEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    SGM::Graph graph(rResult,sEdges);
+    std::vector<SGM::Graph> aComponents;
     size_t nLoops=graph.FindComponents(aComponents);
     aaLoops.reserve(nLoops);
     aaFlipped.reserve(nLoops);
@@ -611,19 +638,19 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     size_t Index1;
     for(Index1=0;Index1<nLoops;++Index1)
         {
-        Graph const &comp=aComponents[Index1];
-        std::set<GraphEdge> const &sGEdges=comp.GetEdges();
-        std::set<edge *,EntityCompare> sEdges;
-        std::set<GraphEdge>::const_iterator GEdgeIter=sGEdges.begin();
+        SGM::Graph const &comp=aComponents[Index1];
+        std::set<SGM::GraphEdge> const &sGEdges=comp.GetEdges();
+        std::set<edge *,EntityCompare> sLoopEdges;
+        auto GEdgeIter=sGEdges.begin();
         while(GEdgeIter!=sGEdges.end())
             {
             size_t ID=GEdgeIter->m_nID;
-            sEdges.insert((edge *)pThing->FindEntity(ID));
+            sLoopEdges.insert((edge *)pThing->FindEntity(ID));
             ++GEdgeIter;
             }
         std::vector<edge *> aEdges;
         std::vector<SGM::EdgeSideType> aFlips;
-        OrderLoopEdges(rResult,this,sEdges,aEdges,aFlips);
+        OrderLoopEdges(rResult,this,sLoopEdges,aEdges,aFlips);
         aaTempLoops.push_back(aEdges);
         aaTempFlipped.push_back(aFlips);
         }
@@ -681,7 +708,11 @@ void face::SetSurface(surface *pSurface)
 
 SGM::EdgeSideType face::GetSideType(edge const *pEdge) const 
     {
-    std::map<edge *,SGM::EdgeSideType>::const_iterator iter=m_mSideType.find((edge *)pEdge);
+    auto iter=m_mSideType.find((edge *)pEdge);
+    if(iter==m_mSideType.end())
+        {
+        return SGM::EdgeSideType::FaceOnUnknown;
+        }
     return iter->second;
     }
 
@@ -944,7 +975,8 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
         else
             {
             // Check for singularities.
-            if( m_pSurface->SingularHighV() && 
+            if( pEdge->GetStart() && 
+                m_pSurface->SingularHighV() && 
                 SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
@@ -959,8 +991,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_u=uvE.m_u;
                 }
-            else if( m_pSurface->SingularHighU() && 
-                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularHighU() && 
+                     SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
@@ -974,8 +1007,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_v=uvE.m_v;
                 }
-            else if( m_pSurface->SingularLowV() && 
-                SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularLowV() && 
+                     SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
@@ -989,8 +1023,9 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 SGM::Point2D uvE=m_pSurface->Inverse(PosE);
                 uv.m_u=uvE.m_u;
                 }
-            else if( m_pSurface->SingularLowU() && 
-                SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+            else if( pEdge->GetStart() && 
+                     m_pSurface->SingularLowU() && 
+                     SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
                 {
                 SGM::Point3D PosE;
                 if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL))

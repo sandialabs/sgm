@@ -10,6 +10,7 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Topology.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -38,16 +39,38 @@ surface::surface(SGM::Result &rResult, surface const &other) :
         m_bSingularHighV(other.m_bSingularHighV)
 {}
 
-
-surface *surface::Clone(SGM::Result &) const
-    {
-    return nullptr; // default if not overridden by derived class
-    }
-
 void surface::FindAllChildren(std::set<entity *, EntityCompare> &) const
     {
     // do nothing, derived classes can override
     }
+
+void surface::GetParents(std::set<entity *, EntityCompare> &sParents) const
+{
+    for (auto pFace : m_sFaces)
+    {
+      sParents.emplace(pFace);
+    }
+    entity::GetParents(sParents);
+}
+
+void surface::RemoveParentsInSet(SGM::Result &rResult,
+                        std::set<entity *,EntityCompare>  const &sParents)
+{
+    std::set<face *, EntityCompare> sRemainingFaces;
+    for (auto pFace : m_sFaces)
+    {
+        if (sParents.find(pFace) != sParents.end())
+        {
+            pFace->SetSurface(nullptr);
+        }
+        else
+        {
+            sRemainingFaces.emplace(pFace);
+        }
+    }
+    m_sFaces = sRemainingFaces;
+    entity::RemoveParentsInSet(rResult, sParents);
+}
 
 void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
@@ -58,64 +81,18 @@ void surface::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
         auto MapValue=mEntityMap.find(pFace);
         if(MapValue!=mEntityMap.end())
             m_sFixedFaces.insert((face *)MapValue->second);
-        else
-            m_sFixedFaces.insert(pFace);
+        //else
+        //    m_sFixedFaces.insert(pFace);
         }
     m_sFaces=m_sFixedFaces;
-
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-        else
-            m_sFixedAttributes.insert(pAttribute);
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-        else
-            m_sFixedOwners.insert(pEntity);
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// surface virtual member functions
+// surface member functions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-bool surface::IsSame(surface const *,double ) const
-    { return false; } // Derived classes may override
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// surface other member functions
-//
-///////////////////////////////////////////////////////////////////////////////
-
-double AreaIntegrand(SGM::Point2D const &uv,void const *pData)
-    {
-    surface const *pSurface=(surface const *)pData;
-    SGM::Vector3D VecU,VecV;
-    pSurface->Evaluate(uv,nullptr,&VecU,&VecV);
-    return (VecU*VecV).Magnitude();
-    }
-
-double surface::FindAreaOfParametricTriangle(SGM::Result        &,//rResult,
-                                             SGM::Point2D const &PosA,
-                                             SGM::Point2D const &PosB,
-                                             SGM::Point2D const &PosC) const
-    {
-    return SGM::IntegrateTriangle(SGMInternal::AreaIntegrand,PosA,PosB,PosC,this);
-    }
 
 SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
                                     SGM::Point3D const &Pos) const
@@ -306,7 +283,7 @@ SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
     SGM::UnitVector3D UDu=Du,VDv=Dv;
     double du=UDu%Vec;
     double dv=VDv%Vec;
-    return SGM::UnitVector2D(du,dv);
+    return {du,dv};
     }
 
 

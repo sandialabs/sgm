@@ -1,3 +1,0 @@
-// Test Transformed Torus Line Intersection;
-RunCPPTest(24);
-

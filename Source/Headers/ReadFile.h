@@ -42,6 +42,7 @@ struct STEPLineData
             m_aDoubles(),
             m_aInts(),
             m_aSizes(),
+            m_aStrings(),
             m_bFlag(true)
     {}
 
@@ -51,17 +52,19 @@ struct STEPLineData
             m_aDoubles(),
             m_aInts(),
             m_aSizes(),
+            m_aStrings(),
             m_bFlag(true)
     {}
 
     STEPLineData(STEPLineData const &) = default;
 
-    STEPLineData(STEPLineData&& other):
+    STEPLineData(STEPLineData&& other) : /* noexcept */
             m_nSTEPTag(other.m_nSTEPTag),
             m_aIDs(std::move(other.m_aIDs)),
             m_aDoubles(std::move(other.m_aDoubles)),
             m_aInts(std::move(other.m_aInts)),
             m_aSizes(std::move(other.m_aSizes)),
+            m_aStrings(std::move(other.m_aStrings)),
             m_bFlag(other.m_bFlag)
         {
             other.m_nSTEPTag = STEPTag::NULL_NONE_INVALID;
@@ -80,6 +83,7 @@ struct STEPLineData
         m_aDoubles = std::move(other.m_aDoubles);
         m_aInts = std::move(m_aInts);
         m_aSizes = std::move(other.m_aSizes);
+        m_aStrings = std::move(other.m_aStrings);
         m_bFlag = other.m_bFlag;
         other.m_bFlag = true;
         return *this;
@@ -94,6 +98,7 @@ struct STEPLineData
             m_aDoubles.clear();
             m_aInts.clear();
             m_aSizes.clear();
+            m_aStrings.clear();
             m_bFlag=true;
         }
 
@@ -102,6 +107,7 @@ struct STEPLineData
     std::vector<double> m_aDoubles;
     std::vector<int> m_aInts;
     std::vector<unsigned> m_aSizes;
+    std::vector<std::string> m_aStrings;
     bool m_bFlag;
     };
 
@@ -160,6 +166,7 @@ struct STEPLine
 typedef std::unordered_map<std::string, STEPTag> STEPTagMapType;
 typedef std::unordered_map<size_t, STEPLineData> STEPLineDataMapType;
 typedef std::unordered_map<size_t, entity *> IDEntityMapType;
+typedef std::unordered_map<body *, SGM::Transform3D> BodyToTransformMapType;
 
 typedef std::vector<std::string *> StringLinesChunk;
 typedef std::vector<STEPLine *> STEPLineChunk;
@@ -650,6 +657,27 @@ inline size_t MoveSTEPLineIntoMap(SGM::Result &rResult,
         }
     }
 
+inline const char *FindSingleQuotedString(const char *pString, std::string &sQuotedString)
+{
+    std::string sInput(pString);
+    size_t first = sInput.find('\'');
+    size_t end = sInput.find('\'', ++first);
+    sQuotedString = sInput.substr(first, end-first);
+    pString += ++end;
+    return pString;
+
+
+    //static const char SINGLE_QUOTE[] = "\'";
+    //// skip to first quote
+    //size_t first = std::strspn(pString, SINGLE_QUOTE);
+    //pString += first;
+
+    //// stop at the next following quote
+    //size_t end = std::strcspn(pString, SINGLE_QUOTE);
+
+    //sQuotedString.assign(pString, end); // assign the token to our m_sTag string
+    //return pString + end;      // return position after the tag
+}
 
 } // namespace SGMInternal
 

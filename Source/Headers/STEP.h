@@ -182,6 +182,12 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
                    std::vector<std::string>     &aLog,
                    SGM::TranslatorOptions const &Options);
 
+size_t ReadTXTFile(SGM::Result                  &rResult,
+                   std::string            const &FileName,
+                   std::vector<entity *>        &aEntities,
+                   std::vector<std::string>     &aLog,
+                   SGM::TranslatorOptions const &Options);
+
 }
 
 #endif // STEP_H

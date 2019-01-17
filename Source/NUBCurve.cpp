@@ -135,7 +135,8 @@ double NUBcurve::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void NUBcurve::Transform(SGM::Transform3D const &Trans)
+void NUBcurve::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
     for (auto & Pos: m_aControlPoints)
         Pos=Trans*Pos;
@@ -180,12 +181,6 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
 
 std::vector<double> const &NUBcurve::GetSeedParams() const
     {
-    if(m_aSeedPoints.empty())
-        {
-        FacetOptions Options;
-        Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
-        FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
-        }
     return m_aSeedParams;
     }
 
@@ -224,7 +219,7 @@ bool NUBcurve::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    NUBcurve const *pNUB2=(NUBcurve const *)pOther;
+    auto const *pNUB2=(NUBcurve const *)pOther;
     if(m_aKnots.size()!=pNUB2->m_aKnots.size())
         {
         return false;

@@ -24,32 +24,28 @@ bool hyperbola::IsSame(curve const *pOther,double dTolerance) const
         {
         return false;
         }
-    hyperbola const *pCurve2=(hyperbola const *)pOther;
-    if(SGM::NearEqual(m_Center,pCurve2->m_Center,dTolerance)==false)
+    auto pCurve2=(hyperbola const *)pOther;
+    if(!SGM::NearEqual(m_Center, pCurve2->m_Center, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_XAxis,pCurve2->m_XAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_XAxis, pCurve2->m_XAxis, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_YAxis,pCurve2->m_YAxis,dTolerance)==false)
+    if(!SGM::NearEqual(m_YAxis, pCurve2->m_YAxis, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_Normal,pCurve2->m_Normal,dTolerance)==false)
+    if(!SGM::NearEqual(m_Normal, pCurve2->m_Normal, dTolerance))
         {
         return false;
         }
-    if(SGM::NearEqual(m_dA,pCurve2->m_dA,dTolerance,false)==false)
+    if(!SGM::NearEqual(m_dA, pCurve2->m_dA, dTolerance, false))
         {
         return false;
         }
-    if(SGM::NearEqual(m_dB,pCurve2->m_dB,dTolerance,false)==false)
-        {
-        return false;
-        }
-    return true;
+    return SGM::NearEqual(m_dB, pCurve2->m_dB, dTolerance, false);
     }
 
 hyperbola::hyperbola(SGM::Result &rResult, hyperbola const &other):
@@ -88,7 +84,7 @@ void hyperbola::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         }
     if(D2)
         {
-        double ddy=-m_dA*t*t/(dB2*dB2*dR*dS);
+        double ddy=(m_dA*(1.0-t*t/(dR*dB2)))/(dS*dB2);
         D2->m_x=m_YAxis.m_x*ddy;
         D2->m_y=m_YAxis.m_y*ddy;
         D2->m_z=m_YAxis.m_z*ddy;
@@ -111,7 +107,8 @@ double hyperbola::Inverse(SGM::Point3D const &Pos,
     return dAnswer;
     }
 
-void hyperbola::Transform(SGM::Transform3D const &Trans)
+void hyperbola::Transform(SGM::Result            &,//rResult,
+                          SGM::Transform3D const &Trans)
     {
     // f(t)=a*sqrt(1+t^2/b^2)
     m_Center=Trans*m_Center;

@@ -38,7 +38,8 @@ SGM_EXPORT SGM::Curve CreateParabola(SGM::Result             &rResult,
                                      SGM::Point3D      const &Center,
                                      SGM::UnitVector3D const &XAxis,
                                      SGM::UnitVector3D const &YAxis,
-                                     double                   dA);
+                                     double                   dA,
+                                     SGM::Interval1D   const *pDomain=nullptr);
 
 SGM_EXPORT SGM::Curve CreateHyperbola(SGM::Result             &rResult,
                                       SGM::Point3D      const &Center,
@@ -57,27 +58,63 @@ SGM_EXPORT SGM::Curve CreateTorusKnot(SGM::Result             &rResult,
                                       size_t                   nB);
 
 SGM_EXPORT SGM::Curve CreateNUBCurve(SGM::Result                     &rResult,
-                                     std::vector<SGM::Point3D> const &aPoints,
+                                     std::vector<SGM::Point3D> const &aInterpolatePoints,
                                      std::vector<double>       const *pParams=nullptr);
 
 SGM_EXPORT SGM::Curve CreateNUBCurveWithEndVectors(SGM::Result                     &rResult,
-                                                   std::vector<SGM::Point3D> const &aPoints,
+                                                   std::vector<SGM::Point3D> const &aInterpolatePoints,
                                                    SGM::Vector3D             const &StartVec,
                                                    SGM::Vector3D             const &EndVec,
                                                    std::vector<double>       const *pParams=nullptr);
 
-SGM_EXPORT SGM::Curve CreateNURBCurveWithControlPointsAndKnots(SGM::Result                          &rResult,
-                                                                    std::vector<SGM::Point4D> const &aControlPoints,
-                                                                    std::vector<double>       const &aKnots);
+SGM_EXPORT SGM::Curve CreateNUBCurveWithControlPointsAndKnots(SGM::Result                     &rResult,
+                                                              std::vector<SGM::Point3D> const &aControlPoints,
+                                                              std::vector<double>       const &aKnots);
 
-SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result  &rResult,
-                                       SGM::Point3D &Pos);
+SGM_EXPORT SGM::Curve CreateNURBCurve(SGM::Result                     &rResult,
+                                      std::vector<SGM::Point4D> const &aControlPoints,
+                                      std::vector<double>       const &aKnots);
+
+SGM_EXPORT SGM::Curve CreateHermiteCurve(SGM::Result                      &rResult,
+                                         std::vector<SGM::Point3D>  const &aPoints,
+                                         std::vector<SGM::Vector3D> const &aVectors,
+                                         std::vector<double>        const &aParams);
+
+SGM_EXPORT SGM::Curve CreatePointCurve(SGM::Result           &rResult,
+                                       SGM::Point3D    const &Pos,
+                                       SGM::Interval1D const *pDomain=nullptr);
+
+// Fits a conic curve to five points returning a line, circle, ellipse, parabola or hyperbola.
+
+SGM_EXPORT SGM::Curve FindConic(SGM::Result                     &rResult,
+                                std::vector<SGM::Point3D> const &aPoints,
+                                double                           dTolerance);
+
+SGM_EXPORT SGM::Curve FindUParamCurve(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID,
+                                      double              dU);
+
+SGM_EXPORT SGM::Curve FindVParamCurve(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID,
+                                      double              dV);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Surface Creation Functions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT SGM::Surface CreatePlaneFromOriginAndNormal(SGM::Result             &rResult,
+                                                       SGM::Point3D      const &Origin,
+                                                       SGM::UnitVector3D const &Normal);
+
+// Creates a plane from point and a normal.
+
+SGM_EXPORT SGM::Surface CreatePlane(SGM::Result             &rResult,
+                                    SGM::Point3D      const &Origin,
+                                    SGM::UnitVector3D const &Normal);
+
+// Creates a plane from three points. 
 
 SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
                                     SGM::Point3D const &Origin,
@@ -86,24 +123,52 @@ SGM_EXPORT SGM::Surface CreatePlane(SGM::Result        &rResult,
 
 SGM_EXPORT SGM::Surface CreateSphereSurface(SGM::Result        &rResult,
                                             SGM::Point3D const &Center,
-                                            double              dRadius);
+                                            double              dRadius,
+                                            SGM::UnitVector3D  *pXAxis=nullptr,
+                                            SGM::UnitVector3D  *pYAxis=nullptr);
+
+SGM_EXPORT SGM::Surface CreateCylinderSurface(SGM::Result        &rResult,
+                                              SGM::Point3D const &Bottom,
+                                              SGM::Point3D const &Top,
+                                              double              dRadius);
+
+SGM_EXPORT SGM::Surface CreateConeSurface(SGM::Result             &rResult,
+                                          SGM::Point3D      const &Origin,
+                                          SGM::UnitVector3D const &Axis,
+                                          double                   dRadius,
+                                          double                   dHalfAngle);
 
 SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
                                            SGM::Point3D      const &Center,
                                            SGM::UnitVector3D const &Axis,
                                            double                   dMinorRadius,
                                            double                   dMajorRadius,
-                                           bool                     bApple=true);
+                                           bool                     bApple=true,
+                                           SGM::UnitVector3D const *pXAxis=nullptr);
 
 SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                                   &rResult,
-                                         std::vector<std::vector<SGM::Point3D> > const &aaPoints,
+                                         std::vector<std::vector<SGM::Point3D> > const &aaInterpolatePoints,
                                          std::vector<SGM::Vector3D>              const *paStartVecs=nullptr,
                                          std::vector<SGM::Vector3D>              const *paEndVecs=nullptr,
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
 
+SGM_EXPORT SGM::Surface CreateNUBSurfaceFromControlPoints(SGM::Result                                   &rResult,
+                                                          std::vector<std::vector<SGM::Point3D> > const &aaControlPoints,
+                                                          std::vector<double>                     const &aUKnots,
+                                                          std::vector<double>                     const &aVKnots);
+
+SGM_EXPORT SGM::Surface CreateNURBSurface(SGM::Result                                   &rResult,
+                                          std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
+                                          std::vector<double>                     const &aUKnots,
+                                          std::vector<double>                     const &aVKnots);
+
 SGM_EXPORT SGM::Surface CreateRevolveSurface(SGM::Result             &rResult,
                                              SGM::Point3D      const &Origin,
+                                             SGM::UnitVector3D const &Axis,
+                                             SGM::Curve              &CurveID);
+
+SGM_EXPORT SGM::Surface CreateExtrudeSurface(SGM::Result             &rResult,
                                              SGM::UnitVector3D const &Axis,
                                              SGM::Curve              &CurveID);
 
@@ -133,6 +198,14 @@ SGM_EXPORT SGM::Vector3D CurveCurvature(SGM::Result        &rResult,
                                         SGM::Curve   const &CurveID,
                                         double              t);
 
+SGM_EXPORT void PrincipleCurvature(SGM::Result        &rResult,
+                                   SGM::Surface const &SurfaceID,
+                                   SGM::Point2D const &uv,
+                                   SGM::UnitVector3D  &Vec1,
+                                   SGM::UnitVector3D  &Vec2,
+                                   double             &dk1,
+                                   double             &dk2);
+
 SGM_EXPORT void EvaluateSurface(SGM::Result             &rResult,
                                 SGM::Surface      const &SurfaceID,
                                 SGM::Point2D      const &uv,
@@ -149,6 +222,40 @@ SGM_EXPORT SGM::Point2D SurfaceInverse(SGM::Result        &rResult,
                                        SGM::Point3D const &Pos,
                                        SGM::Point3D       *pClosePos=nullptr,
                                        SGM::Point2D const *pGuess=nullptr);
+
+SGM_EXPORT bool SameSurface(SGM::Result        &rResult,
+                            SGM::Surface const &SurfaceID1,
+                            SGM::Surface const &SurfaceID2,
+                            double              dTolerance);
+
+SGM_EXPORT bool SameCurve(SGM::Result      &rResult,
+                          SGM::Curve const &CurveID1,
+                          SGM::Curve const &CurveID2,
+                          double            dTolerance);
+
+SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
+                                                     SGM::Surface const &SurfaceID);
+
+SGM_EXPORT void SetDomainOfSurface(SGM::Result           &rResult,
+                                   SGM::Surface          &SurfaceID,
+                                   SGM::Interval2D const &Domain);
+
+SGM_EXPORT bool IsSurfaceSingularHighU(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+ 
+SGM_EXPORT bool IsSurfaceSingularHighV(SGM::Result        &rResult,
+                                       SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowU(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSurfaceSingularLowV(SGM::Result        &rResult,
+                                      SGM::Surface const &SurfaceID);
+
+SGM_EXPORT bool IsSingularity(SGM::Result        &rResult,
+                              SGM::Surface const &SurfaceID,
+                              SGM::Point2D const &uv,
+                              double              dTolerance);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -211,6 +318,12 @@ SGM_EXPORT bool GetNURBCurveData(SGM::Result               &rResult,
                                  std::vector<SGM::Point4D> &aControlPoints,
                                  std::vector<double>       &aKnots);  
 
+SGM_EXPORT bool GetHermiteCurveData(SGM::Result                &rResult,
+                                    SGM::Curve           const &CurveID,
+                                    std::vector<SGM::Point3D>  &aPoints,
+                                    std::vector<SGM::Vector3D> &aVectors,
+                                    std::vector<double>        &aParams);
+
 SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
                                   SGM::Curve const &CurveID,
                                   SGM::Point3D     &Pos);
@@ -223,10 +336,7 @@ SGM_EXPORT bool GetPointCurveData(SGM::Result      &rResult,
 
 SGM_EXPORT SGM::EntityType GetSurfaceType(SGM::Result        &rResult,
                                           SGM::Surface const &SurfaceID);
-
-SGM_EXPORT SGM::Interval2D const &GetDomainOfSurface(SGM::Result        &rResult,
-                                                     SGM::Surface const &SurfaceID);
-             
+            
 SGM_EXPORT bool GetPlaneData(SGM::Result        &rResult,
                              SGM::Surface const &SurfaceID,
                              SGM::Point3D       &Origin,
@@ -249,7 +359,8 @@ SGM_EXPORT bool GetConeData(SGM::Result        &rResult,
                             SGM::UnitVector3D  &YAxis,
                             SGM::UnitVector3D  &ZAxis,  // Points from center to apex.
                             double             &dHalfAngle,
-                            double             &dRadius);
+                            double             &dRadius,
+                            SGM::Point3D       &Apex);
             
 SGM_EXPORT bool GetSphereData(SGM::Result        &rResult,
                               SGM::Surface const &SurfaceID,

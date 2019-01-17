@@ -155,7 +155,7 @@ SGM::Point2D cylinder::Inverse(SGM::Point3D const &Pos,
         {
         // Check for points on the axis, and on the seam.
 
-        if(!m_Domain.m_UDomain.InInterval(dU, SGM_ZERO))
+        if(m_Domain.m_UDomain.OnBoundary(dU, SGM_MIN_TOL))
             {
             if( SGM::NearEqual(pGuess->m_u,m_Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false) &&
                 SGM::NearEqual(dU,m_Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
@@ -193,13 +193,13 @@ bool cylinder::IsSame(surface const *pOther,double dTolerance) const
         }
 
     bool bAnswer=true;
-    cylinder const *pCylinder1=(cylinder const *)this;
-    cylinder const *pCylinder2=(cylinder const *)pOther;
-    if(SGM::NearEqual(pCylinder1->m_dRadius,pCylinder2->m_dRadius,dTolerance,false)==false)
+    auto pCylinder1= this;
+    auto pCylinder2=(cylinder const *)pOther;
+    if(!SGM::NearEqual(pCylinder1->m_dRadius, pCylinder2->m_dRadius, dTolerance, false))
         {
         bAnswer=false;
         }
-    else if(SGM::NearEqual(fabs(pCylinder1->m_ZAxis%pCylinder2->m_ZAxis),1.0,dTolerance,false)==false)
+    else if(!SGM::NearEqual(fabs(pCylinder1->m_ZAxis % pCylinder2->m_ZAxis), 1.0, dTolerance, false))
         {
         bAnswer=false;
         }
@@ -208,7 +208,7 @@ bool cylinder::IsSame(surface const *pOther,double dTolerance) const
         SGM::Point3D const &Pos1=pCylinder1->m_Origin;
         SGM::Point3D const &Pos2=pCylinder2->m_Origin;
         SGM::UnitVector3D const &Axis1=pCylinder1->m_ZAxis;
-        if(SGM::NearEqual(Pos2.Distance(Pos1+Axis1*((Pos2-Pos1)%Axis1)),0.0,dTolerance,false)==false)
+        if(!SGM::NearEqual(Pos2.Distance(Pos1 + Axis1 * ((Pos2 - Pos1) % Axis1)), 0.0, dTolerance, false))
             {
             bAnswer=false;
             }
@@ -230,7 +230,8 @@ void cylinder::PrincipleCurvature(SGM::Point2D const &uv,
     Vec2=dV;
     }
 
-void cylinder::Transform(SGM::Transform3D const &Trans)
+void cylinder::Transform(SGM::Result            &,//rResult,
+                         SGM::Transform3D const &Trans)
     {
         m_Origin = Trans * m_Origin;
         m_XAxis = Trans * m_XAxis;

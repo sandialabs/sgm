@@ -58,27 +58,23 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     edge                                    *pInputEdge=nullptr,
                     std::vector<bool>                       *pImprintFlags=nullptr);
 
-bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
-                   std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies,
-                   unsigned int                          nTri,
-                   unsigned int                          nEdge,
-                   std::vector<SGM::Point3D>      const *pPoints3D=nullptr,
-                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
-                   std::vector<size_t>            const *aTris=nullptr,
-                   SGM::BoxTree                         *Tree=nullptr);
+//bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
+//                   std::vector<unsigned int>            &aTriangles,
+//                   std::vector<unsigned int>            &aAdjacencies,
+//                   unsigned int                          nTri,
+//                   unsigned int                          nEdge,
+//                   std::vector<SGM::Point3D>      const *pPoints3D=nullptr,
+//                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
+//                   std::vector<size_t>            const *aTris=nullptr,
+//                   SGM::BoxTree                         *Tree=nullptr);
 
-void FixBackPointers(unsigned int                     nTri,
-                     std::vector<unsigned int> const &aTriangles,
-                     std::vector<unsigned int>       &aAdjacencies);
+//void FixBackPointers(unsigned int                     nTri,
+//                     std::vector<unsigned int> const &aTriangles,
+//                     std::vector<unsigned int>       &aAdjacencies);
 
 void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
                    std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies,
-                   std::vector<SGM::Point3D>      const *pPoint3D=nullptr,
-                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
-                   std::vector<size_t>            const *aTris=nullptr,
-                   SGM::BoxTree                         *Tree=nullptr);
+                   std::vector<unsigned int>            &aAdjacencies);
 
 
 //  Devides all triangles into four triangles in the following way;
@@ -92,16 +88,17 @@ void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
 void SubdivideFacets(face                const *pFace,
                      std::vector<SGM::Point3D> &aPoints3D,
                      std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<unsigned int> &aTriangles);
+                     std::vector<unsigned int> &aTriangles,
+                     std::vector<entity *>     &aEntities);
 
 void InsertPoints(std::vector<SGM::Point2D> const &aInsertPoints,
                   std::vector<SGM::Point2D>       &aPoints,
                   std::vector<unsigned int>       &aTriangles);
 
 
-SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
-                            std::vector<unsigned int> &aTriangles,
-                            size_t                     nTri);
+//SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
+//                            std::vector<unsigned int> &aTriangles,
+//                            size_t                     nTri);
 
 void SplitTriangleUpdateTree(SGM::Point2D        const &D,
                              std::vector<SGM::Point2D> &aPoints,

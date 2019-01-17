@@ -69,6 +69,13 @@ inline std::string get_models_file_path(std::string const &file_name)
     return full_path.string();
 }
 
+// return a path to the models directory
+inline std::string get_models_path()
+{
+    static const FilePath models_directory(SGM_MODELS_DIRECTORY);
+    return models_directory.string();
+}
+
 // return a full path to a given file name in the models directory
 inline std::string get_models_ouo_file_path(std::string const &file_name)
 {
@@ -148,7 +155,7 @@ std::vector<std::string> get_file_names_if(const std::string &dir, bool (*fileNa
 // Get current date/time, format is YYYY-MM-DD HH:mm:ss
 inline const std::string current_date_time()
 {
-    time_t     now = time(0);
+    time_t     now = time(nullptr);
     struct tm  tstruct{};
     char       buf[80];
 #ifdef _MSC_VER
@@ -204,6 +211,9 @@ namespace SGMTesting {
 
     // A test calls this to release the environment, if it is local it will be deleted.
     void ReleaseTestThing(SGMInternal::thing* pThing);
+
+    // check an entity and then print out the log messages
+    bool CheckEntityAndPrintLog(SGM::Result &rResult, SGM::Entity EntityID);
 }
 
 #endif //SGM_TEST_UTILITY_H

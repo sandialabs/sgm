@@ -3,6 +3,7 @@
 
 #include "EntityClasses.h"
 #include "Curve.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -19,6 +20,33 @@ curve::curve(SGM::Result &rResult, curve const &other) :
         m_bClosed(other.m_bClosed)
     {}
 
+void curve::RemoveParentsInSet(SGM::Result &rResult,
+                               std::set<entity *,EntityCompare>  const &sToRemove)
+{
+    std::set<edge *, EntityCompare> sRemainingParents;
+    std::vector<edge *> aToDisconnect;
+    for(auto pEdge : m_sEdges)
+    {
+        if (sToRemove.find(pEdge) == sToRemove.end())
+        {
+            sRemainingParents.emplace(pEdge);
+        }
+        else
+        {
+            if (pEdge->GetCurve() == this)
+            {
+                aToDisconnect.emplace_back(pEdge);
+            }
+        }
+    }
+    for (auto pEdge : aToDisconnect)
+    {
+        pEdge->SetCurve(nullptr);
+    }
+    m_sEdges = sRemainingParents;
+    entity::RemoveParentsInSet(rResult, sToRemove);
+}
+
 void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     {
     // Run though all the pointers and change them if they are in the map.
@@ -31,42 +59,13 @@ void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        else
-            {
-            m_sFixedEdges.insert(pEdge);
-            }
+        //else
+        //    {
+        //    m_sFixedEdges.insert(pEdge);
+        //    }
         }
     m_sEdges=m_sFixedEdges;
-
-    std::set<attribute *,EntityCompare> m_sFixedAttributes;
-    for(auto pAttribute : m_sAttributes)
-        {
-        auto MapValue=mEntityMap.find(pAttribute);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedAttributes.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedAttributes.insert(pAttribute);
-            }
-        }
-    m_sAttributes=m_sFixedAttributes;
-
-    std::set<entity *,EntityCompare> m_sFixedOwners;
-    for(auto pEntity : m_sOwners)
-        {
-        auto MapValue=mEntityMap.find(pEntity);
-        if(MapValue!=mEntityMap.end())
-            {
-            m_sFixedOwners.insert((attribute *)MapValue->second);
-            }
-        else
-            {
-            m_sFixedOwners.insert(pEntity);
-            }
-        }
-    m_sOwners=m_sFixedOwners;
+    OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
 double curve::NewtonsMethod(double              dStart, 
@@ -240,7 +239,7 @@ size_t FindSpanIndex(SGM::Interval1D     const &Domain,
 
 double DerivativeMagnitude(double t,void const *pData)
     {
-    curve const *pCurve=(curve const*)pData;
+    auto pCurve=(curve const*)pData;
     SGM::Vector3D Vec;
     pCurve->Evaluate(t,nullptr,&Vec);
     return Vec.Magnitude();
@@ -248,7 +247,7 @@ double DerivativeMagnitude(double t,void const *pData)
 
 double curve::FindLength(SGM::Interval1D const &Domain,double dTolerance) const
     {
-    return SGM::Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
+    return Integrate1D(SGMInternal::DerivativeMagnitude,Domain,this,dTolerance);
     }
 
 //

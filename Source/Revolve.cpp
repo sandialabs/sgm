@@ -33,7 +33,7 @@ bool revolve::IsSame(surface const *pOther,double dTolerance) const
         {
         return false;
         }
-    revolve const *pRevolve2=(revolve const *)pOther;
+    auto pRevolve2=(revolve const *)pOther;
     if(SGM::NearEqual(m_Origin,pRevolve2->m_Origin,dTolerance)==false)
         {
         return false;
@@ -57,14 +57,12 @@ revolve::~revolve()
 
 revolve::revolve(SGM::Result &rResult, revolve const &other) :
         surface(rResult, other),
-        m_pCurve(nullptr),
+        m_pCurve(other.m_pCurve),
         m_Origin(other.m_Origin),
         m_XAxis(other.m_XAxis),
         m_YAxis(other.m_YAxis),
         m_ZAxis(other.m_ZAxis)
     {
-    if (other.m_pCurve)
-        SetCurve(other.m_pCurve->Clone(rResult));
     }
 
 revolve* revolve::Clone(SGM::Result &rResult) const
@@ -74,6 +72,17 @@ void revolve::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) cons
     {
     sChildren.insert(m_pCurve);
     }
+
+void revolve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+{
+    surface::ReplacePointers(mEntityMap);
+
+    auto MapValue=mEntityMap.find(m_pCurve);
+    if(MapValue!=mEntityMap.end())
+        m_pCurve = dynamic_cast<curve *>(MapValue->second);
+    else
+        throw std::runtime_error("revolve ReplacePointers did not find a curve in the map");
+}
 
 void revolve::Evaluate(SGM::Point2D const &uv,
                        SGM::Point3D       *Pos,
@@ -217,21 +226,22 @@ SGM::Point2D revolve::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
     
-void revolve::Transform(SGM::Transform3D const &Trans)
+void revolve::Transform(SGM::Result            &,//rResult,
+                        SGM::Transform3D const &Trans)
     {
     m_Origin=Trans*m_Origin;
     m_XAxis=Trans*m_XAxis;
     m_YAxis=Trans*m_YAxis;
     m_ZAxis=Trans*m_ZAxis;
-    if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
-        {
-        m_pCurve->Transform(Trans);
-        }
-    else
-        {
-        //TODO: Make a copy and transform the copy.
-        throw std::logic_error("Missing implementation of Transform() when curve has other owners");
-        }
+    //if(m_pCurve->GetEdges().empty() && m_pCurve->GetOwners().size()==1)
+    //    {
+    //    m_pCurve->Transform(rResult,Trans);
+    //    }
+    //else
+    //    {
+    //    //TODO: Make a copy and transform the copy.
+    //    throw std::logic_error("Missing implementation of Transform() when curve has other owners");
+    //    }
     }
 
 curve *revolve::UParamLine(SGM::Result &rResult, double) const
@@ -262,7 +272,7 @@ void revolve::SetCurve(curve *pCurve)
     m_XAxis = start - m_Origin;
     m_YAxis = m_ZAxis * m_XAxis;
 
-    this->m_bClosedV = pCurve->GetClosed();
+    m_bClosedV = pCurve->GetClosed();
     m_Domain.m_VDomain = pCurve->GetDomain();
     }
 }
