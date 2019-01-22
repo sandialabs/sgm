@@ -1,6 +1,6 @@
 #include "OrderPoints.h"
 
-#if defined(SGM_MULTITHREADED)
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
 #include "parallel_stable_sort.h"
 #endif
 
@@ -23,7 +23,7 @@ buffer<unsigned> OrderPointsLexicographical(std::vector<SGM::Point3D> const &aPo
 
     SGM::Point3D const *pPoints = aPoints.data();
 
-#if defined(SGM_MULTITHREADED)
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
     pss::parallel_stable_sort(aIndexOrdered.begin(),
                               aIndexOrdered.end(),
                               [&pPoints](unsigned i, unsigned j) {

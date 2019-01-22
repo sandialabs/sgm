@@ -16,6 +16,10 @@
 #include "Faceter.h"
 #include "Surface.h"
 
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
+#include "parallel_stable_sort.h"
+#endif
+
 namespace SGMInternal
 {
 
@@ -1971,7 +1975,7 @@ size_t FindAdjacencies2D(std::vector<unsigned> const &aTriangles,
     std::vector<SGMInternal::EdgeData> aEdges;
     size_t nTriangles = aTriangles.size();
     aAdjacency.assign(nTriangles, std::numeric_limits<unsigned>::max());
-    aEdges.reserve(nTriangles);
+    aEdges.reserve(3*nTriangles);
     size_t Index1, Index2;
     for (Index1 = 0; Index1 < nTriangles; Index1 += 3)
         {
@@ -1982,8 +1986,16 @@ size_t FindAdjacencies2D(std::vector<unsigned> const &aTriangles,
         aEdges.emplace_back(b, c, (unsigned)Index1, 1);
         aEdges.emplace_back(c, a, (unsigned)Index1, 2);
         }
-    std::sort(aEdges.begin(), aEdges.end());
     size_t nEdges = aEdges.size();
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
+    if (nEdges > 10000)
+        pss::parallel_stable_sort(aEdges.begin(), aEdges.end());
+    else
+        std::sort(aEdges.begin(), aEdges.end());
+#else
+    std::sort(aEdges.begin(), aEdges.end());
+#endif
+
     Index1 = 0;
     while (Index1 < nEdges)
         {

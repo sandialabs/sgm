@@ -3,7 +3,6 @@
 
 #include "SGMVector.h"
 #include "buffer.h"
-#include "parallel_stable_sort.h"
 
 #include <cmath>
 
