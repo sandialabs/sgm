@@ -1,7 +1,4 @@
 #include "EntityClasses.h"
-#include "EntityFunctions.h"
-#include "Curve.h"
-#include "Surface.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -78,13 +75,13 @@ void entity::RemoveColor(SGM::Result &rResult)
         }
     }
 
-bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
-{
+bool entity::GetColor(int &nRed, int &nGreen, int &nBlue) const
+    {
     for (auto attr : m_sAttributes)
         {
         if (attr->GetName() == "SGM Color")
             {
-            auto pIntegerAttribute = (IntegerAttribute *)(attr);
+            auto pIntegerAttribute = (IntegerAttribute *) (attr);
             std::vector<int> const &aData = pIntegerAttribute->GetData();
             nRed = aData[0];
             nGreen = aData[1];
@@ -93,28 +90,24 @@ bool entity::GetColor(int &nRed,int &nGreen,int &nBlue) const
             }
         }
     return false;
-}
-
-void entity::FindAllChildren(std::set<entity *, EntityCompare> &) const
-    {
     }
 
 void entity::GetParents(std::set<entity *, EntityCompare> &sParents) const
-{
-    for (entity *pOwner : m_sOwners)
     {
-      sParents.emplace(pOwner);
+    for (entity *pOwner : m_sOwners)
+        {
+        sParents.emplace(pOwner);
+        }
     }
-}
 
 void entity::RemoveParentsInSet(SGM::Result &,
-                                std::set<entity *,EntityCompare> const &sEntities)
-{
-    for (entity *pOwner : sEntities)
+                                std::set<entity *, EntityCompare> const &sEntities)
     {
+    for (entity *pOwner : sEntities)
+        {
         pOwner->DisconnectOwnedEntity(this);
         m_sOwners.erase(pOwner);
+        }
     }
-}
 
 }

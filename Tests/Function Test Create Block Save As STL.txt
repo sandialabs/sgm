@@ -1,4 +1,0 @@
-// Tests the ability to create a block and save it a STL;
-BlockID=CreateBlock(0,0,0,10,10,10);
-SaveSTL("STL Parts/Block.stl",BlockID);
-CompareFiles("STL Parts/Block.stl","Test Answers/Block.stl");

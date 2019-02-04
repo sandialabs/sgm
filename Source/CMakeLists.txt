@@ -17,6 +17,10 @@ target_include_directories(SGM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_D
                                       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> 
                                       $<INSTALL_INTERFACE:include>)
 
+if(BUILD_MULTITHREADED)
+    target_link_libraries(SGM PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 generate_export_header(SGM)
 
 # installation

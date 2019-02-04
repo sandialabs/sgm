@@ -150,7 +150,7 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
                 }
             aaControlPoints.emplace_back(std::move(aControlPoints));
             }
-        pSurface = new NUBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
+        pSurface = new NUBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
         }
     else
         {
@@ -175,8 +175,7 @@ surface* CreateBSplineSurfaceFromSTEP(SGM::Result               &rResult,
                 }
             aaControlPoints.emplace_back(std::move(aControlPoints));
             }
-        //TODO: overload NUBsurface constructor to take r-values and call std::move
-        pSurface = new NURBsurface(rResult, aaControlPoints,std::move(aUKnots),std::move(aVKnots));
+        pSurface = new NURBsurface(rResult,std::move(aaControlPoints),std::move(aUKnots),std::move(aVKnots));
         }
 
     return pSurface;
@@ -881,7 +880,7 @@ void ReadAssemblyData(size_t                                             maxSTEP
         else if (stepLineData.m_nSTEPTag == STEPTag::SHAPE_REPRESENTATION)
         {
             std::string name;
-            if (stepLineData.m_aStrings.size())
+            if (!stepLineData.m_aStrings.empty())
             {
                 name = stepLineData.m_aStrings[0];
             }
@@ -900,9 +899,9 @@ void ReadTransformData(size_t                     TransformID,
 {
     STEPLineData const &TransformLineData = mSTEPData.at(TransformID);
     size_t AxisID1 = TransformLineData.m_aIDs[0];
-    STEPLineData STEPLineData1 = mSTEPData.at(AxisID1);
+    STEPLineData const &STEPLineData1 = mSTEPData.at(AxisID1);
     size_t AxisID2 = TransformLineData.m_aIDs[1];
-    STEPLineData STEPLineData2 = mSTEPData.at(AxisID2);
+    STEPLineData const &STEPLineData2 = mSTEPData.at(AxisID2);
 
     SGM::Point3D Center1, Center2;
     SGM::UnitVector3D XAxis1, XAxis2;
@@ -924,7 +923,7 @@ void InstantiateBodiesForLeafAssemblyNodes(SGM::Result &rResult,
                                            BodyToTransformMapType                             &mBodyToTransforms,
                                            std::set<entity *>                                 &sEntities)
 {
-    if (AsmParentNode.aCDSRChildren.size() == 0) // leaf node
+    if (AsmParentNode.aCDSRChildren.empty()) // leaf node
     {
         size_t STEPBrepID = AsmParentNode.BrepID;
         entity *pEntity = mIDToEntityMap.at(STEPBrepID);
@@ -962,7 +961,7 @@ void InstantiateBodiesForLeafAssemblyNodes(SGM::Result &rResult,
             SGM::Transform3D transform = ParentTransform * CDSRChild.Trans;
 
             //get the child node and continue recursing
-            STEPAssemblyNode ChildNode = mAssemblyNodes.at(CDSRChild.ShapeRepChildID);
+            const STEPAssemblyNode &ChildNode = mAssemblyNodes.at(CDSRChild.ShapeRepChildID);
             InstantiateBodiesForLeafAssemblyNodes(rResult, ChildNode, transform,
                                                   mAssemblyNodes, mCDSRLinks, mSTEPData,
                                                   mIDToEntityMap, mBodyToTransforms, sEntities);
@@ -1005,7 +1004,7 @@ void FlattenAssemblies(SGM::Result &rResult,
     for (auto SRR : aSRRentities)
     {
         STEPAssemblyNode &ShapeRep = mAssemblyNodes.at(SRR.ShapeRepID);
-        assert(ShapeRep.aCDSRChildren.size() == 0);
+        assert(ShapeRep.aCDSRChildren.empty());
         ShapeRep.BrepID = SRR.BrepID;
     }
 
@@ -1014,7 +1013,7 @@ void FlattenAssemblies(SGM::Result &rResult,
     for (auto Entry : mAssemblyNodes)
     {
         STEPAssemblyNode &AsmParentNode = Entry.second;
-        if (AsmParentNode.aCDSRParents.size() == 0) // top level node
+        if (AsmParentNode.aCDSRParents.empty()) // top level node
         {
             SGM::UnitVector3D XAxis(1.0, 0.0, 0.0);
             SGM::UnitVector3D YAxis(0.0, 1.0, 0.0);

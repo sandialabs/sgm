@@ -20,9 +20,201 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
+TEST(math_check, edge_params)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,1,1));
+    SGM::GetEdgeParams(rResult,EdgeID);
+    SGM::GetStartPointOfEdge(rResult,EdgeID);
+    SGM::GetEndPointOfEdge(rResult,EdgeID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, plane_param_line)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Interval2D Domain(0,1,0,1);
+    SGM::SetDomainOfSurface(rResult,SurfID,Domain);
+    size_t Index1;
+    for(Index1=0;Index1<5;++Index1)
+        {
+        double dU=Domain.m_UDomain.MidPoint(Index1/4.0);
+        SGM::Curve CurveIDU=SGM::FindUParamCurve(rResult,SurfID,dU);
+        SGM::CreateEdge(rResult,CurveIDU);
+        
+        double dV=Domain.m_VDomain.MidPoint(Index1/4.0);
+        SGM::Curve CurveIDV=SGM::FindVParamCurve(rResult,SurfID,dV);
+        SGM::CreateEdge(rResult,CurveIDV);
+        }
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, sphere_param_line)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreateSphereSurface(rResult,SGM::Point3D(0,0,0),1);
+    SGM::Interval2D Domain=SGM::GetDomainOfSurface(rResult,SurfID);
+    size_t Index1;
+    for(Index1=0;Index1<10;++Index1)
+        {
+        double dU=Domain.m_UDomain.MidPoint(Index1/10.0);
+        SGM::Curve CurveIDU=SGM::FindUParamCurve(rResult,SurfID,dU);
+        SGM::CreateEdge(rResult,CurveIDU);
+        
+        double dV=Domain.m_VDomain.MidPoint(Index1/10.0);
+        SGM::Curve CurveIDV=SGM::FindVParamCurve(rResult,SurfID,dV);
+        SGM::CreateEdge(rResult,CurveIDV);
+        }
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, create_sheet_body_with_edges)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::vector<SGM::Edge> aEdges;
+    aEdges.push_back(EdgeID);
+    std::vector<SGM::EdgeSideType> aTypes;
+    aTypes.push_back(SGM::FaceOnLeftType);
+    /* SGM::Body BodyID= */ SGM::CreateSheetBody(rResult,SurfID,aEdges,aTypes);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_V_NURBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots = {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point4D>> aaPoints = 
+        {{{0,0,0,0}, {1,0,0,0}, {2,0,0,0}},
+         {{0,0,0,0}, {1,1,0,0}, {2,0,0,0}},
+         {{0,0,0,0}, {1,2,0,0}, {2,0,0,0}}};
+
+    SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    EXPECT_TRUE(SGM::IsSurfaceSingularHighV(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSurfaceSingularLowV(rResult,NUBSurfaceID));
+
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_U_NURBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots = {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point4D>> aaPoints = 
+        {{{0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
+         {{1,0,0,0}, {1,1,0,0}, {1,2,0,0}},
+         {{2,0,0,0}, {2,0,0,0}, {2,0,0,0}}};
+    
+    SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
+
+    EXPECT_TRUE(SGM::IsSurfaceSingularHighU(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSurfaceSingularLowU(rResult,NUBSurfaceID));
+    EXPECT_TRUE(SGM::IsSingularity(rResult,NUBSurfaceID,SGM::Point2D(0,0),SGM_MIN_TOL));
+
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_V_NUBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots = {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point3D>> aaPoints = 
+        {{{0,0,0},{1,0,0},{2,0,0}},
+         {{0,0,0},{1,1,0},{2,0,0}},
+         {{0,0,0},{1,2,0},{2,0,0}}};
+    
+    SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindVParamCurve(rResult,NUBSurfaceID,1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, singular_in_U_NUBSurface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<double> aUKnots = {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+
+    std::vector<std::vector<SGM::Point3D>> aaPoints = 
+        {{{0,0,0},{0,0,0},{0,0,0}},
+         {{1,0,0},{1,1,0},{1,2,0}},
+         {{2,0,0},{2,0,0},{2,0,0}}};
+    
+    SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
+
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,0);
+    SGM::FindUParamCurve(rResult,NUBSurfaceID,1);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_face_on_face_through_vertex)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateDisk(rResult,SGM::Point3D(10,10,0),SGM::UnitVector3D(1,-1,0),1);
+    SGM::UniteBodies(rResult,BodyID2,BodyID1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, imprint_edge_on_face_vertex_hit)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::Edge EdgeID1=SGM::CreateLinearEdge(rResult,SGM::Point3D(6,6,0),SGM::Point3D(10,10,0));
+    SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(math_check, DISABLED_imprint_edge_on_face_atoll_flipped)
 {
@@ -87,10 +279,7 @@ TEST(math_check, public_math_functions)
     SGM::SAFEasin(0);
     SGM::SignedArea(SGM::Point2D(0,0),SGM::Point2D(1,0),SGM::Point2D(0,1));
     SGM::CenterOfMass(SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.emplace_back(0,0,0);
-    aPoints.emplace_back(0.5,0.1,0.1);
-    aPoints.emplace_back(1,0,0);
+    std::vector<SGM::Point3D> aPoints = {{0,0,0},{0.5,0.1,0.1},{1,0,0}};
     SGM::Point3D Origin{};
     SGM::UnitVector3D Axis;
     SGM::FindLeastSquareLine3D(aPoints,Origin,Axis);
@@ -160,9 +349,7 @@ TEST(math_check, step_save_wire_body )
 
 TEST(math_check, remove_duplicates_2d )
 {
-    std::vector<SGM::Point2D> aPoints;
-    aPoints.emplace_back(0,0);
-    aPoints.emplace_back(0,0);
+    std::vector<SGM::Point2D> aPoints = {{0,0},{0,0}};
     SGM::RemoveDuplicates2D(aPoints,SGM_ZERO);
     EXPECT_EQ(aPoints.size(),1);
 }
@@ -182,6 +369,16 @@ TEST(math_check, lemon_torus )
     SGM::Point2D GuessUV2(0,0);
     SGM::Point2D uv2=SGM::SurfaceInverse(rResult,SurfID,Pos,&ClosePos,&GuessUV2);
     EXPECT_TRUE(SGM::NearEqual(uv2.m_u,0,SGM_ZERO,false));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, pinched_torus )
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,1);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -233,9 +430,7 @@ TEST(math_check, graph_branch_tests)
     std::vector<SGM::Graph> aBranches;
     EdgeGraph.FindBranches(aBranches);
 
-    std::set<size_t> sVertices;
-    sVertices.insert(0);
-    sVertices.insert(1);
+    std::set<size_t> sVertices = {0,1};
     std::set<SGM::GraphEdge> sEdges;
     sEdges.insert(SGM::GraphEdge(0,1,1,true));
     SGM::Graph DirectedGraph(sVertices,sEdges);
@@ -246,10 +441,10 @@ TEST(math_check, graph_branch_tests)
     sVertices.insert(3);
     sVertices.insert(4);
     sEdges.clear();
-    sEdges.insert(SGM::GraphEdge(0,1,1));
-    sEdges.insert(SGM::GraphEdge(2,1,1));
-    sEdges.insert(SGM::GraphEdge(2,3,1));
-    sEdges.insert(SGM::GraphEdge(2,4,1));
+    sEdges.insert({0,1,1});
+    sEdges.insert({2,1,1});
+    sEdges.insert({2,3,1});
+    sEdges.insert({2,4,1});
     SGM::Graph BranchedGraph(sVertices,sEdges);
     std::vector<SGM::Graph> aBranches2;
     BranchedGraph.FindBranches(aBranches2);
@@ -262,16 +457,9 @@ TEST(math_check, sgm_file_complex)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.emplace_back(0,0,0);
-    aPoints.emplace_back(1,0,0);
-    aPoints.emplace_back(0,1,0);
-    std::vector<unsigned int> aTriangles,aSegments;
-    aTriangles.push_back(0);
-    aTriangles.push_back(1);
-    aTriangles.push_back(2);
-    aSegments.push_back(0);
-    aSegments.push_back(1);
+    std::vector<SGM::Point3D> aPoints = {{0,0,0},{1,0,0},{0,1,0}};
+    std::vector<unsigned> aTriangles = {0,1,2};
+    std::vector<unsigned> aSegments = {0,1};
     SGM::CreateComplex(rResult,aPoints,aSegments,aTriangles);
 
     SGM::TranslatorOptions Options;
@@ -348,7 +536,7 @@ TEST(math_check, points_in_volumes)
 
     /* SGM::Body SphereID = */ SGM::CreateSphere(rResult,SGM::Point3D(0,0,0),1);
     std::vector<SGM::Point3D> aPoints = {{0,0,0}};
-    std::vector<std::vector<SGM::Volume> > aaVolumeIDs;
+    std::vector<std::vector<SGM::Volume>> aaVolumeIDs;
     SGM::PointsInVolumes(rResult,aPoints,aaVolumeIDs);
     
     SGMTesting::ReleaseTestThing(pThing);
@@ -367,9 +555,7 @@ TEST(math_check, vector_angle_and_transforms)
 
 TEST(math_check, find_comps_1d)
 {
-    std::vector<unsigned int> aSegments;
-    aSegments.push_back(0);
-    aSegments.push_back(1);
+    std::vector<unsigned> aSegments = {0,1};
     EXPECT_EQ(SGM::FindComponents1D(aSegments),1);
     }
 
@@ -404,10 +590,6 @@ TEST(math_check, point_curve)
 TEST(math_check, remove_duplicates)
 {
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{2,0,0},{0,0,0},{2,0,0}};
-    /*aPoints.emplace_back(0,0,0);
-    aPoints.emplace_back(2,0,0);
-    aPoints.emplace_back(0,0,0);
-    aPoints.emplace_back(2,0,0);*/
     SGM::Interval3D Box(0,1,0,1,0,1);
     SGM::RemoveDuplicates3D(aPoints,SGM_MIN_TOL,&Box);
     EXPECT_EQ(aPoints.size(),1);
@@ -422,7 +604,7 @@ TEST(math_check, do_points_match)
 {
     std::vector<SGM::Point3D> aPoints1 = {{0,0,0},{1,0,0}};
     std::vector<SGM::Point3D> aPoints2 = {{0,0,0},{1,0,0}};
-    std::map<unsigned int,unsigned int> mMatchMap;
+    std::map<unsigned,unsigned> mMatchMap;
     EXPECT_TRUE(SGM::DoPointsMatch(aPoints1,aPoints2,mMatchMap,SGM_MIN_TOL));  
 
     size_t nWhere;
@@ -433,7 +615,7 @@ TEST(math_check, do_points_match)
 TEST(math_check, find_max_edge_length_2D)
 {
     std::vector<SGM::Point2D> aPoints = {{0,0},{1,0},{2,0}};
-    std::vector<unsigned int> aTriangles = {0,1,2};
+    std::vector<unsigned> aTriangles = {0,1,2};
     double dMin=SGM::FindMaxEdgeLength2D(aPoints,aTriangles);
     EXPECT_TRUE(SGM::NearEqual(dMin,2,SGM_ZERO,false));
 }
@@ -441,7 +623,7 @@ TEST(math_check, find_max_edge_length_2D)
 TEST(math_check, find_min_edge_length_3D)
 {
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{1,0,0},{2,0,0}};
-    std::vector<unsigned int> aTriangles = {0,1,2};
+    std::vector<unsigned> aTriangles = {0,1,2};
     double dMin=SGM::FindMinEdgeLength3D(aPoints,aTriangles);
     EXPECT_TRUE(SGM::NearEqual(dMin,1,SGM_ZERO,false));
 }
@@ -468,11 +650,7 @@ TEST(math_check, matrix_multiply)
 
 //TEST(math_check, polynomial_fit)
 //{
-//    std::vector<SGM::Point2D> aPoints;
-//    aPoints.push_back(SGM::Point2D(-1,1));
-//    aPoints.push_back(SGM::Point2D(0,0));
-//    aPoints.push_back(SGM::Point2D(1,1));
-//    std::vector<double> aCoefficients;
+//    std::vector<SGM::Point2D> aPoints = {{-1,1},{0,0},{1,1}};
 //    SGM::PolynomialFit(aPoints,aCoefficients);
 //    EXPECT_TRUE(SGM::NearEqual(aCoefficients[0],1,SGM_MIN_TOL,false));
 //    EXPECT_TRUE(SGM::NearEqual(aCoefficients[1],0,SGM_MIN_TOL,false));
@@ -481,7 +659,7 @@ TEST(math_check, matrix_multiply)
 
 TEST(math_check, partial_order)
 {
-    std::set<std::pair<size_t,size_t> > sPartialOrder;
+    std::set<std::pair<size_t,size_t>> sPartialOrder;
     sPartialOrder.insert({1,0});
     sPartialOrder.insert({2,0});
     sPartialOrder.insert({4,3});
@@ -495,7 +673,7 @@ TEST(math_check, partial_order)
     size_t nAllDecendents=SGM::FindDecendentsOfGroup(sPartialOrder,aMaximalElements,aAllDecendents);
     EXPECT_EQ(nAllDecendents,4);
 
-    std::vector<std::vector<size_t> > aaGenerations;
+    std::vector<std::vector<size_t>> aaGenerations;
     size_t nGenerations=SGM::FindGenerations(sPartialOrder,0,aaGenerations);
     EXPECT_EQ(nGenerations,2);
 
@@ -507,9 +685,7 @@ TEST(math_check, partial_order)
     size_t nChildern= SGM::FindChildren(sPartialOrder, 0, aChildren);
     EXPECT_EQ(nChildern,2);
 
-    std::vector<size_t> aKeep;
-    aKeep.push_back(0);
-    aKeep.push_back(2);
+    std::vector<size_t> aKeep = {0,2};
     SGM::SubsetPartialOrder(aKeep, sPartialOrder);
     EXPECT_EQ(sPartialOrder.size(),1);
 
@@ -541,12 +717,14 @@ TEST(math_check, revolve_surface_save_step)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints1;
-    aPoints1.emplace_back(-2,.5,0);
-    aPoints1.emplace_back(-1,1.5,0);
-    aPoints1.emplace_back(0,1,0);
-    aPoints1.emplace_back(1,1.5,0);
-    aPoints1.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aPoints1 = 
+        {
+            {-2,.5,0},
+            {-1,1.5,0},
+            {0,1,0},
+            {1,1.5,0},
+            {2,2,0}
+        };
 
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
@@ -590,16 +768,17 @@ TEST(math_check, revolve_surface_test)
 
     // Test Revolve Surface
 
-    // relatively easy testcase to debug
     // NUB curve is a straight line parallel to the axis
     // both have a slope of 2:1, and distance between is sqrt(5.0)
     std::vector<double> aKnots1={0,0,0,0,0.5,1,1,1,1};
-    std::vector<SGM::Point3D> aControlPoints1;
-    aControlPoints1.emplace_back(3.5,1,0);
-    aControlPoints1.emplace_back(3.75,1.5,0);
-    aControlPoints1.emplace_back(4,2,0);
-    aControlPoints1.emplace_back(4.25,2.5,0);
-    aControlPoints1.emplace_back(4.5,3,0);
+    std::vector<SGM::Point3D> aControlPoints1 = 
+        {
+            {3.5,1,0},
+            {3.75,1.5,0},
+            {4,2,0},
+            {4.25,2.5,0},
+            {4.5,3,0}
+        };
 
     SGM::Curve NUBID1=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints1,aKnots1);
 
@@ -690,10 +869,8 @@ TEST(math_check, extrude_hermite)
 
     SGM::DeleteEntity(rResult,SurfID);
     SGM::DeleteEntity(rResult,CurveID);
+
     EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
-    rResult.ClearMessage();
-    
-    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -707,17 +884,18 @@ TEST(math_check, revolve_hermite)
     std::vector<SGM::Vector3D> aVectors = {{1,1,0},{1,1,0}};
     std::vector<double> aParams = {0,12};
     SGM::Curve CurveID=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
+    EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,6));
 
-    SGM::Point3D Origin(0, 2, 0);
-    SGM::UnitVector3D Axis(1,0,0);
-    SGM::Surface SurfID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
+    double dGuess=0;
+    SGM::CurveInverse(rResult,CurveID,SGM::Point3D(0,0,0),nullptr,&dGuess);
 
-    SGM::DeleteEntity(rResult, CurveID);
-    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeCannotDelete);
-    rResult.ClearMessage();
-    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SurfID));
+    SGM::SaveSGM(rResult,"GTest_hermite_test.sgm",CurveID,SGM::TranslatorOptions());
 
-    SGMTesting::ReleaseTestThing(pThing);
+    SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
+
+    SGM::UnitVector3D Axis(0,0,1);
+    SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    SGM::Surface SurfIDCopy=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
 }
 
 TEST(math_check, closest_point)
@@ -880,49 +1058,48 @@ TEST(math_check, cone_copy_transform)
 
 TEST(math_check, find_least_square_plane)
 {
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.reserve(5);
-
     // points all in a x=constant plane
-    aPoints.emplace_back(0,-2,0);
-    aPoints.emplace_back(0,-1,0.5);
-    aPoints.emplace_back(0,0.0,0.25);
-    aPoints.emplace_back(0,1,0.1);
-    aPoints.emplace_back(0,2,.5);
-
+    std::vector<SGM::Point3D> aPointsX =
+        {
+            {0.0, -2.0, 0.0},
+            {0.0, -1.0, 0.5},
+            {0.0,  0.0, 0.25},
+            {0.0,  1.0, 0.1},
+            {0.0,  2.0, 0.5}
+        };
     SGM::Point3D Origin;
     SGM::UnitVector3D XVec;
     SGM::UnitVector3D YVec;
     SGM::UnitVector3D ZVec;
-    bool bFound = FindLeastSquarePlane(aPoints, Origin, XVec, YVec, ZVec);
+    bool bFound = FindLeastSquarePlane(aPointsX, Origin, XVec, YVec, ZVec);
 
     EXPECT_TRUE(bFound);
     EXPECT_TRUE(SGM::NearEqual(fabs(ZVec%SGM::UnitVector3D(1,0,0)), 1.0, SGM_ZERO, false));
 
-    aPoints.clear();
-
     // points all in a y=constant plane
-    aPoints.emplace_back(-2,0,0);
-    aPoints.emplace_back(-1,0,0.5);
-    aPoints.emplace_back(0.0,0,0.25);
-    aPoints.emplace_back(1,0,0.1);
-    aPoints.emplace_back(2,0,.5);
-
-    bFound = FindLeastSquarePlane(aPoints, Origin, XVec, YVec, ZVec);
+    std::vector<SGM::Point3D> aPointsY =
+        {
+            {-2.0, 0.0, 0.0},
+            {-1.0, 0.0, 0.5},
+            { 0.0, 0.0, 0.25},
+            { 1.0, 0.0, 0.1},
+            { 2.0, 0.0, 0.5}
+        };
+    bFound = FindLeastSquarePlane(aPointsY, Origin, XVec, YVec, ZVec);
 
     EXPECT_TRUE(bFound);
     EXPECT_TRUE(SGM::NearEqual(fabs(ZVec%SGM::UnitVector3D(0,1,0)), 1.0, SGM_ZERO, false));
 
-    aPoints.clear();
-
     // points all in a z=constant plane
-    aPoints.emplace_back(-2,0,0);
-    aPoints.emplace_back(-1,0.5,0);
-    aPoints.emplace_back(0.0,0.25,0);
-    aPoints.emplace_back(1,0.1,0);
-    aPoints.emplace_back(2,.5,0);
-
-    bFound = FindLeastSquarePlane(aPoints, Origin, XVec, YVec, ZVec);
+    std::vector<SGM::Point3D> aPointsZ =
+        {
+            {-2.0, 0.0,  0.0},
+            {-1.0, 0.5,  0.0},
+            { 0.0, 0.25, 0.0},
+            { 1.0, 0.1,  0.0},
+            { 2.0, 0.5,  0.0}
+        };
+    bFound = FindLeastSquarePlane(aPointsZ, Origin, XVec, YVec, ZVec);
 
     EXPECT_TRUE(bFound);
     EXPECT_TRUE(SGM::NearEqual(fabs(ZVec%SGM::UnitVector3D(0,0,1)), 1.0, SGM_ZERO, false));
@@ -1191,12 +1368,14 @@ TEST(curve_check, NUB)
     SGM::Result rResult(pThing);
     
     std::vector<double> aKnots={0,0,0,0,0.5,1,1,1,1};
-    std::vector<SGM::Point3D> aControlPoints;
-    aControlPoints.emplace_back(1,1,0);
-    aControlPoints.emplace_back(1.166666666666666,1.166666666666666,0);
-    aControlPoints.emplace_back(2,2.8333333333333333,0);
-    aControlPoints.emplace_back(2.8333333333333333,1.166666666666666,0);
-    aControlPoints.emplace_back(3,1,0);
+    std::vector<SGM::Point3D> aControlPoints = 
+        {
+            {1,1,0},
+            {1.166666666666666,1.166666666666666,0},
+            {2,2.8333333333333333,0},
+            {2.8333333333333333,1.166666666666666,0},
+            {3,1,0}
+        };
 
     SGM::Curve NUBID=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints,aKnots);
 
@@ -1290,8 +1469,8 @@ TEST(math_check, triangulate_overlapping_polygon)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point2D> aPoints = {{0,0},{1,1},{0,1},{1,0}};
-    std::vector<unsigned int> aPolygon = {0,1,2,3};
-    std::vector<unsigned int> aTriangles;
+    std::vector<unsigned> aPolygon = {0,1,2,3};
+    std::vector<unsigned> aTriangles;
     EXPECT_TRUE(SGM::TriangulatePolygon(rResult,aPoints,aPolygon,aTriangles));
     EXPECT_EQ(aTriangles.size(),6);
     
@@ -1355,8 +1534,8 @@ TEST(math_check, triangulate_polygon_with_holes)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point2D> aPoints2D = {{0,0},{1,0},{0,1},{0.25,0.25}};
-    std::vector<std::vector<unsigned int> > aaPolygons = {{0,1,2}, {3}};
-    std::vector<unsigned int> aTriangles,aAdjacencies;
+    std::vector<std::vector<unsigned>> aaPolygons = {{0,1,2}, {3}};
+    std::vector<unsigned> aTriangles,aAdjacencies;
     SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
     EXPECT_EQ(aTriangles.size(),9);
 
@@ -1394,8 +1573,8 @@ TEST(math_check, triangulate_polygon)
         {-2, 0, 0},
         {0 ,-2, 0}
     };
-    std::vector<unsigned int> aPolygon={0,1,2,3,4,5,6,7,8,9};
-    std::vector<unsigned int> aTriangles,aSegments;
+    std::vector<unsigned> aPolygon={0,1,2,3,4,5,6,7,8,9};
+    std::vector<unsigned> aTriangles,aSegments;
     SGM::TriangulatePolygon(rResult,aPoints2D,aPolygon,aTriangles);
     SGM::CreateComplex(rResult,aPoints3D,aSegments,aTriangles);
  
@@ -1408,7 +1587,7 @@ TEST(math_check, octahedron)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point3D> aPoints3D;
-    std::vector<unsigned int> aSegments,aTriangles;
+    std::vector<unsigned> aSegments,aTriangles;
     SGM::Point3D Center(0,0,0);
     SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
     SGM::CreateOctahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles,3);
@@ -1423,7 +1602,7 @@ TEST(math_check, icosahedron)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point3D> aPoints3D;
-    std::vector<unsigned int> aSegments,aTriangles;
+    std::vector<unsigned> aSegments,aTriangles;
     SGM::Point3D Center(0,0,0);
     SGM::UnitVector3D ZAxis(0,0,1),XAxis(1,0,0);
     SGM::CreateIcosahedron(1.0,Center,ZAxis,XAxis,aPoints3D,aTriangles,3);
@@ -1439,13 +1618,9 @@ TEST(math_check, grid_creation_and_point_removal)
 
     // Test grid creation and point imprinting.
 
-    std::vector<double> aValues;
-    aValues.push_back(0);
-    aValues.push_back(1);
-    aValues.push_back(2);
-    aValues.push_back(3);
+    std::vector<double> aValues = {0,1,2,3};
     std::vector<SGM::Point2D> aPoints2D;
-    std::vector<unsigned int> aTriangles,aSegments;
+    std::vector<unsigned> aTriangles,aSegments;
 
     SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
 
@@ -1458,7 +1633,7 @@ TEST(math_check, grid_creation_and_point_removal)
     
     // Point (1,1,0) is at index 5.
     
-    std::vector<unsigned int> aRemovedOrChanged,aReplacedTriangles;
+    std::vector<unsigned> aRemovedOrChanged,aReplacedTriangles;
     SGM::RemovePointFromTriangles(rResult,5,aPoints2D,aTriangles,aRemovedOrChanged,aReplacedTriangles);
     SGM::CreateComplex(rResult,aGridPoints3D,aSegments,aTriangles);
 
@@ -1472,21 +1647,16 @@ TEST(math_check, grid_creation_and_imprinting_polygon)
 
     std::vector<double> aValues = {0,1,2,3};
     std::vector<SGM::Point2D> aPoints2D;
-    std::vector<unsigned int> aTriangles,aSegments;
+    std::vector<unsigned> aTriangles;
 
     SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
 
     std::vector<SGM::Point2D> aPolyPoints2D = {{0,0},{3,0},{3,3}};
     std::vector<SGM::Point3D> aPolyPoints3D = {{0,0,0},{3,0,0},{3,3,0}};
-    
-    aSegments.push_back(0);
-    aSegments.push_back(1);
-    aSegments.push_back(1);
-    aSegments.push_back(2);
-    aSegments.push_back(2);
-    aSegments.push_back(0);
-    
-    std::vector<unsigned int> aPolygonIndices;
+
+    std::vector<unsigned> aSegments = {0,1,1,2,2,0};
+
+    std::vector<unsigned> aPolygonIndices;
     SGM::InsertPolygon(rResult,aPolyPoints2D,aPoints2D,aTriangles,aPolygonIndices);
     std::vector<SGM::Point3D> aPoints3D;
     aPoints3D.reserve(aPoints2D.size());
@@ -1506,13 +1676,9 @@ TEST(math_check, grid_creation_and_imprinting_circle)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<double> aValues;
-    aValues.push_back(0);
-    aValues.push_back(1);
-    aValues.push_back(2);
-    aValues.push_back(3);
+    std::vector<double> aValues = {0,1,2,3};
     std::vector<SGM::Point2D> aPoints2D;
-    std::vector<unsigned int> aTriangles;
+    std::vector<unsigned> aTriangles;
 
     SGM::CreateTrianglesFromGrid(aValues,aValues,aPoints2D,aTriangles);
 
@@ -1525,7 +1691,7 @@ TEST(math_check, grid_creation_and_imprinting_circle)
 
     std::vector<SGM::Point2D> aPolyPoints2D;
     std::vector<SGM::Point3D> aPolyPoints3D;
-    std::vector<unsigned int> aSegments;
+    std::vector<unsigned> aSegments;
     SGM::Interval1D Domain(0,SGM_TWO_PI);
     size_t Index1,nPoints=12;
     double dRadius=1.5;
@@ -1539,11 +1705,11 @@ TEST(math_check, grid_creation_and_imprinting_circle)
         double y=sin(t)*dRadius+1.5;
         aPolyPoints2D.emplace_back(x,y);
         aPolyPoints3D.emplace_back(x,y,0);
-        aSegments.push_back((unsigned int)Index1);
-        aSegments.push_back((unsigned int)((Index1+1)%nPoints));
+        aSegments.push_back((unsigned)Index1);
+        aSegments.push_back((unsigned)((Index1+1)%nPoints));
         }
 
-    std::vector<unsigned int> aPolygonIndices;
+    std::vector<unsigned> aPolygonIndices;
     SGM::InsertPolygon(rResult,aPolyPoints2D,aPoints2D,aTriangles,aPolygonIndices);
     std::vector<SGM::Point3D> aPoints3D;
     aPoints3D.reserve(aPoints2D.size());
@@ -1562,8 +1728,8 @@ TEST(math_check, splitting_complex_at_points)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{10,0,0},{10,10,0}};
-    std::vector<unsigned int> aSegments = {0,1,1,2};
-    std::vector<unsigned int> aTriangles;
+    std::vector<unsigned> aSegments = {0,1,1,2};
+    std::vector<unsigned> aTriangles;
     SGM::Complex ComplexID=SGM::CreateComplex(rResult,aPoints,aSegments,aTriangles);
     
     std::vector<SGM::Point3D> aNewPoints = {{2,0,0},{7,0,0},{10,5,0}};
@@ -1591,12 +1757,7 @@ TEST(math_check, intersect_line_and_revolve)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aNUBPoints;
-    aNUBPoints.emplace_back(-2,.5,0);
-    aNUBPoints.emplace_back(-1,1.5,0);
-    aNUBPoints.emplace_back(0,1,0);
-    aNUBPoints.emplace_back(1,1.5,0);
-    aNUBPoints.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aNUBPoints = {{-2,.5,0},{-1,1.5,0},{0,1,0},{1,1.5,0},{2,2,0}};
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aNUBPoints);
 
     SGM::Point3D AxisOrigin(-1,0,0);
@@ -1631,9 +1792,7 @@ TEST(math_check, intersect_line_and_revolve)
     for (SGM::IntersectionType IType : aTypes1 )
         EXPECT_EQ(IType,SGM::PointType);
 
-    std::vector<SGM::Point3D> aExpected1(2);
-    aExpected1[0] = SGM::Point3D(1,0,1.5);
-    aExpected1[1] = SGM::Point3D(1,0,-1.5);
+    std::vector<SGM::Point3D> aExpected1 = {{1,0,1.5},{1,0,-1.5}};
     int found1=0;
     for (SGM::Point3D PosExpected : aExpected1)
         {
@@ -1656,9 +1815,7 @@ TEST(math_check, intersect_line_and_revolve)
     for (SGM::IntersectionType IType : aTypes2)
         EXPECT_EQ(IType,SGM::PointType);
 
-    std::vector<SGM::Point3D> aExpected2(2);
-    aExpected2[0] = SGM::Point3D(1,0.9,-1.2);
-    aExpected2[1] = SGM::Point3D(1,-0.9,-1.2);
+    std::vector<SGM::Point3D> aExpected2 = {{1,0.9,-1.2},{1,-0.9,-1.2}};
 
     int found2=0;
     for (SGM::Point3D PosExpected : aExpected2)
@@ -1770,35 +1927,32 @@ TEST(math_check, NURB_surface)
 
     // Test of NURB Surface.
 
-    std::vector<std::vector<SGM::Point4D> > aaControlPoints = {
-        {
-            {1,0,0,1},
-            {1,1,0,sqrt(2)/2},
-            {0,1,0,1},
-            {-1,1,0,sqrt(2)/2},
-            {-1,0,0,1},
-            {-1,-1,0,sqrt(2)/2},
-            {0,-1,0,1},
-            {1,-1,0,sqrt(2)/2},
-            {1,0,0,1}
-        },
-        {
-            {1,0,1,1},
-            {1,1,1,sqrt(2)/2},
-            {0,1,1,1},
-            {-1,1,1,sqrt(2)/2},
-            {-1,0,1,1},
-            {-1,-1,1,sqrt(2)/2},
-            {0,-1,1,1},
-            {1,-1,1,sqrt(2)/2},
-            {1,0,1,1}
-        }
-    };
+    std::vector<std::vector<SGM::Point4D>> aaControlPoints =
+        {{{ 1,  0, 0, 1},
+          { 1,  1, 0, SGM_SQRT_2 / 2},
+          { 0,  1, 0, 1},
+          {-1,  1, 0, SGM_SQRT_2 / 2},
+          {-1,  0, 0, 1},
+          {-1, -1, 0, SGM_SQRT_2 / 2},
+          { 0, -1, 0, 1},
+          { 1, -1, 0, SGM_SQRT_2 / 2},
+          { 1,  0, 0, 1}
+         },
+         {{ 1,  0, 1, 1},
+          { 1,  1, 1, SGM_SQRT_2 / 2},
+          { 0,  1, 1, 1},
+          {-1,  1, 1, SGM_SQRT_2 / 2},
+          {-1,  0, 1, 1},
+          {-1, -1, 1, SGM_SQRT_2 / 2},
+          { 0, -1, 1, 1},
+          { 1, -1, 1, SGM_SQRT_2 / 2},
+          { 1,  0, 1, 1}
+        }};
     
     std::vector<double> aUKnots = {0,0,1,1};
 
-    std::vector<double> aVKnots = {
-            0,0,0,SGM_HALF_PI,SGM_HALF_PI,SGM_PI,SGM_PI,SGM_PI*1.5,SGM_PI*1.5,SGM_TWO_PI,SGM_TWO_PI,SGM_TWO_PI};
+    std::vector<double> aVKnots =
+        {0,0,0,SGM_HALF_PI,SGM_HALF_PI,SGM_PI,SGM_PI,SGM_PI*1.5,SGM_PI*1.5,SGM_TWO_PI,SGM_TWO_PI,SGM_TWO_PI};
 
     SGM::Surface SurfID=SGM::CreateNURBSurface(rResult,aaControlPoints,aUKnots,aVKnots);
     EXPECT_TRUE(SGM::TestSurface(rResult,SurfID,SGM::Point2D(0.245,0.678)));
@@ -1848,26 +2002,17 @@ TEST(math_check, NURB_curve_tangent)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(1,1,-1,1);
-    aControlPoints.emplace_back(1,1,-2,sqrt(2)/2);
-    aControlPoints.emplace_back(1,0,-2,1);
-    aControlPoints.emplace_back(1,-1,-2,sqrt(2)/2);
-    aControlPoints.emplace_back(1,-1,-3,1);
-
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
+    std::vector<SGM::Point4D> aControlPoints =
+        {{1,0,0,1},
+         {1,1,0,SGM_SQRT_2/2},
+         {1,1,-1,1},
+         {1,1,-2,SGM_SQRT_2/2},
+         {1,0,-2,1},
+         {1,-1,-2,SGM_SQRT_2/2},
+         {1,-1,-3,1}
+        };
+    std::vector<double> aKnots = 
+        {0,0,0,SGM_HALF_PI,SGM_HALF_PI,SGM_PI,SGM_PI,SGM_PI*1.5,SGM_PI*1.5,SGM_PI*1.5};
 
     SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
@@ -1875,10 +2020,10 @@ TEST(math_check, NURB_curve_tangent)
     SGM::Vector3D Vec;
     SGM::EvaluateCurve(rResult,NURBcurve,SGM_PI*0.25,&Pos,&Vec);
 
-    SGM::Point3D ExpectedPos(1,sqrt(2)/2,-1+sqrt(2)/2);
+    SGM::Point3D ExpectedPos(1,SGM_SQRT_2/2,-1+SGM_SQRT_2/2);
     EXPECT_NEAR((ExpectedPos-Pos).Magnitude(),0,SGM_MIN_TOL);
 
-    SGM::Vector3D ExpectedVec(0,1/sqrt(2),-1/sqrt(2));
+    SGM::Vector3D ExpectedVec(0,1/SGM_SQRT_2,-1/SGM_SQRT_2);
     EXPECT_NEAR((SGM::UnitVector3D(Vec)-ExpectedVec).Magnitude(),0,SGM_MIN_TOL);
 }
 
@@ -1888,31 +2033,22 @@ TEST(math_check, NURB_curve)
     SGM::Result rResult(pThing);
 
     // Test of NURB Curves.
-
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,1,0,1);
-    aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(-1,0,0,1);
-    aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,-1,0,1);
-    aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(1,0,0,1);
     
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
+    std::vector<SGM::Point4D> aControlPoints = 
+        {{ 1, 0, 0, 1},
+         { 1, 1, 0, SGM_SQRT_2/2},
+         { 0, 1, 0, 1},
+         {-1, 1, 0, SGM_SQRT_2/2},
+         {-1, 0, 0, 1},
+         {-1,-1, 0, SGM_SQRT_2/2},
+         { 0,-1, 0, 1},
+         { 1,-1, 0, SGM_SQRT_2/2},
+         { 1, 0, 0, 1}
+        };
+
+    std::vector<double> aKnots =
+        {0, 0, 0, SGM_HALF_PI, SGM_HALF_PI, SGM_PI, SGM_PI, SGM_PI*1.5, SGM_PI*1.5, SGM_TWO_PI, SGM_TWO_PI, SGM_TWO_PI};
+
 
     SGM::Curve CurveID=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
     EXPECT_TRUE(SGM::TestCurve(rResult,CurveID,1.234));
@@ -1996,11 +2132,8 @@ TEST(math_check, line_nub_curve_intersect)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Point3D> aPoints = {{0,0,0},{1,1,0},{2,0,0}};
     size_t Index1;
-    aPoints.emplace_back(SGM::Point3D(0,0,0));
-    aPoints.emplace_back(SGM::Point3D(1,1,0));
-    aPoints.emplace_back(SGM::Point3D(2,0,0));
     SGM::Curve NUBCurveID=SGM::CreateNUBCurve(rResult,aPoints);
 
     // Test with two hits.
@@ -2167,14 +2300,12 @@ TEST(math_check, banded_matrix_solve)
     // 0x+0y+0z-1w-1v+2r=3
 
     std::vector<std::vector<double>> aaMatrix = 
-            {
-                    { 0,  0,  1,  2,  3, 14},
-                    { 0,  2,  1,  1,  1, 11},
-                    { 1,  2,  1,  1,  0, 12},
-                    { 1,  2, -1,  1,  0,  9},
-                    {-1,  1,  2,  1,  0, 17},
-                    {-1, -1,  2,  0,  0,  3}
-            };
+        {{ 0,  0,  1,  2,  3, 14},
+         { 0,  2,  1,  1,  1, 11},
+         { 1,  2,  1,  1,  0, 12},
+         { 1,  2, -1,  1,  0,  9},
+         {-1,  1,  2,  1,  0, 17},
+         {-1, -1,  2,  0,  0,  3}};
 
     EXPECT_TRUE(SGM::BandedSolve(aaMatrix));
     EXPECT_NEAR(aaMatrix[0].back(),1,SGM_ZERO);
@@ -2193,13 +2324,11 @@ TEST(math_check, matrix_solve)
     // 0x+2y-1z+3w=13
     // 1x+1y+2z-1w= 5
 
-    std::vector<std::vector<double> > aaMatrix =
-        {
-            {1,2,0,1,9},
-            {2,2,2,0,12},
-            {0,2,-1,3,13},
-            {1,1,2,-1,5}
-        };
+    std::vector<std::vector<double>> aaMatrix =
+        {{1, 2, 0,  1,  9},
+         {2, 2, 2,  0,  12},
+         {0, 2, -1, 3,  13},
+         {1, 1, 2,  -1, 5}};
 
     EXPECT_TRUE(SGM::LinearSolve(aaMatrix));
     EXPECT_TRUE(SGM::NearEqual(aaMatrix[0].back(),1,SGM_ZERO,false));
@@ -2216,12 +2345,10 @@ TEST(math_check, NUB_curve_through_three_points)
     // Fitting a NUB curve to three points with end vectors.
 
     std::vector<SGM::Point3D> aPoints = 
-        {
-            {1,1,0},
-            {2,2,0},
-            {2.1,1.9,0},
-            {3,1,0}
-        };
+        {{1,   1,   0},
+         {2,   2,   0},
+         {2.1, 1.9, 0},
+         {3,   1,   0}};
 
     SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
 
@@ -2249,12 +2376,10 @@ TEST(math_check, NUB_curve_points_and_end_vecs)
     // Fitting a NUB curve to four points with end vectors.
 
     std::vector<SGM::Point3D> aPoints = 
-        {
-            {1,1,0},
-            {2,2,0},
-            {3,1,0},
-            {5,0,0}
-        };
+        {{1,1,0},
+         {2,2,0},
+         {3,1,0},
+         {5,0,0}};
     SGM::Vector3D StartVec(1,1,0),EndVec(1,-1,0);
 
     SGM::Curve NUBID=SGM::CreateNUBCurveWithEndVectors(rResult,aPoints,StartVec,EndVec);
@@ -2326,10 +2451,7 @@ TEST(math_check, NUB_curve_to_two_points)
     // Fitting a NUB curve to two points.
     // Which requires it be degree one.
 
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.reserve(2);
-    aPoints.emplace_back(1,1,0);
-    aPoints.emplace_back(3,1,0);
+    std::vector<SGM::Point3D> aPoints = {{1,1,0},{3,1,0}};
 
     SGM::Curve NUBID=SGM::CreateNUBCurve(rResult,aPoints);
     for(auto const & Point : aPoints)
@@ -2348,29 +2470,13 @@ TEST(math_check, create_nub_surface)
 
     // Test NUB surface.
 
-    std::vector<double> aUKnots,aVKnots;
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(1.0);
-    aUKnots.push_back(1.0);
-    aUKnots.push_back(1.0);
-    aVKnots=aUKnots;
-    std::vector<std::vector<SGM::Point3D> > aaPoints;
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.assign(3,SGM::Point3D(0,0,0));
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
-    aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
-    aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
-    aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
-    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
-    aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
-    aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
-    aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
-    aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
+    std::vector<double> aUKnots = {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point3D>> aaPoints =
+        {{{0.0,  0.0,  1.0}, {0.0,  1.0,  0.0}, {0.0,  2.0, -1.0}},
+         {{1.0,  0.0,  0.0}, {1.0,  1.0,  0.0}, {1.0,  2.0,  0.0}},
+         {{2.0,  0.0, -1.0}, {2.0,  1.0,  0.0}, {2.0,  2.0,  1.0}}};
+    
     SGM::Surface NUBSurfID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
 
     SGM::GetNUBSurfaceData(rResult,NUBSurfID,aaPoints,aUKnots,aVKnots);
@@ -2763,8 +2869,8 @@ TEST(math_check, test_complex_props)
     EXPECT_TRUE(bManifold);
 
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{1,0,0},{2,0,0}};
-    std::vector<unsigned int> aSegments1 = {0,1,1,2};
-    std::vector<unsigned int> aSegments2 = {0,1,2,1};
+    std::vector<unsigned> aSegments1 = {0,1,1,2};
+    std::vector<unsigned> aSegments2 = {0,1,2,1};
     SGM::Complex ComplexID1=SGM::CreateSegments(rResult,aPoints,aSegments1);
     SGM::Complex ComplexID2=SGM::CreateSegments(rResult,aPoints,aSegments2);
     EXPECT_TRUE(SGM::IsOriented(rResult,ComplexID1));
@@ -3245,12 +3351,14 @@ TEST(math_check, create_revolve)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
  
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.emplace_back(-2,.5,0);
-    aPoints.emplace_back(-1,1.5,0);
-    aPoints.emplace_back(0,1,0);
-    aPoints.emplace_back(1,1.5,0);
-    aPoints.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aPoints =
+        {
+            {-2.0, 0.5, 0.0},
+            {-1.0, 1.5, 0.0},
+            { 0.0, 1.0, 0.0},
+            { 1.0, 1.5, 0.0},
+            { 2.0, 2.0, 0.0}
+        };
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints);
     CreateEdge(rResult,CurveID);
     SGM::Point3D Origin(-1,0,0);
@@ -3304,7 +3412,7 @@ TEST(math_check, create_disk)
 } 
 
 
-TEST(math_check, DISABLED_wire_body) 
+TEST(math_check, DISABLED_wire_body)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -3340,9 +3448,7 @@ TEST(math_check, point_body)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::set<SGM::Point3D> sPoints;
-    sPoints.insert(SGM::Point3D(0,0,0));
-    sPoints.insert(SGM::Point3D(10,10,10));
+    std::set<SGM::Point3D> sPoints = {{0,0,0},{10,10,10}};
     SGM::Body BodyID=SGM::CreatePointBody(rResult,sPoints);
     EXPECT_FALSE(SGM::IsSheetBody(rResult,BodyID));
     EXPECT_FALSE(SGM::IsWireBody(rResult,BodyID));
@@ -3595,12 +3701,14 @@ TEST(math_check, NUB_curve_merge)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints1;
-    aPoints1.emplace_back(-2,.5,0);
-    aPoints1.emplace_back(-1,1.5,0);
-    aPoints1.emplace_back(0,1,0);
-    aPoints1.emplace_back(1,1.5,0);
-    aPoints1.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aPoints1 = 
+        {
+            {-2.0, 0.5, 0.0},
+            {-1.0, 1.5, 0.0},
+            { 0.0, 1.0, 0.0},
+            { 1.0, 1.5, 0.0},
+            { 2.0, 2.0, 0.0}
+        };
 
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
@@ -3633,30 +3741,33 @@ TEST(math_check, DISABLED_NURB_curve_merge)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,1,0,1);
-    aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(-1,0,0,1);
-    aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,-1,0,1);
-    aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(1,0,0,1);
-    
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
+    std::vector<SGM::Point4D> aControlPoints =
+        {
+            {1,0,0,1},
+            {1,1,0,SGM_SQRT_2/2},
+            {0,1,0,1},
+            {-1,1,0,SGM_SQRT_2/2},
+            {-1,0,0,1},
+            {-1,-1,0,SGM_SQRT_2/2},
+            {0,-1,0,1},
+            {1,-1,0,SGM_SQRT_2/2},
+            {1,0,0,1}
+        };
+    std::vector<double> aKnots = 
+        {
+            0,
+            0,
+            0,
+            SGM_HALF_PI,
+            SGM_HALF_PI,
+            SGM_PI,
+            SGM_PI,
+            SGM_PI*1.5,
+            SGM_PI*1.5,
+            SGM_TWO_PI,
+            SGM_TWO_PI,
+            SGM_TWO_PI
+        };
 
     SGM::Curve CurveID=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
 
@@ -3772,12 +3883,12 @@ TEST(math_check, complex_tests)
         {0,1,0},
         {1,0,0}        
     };
-    std::vector<unsigned int> aTriangles = {
+    std::vector<unsigned> aTriangles = {
             0,1,2,3,4,5
     };
     SGM::Complex ComplexID=SGM::CreateTriangles(rResult,aPoints,aTriangles);
 
-    std::vector<unsigned int> aSegments = 
+    std::vector<unsigned> aSegments = 
             {0,1,1,2,2,0,3,4};
     SGM::Complex SegmentsID=SGM::CreateSegments(rResult,aPoints,aSegments);
 
@@ -3868,13 +3979,8 @@ TEST(math_check, checking_the_checker)
 
     // Bad segments in a complex.
 
-    std::vector<SGM::Point3D> aPoints;
-    std::vector<unsigned int> aSegments;
-    aPoints.push_back(SGM::Point3D(0,0,0));
-    aSegments.push_back(0);
-    aSegments.push_back(0);
-    aSegments.push_back(1);
-    aSegments.push_back(2);
+    std::vector<SGM::Point3D> aPoints = {{0,0,0}};
+    std::vector<unsigned> aSegments = {0,0,1,2};
     SGM::Complex ComplexID=SGM::CreateSegments(rResult,aPoints,aSegments);
     SGM::CheckOptions Options3;
     std::vector<std::string> aCheckStrings3;
@@ -3883,12 +3989,8 @@ TEST(math_check, checking_the_checker)
 
     // Bad triangles in a complex.
 
-    std::vector<SGM::Point3D> aPoints2;
-    std::vector<unsigned int> aTriangles2;
-    aPoints2.push_back(SGM::Point3D(0,0,0));
-    aTriangles2.push_back(0);
-    aTriangles2.push_back(0);
-    aTriangles2.push_back(2);
+    std::vector<SGM::Point3D> aPoints2 = {{0,0,0}};
+    std::vector<unsigned> aTriangles2 = {0,0,2};
     SGM::Complex ComplexID2=SGM::CreateTriangles(rResult,aPoints2,aTriangles2);
     SGM::CheckOptions Options4;
     std::vector<std::string> aCheckStrings4;
@@ -4010,7 +4112,7 @@ TEST(math_check, non_manifold_complex)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{0,1,0},{1,0,0},{0,0,1},{-1,0,0}};
-    std::vector<unsigned int> aTriangles = {0, 1, 2, 0, 1, 3, 0, 1, 4};
+    std::vector<unsigned> aTriangles = {0, 1, 2, 0, 1, 3, 0, 1, 4};
     SGM::Complex IDComplex=SGM::CreateTriangles(rResult,aPoints,aTriangles);
     EXPECT_FALSE(SGM::IsManifold(rResult,IDComplex));
     
@@ -4023,7 +4125,7 @@ TEST(math_check, DISABLED_non_manifold_complex_1d)
     SGM::Result rResult(pThing);
 
     std::vector<SGM::Point3D> aPoints {{0,0,0},{0,1,0},{1,0,0},{-1,0,0}};
-    std::vector<unsigned int> aSegments = {0,1,0,2,0,3};
+    std::vector<unsigned> aSegments = {0,1,0,2,0,3};
     SGM::Complex IDComplex=SGM::CreateSegments(rResult,aPoints,aSegments);
     EXPECT_FALSE(SGM::IsManifold(rResult,IDComplex));
     
@@ -4137,12 +4239,14 @@ TEST(math_check, top_level_faces)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints1;
-    aPoints1.emplace_back(-2,.5,0);
-    aPoints1.emplace_back(-1,1.5,0);
-    aPoints1.emplace_back(0,1,0);
-    aPoints1.emplace_back(1,1.5,0);
-    aPoints1.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aPoints1 =
+        {
+            {-2, 0.5, 0},
+            {-1, 1.5, 0},
+            { 0, 1,   0},
+            { 1, 1.5, 0},
+            { 2, 2,   0}
+        };
 
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
 
@@ -4180,30 +4284,21 @@ TEST(math_check, same_curve_tests)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,1,0,1);
-    aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(-1,0,0,1);
-    aControlPoints.emplace_back(-1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(0,-1,0,1);
-    aControlPoints.emplace_back(1,-1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(1,0,0,1);
-    
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
+    std::vector<SGM::Point4D> aControlPoints =
+        {
+            { 1,  0,  0, 1},
+            { 1,  1,  0, SGM_SQRT_2 / 2},
+            { 0,  1,  0, 1},
+            {-1,  1,  0, SGM_SQRT_2 / 2},
+            {-1,  0,  0, 1},
+            {-1, -1,  0, SGM_SQRT_2 / 2},
+            { 0, -1,  0, 1},
+            { 1, -1,  0, SGM_SQRT_2 / 2},
+            { 1,  0,  0, 1},
+        };
+
+    std::vector<double> aKnots =
+        {0,0,0,SGM_HALF_PI,SGM_HALF_PI,SGM_PI,SGM_PI,SGM_PI*1.5,SGM_PI*1.5,SGM_TWO_PI,SGM_TWO_PI,SGM_TWO_PI};
 
     SGM::Curve CurveID1=SGM::CreateNURBCurve(rResult,aControlPoints,aKnots);
 
@@ -4221,12 +4316,14 @@ TEST(math_check, transform_nub_curve)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints1;
-    aPoints1.emplace_back(-2,.5,0);
-    aPoints1.emplace_back(-1,1.5,0);
-    aPoints1.emplace_back(0,1,0);
-    aPoints1.emplace_back(1,1.5,0);
-    aPoints1.emplace_back(2,2,0);
+    std::vector<SGM::Point3D> aPoints1 = 
+        {
+            {-2,.5,0},
+            {-1,1.5,0},
+            {0,1,0},
+            {1,1.5,0},
+            {2,2,0}
+        };
 
     SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,2,3)),CurveID);
@@ -4274,29 +4371,14 @@ TEST(math_check, line_nub_surface_intersect)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<double> aUKnots,aVKnots;
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(0.0);
-    aUKnots.push_back(1.0);
-    aUKnots.push_back(1.0);
-    aUKnots.push_back(1.0);
-    aVKnots=aUKnots;
-    std::vector<std::vector<SGM::Point3D> > aaPoints;
-    std::vector<SGM::Point3D> aPoints;
-    aPoints.assign(3,SGM::Point3D(0,0,0));
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints[0][0]=SGM::Point3D(0.0,0.0,1.0);
-    aaPoints[0][1]=SGM::Point3D(0.0,1.0,0.0);
-    aaPoints[0][2]=SGM::Point3D(0.0,2.0,-1.0);
-    aaPoints[1][0]=SGM::Point3D(1.0,0.0,0.0);
-    aaPoints[1][1]=SGM::Point3D(1.0,1.0,0.0);
-    aaPoints[1][2]=SGM::Point3D(1.0,2.0,0.0);
-    aaPoints[2][0]=SGM::Point3D(2.0,0.0,-1.0);
-    aaPoints[2][1]=SGM::Point3D(2.0,1.0,0.0);
-    aaPoints[2][2]=SGM::Point3D(2.0,2.0,1.0);
+    std::vector<double> aUKnots =
+        {0,0,0,1,1,1};
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point3D>> aaPoints =
+        {{{ 0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}, {0.0, 2.0,-1.0}},
+         {{ 1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 2.0, 0.0}},
+         {{ 2.0, 0.0,-1.0}, {2.0, 1.0, 0.0}, {2.0, 2.0, 1.0}}};
+    
     SGM::Surface NUBSurfaceID=SGM::CreateNUBSurfaceFromControlPoints(rResult,aaPoints,aUKnots,aVKnots);
 
     SGM::SaveSGM(rResult,"GTest_NUB_surface_test.sgm",NUBSurfaceID,SGM::TranslatorOptions());
@@ -4330,22 +4412,12 @@ TEST(math_check, line_nurb_surface_intersect)
     SGM::Result rResult(pThing);
 
     std::vector<double> aUKnots = {0,0,0,1,1,1};
-    std::vector<double> aVKnots = aUKnots;
-    std::vector<std::vector<SGM::Point4D>> aaPoints;
-    std::vector<SGM::Point4D> aPoints;
-    aPoints.assign(3,SGM::Point4D(0,0,0,1));
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints.push_back(aPoints);
-    aaPoints[0][0]=SGM::Point4D(0.0,0.0,1.0,1);
-    aaPoints[0][1]=SGM::Point4D(0.0,1.0,0.0,1);
-    aaPoints[0][2]=SGM::Point4D(0.0,2.0,-1.0,1);
-    aaPoints[1][0]=SGM::Point4D(1.0,0.0,0.0,1);
-    aaPoints[1][1]=SGM::Point4D(1.0,1.0,0.0,1);
-    aaPoints[1][2]=SGM::Point4D(1.0,2.0,0.0,1);
-    aaPoints[2][0]=SGM::Point4D(2.0,0.0,-1.0,1);
-    aaPoints[2][1]=SGM::Point4D(2.0,1.0,0.0,1);
-    aaPoints[2][2]=SGM::Point4D(2.0,2.0,1.0,1);
+    std::vector<double> aVKnots(aUKnots);
+    std::vector<std::vector<SGM::Point4D>> aaPoints =
+        {{{0.0, 0.0, 1.0, 1}, {0.0, 1.0, 0.0, 1}, {0.0, 2.0,-1.0, 1}},
+         {{1.0, 0.0, 0.0, 1}, {1.0, 1.0, 0.0, 1}, {1.0, 2.0, 0.0, 1}},
+         {{2.0, 0.0,-1.0, 1}, {2.0, 1.0, 0.0, 1}, {2.0, 2.0, 1.0, 1}}};
+    
     SGM::Surface NUBSurfaceID=SGM::CreateNURBSurface(rResult,aaPoints,aUKnots,aVKnots);
 
     SGM::GetNURBSurfaceData(rResult,NUBSurfaceID,aaPoints,aUKnots,aVKnots);
@@ -4397,4 +4469,6 @@ TEST(math_check, line_extrude_intersect_conicident)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

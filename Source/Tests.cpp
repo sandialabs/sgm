@@ -31,6 +31,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <EntityFunctions.h>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -648,6 +649,13 @@ bool RunInternalTest(SGM::Result &rResult,
         pThing->VisitEntities(boxVisitor);
         boxVisitor.Visit(*pThing);
         pThing->Accept(boxVisitor);
+
+        // TODO: call transform on every entity
+//        for (auto pEntity : aEntities)
+//            {
+//            if (pEntity->GetType() != SGM::AssemblyType && pEntity->GetType() != SGM::AttributeType)
+//                SGMInternal::TransformEntity(rResult, Deform, pEntity);
+//            }
         }
     else if(nTestNumber==4) // SortablePlane testing
         {

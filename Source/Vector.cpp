@@ -1,3 +1,4 @@
+#include <iostream>
 #include "SGMVector.h"
 #include "SGMMathematics.h"
 #include "SGMTransform.h"

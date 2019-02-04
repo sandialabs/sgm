@@ -52,7 +52,10 @@ void expect_check_success(SGM::Result &rResult)
         {
         std::string message;
         for (std::string &log_item: aLog)
+            {
             message += log_item;
+            message += "\n";
+            }
         FAIL() << message;
         }
 }

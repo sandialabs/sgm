@@ -58,7 +58,7 @@ struct STEPLineData
 
     STEPLineData(STEPLineData const &) = default;
 
-    STEPLineData(STEPLineData&& other):
+    STEPLineData(STEPLineData&& other) : /* noexcept */
             m_nSTEPTag(other.m_nSTEPTag),
             m_aIDs(std::move(other.m_aIDs)),
             m_aDoubles(std::move(other.m_aDoubles)),

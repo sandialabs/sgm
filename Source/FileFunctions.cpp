@@ -117,23 +117,23 @@ bool ReadToString(FILE              *pFile,
     return nCount==nLength;
     }
 
-bool ReadFileLine(FILE        *pFile,
-                  std::string &sFileLine)
-    {
-    char data;
-    while(fread(&data,1,1,pFile))
-        {
-        if(data>31) // ignore control characters
-            {
-            sFileLine+=data;
-            }
-        if(data==';')
-            {
-            return true;
-            }
-        }
-    return false;
-    }
+//bool ReadFileLine(FILE        *pFile,
+//                  std::string &sFileLine)
+//    {
+//    char data;
+//    while(fread(&data,1,1,pFile))
+//        {
+//        if(data>31) // ignore control characters
+//            {
+//            sFileLine+=data;
+//            }
+//        if(data==';')
+//            {
+//            return true;
+//            }
+//        }
+//    return false;
+//    }
 
 void ReadDirectory(std::string        const &DirName, 
                    std::vector<std::string> &aFileNames)

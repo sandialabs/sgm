@@ -106,6 +106,13 @@ namespace SGM {
         return result;
     }
 
+    inline void Interval1D::Swap(Interval1D &other)
+    {
+        using std::swap;
+        swap(m_dMax,other.m_dMax);
+        swap(m_dMin,other.m_dMin);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Interval2D methods
@@ -246,6 +253,12 @@ namespace SGM {
     inline Point2D Interval2D::MidPoint(double dUFraction, double dVFraction) const
     {
         return {m_UDomain.MidPoint(dUFraction), m_VDomain.MidPoint(dVFraction)};
+    }
+
+    inline void Interval2D::Swap(Interval2D &other)
+    {
+        m_UDomain.Swap(other.m_UDomain);
+        m_VDomain.Swap(other.m_VDomain);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -727,6 +740,13 @@ namespace SGM {
                (std::min)(m_YDomain.m_dMax, domain.m_YDomain.m_dMax) &&
                (std::max)(m_ZDomain.m_dMin, domain.m_ZDomain.m_dMin) <=
                (std::min)(m_ZDomain.m_dMax, domain.m_ZDomain.m_dMax);
+    }
+
+    inline void Interval3D::Swap(Interval3D& other) // nothrow
+    {
+        m_XDomain.Swap(other.m_XDomain);
+        m_YDomain.Swap(other.m_YDomain);
+        m_ZDomain.Swap(other.m_ZDomain);
     }
 
 ///////////////////////////////////////////////////////////////////////////////

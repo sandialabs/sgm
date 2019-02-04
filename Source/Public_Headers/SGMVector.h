@@ -7,6 +7,7 @@
 
 #include "sgm_export.h"
 #include "SGMEnums.h"
+#include "SGMConstants.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -34,9 +35,16 @@ namespace SGM
     {
     public:
 
+        enum { N = 2 };
+
+        typedef double type;
+
         Point2D() = default;
 
         Point2D(double u,double v):m_u(u),m_v(v) {}
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_u)[axis]; }
 
         double Distance(Point2D const &Pos) const;
 
@@ -49,6 +57,8 @@ namespace SGM
 
         Point2D operator+=(Vector2D const &Vec);
 
+        void Swap(Point2D &other);
+
         double m_u;
         double m_v;
     };
@@ -58,6 +68,8 @@ namespace SGM
     public:
 
         enum { N = 3 };
+
+        typedef double type;
 
         Point3D() = default;
 
@@ -82,6 +94,8 @@ namespace SGM
 
         bool operator<(Point3D const &Pos) const;
 
+        void Swap(Point3D &other);
+
         double m_x;
         double m_y;
         double m_z;
@@ -102,6 +116,8 @@ namespace SGM
         double DistanceSquared(Point4D const &Pos) const;
 
         bool operator<(Point4D const &Pos) const;
+
+        void Swap(Point4D &other);
 
         double m_x;
         double m_y;
@@ -124,6 +140,8 @@ namespace SGM
         Vector2D(double u,double v):m_u(u),m_v(v) {}
 
         Vector2D operator*(double dScale) const;
+
+        void Swap(Vector2D &other);
 
         double m_u;
         double m_v;
@@ -162,6 +180,8 @@ namespace SGM
 
         void Negate();
 
+        void Swap(Vector3D &other);
+
         double m_x;
         double m_y;
         double m_z;
@@ -180,6 +200,8 @@ namespace SGM
         Vector4D operator*(double dScale) const;
 
         Vector4D operator/(double dScale) const;
+
+        void Swap(Vector4D &other);
 
         double m_x;
         double m_y;
@@ -247,7 +269,13 @@ namespace SGM
     class Ray3D
     {
     public:
-        
+
+        // The Ray is pure constant value class to store direction and origin, which
+        // is used to implement fast ray, line, segment intersections with axis
+        // aligned bounding boxes (Interval3D). This allows the inverse direction and
+        // sign to be calculated only once in the constructor, and so we disallow
+        // changing member variables so we do not violate the inverse direction and sign.
+
         Ray3D(const Point3D &orig, const UnitVector3D &dir) :
                 m_Origin(orig),
                 m_Direction(dir),
@@ -257,11 +285,7 @@ namespace SGM
                 m_zSign(m_InverseDirection.m_z < 0)
         { }
 
-        // The Ray is pure constant value class to store direction and origin, which
-        // is used to implement fast ray, line, segment intersections with axis
-        // aligned bounding boxes (Interval3D). This allows the inverse direction and
-        // sign to be calculated only once in the constructor, and so we disallow
-        // changing member variables so we do not violate the inverse direction and sign.
+        void Swap(Ray3D &other);
 
         Point3D      m_Origin;
         UnitVector3D m_Direction;
@@ -336,7 +360,7 @@ namespace SGM
 
     inline bool NearEqual(Point4D const &Pos1,Point4D const &Pos2,double dTolerance);
 
-    inline bool NearEqual(Vector3D const &Pos1,Vector3D const &Pos2,double dTolerance);
+    inline bool NearEqual(Vector3D const &Vec1,Vector3D const &Vec2,double dTolerance);
 
 } // End of SGM namespace
 

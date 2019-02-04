@@ -62,14 +62,24 @@ size_t SGM::IntersectSegment(SGM::Result               &rResult,
 
 SGM::Complex SGM::CreateTriangles(SGM::Result                     &rResult,
                                   std::vector<SGM::Point3D> const &aPoints,
-                                  std::vector<unsigned int> const &aTriangles)
+                                  std::vector<unsigned int> const &aTriangles,
+                                  bool                             bMerge)
     {
     if(aPoints.empty() || aTriangles.empty())
         {
         rResult.SetResult(SGM::ResultTypeInsufficientData);
         return {0};
         }
-    auto pComplex=new SGMInternal::complex(rResult, aPoints, aTriangles);
+    SGMInternal::complex *pComplex;
+    if (bMerge)
+        {
+        std::vector<unsigned> aSegments; // empty segments
+        pComplex = new SGMInternal::complex(rResult, aPoints, aSegments, aTriangles, SGM_ZERO);
+        }
+    else
+        {
+        pComplex = new SGMInternal::complex(rResult, aPoints, aTriangles);
+        }
     return {pComplex->GetID()};
     }
 

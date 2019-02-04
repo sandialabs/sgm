@@ -1,3 +1,0 @@
-// Tests the NUBCurve from a vector of points;
-RunCPPTest(12);
-

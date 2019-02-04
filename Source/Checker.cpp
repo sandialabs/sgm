@@ -137,7 +137,7 @@ bool body::Check(SGM::Result              &rResult,
 
     if(bChildren)
         {
-        if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
+        if(!CheckChildren(rResult,this,Options,aCheckStrings))
             {
             bAnswer=false;
             }
@@ -146,12 +146,14 @@ bool body::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
-bool complex::Check(SGM::Result              &,//rResult,
+bool complex::Check(SGM::Result              &rResult,
                     SGM::CheckOptions  const &,//Options,
                     std::vector<std::string> &aCheckStrings,
                     bool                      /*bChildren*/) const
     {
     bool bAnswer=true;
+
+    bAnswer = CheckIndexMax(rResult,m_aPoints.size());
 
     size_t nPoints=m_aPoints.size();
     size_t Index1;

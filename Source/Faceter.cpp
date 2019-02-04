@@ -85,7 +85,7 @@ void SubdivideFacets(face                const *pFace,
     aPoints2D.reserve(nTriangles+2*nPoints-2);
     aEntities.reserve(nTriangles+2*nPoints-2);
     std::vector<unsigned int> aAdjacences;
-    SGM::FindAdjacences2D(aTriangles,aAdjacences);
+    SGM::FindAdjacencies2D(aTriangles, aAdjacences);
     size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
@@ -183,12 +183,12 @@ class Node
 
         Node() {m_bMark=false,m_bImprint=true;}
 
-        size_t               m_nNext;
-        size_t               m_nPrevious;
-        SGM::Point2D         m_uv;
-        SGM::Point3D         m_Pos;
-        double               m_t;
-        SGMInternal::entity *m_Entity;
+        size_t               m_nNext{};
+        size_t               m_nPrevious{};
+        SGM::Point2D         m_uv{};
+        SGM::Point3D         m_Pos{};
+        double               m_t{};
+        SGMInternal::entity *m_Entity{};
         bool                 m_bMark;
         bool                 m_bImprint;
     };
@@ -1007,13 +1007,13 @@ class SplitData
         size_t m_nSpan;
     };
 
-class MergeData
-    {
-    public:
-
-        SplitData m_Split1;
-        SplitData m_Split2;
-    };
+//class MergeData
+//    {
+//    public:
+//
+//        SplitData m_Split1;
+//        SplitData m_Split2;
+//    };
 
 static size_t AddNode(std::vector<Node>  &aNodes,
                       face         const *pFace,
@@ -2276,7 +2276,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist,pPoints3D,pNormals);
     //std::vector<unsigned int> aAdjacences;
-    //SGM::FindAdjacences2D(aTriangles,aAdjacences);
+    //SGM::FindAdjacencies(aTriangles,aAdjacences);
     //DelaunayFlips(aPoints2D,aTriangles,aAdjacences,pPoints3D,pNormals);
     return true;
     }

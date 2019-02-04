@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 #include "SGMConstants.h"
 #include "SGMMathematics.h"
@@ -56,6 +57,12 @@ namespace SGM {
         return false;
     }
 
+    inline void Point2D::Swap(Point2D &other)
+    {
+        std::swap(m_u,other.m_u);
+        std::swap(m_v,other.m_v);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Vector2D methods
@@ -65,6 +72,12 @@ namespace SGM {
     inline Vector2D Vector2D::operator*(double dScale) const
     {
         return Vector2D(m_u*dScale,m_v*dScale);
+    }
+
+    inline void Vector2D::Swap(Vector2D &other)
+    {
+    std::swap(m_u,other.m_u);
+    std::swap(m_v,other.m_v);
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -124,6 +137,13 @@ namespace SGM {
         m_z=-m_z;
     }
 
+    inline void Vector3D::Swap(Vector3D &other)
+    {
+        std::swap(m_x,other.m_x);
+        std::swap(m_y,other.m_y);
+        std::swap(m_z,other.m_z);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Vector4D methods
@@ -145,28 +165,12 @@ namespace SGM {
         return Vector4D(m_x/dScale,m_y/dScale,m_z/dScale,m_w/dScale);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //  Point4 methods
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    inline double Point4D::Distance(Point4D const &Pos) const
+    inline void Vector4D::Swap(Vector4D &other)
     {
-        double dX=Pos.m_x-m_x;
-        double dY=Pos.m_y-m_y;
-        double dZ=Pos.m_z-m_z;
-        double dW=Pos.m_z-m_z;
-        return sqrt(dX*dX+dY*dY+dZ*dZ+dW*dW);
-    }
-
-    inline double Point4D::DistanceSquared(Point4D const &Pos) const
-    {
-        double dX=Pos.m_x-m_x;
-        double dY=Pos.m_y-m_y;
-        double dZ=Pos.m_z-m_z;
-        double dW=Pos.m_z-m_z;
-        return dX*dX+dY*dY+dZ*dZ+dW*dW;
+        std::swap(m_x,other.m_x);
+        std::swap(m_y,other.m_y);
+        std::swap(m_z,other.m_z);
+        std::swap(m_w,other.m_w);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -216,31 +220,39 @@ namespace SGM {
 
     inline bool Point3D::operator<(Point3D const &Pos) const
     {
-        if(m_x<Pos.m_x)
-            {
-            return true;
-            }
-        if(Pos.m_x<m_x)
-            {
-            return false;
-            }
-        if(m_y<Pos.m_y)
-            {
-            return true;
-            }
-        if(Pos.m_y<m_y)
-            {
-            return false;
-            }
-        if(m_z<Pos.m_z)
-            {
-            return true;
-            }
-        if(Pos.m_z<m_z)
-            {
-            return false;
-            }
-        return false;
+        return (m_x < Pos.m_x) || (m_x == Pos.m_x && (m_y < Pos.m_y || (m_y == Pos.m_y && m_z < Pos.m_z)));
+//        if(m_x<Pos.m_x)
+//            {
+//            return true;
+//            }
+//        if(Pos.m_x<m_x)
+//            {
+//            return false;
+//            }
+//        if(m_y<Pos.m_y)
+//            {
+//            return true;
+//            }
+//        if(Pos.m_y<m_y)
+//            {
+//            return false;
+//            }
+//        if(m_z<Pos.m_z)
+//            {
+//            return true;
+//            }
+//        if(Pos.m_z<m_z)
+//            {
+//            return false;
+//            }
+//        return false;
+    }
+
+    inline void Point3D::Swap(Point3D &other)
+    {
+        std::swap(m_x,other.m_x);
+        std::swap(m_y,other.m_y);
+        std::swap(m_z,other.m_z);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -293,6 +305,32 @@ namespace SGM {
             return false;
             }
         return false;
+    }
+
+    inline double Point4D::Distance(Point4D const &Pos) const
+    {
+        double dX=Pos.m_x-m_x;
+        double dY=Pos.m_y-m_y;
+        double dZ=Pos.m_z-m_z;
+        double dW=Pos.m_z-m_z;
+        return sqrt(dX*dX+dY*dY+dZ*dZ+dW*dW);
+    }
+
+    inline double Point4D::DistanceSquared(Point4D const &Pos) const
+    {
+        double dX=Pos.m_x-m_x;
+        double dY=Pos.m_y-m_y;
+        double dZ=Pos.m_z-m_z;
+        double dW=Pos.m_z-m_z;
+        return dX*dX+dY*dY+dZ*dZ+dW*dW;
+    }
+
+    inline void Point4D::Swap(Point4D &other)
+    {
+        std::swap(m_x,other.m_x);
+        std::swap(m_y,other.m_y);
+        std::swap(m_z,other.m_z);
+        std::swap(m_w,other.m_w);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -438,6 +476,22 @@ namespace SGM {
             m_z=0.0;
             m_w=1.0;
             }
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Ray3D methods
+//
+///////////////////////////////////////////////////////////////////////////////
+
+    inline void Ray3D::Swap(Ray3D &other)
+    {
+        m_Origin.Swap(other.m_Origin);
+        m_Direction.Swap(other.m_Direction);
+        m_InverseDirection.Swap(other.m_InverseDirection);
+        std::swap(m_xSign,other.m_xSign);
+        std::swap(m_ySign,other.m_ySign);
+        std::swap(m_zSign,other.m_zSign);
     }
 
 ///////////////////////////////////////////////////////////////////////////////

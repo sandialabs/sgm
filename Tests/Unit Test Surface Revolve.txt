@@ -1,3 +1,0 @@
-// Tests the methods of a Revolve surface;
-RunCPPTest(31);
-
