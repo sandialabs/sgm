@@ -3472,9 +3472,12 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
             IntersectLineAndTorus(TorusCenter,LineAxis,Domain,pTorus,dTolerance,aPoints,aTypes);
             for(SGM::Point3D const &Pos : aPoints)
                 {
-                std::vector<SGM::Point3D> aEndPoints;
-                aEndPoints.push_back(Pos);
-                aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pTorus));
+                if(PointOnCurves(Pos,aCurves)==false)
+                    {
+                    std::vector<SGM::Point3D> aEndPoints;
+                    aEndPoints.push_back(Pos);
+                    aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pTorus));
+                    }
                 }
             }
         }
@@ -5346,11 +5349,17 @@ hermite *WalkFromToSub(SGM::Result                     &rResult,
                 SGM::Point3D LastPos=aPoints.back();
                 if(SGM_MIN_TOL<LastPos.Distance(EndPos))
                     {
-                    SGM::Segment3D Seg(LastPos,CurrentPos);
+                    SGM::Point3D LineOrigin=LastPos;
+                    SGM::UnitVector3D LineAxis=CurrentPos-LastPos;
+                    double t=(EndPos-LastPos)%LineAxis;
+                    SGM::Point3D PointOnLine=LineOrigin+LineAxis*t;
                     double dEndTol=dWalkDist*0.1;
-                    if(Seg.PointOnSegment(EndPos,dEndTol))
+                    if(PointOnLine.Distance(EndPos)<dEndTol)
                         {
-                        bFoundEnd=true;
+                        if(2<aPoints.size() || 0<t)
+                            {
+                            bFoundEnd=true;
+                            }
                         }
                     }
                 }

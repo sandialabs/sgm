@@ -363,10 +363,10 @@ TEST(intersection_check, intersect_cylinder_cylinder)
 //    SGM::Result rResult(pThing);
 //    
 //    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::CreateDisk(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(1,0,0),4);
+//    SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,2),4);
 //  
 //    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(1,0,0));
+//    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,2));
 //    std::vector<SGM::Curve> aCurves;
 //    SGM::IntersectSurfaces(rResult,TorusID,PlaneID,aCurves);
 //    for(auto pCurve : aCurves)
@@ -402,7 +402,7 @@ TEST(intersection_check, intersect_plane_torus)
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID4,2));     // Two Major Circles not at Equator
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID5,2));     // Two Minor Circles
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID6,1));     // Outside Tangent Point
-    //EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID7,2));     // Two Major Curves
+    EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID7,2));     // Two Major Curves
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID8,1));     // One Curve Spiric Section, Cassini oval
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID9,2));     // Two Curves Spiric Section
                                                                     // Bernoulli’s lemniscate
