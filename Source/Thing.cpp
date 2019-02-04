@@ -1,11 +1,11 @@
 #include "SGMResult.h"
-#include "SGMTransform.h"
+#include "SGMTransform.h" 
 
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
 
-//#define SGM_TIMER
+//#define SGM_TIMER 
 #include "Timer.h"
 
 #ifdef SGM_MULTITHREADED
