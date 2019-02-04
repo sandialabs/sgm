@@ -425,7 +425,8 @@ TEST(math_check, do_points_match)
     std::map<unsigned int,unsigned int> mMatchMap;
     EXPECT_TRUE(SGM::DoPointsMatch(aPoints1,aPoints2,mMatchMap,SGM_MIN_TOL));  
 
-    double dDist=SGM::DistanceToPoints(aPoints1,SGM::Point3D(3,0,0));
+    size_t nWhere;
+    double dDist=SGM::DistanceToPoints(aPoints1,SGM::Point3D(3,0,0),nWhere);
     EXPECT_TRUE(SGM::NearEqual(dDist,2,SGM_MIN_TOL,false));
 }
 

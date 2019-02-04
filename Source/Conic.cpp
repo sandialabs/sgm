@@ -89,6 +89,181 @@ curve *CheckForLine(SGM::Result                     &rResult,
     return new line(rResult,Origin,XVec);
     }
 
+parabola *FindParabola(SGM::Result                     &rResult,
+                       SGM::Point3D                    &Origin,
+                       SGM::UnitVector3D               &XAxis,
+                       SGM::UnitVector3D               &YAxis,
+                       std::vector<SGM::Point3D> const &aPoints)
+    {
+    std::vector<SGM::Point2D> aXY;
+    aXY.reserve(5);
+    for(auto Pos : aPoints)
+        {
+        SGM::Vector3D Vec=Pos-Origin;
+        aXY.push_back(SGM::Point2D(Vec%XAxis,Vec%YAxis));
+        }
+    
+    // Find y=a*x^2+b*x+c both ways xy and yx.
+     
+    std::vector<std::vector<double> > aaMatrix;
+    aaMatrix.reserve(3);
+    size_t Index1;
+    for(Index1=0;Index1<3;++Index1)
+        {
+        std::vector<double> aMatrix;
+        aMatrix.reserve(4);
+        aMatrix.push_back(aXY[Index1].m_u*aXY[Index1].m_u);
+        aMatrix.push_back(aXY[Index1].m_u);
+        aMatrix.push_back(1.0);
+        aMatrix.push_back(aXY[Index1].m_v);
+        aaMatrix.push_back(aMatrix);
+        }
+    SGM::LinearSolve(aaMatrix);
+    double a1=aaMatrix[0].back();
+    double b1=aaMatrix[1].back();
+    double c1=aaMatrix[2].back();
+
+    aaMatrix.clear();
+    for(Index1=0;Index1<3;++Index1)
+        {
+        std::vector<double> aMatrix;
+        aMatrix.reserve(4);
+        aMatrix.push_back(aXY[Index1].m_v*aXY[Index1].m_v);
+        aMatrix.push_back(aXY[Index1].m_v);
+        aMatrix.push_back(1.0);
+        aMatrix.push_back(aXY[Index1].m_u);
+        aaMatrix.push_back(aMatrix);
+        }
+    SGM::LinearSolve(aaMatrix);
+    double a2=aaMatrix[0].back();
+    double b2=aaMatrix[1].back();
+    double c2=aaMatrix[2].back();
+
+    // Check the fit of each equation.
+
+    double dFit1=0,dFit2=0;
+    for(auto XY : aXY)
+        {
+        double y1=a1*XY.m_u*XY.m_u+b1*XY.m_u+c1;
+        double y2=a2*XY.m_v*XY.m_v+b2*XY.m_v+c2;
+        dFit1+=fabs(y1-XY.m_v);
+        dFit2+=fabs(y2-XY.m_u);
+        }
+
+    // Find the center.
+    // Parabola f(t)=at^2
+    // find y=ax^2+bx+c -> y'=2ax+b -> x=-b/2a
+
+    SGM::Point3D Center;
+    if(dFit1<dFit2)
+        {
+        double x=-b1/(2.0*a1);
+        double y=x*(a1*x+b1)+c1;
+        Center=Origin+x*XAxis+y*YAxis;
+        return new parabola(rResult,Center,XAxis,YAxis,a1);
+        }
+    else
+        {
+        std::swap(XAxis,YAxis);
+        double x=-b2/(2.0*a2);
+        double y=x*(a2*x+b2)+c2;
+        Center=Origin+x*XAxis+y*YAxis;
+        return new parabola(rResult,Center,XAxis,YAxis,a2);
+        }
+    }
+
+hyperbola *FindHyperbola(SGM::Result                     &rResult,
+                         SGM::Point3D                    &Center,
+                         SGM::UnitVector3D               &XAxis,
+                         SGM::UnitVector3D               &YAxis,
+                         double                           dTolerance,
+                         std::vector<SGM::Point3D> const &aPoints)
+    {
+    // Hyperbola f(t)=a*sqrt(1+t^2/b^2)
+    // x^2/a^2-y^2/b^2=1 -> an*x^2+bn*y^2=1, where an=1/a^2, bn=1/b^2
+    // a=sqrt(1/an) b=sqrt(1/bn)
+
+    bool bQuad1=false,bQuad2=false,bQuad3=false,bQuad4=false;
+    std::vector<SGM::Point2D> aXY;
+    aXY.reserve(5);
+    for(auto Pos : aPoints)
+        {
+        SGM::Vector3D Vec=Pos-Center;
+        double x=Vec%XAxis;
+        double y=Vec%YAxis;
+        aXY.push_back(SGM::Point2D(x,y));
+        if(x<-dTolerance)
+            {
+            if(y<-dTolerance)
+                {
+                bQuad3=true;
+                }
+            else if(dTolerance<y)
+                {
+                bQuad2=true;
+                }
+            }
+        else if(dTolerance<x)
+            {
+            if(y<-dTolerance)
+                {
+                bQuad4=true;
+                }
+            else if(dTolerance<y)
+                {
+                bQuad1=true;
+                }
+            }
+        }
+
+    // Note that all three branches were tested by moving the points to different
+    // quads at the top of this function.
+
+    size_t Index1;
+    if(bQuad1 && bQuad4)
+        {
+        std::swap(XAxis,YAxis);
+        }
+    else if(bQuad2 && bQuad3)
+        {
+        std::swap(XAxis,YAxis);
+        YAxis.Negate();
+        for(Index1=0;Index1<3;++Index1)
+            {
+            SGM::Point2D xy=aXY[Index1];
+            aXY[Index1]=SGM::Point2D(xy.m_u,-xy.m_v);
+            }
+        }
+    else if(bQuad3 && bQuad4)
+        {
+        XAxis.Negate();
+        YAxis.Negate();
+        for(Index1=0;Index1<3;++Index1)
+            {
+            SGM::Point2D xy=aXY[Index1];
+            aXY[Index1]=SGM::Point2D(-xy.m_v,-xy.m_u);
+            }
+        }
+    
+    // Find an*x^2+bn*y^2=1
+     
+    std::vector<std::vector<double> > aaMatrix;
+    aaMatrix.reserve(2);
+    for(Index1=0;Index1<2;++Index1)
+        {
+        std::vector<double> aMatrix;
+        aMatrix.reserve(3);
+        aMatrix.push_back(aXY[Index1].m_u*aXY[Index1].m_u);
+        aMatrix.push_back(aXY[Index1].m_v*aXY[Index1].m_v);
+        aMatrix.push_back(1.0);
+        aaMatrix.push_back(aMatrix);
+        }
+    SGM::LinearSolve(aaMatrix);
+    double a=sqrt(fabs(1.0/aaMatrix[0].back()));
+    double b=sqrt(fabs(1.0/aaMatrix[1].back()));
+    return new hyperbola(rResult,Center,XAxis,YAxis,a,b);
+    }
+
 curve *FindConic(SGM::Result                     &rResult,
                  std::vector<SGM::Point3D> const &aPoints,
                  double                           dTolerance)
@@ -139,50 +314,7 @@ curve *FindConic(SGM::Result                     &rResult,
 
             if(fabs(discriminant)<SGM_MIN_TOL)
                 {
-                // Parabola f(t)=at^2
-                // find y=ax^2+bx+c -> y'=2ax+b -> x=-b/2a
-
-                SGM::Vector3D Vec0=aPoints[0]-Origin;
-                SGM::Point2D Pos0(Vec0%XAxis,Vec0%YAxis);
-                SGM::Vector3D Vec1=aPoints[1]-Origin;
-                SGM::Point2D Pos1(Vec1%XAxis,Vec1%YAxis);
-                SGM::Vector3D Vec2=aPoints[2]-Origin;
-                SGM::Point2D Pos2(Vec2%XAxis,Vec2%YAxis);
-
-                std::vector<std::vector<double> > aaEquations;
-                aaEquations.reserve(3);
-                std::vector<double> aEquation;
-                aEquation.reserve(4);
-                aEquation.push_back(Pos0.m_u*Pos0.m_u);
-                aEquation.push_back(Pos0.m_u);
-                aEquation.push_back(1.0);
-                aEquation.push_back(Pos0.m_v);
-                aaEquations.push_back(aEquation);
-                aEquation.clear();
-                aEquation.push_back(Pos1.m_u*Pos1.m_u);
-                aEquation.push_back(Pos1.m_u);
-                aEquation.push_back(1.0);
-                aEquation.push_back(Pos1.m_v);
-                aaEquations.push_back(aEquation);
-                aEquation.clear();
-                aEquation.push_back(Pos2.m_u*Pos2.m_u);
-                aEquation.push_back(Pos2.m_u);
-                aEquation.push_back(1.0);
-                aEquation.push_back(Pos2.m_v);
-                aaEquations.push_back(aEquation);
-                SGM::LinearSolve(aaEquations);
-                double a=aaEquations[0].back();
-                double b=aaEquations[1].back();
-                double c=aaEquations[2].back();
-                double x=-b/(2.0*a);
-                double y=x*(a*x+b)+c;
-                SGM::Point3D Center=Origin+x*XAxis+y*YAxis;
-                if(a<0)
-                    {
-                    a=-a;
-                    YAxis.Negate();
-                    }
-                return new parabola(rResult,Center,XAxis,YAxis,a);
+                return FindParabola(rResult,Origin,XAxis,YAxis,aPoints);
                 }
             else
                 {
@@ -218,47 +350,7 @@ curve *FindConic(SGM::Result                     &rResult,
 
                 if(discriminant<0)
                     {
-                    // Hyperbola f(t)=a*sqrt(1+t^2/b^2)
-                    // x^2/a^2-y^2/b^2=1
-
-                    std::swap(a,b);
-                    bool bLowX=false,bHighX=false;
-                    for(Index1=0;Index1<5;++Index1)
-                        {
-                        double x=ax[Index1];
-                        if(dTolerance<x)
-                            {
-                            bHighX=true;
-                            }
-                        else if(x<-dTolerance)
-                            {
-                            bLowX=true;
-                            }
-                        }
-                    bool bLowY=false,bHighY=false;
-                    for(Index1=0;Index1<5;++Index1)
-                        {
-                        double y=ay[Index1];
-                        if(dTolerance<y)
-                            {
-                            bHighY=true;
-                            }
-                        else if(y<-dTolerance)
-                            {
-                            bLowY=true;
-                            }
-                        }
-                    if(bHighY && bLowY)
-                        {
-                        std::swap(XAxis,YAxis);
-                        std::swap(a,b);
-                        std::swap(bLowX,bLowY);
-                        }
-                    if(bLowX)
-                        {
-                        YAxis.Negate();
-                        }
-                    return new hyperbola(rResult,Center,YAxis,XAxis,a,b);
+                    return FindHyperbola(rResult,Center,XAxis,YAxis,dTolerance,aPoints);
                     }
                 else 
                     {

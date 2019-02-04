@@ -1500,8 +1500,9 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
             unsigned int nStart,nEnd;
             pPart->IsLinear(nStart,nEnd);
             SGM::Point3D const &Pos=pPart->m_aPoints[nStart];
-            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos);
-            double dDistStart=SGM::DistanceToPoints(aStarts,Pos);
+            size_t nWhere;
+            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos,nWhere);
+            double dDistStart=SGM::DistanceToPoints(aStarts,Pos,nWhere);
             if(dDistStart<dDistEnd)
                 {
                 rResult.GetThing()->DeleteEntity(pPart);

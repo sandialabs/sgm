@@ -546,11 +546,11 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::Point3D            &Origin,
                                 SGM::UnitVector3D       &Axis);
 
-hermite *WalkFromTo(SGM::Result        &rResult,
-                    SGM::Point3D const &StartPos,
-                    SGM::Point3D const &EndPos,
-                    surface      const *pSurface1,
-                    surface      const *pSurface2);
+hermite *WalkFromTo(SGM::Result                     &rResult,
+                    SGM::Point3D              const &StartPos,
+                    std::vector<SGM::Point3D> const &aPoints,
+                    surface                   const *pSurface1,
+                    surface                   const *pSurface2);
 
 SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
                         surface      const *pSurface1,

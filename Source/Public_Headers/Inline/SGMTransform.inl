@@ -108,6 +108,32 @@ namespace SGM {
         for (size_t iIndex=0; iIndex<4; ++iIndex)
             m_Matrix[iIndex] = Trans.m_Matrix[iIndex];
     }
+
+// Returns a tranform the rotates space in the right handed
+// direction about the given axis by the given angle.
+
+    inline Transform3D::Transform3D(SGM::Point3D      const &PointOnAxis,
+                                    SGM::UnitVector3D const &Axis,
+                                    double                   dAngle)
+        {
+        SGM::UnitVector3D XAxis=Axis.Orthogonal();
+        SGM::UnitVector3D YAxis=Axis*XAxis;
+        double dSin=sin(dAngle);
+        double dCos=cos(dAngle);
+        SGM::UnitVector3D XRot(dCos,dSin,0);
+        SGM::UnitVector3D YRot(-dSin,dCos,0);
+        SGM::UnitVector3D ZVec(0,0,1);
+        SGM::Point3D Origin(0,0,0);
+        SGM::Transform3D ToOriginRotated=SGM::Transform3D(XAxis,YAxis,Axis,PointOnAxis,XRot,YRot,ZVec,Origin);
+        SGM::UnitVector3D XVec(1,0,0);
+        SGM::UnitVector3D YVec(0,1,0);
+        SGM::Transform3D ToAxisFromOrigin=SGM::Transform3D(XVec,YVec,ZVec,Origin,XAxis,YAxis,Axis,PointOnAxis);
+        SGM::Transform3D Trans=ToOriginRotated*ToAxisFromOrigin;
+
+        for (size_t iIndex=0; iIndex<4; ++iIndex)
+            m_Matrix[iIndex] = Trans.m_Matrix[iIndex];
+        }
+            
     
     inline double SGM::Transform3D::Scale(SGM::UnitVector3D const &Direction) const
     {

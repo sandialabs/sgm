@@ -901,10 +901,10 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
     }
 
 void FacetEdge(SGM::Result               &rResult,
-                      edge                const *pEdge,
-                      FacetOptions        const &Options,
-                      std::vector<SGM::Point3D> &aPoints3D,
-                      std::vector<double>       &aParams)
+               edge                const *pEdge,
+               FacetOptions        const &Options,
+               std::vector<SGM::Point3D> &aPoints3D,
+               std::vector<double>       &aParams)
     {
     curve const *pCurve=pEdge->GetCurve();
     SGM::Interval1D const &Domain=pEdge->GetDomain();

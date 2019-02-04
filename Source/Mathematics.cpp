@@ -715,15 +715,20 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     }
 
 double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
-                        SGM::Point3D              const &Pos1)
+                        SGM::Point3D              const &Pos1,
+                        size_t                          &nWhere)
     {
     double dAnswer=std::numeric_limits<double>::max();
-    for(SGM::Point3D const &Pos2 : aPoints)
+    size_t Index1;
+    size_t nSize=aPoints.size();
+    for(Index1=0;Index1<nSize;++Index1)
         {
+        SGM::Point3D const &Pos2=aPoints[Index1];
         double dDistanceSquared=Pos1.DistanceSquared(Pos2);
         if(dDistanceSquared<dAnswer)
             {
             dAnswer=dDistanceSquared;
+            nWhere=Index1;
             }
         }
     return sqrt(dAnswer);
@@ -1074,6 +1079,31 @@ void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
             aTriangles.push_back(c);
             }
         }
+    }
+
+void RemoveDuplicates1D(std::vector<double> &aPoints,
+                        double               dTolerance)
+    {
+    std::sort(aPoints.begin(),aPoints.end());
+    std::vector<double> aNewPoints;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double d=aPoints[Index1];
+        if(Index1)
+            {
+            if(dTolerance<d-aPoints[Index1-1])
+                {
+                aNewPoints.push_back(d);
+                }
+            }
+        else
+            {
+            aNewPoints.push_back(d);
+            }
+        }
+    aPoints=aNewPoints;
     }
 
 void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,

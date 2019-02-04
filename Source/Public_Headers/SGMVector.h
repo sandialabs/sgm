@@ -72,6 +72,10 @@ namespace SGM
 
         double DistanceSquared(Point3D const &Pos) const;
 
+        double DistanceFromOrigin() const;
+
+        double DistanceFromOriginSquared() const;
+
         Point3D operator+=(Vector3D const &Vec);
 
         Point3D operator*=(Transform3D const &Trans);

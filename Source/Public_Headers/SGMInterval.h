@@ -70,6 +70,16 @@ namespace SGM {
                      (m_dMax < SGM_INTERVAL_POS_MAX) );
         }
 
+        bool IsBoundedAbove() const
+        {
+            return ( m_dMax < SGM_INTERVAL_POS_MAX );
+        }
+
+        bool IsBoundedBelow() const
+        {
+            return ( SGM_INTERVAL_NEG_MIN < m_dMin );
+        }
+
         double MidPoint(double dFraction = 0.5) const
         { 
         return m_dMin * (1 - dFraction) + m_dMax * dFraction; 

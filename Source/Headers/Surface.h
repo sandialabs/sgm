@@ -315,6 +315,13 @@ class cone : public surface
              double                   dHalfAngle,
              SGM::UnitVector3D const *XAxis=nullptr);
 
+        cone(SGM::Result             &rResult,
+             SGM::Point3D      const &Bottom,
+             SGM::Point3D      const &Top,
+             double                   dBottomRadius,
+             double                   dTopRadius,
+             SGM::UnitVector3D const *XAxis=nullptr);
+
         cone(SGM::Result &rResult, cone const &other);
 
         ~cone() override = default;
@@ -332,7 +339,7 @@ class cone : public surface
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
+        double FindHalfAngle() const;
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -363,6 +370,10 @@ class cone : public surface
         curve *VParamLine(SGM::Result &rResult, double dV) const override;
 
         SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
+
+        // Returns how far Pos is inside the cone.  A negative number indicates that Pos is outside the cone.
+
+        double PointInside(SGM::Point3D const &Pos) const;
 
     public:
 

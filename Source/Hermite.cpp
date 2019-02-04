@@ -43,11 +43,13 @@ void hermite::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3
     size_t nSpan=FindSpan(t);
     SGM::Point3D const &P0=m_aPoints[nSpan];
     SGM::Point3D const &P1=m_aPoints[nSpan+1];
-    SGM::Vector3D const &T0=m_aTangents[nSpan];
-    SGM::Vector3D const &T1=m_aTangents[nSpan+1];
+    SGM::Vector3D const &CT0=m_aTangents[nSpan];
+    SGM::Vector3D const &CT1=m_aTangents[nSpan+1];
     double t0=m_aParams[nSpan];
     double t1=m_aParams[nSpan+1];
     double s=(t-t0)/(t1-t0);
+    SGM::Vector3D T0=CT0*(t1-t0);
+    SGM::Vector3D T1=CT1*(t1-t0);
 
     // h1(s) =  2s^3 - 3s^2 + 1 = (s^2)(2s-3)+1
     // h2(s) = -2s^3 + 3s^2     = 1-h1(s)

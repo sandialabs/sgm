@@ -49,6 +49,30 @@ edge *CreateEdge(SGM::Result           &rResult,
         pEdge->SetStart(pStart);
         pEdge->SetEnd(pEnd);
         }
+    else 
+        {
+        SGM::Point3D StartPos,EndPos;
+        SGM::Vector3D StartVec,EndVec;
+        pCurve->Evaluate(Domain.m_dMin,&StartPos,&StartVec);
+        pCurve->Evaluate(Domain.m_dMax,&EndPos,&EndVec);
+        SGM::UnitVector3D Vec0=StartVec,Vec1=EndVec;
+        if(SGM::NearEqual(Vec0,Vec1,SGM_MIN_TOL)==false)
+            {
+            if(pCurve->GetClosed())
+                {
+                vertex *pVertex=new vertex(rResult,StartPos);
+                pEdge->SetStart(pVertex);
+                pEdge->SetEnd(pVertex);
+                }
+            else
+                {
+                vertex *pStart=new vertex(rResult,StartPos);
+                vertex *pEnd=new vertex(rResult,EndPos);
+                pEdge->SetStart(pStart);
+                pEdge->SetEnd(pEnd);
+                }
+            }
+        }
     return pEdge;
     }
 

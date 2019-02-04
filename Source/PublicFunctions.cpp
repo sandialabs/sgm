@@ -1689,6 +1689,16 @@ SGM::Surface SGM::CreateConeSurface(SGM::Result             &rResult,
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateConeSurfaceFromPoints(SGM::Result        &rResult,
+                                              SGM::Point3D const &Bottom,
+                                              SGM::Point3D const &Top,
+                                              double              dBottomRadius,
+                                              double              dTopRadius)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::cone(rResult,Bottom,Top,dBottomRadius,dTopRadius);
+    return {pSurface->GetID()};
+    }
+
 SGM::Surface SGM::CreatePlane(SGM::Result        &rResult,
                               SGM::Point3D const &Origin,
                               SGM::Point3D const &XPos,

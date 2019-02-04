@@ -262,8 +262,8 @@ namespace SGM {
 
     inline Interval3D::Interval3D(Point3D const &A, Point3D const &B, Point3D const &C) :
             m_XDomain((std::min)(A.m_x, (std::min)(B.m_x, C.m_x)), (std::max)(A.m_x, (std::max)(B.m_x, C.m_x))),
-            m_YDomain((std::min)(A.m_y, (std::min)(B.m_y, C.m_y)), (std::max)(A.m_y, (std::max)(B.m_x, C.m_x))),
-            m_ZDomain((std::min)(A.m_z, (std::min)(B.m_z, C.m_z)), (std::max)(A.m_z, (std::max)(B.m_x, C.m_x)))
+            m_YDomain((std::min)(A.m_y, (std::min)(B.m_y, C.m_y)), (std::max)(A.m_y, (std::max)(B.m_y, C.m_y))),
+            m_ZDomain((std::min)(A.m_z, (std::min)(B.m_z, C.m_z)), (std::max)(A.m_z, (std::max)(B.m_z, C.m_z)))
     {}
 
     inline Interval3D::Interval3D(Point3D const &Pos, double tol) :
