@@ -245,6 +245,25 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
             }
         }
     
+    // Find two points that do not match in x or y.
+
+    SGM::Point2D xy1=aXY[0],xy2;
+    double dDiff=0;
+    for(auto xy : aXY)
+        {
+        double dx=fabs(xy.m_u-xy1.m_u);
+        double dy=fabs(xy.m_v-xy1.m_v);
+        double dD=std::min(dx,dy);
+        if(dDiff<dD)
+            {
+            dDiff=dD;
+            xy2=xy;
+            }
+        }
+    std::vector<SGM::Point2D> aXY2;
+    aXY2.push_back(xy1);
+    aXY2.push_back(xy2);
+
     // Find an*x^2+bn*y^2=1
      
     std::vector<std::vector<double> > aaMatrix;
@@ -253,8 +272,8 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
         {
         std::vector<double> aMatrix;
         aMatrix.reserve(3);
-        aMatrix.push_back(aXY[Index1].m_u*aXY[Index1].m_u);
-        aMatrix.push_back(aXY[Index1].m_v*aXY[Index1].m_v);
+        aMatrix.push_back(aXY2[Index1].m_u*aXY2[Index1].m_u);
+        aMatrix.push_back(aXY2[Index1].m_v*aXY2[Index1].m_v);
         aMatrix.push_back(1.0);
         aaMatrix.push_back(aMatrix);
         }

@@ -2809,6 +2809,17 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
      return LineOrigin+LineAxis*(LineAxis%(Pos-LineOrigin));
      }
 
+ bool PointOnSurfaces(SGM::Point3D const &Pos,
+                      surface      const *pSurf1,
+                      surface      const *pSurf2,
+                      double              dTolerance)
+     {
+     SGM::Point3D Pos1,Pos2;
+     pSurf1->Inverse(Pos,&Pos1);
+     pSurf2->Inverse(Pos,&Pos2);
+     return Pos.Distance(Pos1)<dTolerance && Pos.Distance(Pos2)<dTolerance;
+     }
+
  size_t IntersectConeAndCone(SGM::Result                        &rResult,
                              cone                         const *pCone1,
                              cone                         const *pCone2,
@@ -2972,7 +2983,26 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                  }
              else
                  {
+                 // A point curve and maybe another curve.
+
                  aCurves.push_back(new PointCurve(rResult,Apex2));
+
+                 std::vector<SGM::Point3D> aPoints;
+                 std::vector<SGM::IntersectionType> aTypes;
+                 SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
+                 SGM::Point3D ZeroPos;
+                 pCone2->Evaluate(SGM::Point2D(0,0),&ZeroPos);
+                 IntersectLineAndCone(Apex2,ZeroPos-Apex2,Domain,pCone1,dTolerance,aPoints,aTypes);
+                 for(auto Pos : aPoints)
+                     {
+                     if(SGM::NearEqual(Pos,Apex2,dTolerance)==false)
+                         {
+                         std::vector<SGM::Point3D> aEndPoints;
+                         aEndPoints.push_back(Pos);
+                         aEndPoints.push_back(Apex2);
+                         aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone1,pCone2));
+                         }
+                     }
                  }
              }
          else if(SGM::NearEqual(Apex1,Pos2,dTolerance))
@@ -2990,7 +3020,26 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                  }
              else
                  {
+                 // A point curve and maybe another curve.
+
                  aCurves.push_back(new PointCurve(rResult,Apex1));
+
+                 std::vector<SGM::Point3D> aPoints;
+                 std::vector<SGM::IntersectionType> aTypes;
+                 SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
+                 SGM::Point3D ZeroPos;
+                 pCone1->Evaluate(SGM::Point2D(0,0),&ZeroPos);
+                 IntersectLineAndCone(Apex1,ZeroPos-Apex1,Domain,pCone2,dTolerance,aPoints,aTypes);
+                 for(auto Pos : aPoints)
+                     {
+                     if(SGM::NearEqual(Pos,Apex1,dTolerance)==false)
+                         {
+                         std::vector<SGM::Point3D> aEndPoints;
+                         aEndPoints.push_back(Pos);
+                         aEndPoints.push_back(Apex1);
+                         aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone1,pCone2));
+                         }
+                     }
                  }
              }
          else
@@ -3006,24 +3055,23 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
              Seg2.Intersect(Seg3,Pos5,Pos6);
              Seg2.Intersect(Seg3,Pos7,Pos8);
              std::vector<SGM::Point3D> aTangents;
-             double dTangentTol=0.005;
-             if(SGM::NearEqual(Pos1,Pos2,dTangentTol))
+             if(SGM::NearEqual(Pos1,Pos2,dTolerance))
                  {
                  aTangents.push_back(Pos1);
                  }
-             if(SGM::NearEqual(Pos3,Pos4,dTangentTol))
+             if(SGM::NearEqual(Pos3,Pos4,dTolerance))
                  {
                  aTangents.push_back(Pos3);
                  }
-             if(SGM::NearEqual(Pos5,Pos6,dTangentTol))
+             if(SGM::NearEqual(Pos5,Pos6,dTolerance))
                  {
                  aTangents.push_back(Pos5);
                  }
-             if(SGM::NearEqual(Pos7,Pos8,dTangentTol))
+             if(SGM::NearEqual(Pos7,Pos8,dTolerance))
                  {
                  aTangents.push_back(Pos7);
                  }
-             SGM::RemoveDuplicates3D(aTangents,dTangentTol);
+             SGM::RemoveDuplicates3D(aTangents,dTolerance);
              if(aTangents.size()==1)
                  {
                  // Fire the ray on the opposite side of the cone from the tangent point to find walking points.
@@ -3037,7 +3085,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                  pCone2->Evaluate(uv2,&Pos2);
                  SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
                  std::vector<SGM::Point3D> aWalk;
-                 if(-dTangentTol<pCone1->PointInside(Pos2))
+                 if(-dTolerance<pCone1->PointInside(Pos2))
                      {
                      std::vector<SGM::Point3D> aPoints;
                      std::vector<SGM::IntersectionType> aTypes;
@@ -3047,7 +3095,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                          aWalk.push_back(Pos);
                          }
                      }
-                 if(-dTangentTol<pCone2->PointInside(Pos1))
+                 if(-dTolerance<pCone2->PointInside(Pos1))
                      {
                      std::vector<SGM::Point3D> aPoints;
                      std::vector<SGM::IntersectionType> aTypes;
@@ -3158,6 +3206,14 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                      SGM::Segment3D Seg1(Apex1,Apex1-Axis1),Seg2(Apex2,Apex2-Axis2);
                      SGM::Point3D Pos1,Pos2,Pos3,Pos4;
                      Seg1.Intersect(Seg2,Pos1,Pos2);
+                     if(SGM::NearEqual(Pos2,Apex2,dTolerance))
+                         {
+                         Pos2=Apex2-Axis2;
+                         }
+                     if(SGM::NearEqual(Pos1,Apex1,dTolerance))
+                         {
+                         Pos1=Apex1-Axis1;
+                         }
                      pCone1->Inverse(Pos1,&Pos3);
                      pCone2->Inverse(Pos2,&Pos4);
                      std::vector<SGM::Point3D> aPoints1,aPoints2,aWalkFrom;
@@ -3172,7 +3228,7 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                          }
                      for(auto StartPos : aWalkFrom)
                          {
-                         if(PointOnCurves(StartPos,aCurves)==false)
+                         if(PointOnCurves(StartPos,aCurves)==false && PointOnSurfaces(StartPos,pCone1,pCone2,dTolerance))
                              {
                              std::vector<SGM::Point3D> aEndPoints;
                              aEndPoints.push_back(StartPos);
@@ -3209,7 +3265,10 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
          for(Index1=0;Index1<nRoots;++Index1)
              {
              SGM::UnitVector3D LineAxis=aPoints[Index1]-Apex;
-             aCurves.push_back(new line(rResult,aPoints[Index1],LineAxis));
+             line *pLine=new line(rResult,Apex,LineAxis);
+             SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
+             pLine->SetDomain(Domain);
+             aCurves.push_back(pLine);
              }
          if(nRoots==0)
              {
@@ -5005,6 +5064,11 @@ size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
     {
     switch(pSurface->GetSurfaceType())
         {
+        case SGM::EntityType::PlaneType:
+            {
+            auto pPlane=(plane const *)pSurface;
+            return IntersectPlaneAndCylinder(rResult,pPlane,pCylinder,aCurves,pFace1,pFace2,dTolerance);
+            }
         case SGM::EntityType::SphereType:
             {
             auto pSphere=(sphere const *)pSurface;
