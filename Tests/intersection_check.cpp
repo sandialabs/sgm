@@ -145,23 +145,23 @@ bool TestIntersections(SGM::Result        &rResult,
     return bAnswer;
     }
 
-TEST(intersection_check, intersect_circle_torus2) 
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-    
-    SGM::CreateTorus(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1,3);
-    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2);
-    SGM::CreateEdge(rResult,CircleID);
-    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1,3);
-    
-    std::vector<SGM::Point3D> aPoints;
-    std::vector<SGM::IntersectionType> aTypes;
-    SGM::IntersectCurveAndSurface(rResult,CircleID,TorusID,aPoints,aTypes);
-    SGM::CreatePoints(rResult,aPoints);
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
+//TEST(intersection_check, intersect_circle_torus2) 
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//    
+//    SGM::CreateTorus(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1,3);
+//    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2);
+//    SGM::CreateEdge(rResult,CircleID);
+//    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1,3);
+//    
+//    std::vector<SGM::Point3D> aPoints;
+//    std::vector<SGM::IntersectionType> aTypes;
+//    SGM::IntersectCurveAndSurface(rResult,CircleID,TorusID,aPoints,aTypes);
+//    SGM::CreatePoints(rResult,aPoints);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
 
 TEST(intersection_check, intersect_circle_torus) 
 {
@@ -255,7 +255,7 @@ TEST(intersection_check, intersect_torus_torus2)
     SGM::Result rResult(pThing);
     
     SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-    SGM::CreateTorus(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),2,3);    // Minor Tangent Point Four Hermits
+    SGM::CreateTorus(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),2,3);    // Minor Circle and Two Curves with a tangent point
     //SGM::CreateTorus(rResult,SGM::Point3D(4,0,0),SGM::UnitVector3D(0,0,1),1,2);  // Minor Circle and Other Curves
     
     SGM::Surface TorusID1=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
@@ -280,11 +280,13 @@ TEST(intersection_check, intersect_torus_torus)
     SGM::Surface TorusID3=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,3);
     SGM::Surface TorusID4=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),0.5,1.5);
     SGM::Surface TorusID5=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1,2);
+    SGM::Surface TorusID6=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),2,3);
     
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID2,1));     // One Major Circle
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID3,2));     // Two Major Circles
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID4,1));     // One Minor Circle
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID5,2));     // Two Minor Circles
+    EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID6,3));     // Minor Circle and Two Curves
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -584,11 +586,11 @@ TEST(intersection_check, intersect_cylinder_cylinder)
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
 //    SGM::Result rResult(pThing);
 //    
-//    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,2),4);
+//    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2,2);
+//    SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0),5);
 //  
-//    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,2));
+//    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2,2);
+//    SGM::Surface PlaneID=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
 //    std::vector<SGM::Curve> aCurves;
 //    SGM::IntersectSurfaces(rResult,TorusID,PlaneID,aCurves);
 //    for(auto pCurve : aCurves)
@@ -600,7 +602,7 @@ TEST(intersection_check, intersect_cylinder_cylinder)
 //} 
 
 TEST(intersection_check, intersect_plane_torus)
-{
+{ 
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
@@ -608,6 +610,7 @@ TEST(intersection_check, intersect_plane_torus)
     SGM::UnitVector3D PlaneNormal(sin(dAlpha),0.0,cos(dAlpha));
 
     SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Surface TorusID2=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2,2); // Pinched Torus
     SGM::Surface PlaneID1=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),PlaneNormal);
     SGM::Surface PlaneID2=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
     SGM::Surface PlaneID3=SGM::CreatePlane(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,1));
@@ -617,6 +620,8 @@ TEST(intersection_check, intersect_plane_torus)
     SGM::Surface PlaneID7=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,2));
     SGM::Surface PlaneID8=SGM::CreatePlane(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(1,0,0));
     SGM::Surface PlaneID9=SGM::CreatePlane(rResult,SGM::Point3D(0.9,0,0),SGM::UnitVector3D(1,0,0));
+    SGM::Surface PlaneID10=SGM::CreatePlane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
+    SGM::Surface PlaneID11=SGM::CreatePlane(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(1,0,0));
 
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID1,2));     // Villarceau Circles 
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID2,2));     // Two Major Circles
@@ -627,7 +632,8 @@ TEST(intersection_check, intersect_plane_torus)
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID7,2));     // Two Major Curves
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID8,1));     // One Curve Spiric Section, Cassini oval
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID9,2));     // Two Curves Spiric Section
-                                                                    // Bernoulli’s lemniscate
+    EXPECT_TRUE(TestIntersections(rResult,TorusID2,PlaneID10,2));   // Two Touching Circles.
+    EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID11,2));    // Bernoulli’s lemniscate
 
     SGMTesting::ReleaseTestThing(pThing);
 }
