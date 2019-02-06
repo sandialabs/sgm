@@ -508,6 +508,10 @@ class torus : public surface
 
         std::vector<SGM::Point2D> const &GetSeedParams() const;
 
+        bool IsMajorCircle(curve const *pCurve,double dTolerance,double &dV) const;
+
+        bool IsMinorCircle(curve const *pCurve,double dTolerance,double &dU) const;
+
     public:
 
         SGM::Point3D       m_Center;

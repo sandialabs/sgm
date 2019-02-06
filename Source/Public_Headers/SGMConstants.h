@@ -35,6 +35,5 @@
 // width of the geometry.
 
 #define SGM_FIT     1E-3
-#define SGM_FIT_SMALL 1E-4 // Used to make sure we are below SGM_FIT.
 
 #endif //SGM_CONSTANTS_H

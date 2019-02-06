@@ -70,7 +70,7 @@ namespace SGM
                                              SGM::UnitVector3D            const &PlaneNorm,
                                              std::vector<SGM::Point3D>          &aPoints,
                                              std::vector<SGM::IntersectionType> &aTypes,
-                                             double                              dTolerance = SGM_ZERO);
+                                             double                              dTolerance = SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectEdgeAndPlane(SGM::Result                        &rResult,
                                             SGM::Edge                    const &EdgeID,

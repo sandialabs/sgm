@@ -427,7 +427,8 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
+size_t IntersectCircleAndSurface(SGM::Result                        &rResult,
+                                 SGM::Point3D                 const &Center,
                                  SGM::UnitVector3D            const &Normal,
                                  double                              dRadius,
                                  surface                      const *pSurface,
@@ -548,7 +549,7 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
 
 hermite *WalkFromTo(SGM::Result                     &rResult,
                     SGM::Point3D              const &StartPos,
-                    std::vector<SGM::Point3D> const &aPoints,
+                    std::vector<SGM::Point3D> const &aEndPoints,
                     surface                   const *pSurface1,
                     surface                   const *pSurface2);
 

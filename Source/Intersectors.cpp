@@ -10,6 +10,7 @@
 #include "Intersectors.h"
 #include "FacetToBRep.h"
 #include "Topology.h"
+#include "Faceter.h"
 
 namespace SGMInternal
 {
@@ -2210,6 +2211,19 @@ void IntersectPlaneAndSphere(SGM::Point3D         const &Origin,
     return aPoints.size();
     }
 
+size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
+                                circle                       const *pCircle1,
+                                circle                       const *pCircle2,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                double                              dTolerance)
+    {
+    return IntersectCircleAndCircle(pCircle1->m_Center,pCircle2->m_Center,
+                                    pCircle1->m_Normal,pCircle2->m_Normal,
+                                    pCircle1->m_dRadius,pCircle2->m_dRadius,
+                                    aPoints,aTypes,dTolerance);
+    }
+
  size_t IntersectCircleAndSphere(SGM::Point3D                 const &Center,
                                  SGM::UnitVector3D            const &Normal,
                                  double                              dRadius,
@@ -2293,7 +2307,186 @@ size_t IntersectCircleAndPlane(SGM::Point3D                 const &Center,
     return aPoints.size();
     }
 
-size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
+SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
+                        curve        const *pCurve1,
+                        curve        const *pCurve2,
+                        double              dTolerance)
+    {
+    SGM::Point3D Answer=Pos;
+    double dDist=dTolerance+1.0;
+    while(dTolerance<dDist)
+        {
+        SGM::Point3D Pos1,Pos2;
+        double t1=pCurve1->Inverse(Answer,&Pos1);
+        double t2=pCurve2->Inverse(Answer,&Pos2);
+        dDist=std::max(Pos1.Distance(Answer),Pos2.Distance(Answer));
+        SGM::Vector3D Vec1,Vec2;
+        pCurve1->Evaluate(t1,nullptr,&Vec1);
+        pCurve2->Evaluate(t2,nullptr,&Vec2);
+        SGM::Segment3D Seg1(Pos1,Pos1+Vec1),Seg2(Pos2,Pos2+Vec2);
+        Seg1.Intersect(Seg2,Pos1,Pos2);
+        Answer=SGM::MidPoint(Pos1,Pos2);
+        }
+    return Answer;
+    }
+
+size_t IntersectCurves(curve                        const *pCurve1,
+                       curve                        const *pCurve2,
+                       std::vector<SGM::Point3D>          &aPoints,
+                       std::vector<SGM::IntersectionType> &aTypes,
+                       double                              dTolerance)
+    {
+    // Facet the two curves.
+
+    FacetOptions Options;
+    SGM::Interval1D const &Domain1=pCurve1->GetDomain();
+    SGM::Interval1D const &Domain2=pCurve2->GetDomain();
+    std::vector<SGM::Point3D> aPoints1,aPoints2;
+    std::vector<double> aParams1,aParams2;
+    FacetCurve(pCurve1,Domain1,Options,aPoints1,aParams1);
+    FacetCurve(pCurve2,Domain2,Options,aPoints2,aParams2);
+
+    // Find the max facet length.
+
+    double dMax1=0;
+    size_t nSize=aPoints1.size();
+    size_t Index1;
+    for(Index1=1;Index1<nSize;++Index1)
+        {
+        double dLengthSquared=aPoints1[Index1-1].DistanceSquared(aPoints1[Index1]);
+        if(dMax1<dLengthSquared)
+            {
+            dMax1=dLengthSquared;
+            }
+        }
+    double dMax2=0;
+    nSize=aPoints2.size();
+    for(Index1=1;Index1<nSize;++Index1)
+        {
+        double dLengthSquared=aPoints2[Index1-1].DistanceSquared(aPoints2[Index1]);
+        if(dMax2<dLengthSquared)
+            {
+            dMax2=dLengthSquared;
+            }
+        }
+
+    // Find walking points.
+
+    std::vector<SGM::Point3D> aWalk;
+    if(dMax2<dMax1)
+        {
+        for(auto Pos : aPoints2)
+            {
+            SGM::Point3D ClosePos;
+            pCurve1->Inverse(Pos,&ClosePos);
+            if(Pos.DistanceSquared(ClosePos)<dMax2)
+                {
+                aWalk.push_back(Pos);
+                }
+            }
+        }
+    else
+        {
+        for(auto Pos : aPoints1)
+            {
+            SGM::Point3D ClosePos;
+            pCurve2->Inverse(Pos,&ClosePos);
+            if(Pos.DistanceSquared(ClosePos)<dMax1)
+                {
+                aWalk.push_back(Pos);
+                }
+            }
+        }
+
+    // Walk from the walking points.
+
+    for(auto Pos : aWalk)
+        {
+        aPoints.push_back(ZoomInFrom(Pos,pCurve1,pCurve2,dTolerance));
+        }
+    SGM::RemoveDuplicates3D(aPoints,dTolerance);
+
+    aTypes;
+
+    return aPoints.size();
+    }
+
+size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
+                               circle                       const *pCircle,
+                               curve                        const *pCurve,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes,
+                               edge                         const *,//pEdge1,
+                               edge                         const *pEdge2,
+                               double                              dTolerance)
+    {
+    switch(pCurve->GetCurveType())
+        {
+        case SGM::LineType:
+            {
+            auto pLine=(line const *)pCurve;
+            SGM::Interval1D Domain=pCurve->GetDomain();
+            if(pEdge2)
+                {
+                Domain&=pEdge2->GetDomain();
+                }
+            SGM::Point3D const &Origin=pLine->m_Origin;
+            SGM::UnitVector3D const &Axis=pLine->m_Axis;
+            return IntersectLineAndCircle(Origin,Axis,Domain,(circle const *)pCurve,dTolerance,aPoints,aTypes);
+            }
+        case SGM::CircleType:
+            {
+            return IntersectCircleAndCircle(rResult,pCircle,(circle const *)pCurve,aPoints,aTypes,dTolerance);
+            }
+        case SGM::PointCurveType:
+            {
+            auto pPointCurve=(PointCurve const *)pCurve;
+            SGM::Point3D const &Pos=pPointCurve->m_Pos;
+            SGM::Point3D CPos;
+            pCircle->Inverse(Pos,&CPos);
+            size_t nAnswer=0;
+            if(Pos.Distance(CPos)<dTolerance)
+                {
+                aPoints.push_back(CPos);
+                aTypes.push_back(SGM::IntersectionType::CoincidentType);
+                nAnswer=1;
+                }
+            return nAnswer;
+            }
+        default:
+            {
+            return IntersectCurves(pCircle,pCurve,aPoints,aTypes,dTolerance);
+            }
+        }
+    }
+
+size_t IntersectTorusAndCircle(SGM::Result                        &rResult,
+                               SGM::Point3D                 const &Center,
+                               SGM::UnitVector3D            const &Normal,
+                               double                              dRadius,
+                               torus                        const *pTorus,
+                               double                              dTolerance,
+                               std::vector<SGM::Point3D>          &aPoints,
+                               std::vector<SGM::IntersectionType> &aTypes)
+    {
+    plane *pPlane=new plane(rResult,Center,Normal);
+    std::vector<curve *> aCurves;
+    IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,nullptr,nullptr,dTolerance);
+    circle *pCircle=new circle(rResult,Center,Normal,dRadius);
+
+    rResult.GetThing()->DeleteEntity(pPlane);
+    for(auto pCurve : aCurves)
+        {
+        IntersectCircleAndCurve(rResult,pCircle,pCurve,aPoints,aTypes,nullptr,nullptr,dTolerance);
+        rResult.GetThing()->DeleteEntity(pCurve);
+        }
+    rResult.GetThing()->DeleteEntity(pCircle);
+
+    return aPoints.size();
+    }
+
+size_t IntersectCircleAndSurface(SGM::Result                        &rResult,
+                                 SGM::Point3D                 const &Center,
                                  SGM::UnitVector3D            const &Normal,
                                  double                              dRadius,
                                  surface                      const *pSurface,
@@ -2307,11 +2500,19 @@ size_t IntersectCircleAndSurface(SGM::Point3D                 const &Center,
             {
             auto pPlane=(plane const *)pSurface;
             IntersectCircleAndPlane(Center,Normal,dRadius,pPlane->m_Origin,pPlane->m_ZAxis,dTolerance,aPoints,aTypes);
+            break;
             }
         case SGM::EntityType::CylinderType:
             {
             auto pCylinder=(cylinder const *)pSurface;
             IntersectCircleAndCylinder(Center,Normal,dRadius,pCylinder,dTolerance,aPoints,aTypes);
+            break;
+            }
+        case SGM::EntityType::TorusType:
+            {
+            auto pTorus=(torus const *)pSurface;
+            IntersectTorusAndCircle(rResult,Center,Normal,dRadius,pTorus,dTolerance,aPoints,aTypes);
+            break;
             }
         default:
             {
@@ -2394,7 +2595,7 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
             SGM::Point3D const &Center=pCircle->m_Center;
             SGM::UnitVector3D const &Normal=pCircle->m_Normal;
             double dRadius=pCircle->m_dRadius;
-            IntersectCircleAndSurface(Center,Normal,dRadius,pSurface,dTolerance,aPoints,aTypes);
+            IntersectCircleAndSurface(rResult,Center,Normal,dRadius,pSurface,dTolerance,aPoints,aTypes);
             break;
             }
         case SGM::EllipseType:
@@ -2587,19 +2788,6 @@ size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
     return aPoints.size();
     }
 
-size_t IntersectCircleAndCircle(SGM::Result                        &,//rResult,
-                                circle                       const *pCircle1,
-                                circle                       const *pCircle2,
-                                std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes,
-                                double                              dTolerance)
-    {
-    return IntersectCircleAndCircle(pCircle1->m_Center,pCircle2->m_Center,
-                                    pCircle1->m_Normal,pCircle2->m_Normal,
-                                    pCircle1->m_dRadius,pCircle2->m_dRadius,
-                                    aPoints,aTypes,dTolerance);
-    }
-
 size_t IntersectCircleAndCylinder(SGM::Point3D                 const &Center,
                                   SGM::UnitVector3D            const &Normal,
                                   double                              dRadius,
@@ -2645,55 +2833,6 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &rResult,
             }
         }
     return aPoints.size();
-    }
-
-size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
-                               circle                       const *pCircle,
-                               curve                        const *pCurve,
-                               std::vector<SGM::Point3D>          &aPoints,
-                               std::vector<SGM::IntersectionType> &aTypes,
-                               edge                         const *,//pEdge1,
-                               edge                         const *pEdge2,
-                               double                              dTolerance)
-    {
-    switch(pCurve->GetCurveType())
-        {
-        case SGM::LineType:
-            {
-            auto pLine=(line const *)pCurve;
-            SGM::Interval1D Domain=pCurve->GetDomain();
-            if(pEdge2)
-                {
-                Domain&=pEdge2->GetDomain();
-                }
-            SGM::Point3D const &Origin=pLine->m_Origin;
-            SGM::UnitVector3D const &Axis=pLine->m_Axis;
-            return IntersectLineAndCircle(Origin,Axis,Domain,(circle const *)pCurve,dTolerance,aPoints,aTypes);
-            }
-        case SGM::CircleType:
-            {
-            return IntersectCircleAndCircle(rResult,pCircle,(circle const *)pCurve,aPoints,aTypes,dTolerance);
-            }
-        case SGM::PointCurveType:
-            {
-            auto pPointCurve=(PointCurve const *)pCurve;
-            SGM::Point3D const &Pos=pPointCurve->m_Pos;
-            SGM::Point3D CPos;
-            pCircle->Inverse(Pos,&CPos);
-            size_t nAnswer=0;
-            if(Pos.Distance(CPos)<dTolerance)
-                {
-                aPoints.push_back(CPos);
-                aTypes.push_back(SGM::IntersectionType::CoincidentType);
-                nAnswer=1;
-                }
-            return nAnswer;
-            }
-        default:
-            {
-            throw;
-            }
-        }
     }
 
  size_t IntersectCurves(SGM::Result                        &rResult,
@@ -2755,17 +2894,9 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
              {
              break;
              }
-         case SGM::NUBCurveType:
-             {
-             break;
-             }
-         case SGM::NURBCurveType:
-             {
-             break;
-             }
          default:
              {
-             rResult.SetResult(SGM::ResultType::ResultTypeUnknownType);
+             IntersectCurves(pCurve1,pCurve2,aPoints,aTypes,dTolerance);
              }
          }
       return aPoints.size();
@@ -2985,8 +3116,6 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                  {
                  // A point curve and maybe another curve.
 
-                 aCurves.push_back(new PointCurve(rResult,Apex2));
-
                  std::vector<SGM::Point3D> aPoints;
                  std::vector<SGM::IntersectionType> aTypes;
                  SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
@@ -3002,6 +3131,11 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                          aEndPoints.push_back(Apex2);
                          aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone1,pCone2));
                          }
+                     }
+
+                 if(PointOnCurves(Apex2,aCurves)==false)
+                     {
+                     aCurves.push_back(new PointCurve(rResult,Apex2));
                      }
                  }
              }
@@ -3022,8 +3156,6 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                  {
                  // A point curve and maybe another curve.
 
-                 aCurves.push_back(new PointCurve(rResult,Apex1));
-
                  std::vector<SGM::Point3D> aPoints;
                  std::vector<SGM::IntersectionType> aTypes;
                  SGM::Interval1D Domain(0,SGM_INTERVAL_POS_MAX);
@@ -3039,6 +3171,11 @@ size_t IntersectCircleAndCurve(SGM::Result                        &rResult,
                          aEndPoints.push_back(Apex1);
                          aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone1,pCone2));
                          }
+                     }
+
+                 if(PointOnCurves(Apex1,aCurves)==false)
+                     {
+                     aCurves.push_back(new PointCurve(rResult,Apex1));
                      }
                  }
              }
@@ -3506,7 +3643,13 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
 
     if(fabs(dPlaneDistFromCenter)<SGM_MIN_TOL && SGM_MIN_TOL<=dAngle)
         {
-        if( SGM::NearEqual(dAngle,dVillarceauAngle,SGM_MIN_TOL,false))      // Villarceau circles.
+        if(SGM::NearEqual(dAngle,SGM_HALF_PI,SGM_MIN_TOL,false))       // Minor Radius circles.
+            {
+            SGM::UnitVector3D UVec=TorusNormal*PlaneNormal;
+            aCurves.push_back(new circle(rResult,TorusCenter+UVec*pTorus->m_dMajorRadius,PlaneNormal,pTorus->m_dMinorRadius));
+            aCurves.push_back(new circle(rResult,TorusCenter-UVec*pTorus->m_dMajorRadius,PlaneNormal,pTorus->m_dMinorRadius));
+            }
+        else if( SGM::NearEqual(dAngle,dVillarceauAngle,SGM_MIN_TOL,false))      // Villarceau circles.
             {
             SGM::UnitVector3D XVec=TorusNormal*PlaneNormal;
             double dRadius=pTorus->m_dMajorRadius;
@@ -3515,12 +3658,6 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
             SGM::Point3D Center2=TorusCenter-XVec*dOffset;
             aCurves.push_back(new circle(rResult,Center1,PlaneNormal,dRadius));
             aCurves.push_back(new circle(rResult,Center2,PlaneNormal,dRadius));
-            }
-        else if(SGM::NearEqual(dAngle,SGM_HALF_PI,SGM_MIN_TOL,false))       // Minor Radius circles.
-            {
-            SGM::UnitVector3D UVec=TorusNormal*PlaneNormal;
-            aCurves.push_back(new circle(rResult,TorusCenter+UVec*pTorus->m_dMajorRadius,PlaneNormal,pTorus->m_dMinorRadius));
-            aCurves.push_back(new circle(rResult,TorusCenter-UVec*pTorus->m_dMajorRadius,PlaneNormal,pTorus->m_dMinorRadius));
             }
         else                                                                // Two Curves 
             {
@@ -4260,7 +4397,7 @@ size_t IntersectConeAndCylinder(SGM::Result                &rResult,
                     SGM::Point3D TestPos;
                     pCurve->Inverse(StartPos,&TestPos);
                     double dDist=StartPos.Distance(TestPos);
-                    if(SGM_FIT_SMALL*5<dDist)
+                    if(SGM_FIT<dDist)
                         {
                         aEndPoints.clear();
                         aEndPoints.push_back(StartPos);
@@ -4662,6 +4799,286 @@ bool PointOnCircle(SGM::Point3D      const &Pos,
                    double                   dTolerance)
     {
     return fabs((Pos-Center)%Normal)<dTolerance && SGM::NearEqual(dRadius,Pos.Distance(Center),dTolerance,false);
+    }
+
+size_t FindTangentPoints(SGM::Result                &rResult,
+                         torus                const *pTorus1,
+                         torus                const *pTorus2,
+                         std::vector<curve *> const &aCurves,
+                         double                      dTolerance,
+                         std::vector<SGM::Point3D>  &aTangents)
+    {
+    // Find inside tangent points.  Offset the torus with the larger minor radius
+    // and intersect it with the core of the other torus.  Then inverse the found
+    // points onto the larger minor radius torus and test to see if it is tangent.
+    // Outsdie tangent points are found by offsetting out.
+
+    std::vector<SGM::Point3D> aTemp;
+    if(pTorus1->m_dMinorRadius+dTolerance<pTorus2->m_dMinorRadius)
+        {
+        torus *pTorus3=new torus(rResult,pTorus2->m_Center,pTorus2->m_ZAxis,pTorus2->m_dMinorRadius-pTorus1->m_dMinorRadius,pTorus2->m_dMajorRadius,true);
+        torus *pTorus4=new torus(rResult,pTorus2->m_Center,pTorus2->m_ZAxis,pTorus2->m_dMinorRadius+pTorus1->m_dMinorRadius,pTorus2->m_dMajorRadius,true);
+        circle *pCircle=new circle(rResult,pTorus1->m_Center,pTorus1->m_ZAxis,pTorus1->m_dMajorRadius);
+        std::vector<SGM::Point3D> aHits1,aHits2;
+        std::vector<SGM::IntersectionType> aTypes1,aTypes2;
+        size_t nHits1=IntersectCurveAndSurface(rResult,pCircle,pTorus3,aHits1,aTypes1,nullptr,nullptr,dTolerance);
+        size_t nHits2=IntersectCurveAndSurface(rResult,pCircle,pTorus4,aHits2,aTypes2,nullptr,nullptr,dTolerance);
+        size_t Index1;
+        for(Index1=0;Index1<nHits1;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits1[Index1];
+            if(aTypes1[Index1]==SGM::IntersectionType::TangentType)
+                {
+                SGM::Point3D CPos;
+                pTorus2->Inverse(Pos,&CPos);
+                aTemp.push_back(CPos);
+                }
+            }
+        for(Index1=0;Index1<nHits2;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits2[Index1];
+            if(aTypes2[Index1]==SGM::IntersectionType::TangentType)
+                {
+                SGM::Point3D CPos;
+                pTorus1->Inverse(Pos,&CPos);
+                aTemp.push_back(CPos);
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pCircle);
+        rResult.GetThing()->DeleteEntity(pTorus3);
+        rResult.GetThing()->DeleteEntity(pTorus4);
+        }
+    else if(pTorus2->m_dMinorRadius+dTolerance<pTorus1->m_dMinorRadius)
+        {
+        torus *pTorus3=new torus(rResult,pTorus1->m_Center,pTorus1->m_ZAxis,pTorus1->m_dMinorRadius-pTorus2->m_dMinorRadius,pTorus1->m_dMajorRadius,true);
+        torus *pTorus4=new torus(rResult,pTorus1->m_Center,pTorus1->m_ZAxis,pTorus1->m_dMinorRadius+pTorus2->m_dMinorRadius,pTorus1->m_dMajorRadius,true);
+        circle *pCircle=new circle(rResult,pTorus2->m_Center,pTorus2->m_ZAxis,pTorus2->m_dMajorRadius);
+        std::vector<SGM::Point3D> aHits1,aHits2;
+        std::vector<SGM::IntersectionType> aTypes1,aTypes2;
+        size_t nHits1=IntersectCurveAndSurface(rResult,pCircle,pTorus3,aHits1,aTypes1,nullptr,nullptr,dTolerance);
+        size_t nHits2=IntersectCurveAndSurface(rResult,pCircle,pTorus4,aHits2,aTypes2,nullptr,nullptr,dTolerance);
+        size_t Index1;
+        for(Index1=0;Index1<nHits1;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits1[Index1];
+            if(aTypes1[Index1]==SGM::IntersectionType::TangentType)
+                {
+                SGM::Point3D CPos;
+                pTorus1->Inverse(Pos,&CPos);
+                aTemp.push_back(CPos);
+                }
+            }
+        for(Index1=0;Index1<nHits2;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits2[Index1];
+            if(aTypes2[Index1]==SGM::IntersectionType::TangentType)
+                {
+                SGM::Point3D CPos;
+                pTorus2->Inverse(Pos,&CPos);
+                aTemp.push_back(CPos);
+                }
+            }
+        rResult.GetThing()->DeleteEntity(pCircle);
+        rResult.GetThing()->DeleteEntity(pTorus3);
+        rResult.GetThing()->DeleteEntity(pTorus4);
+        }
+
+    // Only include points that are not on the tangent curves.
+
+    SGM::RemoveDuplicates3D(aTemp,dTolerance);
+    for(auto Pos : aTemp)
+        {
+        bool bFound=false;
+        for(auto pCurve : aCurves)
+            {
+            SGM::Point3D CPos;
+            pCurve->Inverse(Pos,&CPos);
+            if(SGM::NearEqual(Pos,CPos,dTolerance))
+                {
+                bFound=true;
+                break;
+                }
+            }
+        if(bFound==false)
+            {
+            aTangents.push_back(Pos);
+            }
+        }
+
+    return aTangents.size();
+    }
+
+size_t FindWalkingPoints(SGM::Result                     &rResult,
+                         torus                     const *pTorus1,
+                         torus                     const *pTorus2,
+                         std::vector<SGM::Point3D> const &aTangents,
+                         std::vector<curve *>      const &aCurves,
+                         double                           dTolerance,
+                         std::vector<SGM::Point3D>       &aWalk)
+    {
+    // Find the U and V values to look for walking points between.
+
+    std::vector<double> aUs,aVs;
+    for(auto Pos : aTangents)
+        {
+        SGM::Point2D uv=pTorus1->Inverse(Pos);
+        aUs.push_back(uv.m_u);
+        aVs.push_back(uv.m_v);
+        }
+    for(auto pCurve : aCurves)
+        {
+        double dU,dV;
+        if(pTorus1->IsMinorCircle(pCurve,dTolerance,dU))
+            {
+            aUs.push_back(dU);
+            }
+        else if(pTorus1->IsMajorCircle(pCurve,dTolerance,dV))
+            {
+            aVs.push_back(dV);
+            }
+        }
+    SGM::RemoveDuplicates1D(aUs,dTolerance);
+    SGM::RemoveDuplicates1D(aVs,dTolerance);
+
+    // Find the circles to intersect to find walking points.
+
+    size_t Index1;
+    if(aUs.size()<aVs.size())
+        {
+        std::vector<double> aWalks;
+        size_t nSize=aVs.size();
+        if(nSize==1)
+            {
+            aWalks.push_back(aVs[0]+SGM_PI);
+            }
+        else
+            {
+            std::sort(aVs.begin(),aVs.end());
+            for(Index1=1;Index1<nSize;++Index1)
+                {
+                aWalks.push_back((aVs[Index1]+aVs[Index1-1])*0.5);
+                }
+            aWalks.push_back((aVs[nSize-1]+aVs[0]+SGM_TWO_PI)*0.5);
+            }
+
+        // Intersect Major circles on pTorus1 with pTorus2.
+
+        for(double dV : aWalks)
+            {
+            curve *pCurve=pTorus1->VParamLine(rResult,dV);
+            std::vector<SGM::IntersectionType> aTypes;
+            IntersectCurveAndSurface(rResult,pCurve,pTorus2,aWalk,aTypes,nullptr,nullptr,dTolerance);
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
+        }
+    else
+        {
+        std::vector<double> aWalks;
+        size_t nSize=aUs.size();
+        if(nSize==1)
+            {
+            aWalks.push_back(aUs[0]+SGM_PI);
+            }
+        else
+            {
+            std::sort(aUs.begin(),aUs.end());
+            for(Index1=1;Index1<nSize;++Index1)
+                {
+                aWalks.push_back((aUs[Index1]+aUs[Index1-1])*0.5);
+                }
+            aWalks.push_back((aUs[nSize-1]+aUs[0]+SGM_TWO_PI)*0.5);
+            }
+
+        // Intersect Minor circles on pTorus1 with pTorus2.
+
+        for(double dU : aWalks)
+            {
+            curve *pCurve=pTorus1->UParamLine(rResult,dU);
+            std::vector<SGM::IntersectionType> aTypes;
+            IntersectCurveAndSurface(rResult,pCurve,pTorus2,aWalk,aTypes,nullptr,nullptr,dTolerance);
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
+        }
+
+    return aWalk.size();
+    }
+
+size_t IntersectTorusAndTorus(SGM::Result               &rResult,
+                              torus               const *pTorus1,
+                              torus               const *pTorus2,
+                              std::vector<curve *>      &aCurves,
+                              face                const *,//pFace1,
+                              face                const *,//pFace2,
+                              double                     dTolerance)
+    {
+    SGM::Point3D const &Center1=pTorus1->m_Center;
+    SGM::Point3D const &Center2=pTorus2->m_Center;
+    SGM::UnitVector3D const &Axis1=pTorus1->m_ZAxis;
+    SGM::UnitVector3D const &Axis2=pTorus2->m_ZAxis;
+    SGM::Point3D AxisPos=Center1+Axis1*(Axis1%(Center2-Center1));
+    if( SGM::NearEqual(Axis1%Axis2,1,dTolerance,false) &&
+        AxisPos.Distance(Center2)<dTolerance )
+        {
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGM::UnitVector3D const &Norm=pTorus1->m_YAxis;
+        SGM::UnitVector3D const XVec=pTorus1->m_XAxis;
+        double dRadius1=pTorus1->m_dMinorRadius;
+        double dRadius2=pTorus2->m_dMinorRadius;
+        SGM::Point3D Cent1=Center1+pTorus1->m_dMajorRadius*XVec;
+        SGM::Point3D Cent2=Center2+pTorus2->m_dMajorRadius*XVec;
+        IntersectCircleAndCircle(Cent1,Cent2,Norm,Norm,dRadius1,dRadius2,aPoints,aTypes,dTolerance);
+        for(SGM::Point3D Pos : aPoints)
+            {
+            SGM::Point3D Center=Center1+Axis1*(Axis1%(Pos-Center1));
+            double dRadius=Center.Distance(Pos);
+            aCurves.push_back(new circle(rResult,Center,Axis1,dRadius,&XVec));
+            }
+        }
+    else if(PointOnCircle(Center1,Center2,pTorus2->m_dMajorRadius,Axis2,dTolerance))
+        {
+        if(SGM::NearEqual(pTorus1->m_dMajorRadius-pTorus1->m_dMinorRadius,pTorus2->m_dMinorRadius,dTolerance,false))
+            {
+            aCurves.push_back(new circle(rResult,Center1,pTorus1->m_ZAxis,pTorus2->m_dMinorRadius));
+            }
+        if(SGM::NearEqual(pTorus1->m_dMinorRadius,pTorus2->m_dMajorRadius-pTorus2->m_dMinorRadius,dTolerance,false))
+            {
+            aCurves.push_back(new circle(rResult,Center2,pTorus2->m_ZAxis,pTorus1->m_dMinorRadius));
+            }
+        }
+    else if(PointOnCircle(Center2,Center1,pTorus1->m_dMajorRadius,Axis1,dTolerance))
+        {
+        if(SGM::NearEqual(pTorus2->m_dMajorRadius-pTorus2->m_dMinorRadius,pTorus1->m_dMinorRadius,dTolerance,false))
+            {
+            aCurves.push_back(new circle(rResult,Center2,pTorus2->m_ZAxis,pTorus1->m_dMinorRadius));
+            }
+        if(pTorus1->m_dMajorRadius-pTorus1->m_dMinorRadius+dTolerance<pTorus2->m_dMinorRadius)
+            {
+            // Look for tangent points.
+
+            std::vector<SGM::Point3D> aTangents;
+            FindTangentPoints(rResult,pTorus1,pTorus2,aCurves,dTolerance,aTangents);
+
+            // Find walking points.
+
+            std::vector<SGM::Point3D> aWalk;
+            FindWalkingPoints(rResult,pTorus1,pTorus2,aTangents,aCurves,dTolerance,aWalk);
+
+            for(SGM::Point3D const &Pos : aWalk)
+                {
+                if(PointOnCurves(Pos,aCurves)==false)
+                    {
+                    aCurves.push_back(WalkFromTo(rResult,Pos,aTangents,pTorus1,pTorus2));
+                    }
+                }
+            }
+        }
+    else
+        {
+        int a=0;
+        a*=1;
+        }
+    return aCurves.size();
     }
 
 size_t IntersectSphereAndTorus(SGM::Result                &rResult,
@@ -5153,6 +5570,11 @@ size_t IntersectTorusAndSurface(SGM::Result                &rResult,
             auto pSphere=(sphere const *)pSurface;
             return IntersectSphereAndTorus(rResult,pSphere,pTorus,aCurves,pFace1,pFace2,dTolerance);
             }
+        case SGM::EntityType::TorusType:
+            {
+            auto pTorus2=(torus const *)pSurface;
+            return IntersectTorusAndTorus(rResult,pTorus,pTorus2,aCurves,pFace1,pFace2,dTolerance);
+            }
         default:
             {
             throw;
@@ -5166,8 +5588,13 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
                          std::vector<curve *>       &aCurves,
                          face                 const *pFace1,
                          face                 const *pFace2,
-                         double                      dTolerance)
+                         double                      dInTolerance)
     {
+    double dTolerance=dInTolerance;
+    if(dTolerance<SGM_MIN_TOL)
+        {
+        dTolerance=SGM_MIN_TOL;
+        }
     switch(pSurface1->GetSurfaceType())
         {
         case SGM::EntityType::PlaneType:
@@ -5273,7 +5700,7 @@ bool MidPointIsOff(HermiteNode const &iter1,
     SGM::Point3D ExactMidPos=ZoomInFrom(MidPos,pSurface1,pSurface2);
     double dDist2=ExactMidPos.DistanceSquared(MidPos);
     bool bAnswer=false;
-    if(SGM_FIT_SMALL<dDist2)
+    if(SGM_MIN_TOL<dDist2)
         {
         SGM::Point2D uv1=pSurface1->Inverse(ExactMidPos);
         SGM::Point2D uv2=pSurface2->Inverse(ExactMidPos);
