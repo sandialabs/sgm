@@ -1,6 +1,7 @@
 #include "SGMVector.h"
 #include "EntityClasses.h"
 #include "Curve.h"
+#include "Intersectors.h"
 #include <utility>
 #include <vector>
 #include <cmath>
@@ -21,6 +22,8 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
                          SGM::UnitVector3D               &YVec,
                          SGM::UnitVector3D               &ZVec)
     {
+    // A*(x^2)+B*(2xy)+C*(y^2)+D*(2x)+E*(2y)+F*(1)=0
+
     // First find the least squares plane through the points.
 
     std::vector<SGM::Point2D> aPoints2D;
@@ -36,37 +39,22 @@ bool FindConicParameters(std::vector<SGM::Point3D> const &aPoints,
         {
         return false;
         }
-
-    std::vector<std::vector<double> > aaMatrix;
-    aaMatrix.reserve(5);
-
-    // A=1 -> B*(2xy)+C*(y^2)+D*(2x)+E*(2y)+F*(1)=(-X^2)
-
-    size_t Index1;
-    for(Index1=0;Index1<5;++Index1)
+    while(5<aPoints2D.size())
         {
-        SGM::Point2D const &uv=aPoints2D[Index1];
-        std::vector<double> aMatrix;
-        aMatrix.reserve(6);
-        aMatrix.push_back(2.0*uv.m_u*uv.m_v);
-        aMatrix.push_back(uv.m_v*uv.m_v);
-        aMatrix.push_back(2.0*uv.m_u);
-        aMatrix.push_back(2.0*uv.m_v);
-        aMatrix.push_back(1.0);
-        aMatrix.push_back(-uv.m_u*uv.m_u);
-        aaMatrix.push_back(aMatrix);
+        aPoints2D.pop_back();
         }
-    if(!SGM::LinearSolve(aaMatrix))
+
+    // Returns <A,B,C,D,E,F> such that A*x^2+B*y^2+C*x*y+D*x+E*y+F=0.
+
+    if(FindConicCoefficient(aPoints2D,aConicParams))
         {
-        return false;
+        // Convert A,B,C,D,E,F to A,C,B,2D,2E,F
+        std::swap(aConicParams[1],aConicParams[2]);
+        aConicParams[3]*=0.5;
+        aConicParams[4]*=0.5;
+        return true;
         }
-    aConicParams.reserve(6);
-    aConicParams.push_back(1.0);
-    for(Index1=0;Index1<5;++Index1)
-        {
-        aConicParams.push_back(aaMatrix[Index1].back());
-        }
-    return true;
+    return false;
     }
 
 curve *CheckForLine(SGM::Result                     &rResult,

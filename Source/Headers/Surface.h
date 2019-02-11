@@ -365,15 +365,20 @@ class cone : public surface
         void Transform(SGM::Result            &rResult,
                        SGM::Transform3D const &Trans) override;
 
-        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+        curve *UParamLine(SGM::Result &rResult,double dU) const override;
 
-        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+        curve *VParamLine(SGM::Result &rResult,double dV) const override;
 
         SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
 
         // Returns how far Pos is inside the cone.  A negative number indicates that Pos is outside the cone.
 
         double PointInside(SGM::Point3D const &Pos) const;
+
+        // A positive value creates a cone that offsets to the outside of this cone,
+        // A negative value creates a cone that offsets to the inside of this cone,
+
+        cone *Offset(SGM::Result &rResult,double dValue) const;
 
     public:
 

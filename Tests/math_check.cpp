@@ -3898,7 +3898,7 @@ TEST(math_check, complex_tests)
     aComponents.clear();
     EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),2);
     aComponents.clear();
-    EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),1);
+    EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),2);
     SGM::FindBoundary(rResult,ComplexID);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());

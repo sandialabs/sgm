@@ -178,6 +178,19 @@ double cone::PointInside(SGM::Point3D const &Pos) const
     return dDist;
     }
 
+cone *cone::Offset(SGM::Result &rResult,
+                   double       dValue) const
+    {
+    // Move the orign up or down to produce the offset.
+
+    double dHalfAngle=FindHalfAngle();
+    SGM::Point3D Apex=FindApex();
+    double m=Apex.Distance(m_Origin);
+    double w=-dValue/m_dSinHalfAngle;
+    SGM::Point3D NewOrigin=Apex-m_ZAxis*(w+m);
+    return new cone(rResult,NewOrigin,m_ZAxis,m_dRadius,dHalfAngle,&m_XAxis);
+    }
+
 SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
                            SGM::Point3D       *ClosePos,
                            SGM::Point2D const *pGuess) const

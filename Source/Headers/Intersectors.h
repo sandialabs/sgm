@@ -547,11 +547,11 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::Point3D            &Origin,
                                 SGM::UnitVector3D       &Axis);
 
-hermite *WalkFromTo(SGM::Result                     &rResult,
-                    SGM::Point3D              const &StartPos,
-                    std::vector<SGM::Point3D> const &aEndPoints,
-                    surface                   const *pSurface1,
-                    surface                   const *pSurface2);
+curve *WalkFromTo(SGM::Result                     &rResult,
+                  SGM::Point3D              const &StartPos,
+                  std::vector<SGM::Point3D> const &aEndPoints,
+                  surface                   const *pSurface1,
+                  surface                   const *pSurface2);
 
 SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
                         surface      const *pSurface1,
@@ -561,6 +561,16 @@ SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
                        SGM::Point3D      const &Pos,
                        SGM::UnitVector3D const &Norm,
                        cone              const *pCone);
+
+ // Returns <A,B,C,D,E,F> such that A*x^2+B*y^2+C*x*y+D*x+E*y+F=0.
+
+bool FindConicCoefficient(std::vector<SGM::Point2D> const &aPoints,
+                          std::vector<double>             &aCoefficients);
+
+bool PointOnCurves(SGM::Point3D         const &Pos,
+                   std::vector<curve *> const &aCurves,
+                   surface              const *pSurface1=nullptr,
+                   surface              const *pSurface2=nullptr);
 
 }
 #endif // INTERSECTOR_H

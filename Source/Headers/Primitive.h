@@ -25,7 +25,8 @@ body *CreateCone(SGM::Result        &rResult,
                  SGM::Point3D const &BottomCenter,
                  SGM::Point3D const &TopCenter,
                  double              dBottomRadius,
-                 double              dTopRadius);
+                 double              dTopRadius,
+                 bool                bSheetBody=false);
 
 body *CreateTorus(SGM::Result             &rResult,
                   SGM::Point3D      const &Center,
