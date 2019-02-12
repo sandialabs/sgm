@@ -1,6 +1,7 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
+#include <SGMTranslators.h>
 
 #include "SGMComplex.h"
 #include "SGMDisplay.h"
