@@ -31,8 +31,6 @@ namespace SGM
                                       SGM::Curve const &CurveID2,
                                       std::vector<SGM::Point3D> &aPoints,
                                       std::vector<SGM::IntersectionType> &aTypes,
-                                      SGM::Edge const *pEdge1 = nullptr,
-                                      SGM::Edge const *pEdge2 = nullptr,
                                       double dTolerance = SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
@@ -40,16 +38,12 @@ namespace SGM
                                                SGM::Surface                 const &SurfaceID,
                                                std::vector<SGM::Point3D>          &aPoints,
                                                std::vector<SGM::IntersectionType> &aTypes,
-                                               SGM::Edge                    const *pEdge = nullptr,
-                                               SGM::Face                    const *pFace = nullptr,
                                                double                              dTolerance = SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectSurfaces(SGM::Result             &rResult,
                                         SGM::Surface      const &SurfaceID1,
                                         SGM::Surface      const &SurfaceID2,
                                         std::vector<SGM::Curve> &aCurves,
-                                        SGM::Face         const *pFace1 = nullptr,
-                                        SGM::Face         const *pFace2 = nullptr,
                                         double                   dTolerance = SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectSegment(SGM::Result               &rResult,

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "SGMConstants.h"
+
 #include "sgm_export.h"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -13,10 +15,6 @@
 //  Bounding Boxes for dimensions one, two and three.
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#define SGM_INTERVAL_TOLERANCE (1E-12)
-#define SGM_INTERVAL_POS_MAX   (1E+12)//(std::numeric_limits<double>::max())
-#define SGM_INTERVAL_NEG_MIN   (-1E+12)//(-std::numeric_limits<double>::max())
 
 namespace SGM {
 
@@ -32,10 +30,10 @@ namespace SGM {
     {
     public:
 
-        // The default constructor makes the empty interval [SGM_INTERVAL_POS_MAX,SGM_INTERVAL_NEG_MIN].
-        // Infinite intervals may be defined as [SGM_INTERVAL_NEG_MIN, SGM_INTERVAL_POS_MAX].
+        // The default constructor makes the empty interval [SGM_MAX,-SGM_MAX].
+        // Infinite intervals may be defined as [-SGM_MAX, SGM_MAX].
 
-        Interval1D() : m_dMin(SGM_INTERVAL_POS_MAX), m_dMax(SGM_INTERVAL_NEG_MIN)
+        Interval1D() : m_dMin(SGM_MAX), m_dMax(-SGM_MAX)
         {}
 
         Interval1D(double dStart, double dEnd) : m_dMin(dStart), m_dMax(dEnd)
@@ -51,13 +49,13 @@ namespace SGM {
         ~Interval1D() = default;
 
         bool operator==(const Interval1D &other) const
-        { return ((fabs(m_dMin-other.m_dMin)<SGM_INTERVAL_TOLERANCE) &&
-                  (fabs(m_dMax-other.m_dMax)<SGM_INTERVAL_TOLERANCE)); }
+        { return ((fabs(m_dMin-other.m_dMin)<SGM_ZERO) &&
+                  (fabs(m_dMax-other.m_dMax)<SGM_ZERO)); }
 
         // Sets the interval to be empty (like the default constructor).
 
         void Reset()
-        { m_dMin = SGM_INTERVAL_POS_MAX; m_dMax = SGM_INTERVAL_NEG_MIN; }
+        { m_dMin = SGM_MAX; m_dMax = -SGM_MAX; }
 
         // If m_dMax < m_dMin then the interval is consider to be empty.
 
@@ -66,18 +64,18 @@ namespace SGM {
 
         bool IsBounded() const
         {
-            return ( (SGM_INTERVAL_NEG_MIN < m_dMin) &&
-                     (m_dMax < SGM_INTERVAL_POS_MAX) );
+            return ( (-SGM_MAX < m_dMin) &&
+                     (m_dMax < SGM_MAX) );
         }
 
         bool IsBoundedAbove() const
         {
-            return ( m_dMax < SGM_INTERVAL_POS_MAX );
+            return ( m_dMax < SGM_MAX );
         }
 
         bool IsBoundedBelow() const
         {
-            return ( SGM_INTERVAL_NEG_MIN < m_dMin );
+            return ( -SGM_MAX < m_dMin );
         }
 
         double MidPoint(double dFraction = 0.5) const
@@ -302,15 +300,15 @@ namespace SGM {
 
         bool IntersectsHalfSpace(Point3D const &p, UnitVector3D const &u, double tolerance) const;
 
-        bool IntersectsLine(Ray3D const &ray, double tolerance = SGM_INTERVAL_TOLERANCE) const;
+        bool IntersectsLine(Ray3D const &ray, double tolerance = SGM_ZERO) const;
 
         bool IntersectsPlane(Point3D const &p, UnitVector3D const &u, double tolerance) const;
 
         bool InInterval(Point3D const &point, double tolerance) const;
 
-        bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_INTERVAL_TOLERANCE) const;
+        bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_ZERO) const;
 
-        bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_INTERVAL_TOLERANCE) const;
+        bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_ZERO) const;
 
         // If a sphere overlaps any part of this bounding box, tolerance acts as increase in sphere radius.
 

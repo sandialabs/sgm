@@ -1785,7 +1785,7 @@ TEST(math_check, intersect_line_and_revolve)
     std::vector<SGM::Point3D> aPoints1;
     std::vector<SGM::IntersectionType> aTypes1;
     double dTolerance = SGM_MIN_TOL;
-    SGM::IntersectCurveAndSurface(rResult, Line1ID, RevolveID, aPoints1, aTypes1, nullptr, nullptr, dTolerance);
+    SGM::IntersectCurveAndSurface(rResult, Line1ID, RevolveID, aPoints1, aTypes1, dTolerance);
 
     EXPECT_EQ(aPoints1.size(),2);
 
@@ -1808,7 +1808,7 @@ TEST(math_check, intersect_line_and_revolve)
 
     std::vector<SGM::Point3D> aPoints2;
     std::vector<SGM::IntersectionType> aTypes2;
-    SGM::IntersectCurveAndSurface(rResult, Line2ID, RevolveID, aPoints2, aTypes2, nullptr, nullptr, dTolerance);
+    SGM::IntersectCurveAndSurface(rResult, Line2ID, RevolveID, aPoints2, aTypes2, dTolerance);
 
     EXPECT_EQ(aPoints2.size(),2);
 
@@ -1854,7 +1854,7 @@ TEST(math_check, intersect_nubcurve_and_plane)
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     double dTolerance = SGM_MIN_TOL;
-    SGM::IntersectCurveAndSurface(rResult, CurveID, PlaneID, aPoints, aTypes, nullptr, nullptr, dTolerance);
+    SGM::IntersectCurveAndSurface(rResult, CurveID, PlaneID, aPoints, aTypes, dTolerance);
 
     EXPECT_EQ(aPoints.size(),1);
     SGM::Point3D Expected(1, 1.5, 0);
@@ -2525,7 +2525,7 @@ TEST(math_check, line_torus_intersection)
     SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,Center,ZAxis,1.0,3.0,false);
     
     SGM::Curve Line1=SGM::CreateLine(rResult,Origin,Axis);
-    size_t nHits=SGM::IntersectCurveAndSurface(rResult,Line1,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    size_t nHits=SGM::IntersectCurveAndSurface(rResult,Line1,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,4);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_ZERO));
@@ -2536,7 +2536,7 @@ TEST(math_check, line_torus_intersection)
     aTypes.clear();
     Origin.m_y=2.0;
     SGM::Curve Line2=SGM::CreateLine(rResult,Origin,Axis);
-    nHits=SGM::IntersectCurveAndSurface(rResult,Line2,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line2,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,3);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_ZERO));
@@ -2546,7 +2546,7 @@ TEST(math_check, line_torus_intersection)
     aTypes.clear();
     Origin.m_y=3.0;
     SGM::Curve Line3=SGM::CreateLine(rResult,Origin,Axis);
-    nHits=SGM::IntersectCurveAndSurface(rResult,Line3,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line3,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,2);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
@@ -2555,7 +2555,7 @@ TEST(math_check, line_torus_intersection)
     aTypes.clear();
     Origin.m_y=4.0;
     SGM::Curve Line4=SGM::CreateLine(rResult,Origin,Axis);
-    nHits=SGM::IntersectCurveAndSurface(rResult,Line4,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line4,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,1);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_ZERO));
 
@@ -2563,7 +2563,7 @@ TEST(math_check, line_torus_intersection)
     aTypes.clear();
     Origin.m_y=5.0;
     SGM::Curve Line5=SGM::CreateLine(rResult,Origin,Axis);
-    nHits=SGM::IntersectCurveAndSurface(rResult,Line5,TorusID,aPoints,aTypes,nullptr,nullptr,SGM_MIN_TOL);
+    nHits=SGM::IntersectCurveAndSurface(rResult,Line5,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,0);
 
     SGM::DeleteEntity(rResult,TorusID);
