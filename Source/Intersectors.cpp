@@ -4971,7 +4971,7 @@ bool PointOnCircle(SGM::Point3D      const &Pos,
 size_t FindTangentPoints(SGM::Result                &rResult,
                          torus                const *pTorus1,
                          torus                const *pTorus2,
-                         std::vector<curve *> const &aCurves,
+                         std::vector<curve *> const &,//aCurves,
                          double                      dTolerance,
                          std::vector<SGM::Point3D>  &aTangents)
     {
@@ -5126,21 +5126,21 @@ size_t FindTangentPoints(SGM::Result                &rResult,
         }
 
     // Only include points that are not on the tangent curves.
-
+    
     SGM::RemoveDuplicates3D(aTemp,dTolerance);
     for(auto Pos : aTemp)
         {
         bool bFound=false;
-        for(auto pCurve : aCurves)
-            {
-            SGM::Point3D CPos;
-            pCurve->Inverse(Pos,&CPos);
-            if(SGM::NearEqual(Pos,CPos,dTolerance))
-                {
-                bFound=true;
-                break;
-                }
-            }
+        //for(auto pCurve : aCurves)
+        //    {
+        //    SGM::Point3D CPos;
+        //    pCurve->Inverse(Pos,&CPos);
+        //    if(SGM::NearEqual(Pos,CPos,dTolerance))
+        //        {
+        //        bFound=true;
+        //        break;
+        //        }
+        //    }
         if(bFound==false)
             {
             aTangents.push_back(Pos);

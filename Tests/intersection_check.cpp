@@ -91,6 +91,33 @@ bool TestIntersections(SGM::Result        &rResult,
     return bAnswer;
     }
 
+bool DoCurvesOverLap(SGM::Result      &rResult,
+                     SGM::Curve const &CurveID1,
+                     SGM::Curve const &CurveID2)
+    {
+    if( SGM::GetCurveType(rResult,CurveID1)!=SGM::EntityType::HermiteCurveType && 
+        SGM::GetCurveType(rResult,CurveID1)!=SGM::EntityType::HermiteCurveType)
+        {
+        return false;
+        }
+    SGM::Interval1D const &Domain1=SGM::GetCurveDomain(rResult,CurveID1);
+    SGM::Interval1D const &Domain2=SGM::GetCurveDomain(rResult,CurveID2);
+    SGM::Point3D Pos1,Pos2,CPos1,CPos2;
+    SGM::EvaluateCurve(rResult,CurveID1,Domain1.MidPoint(),&Pos1);
+    SGM::EvaluateCurve(rResult,CurveID2,Domain2.MidPoint(),&Pos2);
+    SGM::CurveInverse(rResult,CurveID1,Pos2,&CPos1);
+    SGM::CurveInverse(rResult,CurveID2,Pos1,&CPos2);
+    if(SGM::NearEqual(Pos2,CPos1,SGM_FIT))
+        {
+        return true;
+        }
+    if(SGM::NearEqual(Pos1,CPos2,SGM_FIT))
+        {
+        return true;
+        }
+    return false;
+    }
+
 bool TestIntersections(SGM::Result        &rResult,
                        SGM::Surface const &Surface1,
                        SGM::Surface const &Surface2,
@@ -99,14 +126,14 @@ bool TestIntersections(SGM::Result        &rResult,
     bool bAnswer=true;
     std::vector<SGM::Curve> aCurves;
     size_t nCurves=SGM::IntersectSurfaces(rResult,Surface1,Surface2,aCurves);
-
+    size_t Index1,Index2;
+        
     if(nCurves!=nExpectedCurves)
         {
         bAnswer=false;
         }
     else
         {
-        size_t Index1,Index2;
         size_t nTestPoint=10;
         for(Index1=0;bAnswer && Index1<nCurves;++Index1)
             {
@@ -142,6 +169,20 @@ bool TestIntersections(SGM::Result        &rResult,
                 }
             }
         }
+
+    // Also check curves to make sure they do not overlap.
+
+    for(Index1=0;bAnswer && Index1<nCurves;++Index1)
+        {
+        for(Index2=Index1+1;bAnswer && Index2<nCurves;++Index2)
+            {
+            if(DoCurvesOverLap(rResult,aCurves[Index1],aCurves[Index2]))
+                {
+                bAnswer=false;
+                }
+            }
+        }
+
     return bAnswer;
     }
 
@@ -362,25 +403,25 @@ TEST(intersection_check, intersect_circle_plane)
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
-//TEST(intersection_check, intersect_torus_torus2) 
-//{
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::CreateTorus(rResult,SGM::Point3D(0,0.1,0),SGM::UnitVector3D(0,1,0),0.5,2);  
-//
-//    SGM::Surface TorusID1=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::Surface TorusID10=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0.1,0),SGM::UnitVector3D(0,1,0),0.5,2);
-//    std::vector<SGM::Curve> aCurves;
-//    SGM::IntersectSurfaces(rResult,TorusID1,TorusID10,aCurves);
-//    for(auto pCurve : aCurves)
-//        {
-//        SGM::CreateEdge(rResult,pCurve);
-//        }
-//    
-//    SGMTesting::ReleaseTestThing(pThing);
-//}
+TEST(intersection_check, intersect_torus_torus2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::CreateTorus(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,0,1),1,2);  
+
+    SGM::Surface TorusID1=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Surface TorusID9=SGM::CreateTorusSurface(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,TorusID1,TorusID9,aCurves);
+    for(auto pCurve : aCurves)
+        {
+        SGM::CreateEdge(rResult,pCurve);
+        }
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(intersection_check, intersect_torus_torus) 
 {
@@ -410,7 +451,7 @@ TEST(intersection_check, intersect_torus_torus)
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID6,3));     // Minor Circle and Two Curves
     EXPECT_TRUE(TestIntersections(rResult,TorusID3,TorusID7,8));     // Four Tangent Points
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID8,2));     // Two Outside Tangent Points
-    EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID9,4));     // Two VCircles Two Curves Tangent Point
+    EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID9,8));     // Two VCircles Two Curves Tangent Point
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID10,1));    // One Curve
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID11,2));    // Two Curves
     EXPECT_TRUE(TestIntersections(rResult,TorusID1,TorusID12,4));    // Four Curves
