@@ -1074,7 +1074,20 @@ private:
 template<class T, class Alloc>
 inline bool operator==(const buffer<T, Alloc> &lhs, const buffer<T, Alloc> &rhs) NOEXCEPT
 {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    if(lhs.size()!=rhs.size())
+        {
+        return false;
+        }
+    auto iter1=lhs.begin();
+    auto iter2=rhs.begin();
+    while(iter1!=lhs.end())
+        {
+        if(*iter1++!=*iter2++)
+            {
+            return false;
+            }
+        }
+    return true;
 }
 
 /// Compare two buffers for inequality.
