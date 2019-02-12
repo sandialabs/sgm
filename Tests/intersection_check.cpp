@@ -10,6 +10,7 @@
 #include "SGMEntityFunctions.h"
 #include "SGMMeasure.h"
 #include "SGMTopology.h"
+#include "SGMTranslators.h"
 
 #include "test_utility.h"
 

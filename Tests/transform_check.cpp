@@ -4,6 +4,7 @@
 #include "SGMEntityFunctions.h"
 #include "SGMEntityClasses.h"
 #include "SGMTransform.h"
+#include "SGMPrimitives.h"
 
 #include "test_utility.h"
 
