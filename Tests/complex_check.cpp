@@ -53,7 +53,7 @@ TEST(complex_check, complex_read_no_merge)
     EXPECT_EQ(resultType, SGM::ResultTypeOK);
 
     auto aComplexes = (std::vector<SGM::Complex> *) &entities;
-    EXPECT_EQ(aComplexes->size(), 1);
+    EXPECT_GE(aComplexes->size(), 1);
 
     // filenames are not allowed with '?' character on Windows
     // SGM::Complex ComplexID = aComplexes->front();
