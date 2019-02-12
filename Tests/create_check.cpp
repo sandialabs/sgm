@@ -9,6 +9,7 @@
 #include "SGMAttribute.h"
 #include "SGMInterval.h"
 #include "SGMTopology.h"
+#include "SGMPrimitives.h"
 
 #include "test_utility.h"
 

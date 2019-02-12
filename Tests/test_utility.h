@@ -11,15 +11,11 @@
 #include <string>
 #include <gtest/gtest.h>
 
-#ifdef _MSC_VER
-#include <Windows.h>
-#else
-#include <dirent.h>
-#endif
-
-#include <SGMChecker.h>
-#include <SGMPrimitives.h>
-#include <SGMTranslators.h>
+namespace SGM
+{
+  class Result;
+  class Entity;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

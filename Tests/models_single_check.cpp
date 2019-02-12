@@ -6,6 +6,10 @@
 #include "SGMComplex.h"
 #include "SGMIntersector.h"
 #include "SGMEntityFunctions.h"
+#include "SGMChecker.h"
+#include "SGMPrimitives.h"
+#include "SGMTranslators.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //

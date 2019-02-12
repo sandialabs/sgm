@@ -14,6 +14,8 @@
 #include "SGMModify.h"
 #include "SGMDisplay.h"
 #include "SGMAttribute.h"
+#include "SGMTranslators.h"
+#include "SGMChecker.h"
 
 #define SGM_TIMER 
 #include "Timer.h"

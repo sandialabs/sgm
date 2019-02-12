@@ -6,6 +6,7 @@
 #include "SGMTopology.h"
 #include "SGMGeometry.h"
 #include "SGMModify.h"
+#include "SGMPrimitives.h"
 
 #include "test_utility.h"
 

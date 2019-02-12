@@ -11,6 +11,7 @@
 #include "SGMAttribute.h"
 #include "SGMInterval.h"
 #include "SGMTopology.h"
+#include "SGMChecker.h"
 
 #include "test_utility.h"
 
