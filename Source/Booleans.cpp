@@ -116,7 +116,7 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
         {
         std::vector<SGM::Point3D> aIntersectionPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,nullptr,pEdge,dTolerance);
+        IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
         for(SGM::Point3D Pos : aIntersectionPoints)
             {
             if(pLimitEdge && !pLimitEdge->PointInEdge(Pos, dTolerance))
@@ -146,7 +146,7 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
             {
             std::vector<SGM::Point3D> aIntersectionPoints;
             std::vector<SGM::IntersectionType> aTypes;
-            IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,nullptr,pEdge,dTolerance);
+            IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
             for(SGM::Point3D Pos : aIntersectionPoints)
                 {
                 aHits.push_back(Pos);
@@ -652,7 +652,7 @@ bool ImprintFaces(SGM::Result &rResult,
     std::vector<curve *> aCurves;
     surface const *pSurface1=pFace1->GetSurface();
     surface const *pSurface2=pFace2->GetSurface();
-    size_t nCurves=IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,pFace1,pFace2,dTolerance);
+    size_t nCurves=IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,dTolerance);
     std::vector<edge *> aEdges;
     std::vector<SGM::Point3D> aPoints;
     std::map<double,entity *> mHitMap1,mHitMap2;

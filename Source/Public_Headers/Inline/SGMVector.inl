@@ -199,6 +199,16 @@ namespace SGM {
         return dX*dX+dY*dY+dZ*dZ;
     }
 
+    inline double Point3D::DistanceFromOrigin() const
+    {
+        return sqrt(m_x*m_x+m_y*m_y+m_z*m_z);
+    }
+
+    inline double Point3D::DistanceFromOriginSquared() const
+    {
+        return m_x*m_x+m_y*m_y+m_z*m_z;
+    }
+
     inline Point3D Point3D::operator+=(Vector3D const &Vec)
     {
         m_x+=Vec.m_x;

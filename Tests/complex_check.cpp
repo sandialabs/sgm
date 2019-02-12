@@ -63,6 +63,7 @@
 //        }
 //    }
 
+#if 0
 TEST(complex_check, point3d_order)
     {
     std::vector<SGM::Point3D> aPoints0 =
@@ -94,12 +95,12 @@ TEST(complex_check, point3d_order)
     for (int i = 0; i < aIndexOrdered1.size(); ++i)
         std::cout << "aIndexOrdered1[" << i << "] = " << aIndexOrdered1[i] << std::endl;
 
-    EXPECT_EQ(aIndexOrdered1[0],5);
-    EXPECT_EQ(aIndexOrdered1[1],1);
-    EXPECT_EQ(aIndexOrdered1[2],4);
-    EXPECT_EQ(aIndexOrdered1[3],2);
-    EXPECT_EQ(aIndexOrdered1[4],0);
-    EXPECT_EQ(aIndexOrdered1[5],3);
+    EXPECT_EQ(aIndexOrdered1[0],5u);
+    EXPECT_EQ(aIndexOrdered1[1],1u);
+    EXPECT_EQ(aIndexOrdered1[2],4u);
+    EXPECT_EQ(aIndexOrdered1[3],2u);
+    EXPECT_EQ(aIndexOrdered1[4],0u);
+    EXPECT_EQ(aIndexOrdered1[5],3u);
 
     std::vector<SGM::Point3D> aPoints2 =
         {
@@ -185,7 +186,7 @@ TEST(complex_check, point3d_order)
         {
         EXPECT_TRUE(SGMInternal::AlmostEqual(aPoints3[aIndexOrdered3[i]],
                                              aPoints3[aIndexOrdered3[i + 1]],
-                                             SGMInternal::numeric_tolerance<double>::relative));
+                                             2.0 * std::numeric_limits<double>::epsilon()));//SGMInternal::numeric_tolerance<double>::relative
         }
 
     }
@@ -424,6 +425,6 @@ TEST(complex_check, DISABLED_merge_complex)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
-
+#endif
 
 

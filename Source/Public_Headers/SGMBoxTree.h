@@ -125,7 +125,7 @@ namespace SGM {
 
         /// Return items whose bounds intersect the line
         std::vector<BoundedItemType> FindIntersectsLine(Ray3D const &ray,
-                                                        double       tolerance = SGM_INTERVAL_TOLERANCE) const;
+                                                        double       tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the plane
         std::vector<BoundedItemType> FindIntersectsPlane(Point3D      const &point,
@@ -138,12 +138,12 @@ namespace SGM {
 
         /// Return items whose bounds intersect the ray
         std::vector<BoundedItemType> FindIntersectsRay(Ray3D const &ray,
-                                                       double       tolerance = SGM_INTERVAL_TOLERANCE) const;
+                                                       double       tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the segment
         std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, 
                                                            Point3D const &p2,
-                                                           double         tolerance = SGM_INTERVAL_TOLERANCE) const;
+                                                           double         tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the sphere
         std::vector<BoundedItemType> FindIntersectsSphere(Point3D const &center,
@@ -228,7 +228,7 @@ namespace SGM {
 
             IsIntersectingLine() = delete;
 
-            explicit IsIntersectingLine(Ray3D const & ray, double tolerance = SGM_INTERVAL_TOLERANCE)
+            explicit IsIntersectingLine(Ray3D const & ray, double tolerance = SGM_ZERO)
             : m_ray(ray), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
@@ -270,7 +270,7 @@ namespace SGM {
             
             IsIntersectingRay() = delete;
 
-            explicit IsIntersectingRay(Ray3D const & ray, double tolerance = SGM_INTERVAL_TOLERANCE)
+            explicit IsIntersectingRay(Ray3D const & ray, double tolerance = SGM_ZERO)
                     : m_ray(ray), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
@@ -285,7 +285,7 @@ namespace SGM {
             
             IsIntersectingSegment() = delete;
             
-            explicit IsIntersectingSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_INTERVAL_TOLERANCE)
+            explicit IsIntersectingSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_ZERO)
                     : m_point1(p1), m_point2(p2), m_tolerance(tolerance) { }
             
             bool operator()(Bounded const * node) const;

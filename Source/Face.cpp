@@ -44,7 +44,6 @@ SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
         {
         switch(GetSurface()->GetSurfaceType())
             {
-            case SGM::EntityType::ConeType:
             case SGM::EntityType::CylinderType:
             case SGM::EntityType::PlaneType:
                 {

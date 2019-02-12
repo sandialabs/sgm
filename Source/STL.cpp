@@ -189,7 +189,7 @@ complex* ParseSTLCreateComplex(SGM::Result &rResult,
     if (bMerge)
         {
         // Merge the points and construct triangles indices.
-        pComplex = new complex(rResult, aPoints, numeric_tolerance<float>::relative);
+        pComplex = new complex(rResult, aPoints, 2.0 * std::numeric_limits<double>::epsilon());//numeric_tolerance<float>::relative);
         }
     else
         {
@@ -285,8 +285,7 @@ void QueueSTLParseChunks(std::ifstream &inputFileStream,
 
 
 // Returns true if the end of the "solid" was reached
-bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures,
-                        std::vector<SGM::Point3D> &aPoints)
+bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures)
     {
     bool isAtEnd = false;
 
@@ -382,7 +381,7 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
                                     futures);
 
                 // wait for jobs to complete, vertex points inserted into the main point vector
-                isAtEnd = SyncSTLParseChunks(futures, aPoints);
+                isAtEnd = SyncSTLParseChunks(futures);
                 }
             }
         }

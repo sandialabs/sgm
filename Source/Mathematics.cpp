@@ -470,6 +470,46 @@ Interval3D FindOrientedBox(std::vector<Point3D> const &aPoints,
     return Box;
     }
 
+bool IsPlanar(std::vector<Point3D> const &aPoints,
+              SGM::Point3D         const &Origin,
+              SGM::UnitVector3D          &ZVec)
+    {
+    double dDist=0;
+    SGM::Point3D Pos1=aPoints[0];
+    for(auto Pos : aPoints)
+        {
+        double dTest=Pos.DistanceSquared(Origin);
+        if(dDist<dTest)
+            {
+            dDist=dTest;
+            Pos1=Pos;
+            }
+        }
+    SGM::UnitVector3D XVec=Pos1-Origin;
+    SGM::Point3D Pos2=aPoints[0];
+    dDist=0;
+    for(auto Pos : aPoints)
+        {
+        SGM::Point3D Pos3=Origin+XVec*(XVec%(Pos-Origin));
+        double dTest=Pos.Distance(Pos3);
+        if(dDist<dTest)
+            {
+            dDist=dTest;
+            Pos2=Pos;
+            }
+        }
+    ZVec=XVec*(Pos2-Origin);
+    for(auto Pos : aPoints)
+        {
+        double dTest=fabs((Pos-Origin)%ZVec);
+        if(SGM_MIN_TOL<dTest)
+            {
+            return false;
+            }
+        }
+    return true;
+    }
+
 bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                           Point3D                    &Origin,
                           UnitVector3D               &XVec,
@@ -479,6 +519,43 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
     double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
     Origin = FindCenterOfMass3D(aPoints);
 
+    if(aPoints.size()==2)
+        {
+        XVec=aPoints[1]-aPoints[0];
+        ZVec=XVec.Orthogonal();
+        YVec=ZVec*XVec;
+        return true;
+        }
+
+    SGM::UnitVector3D ZAnswer;
+    if(IsPlanar(aPoints,Origin,ZAnswer))
+        {
+        SGM::UnitVector3D ZAnswer=(aPoints[0]-aPoints[1])*(aPoints[2]-aPoints[1]);
+        SGM::UnitVector3D XNorm=ZAnswer.Orthogonal();
+        SGM::UnitVector3D YNorm=ZAnswer*XNorm;
+        std::vector<SGM::Point2D> aPoints2D;
+        SGM::ProjectPointsToPlane(aPoints,Origin,XNorm,YNorm,ZAnswer,aPoints2D);
+        double SumXX2D=0,SumXY2D=0,SumYY2D=0;
+        for(auto xy : aPoints2D)
+            {
+            SumXX2D+=xy.m_u*xy.m_u;
+            SumXY2D+=xy.m_u*xy.m_v;
+            SumYY2D+=xy.m_v*xy.m_v;
+            }
+        const double aaMatrix2D[2][2] =
+                {
+                SumXX2D, SumXY2D,
+                SumXY2D, SumYY2D,
+                };
+        std::vector<double> aValues2D;
+        std::vector<UnitVector2D> aVectors2D;
+        FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
+        XVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm;
+        YVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm; 
+        ZVec=ZAnswer;
+        return true;
+        }
+    
     size_t nPoints = aPoints.size();
     size_t Index1;
     for (Index1 = nPoints/2; Index1 < nPoints; ++Index1)
@@ -507,6 +584,7 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
     std::vector<double> aValues;
     std::vector<UnitVector3D> aVectors;
     size_t nFound = FindEigenVectors3D(&aaMatrix[0], aValues, aVectors);
+
     if (nFound == 3)
         {
         // Smallest value is the normal.
@@ -558,83 +636,48 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
             }
         return true;
         }
-    else if (nFound == 2)
-        {
-        if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
-            {
-            if (fabs(SumXX) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(0,1,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(1,0,0);
-                return true;
-                }
-            else if (fabs(SumYY) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(0,-1,0);
-                return true;
-                }
-            else if (fabs(SumZZ) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,1,0);
-                ZVec = SGM::UnitVector3D(0,0,1);
-                return true;
-                }
-            else
-                {
-                return false;
-                }
-            }
-        else if(aValues[0]<aValues[1])
-            {
-            XVec = aVectors[1];
-            YVec = aVectors[0];
-            }
-        else
-            {
-            XVec = aVectors[0];
-            YVec = aVectors[1];
-            }
-        ZVec = XVec * YVec;
-        return true;
-        }
-    //else if (nFound == 1)
+    //else if (nFound == 2)
     //    {
-    //    XVec = aVectors[0];
-    //    YVec = XVec.Orthogonal();
-    //    ZVec = XVec * YVec;
-    //    return true;
-    //    }
-    //else if (nFound == 0)
-    //    {
-    //    if (fabs(SumXX) < SGM_MIN_TOL)
+    //    if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
     //        {
-    //        XVec = SGM::UnitVector3D(0,1,0);
-    //        YVec = SGM::UnitVector3D(0,0,1);
-    //        ZVec = SGM::UnitVector3D(1,0,0);
-    //        return true;
+    //        if (fabs(SumXX) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(0,1,0);
+    //            YVec = SGM::UnitVector3D(0,0,1);
+    //            ZVec = SGM::UnitVector3D(1,0,0);
+    //            return true;
+    //            }
+    //        else if (fabs(SumYY) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(1,0,0);
+    //            YVec = SGM::UnitVector3D(0,0,1);
+    //            ZVec = SGM::UnitVector3D(0,-1,0);
+    //            return true;
+    //            }
+    //        else if (fabs(SumZZ) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(1,0,0);
+    //            YVec = SGM::UnitVector3D(0,1,0);
+    //            ZVec = SGM::UnitVector3D(0,0,1);
+    //            return true;
+    //            }
+    //        else
+    //            {
+    //            return false;
+    //            }
     //        }
-    //    else if (fabs(SumYY) < SGM_MIN_TOL)
+    //    else if(aValues[0]<aValues[1])
     //        {
-    //        XVec = SGM::UnitVector3D(1,0,0);
-    //        YVec = SGM::UnitVector3D(0,0,1);
-    //        ZVec = SGM::UnitVector3D(0,-1,0);
-    //        return true;
-    //        }
-    //    else if (fabs(SumZZ) < SGM_MIN_TOL)
-    //        {
-    //        XVec = SGM::UnitVector3D(1,0,0);
-    //        YVec = SGM::UnitVector3D(0,1,0);
-    //        ZVec = SGM::UnitVector3D(0,0,1);
-    //        return true;
+    //        XVec = aVectors[1];
+    //        YVec = aVectors[0];
     //        }
     //    else
     //        {
-    //        return false;
+    //        XVec = aVectors[0];
+    //        YVec = aVectors[1];
     //        }
+    //    ZVec = XVec * YVec;
+    //    return true;
     //    }
     return false;
     }
@@ -671,6 +714,30 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                        SGM::Point3D                    *Origin,
                        SGM::UnitVector3D               *Normal)
     {
+    if(aPoints.size()==0)
+        {
+        if(Origin)
+            *Origin=SGM::Point3D(0,0,0);
+        if(Normal)
+            *Normal=SGM::UnitVector3D(0,0,1);
+        return true;
+        }
+    if(aPoints.size()==1)
+        {
+        if(Origin)
+            *Origin=aPoints[0];
+        if(Normal)
+            *Normal=SGM::UnitVector3D(0,0,1);
+        return true;
+        }
+    if(aPoints.size()==2)
+        {
+        if(Origin)
+            *Origin=aPoints[0];
+        if(Normal)
+            *Normal=(aPoints[1]-aPoints[0]).Orthogonal();
+        return true;
+        }
     bool bCoplanar = false;
     SGM::Point3D PlaneOrigin;
     SGM::UnitVector3D XVec;
@@ -732,15 +799,20 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     }
 
 double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
-                        SGM::Point3D              const &Pos1)
+                        SGM::Point3D              const &Pos1,
+                        size_t                          &nWhere)
     {
     double dAnswer=std::numeric_limits<double>::max();
-    for(SGM::Point3D const &Pos2 : aPoints)
+    size_t Index1;
+    size_t nSize=aPoints.size();
+    for(Index1=0;Index1<nSize;++Index1)
         {
+        SGM::Point3D const &Pos2=aPoints[Index1];
         double dDistanceSquared=Pos1.DistanceSquared(Pos2);
         if(dDistanceSquared<dAnswer)
             {
             dAnswer=dDistanceSquared;
+            nWhere=Index1;
             }
         }
     return sqrt(dAnswer);
@@ -1091,6 +1163,31 @@ void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
             aTriangles.push_back(c);
             }
         }
+    }
+
+void RemoveDuplicates1D(std::vector<double> &aPoints,
+                        double               dTolerance)
+    {
+    std::sort(aPoints.begin(),aPoints.end());
+    std::vector<double> aNewPoints;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double d=aPoints[Index1];
+        if(Index1)
+            {
+            if(dTolerance<d-aPoints[Index1-1])
+                {
+                aNewPoints.push_back(d);
+                }
+            }
+        else
+            {
+            aNewPoints.push_back(d);
+            }
+        }
+    aPoints=aNewPoints;
     }
 
 void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
@@ -3144,7 +3241,6 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                 }
             }
         }
-    double dTol = SGM_ZERO * std::max(1.0, dMaxValue);
 
     if (IsDiagonal3D(aaMatrix))
         {
@@ -3157,58 +3253,42 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         return 3;
         }
 
-    double a, b, c, d;
-    CharacteristicPolynomial3D(aaMatrix, a, b, c, d);
+    double a,b,c,d;
+    CharacteristicPolynomial3D(aaMatrix,a,b,c,d);
 
     std::vector<double> aRoots;
-    size_t nRoots = Cubic(a, b, c, d, aRoots);
+    Cubic(a,b,c,d,aRoots);
 
     // To find the Eigen vectors solve Mv=Lv where M is the matrix and
     // L is an Eigen value.
 
     size_t nAnswer = 0;
-    for (Index1 = 0; Index1 < nRoots; ++Index1)
+    for(double dRoot : aRoots)
         {
-        if (dTol < fabs(aRoots[Index1]))
-            {
-            std::vector<std::vector<double> > aaMat;
-            aaMat.reserve(3);
-            std::vector<double> aMat;
-            aMat.reserve(4);
-            aMat.push_back(aaMatrix[0][0] - aRoots[Index1]);
-            aMat.push_back(aaMatrix[0][1]);
-            aMat.push_back(aaMatrix[0][2]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aMat.clear();
-            aMat.push_back(aaMatrix[1][0]);
-            aMat.push_back(aaMatrix[1][1] - aRoots[Index1]);
-            aMat.push_back(aaMatrix[1][2]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aMat.clear();
-            aMat.push_back(aaMatrix[2][0]);
-            aMat.push_back(aaMatrix[2][1]);
-            aMat.push_back(aaMatrix[2][2] - aRoots[Index1]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aVectors.push_back(UnitVectorSolve(aaMat));
-            aValues.push_back(aRoots[Index1]);
-            ++nAnswer;
-            //if (LinearSolve(aaMat) == true)
-            //    {
-            //    aValues.push_back(aRoots[Index1]);
-            //    aVectors.emplace_back(aaMat[0].back(), aaMat[1].back(), aaMat[2].back());
-            //    ++nAnswer;
-            //    }
-            //else if (dTol < fabs(aaMat[0][0]) && dTol < fabs(aaMat[0][1]))
-            //    {
-            //    aValues.push_back(aRoots[Index1]);
-            //    double ratio = -aaMat[0][0] / aaMat[0][1];
-            //    aVectors.emplace_back(1.0, ratio, 0.0);
-            //    ++nAnswer;
-            //    }
-            }
+        std::vector<std::vector<double> > aaMat;
+        aaMat.reserve(3);
+        std::vector<double> aMat;
+        aMat.reserve(4);
+        aMat.push_back(aaMatrix[0][0] - dRoot);
+        aMat.push_back(aaMatrix[0][1]);
+        aMat.push_back(aaMatrix[0][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[1][0]);
+        aMat.push_back(aaMatrix[1][1] - dRoot);
+        aMat.push_back(aaMatrix[1][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[2][0]);
+        aMat.push_back(aaMatrix[2][1]);
+        aMat.push_back(aaMatrix[2][2] - dRoot);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aVectors.push_back(UnitVectorSolve(aaMat));
+        aValues.push_back(dRoot);
+        ++nAnswer;
         }
     return nAnswer;
     }

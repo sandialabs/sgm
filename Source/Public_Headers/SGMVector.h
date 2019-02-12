@@ -39,7 +39,7 @@ namespace SGM
 
         typedef double type;
 
-        Point2D() = default;
+        Point2D() {};
 
         Point2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -71,7 +71,7 @@ namespace SGM
 
         typedef double type;
 
-        Point3D() = default;
+        Point3D() {};
 
         Point3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -83,6 +83,10 @@ namespace SGM
         double Distance(Point3D const &Pos) const;
 
         double DistanceSquared(Point3D const &Pos) const;
+
+        double DistanceFromOrigin() const;
+
+        double DistanceFromOriginSquared() const;
 
         Point3D operator+=(Vector3D const &Vec);
 
@@ -101,7 +105,7 @@ namespace SGM
     {
     public:
 
-        Point4D() = default;
+        Point4D() {};
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
@@ -131,7 +135,7 @@ namespace SGM
     {
     public:
 
-        Vector2D() = default;
+        Vector2D() {};
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -149,7 +153,7 @@ namespace SGM
 
         enum { N = 3 };
 
-        Vector3D() = default;
+        Vector3D() {};
 
         Vector3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -187,7 +191,7 @@ namespace SGM
     {
     public:
 
-        Vector4D() = default;
+        Vector4D() {};
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
@@ -215,7 +219,7 @@ namespace SGM
     {
     public:
 
-        UnitVector2D() = default;
+        UnitVector2D() {};
 
         UnitVector2D(double u,double v);
 
@@ -226,7 +230,7 @@ namespace SGM
     {
     public:
 
-        UnitVector3D() = default;
+        UnitVector3D() {};
 
         UnitVector3D(double x,double y,double z);
 
@@ -251,7 +255,7 @@ namespace SGM
     {
     public:
 
-        UnitVector4D() = default;
+        UnitVector4D() {};
 
         UnitVector4D(Vector4D const &Vec);
     };

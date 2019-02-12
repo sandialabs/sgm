@@ -971,6 +971,47 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             snprintf(Data0, sizeof(Data0), "Cone %lu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
 
+            char Data[100];
+            SGM::Point3D Origin{},Apex{};
+            SGM::UnitVector3D XAxis, YAxis, ZAxis;
+            double dRadius,dAngle;
+            SGM::GetConeData(dPtr->mResult, SurfaceID, Origin, XAxis, YAxis, ZAxis, dAngle, dRadius, Apex);
+
+            auto *data_item1 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Origin.m_x, Origin.m_y, Origin.m_z);
+            data_item1->setText(0, "Center");
+            data_item1->setText(1, Data);
+
+            auto *data_item2 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            data_item2->setText(0, "XAxis");
+            data_item2->setText(1, Data);
+
+            auto *data_item3 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            data_item3->setText(0, "YAxis");
+            data_item3->setText(1, Data);
+
+            auto *data_item4 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            data_item4->setText(0, "ZAxis");
+            data_item4->setText(1, Data);
+
+            auto *data_item5 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "%.15G", dRadius);
+            data_item5->setText(0, "Radius");
+            data_item5->setText(1, Data);
+
+            auto *data_item6 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "%.15G", dAngle*180/SGM_PI);
+            data_item6->setText(0, "Half Angle");
+            data_item6->setText(1, Data);
+
+            auto *data_item7 = new QTreeWidgetItem(surface_item);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Apex.m_x, Apex.m_y, Apex.m_z);
+            data_item7->setText(0, "Apex");
+            data_item7->setText(1, Data);
+
             break;
             }
         case SGM::SphereType:

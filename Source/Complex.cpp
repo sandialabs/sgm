@@ -1049,7 +1049,7 @@ complex *complex::Merge(SGM::Result                  &rResult,
             {
             aSegments.push_back(nOffset + iSegment);
             }
-        nOffset += pComplex->m_aPoints.size();
+        nOffset += (unsigned)pComplex->m_aPoints.size();
         }
 
     // triangles
@@ -1062,7 +1062,7 @@ complex *complex::Merge(SGM::Result                  &rResult,
             {
             aTriangles.push_back(nOffset + iTriangle);
             }
-        nOffset += pComplex->m_aPoints.size();
+        nOffset += (unsigned)pComplex->m_aPoints.size();
         }
 
     auto *pAnswer=new complex(rResult,std::move(aPoints),std::move(aSegments),std::move(aTriangles));
@@ -1700,8 +1700,9 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
             unsigned nStart,nEnd;
             pPart->IsLinear(nStart,nEnd);
             SGM::Point3D const &Pos=pPart->m_aPoints[nStart];
-            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos);
-            double dDistStart=SGM::DistanceToPoints(aStarts,Pos);
+            size_t nWhere;
+            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos,nWhere);
+            double dDistStart=SGM::DistanceToPoints(aStarts,Pos,nWhere);
             if(dDistStart<dDistEnd)
                 {
                 rResult.GetThing()->DeleteEntity(pPart);

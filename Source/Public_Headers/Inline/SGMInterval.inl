@@ -155,10 +155,10 @@ namespace SGM {
 
     inline void Interval2D::Reset()
     {
-        m_UDomain.m_dMin = SGM_INTERVAL_POS_MAX;
-        m_UDomain.m_dMax = SGM_INTERVAL_NEG_MIN;
-        m_VDomain.m_dMin = SGM_INTERVAL_POS_MAX;
-        m_VDomain.m_dMax = SGM_INTERVAL_NEG_MIN;
+        m_UDomain.m_dMin = SGM_MAX;
+        m_UDomain.m_dMax = -SGM_MAX;
+        m_VDomain.m_dMin = SGM_MAX;
+        m_VDomain.m_dMax = -SGM_MAX;
     }
 
     inline bool Interval2D::IsEmpty() const
@@ -326,12 +326,12 @@ namespace SGM {
     
     inline void Interval3D::Reset()
     {
-        m_XDomain.m_dMin = SGM_INTERVAL_POS_MAX;
-        m_XDomain.m_dMax = SGM_INTERVAL_NEG_MIN;
-        m_YDomain.m_dMin = SGM_INTERVAL_POS_MAX;
-        m_YDomain.m_dMax = SGM_INTERVAL_NEG_MIN;
-        m_ZDomain.m_dMin = SGM_INTERVAL_POS_MAX;
-        m_ZDomain.m_dMax = SGM_INTERVAL_NEG_MIN;
+        m_XDomain.m_dMin = SGM_MAX;
+        m_XDomain.m_dMax = -SGM_MAX;
+        m_YDomain.m_dMin = SGM_MAX;
+        m_YDomain.m_dMax = -SGM_MAX;
+        m_ZDomain.m_dMin = SGM_MAX;
+        m_ZDomain.m_dMax = -SGM_MAX;
     }
 
     inline bool Interval3D::IsEmpty() const

@@ -217,12 +217,12 @@ class Node
 
         Node() {m_bMark=false,m_bImprint=true;}
 
-        size_t               m_nNext{};
-        size_t               m_nPrevious{};
-        SGM::Point2D         m_uv{};
-        SGM::Point3D         m_Pos{};
-        double               m_t{};
-        SGMInternal::entity *m_Entity{};
+        size_t               m_nNext;
+        size_t               m_nPrevious;
+        SGM::Point2D         m_uv;
+        SGM::Point3D         m_Pos;
+        double               m_t;
+        SGMInternal::entity *m_Entity;
         bool                 m_bMark;
         bool                 m_bImprint;
     };
@@ -935,10 +935,10 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
     }
 
 void FacetEdge(SGM::Result               &rResult,
-                      edge                const *pEdge,
-                      FacetOptions        const &Options,
-                      std::vector<SGM::Point3D> &aPoints3D,
-                      std::vector<double>       &aParams)
+               edge                const *pEdge,
+               FacetOptions        const &Options,
+               std::vector<SGM::Point3D> &aPoints3D,
+               std::vector<double>       &aParams)
     {
     curve const *pCurve=pEdge->GetCurve();
     SGM::Interval1D const &Domain=pEdge->GetDomain();
