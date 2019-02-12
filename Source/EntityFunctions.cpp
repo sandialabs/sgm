@@ -91,23 +91,42 @@ void DeleteEntity(SGM::Result &rResult,
     }
 }
 
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+#endif
+
 entity *CopyEntity(SGM::Result &rResult,
                    entity      *pEntity)
     {
-    std::set<entity *,EntityCompare> aChildren;
-    pEntity->FindAllChildren(aChildren);
+    FILE *pFile=fopen("c:/paul/Temp/junk2.txt","wt");
+    fprintf(pFile,"Start Copy\n");
+    fflush(pFile);
+
+    std::set<edge *,EntityCompare> sEdges2;
+    FindEdges(rResult,pEntity,sEdges2);
+    fprintf(pFile,"Edges %d\n",sEdges2.size());
+    fflush(pFile);
+
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+
+    fprintf(pFile,"1 %ld\n",sChildren.size());
+    fflush(pFile);
+
     entity *pAnswer=pEntity->Clone(rResult);
     std::map<entity *,entity *> mCopyMap;
     mCopyMap[pEntity]=pAnswer;
-    for(auto pChild : aChildren)
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]=pChild->Clone(rResult);
         }
-    aChildren.insert(pEntity);
-    for(auto pChild : aChildren)
+
+    sChildren.insert(pEntity);
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]->ReplacePointers(mCopyMap);
         }
+
     return pAnswer;
     }
 

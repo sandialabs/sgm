@@ -224,7 +224,7 @@ bool volume::Check(SGM::Result              &rResult,
 
     // Check to see if all its faces point to it.
 
-    if(m_sFaces.empty())
+    if(m_sFaces.empty() && m_sEdges.empty())
         {
         bAnswer=false;
         std::stringstream ss;
