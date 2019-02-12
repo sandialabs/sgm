@@ -18,6 +18,7 @@
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
 #include "parallel_stable_sort.h"
+#include <boost/sort/sort.hpp>
 #endif
 
 namespace SGMInternal
@@ -393,6 +394,13 @@ Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints)
         v += Pos.m_v;
         }
     return {u / nPoints, v / nPoints};
+    }
+
+inline Point2D FindCenterOfMass2DTriangle(Point2D const &a, Point2D const &b, Point2D const &c)
+    {
+    double u = (a.m_u + b.m_u + c.m_u)/3.0;
+    double v = (a.m_v + b.m_v + c.m_v)/3.0;
+    return {u, v};
     }
 
 bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
@@ -1338,14 +1346,14 @@ void CutPolygon(std::vector<unsigned> const &aPolygon,
         }
     }
 
-void ForceEdge(Result                                          &rResult,
-               std::vector<unsigned>                       &aTriangles,
-               std::vector<Point2D>                            &aPoints2D,
-               unsigned                                     nStart,
-               unsigned                                     nEnd,
+void ForceEdge(Result                                  &rResult,
+               std::vector<unsigned>                   &aTriangles,
+               std::vector<Point2D>                    &aPoints2D,
+               unsigned                                 nStart,
+               unsigned                                 nEnd,
                std::set<std::pair<unsigned,unsigned> > &sEdges,
-               SGM::BoxTree                                    &Tree,
-               std::vector<size_t>                             &aTris)
+               SGM::BoxTree                            &Tree,
+               std::vector<size_t>                     &aTris)
     {
     // Find the triangles that are close to the segment a,b.
 
@@ -1449,13 +1457,7 @@ void ForceEdge(Result                                          &rResult,
                     Point2D const &A=aPoints2D[a];
                     Point2D const &B=aPoints2D[b];
                     Point2D const &C=aPoints2D[c];
-                    Point3D A3D(A.m_u,A.m_v,0.0),B3D(B.m_u,B.m_v,0.0),C3D(C.m_u,C.m_v,0.0);
-                    std::vector<Point3D> aPoints;
-                    aPoints.reserve(3);
-                    aPoints.push_back(A3D);
-                    aPoints.push_back(B3D);
-                    aPoints.push_back(C3D);
-                    Interval3D Box(aPoints);
+                    Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
 
                     Tree.Insert(&aTris[nTri/3],Box);
                     sEdges.insert({a,b});
@@ -1736,51 +1738,48 @@ void AddPointAndNormal(SGMInternal::surface const *pSurface,
         }
     }
 
-bool InsertPolygon(Result                     &rResult,
-                   std::vector<Point2D> const &aPolygon,
-                   std::vector<Point2D>       &aPoints2D,
-                   std::vector<unsigned>  &aTriangles,
-                   std::vector<unsigned>  &aPolygonIndices,
-                   SGM::Surface               *pSurfaceID,
-                   std::vector<Point3D>       *pPoints3D,
-                   std::vector<UnitVector3D>  *pNormals,
-                   std::vector<bool>          *pImprintFlag)
+void CreateTriangleTree2D(const std::vector<Point2D> &aPolygon,
+                          std::vector<Point2D>       &aPoints2D,
+                          std::vector<unsigned int>  &aTriangles,
+                          std::vector<size_t>        &aTris,
+                          BoxTree                    &Tree)
     {
-    double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
-    double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
-    double dTol=std::max(std::min(dMinEdgeLength,dMinPolygonEdge)*SGM_FIT,SGM_MIN_TOL);
-    
-    SGMInternal::surface *pSurface=nullptr;
-    if(pSurfaceID)
-        {
-        pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(pSurfaceID->m_ID);
-        }
-
-    // Create a tree of the facets.
-
-    size_t nPolygon=aPolygon.size();
-    std::vector<size_t> aTris;
+    size_t nPolygon = aPolygon.size();
     size_t nTriangles=aTriangles.size();
-    size_t nMaxTris=nTriangles+nPolygon*6; 
+    size_t nMaxTris=nTriangles+nPolygon*6;
     aTris.reserve(nMaxTris/3);
-    size_t Index1,Index2;
+    size_t Index1;
     for(Index1=0;Index1<nMaxTris;Index1+=3)
         {
         aTris.push_back(Index1);
         }
-    SGM::BoxTree Tree;
-    for(Index1=0;Index1<nTriangles;)
+    for(Index1=0; Index1 < nTriangles;)
         {
-        SGM::Point2D const &A=aPoints2D[aTriangles[Index1++]];
-        SGM::Point2D const &B=aPoints2D[aTriangles[Index1++]];
-        SGM::Point2D const &C=aPoints2D[aTriangles[Index1++]];
-        SGM::Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
+        Point2D const &A=aPoints2D[aTriangles[Index1++]];
+        Point2D const &B=aPoints2D[aTriangles[Index1++]];
+        Point2D const &C=aPoints2D[aTriangles[Index1++]];
+        Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
         Tree.Insert(&aTris[(Index1-3)/3],Box);
         }
+    }
 
-    // Find the triangle(s) that each polygon point is in.
+bool FindTrianglesOfPolygonPoints(std::vector<Point2D> const &aPolygon,
+                                  std::vector<Point2D>       &aPoints2D,
+                                  std::vector<unsigned>      &aTriangles,
+                                  std::vector<unsigned>      &aPolygonIndices,
+                                  SGMInternal::surface       *pSurface,
+                                  std::vector<Point3D>       *pPoints3D,
+                                  std::vector<UnitVector3D>  *pNormals,
+                                  std::vector<size_t>        &aTris,
+                                  BoxTree                    &Tree)
+    {
+    double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
+    double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
+    double dTol=std::max(std::min(dMinEdgeLength,dMinPolygonEdge)*SGM_FIT,SGM_MIN_TOL);
 
-    for(Index1=0;Index1<nPolygon;++Index1)
+    size_t nPolygon = aPolygon.size();
+
+    for(size_t Index1=0;Index1<nPolygon;++Index1)
         {
         SGM::Point2D const &D=aPolygon[Index1];
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
@@ -1788,12 +1787,12 @@ bool InsertPolygon(Result                     &rResult,
         size_t nHits=aHits.size();
         std::vector<size_t> aEdges,aFacetTris;
         bool bFound=false;
-        for(Index2=0;Index2<nHits;++Index2)
+        for(size_t Index2=0;Index2<nHits;++Index2)
             {
             size_t nHitTri=*((size_t *)aHits[Index2].first);
-            unsigned a=aTriangles[nHitTri]; 
-            unsigned b=aTriangles[nHitTri+1]; 
-            unsigned c=aTriangles[nHitTri+2]; 
+            unsigned a=aTriangles[nHitTri];
+            unsigned b=aTriangles[nHitTri+1];
+            unsigned c=aTriangles[nHitTri+2];
             SGM::Point2D const &A=aPoints2D[a];
             SGM::Point2D const &B=aPoints2D[b];
             SGM::Point2D const &C=aPoints2D[c];
@@ -1840,7 +1839,7 @@ bool InsertPolygon(Result                     &rResult,
                 break;
                 }
             }
-        if(bFound==false)
+        if(!bFound)
             {
             if(aEdges.size()==2)
                 {
@@ -1860,15 +1859,24 @@ bool InsertPolygon(Result                     &rResult,
                 }
             }
         }
+    return true;
+    }
 
-    // Force polygon edges to be in the triangles.
-
-    nTriangles=aTriangles.size();
+bool ForcePolygonEdgesIntoTriangles(Result                     &rResult,
+                                    std::vector<Point2D> const &aPolygon,
+                                    std::vector<Point2D>       &aPoints2D,
+                                    std::vector<unsigned>      &aTriangles,
+                                    std::vector<unsigned>      &aPolygonIndices,
+                                    std::vector<bool>          *pImprintFlag,
+                                    std::vector<size_t>        &aTris,
+                                    BoxTree                    &Tree)
+    {
+    size_t nTriangles=aTriangles.size();
     std::set<std::pair<unsigned,unsigned> > sEdges;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    for(size_t Index1=0;Index1<nTriangles;Index1+=3)
         {
-        unsigned a=aTriangles[Index1]; 
-        unsigned b=aTriangles[Index1+1]; 
+        unsigned a=aTriangles[Index1];
+        unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
         sEdges.insert({a,b});
         sEdges.insert({b,c});
@@ -1879,7 +1887,9 @@ bool InsertPolygon(Result                     &rResult,
         sEdges.insert({a,c});
         }
 
-    for(Index1=0;Index1<nPolygon;++Index1)
+    size_t nPolygon = aPolygon.size();
+
+    for(size_t Index1=0;Index1<nPolygon;++Index1)
         {
         unsigned a=aPolygonIndices[Index1];
         unsigned b=aPolygonIndices[(Index1+1)%nPolygon];
@@ -1893,15 +1903,49 @@ bool InsertPolygon(Result                     &rResult,
             if(sEdges.find({a,b})==sEdges.end())
                 {
                 // Was Unable to force an edge into the triangles.
-                //SGM::Point3D Pos0=(*pPoints3D)[a];
-                //SGM::Point3D Pos1=(*pPoints3D)[b];
-                //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
+                    //SGM::Point3D Pos0=(*pPoints3D)[a];
+                    //SGM::Point3D Pos1=(*pPoints3D)[b];
+                    //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
                 return false;
                 }
             }
         }
-
     return true;
+    }
+
+bool InsertPolygon(Result                     &rResult,
+                   std::vector<Point2D> const &aPolygon,
+                   std::vector<Point2D>       &aPoints2D,
+                   std::vector<unsigned>      &aTriangles,
+                   std::vector<unsigned>      &aPolygonIndices,
+                   SGM::Surface               *pSurfaceID,
+                   std::vector<Point3D>       *pPoints3D,
+                   std::vector<UnitVector3D>  *pNormals,
+                   std::vector<bool>          *pImprintFlag)
+    {
+    std::vector<size_t> aTris;
+    BoxTree Tree;
+    SGMInternal::surface *pSurface=nullptr;
+    if(pSurfaceID)
+        {
+        pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(pSurfaceID->m_ID);
+        }
+
+    // Create a tree of the facets.
+
+    CreateTriangleTree2D(aPolygon,aPoints2D,aTriangles,aTris,Tree);
+
+    // Find the triangle(s) that each polygon point is in.
+
+    if (!FindTrianglesOfPolygonPoints(aPolygon,aPoints2D,aTriangles,aPolygonIndices,
+                                      pSurface,pPoints3D,pNormals,aTris,Tree))
+        {
+        return false;
+        }
+
+    // Force polygon edges to be in the triangles.
+
+    return ForcePolygonEdgesIntoTriangles(rResult,aPolygon,aPoints2D,aTriangles,aPolygonIndices,pImprintFlag,aTris,Tree);
     }
 
 //void FindBoundaryEdges(std::vector<unsigned>                 const &aTriangles,
@@ -1989,7 +2033,7 @@ size_t FindAdjacencies2D(std::vector<unsigned> const &aTriangles,
     size_t nEdges = aEdges.size();
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
     if (nEdges > 10000)
-        pss::parallel_stable_sort(aEdges.begin(), aEdges.end());
+        boost::sort::block_indirect_sort(aEdges.begin(), aEdges.end());
     else
         std::sort(aEdges.begin(), aEdges.end());
 #else
@@ -2539,15 +2583,15 @@ void RemoveOutsideTriangles(SGM::Result                                   &rResu
         unsigned a=aTriangles[Index1];
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
-        SGM::Point2D const &A=aPoints2D[a];
-        SGM::Point2D const &B=aPoints2D[b];
-        SGM::Point2D const &C=aPoints2D[c];
-        std::vector<SGM::Point2D> aPoints;
-        aPoints.reserve(3);
-        aPoints.push_back(A);
-        aPoints.push_back(B);
-        aPoints.push_back(C);
-        SGM::Point2D CM=FindCenterOfMass2D(aPoints);
+//        SGM::Point2D const &A=aPoints2D[a];
+//        SGM::Point2D const &B=aPoints2D[b];
+//        SGM::Point2D const &C=aPoints2D[c];
+//        std::vector<SGM::Point2D> aPoints;
+//        aPoints.reserve(3);
+//        aPoints.push_back(A);
+//        aPoints.push_back(B);
+//        aPoints.push_back(C);
+        SGM::Point2D CM= FindCenterOfMass2DTriangle(aPoints2D[a], aPoints2D[b], aPoints2D[c]);
         size_t nGroups=aaaPolygons.size();
         for(Index2=0;Index2<nGroups;++Index2)
             {

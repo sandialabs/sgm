@@ -170,7 +170,10 @@ double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     double dAnswer=0;
     for (auto pFace : m_sFaces)
         {
-        dAnswer+=pFace->FindVolume(rResult,bApproximate);
+        if (pFace->GetSides() == 1)
+            {
+            dAnswer += pFace->FindVolume(rResult, bApproximate);
+            }
         }
     return dAnswer/6;
     }

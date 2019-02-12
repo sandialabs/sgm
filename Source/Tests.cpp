@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <cmath>
 #include <EntityFunctions.h>
+#include <array>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -325,13 +326,41 @@ bool TestCurve(SGM::Result              &rResult,
 namespace SGM
 {
 
+static size_t iCallCount = 0;
+
 double TestIntegrand(double x,void const *)
     {
+    iCallCount++;
     return 4.0/(1.0+x*x);
+    }
+
+double TestIntegrand1DSinVoid(double x,void const *)
+    {
+    iCallCount++;
+    return std::sin(x);
+    }
+
+double TestIntegrand1DSin(double x)
+    {
+    iCallCount++;
+    return std::sin(x);
+    }
+
+double TestIntegrand1DSinCosVoid(double x,void const *)
+    {
+    iCallCount++;
+    return x * std::sin(50*x) * std::cos(75*x);
+    }
+
+double TestIntegrand1DSinCos(double x)
+    {
+    iCallCount++;
+    return x * std::sin(50*x) * std::cos(75*x);
     }
 
 double TestIntegrand2D(SGM::Point2D const &uv,void const *)
     {
+    iCallCount++;
     double x=uv.m_u;
     double y=uv.m_v;
     return x*x+4*y;
@@ -378,9 +407,26 @@ bool RunInternalTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
+        iCallCount = 0;
         SGM::Interval1D Domain(0.0,1.0);
         double dValue=SGMInternal::Integrate1D(TestIntegrand,Domain,nullptr,SGM_ZERO);
         if(SGM::NearEqual(dValue,SGM_PI,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        iCallCount = 0;
+        SGM::Interval1D DomainSin(0.0,SGM_PI);
+        dValue=SGMInternal::Integrate1D(TestIntegrand1DSinVoid,DomainSin,nullptr,SGM_ZERO);
+        if(SGM::NearEqual(dValue,2.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        iCallCount = 0;
+        SGM::Interval1D DomainSinCos(-1.0,1.0);
+        dValue=SGMInternal::Integrate1D(TestIntegrand1DSinCosVoid,DomainSinCos,nullptr,1.e-15);
+        if(SGM::NearEqual(dValue,0.033518732588154,SGM_ZERO,false)==false)
             {
             bAnswer=false;
             }
@@ -752,7 +798,7 @@ bool RunInternalTest(SGM::Result &rResult,
         pTorus->SnapToDomain(uv1);
         pTorus->SnapToDomain(uv2);
         }
-    
+
     return bAnswer;
     }
 

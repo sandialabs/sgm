@@ -468,7 +468,6 @@ class torus : public surface
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,

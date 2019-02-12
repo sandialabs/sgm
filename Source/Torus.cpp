@@ -103,10 +103,16 @@ void torus::Evaluate(SGM::Point2D const &uv,
         du+=SGM_PI;
         }
 
+#ifdef __GNUC__
+    double dSinU,dCosU,dSinV,dCosV;
+    __sincos(du, &dSinU, &dCosU);
+    __sincos(uv.m_v, &dSinV, &dCosV);
+#else
     double dCosU=cos(du);
     double dSinU=sin(du);
     double dCosV=cos(uv.m_v);
     double dSinV=sin(uv.m_v);
+#endif
 
     double dCosVMR = dCosV*m_dMinorRadius;
     double dMCV= m_dMajorRadius + dCosVMR;

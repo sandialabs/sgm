@@ -2,6 +2,7 @@
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
 #include "parallel_stable_sort.h"
+#include <boost/sort/sort.hpp>
 #endif
 
 namespace SGMInternal
@@ -24,7 +25,7 @@ buffer<unsigned> OrderPointsLexicographical(std::vector<SGM::Point3D> const &aPo
     SGM::Point3D const *pPoints = aPoints.data();
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
-    pss::parallel_stable_sort(aIndexOrdered.begin(),
+    boost::sort::block_indirect_sort(aIndexOrdered.begin(),
                               aIndexOrdered.end(),
                               [&pPoints](unsigned i, unsigned j) {
                                   return (pPoints[i] < pPoints[j]);
