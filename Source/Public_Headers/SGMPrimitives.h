@@ -48,7 +48,8 @@ SGM_EXPORT SGM::Body CreateCone(SGM::Result        &rResult,
                                 SGM::Point3D const &BottomCenter,
                                 SGM::Point3D const &TopCenter,
                                 double              dBottomRadius,
-                                double              dTopRadius);
+                                double              dTopRadius,
+                                bool                bSheetBody=false);
 
 // If bApple is set to true and dMajorRadius<dMinorRadius, then
 // an apple torus will be made, else a lemon torus will be made.

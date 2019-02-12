@@ -315,13 +315,14 @@ std::vector<SGM::Point3D> const &SGM::GetFacePoints3D(SGM::Result     &rResult,
     }
 
 std::vector<SGM::Entity> SGM::FindPointEntities(SGM::Result     &rResult,
-                                               SGM::Face const &FaceID)
+                                                SGM::Face const &FaceID)
     {
     auto pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    std::vector<SGMInternal::entity *> aEnts=pFace->FindPointEntities(rResult);
+    std::vector<SGMInternal::entity *> aEntities;
+    pFace->FindPointEntities(rResult, aEntities);
     std::vector<SGM::Entity> aAnswer;
-    aAnswer.reserve(aEnts.size());
-    for(auto *pEnt : aEnts)
+    aAnswer.reserve(aEntities.size());
+    for(auto *pEnt : aEntities)
         {
         aAnswer.emplace_back(pEnt->GetID());
         }
@@ -549,23 +550,11 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                             SGM::Curve                   const &CurveID2,
                             std::vector<SGM::Point3D>          &aPoints,
                             std::vector<SGM::IntersectionType> &aTypes,
-                            SGM::Edge                    const *pEdge1,
-                            SGM::Edge                    const *pEdge2,
                             double                              dTolerance)
     {
     auto pCurve1=(SGMInternal::curve const *)rResult.GetThing()->FindEntity(CurveID1.m_ID);
     auto pCurve2=(SGMInternal::curve const *)rResult.GetThing()->FindEntity(CurveID2.m_ID);
-    SGMInternal::edge const *pedge1=nullptr;
-    SGMInternal::edge const *pedge2=nullptr;
-    if(pEdge1)
-        {
-        pedge1=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(pEdge1->m_ID);
-        }
-    if(pEdge2)
-        {
-        pedge2=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(pEdge2->m_ID);
-        }
-    return IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,pedge1,pedge2,dTolerance);
+    return IntersectCurves(rResult,pCurve1,pCurve2,aPoints,aTypes,dTolerance);
     }
 
  size_t SGM::IntersectCurveAndSurface(SGM::Result                        &rResult,
@@ -573,23 +562,11 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
                                       SGM::Surface                 const &SurfaceID,
                                       std::vector<SGM::Point3D>          &aPoints,
                                       std::vector<SGM::IntersectionType> &aTypes,
-                                      SGM::Edge                    const *pEdge,
-                                      SGM::Face                    const *pFace,
                                       double                              dTolerance)
      {
      auto pCurve=(SGMInternal::curve const *)rResult.GetThing()->FindEntity(CurveID.m_ID);
      auto pSurface=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
-     SGMInternal::edge const *pedge=nullptr;
-     SGMInternal::face const *pface=nullptr;
-     if(pEdge)
-         {
-         pedge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(pEdge->m_ID);
-         }
-     if(pFace)
-         {
-         pface=(SGMInternal::face const *)rResult.GetThing()->FindEntity(pFace->m_ID);
-         }
-     return IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,pedge,pface,dTolerance);
+     return IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,dTolerance);
      }
 
  
@@ -597,24 +574,12 @@ size_t SGM::IntersectSurfaces(SGM::Result               &rResult,
                               SGM::Surface        const &SurfaceID1,
                               SGM::Surface        const &SurfaceID2,
                               std::vector<SGM::Curve>   &aCurves,
-                              SGM::Face           const *pFace1,
-                              SGM::Face           const *pFace2,
                               double                     dTolerance)
     {
     auto const *pSurface1=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID1.m_ID);
     auto const *pSurface2=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID2.m_ID);
-    SGMInternal::face const *pface1=nullptr;
-    SGMInternal::face const *pface2=nullptr;
-    if(pFace1)
-        {
-        pface1=(SGMInternal::face const *)rResult.GetThing()->FindEntity(pFace1->m_ID);
-        }
-    if(pFace2)
-        {
-        pface2=(SGMInternal::face const *)rResult.GetThing()->FindEntity(pFace2->m_ID);
-        }
     std::vector<SGMInternal::curve *> acurves;
-    size_t nAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,pface1,pface2,dTolerance);
+    size_t nAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,dTolerance);
     size_t Index1;
     for(Index1=0;Index1<nAnswer;++Index1)
         {
@@ -1206,9 +1171,10 @@ SGM::Body SGM::CreateCone(SGM::Result        &rResult,
                           SGM::Point3D const &BottomCenter,
                           SGM::Point3D const &TopCenter,
                           double              dBottomRadius,
-                          double              dTopRadius)
+                          double              dTopRadius,
+                          bool                bSheetBody)
     {
-    SGMInternal::body *pBody=SGMInternal::CreateCone(rResult,BottomCenter,TopCenter,dBottomRadius,dTopRadius);
+    SGMInternal::body *pBody=SGMInternal::CreateCone(rResult,BottomCenter,TopCenter,dBottomRadius,dTopRadius,bSheetBody);
     return {pBody->GetID()};
     }
 
@@ -1696,6 +1662,16 @@ SGM::Surface SGM::CreateConeSurface(SGM::Result             &rResult,
                                     double                   dHalfAngle)
     {
     SGMInternal::surface *pSurface=new SGMInternal::cone(rResult,Origin,Axis,dRadius,dHalfAngle);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateConeSurfaceFromPoints(SGM::Result        &rResult,
+                                              SGM::Point3D const &Bottom,
+                                              SGM::Point3D const &Top,
+                                              double              dBottomRadius,
+                                              double              dTopRadius)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::cone(rResult,Bottom,Top,dBottomRadius,dTopRadius);
     return {pSurface->GetID()};
     }
 

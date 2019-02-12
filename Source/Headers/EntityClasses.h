@@ -951,7 +951,7 @@ class face : public topology
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
-        std::vector<SGMInternal::entity *> FindPointEntities(SGM::Result &rResult) const;
+        void FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntities) const;
 
         surface *GetSurface() const {return m_pSurface;}
 
@@ -1003,6 +1003,13 @@ class face : public topology
 
     private:
 
+        void InitializeFacetSubdivision(SGM::Result &rResult,
+                                        const size_t MAX_LEVELS,
+                                        std::vector<SGM::Point2D> &aPoints2D,
+                                        std::vector<SGM::Point3D> &aPoints3D,
+                                        std::vector<unsigned int> &aTriangles,
+                                        std::vector<entity *> &aEntities) const;
+
         std::set<edge *,EntityCompare>      m_sEdges;
         std::map<edge *,SGM::EdgeSideType>  m_mSideType;
         volume                             *m_pVolume;
@@ -1015,6 +1022,7 @@ class face : public topology
         mutable std::vector<unsigned>              m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
+
     };
 
 class edge : public topology

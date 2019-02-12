@@ -138,6 +138,12 @@ SGM_EXPORT SGM::Surface CreateConeSurface(SGM::Result             &rResult,
                                           double                   dRadius,
                                           double                   dHalfAngle);
 
+SGM_EXPORT SGM::Surface CreateConeSurfaceFromPoints(SGM::Result        &rResult,
+                                                    SGM::Point3D const &Bottom,
+                                                    SGM::Point3D const &Top,
+                                                    double              dBottomRadius,
+                                                    double              dTopRadius);
+
 SGM_EXPORT SGM::Surface CreateTorusSurface(SGM::Result             &rResult,
                                            SGM::Point3D      const &Center,
                                            SGM::UnitVector3D const &Axis,

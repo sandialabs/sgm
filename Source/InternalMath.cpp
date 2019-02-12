@@ -1,3 +1,4 @@
+#include <buffer.h>
 #include "Mathematics.h"
 #include "SGMConstants.h"
 #include "SGMVector.h"
@@ -258,43 +259,78 @@ double IntegrateTetra(double f(SGM::Point2D const &uv,void const *pData),
     return Integrate1D(SGMInternal::IntegrateTetraY,Domain,&XYData,dTolerance);
     }
 
-double Integrate1D(double f(double x, void const *pData),
+inline double * CreateRombergTableMemory(unsigned nMaxLevels)
+    {
+    nMaxLevels += 2;
+    size_t nLength = nMaxLevels*(nMaxLevels+1)/2; // (1+2+3+...+N+2)
+    return new double[nLength];
+    }
+
+double Integrate1D(double f(double, void const *),
                    SGM::Interval1D const &Domain,
                    void const *pData,
                    double dTolerance)
     {
-    std::vector<std::vector<double>> aaData;
-    double dAnswer = 0;
-    double dh = Domain.Length();
+    static const unsigned MIN_LEVELS = 3;
+    static const unsigned MAX_LEVELS = 14;
+
+    // Let N = MAX_LEVEL, number of arrays (extrapolations) in table is N+1,
+    // where the 0th extrapolation is the trapezoid rule.
+    // The size of ith array S_i needed for each extrapolation: S_i = (1,2,3,4,...,N+1,N+2)
+    // The start position P_i of ith array in table P_i = (0,1,3,6,P_{i-1}+S_{i-1},...,P_N+S_N,P_{N+1}+S_{N+1})
+
     double a = Domain.m_dMin;
     double b = Domain.m_dMax;
-    std::vector<double> aData;
-    aData.push_back(0.5 * dh * (f(a, pData) + f(b, pData)));
-    aaData.push_back(aData);
-    double dError = dTolerance + 1;
-    size_t Index1 = 0, Index2;
-    size_t nMin = 3;
-    while (Index1 < nMin || dTolerance < dError)
+    double dh = b - a;
+    if (dh == 0.0)
         {
-        ++Index1;
+        return 0.0;
+        }
+    double *pTable = CreateRombergTableMemory(MAX_LEVELS);
+
+    // 0th level is trapezoid rule
+    unsigned nLevelPosition = 0;
+    unsigned nLevelSize = 1;
+    double dAnswer = 0.5 * dh * (f(a, pData) + f(b, pData));
+    double *aExtrapolation = &pTable[nLevelPosition];
+    aExtrapolation[0] = dAnswer;
+    double dError = std::numeric_limits<double>::max();
+
+    unsigned iLevel;
+    for (iLevel = 1; iLevel <= MAX_LEVELS && (dError > dTolerance || iLevel < MIN_LEVELS); ++iLevel)
+        {
+        unsigned nLevelPositionPrevious = nLevelPosition;
+        unsigned nLevelSizePrevious = iLevel;
+        nLevelPosition = nLevelPositionPrevious + nLevelSize;
+        nLevelSize = nLevelSizePrevious + 1;
+        aExtrapolation = &pTable[nLevelPosition];
+
+        // sum the evaluation of the function at this level
         dh *= 0.5;
         double dSum = 0.0;
-        size_t nBound = (size_t) pow(2, Index1);
-        for (Index2 = 1; Index2 < nBound; Index2 += 2)
+        unsigned nBound = (unsigned) 1 << iLevel; // pow(2,Index1);
+        for (unsigned Index2 = 1; Index2 < nBound; Index2 += 2)
             {
             dSum += f(a + Index2 * dh, pData);
             }
-        aData.clear();
-        aData.push_back(0.5 * aaData[Index1 - 1][0] + dSum * dh);
-        for (Index2 = 1; Index2 <= Index1; ++Index2)
+
+        // calculate table entries for this level extrapolation
+        double *aExtrapolationPrevious = &pTable[nLevelPositionPrevious];
+        aExtrapolation[0] = 0.5 * aExtrapolationPrevious[0] + dSum * dh;
+        for (unsigned Index2 = 1; Index2 <= iLevel; ++Index2)
             {
-            aData.push_back(aData[Index2 - 1] +
-                            (aData[Index2 - 1] - aaData[Index1 - 1][Index2 - 1]) / (pow(4, Index2) - 1));
+            unsigned Index2m1 = Index2 - 1;
+            double aDataIndex2m1 = aExtrapolation[Index2m1];
+            double dDenom = (1 << (2*Index2)) - 1; // (pow(4,Index2) - 1)
+            aExtrapolation[Index2] = aDataIndex2m1 + (aDataIndex2m1 - aExtrapolationPrevious[Index2m1]) / dDenom;
             }
-        aaData.push_back(aData);
-        dAnswer = aData.back();
-        dError = fabs(aaData[Index1 - 1].back() - dAnswer);
+
+        double dPreviousAnswer = dAnswer;
+        dAnswer = aExtrapolation[iLevel]; // last entry
+        dError = std::abs(dPreviousAnswer - dAnswer);
         }
+
+    delete [] pTable;
     return dAnswer;
     }
 

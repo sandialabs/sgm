@@ -49,6 +49,30 @@ edge *CreateEdge(SGM::Result           &rResult,
         pEdge->SetStart(pStart);
         pEdge->SetEnd(pEnd);
         }
+    else 
+        {
+        SGM::Point3D StartPos,EndPos;
+        SGM::Vector3D StartVec,EndVec;
+        pCurve->Evaluate(Domain.m_dMin,&StartPos,&StartVec);
+        pCurve->Evaluate(Domain.m_dMax,&EndPos,&EndVec);
+        SGM::UnitVector3D Vec0=StartVec,Vec1=EndVec;
+        if(SGM::NearEqual(Vec0,Vec1,SGM_MIN_TOL)==false)
+            {
+            if(pCurve->GetClosed())
+                {
+                vertex *pVertex=new vertex(rResult,StartPos);
+                pEdge->SetStart(pVertex);
+                pEdge->SetEnd(pVertex);
+                }
+            else
+                {
+                vertex *pStart=new vertex(rResult,StartPos);
+                vertex *pEnd=new vertex(rResult,EndPos);
+                pEdge->SetStart(pStart);
+                pEdge->SetEnd(pEnd);
+                }
+            }
+        }
     return pEdge;
     }
 
@@ -280,7 +304,8 @@ body *CreateCone(SGM::Result        &rResult,
                  SGM::Point3D const &BottomCenter,
                  SGM::Point3D const &TopCenter,
                  double              dBottomRadius,
-                 double              dTopRadius)
+                 double              dTopRadius,
+                 bool                bSheetBody)
     {
     SGM::UnitVector3D ZAxis=TopCenter-BottomCenter;
     SGM::UnitVector3D XAxis=ZAxis.Orthogonal();
@@ -288,48 +313,75 @@ body *CreateCone(SGM::Result        &rResult,
 
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
-
-    face *pBottom=new face(rResult);
     face *pSide=new face(rResult);
-    face *pTop=new face(rResult);
-
-    edge *pEdgeBottom=new edge(rResult);
-    edge *pEdgeTop=new edge(rResult);
-
-    plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis);
-    plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis);
 
     double dy=dBottomRadius-dTopRadius;
     double dx=TopCenter.Distance(BottomCenter);
     double dHalfAngle=SGM::SAFEatan2(dy,dx);
     cone *pCone=new cone(rResult,BottomCenter,ZAxis,dBottomRadius,dHalfAngle,&XAxis);
 
-    circle *pCircleBottom=new circle(rResult,BottomCenter,-ZAxis,dBottomRadius,&XAxis);
-    circle *pCircleTop=new circle(rResult,TopCenter,ZAxis,dTopRadius,&XAxis);
-
-    // Connect everything.
-
     pBody->AddVolume(pVolume);
-
-    pVolume->AddFace(pBottom);
     pVolume->AddFace(pSide);
-    pVolume->AddFace(pTop);
-
-    pBottom->AddEdge(rResult,pEdgeBottom,SGM::FaceOnLeftType);
-    pSide->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
-    pSide->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
-    pTop->AddEdge(rResult,pEdgeTop,SGM::FaceOnLeftType);
-
-    pBottom->SetSurface(pPlaneBottom);
     pSide->SetSurface(pCone);
-    pTop->SetSurface(pPlaneTop);
+    if(bSheetBody)
+        {
+        pSide->SetSides(2);
+        }
+    
+    if(SGM_MIN_TOL<dBottomRadius)
+        {
+        if(bSheetBody)
+            {
+            edge *pEdgeBottom=new edge(rResult);
+            circle *pCircleBottom=new circle(rResult,BottomCenter,-ZAxis,dBottomRadius,&XAxis);
 
-    pEdgeBottom->SetCurve(pCircleBottom);
-    pEdgeTop->SetCurve(pCircleTop);
+            pSide->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+            pEdgeBottom->SetCurve(pCircleBottom);
+            pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+            }
+        else
+            {
+            face *pBottom=new face(rResult);
+            edge *pEdgeBottom=new edge(rResult);
+            plane *pPlaneBottom=new plane(rResult,BottomCenter,XAxis,-YAxis,-ZAxis);
+            circle *pCircleBottom=new circle(rResult,BottomCenter,-ZAxis,dBottomRadius,&XAxis);
 
-    pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
-    pEdgeTop->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+            pSide->AddEdge(rResult,pEdgeBottom,SGM::FaceOnRightType);
+            pVolume->AddFace(pBottom);
+            pBottom->AddEdge(rResult,pEdgeBottom,SGM::FaceOnLeftType);
+            pBottom->SetSurface(pPlaneBottom);
+            pEdgeBottom->SetCurve(pCircleBottom);
+            pEdgeBottom->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+            }
+        }
+    
+    if(SGM_MIN_TOL<dTopRadius)
+        {
+        if(bSheetBody)
+            {
+            edge *pEdgeTop=new edge(rResult);
+            circle *pCircleTop=new circle(rResult,TopCenter,ZAxis,dTopRadius,&XAxis);
 
+            pSide->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
+            pEdgeTop->SetCurve(pCircleTop);
+            pEdgeTop->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+            }
+        else
+            {
+            face *pTop=new face(rResult);
+            edge *pEdgeTop=new edge(rResult);
+            plane *pPlaneTop=new plane(rResult,TopCenter,XAxis,YAxis,ZAxis);
+            circle *pCircleTop=new circle(rResult,TopCenter,ZAxis,dTopRadius,&XAxis);
+
+            pTop->AddEdge(rResult,pEdgeTop,SGM::FaceOnLeftType);
+            pVolume->AddFace(pTop);
+            pSide->AddEdge(rResult,pEdgeTop,SGM::FaceOnRightType);
+            pTop->SetSurface(pPlaneTop);
+            pEdgeTop->SetCurve(pCircleTop);
+            pEdgeTop->SetDomain(rResult,SGM::Interval1D(0,SGM_TWO_PI));
+            }
+        }
+    
     return pBody;
     }
 
@@ -1138,6 +1190,8 @@ body *CreateSheetBody(SGM::Result                    &rResult,
     face *pFace=new face(rResult);
     pVolume->AddFace(pFace);
     pFace->SetSurface(pSurface);
+
+    pFace->SetSides(2);
 
     size_t nEdges=aEdges.size();
     size_t Index1;

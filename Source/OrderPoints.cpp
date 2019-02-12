@@ -2,6 +2,7 @@
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
 #include "parallel_stable_sort.h"
+#include <boost/sort/sort.hpp>
 #endif
 
 namespace SGMInternal
@@ -24,7 +25,7 @@ buffer<unsigned> OrderPointsLexicographical(std::vector<SGM::Point3D> const &aPo
     SGM::Point3D const *pPoints = aPoints.data();
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
-    pss::parallel_stable_sort(aIndexOrdered.begin(),
+    boost::sort::block_indirect_sort(aIndexOrdered.begin(),
                               aIndexOrdered.end(),
                               [&pPoints](unsigned i, unsigned j) {
                                   return (pPoints[i] < pPoints[j]);
@@ -116,11 +117,19 @@ buffer<unsigned> OrderPointsZorder(std::vector<SGM::Point3D> const &aPoints)
     Point3DSeparate const *pPointSeparates = aPointSeparates.data();
 
     // Sort the index array using our Less function for pairs of Point3D and Point3DSeparate
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
+    boost::sort::block_indirect_sort(aIndexOrdered.begin(),
+            aIndexOrdered.end(),
+            [&pPoints,&pPointSeparates](unsigned i, unsigned j) {
+                return LessZOrder(pPoints[i], pPointSeparates[i], pPoints[j], pPointSeparates[j]);
+            });
+#else
     std::sort(aIndexOrdered.begin(),
               aIndexOrdered.end(),
               [&pPoints,&pPointSeparates](unsigned i, unsigned j) {
                   return LessZOrder(pPoints[i], pPointSeparates[i], pPoints[j], pPointSeparates[j]);
                   });
+#endif
     return aIndexOrdered;
     }
 

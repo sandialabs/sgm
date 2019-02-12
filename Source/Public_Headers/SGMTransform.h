@@ -67,6 +67,13 @@ namespace SGM {
                     UnitVector3D const &YAxisTo,
                     UnitVector3D const &ZAxisTo,
                     Point3D      const &CenterTo);
+
+        // Returns a tranform the rotates space in the right handed
+        // direction about the given axis by the given angle.
+
+        Transform3D(SGM::Point3D      const &PointOnAxis,
+                    SGM::UnitVector3D const &Axis,
+                    double                   dAngle);
             
         // true if transformation does not include any non-uniform scale or rotation or shear or reflection
 

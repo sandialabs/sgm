@@ -45,8 +45,8 @@ class SGM_EXPORT Graph
     {
     public:
 
-        Graph(std::set<size_t> sVertices, std::set<GraphEdge> sEdges)
-            : m_sVertices(std::move(sVertices)), m_sEdges(std::move(sEdges)), m_mNeighbors() {}
+        Graph(std::set<size_t> &sVertices, std::set<GraphEdge> &sEdges)
+            : m_sVertices(sVertices), m_sEdges(sEdges), m_mNeighbors() {}
 
         // If an edge is closed, then a non-simple graph is returned and extra vertices may
         // be added with potentially invalid IDs if the closed edge(s) do not have vertices.

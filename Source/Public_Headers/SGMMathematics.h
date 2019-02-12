@@ -75,11 +75,18 @@ namespace SGM
                                   std::map<unsigned int,unsigned int> &mMatchMap,
                                   double                              dTolerance);
 
+    // Returns the distance from Pos to the closest point in aPoints along 
+    // with the nWhere, which is the index into aPoints of the closest point to Pos.
+
     SGM_EXPORT double DistanceToPoints(std::vector<Point3D> const &aPoints,
-                                       Point3D              const &Pos);
+                                       Point3D              const &Pos,
+                                       size_t                     &nWhere);
+
+    SGM_EXPORT void RemoveDuplicates1D(std::vector<double> &aPoints,
+                                       double               dTolerance);
 
     SGM_EXPORT void RemoveDuplicates2D(std::vector<Point2D> &aPoints,
-                                       double                     dTolerance);
+                                       double                dTolerance);
 
     // Optionaly a box may be given that the points must be in also.
 

@@ -18,6 +18,7 @@
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
 #include "parallel_stable_sort.h"
+#include <boost/sort/sort.hpp>
 #endif
 
 namespace SGMInternal
@@ -395,6 +396,13 @@ Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints)
     return {u / nPoints, v / nPoints};
     }
 
+inline Point2D FindCenterOfMass2DTriangle(Point2D const &a, Point2D const &b, Point2D const &c)
+    {
+    double u = (a.m_u + b.m_u + c.m_u)/3.0;
+    double v = (a.m_v + b.m_v + c.m_v)/3.0;
+    return {u, v};
+    }
+
 bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
                            Point3D                    &Origin,
                            UnitVector3D               &Axis)
@@ -462,6 +470,46 @@ Interval3D FindOrientedBox(std::vector<Point3D> const &aPoints,
     return Box;
     }
 
+bool IsPlanar(std::vector<Point3D> const &aPoints,
+              SGM::Point3D         const &Origin,
+              SGM::UnitVector3D          &ZVec)
+    {
+    double dDist=0;
+    SGM::Point3D Pos1=aPoints[0];
+    for(auto Pos : aPoints)
+        {
+        double dTest=Pos.DistanceSquared(Origin);
+        if(dDist<dTest)
+            {
+            dDist=dTest;
+            Pos1=Pos;
+            }
+        }
+    SGM::UnitVector3D XVec=Pos1-Origin;
+    SGM::Point3D Pos2=aPoints[0];
+    dDist=0;
+    for(auto Pos : aPoints)
+        {
+        SGM::Point3D Pos3=Origin+XVec*(XVec%(Pos-Origin));
+        double dTest=Pos.Distance(Pos3);
+        if(dDist<dTest)
+            {
+            dDist=dTest;
+            Pos2=Pos;
+            }
+        }
+    ZVec=XVec*(Pos2-Origin);
+    for(auto Pos : aPoints)
+        {
+        double dTest=fabs((Pos-Origin)%ZVec);
+        if(SGM_MIN_TOL<dTest)
+            {
+            return false;
+            }
+        }
+    return true;
+    }
+
 bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                           Point3D                    &Origin,
                           UnitVector3D               &XVec,
@@ -471,6 +519,43 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
     double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
     Origin = FindCenterOfMass3D(aPoints);
 
+    if(aPoints.size()==2)
+        {
+        XVec=aPoints[1]-aPoints[0];
+        ZVec=XVec.Orthogonal();
+        YVec=ZVec*XVec;
+        return true;
+        }
+
+    SGM::UnitVector3D ZAnswer;
+    if(IsPlanar(aPoints,Origin,ZAnswer))
+        {
+        SGM::UnitVector3D ZAnswer=(aPoints[0]-aPoints[1])*(aPoints[2]-aPoints[1]);
+        SGM::UnitVector3D XNorm=ZAnswer.Orthogonal();
+        SGM::UnitVector3D YNorm=ZAnswer*XNorm;
+        std::vector<SGM::Point2D> aPoints2D;
+        SGM::ProjectPointsToPlane(aPoints,Origin,XNorm,YNorm,ZAnswer,aPoints2D);
+        double SumXX2D=0,SumXY2D=0,SumYY2D=0;
+        for(auto xy : aPoints2D)
+            {
+            SumXX2D+=xy.m_u*xy.m_u;
+            SumXY2D+=xy.m_u*xy.m_v;
+            SumYY2D+=xy.m_v*xy.m_v;
+            }
+        const double aaMatrix2D[2][2] =
+                {
+                SumXX2D, SumXY2D,
+                SumXY2D, SumYY2D,
+                };
+        std::vector<double> aValues2D;
+        std::vector<UnitVector2D> aVectors2D;
+        FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
+        XVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm;
+        YVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm; 
+        ZVec=ZAnswer;
+        return true;
+        }
+    
     size_t nPoints = aPoints.size();
     size_t Index1;
     for (Index1 = nPoints/2; Index1 < nPoints; ++Index1)
@@ -499,6 +584,7 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
     std::vector<double> aValues;
     std::vector<UnitVector3D> aVectors;
     size_t nFound = FindEigenVectors3D(&aaMatrix[0], aValues, aVectors);
+
     if (nFound == 3)
         {
         // Smallest value is the normal.
@@ -550,83 +636,48 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
             }
         return true;
         }
-    else if (nFound == 2)
-        {
-        if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
-            {
-            if (fabs(SumXX) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(0,1,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(1,0,0);
-                return true;
-                }
-            else if (fabs(SumYY) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,0,1);
-                ZVec = SGM::UnitVector3D(0,-1,0);
-                return true;
-                }
-            else if (fabs(SumZZ) < SGM_MIN_TOL)
-                {
-                XVec = SGM::UnitVector3D(1,0,0);
-                YVec = SGM::UnitVector3D(0,1,0);
-                ZVec = SGM::UnitVector3D(0,0,1);
-                return true;
-                }
-            else
-                {
-                return false;
-                }
-            }
-        else if(aValues[0]<aValues[1])
-            {
-            XVec = aVectors[1];
-            YVec = aVectors[0];
-            }
-        else
-            {
-            XVec = aVectors[0];
-            YVec = aVectors[1];
-            }
-        ZVec = XVec * YVec;
-        return true;
-        }
-    //else if (nFound == 1)
+    //else if (nFound == 2)
     //    {
-    //    XVec = aVectors[0];
-    //    YVec = XVec.Orthogonal();
-    //    ZVec = XVec * YVec;
-    //    return true;
-    //    }
-    //else if (nFound == 0)
-    //    {
-    //    if (fabs(SumXX) < SGM_MIN_TOL)
+    //    if(SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
     //        {
-    //        XVec = SGM::UnitVector3D(0,1,0);
-    //        YVec = SGM::UnitVector3D(0,0,1);
-    //        ZVec = SGM::UnitVector3D(1,0,0);
-    //        return true;
+    //        if (fabs(SumXX) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(0,1,0);
+    //            YVec = SGM::UnitVector3D(0,0,1);
+    //            ZVec = SGM::UnitVector3D(1,0,0);
+    //            return true;
+    //            }
+    //        else if (fabs(SumYY) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(1,0,0);
+    //            YVec = SGM::UnitVector3D(0,0,1);
+    //            ZVec = SGM::UnitVector3D(0,-1,0);
+    //            return true;
+    //            }
+    //        else if (fabs(SumZZ) < SGM_MIN_TOL)
+    //            {
+    //            XVec = SGM::UnitVector3D(1,0,0);
+    //            YVec = SGM::UnitVector3D(0,1,0);
+    //            ZVec = SGM::UnitVector3D(0,0,1);
+    //            return true;
+    //            }
+    //        else
+    //            {
+    //            return false;
+    //            }
     //        }
-    //    else if (fabs(SumYY) < SGM_MIN_TOL)
+    //    else if(aValues[0]<aValues[1])
     //        {
-    //        XVec = SGM::UnitVector3D(1,0,0);
-    //        YVec = SGM::UnitVector3D(0,0,1);
-    //        ZVec = SGM::UnitVector3D(0,-1,0);
-    //        return true;
-    //        }
-    //    else if (fabs(SumZZ) < SGM_MIN_TOL)
-    //        {
-    //        XVec = SGM::UnitVector3D(1,0,0);
-    //        YVec = SGM::UnitVector3D(0,1,0);
-    //        ZVec = SGM::UnitVector3D(0,0,1);
-    //        return true;
+    //        XVec = aVectors[1];
+    //        YVec = aVectors[0];
     //        }
     //    else
     //        {
-    //        return false;
+    //        XVec = aVectors[0];
+    //        YVec = aVectors[1];
     //        }
+    //    ZVec = XVec * YVec;
+    //    return true;
     //    }
     return false;
     }
@@ -663,6 +714,30 @@ bool ArePointsCoplanar(std::vector<SGM::Point3D> const &aPoints,
                        SGM::Point3D                    *Origin,
                        SGM::UnitVector3D               *Normal)
     {
+    if(aPoints.size()==0)
+        {
+        if(Origin)
+            *Origin=SGM::Point3D(0,0,0);
+        if(Normal)
+            *Normal=SGM::UnitVector3D(0,0,1);
+        return true;
+        }
+    if(aPoints.size()==1)
+        {
+        if(Origin)
+            *Origin=aPoints[0];
+        if(Normal)
+            *Normal=SGM::UnitVector3D(0,0,1);
+        return true;
+        }
+    if(aPoints.size()==2)
+        {
+        if(Origin)
+            *Origin=aPoints[0];
+        if(Normal)
+            *Normal=(aPoints[1]-aPoints[0]).Orthogonal();
+        return true;
+        }
     bool bCoplanar = false;
     SGM::Point3D PlaneOrigin;
     SGM::UnitVector3D XVec;
@@ -724,15 +799,20 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     }
 
 double DistanceToPoints(std::vector<SGM::Point3D> const &aPoints,
-                        SGM::Point3D              const &Pos1)
+                        SGM::Point3D              const &Pos1,
+                        size_t                          &nWhere)
     {
     double dAnswer=std::numeric_limits<double>::max();
-    for(SGM::Point3D const &Pos2 : aPoints)
+    size_t Index1;
+    size_t nSize=aPoints.size();
+    for(Index1=0;Index1<nSize;++Index1)
         {
+        SGM::Point3D const &Pos2=aPoints[Index1];
         double dDistanceSquared=Pos1.DistanceSquared(Pos2);
         if(dDistanceSquared<dAnswer)
             {
             dAnswer=dDistanceSquared;
+            nWhere=Index1;
             }
         }
     return sqrt(dAnswer);
@@ -1085,6 +1165,31 @@ void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
         }
     }
 
+void RemoveDuplicates1D(std::vector<double> &aPoints,
+                        double               dTolerance)
+    {
+    std::sort(aPoints.begin(),aPoints.end());
+    std::vector<double> aNewPoints;
+    size_t nPoints=aPoints.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        double d=aPoints[Index1];
+        if(Index1)
+            {
+            if(dTolerance<d-aPoints[Index1-1])
+                {
+                aNewPoints.push_back(d);
+                }
+            }
+        else
+            {
+            aNewPoints.push_back(d);
+            }
+        }
+    aPoints=aNewPoints;
+    }
+
 void RemoveDuplicates2D(std::vector<SGM::Point2D> &aPoints,
                         double                     dTolerance)
     {
@@ -1338,14 +1443,14 @@ void CutPolygon(std::vector<unsigned> const &aPolygon,
         }
     }
 
-void ForceEdge(Result                                          &rResult,
-               std::vector<unsigned>                       &aTriangles,
-               std::vector<Point2D>                            &aPoints2D,
-               unsigned                                     nStart,
-               unsigned                                     nEnd,
+void ForceEdge(Result                                  &rResult,
+               std::vector<unsigned>                   &aTriangles,
+               std::vector<Point2D>                    &aPoints2D,
+               unsigned                                 nStart,
+               unsigned                                 nEnd,
                std::set<std::pair<unsigned,unsigned> > &sEdges,
-               SGM::BoxTree                                    &Tree,
-               std::vector<size_t>                             &aTris)
+               SGM::BoxTree                            &Tree,
+               std::vector<size_t>                     &aTris)
     {
     // Find the triangles that are close to the segment a,b.
 
@@ -1449,13 +1554,7 @@ void ForceEdge(Result                                          &rResult,
                     Point2D const &A=aPoints2D[a];
                     Point2D const &B=aPoints2D[b];
                     Point2D const &C=aPoints2D[c];
-                    Point3D A3D(A.m_u,A.m_v,0.0),B3D(B.m_u,B.m_v,0.0),C3D(C.m_u,C.m_v,0.0);
-                    std::vector<Point3D> aPoints;
-                    aPoints.reserve(3);
-                    aPoints.push_back(A3D);
-                    aPoints.push_back(B3D);
-                    aPoints.push_back(C3D);
-                    Interval3D Box(aPoints);
+                    Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
 
                     Tree.Insert(&aTris[nTri/3],Box);
                     sEdges.insert({a,b});
@@ -1736,51 +1835,48 @@ void AddPointAndNormal(SGMInternal::surface const *pSurface,
         }
     }
 
-bool InsertPolygon(Result                     &rResult,
-                   std::vector<Point2D> const &aPolygon,
-                   std::vector<Point2D>       &aPoints2D,
-                   std::vector<unsigned>  &aTriangles,
-                   std::vector<unsigned>  &aPolygonIndices,
-                   SGM::Surface               *pSurfaceID,
-                   std::vector<Point3D>       *pPoints3D,
-                   std::vector<UnitVector3D>  *pNormals,
-                   std::vector<bool>          *pImprintFlag)
+void CreateTriangleTree2D(const std::vector<Point2D> &aPolygon,
+                          std::vector<Point2D>       &aPoints2D,
+                          std::vector<unsigned int>  &aTriangles,
+                          std::vector<size_t>        &aTris,
+                          BoxTree                    &Tree)
     {
-    double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
-    double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
-    double dTol=std::max(std::min(dMinEdgeLength,dMinPolygonEdge)*SGM_FIT,SGM_MIN_TOL);
-    
-    SGMInternal::surface *pSurface=nullptr;
-    if(pSurfaceID)
-        {
-        pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(pSurfaceID->m_ID);
-        }
-
-    // Create a tree of the facets.
-
-    size_t nPolygon=aPolygon.size();
-    std::vector<size_t> aTris;
+    size_t nPolygon = aPolygon.size();
     size_t nTriangles=aTriangles.size();
-    size_t nMaxTris=nTriangles+nPolygon*6; 
+    size_t nMaxTris=nTriangles+nPolygon*6;
     aTris.reserve(nMaxTris/3);
-    size_t Index1,Index2;
+    size_t Index1;
     for(Index1=0;Index1<nMaxTris;Index1+=3)
         {
         aTris.push_back(Index1);
         }
-    SGM::BoxTree Tree;
-    for(Index1=0;Index1<nTriangles;)
+    for(Index1=0; Index1 < nTriangles;)
         {
-        SGM::Point2D const &A=aPoints2D[aTriangles[Index1++]];
-        SGM::Point2D const &B=aPoints2D[aTriangles[Index1++]];
-        SGM::Point2D const &C=aPoints2D[aTriangles[Index1++]];
-        SGM::Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
+        Point2D const &A=aPoints2D[aTriangles[Index1++]];
+        Point2D const &B=aPoints2D[aTriangles[Index1++]];
+        Point2D const &C=aPoints2D[aTriangles[Index1++]];
+        Interval3D Box({A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0});
         Tree.Insert(&aTris[(Index1-3)/3],Box);
         }
+    }
 
-    // Find the triangle(s) that each polygon point is in.
+bool FindTrianglesOfPolygonPoints(std::vector<Point2D> const &aPolygon,
+                                  std::vector<Point2D>       &aPoints2D,
+                                  std::vector<unsigned>      &aTriangles,
+                                  std::vector<unsigned>      &aPolygonIndices,
+                                  SGMInternal::surface       *pSurface,
+                                  std::vector<Point3D>       *pPoints3D,
+                                  std::vector<UnitVector3D>  *pNormals,
+                                  std::vector<size_t>        &aTris,
+                                  BoxTree                    &Tree)
+    {
+    double dMinEdgeLength=FindMinEdgeLength2D(aPoints2D,aTriangles);
+    double dMinPolygonEdge=SmallestPolygonEdge(aPolygon);
+    double dTol=std::max(std::min(dMinEdgeLength,dMinPolygonEdge)*SGM_FIT,SGM_MIN_TOL);
 
-    for(Index1=0;Index1<nPolygon;++Index1)
+    size_t nPolygon = aPolygon.size();
+
+    for(size_t Index1=0;Index1<nPolygon;++Index1)
         {
         SGM::Point2D const &D=aPolygon[Index1];
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
@@ -1788,12 +1884,12 @@ bool InsertPolygon(Result                     &rResult,
         size_t nHits=aHits.size();
         std::vector<size_t> aEdges,aFacetTris;
         bool bFound=false;
-        for(Index2=0;Index2<nHits;++Index2)
+        for(size_t Index2=0;Index2<nHits;++Index2)
             {
             size_t nHitTri=*((size_t *)aHits[Index2].first);
-            unsigned a=aTriangles[nHitTri]; 
-            unsigned b=aTriangles[nHitTri+1]; 
-            unsigned c=aTriangles[nHitTri+2]; 
+            unsigned a=aTriangles[nHitTri];
+            unsigned b=aTriangles[nHitTri+1];
+            unsigned c=aTriangles[nHitTri+2];
             SGM::Point2D const &A=aPoints2D[a];
             SGM::Point2D const &B=aPoints2D[b];
             SGM::Point2D const &C=aPoints2D[c];
@@ -1840,7 +1936,7 @@ bool InsertPolygon(Result                     &rResult,
                 break;
                 }
             }
-        if(bFound==false)
+        if(!bFound)
             {
             if(aEdges.size()==2)
                 {
@@ -1860,15 +1956,24 @@ bool InsertPolygon(Result                     &rResult,
                 }
             }
         }
+    return true;
+    }
 
-    // Force polygon edges to be in the triangles.
-
-    nTriangles=aTriangles.size();
+bool ForcePolygonEdgesIntoTriangles(Result                     &rResult,
+                                    std::vector<Point2D> const &aPolygon,
+                                    std::vector<Point2D>       &aPoints2D,
+                                    std::vector<unsigned>      &aTriangles,
+                                    std::vector<unsigned>      &aPolygonIndices,
+                                    std::vector<bool>          *pImprintFlag,
+                                    std::vector<size_t>        &aTris,
+                                    BoxTree                    &Tree)
+    {
+    size_t nTriangles=aTriangles.size();
     std::set<std::pair<unsigned,unsigned> > sEdges;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    for(size_t Index1=0;Index1<nTriangles;Index1+=3)
         {
-        unsigned a=aTriangles[Index1]; 
-        unsigned b=aTriangles[Index1+1]; 
+        unsigned a=aTriangles[Index1];
+        unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
         sEdges.insert({a,b});
         sEdges.insert({b,c});
@@ -1879,7 +1984,9 @@ bool InsertPolygon(Result                     &rResult,
         sEdges.insert({a,c});
         }
 
-    for(Index1=0;Index1<nPolygon;++Index1)
+    size_t nPolygon = aPolygon.size();
+
+    for(size_t Index1=0;Index1<nPolygon;++Index1)
         {
         unsigned a=aPolygonIndices[Index1];
         unsigned b=aPolygonIndices[(Index1+1)%nPolygon];
@@ -1893,15 +2000,49 @@ bool InsertPolygon(Result                     &rResult,
             if(sEdges.find({a,b})==sEdges.end())
                 {
                 // Was Unable to force an edge into the triangles.
-                //SGM::Point3D Pos0=(*pPoints3D)[a];
-                //SGM::Point3D Pos1=(*pPoints3D)[b];
-                //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
+                    //SGM::Point3D Pos0=(*pPoints3D)[a];
+                    //SGM::Point3D Pos1=(*pPoints3D)[b];
+                    //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
                 return false;
                 }
             }
         }
-
     return true;
+    }
+
+bool InsertPolygon(Result                     &rResult,
+                   std::vector<Point2D> const &aPolygon,
+                   std::vector<Point2D>       &aPoints2D,
+                   std::vector<unsigned>      &aTriangles,
+                   std::vector<unsigned>      &aPolygonIndices,
+                   SGM::Surface               *pSurfaceID,
+                   std::vector<Point3D>       *pPoints3D,
+                   std::vector<UnitVector3D>  *pNormals,
+                   std::vector<bool>          *pImprintFlag)
+    {
+    std::vector<size_t> aTris;
+    BoxTree Tree;
+    SGMInternal::surface *pSurface=nullptr;
+    if(pSurfaceID)
+        {
+        pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(pSurfaceID->m_ID);
+        }
+
+    // Create a tree of the facets.
+
+    CreateTriangleTree2D(aPolygon,aPoints2D,aTriangles,aTris,Tree);
+
+    // Find the triangle(s) that each polygon point is in.
+
+    if (!FindTrianglesOfPolygonPoints(aPolygon,aPoints2D,aTriangles,aPolygonIndices,
+                                      pSurface,pPoints3D,pNormals,aTris,Tree))
+        {
+        return false;
+        }
+
+    // Force polygon edges to be in the triangles.
+
+    return ForcePolygonEdgesIntoTriangles(rResult,aPolygon,aPoints2D,aTriangles,aPolygonIndices,pImprintFlag,aTris,Tree);
     }
 
 //void FindBoundaryEdges(std::vector<unsigned>                 const &aTriangles,
@@ -1989,7 +2130,7 @@ size_t FindAdjacencies2D(std::vector<unsigned> const &aTriangles,
     size_t nEdges = aEdges.size();
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
     if (nEdges > 10000)
-        pss::parallel_stable_sort(aEdges.begin(), aEdges.end());
+        boost::sort::block_indirect_sort(aEdges.begin(), aEdges.end());
     else
         std::sort(aEdges.begin(), aEdges.end());
 #else
@@ -2539,15 +2680,15 @@ void RemoveOutsideTriangles(SGM::Result                                   &rResu
         unsigned a=aTriangles[Index1];
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
-        SGM::Point2D const &A=aPoints2D[a];
-        SGM::Point2D const &B=aPoints2D[b];
-        SGM::Point2D const &C=aPoints2D[c];
-        std::vector<SGM::Point2D> aPoints;
-        aPoints.reserve(3);
-        aPoints.push_back(A);
-        aPoints.push_back(B);
-        aPoints.push_back(C);
-        SGM::Point2D CM=FindCenterOfMass2D(aPoints);
+//        SGM::Point2D const &A=aPoints2D[a];
+//        SGM::Point2D const &B=aPoints2D[b];
+//        SGM::Point2D const &C=aPoints2D[c];
+//        std::vector<SGM::Point2D> aPoints;
+//        aPoints.reserve(3);
+//        aPoints.push_back(A);
+//        aPoints.push_back(B);
+//        aPoints.push_back(C);
+        SGM::Point2D CM= FindCenterOfMass2DTriangle(aPoints2D[a], aPoints2D[b], aPoints2D[c]);
         size_t nGroups=aaaPolygons.size();
         for(Index2=0;Index2<nGroups;++Index2)
             {
@@ -3100,7 +3241,6 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                 }
             }
         }
-    double dTol = SGM_ZERO * std::max(1.0, dMaxValue);
 
     if (IsDiagonal3D(aaMatrix))
         {
@@ -3113,58 +3253,42 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         return 3;
         }
 
-    double a, b, c, d;
-    CharacteristicPolynomial3D(aaMatrix, a, b, c, d);
+    double a,b,c,d;
+    CharacteristicPolynomial3D(aaMatrix,a,b,c,d);
 
     std::vector<double> aRoots;
-    size_t nRoots = Cubic(a, b, c, d, aRoots);
+    Cubic(a,b,c,d,aRoots);
 
     // To find the Eigen vectors solve Mv=Lv where M is the matrix and
     // L is an Eigen value.
 
     size_t nAnswer = 0;
-    for (Index1 = 0; Index1 < nRoots; ++Index1)
+    for(double dRoot : aRoots)
         {
-        if (dTol < fabs(aRoots[Index1]))
-            {
-            std::vector<std::vector<double> > aaMat;
-            aaMat.reserve(3);
-            std::vector<double> aMat;
-            aMat.reserve(4);
-            aMat.push_back(aaMatrix[0][0] - aRoots[Index1]);
-            aMat.push_back(aaMatrix[0][1]);
-            aMat.push_back(aaMatrix[0][2]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aMat.clear();
-            aMat.push_back(aaMatrix[1][0]);
-            aMat.push_back(aaMatrix[1][1] - aRoots[Index1]);
-            aMat.push_back(aaMatrix[1][2]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aMat.clear();
-            aMat.push_back(aaMatrix[2][0]);
-            aMat.push_back(aaMatrix[2][1]);
-            aMat.push_back(aaMatrix[2][2] - aRoots[Index1]);
-            aMat.push_back(0.0);
-            aaMat.push_back(aMat);
-            aVectors.push_back(UnitVectorSolve(aaMat));
-            aValues.push_back(aRoots[Index1]);
-            ++nAnswer;
-            //if (LinearSolve(aaMat) == true)
-            //    {
-            //    aValues.push_back(aRoots[Index1]);
-            //    aVectors.emplace_back(aaMat[0].back(), aaMat[1].back(), aaMat[2].back());
-            //    ++nAnswer;
-            //    }
-            //else if (dTol < fabs(aaMat[0][0]) && dTol < fabs(aaMat[0][1]))
-            //    {
-            //    aValues.push_back(aRoots[Index1]);
-            //    double ratio = -aaMat[0][0] / aaMat[0][1];
-            //    aVectors.emplace_back(1.0, ratio, 0.0);
-            //    ++nAnswer;
-            //    }
-            }
+        std::vector<std::vector<double> > aaMat;
+        aaMat.reserve(3);
+        std::vector<double> aMat;
+        aMat.reserve(4);
+        aMat.push_back(aaMatrix[0][0] - dRoot);
+        aMat.push_back(aaMatrix[0][1]);
+        aMat.push_back(aaMatrix[0][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[1][0]);
+        aMat.push_back(aaMatrix[1][1] - dRoot);
+        aMat.push_back(aaMatrix[1][2]);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aMat.clear();
+        aMat.push_back(aaMatrix[2][0]);
+        aMat.push_back(aaMatrix[2][1]);
+        aMat.push_back(aaMatrix[2][2] - dRoot);
+        aMat.push_back(0.0);
+        aaMat.push_back(aMat);
+        aVectors.push_back(UnitVectorSolve(aaMat));
+        aValues.push_back(dRoot);
+        ++nAnswer;
         }
     return nAnswer;
     }
