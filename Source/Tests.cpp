@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <cmath>
 #include <EntityFunctions.h>
+#include <array>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -319,19 +320,59 @@ bool TestCurve(SGM::Result              &rResult,
 
         };
 
+    void PrintOrderedPoints(std::string name, buffer<unsigned> const &aIndexOrdered, std::vector<SGM::Point3D> const &aPoints)
+        {
+        std::cout.setf(std::ios::floatfield,std::ios::scientific);
+        std::cout << std::setprecision(15) << name << std::endl;
+        for (size_t i = 0; i < aPoints.size(); ++i)
+            {
+            SGM::Point3D const &Point = aPoints[aIndexOrdered[i]];
+            std::cout << aIndexOrdered[i] << std::setw(23) << Point[0] << std::setw(23) << Point[1] << std::setw(23) << Point[2] << std::endl;
+            }
+        std::cout << std::endl;
+        }
+
 } // SGMInternal namespace
 
 
 namespace SGM
 {
 
+static size_t iCallCount = 0;
+
 double TestIntegrand(double x,void const *)
     {
+    iCallCount++;
     return 4.0/(1.0+x*x);
+    }
+
+double TestIntegrand1DSinVoid(double x,void const *)
+    {
+    iCallCount++;
+    return std::sin(x);
+    }
+
+double TestIntegrand1DSin(double x)
+    {
+    iCallCount++;
+    return std::sin(x);
+    }
+
+double TestIntegrand1DSinCosVoid(double x,void const *)
+    {
+    iCallCount++;
+    return x * std::sin(50*x) * std::cos(75*x);
+    }
+
+double TestIntegrand1DSinCos(double x)
+    {
+    iCallCount++;
+    return x * std::sin(50*x) * std::cos(75*x);
     }
 
 double TestIntegrand2D(SGM::Point2D const &uv,void const *)
     {
+    iCallCount++;
     double x=uv.m_u;
     double y=uv.m_v;
     return x*x+4*y;
@@ -378,9 +419,26 @@ bool RunInternalTest(SGM::Result &rResult,
             bAnswer=false;
             }
 
+        iCallCount = 0;
         SGM::Interval1D Domain(0.0,1.0);
         double dValue=SGMInternal::Integrate1D(TestIntegrand,Domain,nullptr,SGM_ZERO);
         if(SGM::NearEqual(dValue,SGM_PI,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        iCallCount = 0;
+        SGM::Interval1D DomainSin(0.0,SGM_PI);
+        dValue=SGMInternal::Integrate1D(TestIntegrand1DSinVoid,DomainSin,nullptr,SGM_ZERO);
+        if(SGM::NearEqual(dValue,2.0,SGM_ZERO,false)==false)
+            {
+            bAnswer=false;
+            }
+
+        iCallCount = 0;
+        SGM::Interval1D DomainSinCos(-1.0,1.0);
+        dValue=SGMInternal::Integrate1D(TestIntegrand1DSinCosVoid,DomainSinCos,nullptr,1.e-15);
+        if(SGM::NearEqual(dValue,0.033518732588154,SGM_ZERO,false)==false)
             {
             bAnswer=false;
             }
@@ -752,7 +810,180 @@ bool RunInternalTest(SGM::Result &rResult,
         pTorus->SnapToDomain(uv1);
         pTorus->SnapToDomain(uv2);
         }
-    
+    else if(nTestNumber==7) // order points and sorting for complex testing
+        {
+        bAnswer=true;
+
+        SGMInternal::PrintOrderedPoints("order points", {0}, {{0,0,0}}); // call once for coverage
+
+        std::vector<SGM::Point3D> aPoints0 =
+            {
+                {0.0000000e+00, 4.5602101e-01, 2.5127900e-01},
+                {0.0000000e+00, 1.6629200e-01, 5.0000000e-01},  // point[1] identical with point[4]
+                {0.0000000e+00, 2.1484300e-01, 5.2078199e-01},
+                {5.2347499e-01, 2.0895001e-02, 7.1533000e-01},
+                {0.0000000e+00, 1.6629200e-01, 5.0000000e-01},
+                {6.2853903e-01, 1.4633000e-02, 6.1653697e-01}
+            };
+        buffer<unsigned> aIndexOrdered0 = SGMInternal::OrderPointsLexicographical(aPoints0);
+//    std::cout << std::endl;
+//    for (int i = 0; i < aIndexOrdered0.size(); ++i)
+//        std::cout << "aIndexOrdered0[" << i << "] = " << aIndexOrdered0[i] << std::endl;
+
+        std::vector<SGM::Point3D> aPoints1 =
+            {
+                { 0.5,              0.5,              2.0},
+                {-0.5,             -0.5,             -1.0},
+                { 0.5,             -0.5,              2.0},
+                { 0.5000000000001,  0.5000000000001,  2.0000000000001},
+                {-0.5000000000001,  0.5000000000001, -1.0000000000001},
+                {-0.5000000000001, -0.5000000000001, -1.0000000000001}
+            };
+
+        buffer<unsigned> aIndexOrdered1 = SGMInternal::OrderPointsZorder(aPoints1);
+
+        if (aIndexOrdered1[0] != 5u ||
+            aIndexOrdered1[1] != 1u ||
+            aIndexOrdered1[2] != 4u ||
+            aIndexOrdered1[3] != 2u ||
+            aIndexOrdered1[4] != 0u ||
+            aIndexOrdered1[5] != 3u)
+            {
+//            std::cout << std::endl << "Internal Test aIndexOrdered1 is wrong " << std::endl;
+//            for (int i = 0; i < aIndexOrdered1.size(); ++i)
+//                std::cout << "aIndexOrdered1[" << i << "] = " << aIndexOrdered1[i] << std::endl;
+            bAnswer=false;
+            }
+
+        std::vector<SGM::Point3D> aPoints2 =
+            {
+                {-3000.0e-16,         -3000.0e-16,           5000.0e-16},
+                {-3000.000000001e-16,  5000.000000001e-16,  -3000.000000001e-16},
+                {-3000.000000001e-16, -3000.000000001e-16,   5000.000000001e-16},
+                {-3000.0e-16,          5000.0e-16,          -3000.0e-16}
+            };
+
+        buffer<unsigned> aIndexOrdered2 = SGMInternal::OrderPointsLexicographical(aPoints2);
+//        std::cout << std::endl;
+//        for (int i = 0; i < aIndexOrdered2.size(); ++i)
+//            std::cout << "aIndexOrdered2[" << i << "] = " << aIndexOrdered2[i] << std::endl;
+
+        std::vector<SGM::Point3D> aPoints3 =
+            {
+                {     0.5,                     0.5,                    0.5},                    // 0
+                {    -0.5,                    -0.5,                   -0.5},
+                {    -0.5,                     0.5,                    0.5},                    // 2
+                {     0.5,                    -0.5,                    0.5},
+                {     0.5,                     0.5,                   -0.5},                    // 4
+                {    -0.5,                    -0.5,                    0.5},
+                {     0.5,                    -0.5,                   -0.5},                    // 6
+                {    -0.5,                     0.5,                   -0.5},
+                {   -10.0,                    20.0,                   20.0},                    // 8
+                {    20.0,                   -10.0,                   20.0},
+                {    20.0,                    20.0,                  -10.0},                    // 10
+                { -3000.0,                 -3000.0,                  5000.0},
+                {  5000.0,                 -3000.0,                 -3000.0},                   // 12
+                { -3000.0,                  5000.0,                 -3000.0},
+                {     0.5e-16,                 0.5e-16,                 0.5e-16},               // 14
+                {    -0.5e-16,                -0.5e-16,                -0.5e-16},
+                {    -0.5e-16,                 0.5e-16,                 0.5e-16},               // 16
+                {     0.5e-16,                -0.5e-16,                 0.5e-16},
+                {     0.5e-16,                 0.5e-16,                -0.5e-16},               // 18
+                {    -0.5e-16,                -0.5e-16,                 0.5e-16},
+                {     0.5e-16,                -0.5e-16,                -0.5e-16},               // 20
+                {    -0.5e-16,                 0.5e-16,                -0.5e-16},
+                {   -10.0e-16,                20.0e-16,                20.0e-16},               // 22
+                {    20.0e-16,               -10.0e-16,                20.0e-16},
+                {    20.0e-16,                20.0e-16,               -10.0e-16},               // 24
+                { -3000.0e-16,             -3000.0e-16,              5000.0e-16},
+                {  5000.0e-16,             -3000.0e-16,             -3000.0e-16},               // 26
+                { -3000.0e-16,              5000.0e-16,             -3000.0e-16},
+                {     0.5000000000001,         0.5000000000001,         0.5000000000001},       // 28
+                {    -0.5000000000001,        -0.5000000000001,        -0.5000000000001},
+                {    -0.5000000000001,         0.5000000000001,         0.5000000000001},       // 30
+                {     0.5000000000001,        -0.5000000000001,         0.5000000000001},
+                {     0.5000000000001,         0.5000000000001,        -0.5000000000001},       // 32
+                {    -0.5000000000001,        -0.5000000000001,         0.5000000000001},
+                {     0.5000000000001,        -0.5000000000001,        -0.5000000000001},       // 34
+                {    -0.5000000000001,         0.5000000000001,        -0.5000000000001},
+                {   -10.00000000001,          20.00000000001,          20.00000000001},         // 36
+                {    20.00000000001,         -10.00000000001,          20.00000000001},
+                {    20.00000000001,          20.00000000001,         -10.00000000001},         // 38
+                { -3000.000000001,         -3000.000000001,          5000.000000001},
+                {  5000.000000001,         -3000.000000001,         -3000.000000001},           // 40
+                { -3000.000000001,          5000.000000001,         -3000.000000001},
+                {     0.5000000000001e-16,     0.5000000000001e-16,     0.5000000000001e-16},   // 42
+                {    -0.5000000000001e-16,    -0.5000000000001e-16,    -0.5000000000001e-16},
+                {    -0.5000000000001e-16,     0.5000000000001e-16,     0.5000000000001e-16},   // 44
+                {     0.5000000000001e-16,    -0.5000000000001e-16,     0.5000000000001e-16},
+                {     0.5000000000001e-16,     0.5000000000001e-16,    -0.5000000000001e-16},   // 46
+                {    -0.5000000000001e-16,    -0.5000000000001e-16,     0.5000000000001e-16},
+                {     0.5000000000001e-16,    -0.5000000000001e-16,    -0.5000000000001e-16},   // 48
+                {    -0.5000000000001e-16,     0.5000000000001e-16,    -0.5000000000001e-16},
+                {   -10.00000000001e-16,      20.00000000001e-16,      20.00000000001e-16},     // 50
+                {    20.00000000001e-16,     -10.00000000001e-16,      20.00000000001e-16},
+                {    20.00000000001e-16,      20.00000000001e-16,     -10.00000000001e-16},     // 52
+                { -3000.000000001e-16,     -3000.000000001e-16,      5000.000000001e-16},
+                {  5000.000000001e-16,     -3000.000000001e-16,     -3000.000000001e-16},       // 54
+                { -3000.000000001e-16,      5000.000000001e-16,     -3000.000000001e-16},
+            };
+
+        buffer<unsigned> aIndexOrdered3 = SGMInternal::OrderPointsZorder(aPoints3);
+
+        // every consecutive pair in the sorted list should be close
+        bool bExpectedAlmostEqual = true;
+        for (int i = 0; i+1 < aIndexOrdered3.size(); i+=2)
+            {
+            bExpectedAlmostEqual = bExpectedAlmostEqual &&
+                SGMInternal::AlmostEqual(aPoints3[aIndexOrdered3[i]],
+                                         aPoints3[aIndexOrdered3[i + 1]],
+                                         2.0 * std::numeric_limits<double>::epsilon());
+            }
+        if (!bExpectedAlmostEqual)
+            {
+//            std::cout << std::endl << "IndexOrdered3 is wrong" << std::endl;
+//            for (int i = 0; i < aIndexOrdered3.size(); ++i)
+//                std::cout << "aIndexOrdered3[" << i << "] = " << aIndexOrdered3[i] << std::endl;
+            bAnswer=false;
+            }
+
+        std::vector<SGM::Point3D> aPoints4 =
+            {
+                {5.2093670000000, 0.2457350000000, 103.6632050000000},
+                {5.2093670000003, 0.2854750000003, 103.6632050000003},
+                {5.2093670000000, 0.2457350000000, 103.6632050000000},
+                {5.2093670000001, 0.2854750000001, 103.6632050000001},
+                {5.2093670000000, 0.2457350000000, 103.6632050000000},
+                {5.2093670000002, 0.2854750000002, 103.6632050000002},
+                {5.2093670000001, 0.2457350000001, 103.6632050000001},
+                {5.2487370000001, 0.2384040000001, 103.6632050000001},
+                {5.2487370000001, 0.2775250000001, 103.6632050000001},
+                {5.2093670000000, 0.2854750000000, 103.6632050000000}
+            };
+
+            {
+            buffer<unsigned> aIndexOrdered4 = SGMInternal::OrderPointsLexicographical(aPoints4);
+            buffer<unsigned> aExpectedLexicographical4 = { 0, 2, 4, 9, 6, 3, 5, 1, 7, 8 };
+            if (aIndexOrdered4 != aExpectedLexicographical4)
+                {
+//                std::cout << std::endl << "aPoints4 Lexicographical is wrong." << std::endl;
+//                SGMInternal::PrintOrderedPoints("aPoints4 Lexicographical:", aIndexOrdered1, aPoints4);
+                bAnswer=false;
+                }
+            }
+            {
+            buffer<unsigned> aIndexOrdered4 = SGMInternal::OrderPointsZorder(aPoints4);
+            buffer<unsigned> aExpectedZorder4 = { 0, 2, 4, 6, 7, 9, 3, 5, 1, 8 };
+            if (aIndexOrdered4 != aExpectedZorder4)
+                {
+//                std::cout << std::endl << "aPoints4 Z order is wrong." << std::endl;
+//                SGMInternal::PrintOrderedPoints("aPoints4 Z order:", aIndexOrdered4, aPoints4);
+                bAnswer=false;
+                }
+            }
+
+        }
+
     return bAnswer;
     }
 

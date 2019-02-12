@@ -25,146 +25,68 @@ namespace SGMInternal
 
 edge *FindEdge(entity *pEntA,entity *pEntB)
     {
-    edge *pAnswer=nullptr;
-    if( pEntA->GetType()==SGM::EdgeType && 
-        pEntB->GetType()==SGM::EdgeType && 
-        pEntA==pEntB)
+    bool isAEdge = pEntA->GetType()==SGM::EdgeType;
+    bool isBEdge = pEntB->GetType()==SGM::EdgeType;
+    if (isAEdge)
         {
-        pAnswer=(edge *)pEntA;
+        edge *pEdgeA = (edge *)pEntA;
+        if (pEdgeA->GetStart()==pEntB || pEdgeA->GetEnd()==pEntB || (isBEdge && pEntA==pEntB))
+            {
+            return pEdgeA;
+            }
         }
-    else if( pEntA->GetType()==SGM::EdgeType &&
-             ((edge *)pEntA)->GetStart()==pEntB)
+    if (isBEdge)
         {
-        pAnswer=(edge *)pEntA;
+        edge *pEdgeB = (edge *)pEntB;
+        if (pEdgeB->GetStart()==pEntB || pEdgeB->GetEnd()==pEntB)
+            {
+            return pEdgeB;
+            }
         }
-    else if( pEntA->GetType()==SGM::EdgeType &&
-             ((edge *)pEntA)->GetEnd()==pEntB)
-        {
-        pAnswer=(edge *)pEntA;
-        }
-    else if( pEntB->GetType()==SGM::EdgeType &&
-             ((edge *)pEntB)->GetStart()==pEntB)
-        {
-        pAnswer=(edge *)pEntB;
-        }
-    else if( pEntB->GetType()==SGM::EdgeType &&
-             ((edge *)pEntB)->GetEnd()==pEntB)
-        {
-        pAnswer=(edge *)pEntB;
-        }
-    else if( pEntA->GetType()==SGM::VertexType &&
-             pEntB->GetType()==SGM::VertexType)
+    if( pEntA->GetType()==SGM::VertexType &&
+        pEntB->GetType()==SGM::VertexType)
         {
         auto pVertexA=(vertex *)pEntA;
         auto pVertexB=(vertex *)pEntB;
         std::set<edge *,EntityCompare> const &sEdgesA=pVertexA->GetEdges();
         std::set<edge *,EntityCompare> const &sEdgesB=pVertexB->GetEdges();
-        for(edge *pEdge : sEdgesA)
-            {
-            if(sEdgesB.find(pEdge)!=sEdgesB.end())
-                {
-                pAnswer=pEdge;
-                break;
-                }
-            }
+        std::vector<edge*> aIntersection;
+        std::set_intersection(sEdgesA.begin(), sEdgesA.end(),
+                              sEdgesB.begin(), sEdgesB.end(),
+                              std::back_inserter(aIntersection),
+                              EntityCompare());
+        if (!aIntersection.empty())
+            return (edge*)aIntersection[0];
         }
-    return pAnswer;
+    return nullptr;
     }
 
-void SubdivideFacets(face                const *pFace,
-                     std::vector<SGM::Point3D> &aPoints3D,
-                     std::vector<SGM::Point2D> &aPoints2D,
-                     std::vector<unsigned int> &aTriangles,
-                     std::vector<entity *>     &aEntities)
+void SubdivideTriangles(std::vector<unsigned int> &aTriangles, size_t nPoints)
     {
-    surface const *pSurface=pFace->GetSurface();
-    size_t nPoints=aPoints3D.size();
-    size_t nTriangles=aTriangles.size();
-    aTriangles.reserve(nTriangles*4);
-    aPoints3D.reserve(nTriangles+2*nPoints-2);
-    aPoints2D.reserve(nTriangles+2*nPoints-2);
-    aEntities.reserve(nTriangles+2*nPoints-2);
-    std::vector<unsigned int> aAdjacences;
-    SGM::FindAdjacencies2D(aTriangles, aAdjacences);
-    size_t Index1;
-    for(Index1=0;Index1<nTriangles;Index1+=3)
+    size_t nTriangles = aTriangles.size();
+    unsigned a,b,c,ab,bc,ca,nPointsCount;
+
+    size_t nNewTriangles=nTriangles*4;
+    if (nNewTriangles > aTriangles.capacity())
         {
-        unsigned int a=aTriangles[Index1];
-        unsigned int b=aTriangles[Index1+1];
-        unsigned int c=aTriangles[Index1+2];
+        aTriangles.reserve(nNewTriangles);
+        }
 
-        SGM::Point2D const &A=aPoints2D[a];
-        SGM::Point2D const &B=aPoints2D[b];
-        SGM::Point2D const &C=aPoints2D[c];
-        
-        SGM::Point2D AB=SGM::MidPoint(A,B);
-        SGM::Point2D BC=SGM::MidPoint(B,C);
-        SGM::Point2D CA=SGM::MidPoint(C,A);
+    nPointsCount = (unsigned)nPoints;
+    for(size_t Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        ab = nPointsCount++;
+        bc = nPointsCount++;
+        ca = nPointsCount++;
 
-        entity *pEntA=aEntities[a];
-        entity *pEntB=aEntities[b];
-        entity *pEntC=aEntities[c];
-        
-        SGM::Point3D AB3D,BC3D,CA3D;
-        pSurface->Evaluate(AB,&AB3D);
-        pSurface->Evaluate(BC,&BC3D);
-        pSurface->Evaluate(CA,&CA3D);
+        a = aTriangles[Index1];
+        b = aTriangles[Index1 + 1];
+        c = aTriangles[Index1 + 2];
 
-        edge *pEdgeAB = aAdjacences[Index1  ]==std::numeric_limits<unsigned int>::max() ? FindEdge(pEntA,pEntB) : nullptr;
-        edge *pEdgeBC = aAdjacences[Index1+1]==std::numeric_limits<unsigned int>::max() ? FindEdge(pEntB,pEntC) : nullptr;
-        edge *pEdgeCA = aAdjacences[Index1+2]==std::numeric_limits<unsigned int>::max() ? FindEdge(pEntC,pEntA) : nullptr;
-        SGM::Point3D CPos;
+        aTriangles[Index1] = ab;
+        aTriangles[Index1 + 1] = bc;
+        aTriangles[Index1 + 2] = ca;
 
-        if(pEdgeAB)
-            {
-            pEdgeAB->GetCurve()->Inverse(AB3D,&CPos);
-            AB=pSurface->Inverse(CPos,nullptr,&AB);
-            AB3D=CPos;
-            aEntities.push_back(pEdgeAB);
-            }
-        else
-            {
-            aEntities.push_back((entity *)pFace);
-            }
-
-        if(pEdgeBC)
-            {
-            pEdgeBC->GetCurve()->Inverse(BC3D,&CPos);
-            BC=pSurface->Inverse(CPos,nullptr,&BC);
-            BC3D=CPos;
-            aEntities.push_back(pEdgeBC);
-            }
-        else
-            {
-            aEntities.push_back((entity *)pFace);
-            }
-
-        if(pEdgeCA)
-            {
-            pEdgeCA->GetCurve()->Inverse(CA3D,&CPos);
-            CA=pSurface->Inverse(CPos,nullptr,&CA);
-            CA3D=CPos;
-            aEntities.push_back(pEdgeCA);
-            }
-        else
-            {
-            aEntities.push_back((entity *)pFace);
-            }
-
-        aPoints3D.push_back(AB3D);
-        aPoints3D.push_back(BC3D);
-        aPoints3D.push_back(CA3D);
-
-        unsigned int ab=(unsigned int)aPoints2D.size();
-        aPoints2D.push_back(AB);
-        unsigned int bc=(unsigned int)aPoints2D.size();
-        aPoints2D.push_back(BC);
-        unsigned int ca=(unsigned int)aPoints2D.size();
-        aPoints2D.push_back(CA);
-
-        aTriangles[Index1]=ab;
-        aTriangles[Index1+1]=bc;
-        aTriangles[Index1+2]=ca;
         aTriangles.push_back(a);
         aTriangles.push_back(ab);
         aTriangles.push_back(ca);
@@ -175,6 +97,118 @@ void SubdivideFacets(face                const *pFace,
         aTriangles.push_back(ca);
         aTriangles.push_back(bc);
         }
+    }
+
+void SubdividePoints(face                      const *pFace,
+                     size_t                           nOriginalTriangles,
+                     std::vector<unsigned int> const &aTriangles,
+                     std::vector<unsigned int> const &aAdjacencies,
+                     std::vector<SGM::Point2D>       &aPoints2D,
+                     std::vector<SGM::Point3D>       &aPoints3D,
+                     std::vector<entity *>           &aEntities)
+    {
+    surface const *pSurface=pFace->GetSurface();
+
+    size_t nPoints=aPoints3D.size();
+    assert(nPoints == aPoints3D.size());
+
+    size_t nNewPoints=nOriginalTriangles+2*nPoints-2;
+    if (nNewPoints > aPoints3D.capacity())
+        {
+        aPoints3D.reserve(nNewPoints);
+        aPoints2D.reserve(nNewPoints);
+        aEntities.reserve(nNewPoints);
+        }
+
+    unsigned a,b,c,ab,bc,ca;
+    unsigned nOffset = (unsigned)nOriginalTriangles;
+    for(size_t Index1=0;Index1<nOriginalTriangles;Index1+=3,nOffset+=9)
+        {
+        a  = aTriangles[nOffset];
+        ab = aTriangles[nOffset+1];
+        ca = aTriangles[nOffset+2];
+        b  = aTriangles[nOffset+3];
+        bc = aTriangles[nOffset+4];
+        c  = aTriangles[nOffset+6];
+
+        SGM::Point2D const &A=aPoints2D[a];
+        SGM::Point2D const &B=aPoints2D[b];
+        SGM::Point2D const &C=aPoints2D[c];
+        aPoints2D.emplace_back(0.5*(A.m_u+B.m_u),0.5*(A.m_v+B.m_v));
+        aPoints2D.emplace_back(0.5*(B.m_u+C.m_u),0.5*(B.m_v+C.m_v));
+        aPoints2D.emplace_back(0.5*(C.m_u+A.m_u),0.5*(C.m_v+A.m_v));
+
+        SGM::Point3D AB3D,BC3D,CA3D;
+        pSurface->Evaluate(aPoints2D[ab],&AB3D);
+        pSurface->Evaluate(aPoints2D[bc],&BC3D);
+        pSurface->Evaluate(aPoints2D[ca],&CA3D);
+
+        size_t nCurrentEntities = aEntities.size();
+
+        aPoints3D.push_back(AB3D);
+        aPoints3D.push_back(BC3D);
+        aPoints3D.push_back(CA3D);
+
+        aEntities.push_back((entity *)pFace);
+        aEntities.push_back((entity *)pFace);
+        aEntities.push_back((entity *)pFace);
+
+        SGM::Point3D CPos;
+
+        if (aAdjacencies[Index1] == std::numeric_limits<unsigned>::max())
+            {
+            edge *pEdgeAB = FindEdge(aEntities[a],aEntities[b]);
+            if (pEdgeAB)
+                {
+                pEdgeAB->GetCurve()->Inverse(AB3D, &CPos);
+                aPoints2D[ab] = pSurface->Inverse(CPos, nullptr, &aPoints2D[ab]);
+                aPoints3D[ab] = CPos;
+                aEntities[nCurrentEntities] = pEdgeAB;
+                }
+            }
+
+        if (aAdjacencies[Index1+1] == std::numeric_limits<unsigned>::max())
+            {
+            edge *pEdgeBC = FindEdge(aEntities[b],aEntities[c]);
+            if(pEdgeBC)
+                {
+                pEdgeBC->GetCurve()->Inverse(BC3D,&CPos);
+                aPoints2D[bc] = pSurface->Inverse(CPos,nullptr,&aPoints2D[bc]);
+                aPoints3D[bc] = CPos;
+                aEntities[nCurrentEntities+1] = pEdgeBC;
+                }
+            }
+
+        if (aAdjacencies[Index1+2] == std::numeric_limits<unsigned>::max())
+            {
+            edge *pEdgeCA = FindEdge(aEntities[c],aEntities[a]);
+            if(pEdgeCA)
+                {
+                pEdgeCA->GetCurve()->Inverse(CA3D,&CPos);
+                aPoints2D[ca] = pSurface->Inverse(CPos,nullptr,&aPoints2D[ca]);
+                aPoints3D[ca] = CPos;
+                aEntities[nCurrentEntities+2] = pEdgeCA;
+                }
+            }
+        }
+    }
+
+void SubdivideFacets(face                const *pFace,
+                     std::vector<SGM::Point3D> &aPoints3D,
+                     std::vector<SGM::Point2D> &aPoints2D,
+                     std::vector<unsigned int> &aTriangles,
+                     std::vector<entity *>     &aEntities)
+    {
+
+    size_t nPoints=aPoints3D.size();
+    size_t nTriangles=aTriangles.size();
+
+    std::vector<unsigned> aAdjacencies;
+    SGM::FindAdjacencies2D(aTriangles, aAdjacencies);
+
+    SubdivideTriangles(aTriangles, nPoints);
+
+    SubdividePoints(pFace, nTriangles, aTriangles, aAdjacencies, aPoints2D, aPoints3D, aEntities);
     }
 
 class Node

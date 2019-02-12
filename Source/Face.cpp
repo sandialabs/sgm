@@ -247,7 +247,7 @@ entity *FindClosestEdgeOrVertex(SGM::Result                          &rResult,
     return pAnswer;
     }
 
-std::vector<entity *> face::FindPointEntities(SGM::Result &rResult) const
+void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntities) const
     {
     if(m_aPoints2D.empty())
         {
@@ -258,21 +258,18 @@ std::vector<entity *> face::FindPointEntities(SGM::Result &rResult) const
     std::vector<unsigned int> aBoundary;
     std::set<unsigned int> sInterior;
     SGM::FindBoundary(m_aTriangles,aBoundary,sInterior);
-    std::vector<entity *> aAnswer;
-    aAnswer.assign(m_aPoints3D.size(),(entity *)this);
+    aEntities.assign(m_aPoints3D.size(),(entity *)this);
 
     for(unsigned int Index : aBoundary)
         {
-        if(aAnswer[Index]==this)
+        if(aEntities[Index]==this)
             {
             if(entity *pEnt=FindClosestEdgeOrVertex(rResult,m_aPoints3D[Index],m_sEdges))
                 {
-                aAnswer[Index]=pEnt;
+                aEntities[Index]=pEnt;
                 }
             }
         }
-
-    return aAnswer;
     }
 
 bool face::PointInFace(SGM::Result        &rResult,
@@ -534,36 +531,90 @@ void face::ClearFacets(SGM::Result &rResult) const
         }
     }
 
+void face::InitializeFacetSubdivision(SGM::Result &rResult,
+                                      const size_t MAX_LEVELS,
+                                      std::vector<SGM::Point2D> &aPoints2D,
+                                      std::vector<SGM::Point3D> &aPoints3D,
+                                      std::vector<unsigned int> &aTriangles,
+                                      std::vector<entity *> &aEntities) const
+    {
+    GetPoints2D(rResult);
+    size_t nPoints = m_aPoints3D.size();
+    size_t nTriangles = m_aTriangles.size();
+    for (unsigned iLevel = 0; iLevel < MAX_LEVELS; ++iLevel)
+        {
+        nPoints=nTriangles+2*nPoints-2;
+        nTriangles=nTriangles*4;
+        }
+    assert(nPoints < std::numeric_limits<unsigned>::max());
+
+    aPoints2D.reserve(nPoints);
+    aPoints2D.assign(m_aPoints2D.begin(), m_aPoints2D.end());
+
+    aPoints3D.reserve(nPoints);
+    aPoints3D.assign(m_aPoints3D.begin(), m_aPoints3D.end());
+
+    aTriangles.reserve(nTriangles);
+    aTriangles.assign(m_aTriangles.begin(), m_aTriangles.end());
+
+    aEntities.reserve(nPoints);
+    FindPointEntities(rResult, aEntities);
+    }
+
+// Richardson extrapolation to infinite resolution
+// Returns true if extrapolation was performed and the extrapolated value.
+
+std::pair<bool,double> RichardsonExtrapolation(const double * aEstimated)
+    {
+    double aDifference[2];
+    double dExtrapolated = 0.0;
+    aDifference[0] = aEstimated[0] - aEstimated[1];
+    aDifference[1] = aEstimated[1] - aEstimated[2];
+    double dRatio = aDifference[0] / aDifference[1];
+    bool isSameSign = dRatio > 0;
+    if (isSameSign)
+        {
+        double p = std::log(dRatio) / std::log(2.0);
+        double a = aDifference[0] / (std::pow(2.0, p) - std::pow(1.0, p));
+        dExtrapolated = aEstimated[2] - a * std::pow(0.5, p);
+        //std::cout << "    extrapolated = " << dExtrapolated << std::endl;
+        }
+    return std::make_pair(isSameSign,dExtrapolated);
+    }
+
 double face::FindArea(SGM::Result &rResult) const
     {
-    // Refining the full set of parametric triangles twice and taking their area.
+    static const size_t MAX_LEVELS = 5;
+    double aArea[MAX_LEVELS];
+    double aAreaEstimated[MAX_LEVELS];
 
-    this->GetPoints2D(rResult);
-    std::vector<SGM::Point2D> aPoints2D=m_aPoints2D;
-    std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
-    std::vector<unsigned int> aTriangles=m_aTriangles;
-    std::vector<entity *> aEnts=FindPointEntities(rResult);
+    std::vector<SGM::Point2D> aPoints2D;
+    std::vector<SGM::Point3D> aPoints3D;
+    std::vector<unsigned int> aTriangles;
+    std::vector<entity *>     aEntities;
+    InitializeFacetSubdivision(rResult, MAX_LEVELS, aPoints2D, aPoints3D, aTriangles, aEntities);
 
-    //SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
-    //new complex(rResult,aPoints3D,aTriangles);
+    double dDiff = SGM_MAX;
+    aArea[0] = TriangleArea(aPoints3D,aTriangles);
+    aAreaEstimated[0] = SGM_MAX;
+    size_t nLevel;
 
-    double dDiff=SGM_MAX;
-    double dOldArea=SGM_MAX;
-    double dArea2=0;
-    double dArea0=TriangleArea(aPoints3D,aTriangles);
-    size_t nCount=0;
-    while(SGM_MIN_TOL<dDiff && nCount<5)
+    for (nLevel=1; SGM_MIN_TOL<dDiff && nLevel<MAX_LEVELS; ++nLevel)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
-        double dArea1=TriangleArea(aPoints3D,aTriangles);
-        dArea2=(4*dArea1-dArea0)/3;
-        dArea0=dArea1;
-        dDiff=fabs(dArea2-dOldArea);
-        dOldArea=dArea2;
-        ++nCount;
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        aArea[nLevel]=TriangleArea(aPoints3D,aTriangles);
+        aAreaEstimated[nLevel]=(4*aArea[nLevel]-aArea[nLevel-1])/3;
+        if (nLevel>=3 && dDiff<1000*SGM_MIN_TOL) // we have at least 3 levels and getting close to tolerance
+            {
+            std::pair<bool, double> Extrapolated = RichardsonExtrapolation(&aAreaEstimated[nLevel - 2]);
+            if (Extrapolated.first)
+                {
+                return Extrapolated.second;
+                }
+            }
+            dDiff=std::abs(aAreaEstimated[nLevel]-aAreaEstimated[nLevel-1]);
         }
-
-    return dArea2;
+    return aAreaEstimated[nLevel-1];
     }
 
 double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
@@ -582,36 +633,50 @@ double FindLocalVolume(std::vector<SGM::Point3D> const &aPoints,
     return dAnswer;
     }
 
+inline double NegateValue(bool bFlipped, double dValue)
+    {
+    return bFlipped ? -dValue : dValue;
+    }
+
 double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     {
-    std::vector<SGM::Point2D> aPoints2D=GetPoints2D(rResult);
-    std::vector<SGM::Point3D> aPoints3D=m_aPoints3D;
-    std::vector<unsigned int> aTriangles=m_aTriangles;
-    double dAnswer0=FindLocalVolume(aPoints3D,aTriangles);
-    if(m_bFlipped)
-        {
-        dAnswer0=-dAnswer0;
-        }
+    static const size_t MAX_LEVELS = 5;
+    double aVolume[MAX_LEVELS];
+    double aVolumeEstimated[MAX_LEVELS];
+    GetPoints2D(rResult);
+
+    aVolume[0]=NegateValue(m_bFlipped,FindLocalVolume(m_aPoints3D,m_aTriangles));
     if(bApproximate)
         {
-        return dAnswer0;
+        return aVolume[0];
         }
 
-    double dVolume=dAnswer0;
-    std::vector<entity *> aEnts=FindPointEntities(rResult);
-    size_t Index1;
-    for(Index1=0;Index1<2;++Index1)
+    std::vector<SGM::Point2D> aPoints2D;
+    std::vector<SGM::Point3D> aPoints3D;
+    std::vector<unsigned int> aTriangles;
+    std::vector<entity *>     aEntities;
+    InitializeFacetSubdivision(rResult, MAX_LEVELS, aPoints2D, aPoints3D, aTriangles, aEntities);
+
+    double dDiff = SGM_MAX;
+    aVolumeEstimated[0] = SGM_MAX;
+    size_t nLevel;
+
+    for(nLevel=1; dDiff>SGM_MIN_TOL && nLevel<MAX_LEVELS; ++nLevel)
         {
-        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEnts);
-        double dAnswer1=FindLocalVolume(aPoints3D,aTriangles);
-        if(m_bFlipped)
+        SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEntities);
+        aVolume[nLevel]=NegateValue(m_bFlipped,FindLocalVolume(aPoints3D,aTriangles));
+        aVolumeEstimated[nLevel]=(4*aVolume[nLevel]-aVolume[nLevel-1])/3;
+        if (nLevel>=3 && dDiff<1000*SGM_MIN_TOL) // we have at least 3 levels and getting close to tolerance
             {
-            dAnswer1=-dAnswer1;
+            std::pair<bool, double> Extrapolated = RichardsonExtrapolation(&aVolumeEstimated[nLevel - 2]);
+            if (Extrapolated.first)
+                {
+                return Extrapolated.second;
+                }
             }
-        dVolume=(4*dAnswer1-dAnswer0)/3;
-        dAnswer0=dAnswer1;
+        dDiff=std::abs(aVolumeEstimated[nLevel]-aVolumeEstimated[nLevel-1]);
         }
-    return dVolume;
+    return aVolumeEstimated[nLevel-1];
     }
 
 size_t face::FindLoops(SGM::Result                                  &rResult,

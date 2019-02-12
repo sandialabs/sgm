@@ -599,15 +599,17 @@ namespace SGM {
 
     inline Point3D MidPoint(Point3D const &Pos0,Point3D const &Pos1,double dFraction)
     {
-        return Point3D(Pos0.m_x*(1.0-dFraction)+Pos1.m_x*dFraction,
-                       Pos0.m_y*(1.0-dFraction)+Pos1.m_y*dFraction,
-                       Pos0.m_z*(1.0-dFraction)+Pos1.m_z*dFraction);
+        double dOneMinusFraction = 1.0-dFraction;
+        return {Pos0.m_x*dOneMinusFraction+Pos1.m_x*dFraction,
+                Pos0.m_y*dOneMinusFraction+Pos1.m_y*dFraction,
+                Pos0.m_z*dOneMinusFraction+Pos1.m_z*dFraction};
     }
 
     inline Point2D MidPoint(Point2D const &Pos0,Point2D const &Pos1,double dFraction)
     {
-        return Point2D(Pos0.m_u*(1.0-dFraction)+Pos1.m_u*dFraction,
-                       Pos0.m_v*(1.0-dFraction)+Pos1.m_v*dFraction);
+        double dOneMinusFraction = 1.0-dFraction;
+        return {Pos0.m_u*dOneMinusFraction+Pos1.m_u*dFraction,
+                Pos0.m_v*dOneMinusFraction+Pos1.m_v*dFraction};
     }
 
     inline bool NearEqual(double d1,double d2,double dTolerance,bool bRelative)

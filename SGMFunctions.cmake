@@ -158,8 +158,8 @@ macro(sgm_project_setup)
             COMMAND test ! -e coverage || mv coverage coverage_`date -r coverage +%Y-%m-%d_%H-%M-%S`
             COMMAND find . -name "*.gcda" -type f -delete        # remove old data files
             COMMAND ${PROJECT_BINARY_DIR}/bin/sgm_tests          # run tests
-            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source --xml -o coverage.xml
-            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source --html --html-details -o coverage.html
+            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source -e ".*boost/.*" --xml -o coverage.xml
+            COMMAND mkdir -p coverage && cd coverage && gcovr --object-directory=${PROJECT_BINARY_DIR} -r ${CMAKE_SOURCE_DIR} -f ${CMAKE_SOURCE_DIR}/Source -e ".*boost/.*" --html --html-details -o coverage.html
             COMMENT "Build coverage.html summarizing coverage of tests using gcovr tool."
             )
   endif()

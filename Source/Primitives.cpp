@@ -1149,6 +1149,8 @@ body *CreateSheetBody(SGM::Result                    &rResult,
     pVolume->AddFace(pFace);
     pFace->SetSurface(pSurface);
 
+    pFace->SetSides(2);
+
     size_t nEdges=aEdges.size();
     size_t Index1;
     if(nEdges)

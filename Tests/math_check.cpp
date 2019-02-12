@@ -237,18 +237,6 @@ TEST(math_check, DISABLED_imprint_edge_on_face_atoll_flipped)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, measure_volume)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::Body BodyID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
-    double dVolume=SGM::FindVolume(rResult,BodyID,false);
-    EXPECT_TRUE(SGM::NearEqual(dVolume,1000,SGM_MIN_TOL,false));
-    
-    SGMTesting::ReleaseTestThing(pThing);
-}
-
 TEST(math_check, color_inheritance)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -280,7 +268,7 @@ TEST(math_check, public_math_functions)
     SGM::SignedArea(SGM::Point2D(0,0),SGM::Point2D(1,0),SGM::Point2D(0,1));
     SGM::CenterOfMass(SGM::Point3D(0,0,0),SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{0.5,0.1,0.1},{1,0,0}};
-    SGM::Point3D Origin{};
+    SGM::Point3D Origin;
     SGM::UnitVector3D Axis;
     SGM::FindLeastSquareLine3D(aPoints,Origin,Axis);
 
@@ -361,7 +349,7 @@ TEST(math_check, lemon_torus )
 
     SGM::Surface SurfID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,0.25,false);
 
-    SGM::Point3D Pos(0.25,0,0.1),ClosePos{};
+    SGM::Point3D Pos(0.25,0,0.1),ClosePos;
     SGM::Point2D GuessUV(SGM_TWO_PI,0);
     SGM::Point2D uv=SGM::SurfaceInverse(rResult,SurfID,Pos,&ClosePos,&GuessUV);
     EXPECT_TRUE(SGM::NearEqual(uv.m_u,SGM_TWO_PI,SGM_ZERO,false));
@@ -518,7 +506,7 @@ TEST(math_check, closest_point_on_things)
     SGM::FindVertices(rResult,BlockID,sVertices);
     SGM::Vertex VertexID=*(sVertices.begin());
 
-    SGM::Point3D ClosePos{};
+    SGM::Point3D ClosePos;
     SGM::Entity ClosestEntity;
     SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(0,0,0),VolumeID,ClosePos,ClosestEntity);
     SGM::FindClosestPointOnEntity(rResult,SGM::Point3D(5,5,5),VolumeID,ClosePos,ClosestEntity,false);
@@ -574,14 +562,14 @@ TEST(math_check, point_curve)
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),CurveID);
     EXPECT_FALSE(SGM::SameCurve(rResult,CurveID,CurveID2,SGM_MIN_TOL));
 
-    SGM::Point3D ClosePos{};
+    SGM::Point3D ClosePos;
     double dGuess1=-1,dGuess2=0.5,dGuess3=2;
     SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess1);
     SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess2);
     SGM::CurveInverse(rResult,CurveID,Pos,&ClosePos,&dGuess3);
-    SGM::Point3D xyz{};
-    SGM::Vector3D Vec1{};
-    SGM::Vector3D Vec2{};
+    SGM::Point3D xyz;
+    SGM::Vector3D Vec1;
+    SGM::Vector3D Vec2;
     SGM::EvaluateCurve(rResult,CurveID,0,&xyz,&Vec1,&Vec2);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -1860,24 +1848,6 @@ TEST(math_check, intersect_nubcurve_and_plane)
     SGM::Point3D Expected(1, 1.5, 0);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0], Expected, dTolerance));
 
-    SGMTesting::ReleaseTestThing(pThing);
-    }
-
-TEST(math_check, body_volumes)
-    {
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::Point3D Pos0(0,0,0),Pos1(10,10,10);
-    SGM::Body BodyID1=SGM::CreateBlock(rResult,Pos0,Pos1);
-    double dVolume1=SGM::FindVolume(rResult,BodyID1,true);
-    EXPECT_NEAR(dVolume1,1000,SGM_ZERO);
-    
-    SGM::Point3D Pos3(0,0,0),Pos4(0,0,1);
-    SGM::Body BodyID2=SGM::CreateCylinder(rResult,Pos3,Pos4,1.0);
-    double dVolume2=SGM::FindVolume(rResult,BodyID2,false);
-    EXPECT_TRUE(SGM::NearEqual(dVolume2,3.1415926535897932384626433832795,SGM_MIN_TOL,true));
-    
     SGMTesting::ReleaseTestThing(pThing);
     }
 
