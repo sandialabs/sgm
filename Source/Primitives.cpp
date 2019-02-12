@@ -6,6 +6,8 @@
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Modify.h"
+#include "EntityFunctions.h"
+#include "Faceter.h"
 
 #include "Curve.h"
 #include <cmath>
@@ -155,9 +157,10 @@ body *CreateWireBody(SGM::Result            &rResult,
             {
             if( pVertex!=pTest && 
                 sDeleted.find(pTest)==sDeleted.end() &&
+                sDeleted.find(pVertex)==sDeleted.end() &&
                 SGM::NearEqual(pVertex->GetPoint(),pTest->GetPoint(),SGM_MIN_TOL))
                 {
-                MergeVerices(rResult,pVertex,pTest);
+                MergeVertices(rResult,pVertex,pTest);
                 sDeleted.insert(pTest);
                 }
             }
@@ -1002,140 +1005,95 @@ body *CreateDisk(SGM::Result             &rResult,
     return pBody;
     }
 
+
 body *CoverPlanarWire(SGM::Result &rResult,
                       body        *pPlanarWire)
     {
-    // Create the new body
+    // Create the new body and move the edges onto a face.
 
-    auto   pBody=new SGMInternal::body(rResult);
-    auto pVolume=new SGMInternal::volume(rResult);
-    auto   pFace=new SGMInternal::face(rResult);
-    pFace->SetSides(2);
+    body *pBody=(body *)CopyEntity(rResult,pPlanarWire);
+
+    face *pFace=new face(rResult);
+    volume *pVolume=*(pBody->GetVolumes().begin());
     pVolume->AddFace(pFace);
-    pBody->AddVolume(pVolume);
-
-    // Copy the wire edges and vertices
-
-    std::set<edge *,EntityCompare> sEdges;
-    std::set<vertex *,EntityCompare> sVertices;
-    FindEdges(rResult,pPlanarWire,sEdges);
-    FindVertices(rResult,pPlanarWire,sVertices);
-
-    // Order edges.
-    // Note that this only works for simple closed wires.
-
-    size_t nSize=sEdges.size();
-    std::vector<edge *> aEdges;
-    std::vector<SGM::EdgeSideType> aTypes;
-    aEdges.reserve(nSize);
-    aTypes.reserve(nSize);
-    std::set<edge *,EntityCompare> sNotUsed=sEdges;
-    while(!sNotUsed.empty())
+    std::set<edge *,EntityCompare> sEdges=pVolume->GetEdges();
+    for(edge *pEdge : sEdges)
         {
-        edge *pEdge=*(sNotUsed.begin());
-        aEdges.push_back(pEdge);
-        sNotUsed.erase(pEdge);
-        vertex *pEnd=pEdge->GetEnd();
-        std::set<edge *,EntityCompare> sEndEdges=pEnd->GetEdges();
+        pEdge->SetVolume(nullptr);
+        pFace->AddEdge(rResult,pEdge,SGM::EdgeSideType::FaceOnUnknown);
+        pVolume->RemoveEdge(pEdge);
+        }
 
-        // Look for an edge that is not used.
+    // Order the edges.
 
-        edge *pNext=nullptr;
-        for(edge *pTest:sEndEdges)
+    std::vector<edge *> aEdges;
+    edge *pLastEdge=*sEdges.begin();
+    aEdges.push_back(pLastEdge);
+    sEdges.erase(pLastEdge);
+    pFace->SetEdgeSideType(rResult,pLastEdge,SGM::EdgeSideType::FaceOnLeftType);
+    vertex *pNextVertex=pLastEdge->GetEnd();
+    while(sEdges.size())
+        {
+        bool bFound=false;
+        for(edge *pEdge : sEdges)
             {
-            if(sNotUsed.find(pTest)!=sNotUsed.end())
+            if(pNextVertex==pEdge->GetStart())
                 {
-                pNext=pTest;
+                pFace->SetEdgeSideType(rResult,pEdge,SGM::EdgeSideType::FaceOnLeftType);
+                pLastEdge=pEdge;
+                pNextVertex=pEdge->GetEnd();
+                aEdges.push_back(pLastEdge);
+                sEdges.erase(pEdge);
+                bFound=true;
+                break;
+                }
+            else if(pNextVertex==pEdge->GetEnd())
+                {
+                pFace->SetEdgeSideType(rResult,pEdge,SGM::EdgeSideType::FaceOnRightType);
+                pLastEdge=pEdge;
+                pNextVertex=pEdge->GetStart();
+                aEdges.push_back(pLastEdge);
+                sEdges.erase(pEdge);
+                bFound=true;
                 break;
                 }
             }
-        if(pNext)
+        if(bFound==false)
             {
-            aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
-            }
-        else
-            {
-            vertex *pStart=pEdge->GetStart();
-            std::set<edge *,EntityCompare> sStartEdges=pStart->GetEdges();
-            for(edge *pTest:sStartEdges)
-                {
-                if(sNotUsed.empty() || sNotUsed.find(pTest)!=sNotUsed.end())
-                    {
-                    pNext=pTest;
-                    break;
-                    }
-                }
-            if(pNext)
-                {
-                aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
-                }
-            else
-                {
-                return nullptr;
-                }
+            return nullptr;
             }
         }
 
-    // Create a polygon from the ordered edges.
-    
-    std::vector<SGM::Point3D> aPoints;
-    size_t Index1,Index2;
-    size_t nEdgesSize=aEdges.size();
-    for(Index1=0;Index1<nEdgesSize;++Index1)
+    // Find a bounding polygon and create plane in the correct direction.
+
+    std::vector<SGM::Point3D> aPoints3D;
+    for(edge *pEdge : aEdges)
         {
-        edge *pEdge=aEdges[Index1];
-        std::vector<SGM::Point3D> const &aFacets=pEdge->GetFacets(rResult);
-        size_t nFacets=aFacets.size();
-        if(aTypes[Index1]==SGM::FaceOnLeftType)
-            {
-            for(Index2=0;Index2<nFacets-1;++Index2)
-                {
-                aPoints.push_back(aFacets[Index2]);
-                }
-            }
-        else
-            {
-            for(Index2=0;Index2<nFacets-1;++Index2)
-                {
-                aPoints.push_back(aFacets[(nFacets-1)-Index2]);
-                }
-            }
-        }
-    
-    // Create the plane.
+        FacetOptions Options;
+        curve const *pCurve=pEdge->GetCurve();
+        SGM::Interval1D const &Domain=pEdge->GetDomain();
+        std::vector<double> aParams;
+        std::vector<SGM::Point3D> aFacets;
+        FacetCurve(pCurve,Domain,Options,aFacets,aParams);
 
+        if(pFace->GetSideType(pEdge)==SGM::EdgeSideType::FaceOnRightType)
+            {
+            std::reverse(aFacets.begin(),aFacets.end());
+            }
+        aPoints3D.insert(aPoints3D.end(),++aFacets.begin(),aFacets.end());
+        }
     SGM::Point3D Origin;
     SGM::UnitVector3D XVec,YVec,ZVec;
-    SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+    SGM::FindLeastSquarePlane(aPoints3D,Origin,XVec,YVec,ZVec);
     std::vector<SGM::Point2D> aPoints2D;
-    ProjectPointsToPlane(aPoints,Origin,XVec,YVec,ZVec,aPoints2D);
+    SGM::ProjectPointsToPlane(aPoints3D,Origin,XVec,YVec,ZVec,aPoints2D);
     double dArea=SGM::PolygonArea(aPoints2D);
     if(dArea<0)
         {
-        ZVec.Negate();
         YVec.Negate();
+        ZVec.Negate();
         }
-    auto pPlane=new SGMInternal::plane(rResult,Origin,XVec,YVec,ZVec);
-    pFace->SetSurface(pPlane);
-
-    // Copy the edges and vertices.
-    
-    std::map<SGMInternal::vertex const *,SGMInternal::vertex *> mVertices;
-    for (auto pVertex : sVertices)
-        {
-        mVertices[pVertex]=pVertex->Clone(rResult);
-        }
-    for(Index1=0;Index1<nEdgesSize;++Index1)
-        {
-        edge *pEdge=aEdges[Index1];
-        SGMInternal::curve const *pCurve=pEdge->GetCurve();
-        SGMInternal::curve *pNewCurve=pCurve->Clone(rResult);
-        SGM::Interval1D const &Domain=pEdge->GetDomain();
-        auto pNewEdge=new SGMInternal::edge(rResult);
-        pNewEdge->SetCurve(pNewCurve);
-        pNewEdge->SetDomain(rResult,Domain);
-        pFace->AddEdge(rResult,pNewEdge,aTypes[Index1]);
-        }
+    pFace->SetSurface(new plane(rResult,Origin,XVec,YVec,ZVec));
 
     return pBody;
     }

@@ -926,6 +926,10 @@ class face : public topology
                      edge              *pEdge,
                      SGM::EdgeSideType nEdgeType);
 
+        void SetEdgeSideType(SGM::Result       &rResult,
+                             edge              *pEdge,
+                             SGM::EdgeSideType nEdgeType);
+
         void RemoveEdge(SGM::Result &rResult,
                         edge        *pEdge);
 

@@ -16,6 +16,23 @@
 //#pragma clang diagnostic push
 //#pragma ide diagnostic ignored "cert-err58-cpp"
 
+TEST(create_check, cover_wire_body)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::set<SGM::Edge> sEdges;
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,10,0),SGM::Point3D(10,10,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,10,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(10,0,0),SGM::Point3D(10,10,0)));
+    SGM::Body WireID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::CopyEntity(rResult,WireID);
+    SGM::Body BodyID=SGM::CoverPlanarWire(rResult,WireID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 TEST(create_check, create_cylinder_from_entities)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -267,7 +267,7 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
         }
     }
 
-void MergeVerices(SGM::Result &rResult,
+void MergeVertices(SGM::Result &rResult,
                   vertex      *pKeepVertex,
                   vertex      *pDeleteVertex)
     {
@@ -298,7 +298,7 @@ void ImprintPeninsula(SGM::Result &rResult,
             {
             pStartEntity=ImprintPointOnEdge(rResult,pEdge->GetStart()->GetPoint(),(edge *)pStartEntity);
             }
-        MergeVerices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
+        MergeVertices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
         }
     else 
         {
@@ -306,7 +306,7 @@ void ImprintPeninsula(SGM::Result &rResult,
             {
             pEndEntity=ImprintPointOnEdge(rResult,pEdge->GetEnd()->GetPoint(),(edge *)pEndEntity);
             }
-        MergeVerices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
+        MergeVertices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
         }
     pFace->AddEdge(rResult,pEdge,SGM::EdgeSideType::FaceOnBothSidesType);
     }
@@ -322,13 +322,13 @@ void ImprintBridge(SGM::Result &rResult,
         {
         pStartEntity=ImprintPointOnEdge(rResult,pEdge->GetStart()->GetPoint(),(edge *)pStartEntity);
         }
-    MergeVerices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
+    MergeVertices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
 
     if(pEndEntity->GetType()==SGM::EdgeType)
         {
         pEndEntity=ImprintPointOnEdge(rResult,pEdge->GetEnd()->GetPoint(),(edge *)pEndEntity);
         }
-    MergeVerices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
+    MergeVertices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
 
     pFace->AddEdge(rResult,pEdge,SGM::EdgeSideType::FaceOnBothSidesType);
     }
@@ -451,8 +451,8 @@ face *ImprintSplitter(SGM::Result &rResult,
         {
         pEndEntity=ImprintPointOnEdge(rResult,pEdge->GetEnd()->GetPoint(),(edge *)pEndEntity);
         }
-    MergeVerices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
-    MergeVerices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
+    MergeVertices(rResult,(vertex *)pStartEntity,pEdge->GetStart());
+    MergeVertices(rResult,(vertex *)pEndEntity,pEdge->GetEnd());
 
     // Split the loop into two loops.
 
