@@ -230,6 +230,15 @@ void ParseSTLTextSerial(SGM::Result &rResult,
     file.close();
     }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// STL file read parallel
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+#if defined(SGM_MULTITHREADED)
+
 bool ParseSTLStreamChunk(StringLinesChunk          *p_aChunkLines,
                          std::vector<SGM::Point3D> *p_aPoints)
     {
@@ -393,5 +402,7 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
 
     aEntities.push_back(ParseSTLCreateComplex(rResult,bMerge,aPoints));
     }
+
+#endif // defined(SGM_MULTITHREADED)
 
 } // namespace SGMInternal

@@ -117,11 +117,19 @@ buffer<unsigned> OrderPointsZorder(std::vector<SGM::Point3D> const &aPoints)
     Point3DSeparate const *pPointSeparates = aPointSeparates.data();
 
     // Sort the index array using our Less function for pairs of Point3D and Point3DSeparate
+#if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
+    boost::sort::block_indirect_sort(aIndexOrdered.begin(),
+            aIndexOrdered.end(),
+            [&pPoints,&pPointSeparates](unsigned i, unsigned j) {
+                return LessZOrder(pPoints[i], pPointSeparates[i], pPoints[j], pPointSeparates[j]);
+            });
+#else
     std::sort(aIndexOrdered.begin(),
               aIndexOrdered.end(),
               [&pPoints,&pPointSeparates](unsigned i, unsigned j) {
                   return LessZOrder(pPoints[i], pPointSeparates[i], pPoints[j], pPointSeparates[j]);
                   });
+#endif
     return aIndexOrdered;
     }
 
