@@ -66,15 +66,15 @@ void offset::FindAllChildren(std::set<entity *, EntityCompare> &/*sChildren*/) c
     throw std::logic_error("Derived class of surface must override FindAllChildren()");
     }
 
-void offset::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
+void offset::ReplacePointers(std::map<entity *,entity *> const &)
 {
-    surface::ReplacePointers(mEntityMap);
-
-    auto MapValue=mEntityMap.find(m_pSurface);
-    if(MapValue!=mEntityMap.end())
-        m_pSurface = dynamic_cast<surface *>(MapValue->second);
-    else
-        throw std::runtime_error("offset ReplacePointers did not find a surface in the map");
+//    surface::ReplacePointers(mEntityMap);
+//
+//    auto MapValue=mEntityMap.find(m_pSurface);
+//    if(MapValue!=mEntityMap.end())
+//        m_pSurface = dynamic_cast<surface *>(MapValue->second);
+//    else
+//        throw std::runtime_error("offset ReplacePointers did not find a surface in the map");
 }
 
 void offset::Evaluate(SGM::Point2D const &,
