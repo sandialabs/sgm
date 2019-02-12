@@ -34,7 +34,9 @@ bool ReadFileLine(FILE        *pFile,
 
 // Advance the file pointer to the given string.
 
-bool ReadToString(FILE              *pFile,
-                  std::string const &sData);
-    }
+//bool ReadToString(FILE              *pFile,
+//                  std::string const &sData);
+
+}
+
 #endif // FILE_FUNCTIONS_H

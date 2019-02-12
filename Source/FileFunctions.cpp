@@ -93,29 +93,29 @@ std::string GetFileName(std::string const &FileName)
     return("");
     }
 
-bool ReadToString(FILE              *pFile,
-                  std::string const &sData)
-    {
-    char const *str=sData.c_str();
-    size_t nLength=sData.length();
-    size_t nCount=0;
-    char data;
-    while(nCount<nLength)
-        {
-        if(fread(&data,1,1,pFile))
-            {
-            if(str[nCount]==data)
-                {
-                ++nCount;
-                }
-            }
-        else
-            {
-            break;
-            }
-        }
-    return nCount==nLength;
-    }
+//bool ReadToString(FILE              *pFile,
+//                  std::string const &sData)
+//    {
+//    char const *str=sData.c_str();
+//    size_t nLength=sData.length();
+//    size_t nCount=0;
+//    char data;
+//    while(nCount<nLength)
+//        {
+//        if(fread(&data,1,1,pFile))
+//            {
+//            if(str[nCount]==data)
+//                {
+//                ++nCount;
+//                }
+//            }
+//        else
+//            {
+//            break;
+//            }
+//        }
+//    return nCount==nLength;
+//    }
 
 //bool ReadFileLine(FILE        *pFile,
 //                  std::string &sFileLine)
