@@ -747,6 +747,14 @@ void face::AddEdge(SGM::Result       &rResult,
     ClearFacets(rResult);
     }
 
+void face::SetEdgeSideType(SGM::Result       &rResult,
+                           edge              *pEdge,
+                           SGM::EdgeSideType nEdgeType)
+    {
+    m_mSideType[pEdge]=nEdgeType;
+    ClearFacets(rResult);
+    }
+
 void face::RemoveEdge(SGM::Result &rResult,
                       edge        *pEdge)
     {

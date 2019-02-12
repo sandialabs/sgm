@@ -94,20 +94,23 @@ void DeleteEntity(SGM::Result &rResult,
 entity *CopyEntity(SGM::Result &rResult,
                    entity      *pEntity)
     {
-    std::set<entity *,EntityCompare> aChildren;
-    pEntity->FindAllChildren(aChildren);
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+
     entity *pAnswer=pEntity->Clone(rResult);
     std::map<entity *,entity *> mCopyMap;
     mCopyMap[pEntity]=pAnswer;
-    for(auto pChild : aChildren)
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]=pChild->Clone(rResult);
         }
-    aChildren.insert(pEntity);
-    for(auto pChild : aChildren)
+
+    sChildren.insert(pEntity);
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]->ReplacePointers(mCopyMap);
         }
+
     return pAnswer;
     }
 

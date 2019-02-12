@@ -1018,7 +1018,7 @@ TEST(math_check, cone_copy_transform)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Pos0(0,0,0),Pos1(0,0,1);
-    SGM::Body ConeID=SGM::CreateCone(rResult,Pos0,Pos1,1.0,2.0);
+    SGM::Body ConeID=SGM::CreateCone(rResult,Pos0,Pos1,1.0,2.0,true);
     SGM::Transform3D Trans(SGM::Vector3D(1,2,3));
     SGM::TransformEntity(rResult,Trans,ConeID);
     SGM::CopyEntity(rResult,ConeID);
@@ -3381,38 +3381,6 @@ TEST(math_check, create_disk)
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
-
-TEST(math_check, DISABLED_wire_body)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
-    std::set<SGM::Edge> sEdges;
-    sEdges.insert(EdgeID);
-    SGM::Body WireID=SGM::CreateWireBody(rResult,sEdges);
-    EXPECT_TRUE(SGM::IsWireBody(rResult,WireID));
-    SGM::ChangeColor(rResult,WireID,255,0,0);
-    SGM::CopyEntity(rResult,WireID);
-    int nRed=0,nGreen=0,nBlue=0;
-    SGM::GetColor(rResult,WireID,nRed,nGreen,nBlue);
-    EXPECT_EQ(nRed,255);
-
-    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
-    SGM::Edge EdgeID2=SGM::CreateEdge(rResult,CurveID);
-    sEdges.clear();
-    sEdges.insert(EdgeID2);
-    SGM::Body WireID2=SGM::CreateWireBody(rResult,sEdges);
-    SGM::CoverPlanarWire(rResult,WireID2);
-
-    std::vector<SGM::Edge> aEdges;
-    SGM::FindCloseEdges(rResult,SGM::Point3D(1,0,0),WireID2,20,aEdges);
-    aEdges.clear();
-    SGM::FindWireEdges(rResult,WireID2,sEdges);
-
-    SGMTesting::ReleaseTestThing(pThing);
-} 
-
 TEST(math_check, point_body) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -3556,6 +3524,9 @@ TEST(math_check, parabola_merge)
     SGM::UnitVector3D XAxis(1,0,0),YAxis(0,1,0),Normal;
     double dA=1.0;
     SGM::Curve CurveID=SGM::CreateParabola(rResult,Center,XAxis,YAxis,dA);
+
+    SGM::CopyEntity(rResult,CurveID);
+
     SGM::Interval1D Domain(-10,10);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID,&Domain);
 
