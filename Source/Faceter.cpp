@@ -631,6 +631,10 @@ void FacetCurve(curve               const *pCurve,
                 }
             lNodes.emplace_back(d1,Pos1);
             double dAngle=SGM_PI-Options.m_dEdgeAngleTol;
+            if(nCurveType==SGM::ParabolaType)
+                {
+                dAngle=SGM_PI-0.03490658503988659153847381536977; // 2 degrees
+                }
             double dCos=cos(dAngle);
             bool bRefine=true;
             while(bRefine)

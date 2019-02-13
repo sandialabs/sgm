@@ -219,11 +219,11 @@ bool TestIntersections(SGM::Result        &rResult,
 //    SGM::Result rResult(pThing);
 //
 //    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::CreateCone(rResult,SGM::Point3D(-3,0,2),SGM::Point3D(4,0,0),1,0);
+//    SGM::CreateCone(rResult,SGM::Point3D(2,-4,0),SGM::Point3D(2,3,0),2.333333333333333,0);
 //
 //    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-//    SGM::Surface ConeID=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(-3,0,2),SGM::Point3D(4,0,0),1,0);
-//    
+//    SGM::Surface ConeID=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(2,-4,0),SGM::Point3D(2,3,0),2.333333333333333,0);
+//   
 //    std::vector<SGM::Curve> aCurves;
 //    SGM::IntersectSurfaces(rResult,TorusID,ConeID,aCurves);
 //    for(auto pCurve : aCurves)
@@ -264,6 +264,20 @@ TEST(intersection_check, intersect_cone_torus)
 
     SGM::Surface ConeID10=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(2,0,3),SGM::Point3D(2,0,1),2,0);
     SGM::Surface ConeID11=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(-3,0,2),SGM::Point3D(4,0,0),1,0);
+
+    double L=5.71666666666666666;
+    double M=1.75;
+    SGM::Point3D Apex(-L,0,1);
+    SGM::Point3D Base(M,0,0);
+    double d=Apex.Distance(Base);
+    double s=sqrt(1+(L+M)*(L+M));
+    double a=SGM::SAFEasin(1/s);
+    double b=SGM_HALF_PI-a;
+    SGM::Point3D Base2=Apex+(Base-Apex)*1.5;
+    double dR2=(d*sin(a)/sin(b))*1.5;
+
+    SGM::Surface TorusID2=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,1.75);
+    SGM::Surface ConeID12=SGM::CreateConeSurfaceFromPoints(rResult,Base2,Apex,dR2,0);
     
     EXPECT_TRUE(TestIntersections(rResult,ConeID1,TorusID,3));     // Minor Circle and Two Curves
     EXPECT_TRUE(TestIntersections(rResult,ConeID2,TorusID,1));     // One Major Circle
@@ -276,28 +290,35 @@ TEST(intersection_check, intersect_cone_torus)
     EXPECT_TRUE(TestIntersections(rResult,ConeID9,TorusID,6));     // Three Inside Tangent Points
     EXPECT_TRUE(TestIntersections(rResult,ConeID10,TorusID,1));    // Non-Tangent Point
     EXPECT_TRUE(TestIntersections(rResult,ConeID11,TorusID,3));    // Three Curves
+    EXPECT_TRUE(TestIntersections(rResult,ConeID12,TorusID2,10));  // Five Tangent Points
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
 
-TEST(intersection_check, intersect_circle_cone2) 
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::CreateCone(rResult,SGM::Point3D(2,-0.5,0),SGM::Point3D(2,3,0),1.1666666666666665,0); 
-    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(1.9910326583929372,-0.18917968498957044,0),
-                                          SGM::UnitVector3D(0.094589842494785220,0.99551632919646860,0),1);
-    SGM::CreateEdge(rResult,CircleID);
-
-    //SGM::Surface ConeID=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(2,-0.5,0),SGM::Point3D(2,3,0),1.1666666666666665,0);
-    //std::vector<SGM::Point3D> aPoints;
-    //std::vector<SGM::IntersectionType> aTypes;
-    //SGM::IntersectCurveAndSurface(rResult,CircleID,ConeID,aPoints,aTypes);
-    //SGM::CreatePoints(rResult,aPoints);
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
+//TEST(intersection_check, intersect_circle_cone2) 
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    //SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,1.75);
+//    SGM::Point3D Apex(-6.0108750395592825,0,1);
+//    SGM::Point3D Base(1.75,0,0);
+//    SGM::Point3D Base2=Apex+(Base-Apex)*1.5;
+//    double dR=1.0082671749575303*1.5;
+//    SGM::CreateCone(rResult,Base2,Apex,dR,0);
+//
+//    SGM::Curve CircleID=SGM::CreateCircle(rResult,SGM::Point3D(cos(SGM_PI*0.25)*1.75,sin(SGM_PI*0.25)*1.75,0),
+//                                          SGM::UnitVector3D(1,-1,0),1);
+//    SGM::CreateEdge(rResult,CircleID);
+//
+//    SGM::Surface ConeID=SGM::CreateConeSurfaceFromPoints(rResult,Base2,Apex,dR,0);
+//    std::vector<SGM::Point3D> aPoints;
+//    std::vector<SGM::IntersectionType> aTypes;
+//    SGM::IntersectCurveAndSurface(rResult,CircleID,ConeID,aPoints,aTypes);
+//    SGM::CreatePoints(rResult,aPoints);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
 
 //TEST(intersection_check, intersect_circle_torus2) 
 //{
@@ -683,10 +704,10 @@ TEST(intersection_check, intersect_conics2)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
     
-    SGM::Curve Curve1=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2);
-    SGM::Curve Curve2=SGM::CreateParabola(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0),SGM::UnitVector3D(1,0,0),1);
+    SGM::Curve Curve1=SGM::CreateCircle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1.75);
+    SGM::Curve Curve2=SGM::CreateParabola(rResult,SGM::Point3D(-6.1397264892866357,0,0),SGM::UnitVector3D(0,1,0),SGM::UnitVector3D(1,0,0),1.9402187598898268);
     SGM::CreateEdge(rResult,Curve1);
-    SGM::Interval1D Domain(-1.5,1.5);
+    SGM::Interval1D Domain(-2,2);
     SGM::CreateEdge(rResult,Curve2,&Domain);
 
     std::vector<SGM::Point3D> aPoints;

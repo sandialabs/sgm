@@ -8,6 +8,7 @@
 #include "Modify.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
+#include "Intersectors.h"
 
 #include "Curve.h"
 #include <cmath>
@@ -210,6 +211,46 @@ body *CreateSphere(SGM::Result        &rResult,
                    SGM::Point3D const &Center,
                    double              dRadius)
     {
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //double L=6.3;
+    //double M=1.75;
+    //double d1=5,d2=6.5;
+    //plane *pPlane=new plane(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1));
+    //circle *pCircle=new circle(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),M);
+    //while(M)
+    //    {
+    //    double s=sqrt(1+(L+M)*(L+M));
+    //    double a=SGM::SAFEasin(1/s);
+    //    double b=SGM_HALF_PI-a;
+    //    SGM::Point3D Pos1(M,0,0);
+    //    SGM::Point3D Pos2(-L,0,1);
+    //    double d=Pos1.Distance(Pos2);
+    //    double dR=d*sin(a)/sin(b);
+    //    cone *pCone=new cone(rResult,SGM::Point3D(M,0,0),SGM::Point3D(-L,0,1),dR,0);
+    //    std::vector<curve *> aCurves;
+    //    IntersectSurfaces(rResult,pCone,pPlane,aCurves,SGM_MIN_TOL);
+    //    curve *pParabola=aCurves[0];
+    //    std::vector<SGM::Point3D> aPoints;
+    //    std::vector<SGM::IntersectionType> aTypes;
+    //    IntersectCurves(rResult,pCircle,pParabola,aPoints,aTypes,SGM_MIN_TOL);
+    //
+    //    if(aPoints.size()==4)
+    //        {
+    //        d2=L;
+    //        L=(L+d1)*0.5;
+    //        }
+    //    else
+    //        {
+    //        d1=L;
+    //        L=(L+d2)*0.5;
+    //        }
+    //    }
+    //
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
 

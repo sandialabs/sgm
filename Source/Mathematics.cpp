@@ -3574,6 +3574,15 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                         aLookFrom.push_back((aDRoots[2] + aDRoots[1]) * 0.5);
                         }
                     }
+
+                if(fabs(aDRootValues[0])<dTolerance)
+                    {
+                    aRoots.push_back(aDRoots[0]);
+                    }
+                if(fabs(aDRootValues[2])<dTolerance)
+                    {
+                    aRoots.push_back(aDRoots[2]);
+                    }
                 }
 
             if (aDRootValues[nDRoots - 1] < -dTolerance)
@@ -3595,47 +3604,10 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
             aRoots.push_back(aLookFrom[Index1]);
             }
 
+        SGM::RemoveDuplicates1D(aRoots,dTolerance);
         std::sort(aRoots.begin(), aRoots.end());
         return aRoots.size();
     }
-
-    /*
-    bool SGM::PolynomialFit(std::vector<SGM::Point2D> &aPoints,
-                            std::vector<double>       &aCoefficients)
-    {
-        std::sort(aPoints.begin(), aPoints.end());
-        size_t nPoints = aPoints.size();
-        size_t Index1, Index2;
-        std::vector<std::vector<double> > aaMatrix;
-        aaMatrix.reserve(nPoints);
-        for (Index1 = 0; Index1 < nPoints; ++Index1)
-            {
-            double x = aPoints[Index1].m_u;
-            double y = aPoints[Index1].m_v;
-            std::vector<double> aRow;
-            aRow.reserve(nPoints + 1);
-            aRow.push_back(1.0);
-            double dValue = x;
-            for (Index2 = 1; Index2 < nPoints; ++Index2)
-                {
-                aRow.push_back(dValue);
-                dValue *= x;
-                }
-            aRow.push_back(y);
-            aaMatrix.push_back(aRow);
-            }
-        if (LinearSolve(aaMatrix) == false)
-            {
-            return false;
-            }
-        aCoefficients.reserve(nPoints);
-        for (Index1 = 1; Index1 <= nPoints; ++Index1)
-            {
-            aCoefficients.push_back(aaMatrix[nPoints - Index1][nPoints]);
-            }
-        return true;
-    }
-    */
 
     size_t FindMaximalElements(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
                                     std::vector<size_t> &aMaximalElements)
