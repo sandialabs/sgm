@@ -14,6 +14,8 @@
 #include "SGMModify.h"
 #include "SGMDisplay.h"
 #include "SGMAttribute.h"
+#include "SGMTranslators.h"
+#include "SGMChecker.h"
 
 #define SGM_TIMER 
 #include "Timer.h"
@@ -1148,14 +1150,12 @@ TEST(math_check, quartic_equation)
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
-
     // (x-1)(x-1)(x^2+1) -> x^4-2*x^3+2*x^2-2*x+1 One double root.
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_MIN_TOL);
     EXPECT_EQ(nRoots,1);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-
 
     // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 

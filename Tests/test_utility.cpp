@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <SGMPrimitives.h>
+#include "SGMEntityClasses.h"
+#include "SGMChecker.h"
 
 #include "test_utility.h"
 
@@ -7,6 +9,13 @@ using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
 using ::testing::TestEventListeners;
 using ::testing::UnitTest;
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
+#include <dirent.h>
+#endif
+
 
 // list of file extensions of models we try to read
 const std::vector<std::string> SGM_MODELS_EXTENSIONS = {".stp",".STEP",".STP",".step"}; // NOLINT(cert-err58-cpp)

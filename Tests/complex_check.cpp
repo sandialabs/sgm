@@ -1,6 +1,7 @@
 #include <limits>
 #include <string>
 #include <gtest/gtest.h>
+#include <SGMTranslators.h>
 
 #include "SGMComplex.h"
 #include "SGMDisplay.h"
@@ -11,11 +12,58 @@
 #include "SGMAttribute.h"
 #include "SGMInterval.h"
 #include "SGMTopology.h"
+#include "SGMChecker.h"
 
 #include "test_utility.h"
 
 //#pragma clang diagnostic push
 //#pragma ide diagnostic ignored "cert-err58-cpp"
+
+TEST(complex_check, stl_file_not_exist)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    std::string file_path = get_models_file_path("STL Files/fake_name_42.stl");
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeFileOpen);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+TEST(complex_check, complex_read_no_merge)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+
+    std::string file_path = get_models_file_path("STL Files/Block_With_Face.stl");
+    options.m_bMerge=false;
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    EXPECT_EQ(resultType, SGM::ResultTypeOK);
+
+    auto aComplexes = (std::vector<SGM::Complex> *) &entities;
+    EXPECT_GE(aComplexes->size(), 1);
+
+    // filenames are not allowed with '?' character on Windows
+    // SGM::Complex ComplexID = aComplexes->front();
+    // std::string OutputSTLFile = get_models_file_path("STL Files/Block?.stl");
+    // SGM::SaveSTL(rResult, OutputSTLFile, ComplexID, options);
+    // resultType = rResult.GetResult();
+    // EXPECT_EQ(resultType, SGM::ResultTypeFileOpen);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 TEST(complex_check, order_points)
     {

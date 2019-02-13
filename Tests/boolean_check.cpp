@@ -148,7 +148,7 @@ TEST(all_cases, split_split_vertex)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(Boolean_check, Peninsula_Peninsula_Disks)
+TEST(boolean_check, Peninsula_Peninsula_Disks)
     {
     // Boolean of two disks Peninsula
     
@@ -214,7 +214,7 @@ TEST(Boolean_check, Splitter_Island_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
+TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     {
     // Imprinting an atoll edge on a face.
     
@@ -246,7 +246,7 @@ TEST(Boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint1)
+TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -279,7 +279,7 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint2)
+TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint2)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -312,7 +312,7 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint2)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, Sphere_Sphere_Unite)
+TEST(boolean_check, Sphere_Sphere_Unite)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -331,7 +331,7 @@ TEST(Boolean_check, Sphere_Sphere_Unite)
     }
 
 
-TEST(Boolean_check, imprint_face_on_face_through_vertex)
+TEST(boolean_check, imprint_face_on_face_through_vertex)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -343,7 +343,7 @@ TEST(Boolean_check, imprint_face_on_face_through_vertex)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face_vertex_hit)
+TEST(boolean_check, imprint_edge_on_face_vertex_hit)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -360,7 +360,7 @@ TEST(Boolean_check, imprint_edge_on_face_vertex_hit)
 }
 
 
-TEST(Boolean_check, tangent_imprint_case )
+TEST(boolean_check, tangent_imprint_case )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -376,7 +376,7 @@ TEST(Boolean_check, tangent_imprint_case )
 }
 
 
-TEST(Boolean_check, unite_bodies_peninsula )
+TEST(boolean_check, unite_bodies_peninsula )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -390,7 +390,7 @@ TEST(Boolean_check, unite_bodies_peninsula )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, unite_bodies_island )
+TEST(boolean_check, unite_bodies_island )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -404,7 +404,7 @@ TEST(Boolean_check, unite_bodies_island )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face_atoll)
+TEST(boolean_check, imprint_edge_on_face_atoll)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -423,7 +423,7 @@ TEST(Boolean_check, imprint_edge_on_face_atoll)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face)
+TEST(boolean_check, imprint_edge_on_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
