@@ -699,7 +699,7 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     aaTempLoops.reserve(nLoops);
     aaTempFlipped.reserve(nLoops);
 
-    size_t Index1;
+    size_t Index1,Index2;
     for(Index1=0;Index1<nLoops;++Index1)
         {
         SGM::Graph const &comp=aComponents[Index1];
@@ -734,7 +734,39 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         aaFlipped.push_back(aaTempFlipped[aOrder[Index1].second]);
         }
 
-    return nLoops;
+    // Check for double sided loops of surface that are close in both directions.
+
+    if(m_pSurface->ClosedInU() && m_pSurface->ClosedInV())
+        {
+        for(Index1=0;Index1<nLoops;++Index1)
+            {
+            auto aLoop=aaLoops[Index1];
+            bool bFound=false;
+            for(auto pEdge : aLoop)
+                {
+                if(GetSideType(pEdge)!=SGM::FaceOnBothSidesType)
+                    {
+                    bFound=true;
+                    break;
+                    }
+                }
+            if(!bFound)
+                {
+                std::vector<SGM::EdgeSideType> aNewFlipped;
+                size_t nLoop=aLoop.size();
+                aNewFlipped.reserve(nLoop);
+                for(Index2=0;Index2<nLoop;++Index2)
+                    {
+                    aaFlipped[Index1][Index2]=SGM::EdgeSideType::FaceOnLeftType;
+                    aNewFlipped.push_back(SGM::EdgeSideType::FaceOnRightType);
+                    }
+                aaFlipped.push_back(aNewFlipped);
+                aaLoops.push_back(aaLoops[Index1]);
+                }
+            }
+        }
+
+    return aaLoops.size();
     }
 
 void face::AddEdge(SGM::Result       &rResult,

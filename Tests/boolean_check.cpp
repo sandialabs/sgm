@@ -436,7 +436,7 @@ TEST(boolean_check, imprint_edge_on_face)
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,2,0),SGM::Point3D(0,-2,0));
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
     SGM::Merge(rResult,DiskID);
-
+     
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -446,12 +446,32 @@ TEST(boolean_check, winding_numbers)
     SGM::Result rResult(pThing);
 
     SGM::Surface SurfaceID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
-    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    //SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
     SGM::Curve CurveID=SGM::CreateTorusKnot(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0),SGM::UnitVector3D(0,1,0),1,2,3,4);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
     std::vector<SGM::Point3D> const &aPoints=SGM::GetEdgePoints(rResult,EdgeID);
     int nUWinds,nVWinds;
     SGM::FindWindingNumbers(rResult,SurfaceID,aPoints,nUWinds,nVWinds);
+
+    EXPECT_EQ(nUWinds,3);
+    EXPECT_EQ(nVWinds,4);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(boolean_check, lower_genus)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

@@ -495,6 +495,13 @@ face *ImprintSplitter(SGM::Result &rResult,
     return pNewFace;
     }
 
+void ImprintLowersGenus(SGM::Result &rResult,
+                        edge        *pEdge,
+                        face        *pFace)
+    {
+    pFace->AddEdge(rResult,pEdge,SGM::FaceOnBothSidesType);
+    }
+
 face *ImprintAtoll(SGM::Result &rResult,
                    edge        *pEdge,
                    face        *pFace)
@@ -526,6 +533,24 @@ face *ImprintAtoll(SGM::Result &rResult,
     pFace->AddEdge(rResult,pEdge,pNewFace->GetSideType(pEdge)==SGM::FaceOnRightType ? SGM::FaceOnLeftType : SGM::FaceOnRightType);
     
     return pNewFace;
+    }
+
+bool LowersGenus(SGM::Result &rResult,
+                 edge        *pEdge,
+                 face        *pFace)
+    {
+    surface *pSurface=pFace->GetSurface();
+    if(pSurface->ClosedInU() && pSurface->ClosedInV())
+        {
+        std::vector<SGM::Point3D> const &aPoints=pEdge->GetFacets(rResult);
+        int nUWinds,nVWinds;
+        FindWindingNumbers(pSurface,aPoints,nUWinds,nVWinds);
+        if(nUWinds || nVWinds)
+            {
+            return true;
+            }
+        }
+    return false;
     }
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
@@ -575,9 +600,15 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
         
         ImprintPeninsula(rResult,pEdge,pFace,pStartEntity,pEndEntity);
         }
+    else if(LowersGenus(rResult,pEdge,pFace))
+        {
+        // Lowers Genus
+
+        ImprintLowersGenus(rResult,pEdge,pFace);
+        }
     else if(pEdge->IsClosed() && !pEdge->IsDegenerate())
         {
-        // Atoll or Non-Contractible
+        // Atoll
 
         aFaces.push_back(ImprintAtoll(rResult,pEdge,pFace));
         }
