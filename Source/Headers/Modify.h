@@ -56,8 +56,13 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            edge               *pEdge);
 
 void MergeVertices(SGM::Result &rResult,
-                  vertex      *pKeepVertex,
-                  vertex      *pDeleteVertex);
+                   vertex      *pKeepVertex,
+                   vertex      *pDeleteVertex);
+
+void FindWindingNumbers(surface                   const *pSurface,
+                        std::vector<SGM::Point3D> const &aPolygon3D,
+                        int                             &nUWinds,
+                        int                             &nVWinds);
 }
 
 #endif

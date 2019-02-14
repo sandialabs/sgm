@@ -15,6 +15,7 @@
 #include "SGMIntersector.h"
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
+#include "SGMDisplay.h"
 
 #include "test_utility.h"
 
@@ -439,6 +440,20 @@ TEST(boolean_check, imprint_edge_on_face)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(boolean_check, winding_numbers)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    SGM::Surface SurfaceID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Curve CurveID=SGM::CreateTorusKnot(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0),SGM::UnitVector3D(0,1,0),1,2,3,4);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::vector<SGM::Point3D> const &aPoints=SGM::GetEdgePoints(rResult,EdgeID);
+    int nUWinds,nVWinds;
+    SGM::FindWindingNumbers(rResult,SurfaceID,aPoints,nUWinds,nVWinds);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 

@@ -1801,6 +1801,16 @@ bool SGM::IsSingularity(SGM::Result        &rResult,
     return pSurface->IsSingularity(uv,dTolerance);
     }
 
+void SGM::FindWindingNumbers(SGM::Result                     &rResult,
+                             SGM::Surface              const &SurfaceID,
+                             std::vector<SGM::Point3D> const &aPolygon3D,
+                             int                             &nUWinds,
+                             int                             &nVWinds)
+    {
+    auto const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    SGMInternal::FindWindingNumbers(pSurface,aPolygon3D,nUWinds,nVWinds);
+    }
+
 bool SGM::GetLineData(SGM::Result       &rResult,
                       SGM::Curve  const &CurveID,
                       SGM::Point3D      &Origin,

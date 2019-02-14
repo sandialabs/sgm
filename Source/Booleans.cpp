@@ -804,5 +804,123 @@ void UniteBodies(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pDeleteBody);
     }
 
+void FindWindingNumbers(surface                   const *pSurface,
+                        std::vector<SGM::Point3D> const &aPolygon3D,
+                        int                             &nUWinds,
+                        int                             &nVWinds)
+    {
+    // Find the uv values of the points on the surface.
+
+    std::vector<SGM::Point2D> aPolygon2D;
+    size_t nPolygon=aPolygon3D.size();
+    aPolygon2D.reserve(nPolygon);
+    size_t Index1;
+    for(Index1=0;Index1<nPolygon;++Index1)
+        {
+        SGM::Point2D uv=pSurface->Inverse(aPolygon3D[Index1]);
+        aPolygon2D.push_back(uv);
+        }
+
+    // Find the U winding number.
+
+    nUWinds=0;
+    if(pSurface->ClosedInU())
+        {
+        // Find an unused U Value.
+
+        SGM::Interval1D UDomain=pSurface->GetDomain().m_UDomain;
+        double dMid=UDomain.MidPoint();
+        double dDist=UDomain.Length()/4.0;
+        std::vector<double> aUs;
+        aUs.reserve(nPolygon);
+        for(auto uv : aPolygon2D)
+            {
+            aUs.push_back(uv.m_u);
+            }
+        std::sort(aUs.begin(),aUs.end());
+        double dU=SGM_MAX;
+        for(Index1=1;Index1<nPolygon;++Index1)
+            {
+            if(SGM_MIN_TOL<aUs[Index1]-aUs[Index1-1] && fabs(aUs[Index1]-dMid)<dDist)
+                {
+                double dTest=(aUs[Index1]+aUs[Index1-1])*0.5;
+                if( fabs(dTest-dMid)<fabs(dU-dMid) )
+                    {
+                    dU=dTest;
+                    }
+                }
+            }
+    
+        // Find the crossing of dU.
+
+        for(Index1=1;Index1<=nPolygon;++Index1)
+            {
+            SGM::Point2D const &uv1=aPolygon2D[Index1%nPolygon];
+            if(fabs(uv1.m_u-dMid)<dDist)
+                {
+                SGM::Point2D const &uv0=aPolygon2D[Index1-1];
+                if(uv0.m_u<dU && dU<uv1.m_u)
+                    {
+                    ++nUWinds;
+                    }
+                else if(uv1.m_u<dU && dU<uv0.m_u)
+                    {
+                    --nUWinds;
+                    }
+                }
+            }
+        }
+
+    // Find the V winding number.
+
+    nVWinds=0;
+    if(pSurface->ClosedInV())
+        {
+        // Find an unused V value.
+
+        SGM::Interval1D VDomain=pSurface->GetDomain().m_VDomain;
+        double dMid=VDomain.MidPoint();
+        double dDist=VDomain.Length()/4.0;
+        std::vector<double> aVs;
+        aVs.reserve(nPolygon);
+        for(auto uv : aPolygon2D)
+            {
+            aVs.push_back(uv.m_v);
+            }
+        std::sort(aVs.begin(),aVs.end());
+        double dV=SGM_MAX;
+        for(Index1=1;Index1<nPolygon;++Index1)
+            {
+            if(SGM_MIN_TOL<aVs[Index1]-aVs[Index1-1] && fabs(aVs[Index1]-dMid)<dDist)
+                {
+                double dTest=(aVs[Index1]+aVs[Index1-1])*0.5;
+                if( fabs(dTest-dMid)<fabs(dV-dMid) )
+                    {
+                    dV=dTest;
+                    }
+                }
+            }
+
+        // Find the crossings of dV.
+
+        for(Index1=1;Index1<=nPolygon;++Index1)
+            {
+            SGM::Point2D const &uv1=aPolygon2D[Index1%nPolygon];
+            if(fabs(uv1.m_v-dMid)<dDist)
+                {
+                SGM::Point2D const &uv0=aPolygon2D[Index1-1];
+                if(uv0.m_v<dV && dV<uv1.m_v)
+                    {
+                    ++nVWinds;
+                    }
+                else if(uv1.m_v<dV && dV<uv0.m_v)
+                    {
+                    --nVWinds;
+                    }
+                }
+            }
+        }
+    }
+
 } // End of SGMInternal namespace.
 
