@@ -181,7 +181,7 @@ TEST(boolean_check, Peninsula_Peninsula_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, Splitter_Island_Disks)
+TEST(boolean_check, Splitter_Island_Disks) 
     {
     // Boolean of two disks Splitter and Island
     
@@ -190,31 +190,31 @@ TEST(Boolean_check, Splitter_Island_Disks)
 
     SGM::Point3D Center0(0,0,0),Center1(0,0.5,0);
     SGM::UnitVector3D Normal0(0,0,1),Normal1(0,1,0);
-    SGM::Body KeepID=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
+    SGM::Body KeepID=SGM::CreateDisk(rResult,Center0,Normal0,0.8);
     SGM::Body DeleteID=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
 
     SGM::UniteBodies(rResult,KeepID,DeleteID);
     
-    //std::set<SGM::Face> sFaces;
-    //SGM::FindFaces(rResult,KeepID,sFaces);
-    //EXPECT_EQ(sFaces.size(), 3);
-    //
-    //std::set<SGM::Edge> sEdges;
-    //SGM::FindEdges(rResult,KeepID,sEdges);
-    //EXPECT_EQ(sEdges.size(), 4);
-    //
-    //std::set<SGM::Vertex> sVertices;
-    //SGM::FindVertices(rResult,KeepID,sVertices);
-    //EXPECT_EQ(sVertices.size(), 2);
-    //
-    //SGM::CheckOptions Options;
-    //std::vector<std::string> aCheckStrings;
-    //EXPECT_TRUE(SGM::CheckEntity(rResult,KeepID,Options,aCheckStrings));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,KeepID,sFaces);
+    EXPECT_EQ(sFaces.size(), 3);
+    
+    std::set<SGM::Edge> sEdges;
+    SGM::FindEdges(rResult,KeepID,sEdges);
+    EXPECT_EQ(sEdges.size(), 4);
+    
+    std::set<SGM::Vertex> sVertices;
+    SGM::FindVertices(rResult,KeepID,sVertices);
+    EXPECT_EQ(sVertices.size(), 2);
+    
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,KeepID,Options,aCheckStrings));
     
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
+TEST(boolean_check, Imprinting_Atoll_Bridge_Edge)
     {
     // Imprinting an atoll edge on a face.
     
@@ -246,7 +246,7 @@ TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint1)
+TEST(boolean_check, Sphere_Sphere_Imprint1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -271,7 +271,7 @@ TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     SGM::FindFaces(rResult,Sphere1,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
-
+    
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere1,Options,aCheckStrings));
@@ -279,7 +279,7 @@ TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(boolean_check, DISABLED_Sphere_Sphere_Imprint2)
+TEST(boolean_check, Sphere_Sphere_Imprint2)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

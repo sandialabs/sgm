@@ -738,6 +738,7 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     std::map<double,entity *> mHitMap1,mHitMap2;
     curve *pCurve=pEdge->GetCurve();
     TrimCurveWithFaces(rResult,pCurve,pFace,nullptr,aEdges,aPoints,mHitMap1,mHitMap2,pEdge);
+    pCurve->RemoveEdge(pEdge);
     rResult.GetThing()->DeleteEntity(pEdge);
 
     for(edge *pSubEdge : aEdges)
