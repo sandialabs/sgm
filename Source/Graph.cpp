@@ -102,7 +102,7 @@ SGM::Graph::Graph(SGM::Result               &rResult,
         {
         for (auto FaceID : sFaces)
             {
-            auto pFace=dynamic_cast<SGMInternal::face *>(pThing->FindEntity(FaceID.m_ID));
+            auto pFace=(SGMInternal::face *)(pThing->FindEntity(FaceID.m_ID));
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
             auto const &sEdges=pFace->GetEdges();
@@ -124,7 +124,7 @@ SGM::Graph::Graph(SGM::Result               &rResult,
         {
         for (auto FaceID : sFaces)
             {
-            auto pFace=dynamic_cast<SGMInternal::face *>(pThing->FindEntity(FaceID.m_ID));
+            auto pFace=(SGMInternal::face *)(pThing->FindEntity(FaceID.m_ID));
             size_t nStart=pFace->GetID();
             m_sVertices.insert(pFace->GetID());
             std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertices;

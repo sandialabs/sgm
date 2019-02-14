@@ -831,6 +831,23 @@ void face::TransformFacets(SGM::Transform3D const &Trans)
         }
     }
 
+void face::Negate()
+    {
+    for(edge *pEdge : m_sEdges)
+        {
+        SGM::EdgeSideType nType=m_mSideType[pEdge];
+        if(nType==SGM::FaceOnLeftType)
+            {
+            m_mSideType[pEdge]=SGM::FaceOnRightType;
+            }
+        else if(nType==SGM::FaceOnRightType)
+            {
+            m_mSideType[pEdge]=SGM::FaceOnLeftType;
+            }
+        }
+    m_bFlipped=!m_bFlipped;
+    }
+
 bool face::HasBranchedVertex() const
     {
     std::set<vertex *> sVertices;

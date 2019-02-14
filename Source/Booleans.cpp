@@ -922,6 +922,10 @@ void UniteBodies(SGM::Result &rResult,
         MergeAndMoveVolumes(rResult,pKeepBody,sVerts);
         }
     rResult.GetThing()->DeleteEntity(pDeleteBody);
+
+    // Orient the sheet body faces to be consistant with each other.
+
+    OrientBody(rResult,pKeepBody);
     }
 
 void FindWindingNumbers(surface                   const *pSurface,
@@ -1038,6 +1042,84 @@ void FindWindingNumbers(surface                   const *pSurface,
                     --nVWinds;
                     }
                 }
+            }
+        }
+    }
+
+bool ConsistentFaces(SGM::Result &rResult,
+                     face  const *pFace1,
+                     face  const *pFace2)
+    {
+    std::vector<edge *> aEdges;
+    FindCommonEdgesFromFaces(rResult,pFace1,pFace2,aEdges);
+    edge *pEdge=aEdges[0];
+    std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+    if(sFaces.size()==2)
+        {
+        if(pFace1->GetSideType(pEdge)==pFace2->GetSideType(pEdge))
+            {
+            return false;
+            }
+        return true;
+        }
+    return false;
+    }
+
+void OrientFaces(SGM::Result                    &rResult,
+                 std::set<face *,EntityCompare> &sfaces)
+    {
+    std::set<face *,EntityCompare> sUsed;
+    face *pFace=*sfaces.begin();
+    sfaces.erase(pFace);
+    sUsed.insert(pFace);
+    while(sfaces.size())
+        {
+        face *pTestFace=*sfaces.begin();
+        std::set<face *,EntityCompare> sAdjacentFaces;
+        FindAdjacentFaces(rResult,pTestFace,sAdjacentFaces);
+        for(auto pAdjacentFace : sAdjacentFaces)
+            {
+            if(sUsed.find(pAdjacentFace)!=sUsed.end())
+                {
+                if(ConsistentFaces(rResult,pTestFace,pAdjacentFace)==false)
+                    {
+                    pFace->Negate();
+                    }
+                sUsed.insert(pTestFace);
+                sfaces.erase(pTestFace);
+                break;
+                }
+            }
+        }
+    }
+
+void OrientBody(SGM::Result &rResult,
+                body        *pBody)
+    {
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pBody,sFaces);
+    if(!sFaces.empty())
+        {
+        std::set<SGM::Face> sDouble;
+        for(auto pFace : sFaces)
+            {
+            if(pFace->GetSides()==2)
+                {
+                sDouble.insert(SGM::Face(pFace->GetID()));
+                }
+            }
+        SGM::Graph graph(rResult,sDouble,true);
+        std::vector<SGM::Graph> aComponents;
+        graph.FindComponents(aComponents);
+        for(auto comp : aComponents)
+            {
+            std::set<size_t> const &sVerts=comp.GetVertices();
+            std::set<face *,EntityCompare> sfaces;
+            for(auto FaceID : sVerts)
+                {
+                sfaces.insert((face *)rResult.GetThing()->FindEntity(FaceID));
+                }
+            OrientFaces(rResult,sfaces);
             }
         }
     }

@@ -1005,6 +1005,8 @@ class face : public topology
 
         bool HasBranchedVertex() const;
 
+        void Negate();
+
     private:
 
         void InitializeFacetSubdivision(SGM::Result &rResult,

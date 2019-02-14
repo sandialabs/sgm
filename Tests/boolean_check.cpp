@@ -485,6 +485,10 @@ TEST(boolean_check, coincident)
     SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,0,0),SGM::Point3D(10,10,10));
     SGM::UniteBodies(rResult,BodyID1,BodyID2);
 
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 

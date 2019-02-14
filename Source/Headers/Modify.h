@@ -59,10 +59,17 @@ void MergeVertices(SGM::Result &rResult,
                    vertex      *pKeepVertex,
                    vertex      *pDeleteVertex);
 
+void MergeEdges(SGM::Result &rResult,
+                edge        *pKeepEdge,
+                edge        *pDeleteEdge);
+
 void FindWindingNumbers(surface                   const *pSurface,
                         std::vector<SGM::Point3D> const &aPolygon3D,
                         int                             &nUWinds,
                         int                             &nVWinds);
+
+void OrientBody(SGM::Result &rResult,
+                body        *pBody);
 }
 
 #endif
