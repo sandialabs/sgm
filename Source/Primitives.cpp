@@ -454,7 +454,63 @@ body *CreateBlock(SGM::Result        &rResult,
     volume *pVolume=new volume(rResult);
     pBody->AddVolume(pVolume);
 
-    if(std::abs(Z0-Z1)<SGM_MIN_TOL)
+    if(std::abs(X0-X1)<SGM_MIN_TOL)
+        {
+        SGM::Point3D Pos0(X0,Y0,Z0);
+        SGM::Point3D Pos1(X0,Y1,Z0);
+        SGM::Point3D Pos2(X0,Y1,Z1);
+        SGM::Point3D Pos3(X0,Y0,Z1);
+
+        face *pFace0123=new face(rResult);
+
+        edge *pEdge01=new edge(rResult);
+        edge *pEdge12=new edge(rResult);
+        edge *pEdge23=new edge(rResult);
+        edge *pEdge30=new edge(rResult);
+
+        vertex *pVertex0=new vertex(rResult,Pos0);
+        vertex *pVertex1=new vertex(rResult,Pos1);
+        vertex *pVertex2=new vertex(rResult,Pos2);
+        vertex *pVertex3=new vertex(rResult,Pos3);
+
+        plane *pPlane0123=new plane(rResult,Pos0,Pos1,Pos3);
+
+        line *pLine01=new line(rResult,Pos0,Pos1);
+        line *pLine12=new line(rResult,Pos1,Pos2);
+        line *pLine23=new line(rResult,Pos2,Pos3);
+        line *pLine30=new line(rResult,Pos3,Pos0);
+
+        pVolume->AddFace(pFace0123);
+
+        pFace0123->AddEdge(rResult,pEdge01,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge12,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge23,SGM::FaceOnLeftType);
+        pFace0123->AddEdge(rResult,pEdge30,SGM::FaceOnLeftType);
+
+        pEdge01->SetStart(pVertex0);
+        pEdge12->SetStart(pVertex1);
+        pEdge23->SetStart(pVertex2);
+        pEdge30->SetStart(pVertex3);
+
+        pEdge01->SetEnd(pVertex1);
+        pEdge12->SetEnd(pVertex2);
+        pEdge23->SetEnd(pVertex3);
+        pEdge30->SetEnd(pVertex0);
+
+        pEdge01->SetDomain(rResult,SGM::Interval1D(0,Pos0.Distance(Pos1)));
+        pEdge12->SetDomain(rResult,SGM::Interval1D(0,Pos1.Distance(Pos2)));
+        pEdge23->SetDomain(rResult,SGM::Interval1D(0,Pos2.Distance(Pos3)));
+        pEdge30->SetDomain(rResult,SGM::Interval1D(0,Pos3.Distance(Pos0)));
+
+        pFace0123->SetSurface(pPlane0123);
+        pFace0123->SetSides(2);
+
+        pEdge01->SetCurve(pLine01);
+        pEdge12->SetCurve(pLine12);
+        pEdge23->SetCurve(pLine23);
+        pEdge30->SetCurve(pLine30);
+        }
+    else if(std::abs(Z0-Z1)<SGM_MIN_TOL)
         {
         SGM::Point3D Pos0(X0,Y0,Z0);
         SGM::Point3D Pos1(X1,Y0,Z0);

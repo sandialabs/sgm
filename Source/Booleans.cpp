@@ -553,6 +553,90 @@ bool LowersGenus(SGM::Result &rResult,
     return false;
     }
 
+bool AreEdgesCoincident(edge const *pEdge1,
+                        edge const *pEdge2)
+    {
+    curve const *pCurve1=pEdge1->GetCurve();
+    curve const *pCurve2=pEdge2->GetCurve();
+    if(pCurve1->IsSame(pCurve2,SGM_MIN_TOL))
+        {
+        SGM::Point3D const &Start1=pEdge1->GetStart()->GetPoint();
+        SGM::Point3D const &End1=pEdge1->GetEnd()->GetPoint();
+        SGM::Point3D const &Start2=pEdge2->GetStart()->GetPoint();
+        SGM::Point3D const &End2=pEdge2->GetEnd()->GetPoint();
+        if(Start1.Distance(Start2)<SGM_ZERO && End1.Distance(End2)<SGM_ZERO)
+            {
+            return true;
+            }
+        if(Start1.Distance(End2)<SGM_ZERO && End1.Distance(Start2)<SGM_ZERO)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+edge *AreCoincident(edge        *pEdge,
+                    face        *pFace)
+    {
+    for(auto pTestEdge : pFace->GetEdges())
+        {
+        if(AreEdgesCoincident(pEdge,pTestEdge))
+            {
+            return pTestEdge;
+            }
+        }
+    return nullptr;
+    }
+
+void MergeEdges(SGM::Result &rResult,
+                edge        *pKeepEdge,
+                edge        *pDeleteEdge)
+    {
+    vertex *pStartKeep=pKeepEdge->GetStart();
+    vertex *pEndKeep=pKeepEdge->GetEnd();
+    vertex *pStartDelete=pDeleteEdge->GetStart();
+    vertex *pEndDelete=pDeleteEdge->GetEnd();
+    bool bFlip=false;
+    if(pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO)
+        {
+        MergeVertices(rResult,pStartKeep,pStartDelete);
+        MergeVertices(rResult,pEndKeep,pEndDelete);
+        }
+    else
+        {
+        bFlip=true;
+        MergeVertices(rResult,pStartKeep,pEndDelete);
+        MergeVertices(rResult,pEndKeep,pStartDelete);
+        }
+    std::set<face *,EntityCompare> sFaces=pDeleteEdge->GetFaces();
+    for(face *pFace : sFaces)
+        {
+        SGM::EdgeSideType nType=pFace->GetSideType(pDeleteEdge);
+        pFace->RemoveEdge(rResult,pDeleteEdge);
+        if(bFlip)
+            {
+            if(nType==SGM::EdgeSideType::FaceOnLeftType)
+                {
+                nType=SGM::EdgeSideType::FaceOnRightType;
+                }
+            else if(nType==SGM::EdgeSideType::FaceOnRightType)
+                {
+                nType=SGM::EdgeSideType::FaceOnLeftType;
+                }
+            pFace->AddEdge(rResult,pKeepEdge,nType);
+            }
+        else
+            {
+            pFace->AddEdge(rResult,pKeepEdge,nType);
+            }
+        }
+    curve *pCurve=pDeleteEdge->GetCurve();
+    pDeleteEdge->SeverRelations(rResult);
+    rResult.GetThing()->DeleteEntity(pCurve);
+    rResult.GetThing()->DeleteEntity(pDeleteEdge);
+    }
+
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace,
@@ -572,9 +656,14 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     // Non-Contractible (The edge is not contractible in the face.)
     // Coincident (The edge is coincident with an existing edge of the face.)
 
-    if(pStartEntity && pEndEntity)
+
+    if(edge *pConincentEdge=AreCoincident(pEdge,pFace))
         {
-        // Bridge, Splitter, or Non-Contractible
+        MergeEdges(rResult,pEdge,pConincentEdge);
+        }
+    else if(pStartEntity && pEndEntity)
+        {
+        // Bridge, Splitter
 
         std::vector<std::vector<edge *> > aaLoops;
         std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
@@ -583,7 +672,7 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
         size_t nEndLoop=FindLoop(pEndEntity,aaLoops);
         if(nStartLoop==nEndLoop)
             {
-            // Splitter, or Non-Contractible
+            // Splitter
 
             aFaces.push_back(ImprintSplitter(rResult,pEdge,pFace,pStartEntity,pEndEntity));
             }

@@ -476,4 +476,16 @@ TEST(boolean_check, lower_genus)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(boolean_check, coincident)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,0,0),SGM::Point3D(10,10,10));
+    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 
