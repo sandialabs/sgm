@@ -523,7 +523,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     double dArea=0.0;
     for(std::vector<unsigned int> const &aPolygon : aaPolygons)
         {
-        dArea+=SGM::PolygonArea(PointFormPolygon(aPoints2D,aPolygon));
+        dArea+=SGM::PolygonArea(PointsFromPolygon(aPoints2D,aPolygon));
         }
     if(dArea<0)
         {

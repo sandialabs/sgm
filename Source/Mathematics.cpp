@@ -1644,7 +1644,7 @@ void ForceEdge(Result                                  &rResult,
         std::vector<std::vector<unsigned> > aaPolygons1,aaPolygons2;
         aaPolygons1.push_back(aPoly1);
         aaPolygons2.push_back(aPoly2);
-        std::vector<SGM::Point2D> aPolyPoints1=SGM::PointFormPolygon(aPoints2D,aPoly1);
+        std::vector<SGM::Point2D> aPolyPoints1=SGM::PointsFromPolygon(aPoints2D,aPoly1);
         for(unsigned nHole : sInterior)
             {
             if(SGM::PointInPolygon(aPoints2D[nHole],aPolyPoints1))
@@ -2499,7 +2499,7 @@ std::vector<unsigned> MergePolygon(std::vector<Point2D>      const &aPoints2D,
     return aAnswer;
     }
 
-std::vector<SGM::Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
+std::vector<SGM::Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPoints2D,
                                            std::vector<unsigned> const &aPolygons)
     {
     std::vector<SGM::Point2D> aAnswer;
@@ -2518,12 +2518,12 @@ bool PointInPolygonGroup(Point2D                                 const &Pos,
                          std::vector<std::vector<unsigned> > const &aaPolygons)
     {
     size_t nPolygons=aaPolygons.size();
-    if(nPolygons && PointInPolygon(Pos,PointFormPolygon(aPoints2D,aaPolygons[0])))
+    if(nPolygons && PointInPolygon(Pos,PointsFromPolygon(aPoints2D,aaPolygons[0])))
         {
         size_t Index1;
         for(Index1=1;Index1<nPolygons;++Index1)
             {
-            if(PointInPolygon(Pos,PointFormPolygon(aPoints2D,aaPolygons[Index1]))==false)
+            if(PointInPolygon(Pos,PointsFromPolygon(aPoints2D,aaPolygons[Index1]))==false)
                 {
                 return false;
                 }

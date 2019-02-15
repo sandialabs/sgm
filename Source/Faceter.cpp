@@ -2245,7 +2245,7 @@ static bool AngleGrid(SGM::Result                                   &rResult,
         {
         std::vector<unsigned int> aPolygonIndices;
         std::vector<bool> aFlags=ShuffleFlags(*pImprintFlag,aaPolygons[Index1]);
-        if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
+        if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
                                aScaled, aTriangles, aPolygonIndices, nullptr, nullptr, nullptr, &aFlags))
             {
             return false;
@@ -2288,7 +2288,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
         if(aImprintFlags)
             {
             std::vector<bool> aFlags=ShuffleFlags(*aImprintFlags,aaPolygons[Index1]);
-            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
                                    aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, &aFlags))
                 {
                 aPoints2D.clear();
@@ -2300,7 +2300,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
             }
         else
             {
-            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
                                    aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, nullptr))
                 {
                 aPoints2D.clear();
@@ -2374,7 +2374,7 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
         std::vector<unsigned int> aPolygonIndices;
         SGM::Surface PolygonSurfaceID(pFace->GetSurface()->GetID());
         std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
-        SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+        SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
             aPoints2D,aTriangles,aPolygonIndices,&PolygonSurfaceID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }
