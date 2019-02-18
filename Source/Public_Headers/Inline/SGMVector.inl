@@ -296,11 +296,11 @@ namespace SGM {
             {
             return false;
             }
-        if(m_z<Pos.m_w)
+        if(m_w<Pos.m_w)
             {
             return true;
             }
-        if(Pos.m_z<m_w)
+        if(Pos.m_w<m_w)
             {
             return false;
             }

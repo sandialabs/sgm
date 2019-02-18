@@ -710,6 +710,17 @@ double ParabolaInverse(SGM::Point3D      const &Center,
                        SGM::Point3D            *ClosePos,
                        double            const *guess = nullptr);
 
+size_t FindKnots(std::vector<SGM::Point3D> const &aPoints,
+                 std::vector<double>             &aKnots,
+                 std::vector<double>             &aLengths,
+                 std::vector<double>       const *pParams=nullptr);
+
+void FindControlPoints(std::vector<SGM::Point3D> const &aPoints,
+                       std::vector<double>       const &aKnots,
+                       std::vector<double>       const &aLengths,
+                       size_t                           nDegree,
+                       std::vector<SGM::Point3D>       &aControlPoints);
+
 } // End SGMInternal namespace
 
 #include "Inline/Curve.inl"

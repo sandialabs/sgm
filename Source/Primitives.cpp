@@ -875,13 +875,11 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
     aKnots.push_back(1.0);
     }
 
- NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
-                          std::vector<SGM::Point3D> const &aPoints,
-                          std::vector<double>       const *pParams)
+size_t FindKnots(std::vector<SGM::Point3D> const &aPoints,
+                 std::vector<double>             &aKnots,
+                 std::vector<double>             &aLengths,
+                 std::vector<double>       const *pParams)
     {
-    // Find the knot vector.
-
-    std::vector<double> aLengths,aKnots;
     if(pParams)
         {
         aLengths=*pParams;
@@ -892,6 +890,15 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
         }
     size_t nDegree;
     FindDegree3Knots(aLengths,aKnots,nDegree);
+    return nDegree;
+    }
+
+void FindControlPoints(std::vector<SGM::Point3D> const &aPoints,
+                       std::vector<double>       const &aKnots,
+                       std::vector<double>       const &aLengths,
+                       size_t                           nDegree,
+                       std::vector<SGM::Point3D>       &aControlPoints)
+    {
     SGM::Interval1D Domain(0,1);
 
     // Set up the banded matrix.
@@ -961,17 +968,24 @@ void FindDegree3KnotsWithEndDirections(std::vector<double> const &aLengths,
 
     // Create the curve.
 
-    std::vector<SGM::Point3D> aControlPoints;
     aControlPoints.reserve(nPoints);
     for(Index1=0;Index1<nPoints;++Index1)
         {
         SGM::Point3D Pos(aaXMatrix[Index1].back(),aaYMatrix[Index1].back(),aaZMatrix[Index1].back());
         aControlPoints.push_back(Pos);
         }
-    NUBcurve *pAnswer=new NUBcurve(rResult,std::move(aControlPoints),std::move(aKnots));
+    }
 
-    SGM::Point3D CPos;
-    pAnswer->Inverse(aPoints[1],&CPos);
+NUBcurve *CreateNUBCurve(SGM::Result                     &rResult,
+                         std::vector<SGM::Point3D> const &aPoints,
+                         std::vector<double>       const *pParams)
+    {
+    std::vector<SGM::Point3D> aControlPoints;
+    std::vector<double> aKnots,aLengths;
+    size_t dDegree=FindKnots(aPoints,aKnots,aLengths,pParams);
+    FindControlPoints(aPoints,aKnots,aLengths,dDegree,aControlPoints);
+    
+    NUBcurve *pAnswer=new NUBcurve(rResult,std::move(aControlPoints),std::move(aKnots));
 
     return pAnswer;
     }
@@ -1263,13 +1277,26 @@ body *CreateSheetBody(SGM::Result                    &rResult,
             pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
             }
         }
-    else if(pSurface->ClosedInU())
+
+    if(pSurface->ClosedInV()==false)
         {
         SGM::Interval2D const &Domain=pSurface->GetDomain();
         double dStart=Domain.m_VDomain.m_dMin;
         double dEnd=Domain.m_VDomain.m_dMax;
         curve *pStart=pSurface->VParamLine(rResult,dStart);
         curve *pEnd=pSurface->VParamLine(rResult,dEnd);
+        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
+        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
+        }
+    if(pSurface->ClosedInU()==false)
+        {
+        SGM::Interval2D const &Domain=pSurface->GetDomain();
+        double dStart=Domain.m_UDomain.m_dMin;
+        double dEnd=Domain.m_UDomain.m_dMax;
+        curve *pStart=pSurface->UParamLine(rResult,dStart);
+        curve *pEnd=pSurface->UParamLine(rResult,dEnd);
         edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
         edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
         pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);

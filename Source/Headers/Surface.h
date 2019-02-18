@@ -544,6 +544,9 @@ class NUBsurface: public surface
                    std::vector<double>                    &&aUKnots,
                    std::vector<double>                    &&aVKnots);
 
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D>> const &aaInterpolatePoints);
+
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 
         ~NUBsurface() override = default;

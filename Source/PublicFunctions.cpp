@@ -1627,6 +1627,17 @@ SGM::Surface SGM::CreateNUBSurfaceFromControlPoints(SGM::Result                 
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateNUBSurface(SGM::Result                                   &rResult,
+                                   std::vector<std::vector<SGM::Point3D> > const &aaInterpolatePoints,
+                                   std::vector<SGM::Vector3D>              const *,//paStartVecs,
+                                   std::vector<SGM::Vector3D>              const *,//paEndVecs,
+                                   std::vector<double>                     const *,//pUParams,
+                                   std::vector<double>                     const *)//pVParams)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaInterpolatePoints);
+    return {pSurface->GetID()};
+    }
+
 SGM::Surface SGM::CreateNURBSurface(SGM::Result                                   &rResult,
                                     std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
                                     std::vector<double>                     const &aUKnots,

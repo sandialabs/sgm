@@ -1,7 +1,10 @@
 #include "SGMVector.h"
+
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Intersectors.h"
+#include "Primitive.h"
+
 #include <utility>
 #include <vector>
 #include <cmath>
@@ -168,7 +171,7 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
                          std::vector<SGM::Point3D> const &aPoints)
     {
     // Hyperbola f(t)=a*sqrt(1+t^2/b^2)
-    // x^2/a^2-y^2/b^2=1 -> an*x^2+bn*y^2=1, where an=1/a^2, bn=1/b^2
+    // x^2/a^2-y^2/b^2=1 -> an*x^2-bn*y^2=1, where an=1/a^2, bn=1/b^2
     // a=sqrt(1/an) b=sqrt(1/bn)
 
     bool bQuad1=false,bQuad2=false,bQuad3=false,bQuad4=false;
@@ -216,20 +219,20 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
         {
         std::swap(XAxis,YAxis);
         YAxis.Negate();
-        for(Index1=0;Index1<3;++Index1)
+        for(Index1=0;Index1<5;++Index1)
             {
             SGM::Point2D xy=aXY[Index1];
-            aXY[Index1]=SGM::Point2D(xy.m_u,-xy.m_v);
+            aXY[Index1]=SGM::Point2D(xy.m_v,-xy.m_u);
             }
         }
     else if(bQuad3 && bQuad4)
         {
         XAxis.Negate();
         YAxis.Negate();
-        for(Index1=0;Index1<3;++Index1)
+        for(Index1=0;Index1<5;++Index1)
             {
             SGM::Point2D xy=aXY[Index1];
-            aXY[Index1]=SGM::Point2D(-xy.m_v,-xy.m_u);
+            aXY[Index1]=SGM::Point2D(-xy.m_u,-xy.m_v);
             }
         }
     
@@ -252,7 +255,7 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
     aXY2.push_back(xy1);
     aXY2.push_back(xy2);
 
-    // Find an*x^2+bn*y^2=1
+    // Find an*x^2-bn*y^2=1
      
     std::vector<std::vector<double> > aaMatrix;
     aaMatrix.reserve(2);
@@ -261,14 +264,15 @@ hyperbola *FindHyperbola(SGM::Result                     &rResult,
         std::vector<double> aMatrix;
         aMatrix.reserve(3);
         aMatrix.push_back(aXY2[Index1].m_u*aXY2[Index1].m_u);
-        aMatrix.push_back(aXY2[Index1].m_v*aXY2[Index1].m_v);
+        aMatrix.push_back(-aXY2[Index1].m_v*aXY2[Index1].m_v);
         aMatrix.push_back(1.0);
         aaMatrix.push_back(aMatrix);
         }
     SGM::LinearSolve(aaMatrix);
     double a=sqrt(fabs(1.0/aaMatrix[0].back()));
     double b=sqrt(fabs(1.0/aaMatrix[1].back()));
-    return new hyperbola(rResult,Center,XAxis,YAxis,a,b);
+
+    return new hyperbola(rResult,Center,XAxis,YAxis,b,a);
     }
 
 curve *FindConic(SGM::Result                     &rResult,

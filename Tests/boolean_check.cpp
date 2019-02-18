@@ -492,4 +492,55 @@ TEST(boolean_check, coincident)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(boolean_check, coincident_2)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(5,0,0),SGM::Point3D(5,10,5));
+    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+//TEST(boolean_check, coincident_3)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+//    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,-2,0),SGM::Point3D(10,12,5));
+//    //SGM::UniteBodies(rResult,BodyID1,BodyID2);
+//
+//    SGM::CheckOptions Options;
+//    std::vector<std::string> aCheckStrings;
+//    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+//TEST(boolean_check, imprint_line_sqaure)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    // TrimCurveWithFaces issue
+//
+//    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+//    std::set<SGM::Face> sFaces;
+//    SGM::FindFaces(rResult,BodyID1,sFaces);
+//    SGM::Face FaceID=*(sFaces.begin());
+//    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(5,0,0),SGM::Point3D(5,5,0));
+//    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+//
+//    SGM::CheckOptions Options;
+//    std::vector<std::string> aCheckStrings;
+//    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
