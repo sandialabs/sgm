@@ -508,21 +508,21 @@ TEST(boolean_check, coincident_2)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-//TEST(boolean_check, coincident_3)
-//{
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
-//    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,-2,0),SGM::Point3D(10,12,5));
-//    //SGM::UniteBodies(rResult,BodyID1,BodyID2);
-//
-//    SGM::CheckOptions Options;
-//    std::vector<std::string> aCheckStrings;
-//    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
-//
-//    SGMTesting::ReleaseTestThing(pThing);
-//}
+TEST(boolean_check, coincident_3)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,-2,0),SGM::Point3D(10,12,5));
+    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 //TEST(boolean_check, imprint_line_sqaure)
 //{

@@ -5095,7 +5095,7 @@ void FindWalkingPoints(SGM::Result               &rResult,
             SGM::UnitVector3D Norm1,Norm2;
             pSurface->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
             pTorus->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
-            aTemp.push_back({-Norm1.Angle(Norm2),Pos});
+            aTemp.push_back({fabs(SGM_HALF_PI-Norm1.Angle(Norm2)),Pos});
             }
         }
     aWalk.clear();

@@ -1302,6 +1302,11 @@ body *CreateSheetBody(SGM::Result                    &rResult,
         pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
         pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
         }
+    if(pSurface->ClosedInU()==false && pSurface->ClosedInV()==false)
+        {
+        // Merge vertices.
+        throw;
+        }
 
     return pBody;
     }
