@@ -143,8 +143,8 @@ namespace SGM
 
     // Coverts a polygon from a vector of indices to a vector of points.
 
-    std::vector<Point2D> PointFormPolygon(std::vector<Point2D>      const &aPoints2D,
-                                               std::vector<unsigned int> const &aPolygon);
+    std::vector<Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPoints2D,
+                                           std::vector<unsigned int> const &aPolygon);
 
     // Merges the indices of close points, within dTolerance, in aPolygon.
 

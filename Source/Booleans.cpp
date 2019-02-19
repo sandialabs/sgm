@@ -286,6 +286,30 @@ void MergeVertices(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pDeleteVertex);
     }
 
+void MergeVertexSet(SGM::Result &rResult,
+                    std::set<vertex *, EntityCompare> &sVertices)
+{
+    // Note that this only works on single volume wires.
+    // Also note that this is a n^2 algorithum which could be n*ln(n).
+
+    std::set<vertex *> sDeleted;
+    for(vertex *pVertex:sVertices)
+        {
+        for(vertex *pTest:sVertices)
+            {
+            if( pVertex!=pTest && 
+                sDeleted.find(pTest)==sDeleted.end() &&
+                sDeleted.find(pVertex)==sDeleted.end() &&
+                SGM::NearEqual(pVertex->GetPoint(),pTest->GetPoint(),SGM_MIN_TOL))
+                {
+                MergeVertices(rResult,pVertex,pTest);
+                sDeleted.insert(pTest);
+                }
+            }
+        }
+}
+
+
 void ImprintPeninsula(SGM::Result &rResult,
                       edge        *pEdge,
                       face        *pFace,
@@ -523,7 +547,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     double dArea=0.0;
     for(std::vector<unsigned int> const &aPolygon : aaPolygons)
         {
-        dArea+=SGM::PolygonArea(PointFormPolygon(aPoints2D,aPolygon));
+        dArea+=SGM::PolygonArea(PointsFromPolygon(aPoints2D,aPolygon));
         }
     if(dArea<0)
         {
