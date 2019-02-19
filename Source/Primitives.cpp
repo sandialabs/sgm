@@ -1245,9 +1245,9 @@ body *CreateSheetBody(SGM::Result                    &rResult,
 
     size_t nEdges=aEdges.size();
     size_t Index1;
+    std::set<vertex*, EntityCompare> sVertices;
     if(nEdges)
         {
-        std::set<vertex*, EntityCompare> sVertices;
         for(Index1=0;Index1<nEdges;++Index1)
             {
             edge *pEdge=aEdges[Index1];
@@ -1259,35 +1259,69 @@ body *CreateSheetBody(SGM::Result                    &rResult,
             }
         MergeVertexSet(rResult, sVertices);
         }
-
-    if(pSurface->ClosedInV()==false)
+    else
         {
-        SGM::Interval2D const &Domain=pSurface->GetDomain();
-        double dStart=Domain.m_VDomain.m_dMin;
-        double dEnd=Domain.m_VDomain.m_dMax;
-        curve *pStart=pSurface->VParamLine(rResult,dStart);
-        curve *pEnd=pSurface->VParamLine(rResult,dEnd);
-        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
-        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
-        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
-        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
-        }
-    if(pSurface->ClosedInU()==false)
-        {
-        SGM::Interval2D const &Domain=pSurface->GetDomain();
-        double dStart=Domain.m_UDomain.m_dMin;
-        double dEnd=Domain.m_UDomain.m_dMax;
-        curve *pStart=pSurface->UParamLine(rResult,dStart);
-        curve *pEnd=pSurface->UParamLine(rResult,dEnd);
-        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
-        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
-        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
-        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
-        }
-    if(pSurface->ClosedInU()==false && pSurface->ClosedInV()==false)
-        {
-        // Merge vertices.
-        throw;
+        if(pSurface->ClosedInV()==false)
+            {
+            SGM::Interval2D const &Domain=pSurface->GetDomain();
+            double dStart=Domain.m_VDomain.m_dMin;
+            double dEnd=Domain.m_VDomain.m_dMax;
+            curve *pStart=pSurface->VParamLine(rResult,dStart);
+            curve *pEnd=pSurface->VParamLine(rResult,dEnd);
+            edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+            edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+            if(pEdgeStart->GetStart())
+                {
+                sVertices.insert(pEdgeStart->GetStart());
+                }
+            if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
+                {
+                sVertices.insert(pEdgeStart->GetEnd());
+                }
+            if(pEdgeEnd->GetStart())
+                {
+                sVertices.insert(pEdgeEnd->GetStart());
+                }
+            if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
+                {
+                sVertices.insert(pEdgeEnd->GetEnd());
+                }
+            pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
+            pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
+            }
+        if(pSurface->ClosedInU()==false)
+            {
+            SGM::Interval2D const &Domain=pSurface->GetDomain();
+            double dStart=Domain.m_UDomain.m_dMin;
+            double dEnd=Domain.m_UDomain.m_dMax;
+            curve *pStart=pSurface->UParamLine(rResult,dStart);
+            curve *pEnd=pSurface->UParamLine(rResult,dEnd);
+            edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+            edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+            if(pEdgeStart->GetStart())
+                {
+                sVertices.insert(pEdgeStart->GetStart());
+                }
+            if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
+                {
+                sVertices.insert(pEdgeStart->GetEnd());
+                }
+            if(pEdgeEnd->GetStart())
+                {
+                sVertices.insert(pEdgeEnd->GetStart());
+                }
+            if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
+                {
+                sVertices.insert(pEdgeEnd->GetEnd());
+                }
+            pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnRightType);
+            pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnLeftType);
+            }
+        if(pSurface->ClosedInU()==false && pSurface->ClosedInV()==false)
+            {
+            // Merge vertices.
+            MergeVertexSet(rResult, sVertices);
+            }
         }
 
     return pBody;

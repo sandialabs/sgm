@@ -604,7 +604,7 @@ double face::FindArea(SGM::Result &rResult) const
         SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEntities);
         aArea[nLevel]=TriangleArea(aPoints3D,aTriangles);
         aAreaEstimated[nLevel]=(4*aArea[nLevel]-aArea[nLevel-1])/3;
-        if (nLevel>=3 && dDiff<1000*SGM_MIN_TOL) // we have at least 3 levels and getting close to tolerance
+        if (nLevel>=3 && dDiff<SGM_MIN_TOL) // We have at least 3 levels and getting close to tolerance.
             {
             std::pair<bool, double> Extrapolated = RichardsonExtrapolation(&aAreaEstimated[nLevel - 2]);
             if (Extrapolated.first)
