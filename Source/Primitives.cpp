@@ -147,26 +147,7 @@ body *CreateWireBody(SGM::Result            &rResult,
         sVertices.insert(pEdge->GetEnd());
         }
 
-    // Merge edges.
-    // Note that this only works on single volume wires.
-    // Also note that this is a n^2 algorithum which could be n*ln(n).
-
-    std::set<vertex *> sDeleted;
-    for(vertex *pVertex:sVertices)
-        {
-        for(vertex *pTest:sVertices)
-            {
-            if( pVertex!=pTest && 
-                sDeleted.find(pTest)==sDeleted.end() &&
-                sDeleted.find(pVertex)==sDeleted.end() &&
-                SGM::NearEqual(pVertex->GetPoint(),pTest->GetPoint(),SGM_MIN_TOL))
-                {
-                MergeVertices(rResult,pVertex,pTest);
-                sDeleted.insert(pTest);
-                }
-            }
-        }
-
+    MergeVertexSet(rResult, sVertices);
     return pBody;
     }
 
@@ -1252,16 +1233,17 @@ body *CreateSheetBody(SGM::Result                    &rResult,
     size_t Index1;
     if(nEdges)
         {
+        std::set<vertex*, EntityCompare> sVertices;
         for(Index1=0;Index1<nEdges;++Index1)
             {
             edge *pEdge=aEdges[Index1];
-            if(pEdge->GetStart())
-                {
-                // More code needs to be added to merge vertices.
-                throw;
-                }
             pFace->AddEdge(rResult,pEdge,aTypes[Index1]);
+            if (pEdge->GetStart())
+                sVertices.insert(pEdge->GetStart());
+            if (pEdge->GetEnd())
+                sVertices.insert(pEdge->GetEnd());
             }
+        MergeVertexSet(rResult, sVertices);
         }
     else if(pSurface->ClosedInU())
         {

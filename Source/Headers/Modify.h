@@ -59,6 +59,9 @@ void MergeVertices(SGM::Result &rResult,
                    vertex      *pKeepVertex,
                    vertex      *pDeleteVertex);
 
+void MergeVertexSet(SGM::Result &rResult,
+                    std::set<vertex *, EntityCompare> &sVertices);
+
 void MergeEdges(SGM::Result &rResult,
                 edge        *pKeepEdge,
                 edge        *pDeleteEdge);
