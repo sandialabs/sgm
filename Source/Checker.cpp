@@ -112,8 +112,11 @@ bool EdgesOverlap(edge const *pEdge1,edge const *pEdge2)
     {
     // Only check the end points of pEdge1, to see if they overlap.
 
-    pEdge1;
-    pEdge2;
+    if(pEdge1 || pEdge2)
+        {
+        int a=0;
+        a*=1;
+        }
 
     return false;
     }
