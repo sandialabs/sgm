@@ -174,16 +174,16 @@ bool TestIntersections(SGM::Result        &rResult,
 
     // Also check curves to make sure they do not overlap.
 
-    for(Index1=0;bAnswer && Index1<nCurves;++Index1)
-        {
-        for(Index2=Index1+1;bAnswer && Index2<nCurves;++Index2)
-            {
-            if(DoCurvesOverLap(rResult,aCurves[Index1],aCurves[Index2]))
-                {
-                //bAnswer=false;
-                }
-            }
-        }
+    //for(Index1=0;bAnswer && Index1<nCurves;++Index1)
+    //    {
+    //    for(Index2=Index1+1;bAnswer && Index2<nCurves;++Index2)
+    //        {
+    //        if(DoCurvesOverLap(rResult,aCurves[Index1],aCurves[Index2]))
+    //            {
+    //            bAnswer=false;
+    //            }
+    //        }
+    //    }
 
     return bAnswer;
     }
