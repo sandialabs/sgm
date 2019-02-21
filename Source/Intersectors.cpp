@@ -6034,6 +6034,70 @@ void FindTangentPoints(SGM::Result               &rResult,
         }
     }
 
+size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
+                            plane               const *pPlane,
+                            NUBsurface          const *pNUB,
+                            std::vector<curve *>      &aCurves,
+                            double                     dTolerance)
+    {
+    // Find the signed distance from each control point to the plane.
+
+    SGM::Point3D const &Origin=pPlane->m_Origin;
+    SGM::UnitVector3D const &Normal=pPlane->m_ZAxis;
+    size_t nSize1=pNUB->m_aaControlPoints.size();
+    size_t nSize2=pNUB->m_aaControlPoints[0].size();
+    size_t Index1,Index2;
+    std::vector<std::vector<double> > aaDist;
+    aaDist.reserve(nSize1);
+    for(Index1=0;Index1<nSize1;++Index1)
+        {
+        std::vector<double> aDist;
+        std::vector<SGM::Point3D> const &aPoints=pNUB->m_aaControlPoints[Index1];
+        aDist.reserve(nSize2);
+        for(Index2=0;Index2<nSize2;++Index2)
+            {
+            SGM::Point3D const &Pos=aPoints[Index2];
+            aDist.push_back((Pos-Origin)%Normal);
+            }
+        aaDist.push_back(aDist);
+        }
+
+    // Find Control points pairs that cross the plane.
+
+    std::vector<SGM::Point3D> aWalkPoints;
+    for(Index1=1;Index1<nSize1;++Index1)
+        {
+        for(Index2=1;Index2<nSize2;++Index2)
+            {
+            double dF00=aaDist[Index1][Index2];
+            double dF10=aaDist[Index1-1][Index2];
+            double dF01=aaDist[Index1][Index2-1];
+            SGM::Point3D const &Pos00=pNUB->m_aaControlPoints[Index1][Index2];
+            SGM::Point3D const &Pos10=pNUB->m_aaControlPoints[Index1-1][Index2];
+            SGM::Point3D const &Pos01=pNUB->m_aaControlPoints[Index1][Index2-1];
+            if(fabs(dF00)<dTolerance || dF10*dF00<0)
+                {
+                aWalkPoints.push_back(ZoomInFrom(SGM::MidPoint(Pos00,Pos10),pPlane,pNUB));
+                }
+            if(fabs(dF00)<dTolerance || dF01*dF00<0)
+                {
+                aWalkPoints.push_back(ZoomInFrom(SGM::MidPoint(Pos00,Pos01),pPlane,pNUB));
+                }
+            }
+        }
+
+    for(auto Pos : aWalkPoints)
+        {
+        if(PointOnCurves(Pos,aCurves)==false)
+            {
+            std::vector<SGM::Point3D> aEndPoints;
+            aEndPoints.push_back(Pos);
+            aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pNUB));
+            }
+        }
+    return aCurves.size();
+    }
+
 size_t IntersectConeAndTorus(SGM::Result               &rResult,
                              cone                const *pCone,
                              torus               const *pTorus,
@@ -6644,6 +6708,26 @@ size_t IntersectConeAndSurface(SGM::Result                &rResult,
         }
     }
 
+size_t IntersectNUBAndSurface(SGM::Result                &rResult,
+                              NUBsurface           const *pNUBSurface,
+                              surface              const *pSurface,
+                              std::vector<curve *>       &aCurves,
+                              double                      dTolerance)
+    {
+    switch(pSurface->GetSurfaceType())
+        {
+        case SGM::EntityType::PlaneType:
+            {
+            auto pPlane=(plane const *)pSurface;
+            return IntersectPlaneAndNUB(rResult,pPlane,pNUBSurface,aCurves,dTolerance);
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
 size_t IntersectTorusAndSurface(SGM::Result                &rResult,
                                 torus                const *pTorus,
                                 surface              const *pSurface,
@@ -6753,6 +6837,11 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
             auto pTorus=(torus const *)pSurface1;
             return IntersectTorusAndSurface(rResult,pTorus,pSurface2,aCurves,dTolerance);
             }
+        case SGM::EntityType::NUBSurfaceType:
+            {
+            auto pNUB=(NUBsurface const *)pSurface1;
+            return IntersectNUBAndSurface(rResult,pNUB,pSurface2,aCurves,dTolerance);
+            }
         default:
             {
             throw;
@@ -6859,6 +6948,8 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
     SGM::Point3D CurrentPos=StartPos;
     SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
     SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
+    SGM::Interval2D const &Domain1=pSurface1->GetDomain();
+    SGM::Interval2D const &Domain2=pSurface2->GetDomain();
     SGM::UnitVector3D Norm1,Norm2;
     pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
     pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
@@ -6949,6 +7040,13 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
             aPoints.push_back(CurrentPos);
             aTangents.push_back(WalkDir);
             }
+        else if(Domain1.OnBoundary(uv1,SGM_MIN_TOL) ||
+                Domain2.OnBoundary(uv2,SGM_MIN_TOL))
+            {
+            bFound=true;
+            aPoints.push_back(CurrentPos);
+            aTangents.push_back(WalkDir);
+            }
         else if(aEndPoints.size())
             {
             size_t nWhere;
@@ -6978,7 +7076,7 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
                     double dEndTol=dWalkDist*0.1;
                     if(PointOnLine.Distance(EndPos)<dEndTol)
                         {
-                        if(2<aPoints.size() || 0<t)
+                        if(2<aPoints.size() && 0<t)
                             {
                             bFoundEnd=true;
                             }

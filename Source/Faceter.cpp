@@ -2364,6 +2364,30 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
         aVValues[aVValues.size()-1]+=dLength;
         }
 
+    if(aUValues.size()==2)
+        {
+        double dVal0=aUValues[0];
+        double dVal1=aUValues[1];
+        aUValues.clear();
+        aUValues.push_back(dVal0);
+        aUValues.push_back((dVal1+dVal0)*0.25);
+        aUValues.push_back((dVal1+dVal0)*0.5);
+        aUValues.push_back((dVal1+dVal0)*0.75);
+        aUValues.push_back(dVal1);
+        }
+
+    if(aVValues.size()==2)
+        {
+        double dVal0=aVValues[0];
+        double dVal1=aVValues[1];
+        aVValues.clear();
+        aVValues.push_back(dVal0);
+        aVValues.push_back((dVal1+dVal0)*0.25);
+        aVValues.push_back((dVal1+dVal0)*0.5);
+        aVValues.push_back((dVal1+dVal0)*0.75);
+        aVValues.push_back(dVal1);
+        }
+
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
     FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
 

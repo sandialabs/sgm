@@ -105,7 +105,7 @@ SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
     SGM::Vector3D DU,DV;
     SGM::UnitVector3D Norm;
     SGM::Point2D Answer=StartUV;
-    while(nCount<100 && fabs(dDot) >= SGM_ZERO &&
+    while(nCount<100 && 
        (SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
         SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO))
         {
