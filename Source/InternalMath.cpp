@@ -476,45 +476,45 @@ double IntegrateTriangle(double f(SGM::Point2D const &uv, void const *pData),
     return dAnswer;
     }
 
-    // Returns true if Pos0 is on the same side of the line
-    // {Pos1,Pos2} as the point Pos3 in their common plane.
+// Returns true if Pos0 is on the same side of the line
+// {Pos1,Pos2} as the point Pos3 in their common plane.
 
-bool SameSide(SGM::Point3D const &Pos0,
-              SGM::Point3D const &Pos1,
-              SGM::Point3D const &Pos2,
-              SGM::Point3D const &Pos3)
-    {
-    SGM::Vector3D LineVec=Pos2-Pos1;
-    SGM::Vector3D Test0=Pos0-Pos1;
-    SGM::Vector3D Test1=Pos3-Pos1;
-    return 0<=(LineVec*Test0)%(LineVec*Test1);
-    }
-
-double PizzaSliceArea(SGM::Point3D const &Pos0,
-                      SGM::Point3D const &Pos1,
-                      SGM::Point3D const &Pos2,
-                      SGM::Point3D const &Pos3)
-    {
-    double dTA=((Pos1-Pos0)*(Pos2-Pos0)).Magnitude()/2.0;
-    SGM::Point3D Center;
-    SGM::UnitVector3D Normal;
-    double dRadius;
-    double dCordArea=0.0;
-    if(SGM::FindCircle(Pos0,Pos1,Pos2,Center,Normal,dRadius))
-        {
-        SGM::UnitVector3D UVec1=Pos0-Center;
-        SGM::UnitVector3D UVec2=Pos1-Center;
-        double dAngle=UVec1.Angle(UVec2);
-        double dTA2=((Pos0-Center)*(Pos1-Center)).Magnitude()/2.0;
-        double dSlice=dRadius*dRadius*dAngle/SGM_TWO_PI;
-        dCordArea=dSlice-dTA2;
-        if(SameSide(Pos3,Pos1,Pos2,Pos0))
-            {
-            dCordArea=-dCordArea;
-            }
-        }
-    double dArea=dTA+dCordArea;
-    return dArea;
-    }
+//bool SameSide(SGM::Point3D const &Pos0,
+//              SGM::Point3D const &Pos1,
+//              SGM::Point3D const &Pos2,
+//              SGM::Point3D const &Pos3)
+//    {
+//    SGM::Vector3D LineVec=Pos2-Pos1;
+//    SGM::Vector3D Test0=Pos0-Pos1;
+//    SGM::Vector3D Test1=Pos3-Pos1;
+//    return 0<=(LineVec*Test0)%(LineVec*Test1);
+//    }
+//
+//double PizzaSliceArea(SGM::Point3D const &Pos0,
+//                      SGM::Point3D const &Pos1,
+//                      SGM::Point3D const &Pos2,
+//                      SGM::Point3D const &Pos3)
+//    {
+//    double dTA=((Pos1-Pos0)*(Pos2-Pos0)).Magnitude()/2.0;
+//    SGM::Point3D Center;
+//    SGM::UnitVector3D Normal;
+//    double dRadius;
+//    double dCordArea=0.0;
+//    if(SGM::FindCircle(Pos3,Pos1,Pos2,Center,Normal,dRadius))
+//        {
+//        SGM::UnitVector3D UVec1=Pos2-Center;
+//        SGM::UnitVector3D UVec2=Pos1-Center;
+//        double dAngle=UVec1.Angle(UVec2);
+//        double dTA2=((Pos2-Center)*(Pos1-Center)).Magnitude()/2.0;
+//        double dSlice=dRadius*dRadius*dAngle/2.0;
+//        dCordArea=dSlice-dTA2;
+//        if(SameSide(Pos3,Pos1,Pos2,Pos0))
+//            {
+//            dCordArea=-dCordArea;
+//            }
+//        }
+//    double dArea=dTA+dCordArea;
+//    return dArea;
+//    }
 
 } // End namespace SGMInternal

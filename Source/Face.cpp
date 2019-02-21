@@ -529,8 +529,7 @@ bool OnNonLinearEdge(SGM::Point3D const &PosA,
     }
 
 double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
-                    std::vector<unsigned int> const &aTriangles,
-                    std::vector<entity *>     const &aEntities)
+                    std::vector<unsigned int> const &aTriangles)
     {
     double dArea=0.0;
     size_t nTriangles=aTriangles.size();
@@ -540,32 +539,12 @@ double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
         size_t a=aTriangles[Index1];
         size_t b=aTriangles[Index1+1];
         size_t c=aTriangles[Index1+2];
-        entity const *pAEnt=aEntities[a];
-        entity const *pBEnt=aEntities[b];
-        entity const *pCEnt=aEntities[c];
         SGM::Point3D const &PosA=aPoints3D[a];
         SGM::Point3D const &PosB=aPoints3D[b];
         SGM::Point3D const &PosC=aPoints3D[c];
-        SGM::Point3D Pos;
-        if(OnNonLinearEdge(PosA,PosB,pAEnt,pBEnt,Pos))
-            {
-            //dArea+=PizzaSliceArea(PosC,PosA,PosB,Pos);
-            }
-        else if(OnNonLinearEdge(PosB,PosC,pBEnt,pCEnt,Pos))
-            {
-            //dArea+=PizzaSliceArea(PosA,PosB,PosC,Pos);
-            }
-        else if(OnNonLinearEdge(PosC,PosA,pCEnt,pAEnt,Pos))
-            {
-            //dArea+=PizzaSliceArea(PosB,PosC,PosA,Pos);
-            }
-        else
-            {
-            //dArea+=((PosB-PosA)*(PosC-PosA)).Magnitude()*0.5;
-            }
-        dArea+=((PosB-PosA)*(PosC-PosA)).Magnitude()*0.5;
+        dArea+=((PosB-PosA)*(PosC-PosA)).Magnitude();
         }
-    return dArea;
+    return dArea*0.5;
     }
 
 void face::ClearFacets(SGM::Result &rResult) const
@@ -649,23 +628,15 @@ double face::FindArea(SGM::Result &rResult) const
     InitializeFacetSubdivision(rResult, MAX_LEVELS, aPoints2D, aPoints3D, aTriangles, aEntities);
 
     double dDiff = SGM_MAX;
-    aArea[0] = TriangleArea(aPoints3D,aTriangles,aEntities);
+    aArea[0] = TriangleArea(aPoints3D,aTriangles);
     aAreaEstimated[0] = SGM_MAX;
     size_t nLevel;
-
-    double dTolerance=SGM_MIN_TOL;
-    
-    new complex(rResult,aPoints3D,aTriangles);
-
-    for (nLevel=1; dTolerance<dDiff && nLevel<MAX_LEVELS; ++nLevel)
+    for (nLevel=1; SGM_MIN_TOL<dDiff && nLevel<MAX_LEVELS; ++nLevel)
         {
         SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEntities);
-
-        //new complex(rResult,aPoints3D,aTriangles);
-
-        aArea[nLevel]=TriangleArea(aPoints3D,aTriangles,aEntities);
+        aArea[nLevel]=TriangleArea(aPoints3D,aTriangles);
         aAreaEstimated[nLevel]=(4*aArea[nLevel]-aArea[nLevel-1])/3;
-        if (nLevel>=3 && dDiff<dTolerance) // We have at least 3 levels and getting close to tolerance.
+        if (nLevel>=3 && dDiff<SGM_MIN_TOL) // We have at least 3 levels and getting close to tolerance.
             {
             std::pair<bool, double> Extrapolated = RichardsonExtrapolation(&aAreaEstimated[nLevel - 2]);
             if (Extrapolated.first)

@@ -27,28 +27,29 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
-//TEST(math_check, bulge_area)
-//{
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    std::vector<SGM::Entity> aEntities;
-//    std::vector<std::string> log;
-//    SGM::TranslatorOptions options;
-//    std::string file_path = get_models_file_path("bulge.stp");
-//    options.m_bMerge=true;
-//    SGM::ReadFile(rResult, file_path, aEntities, log, options);
-//
-//    std::set<SGM::Face> sFaces;
-//    SGM::FindFaces(rResult,aEntities[0],sFaces);
-//    auto iter=sFaces.begin();
-//    ++iter;
-//    SGM::Face FaceID=*(iter);
-//    double dArea=SGM::FindArea(rResult,FaceID);
-//    dArea*=1;
-//    
-//    SGMTesting::ReleaseTestThing(pThing);
-//}
+TEST(math_check, bulge_area)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+    std::string file_path = get_models_file_path("bulge.stp");
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, aEntities, log, options);
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,aEntities[0],sFaces);
+    auto iter=sFaces.begin();
+    ++iter;
+    SGM::Face FaceID=*(iter);
+    double dArea=SGM::FindArea(rResult,FaceID);
+   
+    EXPECT_NEAR(dArea,40.676307120618583750332669282937,SGM_MIN_TOL);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(math_check, ruled_surface)
     {

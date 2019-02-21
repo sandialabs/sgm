@@ -82,19 +82,19 @@ namespace SGMInternal
     //         \          P3
     //          \
     //           P1
-
-    double PizzaSliceArea(SGM::Point3D const &Pos0,
-                          SGM::Point3D const &Pos1,
-                          SGM::Point3D const &Pos2,
-                          SGM::Point3D const &Pos3);
-
+    //
+    //double PizzaSliceArea(SGM::Point3D const &Pos0,
+    //                      SGM::Point3D const &Pos1,
+    //                      SGM::Point3D const &Pos2,
+    //                      SGM::Point3D const &Pos3);
+    //
     // Returns true if Pos0 is on the same side of the line
     // {Pos1,Pos2} as the point Pos3 in their common plane.
-
-    bool SameSide(SGM::Point3D const &Pos0,
-                  SGM::Point3D const &Pos1,
-                  SGM::Point3D const &Pos2,
-                  SGM::Point3D const &Pos3);
+    //
+    //bool SameSide(SGM::Point3D const &Pos0,
+    //              SGM::Point3D const &Pos1,
+    //              SGM::Point3D const &Pos2,
+    //              SGM::Point3D const &Pos3);
 
 } // SGMInternal namespace
 

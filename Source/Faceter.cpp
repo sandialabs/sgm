@@ -38,7 +38,7 @@ edge *FindEdge(entity *pEntA,entity *pEntB)
     if (isBEdge)
         {
         edge *pEdgeB = (edge *)pEntB;
-        if (pEdgeB->GetStart()==pEntB || pEdgeB->GetEnd()==pEntB)
+        if (pEdgeB->GetStart()==pEntA || pEdgeB->GetEnd()==pEntA)
             {
             return pEdgeB;
             }
