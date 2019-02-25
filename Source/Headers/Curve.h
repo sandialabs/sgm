@@ -656,6 +656,8 @@ class hermite: public curve
 
         bool IsSame(curve const *pOther,double dTolerance) const override;
 
+        std::vector<double> SpecialFacetParams() const override;
+
     public:
 
         std::vector<SGM::Point3D>  m_aPoints;

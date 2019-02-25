@@ -6102,7 +6102,35 @@ double FindMaxWalk(surface           const *pSurface,
     {
     if(pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
         {
-        return 0.2;
+        NUBsurface const *pNUB=(NUBsurface const *)pSurface;
+        size_t nUSize=pNUB->m_aaControlPoints.size();
+        size_t nVSize=pNUB->m_aaControlPoints[0].size();
+        SGM::Interval2D const &Domain=pNUB->GetDomain();
+        SGM::UnitVector2D UVec=pSurface->FindSurfaceDirection(uv,WalkDir);
+        SGM::Vector3D VecU,VecV;
+        pSurface->Evaluate(uv,nullptr,&VecU,&VecV);
+        double dUspeed=VecU.Magnitude();
+        double dVspeed=VecV.Magnitude();
+        double dU=dUspeed*Domain.m_UDomain.Length()/nUSize;
+        double dV=dVspeed*Domain.m_VDomain.Length()/nVSize;
+        double dAnswer=dU*fabs(UVec.m_u)+dV*fabs(UVec.m_v);
+        return dAnswer*0.2;
+        }
+    else if(pSurface->GetSurfaceType()==SGM::ExtrudeType)
+        {
+        extrude const *pExtrude=(extrude const *)pSurface;
+        curve const *pCurve=pExtrude->m_pCurve;
+        if(pCurve->GetCurveType()==SGM::NUBCurveType)
+            {
+            NUBcurve const *pNUB=(NUBcurve const *)pCurve;
+            SGM::Vector3D Vec;
+            pCurve->Evaluate(uv.m_u,nullptr,&Vec);
+            double dU=Vec.Magnitude();
+            size_t nSize=pNUB->GetSeedPoints().size();
+            double dAnswer=pNUB->GetDomain().Length()*dU/nSize;
+            return dAnswer;
+            }
+        return 1;
         }
     else
         {

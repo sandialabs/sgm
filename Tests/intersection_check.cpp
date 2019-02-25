@@ -244,9 +244,11 @@ TEST(intersection_check, intersect_plane_extrude)
 
     SGM::Surface PlaneID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0,-1),SGM::UnitVector3D(0,0,1));
     SGM::Surface PlaneID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0.5,0),SGM::UnitVector3D(0,1,0));
+    SGM::Surface PlaneID3=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0.5,0),SGM::UnitVector3D(0,1,1));
     
     EXPECT_TRUE(TestIntersections(rResult,ExtrudeID,PlaneID1,1));     // Transformed copy of the extruded curve.
     EXPECT_TRUE(TestIntersections(rResult,ExtrudeID,PlaneID2,5));     // Five lines.
+    EXPECT_TRUE(TestIntersections(rResult,ExtrudeID,PlaneID3,1));     // Projected curve.
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
