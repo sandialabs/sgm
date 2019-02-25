@@ -86,10 +86,15 @@ body *CreateSheetBody(SGM::Result                    &rResult,
                       std::vector<edge *>            &aEdges,
                       std::vector<SGM::EdgeSideType> &aTypes);
 
+body *CreateSheetBody(SGM::Result           &rResult,
+                      surface               *pSurface,
+                      SGM::Interval2D const &Domain);
+
 face *CreateFaceFromSurface(SGM::Result                    &rResult,
                             surface                        *pSurface,
                             std::vector<edge *>            &aEdges,
-                            std::vector<SGM::EdgeSideType> &aTypes);
+                            std::vector<SGM::EdgeSideType> &aTypes,
+                            SGM::Interval2D          const *pDomain=nullptr);
 
 body *CoverPlanarWire(SGM::Result &rResult,
                       body        *pPlanarWire);

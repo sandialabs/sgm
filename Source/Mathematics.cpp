@@ -1012,10 +1012,10 @@ bool PointInPolygon(Point2D const &Pos,
     return nCrosses % 2 == 1;
     }
 
-bool SGM::InTriangle(Point2D const &A,
-                     Point2D const &B,
-                     Point2D const &C,
-                     Point2D const &D)
+bool InTriangle(Point2D const &A,
+                Point2D const &B,
+                Point2D const &C,
+                Point2D const &D)
     {
     bool b1 = SGMInternal::sign(D, A, B) < 0;
     bool b2 = SGMInternal::sign(D, B, C) < 0;
@@ -1027,10 +1027,10 @@ bool SGM::InTriangle(Point2D const &A,
     return false;
     }
 
-bool SGM::InAngle(SGM::Point2D const &A,
-                  SGM::Point2D const &B,
-                  SGM::Point2D const &C,
-                  SGM::Point2D const &D)
+bool InAngle(SGM::Point2D const &A,
+             SGM::Point2D const &B,
+             SGM::Point2D const &C,
+             SGM::Point2D const &D)
     {
     SGM::UnitVector2D X=B-A;
     SGM::UnitVector2D Y(-X.m_v,X.m_u);
@@ -1053,9 +1053,9 @@ bool SGM::InAngle(SGM::Point2D const &A,
     return dAngleD<=dAngleC;
     }
 
-double SGM::SignedArea(Point2D const &A,
-                       Point2D const &B,
-                       Point2D const &C)
+double SignedArea(Point2D const &A,
+                  Point2D const &B,
+                  Point2D const &C)
     {
     return ((A.m_u*B.m_v - B.m_u*A.m_v)+(B.m_u*C.m_v - C.m_u*B.m_v)+(C.m_u*A.m_v - A.m_u*C.m_v))*0.5;
     }
@@ -1099,12 +1099,12 @@ bool InCircumcircle(SGM::Point2D const &A,
     return SGM_MIN_TOL<dDet;
     }
 
-bool SGM::FindCircle(Point3D const &Pos0,
-                     Point3D const &Pos1,
-                     Point3D const &Pos2,
-                     Point3D &Center,
-                     UnitVector3D &Normal,
-                     double &dRadius)
+bool FindCircle(Point3D const &Pos0,
+                Point3D const &Pos1,
+                Point3D const &Pos2,
+                Point3D &Center,
+                UnitVector3D &Normal,
+                double &dRadius)
     {
     Vector3D Up = (Pos2 - Pos1) * (Pos0 - Pos1);
     if (Up.Magnitude() < SGM_ZERO)

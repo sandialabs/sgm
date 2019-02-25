@@ -1259,6 +1259,16 @@ SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
     return {pBody->GetID()};
     }
 
+SGM::Body SGM::CreateSheetBody(SGM::Result           &rResult,
+                               SGM::Surface          &SurfaceID,
+                               SGM::Interval2D const &Domain)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pSurface=(SGMInternal::surface *)pThing->FindEntity(SurfaceID.m_ID);
+    SGMInternal::body *pBody=SGMInternal::CreateSheetBody(rResult,pSurface,Domain);
+    return {pBody->GetID()};
+    }
+
 SGM::Face SGM::CreateFaceFromSurface(SGM::Result                    &rResult,
                                      SGM::Surface                   &SurfaceID,
                                      std::vector<SGM::Edge>         &aEdges,

@@ -85,6 +85,10 @@ SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result                    &rResult,
                                      std::vector<SGM::Edge>         &aEdges,
                                      std::vector<SGM::EdgeSideType> &aTypes);
 
+SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result           &rResult,
+                                     SGM::Surface          &SurfaceID,
+                                     SGM::Interval2D const &Domain);
+
 // If edges are not given then the whole surface is used to make a sheet body.
 
 SGM_EXPORT SGM::Face CreateFaceFromSurface(SGM::Result                    &rResult,

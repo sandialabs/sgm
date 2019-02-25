@@ -13,6 +13,7 @@
 #include "Faceter.h"
 #include "Primitive.h"
 #include "Mathematics.h"
+#include "EntityFunctions.h"
 
 namespace SGMInternal
 {
@@ -4103,6 +4104,55 @@ bool PlaneIsTangentToTorus(plane        const *pPlane,
     return false;
     }
 
+size_t IntersectPlaneAndExtrude(SGM::Result          &rResult,
+                                plane          const *pPlane,
+                                extrude        const *pExtrude,
+                                std::vector<curve *> &aCurves,
+                                double                dTolerance)
+    {
+    SGM::UnitVector3D PlaneNorm=pPlane->m_ZAxis;
+    SGM::UnitVector3D ExtrudeDirection=pExtrude->m_vAxis;
+    double dDot=fabs(PlaneNorm%ExtrudeDirection);
+    if(fabs(dDot-1.0)<dTolerance)
+        {
+        // Transformed copy of the curve.
+
+        SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        IntersectLineAndPlane(pExtrude->m_Origin,ExtrudeDirection,Domain,pPlane,dTolerance,aPoints,aTypes);
+        SGM::Vector3D Vec=aPoints[0]-pExtrude->m_Origin;
+        SGM::Transform3D Trans(Vec);
+        curve *pCurve=(curve *)CopyEntity(rResult,pExtrude->m_pCurve);
+        pCurve->Transform(rResult,Trans);
+        aCurves.push_back(pCurve);
+        }
+    else if(fabs(dDot)<dTolerance)
+        {
+        // A set of lines.
+
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        IntersectCurveAndPlane(rResult,pExtrude->m_pCurve,pPlane->m_Origin,PlaneNorm,aPoints,aTypes,dTolerance);
+        for(auto Pos : aPoints)
+            {
+            aCurves.push_back(new line(rResult,Pos,ExtrudeDirection));
+            }
+        }
+    else
+        {
+        // Projection of the cuve onto the line.
+
+        SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        IntersectLineAndPlane(pExtrude->m_Origin,ExtrudeDirection,Domain,pPlane,dTolerance,aPoints,aTypes);
+        std::vector<SGM::Point3D> aEndPoints;
+        aCurves.push_back(WalkFromTo(rResult,aPoints[0],aEndPoints,pPlane,pExtrude));
+        }
+    return aCurves.size();
+    }
+
 size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
                               plane                const *pPlane,
                               torus                const *pTorus,
@@ -4257,10 +4307,11 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
             torus const *pTorus=(torus const *)pSurface;
             return IntersectPlaneAndTorus(rResult,pPlane,pTorus,aCurves,dTolerance);
             }
-        //case SGM::EntityType::RevolveType:
-        //    {
-        //    throw;
-        //    }
+        case SGM::EntityType::ExtrudeType:
+            {
+            extrude const *pExtrude=(extrude const *)pSurface;
+            return IntersectPlaneAndExtrude(rResult,pPlane,pExtrude,aCurves,dTolerance);
+            }
         default:
             {
             return IntersectPlaneAndSurface(rResult,pPlane,pSurface,aCurves,dTolerance);

@@ -1190,18 +1190,90 @@ body *CoverPlanarWire(SGM::Result &rResult,
     return pBody;
     }
 
+void CreateFaceFromSurface(SGM::Result           &rResult,
+                           surface               *pSurface,
+                           face                  *pFace,
+                           SGM::Interval2D const &Domain)
+    {
+    std::set<vertex*, EntityCompare> sVertices;
+    if(pSurface->ClosedInV()==false)
+        {
+        double dStart=Domain.m_VDomain.m_dMin;
+        double dEnd=Domain.m_VDomain.m_dMax;
+        curve *pStart=pSurface->VParamLine(rResult,dStart);
+        curve *pEnd=pSurface->VParamLine(rResult,dEnd);
+        pStart->SetDomain(Domain.m_UDomain);
+        pEnd->SetDomain(Domain.m_UDomain);
+        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+        if(pEdgeStart->GetStart())
+            {
+            sVertices.insert(pEdgeStart->GetStart());
+            }
+        if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
+            {
+            sVertices.insert(pEdgeStart->GetEnd());
+            }
+        if(pEdgeEnd->GetStart())
+            {
+            sVertices.insert(pEdgeEnd->GetStart());
+            }
+        if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
+            {
+            sVertices.insert(pEdgeEnd->GetEnd());
+            }
+        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
+        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
+        }
+    if(pSurface->ClosedInU()==false)
+        {
+        double dStart=Domain.m_UDomain.m_dMin;
+        double dEnd=Domain.m_UDomain.m_dMax;
+        curve *pStart=pSurface->UParamLine(rResult,dStart);
+        curve *pEnd=pSurface->UParamLine(rResult,dEnd);
+        pStart->SetDomain(Domain.m_VDomain);
+        pEnd->SetDomain(Domain.m_VDomain);
+        edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
+        edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
+        if(pEdgeStart->GetStart())
+            {
+            sVertices.insert(pEdgeStart->GetStart());
+            }
+        if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
+            {
+            sVertices.insert(pEdgeStart->GetEnd());
+            }
+        if(pEdgeEnd->GetStart())
+            {
+            sVertices.insert(pEdgeEnd->GetStart());
+            }
+        if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
+            {
+            sVertices.insert(pEdgeEnd->GetEnd());
+            }
+        pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnRightType);
+        pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnLeftType);
+        }
+    if(pSurface->ClosedInU()==false && pSurface->ClosedInV()==false)
+        {
+        // Merge vertices.
+        MergeVertexSet(rResult, sVertices);
+        }
+    }
+
 face *CreateFaceFromSurface(SGM::Result                    &rResult,
                             surface                        *pSurface,
                             std::vector<edge *>            &aEdges,
-                            std::vector<SGM::EdgeSideType> &aTypes)
+                            std::vector<SGM::EdgeSideType> &aTypes,
+                            SGM::Interval2D          const *pDomain)
     {
     face *pFace=new face(rResult);
     pFace->SetSurface(pSurface);
     size_t nEdges=aEdges.size();
     size_t Index1;
-    std::set<vertex*, EntityCompare> sVertices;
     if(nEdges)
         {
+        std::set<vertex*, EntityCompare> sVertices;
         for(Index1=0;Index1<nEdges;++Index1)
             {
             edge *pEdge=aEdges[Index1];
@@ -1215,67 +1287,12 @@ face *CreateFaceFromSurface(SGM::Result                    &rResult,
         }
     else
         {
-        if(pSurface->ClosedInV()==false)
+        SGM::Interval2D Domain=pSurface->GetDomain();
+        if(pDomain)
             {
-            SGM::Interval2D const &Domain=pSurface->GetDomain();
-            double dStart=Domain.m_VDomain.m_dMin;
-            double dEnd=Domain.m_VDomain.m_dMax;
-            curve *pStart=pSurface->VParamLine(rResult,dStart);
-            curve *pEnd=pSurface->VParamLine(rResult,dEnd);
-            edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
-            edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
-            if(pEdgeStart->GetStart())
-                {
-                sVertices.insert(pEdgeStart->GetStart());
-                }
-            if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
-                {
-                sVertices.insert(pEdgeStart->GetEnd());
-                }
-            if(pEdgeEnd->GetStart())
-                {
-                sVertices.insert(pEdgeEnd->GetStart());
-                }
-            if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
-                {
-                sVertices.insert(pEdgeEnd->GetEnd());
-                }
-            pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnLeftType);
-            pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnRightType);
+            Domain=*pDomain;
             }
-        if(pSurface->ClosedInU()==false)
-            {
-            SGM::Interval2D const &Domain=pSurface->GetDomain();
-            double dStart=Domain.m_UDomain.m_dMin;
-            double dEnd=Domain.m_UDomain.m_dMax;
-            curve *pStart=pSurface->UParamLine(rResult,dStart);
-            curve *pEnd=pSurface->UParamLine(rResult,dEnd);
-            edge *pEdgeStart=CreateEdge(rResult,pStart,nullptr);
-            edge *pEdgeEnd=CreateEdge(rResult,pEnd,nullptr);
-            if(pEdgeStart->GetStart())
-                {
-                sVertices.insert(pEdgeStart->GetStart());
-                }
-            if(pEdgeStart->GetEnd() && pEdgeStart->GetStart()!=pEdgeStart->GetEnd())
-                {
-                sVertices.insert(pEdgeStart->GetEnd());
-                }
-            if(pEdgeEnd->GetStart())
-                {
-                sVertices.insert(pEdgeEnd->GetStart());
-                }
-            if(pEdgeEnd->GetEnd() && pEdgeEnd->GetStart()!=pEdgeEnd->GetEnd())
-                {
-                sVertices.insert(pEdgeEnd->GetEnd());
-                }
-            pFace->AddEdge(rResult,pEdgeStart,SGM::EdgeSideType::FaceOnRightType);
-            pFace->AddEdge(rResult,pEdgeEnd,SGM::EdgeSideType::FaceOnLeftType);
-            }
-        if(pSurface->ClosedInU()==false && pSurface->ClosedInV()==false)
-            {
-            // Merge vertices.
-            MergeVertexSet(rResult, sVertices);
-            }
+        CreateFaceFromSurface(rResult,pSurface,pFace,Domain);
         }
     return pFace;
     }
@@ -1288,7 +1305,23 @@ body *CreateSheetBody(SGM::Result                    &rResult,
     body   *pBody=new body(rResult); 
     volume *pVolume=new volume(rResult);
     pBody->AddVolume(pVolume);
-    face *pFace=CreateFaceFromSurface(rResult,pSurface,aEdges,aTypes);
+    face *pFace=CreateFaceFromSurface(rResult,pSurface,aEdges,aTypes,nullptr);
+    pVolume->AddFace(pFace);
+    pFace->SetSurface(pSurface);
+    pFace->SetSides(2);
+    return pBody;
+    }
+
+body *CreateSheetBody(SGM::Result           &rResult,
+                      surface               *pSurface,
+                      SGM::Interval2D const &Domain)
+    {
+    body   *pBody=new body(rResult); 
+    volume *pVolume=new volume(rResult);
+    pBody->AddVolume(pVolume);
+    std::vector<edge *> aEdges;
+    std::vector<SGM::EdgeSideType> aTypes;
+    face *pFace=CreateFaceFromSurface(rResult,pSurface,aEdges,aTypes,&Domain);
     pVolume->AddFace(pFace);
     pFace->SetSurface(pSurface);
     pFace->SetSides(2);

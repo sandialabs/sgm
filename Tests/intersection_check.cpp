@@ -194,6 +194,63 @@ bool TestIntersections(SGM::Result        &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
      
+TEST(intersection_check, intersect_plane_extrude2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,1,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.push_back(SGM::Point3D(3,1,0));
+    aPoints.push_back(SGM::Point3D(4,0,0));
+    aPoints.push_back(SGM::Point3D(5,1,0));
+    SGM::Curve CurveID=SGM::CreateNUBCurve(rResult,aPoints);
+    SGM::Surface ExtrudeID=SGM::CreateExtrudeSurface(rResult,SGM::UnitVector3D(0,0,1),CurveID);
+    SGM::Interval2D Domain=SGM::GetDomainOfSurface(rResult,ExtrudeID);
+    Domain.m_VDomain.m_dMin=-2;
+    Domain.m_VDomain.m_dMax=2;
+    SGM::CreateSheetBody(rResult,ExtrudeID,Domain);
+
+    SGM::CreateDisk(rResult,SGM::Point3D(2.5,0.5,0),SGM::UnitVector3D(0,1,1),3.5);
+
+    SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0.5,0),SGM::UnitVector3D(0,1,1));
+    
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,PlaneID,ExtrudeID,aCurves);
+    for(auto pCurve : aCurves)
+        { 
+        SGM::CreateEdge(rResult,pCurve);
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_plane_extrude) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(1,1,0));
+    aPoints.push_back(SGM::Point3D(2,0,0));
+    aPoints.push_back(SGM::Point3D(3,1,0));
+    aPoints.push_back(SGM::Point3D(4,0,0));
+    aPoints.push_back(SGM::Point3D(5,1,0));
+    SGM::Curve CurveID=SGM::CreateNUBCurve(rResult,aPoints);
+    SGM::Surface ExtrudeID=SGM::CreateExtrudeSurface(rResult,SGM::UnitVector3D(0,0,1),CurveID);
+
+    SGM::Surface PlaneID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0,-1),SGM::UnitVector3D(0,0,1));
+    SGM::Surface PlaneID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,0.5,0),SGM::UnitVector3D(0,1,0));
+    
+    EXPECT_TRUE(TestIntersections(rResult,ExtrudeID,PlaneID1,1));     // Transformed copy of the extruded curve.
+    EXPECT_TRUE(TestIntersections(rResult,ExtrudeID,PlaneID2,5));     // Five lines.
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 //TEST(intersection_check, plane_nub_surface2) 
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
