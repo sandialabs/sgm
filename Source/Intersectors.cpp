@@ -6906,6 +6906,26 @@ size_t IntersectNUBAndSurface(SGM::Result                &rResult,
         }
     }
 
+size_t IntersectExtrudeAndSurface(SGM::Result                &rResult,
+                                  extrude              const *pExtrude,
+                                  surface              const *pSurface,
+                                  std::vector<curve *>       &aCurves,
+                                  double                      dTolerance)
+    {
+    switch(pSurface->GetSurfaceType())
+        {
+        case SGM::EntityType::PlaneType:
+            {
+            auto pPlane=(plane const *)pSurface;
+            return IntersectPlaneAndExtrude(rResult,pPlane,pExtrude,aCurves,dTolerance);
+            }
+        default:
+            {
+            throw;
+            }
+        }
+    }
+
 size_t IntersectTorusAndSurface(SGM::Result                &rResult,
                                 torus                const *pTorus,
                                 surface              const *pSurface,
@@ -6988,6 +7008,11 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
             {
             auto pNUB=(NUBsurface const *)pSurface1;
             return IntersectNUBAndSurface(rResult,pNUB,pSurface2,aCurves,dTolerance);
+            }
+        case SGM::EntityType::ExtrudeType:
+            {
+            auto pExtrude=(extrude const *)pSurface1;
+            return IntersectExtrudeAndSurface(rResult,pExtrude,pSurface2,aCurves,dTolerance);
             }
         default:
             {
