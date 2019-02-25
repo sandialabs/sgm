@@ -517,4 +517,71 @@ double IntegrateTriangle(double f(SGM::Point2D const &uv, void const *pData),
 //    return dArea;
 //    }
 
+double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
+                         void            const *pData,
+                         SGM::Point2D    const &Start,
+                         double                 dStepSize,
+                         SGM::Interval2D const &Domain,
+                         SGM::Point2D          &Answer)
+    {
+    Answer=Start;
+    size_t nSameSize=0;
+    bool bFound=false;
+    double dF=(*f)(Answer,pData);
+    while(!bFound)
+        {
+        SGM::Point2D uvn0(Answer.m_u-dStepSize,Answer.m_v);
+        SGM::Point2D uv10(Answer.m_u+dStepSize,Answer.m_v);
+        SGM::Point2D uv0n(Answer.m_u,Answer.m_v-dStepSize);
+        SGM::Point2D uv01(Answer.m_u,Answer.m_v+dStepSize);
+
+        double duvn0=(*f)(uvn0,pData);
+        double duv10=(*f)(uv10,pData);
+        double duv0n=(*f)(uv0n,pData);
+        double duv01=(*f)(uv01,pData);
+
+        SGM::UnitVector2D WalkDir(duvn0-duv10,duv0n-duv01);
+        SGM::Vector2D Walk=WalkDir*dStepSize;
+        SGM::Point2D uv=Answer+Walk;
+        if(uv.m_u<Domain.m_UDomain.m_dMin)
+            {
+            uv.m_u=Domain.m_UDomain.m_dMin;
+            }
+        else if(Domain.m_UDomain.m_dMax<uv.m_u)
+            {
+            uv.m_u=Domain.m_UDomain.m_dMax;
+            }
+        if(uv.m_v<Domain.m_VDomain.m_dMin)
+            {
+            uv.m_v=Domain.m_VDomain.m_dMin;
+            }
+        else if(Domain.m_VDomain.m_dMax<uv.m_v)
+            {
+            uv.m_v=Domain.m_VDomain.m_dMax;
+            }
+
+        double dNewF=(*f)(uv,pData);
+        if(dNewF<dF)
+            {
+            ++nSameSize;
+            Answer=uv;
+            dF=dNewF;
+            if(4<nSameSize)
+                {
+                dStepSize*=2.0;
+                }
+            }
+        else if(dStepSize<SGM_MIN_TOL*0.1)
+            {
+            bFound=true;
+            }
+        else
+            {
+            nSameSize=0;
+            dStepSize*=0.5;
+            }
+        }
+    return dF;
+    }
+
 } // End namespace SGMInternal

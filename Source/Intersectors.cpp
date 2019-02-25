@@ -12,6 +12,7 @@
 #include "Topology.h"
 #include "Faceter.h"
 #include "Primitive.h"
+#include "Mathematics.h"
 
 namespace SGMInternal
 {
@@ -5964,6 +5965,16 @@ void FindTangentPoints(SGM::Result               &rResult,
                        double                     dTolerance,
                        std::vector<SGM::Point3D> &aTangents)
     {
+    // Check the apex of the cone.
+
+    SGM::Point3D Apex=pCone->FindApex();
+    SGM::Point3D CPos;
+    pTorus->Inverse(Apex,&CPos);
+    if(SGM::NearEqual(Apex,CPos,SGM_MIN_TOL))
+        {
+        aTangents.push_back(Apex);
+        }
+
     // Find outside tangent points.
 
     std::vector<SGM::Point3D> aTestPoints1;
@@ -6034,6 +6045,113 @@ void FindTangentPoints(SGM::Result               &rResult,
         }
     }
 
+double FindMaxWalk(surface           const *pSurface,
+                   SGM::UnitVector3D const &WalkDir,
+                   SGM::Point2D      const &uv)
+    {
+    if(pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
+        {
+        return 0.2;
+        }
+    else
+        {
+        double c=fabs(pSurface->DirectionalCurvature(uv,WalkDir));
+        if(c<SGM_FIT)
+            {
+            return 1000;
+            }
+        return 0.5/c;
+        }
+    }
+
+double FindHowFarToWalk(surface           const *pSurface1,
+                        surface           const *pSurface2,
+                        SGM::UnitVector3D const &WalkDir,
+                        SGM::Point2D      const &uv1,
+                        SGM::Point2D      const &uv2)
+    {
+    double dMax1=FindMaxWalk(pSurface1,WalkDir,uv1);
+    double dMax2=FindMaxWalk(pSurface2,WalkDir,uv2);
+    return std::min(dMax1,dMax2);
+    }
+
+double SurfaceNormalAngle(SGM::Point2D const &uv,void const *pData)
+    {
+    surface const **ppSurf=(surface const **)pData;
+    surface const *pSurface1=ppSurf[0];
+    surface const *pSurface2=ppSurf[1];
+    SGM::UnitVector3D Norm1,Norm2;
+    SGM::Point3D Pos1,Pos2;
+    pSurface1->Evaluate(uv,&Pos1,nullptr,nullptr,&Norm1);
+    SGM::Point2D uv2=pSurface2->Inverse(Pos1);
+    pSurface2->Evaluate(uv2,&Pos2,nullptr,nullptr,&Norm2);
+    return Norm1.Angle(Norm2)+Pos1.Distance(Pos2);
+    }
+
+bool FindLocalTangentPoint(surface      const *pSurface1,
+                           surface      const *pSurface2,
+                           SGM::Point3D const &Pos,
+                           SGM::Point3D       &TangentPos)
+    {
+    surface const * Data[2];
+    Data[0]=pSurface1;
+    Data[1]=pSurface2;
+    SGM::Point2D Answer;
+    SGM::Point2D uv1=pSurface1->Inverse(Pos);
+    double dVal=SteepestDescent2D(SurfaceNormalAngle,&Data,uv1,SGM_FIT,pSurface1->GetDomain(),Answer);
+    if(dVal<SGM_MIN_TOL)
+        {
+        pSurface1->Evaluate(Answer,&TangentPos);
+        return true;
+        }
+    return false;
+    }
+
+void FindTangentPoints(surface                   const *pSurface1,
+                       surface                   const *pSurface2,
+                       std::vector<SGM::Point3D> const &aWalkPoints,
+                       std::vector<SGM::Point3D>       &aTangents)
+    {
+    for(auto Pos : aWalkPoints)
+        {
+        SGM::Point3D TPos;
+        if(FindLocalTangentPoint(pSurface1,pSurface2,Pos,TPos))
+            {
+            aTangents.push_back(TPos);
+            }
+        }
+    SGM::RemoveDuplicates3D(aTangents,SGM_FIT);
+    }
+
+void OrderWalkingPoints(surface             const *pSurface1,
+                        surface             const *pSurface2,
+                        std::vector<SGM::Point3D> &aWalkPoints,
+                        std::vector<SGM::Point3D> &aNearTangent)
+    {
+    std::vector<std::pair<double,SGM::Point3D> > aPairs;
+    for(auto Pos : aWalkPoints)
+        {
+        SGM::UnitVector3D Norm1,Norm2;
+        SGM::Point2D uv1=pSurface1->Inverse(Pos);
+        SGM::Point2D uv2=pSurface2->Inverse(Pos);
+        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+        double dAngle=Norm1.Angle(Norm2);
+        aPairs.push_back({dAngle,Pos});
+        }
+    aWalkPoints.clear();
+    std::sort(aPairs.begin(),aPairs.end());
+    for(auto Pair : aPairs)
+        {
+        if(Pair.first<0.34906585039886591538473815369772)  // 20 degrees
+            {
+            aNearTangent.push_back(Pair.second);
+            }
+        aWalkPoints.push_back(Pair.second);
+        }
+    std::reverse(aWalkPoints.begin(),aWalkPoints.end());
+    }
+
 size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
                             plane               const *pPlane,
                             NUBsurface          const *pNUB,
@@ -6085,12 +6203,21 @@ size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
                 }
             }
         }
+    SGM::RemoveDuplicates3D(aWalkPoints,SGM_MIN_TOL);
 
+    std::vector<SGM::Point3D> aNearTangent;
+    OrderWalkingPoints(pNUB,pPlane,aWalkPoints,aNearTangent);
+
+    std::vector<SGM::Point3D> aTangents;
+    FindTangentPoints(pNUB,pPlane,aNearTangent,aTangents);
+
+    size_t nCount=0;
     for(auto Pos : aWalkPoints)
         {
+        ++nCount;
         if(PointOnCurves(Pos,aCurves)==false)
             {
-            std::vector<SGM::Point3D> aEndPoints;
+            std::vector<SGM::Point3D> aEndPoints=aTangents;
             aEndPoints.push_back(Pos);
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pNUB));
             }
@@ -6774,37 +6901,6 @@ size_t IntersectSurfaces(SGM::Result                &rResult,
                          std::vector<curve *>       &aCurves,
                          double                      dInTolerance)
     {
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    //   Temp code 
-    //
-    //   Check the line segment case
-    // 
-    // SGM::Point3D Center1(0,0,0),Center2(1,0,0);
-    // SGM::UnitVector3D Normal1(0,0,1),Normal2(0,1,8);
-    // double dRadius1=1,dRadius2=1.2;
-    // std::vector<SGM::Point3D> aPoints1,aPoints2;
-    // 
-    // size_t nMins=FindLocalMins(Center1,Normal1,dRadius1,Center2,Normal2,dRadius2,aPoints1,aPoints2);
-    // 
-    // curve *pCurve1=new circle(rResult,Center1,Normal1,dRadius1);
-    // curve *pCurve2=new circle(rResult,Center2,Normal2,dRadius2);
-    // CreateEdge(rResult,pCurve1,nullptr);
-    // CreateEdge(rResult,pCurve2,nullptr);
-    // size_t Index1;
-    // for(Index1=0;Index1<nMins;++Index1)
-    //     {
-    //     CreateEdge(rResult,aPoints1[Index1],aPoints2[Index1]);
-    //     }
-    // 
-    // if(pSurface1)
-    //     {
-    //     return 0;
-    //     }
-    // 
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
     double dTolerance=dInTolerance;
     if(dTolerance<SGM_MIN_TOL)
         {
@@ -6936,6 +7032,91 @@ bool MidPointIsOff(HermiteNode const &iter1,
     return bAnswer;
     }
 
+bool LeavingDomain(surface           const *pSurface,
+                   SGM::Point2D      const &uv,
+                   SGM::UnitVector3D const &WalkDir3D)
+    {
+    SGM::UnitVector2D WalkDir2D=pSurface->FindSurfaceDirection(uv,WalkDir3D);
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
+        {
+        // At the bottom.
+        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+            {
+            if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
+                {
+                return true;
+                }
+            else if(fabs(uv.m_u-Domain.m_UDomain.m_dMax)<SGM_MIN_TOL && 0<uv.m_u)
+                {
+                return true;
+                }
+            }
+        else if(WalkDir2D.m_v<0)
+            {
+            return true;
+            }
+        }
+    else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+        {
+        // At the top.
+        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+            {
+            if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
+                {
+                return true;
+                }
+            else if(fabs(uv.m_u-Domain.m_UDomain.m_dMax)<SGM_MIN_TOL && 0<uv.m_u)
+                {
+                return true;
+                }
+            }
+        else if(0<WalkDir2D.m_v)
+            {
+            return true;
+            }
+        }
+    else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
+        {
+        // On the left.
+        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+            {
+            if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
+                {
+                return true;
+                }
+            else if(fabs(uv.m_v-Domain.m_VDomain.m_dMax)<SGM_MIN_TOL && 0<uv.m_v)
+                {
+                return true;
+                }
+            }
+        else if(WalkDir2D.m_u<0)
+            {
+            return true;
+            }
+        }
+    else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
+        {
+        // On the right.
+        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+            {
+            if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
+                {
+                return true;
+                }
+            else if(fabs(uv.m_v-Domain.m_VDomain.m_dMax)<SGM_MIN_TOL && 0<uv.m_v)
+                {
+                return true;
+                }
+            }
+        else if(0<WalkDir2D.m_u)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 curve *WalkFromToSub(SGM::Result                     &rResult,
                      SGM::Point3D              const &StartPos,
                      std::vector<SGM::Point3D> const &aEndPoints,
@@ -6948,24 +7129,17 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
     SGM::Point3D CurrentPos=StartPos;
     SGM::Point2D uv1=pSurface1->Inverse(CurrentPos);
     SGM::Point2D uv2=pSurface2->Inverse(CurrentPos);
-    SGM::Interval2D const &Domain1=pSurface1->GetDomain();
-    SGM::Interval2D const &Domain2=pSurface2->GetDomain();
     SGM::UnitVector3D Norm1,Norm2;
     pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
     pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
     SGM::UnitVector3D WalkDir=Norm1*Norm2;
-    double dWalkFraction=0.5; 
 
     bool bFound=false;
     while(!bFound) 
         {
         // Find how far to walk.
 
-        double c1=pSurface1->DirectionalCurvature(uv1,WalkDir);
-        double c2=pSurface2->DirectionalCurvature(uv2,WalkDir);
-        double dMax=std::max(fabs(c1),fabs(c2));
-        double dR=dMax<SGM_ZERO ? SGM_MAX : 1.0/dMax;
-        double dWalkDist=dR*dWalkFraction;
+        double dWalkDist=FindHowFarToWalk(pSurface1,pSurface2,WalkDir,uv1,uv2);
         
         aPoints.push_back(CurrentPos);
         aTangents.push_back(WalkDir);
@@ -6984,6 +7158,10 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
                 {
                 dWalkDist*=0.5;
                 Pos=CurrentPos+WalkDir*dWalkDist;
+                if(dWalkDist<SGM_FIT && aPoints.size()==1)
+                    {
+                    return new PointCurve(rResult,aPoints[0]);
+                    }
                 }
             else
                 {
@@ -7004,6 +7182,13 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
             else
                 {
                 bCutWalk=false;
+                }
+            if(dWalkDist<SGM_MIN_TOL)
+                {
+                if(aPoints.size()==1)
+                    {
+                    return new PointCurve(rResult,aPoints[0]);
+                    }
                 }
             }
         
@@ -7034,20 +7219,25 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
 
         // Check to see if we are at the EndPos.
         
-        if(1000<dWalkDist)
+        if(999.9<dWalkDist)
             {
             bFound=true;
             aPoints.push_back(CurrentPos);
             aTangents.push_back(WalkDir);
             }
-        else if(Domain1.OnBoundary(uv1,SGM_MIN_TOL) ||
-                Domain2.OnBoundary(uv2,SGM_MIN_TOL))
+        else if(LeavingDomain(pSurface1,uv1,WalkDir))
             {
             bFound=true;
             aPoints.push_back(CurrentPos);
             aTangents.push_back(WalkDir);
             }
-        else if(aEndPoints.size())
+        else if(LeavingDomain(pSurface2,uv2,WalkDir))
+            {
+            bFound=true;
+            aPoints.push_back(CurrentPos);
+            aTangents.push_back(WalkDir);
+            }
+        else if(bFound==false && aEndPoints.size())
             {
             size_t nWhere;
             SGM::DistanceToPoints(aEndPoints,CurrentPos,nWhere);
@@ -7118,6 +7308,12 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
 
     // Refine points to meet SGM_FIT times the cord length of the curve tolerance.
 
+    std::vector<SGM::Point3D> aTemp=aPoints;
+    SGM::RemoveDuplicates3D(aTemp,SGM_FIT);
+    if(aTemp.size()==1)
+        {
+        return new PointCurve(rResult,SGM::FindCenterOfMass3D(aPoints));
+        }
     SGM::FindLengths3D(aPoints,aParams);
 
     //int a=1;

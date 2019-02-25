@@ -275,7 +275,7 @@ void surface::SnapToDomain(SGM::Point2D &uv) const
         }
     }
 
-SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
+SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D  const &uv,
                                                 SGM::Vector3D const &Vec) const
     {
     SGM::Vector3D Du,Dv;

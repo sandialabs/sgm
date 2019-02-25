@@ -72,6 +72,14 @@ namespace SGMInternal
                              void                                 const *pData=nullptr,
                              double                                      dTolerance=SGM_ZERO);
 
+    
+    double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
+                             void            const *pData,
+                             SGM::Point2D    const &Start,
+                             double                 StepSize,
+                             SGM::Interval2D const &Domain,
+                             SGM::Point2D          &Answer);
+
     //  Returns the area of pizza slice defined the triangle {P0,P1,P2}
     //  With a cord section of the circle through {P1,P3,P3} subtracted 
     //  from the triangle area if P3 is in triangle {P0,P1,P2} and add
