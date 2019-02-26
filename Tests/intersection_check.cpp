@@ -632,7 +632,7 @@ TEST(intersection_check, intersect_circle_plane)
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
 
-TEST(DISABLED_intersection_check, intersect_torus_torus) 
+TEST(intersection_check, intersect_torus_torus) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

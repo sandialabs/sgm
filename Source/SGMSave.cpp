@@ -12,6 +12,7 @@
 // Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
+__pragma(warning(disable: 4477 ))
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -76,7 +77,7 @@ void WriteEntityList(FILE                                   *pFile,
         auto iter=sEntities->begin();
         while(iter!=sEntities->end())
             {
-            fprintf(pFile,"#%zu",(*iter)->GetID());
+            fprintf(pFile,"#%lu",(*iter)->GetID());
             ++iter;
             if(iter!=sEntities->end())
                 {
@@ -189,7 +190,7 @@ void body::WriteSGM(SGM::Result                  &rResult,
                     FILE                         *pFile,
                     SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Body",GetID());
+    fprintf(pFile,"#%lu Body",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WriteEntityList(pFile," Volumes",(std::set<entity *,EntityCompare> const *)&m_sVolumes);
     WritePoints(pFile,m_aPoints);
@@ -200,7 +201,7 @@ void complex::WriteSGM(SGM::Result                  &rResult,
                        FILE                         *pFile,
                        SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Complex",GetID());
+    fprintf(pFile,"#%lu Complex",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoints(pFile,m_aPoints);
     WriteUnsignedInts(pFile," Segments",m_aSegments);
@@ -212,7 +213,7 @@ void volume::WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Volume",GetID());
+    fprintf(pFile,"#%lu Volume",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     if(!m_sFaces.empty())
         {
@@ -229,7 +230,7 @@ void face::WriteSGM(SGM::Result                  &rResult,
                     FILE                         *pFile,
                     SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Face",GetID());
+    fprintf(pFile,"#%lu Face",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WriteEntityList(pFile," Edges",(std::set<entity *,EntityCompare> const *)&m_sEdges);
     std::vector<unsigned int> aSides;
@@ -240,7 +241,7 @@ void face::WriteSGM(SGM::Result                  &rResult,
         aSides.push_back((unsigned int)(m_mSideType.find(pEdge)->second));
         }
     WriteUnsignedInts(pFile," EdgeSides",aSides);
-    fprintf(pFile," Surface #%zu",m_pSurface->GetID());
+    fprintf(pFile," Surface #%lu",m_pSurface->GetID());
     if(m_nSides==2)
         {
         fprintf(pFile," DoubleSided");
@@ -261,16 +262,16 @@ void edge::WriteSGM(SGM::Result                  &rResult,
                     FILE                         *pFile,
                     SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Edge",GetID());
+    fprintf(pFile,"#%lu Edge",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     if(m_pStart)
         {
-        fprintf(pFile," Start #%zu End #%zu Curve #%zu;\n",
+        fprintf(pFile," Start #%lu End #%lu Curve #%lu;\n",
             m_pStart->GetID(),m_pEnd->GetID(),m_pCurve->GetID());
         }
     else
         {
-        fprintf(pFile," Curve #%zu;\n",m_pCurve->GetID());
+        fprintf(pFile," Curve #%lu;\n",m_pCurve->GetID());
         }
     }
 
@@ -278,7 +279,7 @@ void vertex::WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Vertex ",GetID());
+    fprintf(pFile,"#%lu Vertex ",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile,"Point ",m_Pos);
     fprintf(pFile,";\n"); 
@@ -288,7 +289,7 @@ void attribute::WriteSGM(SGM::Result                  &rResult,
                          FILE                         *pFile,
                          SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Attribute",GetID());
+    fprintf(pFile,"#%lu Attribute",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     if(m_AttributeType==SGM::AttributeType)
         {
@@ -360,7 +361,7 @@ void line::WriteSGM(SGM::Result                  &rResult,
                     FILE                         *pFile,
                     SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Line",GetID());
+    fprintf(pFile,"#%lu Line",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Axis ",SGM::Point3D(m_Axis));
@@ -371,7 +372,7 @@ void circle::WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Circle",GetID());
+    fprintf(pFile,"#%lu Circle",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
@@ -383,7 +384,7 @@ void ellipse::WriteSGM(SGM::Result                  &rResult,
                        FILE                         *pFile,
                        SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Ellipse",GetID());
+    fprintf(pFile,"#%lu Ellipse",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
@@ -395,7 +396,7 @@ void parabola::WriteSGM(SGM::Result                  &rResult,
                         FILE                         *pFile,
                         SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Parabola",GetID());
+    fprintf(pFile,"#%lu Parabola",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
@@ -407,7 +408,7 @@ void hyperbola::WriteSGM(SGM::Result                  &rResult,
                          FILE                         *pFile,
                          SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Hyperbola",GetID());
+    fprintf(pFile,"#%lu Hyperbola",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
@@ -419,7 +420,7 @@ void NUBcurve::WriteSGM(SGM::Result                  &rResult,
                         FILE                         *pFile,
                         SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu NUBCurve",GetID());
+    fprintf(pFile,"#%lu NUBCurve",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoints(pFile,m_aControlPoints);
     WriteDoubles(pFile,m_aKnots);
@@ -430,7 +431,7 @@ void NURBcurve::WriteSGM(SGM::Result                  &rResult,
                          FILE                         *pFile,
                          SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu NURBCurve ",GetID());
+    fprintf(pFile,"#%lu NURBCurve ",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoints4D(pFile,m_aControlPoints);
     WriteDoubles(pFile,m_aKnots);
@@ -441,7 +442,7 @@ void PointCurve::WriteSGM(SGM::Result                  &rResult,
                           FILE                         *pFile,
                           SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu PointCurve",GetID());
+    fprintf(pFile,"#%lu PointCurve",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," ",m_Pos);
     fprintf(pFile,";\n");
@@ -451,7 +452,7 @@ void hermite::WriteSGM(SGM::Result                  &rResult,
                        FILE                         *pFile,
                        SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Hermite",GetID());
+    fprintf(pFile,"#%lu Hermite",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoints(pFile,m_aPoints);
     WriteVectors(pFile,m_aTangents);
@@ -463,7 +464,7 @@ void TorusKnot::WriteSGM(SGM::Result                  &rResult,
                          FILE                         *pFile,
                          SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu TorusKnot",GetID());
+    fprintf(pFile,"#%lu TorusKnot",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
@@ -475,7 +476,7 @@ void plane::WriteSGM(SGM::Result                  &rResult,
                      FILE                         *pFile,
                      SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Plane",GetID());
+    fprintf(pFile,"#%lu Plane",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
@@ -487,7 +488,7 @@ void cylinder::WriteSGM(SGM::Result                  &rResult,
                         FILE                         *pFile,
                         SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Cylinder",GetID());
+    fprintf(pFile,"#%lu Cylinder",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
@@ -499,7 +500,7 @@ void cone::WriteSGM(SGM::Result                  &rResult,
                     FILE                         *pFile,
                     SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Cone",GetID());
+    fprintf(pFile,"#%lu Cone",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
@@ -511,7 +512,7 @@ void sphere::WriteSGM(SGM::Result                  &rResult,
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Sphere",GetID());
+    fprintf(pFile,"#%lu Sphere",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
@@ -523,7 +524,7 @@ void torus::WriteSGM(SGM::Result                  &rResult,
                      FILE                         *pFile,
                      SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Torus",GetID());
+    fprintf(pFile,"#%lu Torus",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_ZAxis));
@@ -535,13 +536,13 @@ void NUBsurface::WriteSGM(SGM::Result                  &rResult,
                           FILE                         *pFile,
                           SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu NUBSurface",GetID());
+    fprintf(pFile,"#%lu NUBSurface",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     size_t nRows=m_aaControlPoints.size();
     size_t Index1;
     WriteDoubles(pFile,m_aUKnots);
     WriteDoubles(pFile,m_aVKnots);
-    fprintf(pFile," %zu ",nRows);
+    fprintf(pFile," %lu ",nRows);
     for(Index1=0;Index1<nRows;++Index1)
         {
         WritePoints(pFile,m_aaControlPoints[Index1]);
@@ -553,13 +554,13 @@ void NURBsurface::WriteSGM(SGM::Result                  &rResult,
                            FILE                         *pFile,
                            SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu NURBSurface",GetID());
+    fprintf(pFile,"#%lu NURBSurface",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     size_t nRows=m_aaControlPoints.size();
     size_t Index1;
     WriteDoubles(pFile,m_aUKnots);
     WriteDoubles(pFile,m_aVKnots);
-    fprintf(pFile," %zu ",nRows);
+    fprintf(pFile," %lu ",nRows);
     for(Index1=0;Index1<nRows;++Index1)
         {
         WritePoints4D(pFile,m_aaControlPoints[Index1]);
@@ -571,7 +572,7 @@ void revolve::WriteSGM(SGM::Result                  &rResult,
                        FILE                         *pFile,
                        SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Revolve",GetID());
+    fprintf(pFile,"#%lu Revolve",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Axis ",SGM::Point3D(m_ZAxis));
@@ -583,7 +584,7 @@ void extrude::WriteSGM(SGM::Result                  &rResult,
                        FILE                         *pFile,
                        SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Extrude",GetID());
+    fprintf(pFile,"#%lu Extrude",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     WritePoint(pFile," Origin ",m_Origin);
     WritePoint(pFile," Axis ",SGM::Point3D(m_vAxis));
@@ -594,7 +595,7 @@ void reference::WriteSGM(SGM::Result                  &rResult,
                          FILE                         *pFile,
                          SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Reference",GetID());
+    fprintf(pFile,"#%lu Reference",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     }
 
@@ -602,7 +603,7 @@ void assembly::WriteSGM(SGM::Result                  &rResult,
                         FILE                         *pFile,
                         SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Assembly",GetID());
+    fprintf(pFile,"#%lu Assembly",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     }
 
@@ -610,7 +611,7 @@ void thing::WriteSGM(SGM::Result                  &rResult,
                      FILE                         *pFile,
                      SGM::TranslatorOptions const &Options) const
     {
-    fprintf(pFile,"#%zu Thing",GetID());
+    fprintf(pFile,"#%lu Thing",GetID());
     entity::WriteSGM(rResult,pFile,Options);
     fprintf(pFile,";\n");
     for(auto iter : m_mAllEntities)
