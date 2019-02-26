@@ -571,7 +571,7 @@ double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
                 dStepSize*=2.0;
                 }
             }
-        else if(dStepSize<SGM_MIN_TOL*0.1)
+        else if(dStepSize<1E-10)
             {
             bFound=true;
             }

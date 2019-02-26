@@ -193,6 +193,74 @@ bool TestIntersections(SGM::Result        &rResult,
 //  Start of G Tests
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+TEST(intersection_check, intersect_plane_revolve2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+    SGM::Interval2D const &Domain=SGM::GetDomainOfSurface(rResult,RevolveID);
+    SGM::CreateSheetBody(rResult,RevolveID,Domain);
+
+    double dDist=1.0001;
+    SGM::CreateDisk(rResult,SGM::Point3D(4,dDist,0),SGM::UnitVector3D(0,1,0),5);
+    
+    SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(4,dDist,0),SGM::UnitVector3D(0,1,0));
+    
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,PlaneID,RevolveID,aCurves);
+    for(auto pCurve : aCurves)
+        { 
+        SGM::CreateEdge(rResult,pCurve);
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_plane_revolve) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+    
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID1=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+
+    std::vector<SGM::Point3D> aPoints2;
+    aPoints2.push_back(SGM::Point3D(1,0,1));
+    aPoints2.push_back(SGM::Point3D(2,0,0));
+    aPoints2.push_back(SGM::Point3D(3,0,1));
+    aPoints2.push_back(SGM::Point3D(4,0,0));
+    aPoints2.push_back(SGM::Point3D(5,0,1));
+    SGM::Curve CurveID2=SGM::CreateNUBCurve(rResult,aPoints2);
+    SGM::Surface RevolveID2=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,0),CurveID2);
+
+    SGM::Surface PlaneID1=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(2.5,3,0),SGM::UnitVector3D(0,1,0));
+    SGM::Surface PlaneID2=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(0,0,0.5),SGM::UnitVector3D(0,0,1));
+    
+    EXPECT_TRUE(TestIntersections(rResult,PlaneID1,RevolveID1,2));     // Two copies of the defining revolve curve.
+    EXPECT_TRUE(TestIntersections(rResult,PlaneID2,RevolveID2,4));     // Four circles.
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
      
 //TEST(intersection_check, intersect_plane_extrude2) 
 //{

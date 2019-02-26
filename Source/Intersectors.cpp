@@ -4104,6 +4104,172 @@ bool PlaneIsTangentToTorus(plane        const *pPlane,
     return false;
     }
 
+double SurfaceNormalAngle(SGM::Point2D const &uv,void const *pData)
+    {
+    surface const **ppSurf=(surface const **)pData;
+    surface const *pSurface1=ppSurf[0];
+    surface const *pSurface2=ppSurf[1];
+    SGM::UnitVector3D Norm1,Norm2;
+    SGM::Point3D Pos1,Pos2;
+    pSurface1->Evaluate(uv,&Pos1,nullptr,nullptr,&Norm1);
+    SGM::Point2D uv2=pSurface2->Inverse(Pos1);
+    pSurface2->Evaluate(uv2,&Pos2,nullptr,nullptr,&Norm2);
+    if(Norm1%Norm2<0)
+        {
+        Norm2.Negate();
+        }
+    return Norm1.Angle(Norm2)+Pos1.Distance(Pos2);
+    }
+
+bool FindLocalTangentPoint(surface      const *pSurface1,
+                           surface      const *pSurface2,
+                           SGM::Point3D const &Pos,
+                           SGM::Point3D       &TangentPos)
+    {
+    surface const * Data[2];
+    Data[0]=pSurface1;
+    Data[1]=pSurface2;
+    SGM::Point2D Answer;
+    SGM::Point2D uv1=pSurface1->Inverse(Pos);
+    double dVal=SteepestDescent2D(SurfaceNormalAngle,&Data,uv1,SGM_FIT,pSurface1->GetDomain(),Answer);
+    if(dVal<SGM_MIN_TOL)
+        {
+        pSurface1->Evaluate(Answer,&TangentPos);
+        return true;
+        }
+    return false;
+    }
+
+void FindTangentPoints(surface                   const *pSurface1,
+                       surface                   const *pSurface2,
+                       std::vector<SGM::Point3D> const &aWalkPoints,
+                       std::vector<SGM::Point3D>       &aTangents)
+    {
+    for(auto Pos : aWalkPoints)
+        {
+        SGM::Point3D TPos;
+        if(FindLocalTangentPoint(pSurface1,pSurface2,Pos,TPos))
+            {
+            aTangents.push_back(TPos);
+            }
+        }
+    SGM::RemoveDuplicates3D(aTangents,SGM_FIT);
+    }
+
+void OrderWalkingPoints(surface             const *pSurface1,
+                        surface             const *pSurface2,
+                        std::vector<SGM::Point3D> &aWalkPoints,
+                        std::vector<SGM::Point3D> &aNearTangent)
+    {
+    std::vector<std::pair<double,SGM::Point3D> > aPairs;
+    for(auto Pos : aWalkPoints)
+        {
+        SGM::UnitVector3D Norm1,Norm2;
+        SGM::Point2D uv1=pSurface1->Inverse(Pos);
+        SGM::Point2D uv2=pSurface2->Inverse(Pos);
+        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
+        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
+        if(Norm1%Norm2<0)
+            {
+            Norm2.Negate();
+            }
+        double dAngle=Norm1.Angle(Norm2);
+        aPairs.push_back({dAngle,Pos});
+        }
+    aWalkPoints.clear();
+    std::sort(aPairs.begin(),aPairs.end());
+    for(auto Pair : aPairs)
+        {
+        if(Pair.first<0.34906585039886591538473815369772)  // 20 degrees
+            {
+            aNearTangent.push_back(Pair.second);
+            }
+        aWalkPoints.push_back(Pair.second);
+        }
+    std::reverse(aWalkPoints.begin(),aWalkPoints.end());
+    }
+
+size_t IntersectPlaneAndRevolve(SGM::Result          &rResult,
+                                plane          const *pPlane,
+                                revolve        const *pRevolve,
+                                std::vector<curve *> &aCurves,
+                                double                dTolerance)
+    {
+    SGM::UnitVector3D PlaneNorm=pPlane->m_ZAxis;
+    SGM::UnitVector3D Axis=pRevolve->m_ZAxis;
+    double dDot=fabs(PlaneNorm%Axis);
+    SGM::Point3D PlanePos;
+    SGM::Point3D RevolveCenter=pRevolve->m_Origin;
+    pPlane->Inverse(RevolveCenter,&PlanePos);
+    if(fabs(dDot)<dTolerance && SGM::NearEqual(PlanePos,RevolveCenter,dTolerance))
+        {
+        SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        IntersectLineAndRevolve(rResult,RevolveCenter,PlaneNorm*Axis,Domain,pRevolve,dTolerance,aPoints,aTypes);
+        for(auto Pos : aPoints)
+            {
+            SGM::Point2D uv=pRevolve->Inverse(Pos);
+            SGM::Transform3D Rotate(RevolveCenter,Axis,uv.m_u);
+            curve *pCopy=(curve *)CopyEntity(rResult,pRevolve->m_pCurve);
+            pCopy->Transform(rResult,Rotate);
+            aCurves.push_back(pCopy);
+            }
+        }
+    else if(SGM::NearEqual(fabs(dDot),1.0,dTolerance,false))
+        {
+        SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        SGM::Point3D Pos;
+        pRevolve->m_pCurve->Evaluate(pRevolve->m_pCurve->GetDomain().MidPoint(),&Pos);
+        SGM::UnitVector3D Dir=Axis*(Pos-PlanePos)*Axis;
+        IntersectLineAndCurve(rResult,PlanePos,Dir,Domain,pRevolve->m_pCurve,dTolerance,aPoints,aTypes);
+        for(auto Pos : aPoints)
+            {
+            double dRadius=PlanePos.Distance(Pos);
+            aCurves.push_back(new circle(rResult,PlanePos,Axis,dRadius,&Dir));
+            }
+        }
+    else
+        {
+        // Run down the curve and use circle plane intersection to find walking points.
+
+        FacetOptions Options;
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<double> aParams;
+        FacetCurve(pRevolve->m_pCurve,pRevolve->m_pCurve->GetDomain(),Options,aPoints,aParams);
+        std::vector<SGM::Point3D> aWalkingPoints;
+        for(auto Pos : aPoints)
+            {
+            SGM::Point3D Center=ClosestPointOnLine(Pos,RevolveCenter,Axis);
+            std::vector<SGM::Point3D> aPoints2;
+            std::vector<SGM::IntersectionType> aTypes2;
+            double dRadius=Center.Distance(Pos);
+            IntersectCircleAndPlane(Center,Axis,dRadius,pPlane->m_Origin,PlaneNorm,dTolerance,aPoints2,aTypes2);
+            aWalkingPoints.insert(aWalkingPoints.begin(),aPoints2.begin(),aPoints2.end());
+            }
+        std::vector<SGM::Point3D> aNearTangent;
+        OrderWalkingPoints(pRevolve,pPlane,aWalkingPoints,aNearTangent);
+
+        std::vector<SGM::Point3D> aTangents;
+        FindTangentPoints(pPlane,pRevolve,aNearTangent,aTangents);
+
+        size_t nCount=0;
+        for(auto Pos : aWalkingPoints)
+            {
+            ++nCount;
+            if(PointOnCurves(Pos,aCurves)==false)
+                {
+                std::vector<SGM::Point3D> aEndPoints=aTangents;
+                aEndPoints.push_back(Pos);
+                aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pRevolve));
+                }
+            }
+        }
+    return aCurves.size();
+    }
+
 size_t IntersectPlaneAndExtrude(SGM::Result          &rResult,
                                 plane          const *pPlane,
                                 extrude        const *pExtrude,
@@ -4311,6 +4477,11 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
             {
             extrude const *pExtrude=(extrude const *)pSurface;
             return IntersectPlaneAndExtrude(rResult,pPlane,pExtrude,aCurves,dTolerance);
+            }
+        case SGM::EntityType::RevolveType:
+            {
+            revolve const *pRevolve=(revolve const *)pSurface;
+            return IntersectPlaneAndRevolve(rResult,pPlane,pRevolve,aCurves,dTolerance);
             }
         default:
             {
@@ -6154,83 +6325,6 @@ double FindHowFarToWalk(surface           const *pSurface1,
     return std::min(dMax1,dMax2);
     }
 
-double SurfaceNormalAngle(SGM::Point2D const &uv,void const *pData)
-    {
-    surface const **ppSurf=(surface const **)pData;
-    surface const *pSurface1=ppSurf[0];
-    surface const *pSurface2=ppSurf[1];
-    SGM::UnitVector3D Norm1,Norm2;
-    SGM::Point3D Pos1,Pos2;
-    pSurface1->Evaluate(uv,&Pos1,nullptr,nullptr,&Norm1);
-    SGM::Point2D uv2=pSurface2->Inverse(Pos1);
-    pSurface2->Evaluate(uv2,&Pos2,nullptr,nullptr,&Norm2);
-    return Norm1.Angle(Norm2)+Pos1.Distance(Pos2);
-    }
-
-bool FindLocalTangentPoint(surface      const *pSurface1,
-                           surface      const *pSurface2,
-                           SGM::Point3D const &Pos,
-                           SGM::Point3D       &TangentPos)
-    {
-    surface const * Data[2];
-    Data[0]=pSurface1;
-    Data[1]=pSurface2;
-    SGM::Point2D Answer;
-    SGM::Point2D uv1=pSurface1->Inverse(Pos);
-    double dVal=SteepestDescent2D(SurfaceNormalAngle,&Data,uv1,SGM_FIT,pSurface1->GetDomain(),Answer);
-    if(dVal<SGM_MIN_TOL)
-        {
-        pSurface1->Evaluate(Answer,&TangentPos);
-        return true;
-        }
-    return false;
-    }
-
-void FindTangentPoints(surface                   const *pSurface1,
-                       surface                   const *pSurface2,
-                       std::vector<SGM::Point3D> const &aWalkPoints,
-                       std::vector<SGM::Point3D>       &aTangents)
-    {
-    for(auto Pos : aWalkPoints)
-        {
-        SGM::Point3D TPos;
-        if(FindLocalTangentPoint(pSurface1,pSurface2,Pos,TPos))
-            {
-            aTangents.push_back(TPos);
-            }
-        }
-    SGM::RemoveDuplicates3D(aTangents,SGM_FIT);
-    }
-
-void OrderWalkingPoints(surface             const *pSurface1,
-                        surface             const *pSurface2,
-                        std::vector<SGM::Point3D> &aWalkPoints,
-                        std::vector<SGM::Point3D> &aNearTangent)
-    {
-    std::vector<std::pair<double,SGM::Point3D> > aPairs;
-    for(auto Pos : aWalkPoints)
-        {
-        SGM::UnitVector3D Norm1,Norm2;
-        SGM::Point2D uv1=pSurface1->Inverse(Pos);
-        SGM::Point2D uv2=pSurface2->Inverse(Pos);
-        pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
-        pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
-        double dAngle=Norm1.Angle(Norm2);
-        aPairs.push_back({dAngle,Pos});
-        }
-    aWalkPoints.clear();
-    std::sort(aPairs.begin(),aPairs.end());
-    for(auto Pair : aPairs)
-        {
-        if(Pair.first<0.34906585039886591538473815369772)  // 20 degrees
-            {
-            aNearTangent.push_back(Pair.second);
-            }
-        aWalkPoints.push_back(Pair.second);
-        }
-    std::reverse(aWalkPoints.begin(),aWalkPoints.end());
-    }
-
 size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
                             plane               const *pPlane,
                             NUBsurface          const *pNUB,
@@ -7489,6 +7583,19 @@ curve *WalkFromTo(SGM::Result                     &rResult,
             pHermite1->Negate();
             pHermite1->Concatenate(pHermite2);
             rResult.GetThing()->DeleteEntity(pHermite2);
+            }
+        else
+            {
+            rResult.GetThing()->DeleteEntity(pCurve2);
+            }
+        }
+    else if(pCurve1->GetCurveType()==SGM::EntityType::PointCurveType)
+        {
+        curve *pCurve2=WalkFromToSub(rResult,StartPos,aEndPoints,pSurface2,pSurface1);
+        if(pCurve2->GetCurveType()==SGM::EntityType::HermiteCurveType)
+            {
+            rResult.GetThing()->DeleteEntity(pCurve1);
+            pCurve1=pCurve2;
             }
         else
             {
