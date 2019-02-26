@@ -527,8 +527,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         return true;
         }
 
-    SGM::UnitVector3D ZAnswer;
-    if(IsPlanar(aPoints,Origin,ZAnswer))
+    SGM::UnitVector3D ZAnswer1;
+    if(IsPlanar(aPoints,Origin,ZAnswer1))
         {
         SGM::UnitVector3D ZAnswer=(aPoints[0]-aPoints[1])*(aPoints[2]-aPoints[1]);
         SGM::UnitVector3D XNorm=ZAnswer.Orthogonal();

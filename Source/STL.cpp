@@ -66,7 +66,7 @@ void SaveSTL(SGM::Result                  &rResult,
     while(ComplexIter!=sComplexes.end())
         {
         complex *pComplex=*ComplexIter;
-        fprintf(pFile,"solid Complex %lu\n",pComplex->GetID());
+        fprintf(pFile,"solid Complex %zu\n",pComplex->GetID());
         std::vector<SGM::Point3D> const &aPoints=pComplex->GetPoints();
         std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
         size_t Index1;
@@ -88,7 +88,7 @@ void SaveSTL(SGM::Result                  &rResult,
             fprintf(pFile,"      endloop\n");
             fprintf(pFile,"   endfacet\n");
             }
-        fprintf(pFile,"endsolid Complex %lu\n",pComplex->GetID());
+        fprintf(pFile,"endsolid Complex %zu\n",pComplex->GetID());
         ++ComplexIter;
         }
 
@@ -103,7 +103,7 @@ void SaveSTL(SGM::Result                  &rResult,
             {
             face *pFace=*FaceIter;
             //pFace=(face *)rResult.GetThing()->FindEntity(57);
-            fprintf(pFile,"solid Face %lu\n",pFace->GetID());
+            fprintf(pFile,"solid Face %zu\n",pFace->GetID());
             std::vector<SGM::Point3D> const &aPoints=pFace->GetPoints3D(rResult);
             std::vector<unsigned int> const &aTriangles=pFace->GetTriangles(rResult);
             size_t Index1;
@@ -125,14 +125,14 @@ void SaveSTL(SGM::Result                  &rResult,
                 fprintf(pFile,"      endloop\n");
                 fprintf(pFile,"   endfacet\n");
                 }
-            fprintf(pFile,"endsolid Face %lu\n",pFace->GetID());
+            fprintf(pFile,"endsolid Face %zu\n",pFace->GetID());
             ++FaceIter;
             }
         else
             {
             face *pFace=*FaceIter;
             //pFace=(face *)rResult.GetThing()->FindEntity(57);
-            fprintf(pFile,"solid Face %lu\n",pFace->GetID());
+            fprintf(pFile,"solid Face %zu\n",pFace->GetID());
             std::vector<SGM::Point2D> const &aPoints=pFace->GetPoints2D(rResult);
             std::vector<unsigned int> const &aTriangles=pFace->GetTriangles(rResult);
             size_t Index1;
@@ -154,7 +154,7 @@ void SaveSTL(SGM::Result                  &rResult,
                 fprintf(pFile,"      endloop\n");
                 fprintf(pFile,"   endfacet\n");
                 }
-            fprintf(pFile,"endsolid Face %lu\n",pFace->GetID());
+            fprintf(pFile,"endsolid Face %zu\n",pFace->GetID());
             ++FaceIter;
             }
         }
