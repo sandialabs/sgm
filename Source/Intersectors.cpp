@@ -4340,9 +4340,9 @@ size_t IntersectPlaneAndRevolve(SGM::Result          &rResult,
         SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        SGM::Point3D Pos;
-        pRevolve->m_pCurve->Evaluate(pRevolve->m_pCurve->GetDomain().MidPoint(),&Pos);
-        SGM::UnitVector3D Dir=Axis*(Pos-PlanePos)*Axis;
+        SGM::Point3D Pos1;
+        pRevolve->m_pCurve->Evaluate(pRevolve->m_pCurve->GetDomain().MidPoint(),&Pos1);
+        SGM::UnitVector3D Dir=Axis*(Pos1-PlanePos)*Axis;
         IntersectLineAndCurve(rResult,PlanePos,Dir,Domain,pRevolve->m_pCurve,dTolerance,aPoints,aTypes);
         for(auto Pos : aPoints)
             {
