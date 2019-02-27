@@ -68,13 +68,14 @@ void curve::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
-double curve::NewtonsMethod(double              dStart, 
-                            SGM::Point3D const &Pos) const
+double NewtonsMethodSub(double              dStart, 
+                        SGM::Point3D const &Pos,
+                        curve        const *pCurve)
     {
     SGM::Point3D Origin;
     SGM::Vector3D Vec;
-    Evaluate(dStart,&Origin,&Vec);
-    SGM::Interval1D const &Domain=GetDomain();
+    pCurve->Evaluate(dStart,&Origin,&Vec);
+    SGM::Interval1D const &Domain=pCurve->GetDomain();
     double dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
     dStart+=dt;
     size_t nCount=0;
@@ -82,7 +83,7 @@ double curve::NewtonsMethod(double              dStart,
     double dTol=std::max(1.0,dDist)*SGM_ZERO;
     while(nCount<100 && (dTol<dt || dt<-dTol))
         {
-        Evaluate(dStart,&Origin,&Vec);
+        pCurve->Evaluate(dStart,&Origin,&Vec);
         dt=((Pos-Origin)%Vec)/Vec.MagnitudeSquared();
         dStart+=dt;
         if(dStart<Domain.m_dMin)
@@ -97,6 +98,44 @@ double curve::NewtonsMethod(double              dStart,
             }
         ++nCount;
         }
+    return dStart;
+    }
+
+double curve::NewtonsMethod(double              dStart, 
+                            SGM::Point3D const &Pos) const
+    {
+    double dParam=dStart;
+    dStart=NewtonsMethodSub(dStart,Pos,this);
+
+    // Newton's method might not work at the end of the curve.
+    // Hence, check both sides if the curve is closed.
+
+    if(m_bClosed)
+        {
+        if(fabs(dParam-m_Domain.m_dMin)<SGM_MIN_TOL)
+            {
+            double dAnswerMax=NewtonsMethodSub(m_Domain.m_dMax,Pos,this);
+            SGM::Point3D CPos1,CPos2;
+            Evaluate(dStart,&CPos1);
+            Evaluate(dAnswerMax,&CPos2);
+            if(Pos.DistanceSquared(CPos2)+SGM_MIN_TOL<Pos.DistanceSquared(CPos1))
+                {
+                dStart=dAnswerMax;
+                }
+            }
+        if(fabs(dParam-m_Domain.m_dMax)<SGM_MIN_TOL)
+            {
+            double dAnswerMin=NewtonsMethodSub(m_Domain.m_dMin,Pos,this);
+            SGM::Point3D CPos1,CPos2;
+            Evaluate(dStart,&CPos1);
+            Evaluate(dAnswerMin,&CPos2);
+            if(Pos.DistanceSquared(CPos2)+SGM_MIN_TOL<Pos.DistanceSquared(CPos1))
+                {
+                dStart=dAnswerMin;
+                }
+            }
+        }
+
     return dStart;
     }
 

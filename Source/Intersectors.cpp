@@ -4287,25 +4287,15 @@ size_t IntersectPlaneAndRevolve(SGM::Result          &rResult,
         std::vector<SGM::Point3D> aTangents;
         FindTangentPoints(pPlane,pRevolve,aNearTangent,aTangents);
 
-        std::vector<SGM::Point3D> aBadPoints;
         for(auto Pos : aWalkingPoints)
             {
             if(PointOnCurves(Pos,aCurves,pPlane,pRevolve)==false)
                 {
-                if(aCurves.size()==6)
-                    {
-                    aBadPoints.push_back(Pos);
-                    }
-                else
-                    {
-                    std::vector<SGM::Point3D> aEndPoints=aTangents;
-                    aEndPoints.push_back(Pos);
-                    aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pRevolve));
-                    }
+                std::vector<SGM::Point3D> aEndPoints=aTangents;
+                aEndPoints.push_back(Pos);
+                aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pRevolve));
                 }
             }
-
-        new complex(rResult,aBadPoints);
         }
     return aCurves.size();
     }
@@ -5365,7 +5355,10 @@ void FindWalkingPoints(SGM::Result               &rResult,
     std::sort(aTemp.begin(),aTemp.end());
     for(auto AnglePoint : aTemp)
         {
-        aWalk.push_back(AnglePoint.second);
+        if(PointOnSurfaces(AnglePoint.second,pSurface,pTorus,SGM_FIT))
+            {
+            aWalk.push_back(AnglePoint.second);
+            }
         }
     }
 
