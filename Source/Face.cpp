@@ -711,6 +711,18 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return aVolumeEstimated[nLevel-1];
     }
 
+SGM::UnitVector3D face::FindNormalOfFace(SGM::Point3D const &Pos) const
+    {
+    SGM::Point2D uv=m_pSurface->Inverse(Pos);
+    SGM::UnitVector3D Norm;
+    m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+    if(m_bFlipped)
+        {
+        Norm.Negate();
+        }
+    return Norm;
+    }
+
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const

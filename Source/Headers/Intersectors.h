@@ -546,8 +546,8 @@ size_t SolveTwoConics(std::vector<double>        aCoefficients1,
 
 bool PointOnCurves(SGM::Point3D         const &Pos,
                    std::vector<curve *> const &aCurves,
-                   surface              const *pSurface1=nullptr,
-                   surface              const *pSurface2=nullptr);
+                   surface              const *pSurface1,
+                   surface              const *pSurface2);
 
 }
 #endif // INTERSECTOR_H

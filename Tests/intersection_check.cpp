@@ -219,7 +219,7 @@ TEST(intersection_check, intersect_plane_revolve2)
     SGM::Interval2D const &Domain=SGM::GetDomainOfSurface(rResult,RevolveID);
     SGM::CreateSheetBody(rResult,RevolveID,Domain);
 
-    double dDist=1.0001;
+    double dDist=1.000525;
     SGM::CreateDisk(rResult,SGM::Point3D(4,dDist,0),SGM::UnitVector3D(0,1,0),5);
     
     SGM::Surface PlaneID=SGM::CreatePlaneFromOriginAndNormal(rResult,SGM::Point3D(4,dDist,0),SGM::UnitVector3D(0,1,0));
@@ -427,7 +427,7 @@ TEST(intersection_check, plane_nub_surface)
 //    SGMTesting::ReleaseTestThing(pThing);
 //} 
  
-TEST(intersection_check, intersect_cone_torus) 
+TEST(intersection_check, DISABLED_intersect_cone_torus) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
