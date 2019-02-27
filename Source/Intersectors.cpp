@@ -15,6 +15,12 @@
 #include "Mathematics.h"
 #include "EntityFunctions.h"
 
+// Lets us use fprintf
+#ifdef _MSC_VER
+__pragma(warning(disable: 4996 ))
+__pragma(warning(disable: 4477 ))
+#endif
+
 namespace SGMInternal
 {
 // Given a circle and a plane return an ellipse that might be a degenerate
@@ -5917,7 +5923,7 @@ size_t FindWalkingPoints(SGM::Result                     &rResult,
         curve *pCurve2=pTorus2->VParamLine(rResult,0);
         std::vector<SGM::IntersectionType> aTypes2;
         std::vector<SGM::Point3D> aPoints2;
-        IntersectCurveAndSurface(rResult,pCurve1,pTorus1,aPoints2,aTypes2,dTolerance);
+        IntersectCurveAndSurface(rResult,pCurve2,pTorus1,aPoints2,aTypes2,dTolerance);
         rResult.GetThing()->DeleteEntity(pCurve2);
         for(auto Pos : aPoints2)
             {
@@ -6155,12 +6161,13 @@ size_t IntersectTorusAndTorus(SGM::Result               &rResult,
 
             std::vector<SGM::Point3D> aWalk;
             FindWalkingPoints(rResult,pTorus1,pTorus2,aTangents,aCurves,dTolerance,aWalk);
-			std::cout << aWalk.size() << " walking points" << std::endl;
 
+            std::vector<SGM::Point3D> aUsed;
             for(SGM::Point3D const &Pos : aWalk)
                 {
                 if(PointOnCurves(Pos,aCurves)==false)
                     {
+                    aUsed.push_back(Pos);
                     std::vector<SGM::Point3D> aEndPoints=aTangents;
                     aEndPoints.push_back(Pos);
                     aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pTorus1,pTorus2));
@@ -7328,7 +7335,6 @@ curve *WalkFromToSub(SGM::Result                     &rResult,
     pSurface1->Evaluate(uv1,nullptr,nullptr,nullptr,&Norm1);
     pSurface2->Evaluate(uv2,nullptr,nullptr,nullptr,&Norm2);
     SGM::UnitVector3D WalkDir=Norm1*Norm2;
-
     bool bFound=false;
     while(!bFound) 
         {

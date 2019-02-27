@@ -187,6 +187,9 @@ SGM_EXPORT SGM::Surface CreateExtrudeSurface(SGM::Result             &rResult,
 SGM_EXPORT SGM::Interval1D const &GetCurveDomain(SGM::Result      &rResult,
                                                  SGM::Curve const &CurveID);
 
+SGM_EXPORT bool IsCurveClosed(SGM::Result      &rResult,
+                              SGM::Curve const &CurveID);
+
 SGM_EXPORT void EvaluateCurve(SGM::Result      &rResult,
                               SGM::Curve const &CurveID, 
                               double            dt,

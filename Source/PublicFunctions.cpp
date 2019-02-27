@@ -1471,6 +1471,14 @@ SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
     return pCurve->GetDomain();
     }
 
+SGM_EXPORT bool SGM::IsCurveClosed(SGM::Result      &rResult,
+                                   SGM::Curve const &CurveID)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pCurve=(SGMInternal::curve *)(pThing->FindEntity(CurveID.m_ID));
+    return pCurve->GetClosed();
+    }
+
 void SGM::EvaluateCurve(SGM::Result      &rResult,
                         SGM::Curve const &CurveID, 
                         double            dt,
