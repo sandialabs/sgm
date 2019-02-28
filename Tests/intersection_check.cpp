@@ -199,6 +199,182 @@ bool TestIntersections(SGM::Result        &rResult,
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+TEST(intersection_check, intersect_sphere_extrude2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(-1,-1,0));
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(4,1,0));
+    aPoints1.push_back(SGM::Point3D(0,1,0));
+    aPoints1.push_back(SGM::Point3D(-1,2,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateExtrudeSurface(rResult,SGM::UnitVector3D(0,0,1),CurveID1);
+    SGM::Interval2D Domain=SGM::GetDomainOfSurface(rResult,RevolveID);
+    Domain.m_VDomain=SGM::Interval1D(-3,3);
+    SGM::CreateSheetBody(rResult,RevolveID,Domain);
+
+    SGM::CreateSphere(rResult,SGM::Point3D(2,0.5,0),1.5);
+
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(2,0.5,0),1.5);
+    
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SphereID,RevolveID,aCurves);
+    for(auto pCurve : aCurves)
+        { 
+        SGM::CreateEdge(rResult,pCurve);
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_circle_revolve2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+    SGM::Interval2D const &Domain=SGM::GetDomainOfSurface(rResult,RevolveID);
+    SGM::CreateSheetBody(rResult,RevolveID,Domain);
+
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(4,7,0),SGM::UnitVector3D(0,0,1),7);
+    SGM::CreateEdge(rResult,CurveID);
+    //SGM::CreateTorus(rResult,SGM::Point3D(4,7,0),SGM::UnitVector3D(0,0,1),3,4);
+
+    //SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(4,7,0),SGM::UnitVector3D(0,0,1),3,4);
+    //
+    //std::vector<SGM::Curve> aCurves;
+    //SGM::IntersectSurfaces(rResult,TorusID,RevolveID,aCurves);
+    //for(auto pCurve : aCurves)
+    //    { 
+    //    SGM::CreateEdge(rResult,pCurve);
+    //    }
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_torus_revolve2) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+    SGM::Interval2D const &Domain=SGM::GetDomainOfSurface(rResult,RevolveID);
+    SGM::CreateSheetBody(rResult,RevolveID,Domain);
+
+    SGM::CreateTorus(rResult,SGM::Point3D(4,3,0),SGM::UnitVector3D(1,0,0),1,2);
+
+    SGM::Surface TorusID=SGM::CreateTorusSurface(rResult,SGM::Point3D(4,3,0),SGM::UnitVector3D(1,0,0),1,2);
+    
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,TorusID,RevolveID,aCurves);
+    for(auto pCurve : aCurves)
+        { 
+        SGM::CreateEdge(rResult,pCurve);
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_torus_revolve) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+
+    SGM::Surface TorusID1=SGM::CreateTorusSurface(rResult,SGM::Point3D(4,3,0),SGM::UnitVector3D(1,0,0),1,2);
+    SGM::Surface TorusID2=SGM::CreateTorusSurface(rResult,SGM::Point3D(4,7,0),SGM::UnitVector3D(0,0,1),3,4);
+    
+    EXPECT_TRUE(TestIntersections(rResult,TorusID1,RevolveID,3));     // There circles.
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_sphere_revolve) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(4,3,0),2.75);
+
+    EXPECT_TRUE(TestIntersections(rResult,SphereID,RevolveID,4));     // Four circles.
+    
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
+TEST(intersection_check, intersect_cylinder_revolve) 
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1;
+    aPoints1.push_back(SGM::Point3D(0,0,0));
+    aPoints1.push_back(SGM::Point3D(1,1,0));
+    aPoints1.push_back(SGM::Point3D(2,0,0));
+    aPoints1.push_back(SGM::Point3D(3,1,0));
+    aPoints1.push_back(SGM::Point3D(4,0,0));
+    aPoints1.push_back(SGM::Point3D(5,1,0));
+    aPoints1.push_back(SGM::Point3D(6,0,0));
+    aPoints1.push_back(SGM::Point3D(7,1,0));
+    aPoints1.push_back(SGM::Point3D(8,0,0));
+    SGM::Curve CurveID1=SGM::CreateNUBCurve(rResult,aPoints1);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,SGM::Point3D(0,3,0),SGM::UnitVector3D(1,0,0),CurveID1);
+    SGM::Surface CylinderID=SGM::CreateCylinderSurface(rResult,SGM::Point3D(-1,3,0),SGM::Point3D(9,3,0),2.5);
+    
+    EXPECT_TRUE(TestIntersections(rResult,CylinderID,RevolveID,8));     // Eight circles.
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 //TEST(intersection_check, intersect_plane_revolve2) 
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -19,7 +19,8 @@ body *CreateSphere(SGM::Result        &rResult,
 body *CreateCylinder(SGM::Result        &rResult,
                      SGM::Point3D const &BottomCenter,
                      SGM::Point3D const &TopCenter,
-                     double              dRadius);
+                     double              dRadius,
+                     bool                bSheetBody=false);
 
 body *CreateCone(SGM::Result        &rResult,
                  SGM::Point3D const &BottomCenter,

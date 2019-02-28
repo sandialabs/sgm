@@ -1169,9 +1169,10 @@ SGM::Body SGM::CreateSphere(SGM::Result        &rResult,
 SGM::Body SGM::CreateCylinder(SGM::Result        &rResult,
                               SGM::Point3D const &BottomCenter,
                               SGM::Point3D const &TopCenter,
-                              double              dRadius)
+                              double              dRadius,
+                              bool                bSheetBody)
     {
-    SGMInternal::body *pBody=SGMInternal::CreateCylinder(rResult,BottomCenter,TopCenter,dRadius);
+    SGMInternal::body *pBody=SGMInternal::CreateCylinder(rResult,BottomCenter,TopCenter,dRadius,bSheetBody);
     return {pBody->GetID()};
     }
 

@@ -254,10 +254,9 @@ body *CreateSphere(SGM::Result        &rResult,
 body *CreateCylinder(SGM::Result        &rResult,
                      SGM::Point3D const &BottomCenter,
                      SGM::Point3D const &TopCenter,
-                     double              dRadius)
+                     double              dRadius,
+                     bool                bSheetBody)
     {
-    bool bSheetBody=false;
-
     SGM::UnitVector3D ZAxis=TopCenter-BottomCenter;
     SGM::UnitVector3D XAxis=ZAxis.Orthogonal();
     SGM::UnitVector3D YAxis=ZAxis*XAxis;

@@ -42,7 +42,8 @@ SGM_EXPORT SGM::Body CreateSphere(SGM::Result        &rResult,
 SGM_EXPORT SGM::Body CreateCylinder(SGM::Result        &rResult,
                                     SGM::Point3D const &BottomCenter,
                                     SGM::Point3D const &TopCenter,
-                                    double              dRadius);
+                                    double              dRadius,
+                                    bool                bSheetBody=false);
 
 SGM_EXPORT SGM::Body CreateCone(SGM::Result        &rResult,
                                 SGM::Point3D const &BottomCenter,
