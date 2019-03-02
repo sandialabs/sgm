@@ -6,6 +6,7 @@
 #include "Curve.h"
 #include "Query.h"
 #include "Mathematics.h"
+#include "Signature.h"
 
 #include "SGMGraph.h"
 #include "SGMMathematics.h"
@@ -1249,5 +1250,22 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
         }
     return uv;
     }
+
+Signature face::GetSignature(SGM::Result &rResult) const
+{
+    std::vector<SGM::Point3D> aPoints;
+    std::set<vertex *, EntityCompare> sVertices;
+    FindVertices(rResult, this, sVertices);
+    if (sVertices.size() == 0)
+        throw std::logic_error("Signature for face without vertices is not implemented");
+
+    for (auto pVert : sVertices)
+    {
+        aPoints.emplace_back(pVert->GetPoint());
+    }
+
+    Signature Sig(aPoints);
+    return Sig;
+}
 
 } // End SGMInternal namespace

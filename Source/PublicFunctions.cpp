@@ -30,6 +30,7 @@
 #include "Interrogate.h"
 #include "Modify.h"
 #include "FacetToBRep.h"
+#include "Interrogate.h"
 
 #include <algorithm>
 
@@ -2677,3 +2678,16 @@ SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
     return {pCurve->GetID()};
     }
 
+void SGM::FindSimilarFaces(SGM::Result            &rResult,
+                           SGM::Face        const &FaceID,
+                           std::vector<SGM::Face> &aSimilar,
+                           bool                    bIgnoreScale)
+{
+    auto pFace = (SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    std::vector<SGMInternal::face *> aFaces;
+    SGMInternal::FindSimilarFaces(rResult, pFace, aFaces, bIgnoreScale);
+    for (auto pEnt : aFaces)
+    {
+        aSimilar.emplace_back(SGM::Face(pEnt->GetID()));
+    }
+}

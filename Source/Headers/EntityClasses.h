@@ -54,6 +54,8 @@ class offset;
 class NUBsurface;
 class NURBsurface;
 
+class Signature;
+
 struct EntityCompare {
     bool operator()(entity* const& ent1, entity* const& ent2) const;
 };
@@ -983,6 +985,8 @@ class face : public topology
         int GetSides() const {return m_nSides;}
 
         bool IsTopLevel() const override;
+
+        Signature GetSignature(SGM::Result &rResult) const;
 
         // Find methods
 
