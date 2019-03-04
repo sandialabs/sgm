@@ -12,6 +12,7 @@
 // Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
+__pragma(warning(disable: 4477 ))
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -468,7 +469,7 @@ void TorusKnot::WriteSGM(SGM::Result                  &rResult,
     WritePoint(pFile," Center ",m_Center);
     WritePoint(pFile," Normal ",SGM::Point3D(m_Normal));
     WritePoint(pFile," XAxis ",SGM::Point3D(m_XAxis));
-    fprintf(pFile," Minor %#.15G Major %#.15G A %ld B %ld;\n",m_dMinorRadius,m_dMajorRadius,m_nA,m_nB);
+    fprintf(pFile," Minor %#.15G Major %#.15G A %zd B %zd;\n",m_dMinorRadius,m_dMajorRadius,m_nA,m_nB);
     }
 
 void plane::WriteSGM(SGM::Result                  &rResult,

@@ -16,6 +16,7 @@
 // Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
+__pragma(warning(disable: 4477 ))
 #endif
 
 namespace SGMInternal
@@ -382,6 +383,15 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
                             std::vector<entity*>         &aEntities,
                             bool                          bMerge)
     {
+
+    std::ifstream inputFileStream(FileName, std::ios::in);
+    if (!inputFileStream.is_open())
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        rResult.SetMessage("Could not open " + FileName);
+        return;
+        }
+
     const size_t STRING_RESERVE = 63;
     const size_t CHUNK_SIZE = 1024;
     const size_t NUM_PARSE_THREADS = 3;
@@ -402,14 +412,6 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
 
     // array of jobs (chunks), each result returned in a future object
     std::vector<std::future<bool>> futures;
-
-    std::ifstream inputFileStream(FileName, std::ios::in);
-    if (!inputFileStream.is_open())
-        {
-        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
-        rResult.SetMessage("Could not open " + FileName);
-        return;
-        }
 
     std::string line;
     while (std::getline(inputFileStream, line))
@@ -432,10 +434,9 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
             }
         }
 
+    rResult.GetThing()->SetConcurrentInactive();
     inputFileStream.close();
     DestroySTLParseChunks(aChunkLines, aChunkPoints);
-
-    rResult.GetThing()->SetConcurrentInactive();
 
     aEntities.push_back(ParseSTLCreateComplex(rResult,bMerge,aPoints));
     }

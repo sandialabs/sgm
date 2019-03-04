@@ -929,6 +929,14 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
     return pFace->GetSurface()->GetID();
     }
 
+SGM::UnitVector3D SGM::FindNormalOfFace(SGM::Result        &rResult,
+                                        SGM::Face    const &FaceID,
+                                        SGM::Point3D const &Pos)
+    {
+    auto pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    return pFace->FindNormalOfFace(Pos);
+    }
+
 SGM::Curve SGM::GetCurveOfEdge(SGM::Result     &rResult,
                                SGM::Edge const &EdgeID)
     {
@@ -1171,9 +1179,10 @@ SGM::Body SGM::CreateSphere(SGM::Result        &rResult,
 SGM::Body SGM::CreateCylinder(SGM::Result        &rResult,
                               SGM::Point3D const &BottomCenter,
                               SGM::Point3D const &TopCenter,
-                              double              dRadius)
+                              double              dRadius,
+                              bool                bSheetBody)
     {
-    SGMInternal::body *pBody=SGMInternal::CreateCylinder(rResult,BottomCenter,TopCenter,dRadius);
+    SGMInternal::body *pBody=SGMInternal::CreateCylinder(rResult,BottomCenter,TopCenter,dRadius,bSheetBody);
     return {pBody->GetID()};
     }
 
@@ -1266,6 +1275,16 @@ SGM::Body SGM::CreateSheetBody(SGM::Result                    &rResult,
         aedges.push_back(pEdge);
         }
     SGMInternal::body *pBody=SGMInternal::CreateSheetBody(rResult,pSurface,aedges,aTypes);
+    return {pBody->GetID()};
+    }
+
+SGM::Body SGM::CreateSheetBody(SGM::Result           &rResult,
+                               SGM::Surface          &SurfaceID,
+                               SGM::Interval2D const &Domain)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pSurface=(SGMInternal::surface *)pThing->FindEntity(SurfaceID.m_ID);
+    SGMInternal::body *pBody=SGMInternal::CreateSheetBody(rResult,pSurface,Domain);
     return {pBody->GetID()};
     }
 
@@ -1471,6 +1490,14 @@ SGM::Interval1D const &SGM::GetCurveDomain(SGM::Result      &rResult,
     return pCurve->GetDomain();
     }
 
+SGM_EXPORT bool SGM::IsCurveClosed(SGM::Result      &rResult,
+                                   SGM::Curve const &CurveID)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    auto pCurve=(SGMInternal::curve *)(pThing->FindEntity(CurveID.m_ID));
+    return pCurve->GetClosed();
+    }
+
 void SGM::EvaluateCurve(SGM::Result      &rResult,
                         SGM::Curve const &CurveID, 
                         double            dt,
@@ -1634,6 +1661,17 @@ SGM::Surface SGM::CreateNUBSurfaceFromControlPoints(SGM::Result                 
                                                     std::vector<double>                     const &aVKnots)
     {
     SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaControlPoints,aUKnots,aVKnots);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateNUBSurface(SGM::Result                                   &rResult,
+                                   std::vector<std::vector<SGM::Point3D> > const &aaInterpolatePoints,
+                                   std::vector<SGM::Vector3D>              const *,//paStartVecs,
+                                   std::vector<SGM::Vector3D>              const *,//paEndVecs,
+                                   std::vector<double>                     const *,//pUParams,
+                                   std::vector<double>                     const *)//pVParams)
+    {
+    SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaInterpolatePoints);
     return {pSurface->GetID()};
     }
 
@@ -1809,6 +1847,16 @@ bool SGM::IsSingularity(SGM::Result        &rResult,
     {
     auto const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
     return pSurface->IsSingularity(uv,dTolerance);
+    }
+
+void SGM::FindWindingNumbers(SGM::Result                     &rResult,
+                             SGM::Surface              const &SurfaceID,
+                             std::vector<SGM::Point3D> const &aPolygon3D,
+                             int                             &nUWinds,
+                             int                             &nVWinds)
+    {
+    auto const *pSurface=(SGMInternal::surface *)(rResult.GetThing()->FindEntity(SurfaceID.m_ID));
+    SGMInternal::FindWindingNumbers(pSurface,aPolygon3D,nUWinds,nVWinds);
     }
 
 bool SGM::GetLineData(SGM::Result       &rResult,

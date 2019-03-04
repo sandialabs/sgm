@@ -654,13 +654,6 @@ void OrderLoopEdges(SGM::Result                          &rResult,
         {
         return;
         }
-    else if(nSize==1)
-        {
-        edge *pEdge=*(sEdges.begin());
-        aEdges.push_back(pEdge);
-        aFlips.push_back(pFace->GetSideType(pEdge));
-        return;
-        }
 
     size_t nDoubles=0;
     for(edge *pEdge : sEdges)

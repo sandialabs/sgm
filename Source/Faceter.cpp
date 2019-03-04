@@ -63,7 +63,7 @@ edge *FindEdge(entity *pEntA,entity *pEntB)
     if (isBEdge)
         {
         edge *pEdgeB = (edge *)pEntB;
-        if (pEdgeB->GetStart()==pEntB || pEdgeB->GetEnd()==pEntB)
+        if (pEdgeB->GetStart()==pEntA || pEdgeB->GetEnd()==pEntA)
             {
             return pEdgeB;
             }
@@ -654,6 +654,10 @@ void FacetCurve(curve               const *pCurve,
                 }
             lNodes.emplace_back(d1,Pos1);
             double dAngle=SGM_PI-Options.m_dEdgeAngleTol;
+            if(nCurveType==SGM::ParabolaType)
+                {
+                dAngle=SGM_PI-0.03490658503988659153847381536977; // 2 degrees
+                }
             double dCos=cos(dAngle);
             bool bRefine=true;
             while(bRefine)
@@ -2264,7 +2268,7 @@ static bool AngleGrid(SGM::Result                                   &rResult,
         {
         std::vector<unsigned int> aPolygonIndices;
         std::vector<bool> aFlags=ShuffleFlags(*pImprintFlag,aaPolygons[Index1]);
-        if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
+        if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
                                aScaled, aTriangles, aPolygonIndices, nullptr, nullptr, nullptr, &aFlags))
             {
             return false;
@@ -2307,7 +2311,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
         if(aImprintFlags)
             {
             std::vector<bool> aFlags=ShuffleFlags(*aImprintFlags,aaPolygons[Index1]);
-            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
                                    aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, &aFlags))
                 {
                 aPoints2D.clear();
@@ -2319,7 +2323,7 @@ static bool ImprintPolygons(SGM::Result                                   &rResu
             }
         else
             {
-            if(!SGM::InsertPolygon(rResult, SGM::PointFormPolygon(aPolygonPoints, aaPolygons[Index1]),
+            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
                                    aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, nullptr))
                 {
                 aPoints2D.clear();
@@ -2383,6 +2387,30 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
         aVValues[aVValues.size()-1]+=dLength;
         }
 
+    if(aUValues.size()==2)
+        {
+        double dVal0=aUValues[0];
+        double dVal1=aUValues[1];
+        aUValues.clear();
+        aUValues.push_back(dVal0);
+        aUValues.push_back((dVal1+dVal0)*0.25);
+        aUValues.push_back((dVal1+dVal0)*0.5);
+        aUValues.push_back((dVal1+dVal0)*0.75);
+        aUValues.push_back(dVal1);
+        }
+
+    if(aVValues.size()==2)
+        {
+        double dVal0=aVValues[0];
+        double dVal1=aVValues[1];
+        aVValues.clear();
+        aVValues.push_back(dVal0);
+        aVValues.push_back((dVal1+dVal0)*0.25);
+        aVValues.push_back((dVal1+dVal0)*0.5);
+        aVValues.push_back((dVal1+dVal0)*0.75);
+        aVValues.push_back(dVal1);
+        }
+
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles);
     FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
 
@@ -2393,7 +2421,7 @@ static void ParamCurveGrid(SGM::Result                                   &rResul
         std::vector<unsigned int> aPolygonIndices;
         SGM::Surface PolygonSurfaceID(pFace->GetSurface()->GetID());
         std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
-        SGM::InsertPolygon(rResult,SGM::PointFormPolygon(aPolygonPoints,aaPolygons[Index1]),
+        SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
             aPoints2D,aTriangles,aPolygonIndices,&PolygonSurfaceID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }

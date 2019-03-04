@@ -401,8 +401,8 @@ bool torus::IsMajorCircle(curve const *pCurve,double dTolerance,double &dV) cons
         circle const *pCircle=(circle const *)pCurve;
         if(fabs(fabs(pCircle->m_Normal%m_ZAxis)-1.0)<dTolerance)
             {
-            SGM::Point3D Pos=m_Center+m_ZAxis*(m_ZAxis%(pCircle->m_Center-m_Center));
-            if(SGM::NearEqual(Pos,pCircle->m_Center,dTolerance))
+            SGM::Point3D Pos1=m_Center+m_ZAxis*(m_ZAxis%(pCircle->m_Center-m_Center));
+            if(SGM::NearEqual(Pos1,pCircle->m_Center,dTolerance))
                 {
                 SGM::Point3D Pos,CPos;
                 pCircle->Evaluate(0,&Pos);

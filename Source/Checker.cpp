@@ -3,6 +3,7 @@
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
+#include "Topology.h"
 
 #include <sstream>
 
@@ -107,6 +108,74 @@ bool CheckOwnersHaveChild(entity const *pChild, std::vector<std::string> &aCheck
     return bAnswer;
     }
 
+bool EdgesOverlap(edge const *pEdge1,edge const *pEdge2)
+    {
+    // Only check the end points of pEdge1, to see if they overlap.
+
+    if(pEdge1->GetStart())
+        {
+        if(pEdge2->GetStart()!=pEdge1->GetStart() && pEdge2->GetStart()!=pEdge1->GetEnd())
+            {
+            SGM::Point3D Pos=pEdge1->GetStart()->GetPoint();
+            SGM::Point3D CPos;
+            double t=pEdge2->GetCurve()->Inverse(Pos,&CPos);
+            if(Pos.Distance(CPos)<SGM_ZERO)
+                {
+                if(pEdge2->GetDomain().InInterval(t,SGM_MIN_TOL))
+                    {
+                    return true;
+                    }
+                }
+            }
+        }
+    if(pEdge2->GetStart())
+        {
+        if(pEdge1->GetStart()!=pEdge2->GetStart() && pEdge1->GetStart()!=pEdge2->GetEnd())
+            {
+            SGM::Point3D Pos=pEdge2->GetStart()->GetPoint();
+            SGM::Point3D CPos;
+            double t=pEdge1->GetCurve()->Inverse(Pos,&CPos);
+            if(Pos.Distance(CPos)<SGM_ZERO)
+                {
+                if(pEdge1->GetDomain().InInterval(t,SGM_MIN_TOL))
+                    {
+                    return true;
+                    }
+                }
+            }
+        }
+
+    return false;
+    }
+
+bool OverlappingEdges(SGM::Result              &rResult,
+                      entity             const *pEntity,
+                      std::vector<std::string> &aCheckStrings)
+    {
+    std::set<edge *,EntityCompare> sEdges;
+    FindEdges(rResult,pEntity,sEdges);
+
+    // Note that this is n^2 and could be n*ln(n).
+
+    for(edge *pEdge1 : sEdges)
+        {
+        for(edge *pEdge2 : sEdges)
+            {
+            if(pEdge1!=pEdge2)
+                {
+                if(EdgesOverlap(pEdge1,pEdge2))
+                    {
+                    std::stringstream ss;
+                    ss << pEntity << " has overlapping edges, " << pEdge1 << " and " << pEdge2 << " .";
+                    aCheckStrings.emplace_back(ss.str());
+                    return true;
+                    }
+                }
+            }
+        }
+    return false;
+    }
+
 bool body::Check(SGM::Result              &rResult,
                  SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings,
@@ -134,6 +203,11 @@ bool body::Check(SGM::Result              &rResult,
         ss << this << " has no volumes and no points.";
         aCheckStrings.emplace_back(ss.str());
         }
+
+    //if(OverlappingEdges(rResult,this,aCheckStrings))
+    //    {
+    //    bAnswer=false;
+    //    }
 
     if(bChildren)
         {

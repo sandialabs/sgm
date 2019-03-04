@@ -136,7 +136,7 @@ class surface : public entity
         // Returns the two-dimensional unit vector in the parameters space 
         // of this surface that Vec projects onto at the point uv.
         
-        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D        &uv,
+        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D  const &uv,
                                                SGM::Vector3D const &Vec) const;
 
         SGM::Point2D NewtonsMethod(SGM::Point2D const &StartUV,
@@ -543,6 +543,9 @@ class NUBsurface: public surface
                    std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
                    std::vector<double>                    &&aUKnots,
                    std::vector<double>                    &&aVKnots);
+
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D>> const &aaInterpolatePoints);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 

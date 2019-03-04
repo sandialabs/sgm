@@ -539,10 +539,15 @@ SGM::Point3D ZoomInFrom(SGM::Point3D const &Pos,
 bool FindConicCoefficient(std::vector<SGM::Point2D> const &aPoints,
                           std::vector<double>             &aCoefficients);
 
+size_t SolveTwoConics(std::vector<double>        aCoefficients1,
+                      std::vector<double>        aCoefficients2,
+                      std::vector<SGM::Point2D> &aPoints,
+                      double                     dTolerance);
+
 bool PointOnCurves(SGM::Point3D         const &Pos,
                    std::vector<curve *> const &aCurves,
-                   surface              const *pSurface1=nullptr,
-                   surface              const *pSurface2=nullptr);
+                   surface              const *pSurface1,
+                   surface              const *pSurface2);
 
 }
 #endif // INTERSECTOR_H

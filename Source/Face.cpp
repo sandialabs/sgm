@@ -9,6 +9,7 @@
 #include "Surface.h"
 #include "Curve.h"
 #include "Query.h"
+#include "Mathematics.h"
 
 #include <cfloat>
 #include <algorithm>
@@ -498,6 +499,35 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
+bool OnNonLinearEdge(SGM::Point3D const &PosA,
+                     SGM::Point3D const &PosB,
+                     entity       const *pAEnt,
+                     entity       const *pBEnt,
+                     SGM::Point3D       &Pos)
+    {
+    if(pAEnt->GetType()==SGM::EdgeType && pBEnt->GetType()==SGM::EdgeType && pAEnt==pBEnt)
+        {
+        edge *pEdge=(edge *)pAEnt;
+        pEdge->GetCurve()->Inverse(SGM::MidPoint(PosA,PosB),&Pos);
+        return true;
+        }
+    if( pAEnt->GetType()==SGM::VertexType && pBEnt->GetType()==SGM::EdgeType && 
+        (((edge *)pBEnt)->GetStart()==pAEnt || ((edge *)pBEnt)->GetEnd()==pAEnt))
+        {
+        edge *pEdge=(edge *)pBEnt;
+        pEdge->GetCurve()->Inverse(SGM::MidPoint(PosA,PosB),&Pos);
+        return true;
+        }
+    if( pAEnt->GetType()==SGM::EdgeType && pBEnt->GetType()==SGM::VertexType && 
+        (((edge *)pAEnt)->GetStart()==pBEnt || ((edge *)pAEnt)->GetEnd()==pBEnt))
+        {
+        edge *pEdge=(edge *)pAEnt;
+        pEdge->GetCurve()->Inverse(SGM::MidPoint(PosA,PosB),&Pos);
+        return true;
+        }
+    return false;
+    }
+
 double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
                     std::vector<unsigned int> const &aTriangles)
     {
@@ -509,7 +539,10 @@ double TriangleArea(std::vector<SGM::Point3D> const &aPoints3D,
         size_t a=aTriangles[Index1];
         size_t b=aTriangles[Index1+1];
         size_t c=aTriangles[Index1+2];
-        dArea+=((aPoints3D[b]-aPoints3D[a])*(aPoints3D[c]-aPoints3D[a])).Magnitude();
+        SGM::Point3D const &PosA=aPoints3D[a];
+        SGM::Point3D const &PosB=aPoints3D[b];
+        SGM::Point3D const &PosC=aPoints3D[c];
+        dArea+=((PosB-PosA)*(PosC-PosA)).Magnitude();
         }
     return dArea*0.5;
     }
@@ -598,13 +631,12 @@ double face::FindArea(SGM::Result &rResult) const
     aArea[0] = TriangleArea(aPoints3D,aTriangles);
     aAreaEstimated[0] = SGM_MAX;
     size_t nLevel;
-
     for (nLevel=1; SGM_MIN_TOL<dDiff && nLevel<MAX_LEVELS; ++nLevel)
         {
         SubdivideFacets(this,aPoints3D,aPoints2D,aTriangles,aEntities);
         aArea[nLevel]=TriangleArea(aPoints3D,aTriangles);
         aAreaEstimated[nLevel]=(4*aArea[nLevel]-aArea[nLevel-1])/3;
-        if (nLevel>=3 && dDiff<1000*SGM_MIN_TOL) // we have at least 3 levels and getting close to tolerance
+        if (nLevel>=3 && dDiff<SGM_MIN_TOL) // We have at least 3 levels and getting close to tolerance.
             {
             std::pair<bool, double> Extrapolated = RichardsonExtrapolation(&aAreaEstimated[nLevel - 2]);
             if (Extrapolated.first)
@@ -679,6 +711,18 @@ double face::FindVolume(SGM::Result &rResult,bool bApproximate) const
     return aVolumeEstimated[nLevel-1];
     }
 
+SGM::UnitVector3D face::FindNormalOfFace(SGM::Point3D const &Pos) const
+    {
+    SGM::Point2D uv=m_pSurface->Inverse(Pos);
+    SGM::UnitVector3D Norm;
+    m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+    if(m_bFlipped)
+        {
+        Norm.Negate();
+        }
+    return Norm;
+    }
+
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
                        std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
@@ -699,7 +743,7 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
     aaTempLoops.reserve(nLoops);
     aaTempFlipped.reserve(nLoops);
 
-    size_t Index1;
+    size_t Index1,Index2;
     for(Index1=0;Index1<nLoops;++Index1)
         {
         SGM::Graph const &comp=aComponents[Index1];
@@ -734,7 +778,39 @@ size_t face::FindLoops(SGM::Result                                  &rResult,
         aaFlipped.push_back(aaTempFlipped[aOrder[Index1].second]);
         }
 
-    return nLoops;
+    // Check for double sided loops of surface that are close in both directions.
+
+    if(m_pSurface->ClosedInU() && m_pSurface->ClosedInV())
+        {
+        for(Index1=0;Index1<nLoops;++Index1)
+            {
+            auto aLoop=aaLoops[Index1];
+            bool bFound=false;
+            for(auto pEdge : aLoop)
+                {
+                if(GetSideType(pEdge)!=SGM::FaceOnBothSidesType)
+                    {
+                    bFound=true;
+                    break;
+                    }
+                }
+            if(!bFound)
+                {
+                std::vector<SGM::EdgeSideType> aNewFlipped;
+                size_t nLoop=aLoop.size();
+                aNewFlipped.reserve(nLoop);
+                for(Index2=0;Index2<nLoop;++Index2)
+                    {
+                    aaFlipped[Index1][Index2]=SGM::EdgeSideType::FaceOnLeftType;
+                    aNewFlipped.push_back(SGM::EdgeSideType::FaceOnRightType);
+                    }
+                aaFlipped.push_back(aNewFlipped);
+                aaLoops.push_back(aaLoops[Index1]);
+                }
+            }
+        }
+
+    return aaLoops.size();
     }
 
 void face::AddEdge(SGM::Result       &rResult,
@@ -797,6 +873,23 @@ void face::TransformFacets(SGM::Transform3D const &Trans)
         m_aPoints3D[Index1]*=Trans;
         m_aNormals[Index1]*=Trans;
         }
+    }
+
+void face::Negate()
+    {
+    for(edge *pEdge : m_sEdges)
+        {
+        SGM::EdgeSideType nType=m_mSideType[pEdge];
+        if(nType==SGM::FaceOnLeftType)
+            {
+            m_mSideType[pEdge]=SGM::FaceOnRightType;
+            }
+        else if(nType==SGM::FaceOnRightType)
+            {
+            m_mSideType[pEdge]=SGM::FaceOnLeftType;
+            }
+        }
+    m_bFlipped=!m_bFlipped;
     }
 
 bool face::HasBranchedVertex() const

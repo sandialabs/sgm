@@ -286,6 +286,30 @@ void MergeVertices(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pDeleteVertex);
     }
 
+void MergeVertexSet(SGM::Result &rResult,
+                    std::set<vertex *, EntityCompare> &sVertices)
+{
+    // Note that this only works on single volume wires.
+    // Also note that this is a n^2 algorithum which could be n*ln(n).
+
+    std::set<vertex *> sDeleted;
+    for(vertex *pVertex:sVertices)
+        {
+        for(vertex *pTest:sVertices)
+            {
+            if( pVertex!=pTest && 
+                sDeleted.find(pTest)==sDeleted.end() &&
+                sDeleted.find(pVertex)==sDeleted.end() &&
+                SGM::NearEqual(pVertex->GetPoint(),pTest->GetPoint(),SGM_MIN_TOL))
+                {
+                MergeVertices(rResult,pVertex,pTest);
+                sDeleted.insert(pTest);
+                }
+            }
+        }
+}
+
+
 void ImprintPeninsula(SGM::Result &rResult,
                       edge        *pEdge,
                       face        *pFace,
@@ -495,6 +519,13 @@ face *ImprintSplitter(SGM::Result &rResult,
     return pNewFace;
     }
 
+void ImprintLowersGenus(SGM::Result &rResult,
+                        edge        *pEdge,
+                        face        *pFace)
+    {
+    pFace->AddEdge(rResult,pEdge,SGM::FaceOnBothSidesType);
+    }
+
 face *ImprintAtoll(SGM::Result &rResult,
                    edge        *pEdge,
                    face        *pFace)
@@ -516,7 +547,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     double dArea=0.0;
     for(std::vector<unsigned int> const &aPolygon : aaPolygons)
         {
-        dArea+=SGM::PolygonArea(PointFormPolygon(aPoints2D,aPolygon));
+        dArea+=SGM::PolygonArea(PointsFromPolygon(aPoints2D,aPolygon));
         }
     if(dArea<0)
         {
@@ -526,6 +557,108 @@ face *ImprintAtoll(SGM::Result &rResult,
     pFace->AddEdge(rResult,pEdge,pNewFace->GetSideType(pEdge)==SGM::FaceOnRightType ? SGM::FaceOnLeftType : SGM::FaceOnRightType);
     
     return pNewFace;
+    }
+
+bool LowersGenus(SGM::Result &rResult,
+                 edge        *pEdge,
+                 face        *pFace)
+    {
+    surface *pSurface=pFace->GetSurface();
+    if(pSurface->ClosedInU() && pSurface->ClosedInV())
+        {
+        std::vector<SGM::Point3D> const &aPoints=pEdge->GetFacets(rResult);
+        int nUWinds,nVWinds;
+        FindWindingNumbers(pSurface,aPoints,nUWinds,nVWinds);
+        if(nUWinds || nVWinds)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+bool AreEdgesCoincident(edge const *pEdge1,
+                        edge const *pEdge2)
+    {
+    curve const *pCurve1=pEdge1->GetCurve();
+    curve const *pCurve2=pEdge2->GetCurve();
+    if(pCurve1->IsSame(pCurve2,SGM_MIN_TOL))
+        {
+        SGM::Point3D const &Start1=pEdge1->GetStart()->GetPoint();
+        SGM::Point3D const &End1=pEdge1->GetEnd()->GetPoint();
+        SGM::Point3D const &Start2=pEdge2->GetStart()->GetPoint();
+        SGM::Point3D const &End2=pEdge2->GetEnd()->GetPoint();
+        if(Start1.Distance(Start2)<SGM_ZERO && End1.Distance(End2)<SGM_ZERO)
+            {
+            return true;
+            }
+        if(Start1.Distance(End2)<SGM_ZERO && End1.Distance(Start2)<SGM_ZERO)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+edge *AreCoincident(edge        *pEdge,
+                    face        *pFace)
+    {
+    for(auto pTestEdge : pFace->GetEdges())
+        {
+        if(AreEdgesCoincident(pEdge,pTestEdge))
+            {
+            return pTestEdge;
+            }
+        }
+    return nullptr;
+    }
+
+void MergeEdges(SGM::Result &rResult,
+                edge        *pKeepEdge,
+                edge        *pDeleteEdge)
+    {
+    vertex *pStartKeep=pKeepEdge->GetStart();
+    vertex *pEndKeep=pKeepEdge->GetEnd();
+    vertex *pStartDelete=pDeleteEdge->GetStart();
+    vertex *pEndDelete=pDeleteEdge->GetEnd();
+    bool bFlip=false;
+    if(pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO)
+        {
+        MergeVertices(rResult,pStartKeep,pStartDelete);
+        MergeVertices(rResult,pEndKeep,pEndDelete);
+        }
+    else
+        {
+        bFlip=true;
+        MergeVertices(rResult,pStartKeep,pEndDelete);
+        MergeVertices(rResult,pEndKeep,pStartDelete);
+        }
+    std::set<face *,EntityCompare> sFaces=pDeleteEdge->GetFaces();
+    for(face *pFace : sFaces)
+        {
+        SGM::EdgeSideType nType=pFace->GetSideType(pDeleteEdge);
+        pFace->RemoveEdge(rResult,pDeleteEdge);
+        if(bFlip)
+            {
+            if(nType==SGM::EdgeSideType::FaceOnLeftType)
+                {
+                nType=SGM::EdgeSideType::FaceOnRightType;
+                }
+            else if(nType==SGM::EdgeSideType::FaceOnRightType)
+                {
+                nType=SGM::EdgeSideType::FaceOnLeftType;
+                }
+            pFace->AddEdge(rResult,pKeepEdge,nType);
+            }
+        else
+            {
+            pFace->AddEdge(rResult,pKeepEdge,nType);
+            }
+        }
+    curve *pCurve=pDeleteEdge->GetCurve();
+    pDeleteEdge->SeverRelations(rResult);
+    rResult.GetThing()->DeleteEntity(pCurve);
+    rResult.GetThing()->DeleteEntity(pDeleteEdge);
     }
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
@@ -547,9 +680,14 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     // Non-Contractible (The edge is not contractible in the face.)
     // Coincident (The edge is coincident with an existing edge of the face.)
 
-    if(pStartEntity && pEndEntity)
+
+    if(edge *pConincentEdge=AreCoincident(pEdge,pFace))
         {
-        // Bridge, Splitter, or Non-Contractible
+        MergeEdges(rResult,pEdge,pConincentEdge);
+        }
+    else if(pStartEntity && pEndEntity)
+        {
+        // Bridge, Splitter
 
         std::vector<std::vector<edge *> > aaLoops;
         std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
@@ -558,7 +696,7 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
         size_t nEndLoop=FindLoop(pEndEntity,aaLoops);
         if(nStartLoop==nEndLoop)
             {
-            // Splitter, or Non-Contractible
+            // Splitter
 
             aFaces.push_back(ImprintSplitter(rResult,pEdge,pFace,pStartEntity,pEndEntity));
             }
@@ -575,9 +713,15 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
         
         ImprintPeninsula(rResult,pEdge,pFace,pStartEntity,pEndEntity);
         }
+    else if(LowersGenus(rResult,pEdge,pFace))
+        {
+        // Lowers Genus
+
+        ImprintLowersGenus(rResult,pEdge,pFace);
+        }
     else if(pEdge->IsClosed() && !pEdge->IsDegenerate())
         {
-        // Atoll or Non-Contractible
+        // Atoll
 
         aFaces.push_back(ImprintAtoll(rResult,pEdge,pFace));
         }
@@ -738,6 +882,7 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     std::map<double,entity *> mHitMap1,mHitMap2;
     curve *pCurve=pEdge->GetCurve();
     TrimCurveWithFaces(rResult,pCurve,pFace,nullptr,aEdges,aPoints,mHitMap1,mHitMap2,pEdge);
+    pCurve->RemoveEdge(pEdge);
     rResult.GetThing()->DeleteEntity(pEdge);
 
     for(edge *pSubEdge : aEdges)
@@ -801,6 +946,206 @@ void UniteBodies(SGM::Result &rResult,
         MergeAndMoveVolumes(rResult,pKeepBody,sVerts);
         }
     rResult.GetThing()->DeleteEntity(pDeleteBody);
+
+    // Orient the sheet body faces to be consistant with each other.
+
+    OrientBody(rResult,pKeepBody);
+    }
+
+void FindWindingNumbers(surface                   const *pSurface,
+                        std::vector<SGM::Point3D> const &aPolygon3D,
+                        int                             &nUWinds,
+                        int                             &nVWinds)
+    {
+    // Find the uv values of the points on the surface.
+
+    std::vector<SGM::Point2D> aPolygon2D;
+    size_t nPolygon=aPolygon3D.size();
+    aPolygon2D.reserve(nPolygon);
+    size_t Index1;
+    for(Index1=0;Index1<nPolygon;++Index1)
+        {
+        SGM::Point2D uv=pSurface->Inverse(aPolygon3D[Index1]);
+        aPolygon2D.push_back(uv);
+        }
+
+    // Find the U winding number.
+
+    nUWinds=0;
+    if(pSurface->ClosedInU())
+        {
+        // Find an unused U Value.
+
+        SGM::Interval1D UDomain=pSurface->GetDomain().m_UDomain;
+        double dMid=UDomain.MidPoint();
+        double dDist=UDomain.Length()/4.0;
+        std::vector<double> aUs;
+        aUs.reserve(nPolygon);
+        for(auto uv : aPolygon2D)
+            {
+            aUs.push_back(uv.m_u);
+            }
+        std::sort(aUs.begin(),aUs.end());
+        double dU=SGM_MAX;
+        for(Index1=1;Index1<nPolygon;++Index1)
+            {
+            if(SGM_MIN_TOL<aUs[Index1]-aUs[Index1-1] && fabs(aUs[Index1]-dMid)<dDist)
+                {
+                double dTest=(aUs[Index1]+aUs[Index1-1])*0.5;
+                if( fabs(dTest-dMid)<fabs(dU-dMid) )
+                    {
+                    dU=dTest;
+                    }
+                }
+            }
+    
+        // Find the crossing of dU.
+
+        for(Index1=1;Index1<=nPolygon;++Index1)
+            {
+            SGM::Point2D const &uv1=aPolygon2D[Index1%nPolygon];
+            if(fabs(uv1.m_u-dMid)<dDist)
+                {
+                SGM::Point2D const &uv0=aPolygon2D[Index1-1];
+                if(uv0.m_u<dU && dU<uv1.m_u)
+                    {
+                    ++nUWinds;
+                    }
+                else if(uv1.m_u<dU && dU<uv0.m_u)
+                    {
+                    --nUWinds;
+                    }
+                }
+            }
+        }
+
+    // Find the V winding number.
+
+    nVWinds=0;
+    if(pSurface->ClosedInV())
+        {
+        // Find an unused V value.
+
+        SGM::Interval1D VDomain=pSurface->GetDomain().m_VDomain;
+        double dMid=VDomain.MidPoint();
+        double dDist=VDomain.Length()/4.0;
+        std::vector<double> aVs;
+        aVs.reserve(nPolygon);
+        for(auto uv : aPolygon2D)
+            {
+            aVs.push_back(uv.m_v);
+            }
+        std::sort(aVs.begin(),aVs.end());
+        double dV=SGM_MAX;
+        for(Index1=1;Index1<nPolygon;++Index1)
+            {
+            if(SGM_MIN_TOL<aVs[Index1]-aVs[Index1-1] && fabs(aVs[Index1]-dMid)<dDist)
+                {
+                double dTest=(aVs[Index1]+aVs[Index1-1])*0.5;
+                if( fabs(dTest-dMid)<fabs(dV-dMid) )
+                    {
+                    dV=dTest;
+                    }
+                }
+            }
+
+        // Find the crossings of dV.
+
+        for(Index1=1;Index1<=nPolygon;++Index1)
+            {
+            SGM::Point2D const &uv1=aPolygon2D[Index1%nPolygon];
+            if(fabs(uv1.m_v-dMid)<dDist)
+                {
+                SGM::Point2D const &uv0=aPolygon2D[Index1-1];
+                if(uv0.m_v<dV && dV<uv1.m_v)
+                    {
+                    ++nVWinds;
+                    }
+                else if(uv1.m_v<dV && dV<uv0.m_v)
+                    {
+                    --nVWinds;
+                    }
+                }
+            }
+        }
+    }
+
+bool ConsistentFaces(SGM::Result &rResult,
+                     face  const *pFace1,
+                     face  const *pFace2)
+    {
+    std::vector<edge *> aEdges;
+    FindCommonEdgesFromFaces(rResult,pFace1,pFace2,aEdges);
+    edge *pEdge=aEdges[0];
+    std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+    if(sFaces.size()==2)
+        {
+        if(pFace1->GetSideType(pEdge)==pFace2->GetSideType(pEdge))
+            {
+            return false;
+            }
+        return true;
+        }
+    return false;
+    }
+
+void OrientFaces(SGM::Result                    &rResult,
+                 std::set<face *,EntityCompare> &sfaces)
+    {
+    std::set<face *,EntityCompare> sUsed;
+    face *pFace=*sfaces.begin();
+    sfaces.erase(pFace);
+    sUsed.insert(pFace);
+    while(sfaces.size())
+        {
+        face *pTestFace=*sfaces.begin();
+        std::set<face *,EntityCompare> sAdjacentFaces;
+        FindAdjacentFaces(rResult,pTestFace,sAdjacentFaces);
+        for(auto pAdjacentFace : sAdjacentFaces)
+            {
+            if(sUsed.find(pAdjacentFace)!=sUsed.end())
+                {
+                if(ConsistentFaces(rResult,pTestFace,pAdjacentFace)==false)
+                    {
+                    pFace->Negate();
+                    }
+                sUsed.insert(pTestFace);
+                sfaces.erase(pTestFace);
+                break;
+                }
+            }
+        }
+    }
+
+void OrientBody(SGM::Result &rResult,
+                body        *pBody)
+    {
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pBody,sFaces);
+    if(!sFaces.empty())
+        {
+        std::set<SGM::Face> sDouble;
+        for(auto pFace : sFaces)
+            {
+            if(pFace->GetSides()==2)
+                {
+                sDouble.insert(SGM::Face(pFace->GetID()));
+                }
+            }
+        SGM::Graph graph(rResult,sDouble,true);
+        std::vector<SGM::Graph> aComponents;
+        graph.FindComponents(aComponents);
+        for(auto comp : aComponents)
+            {
+            std::set<size_t> const &sVerts=comp.GetVertices();
+            std::set<face *,EntityCompare> sfaces;
+            for(auto FaceID : sVerts)
+                {
+                sfaces.insert((face *)rResult.GetThing()->FindEntity(FaceID));
+                }
+            OrientFaces(rResult,sfaces);
+            }
+        }
     }
 
 } // End of SGMInternal namespace.

@@ -105,7 +105,7 @@ SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
     SGM::Vector3D DU,DV;
     SGM::UnitVector3D Norm;
     SGM::Point2D Answer=StartUV;
-    while(nCount<100 && fabs(dDot) >= SGM_ZERO &&
+    while(nCount<100 && 
        (SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
         SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO))
         {
@@ -275,7 +275,7 @@ void surface::SnapToDomain(SGM::Point2D &uv) const
         }
     }
 
-SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D        &uv,
+SGM::UnitVector2D surface::FindSurfaceDirection(SGM::Point2D  const &uv,
                                                 SGM::Vector3D const &Vec) const
     {
     SGM::Vector3D Du,Dv;

@@ -982,6 +982,8 @@ class face : public topology
 
         // Find methods
 
+        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;
+
         size_t FindLoops(SGM::Result                                  &rResult,
                          std::vector<std::vector<edge *> >            &aaLoops,
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
@@ -1004,6 +1006,8 @@ class face : public topology
         void TransformFacets(SGM::Transform3D const &Trans);
 
         bool HasBranchedVertex() const;
+
+        void Negate();
 
     private:
 

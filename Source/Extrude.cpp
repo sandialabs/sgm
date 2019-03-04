@@ -5,6 +5,7 @@
 #include "SGMTransform.h"
 
 #include "EntityClasses.h"
+#include "EntityFunctions.h"
 #include "Surface.h"
 #include "Curve.h"
 
@@ -182,11 +183,21 @@ void extrude::Transform(SGM::Result            &,//rResult,
     m_vAxis=Trans*m_vAxis;
     }
 
-curve *extrude::UParamLine(SGM::Result &, double) const
-    { throw std::logic_error("Derived class of surface must override UParamLine()"); }
+curve *extrude::UParamLine(SGM::Result &rResult, double dU) const
+    { 
+    SGM::Point3D Pos;
+    m_pCurve->Evaluate(dU,&Pos);
+    return new line(rResult,Pos,m_vAxis);
+    }
 
-curve *extrude::VParamLine(SGM::Result &, double) const
-    { throw std::logic_error("Derived class of surface must override VParamLine()"); }
+curve *extrude::VParamLine(SGM::Result &rResult, double dV) const
+    { 
+    SGM::Vector3D Offset=m_vAxis*dV;
+    curve *pCurve=(curve *)CopyEntity(rResult,m_pCurve);
+    SGM::Transform3D Trans(Offset);
+    pCurve->Transform(rResult,Trans);
+    return pCurve; 
+    }
 
 void extrude::SetCurve(curve *pCurve)
     {

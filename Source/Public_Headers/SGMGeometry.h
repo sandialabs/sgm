@@ -187,6 +187,9 @@ SGM_EXPORT SGM::Surface CreateExtrudeSurface(SGM::Result             &rResult,
 SGM_EXPORT SGM::Interval1D const &GetCurveDomain(SGM::Result      &rResult,
                                                  SGM::Curve const &CurveID);
 
+SGM_EXPORT bool IsCurveClosed(SGM::Result      &rResult,
+                              SGM::Curve const &CurveID);
+
 SGM_EXPORT void EvaluateCurve(SGM::Result      &rResult,
                               SGM::Curve const &CurveID, 
                               double            dt,
@@ -262,6 +265,15 @@ SGM_EXPORT bool IsSingularity(SGM::Result        &rResult,
                               SGM::Surface const &SurfaceID,
                               SGM::Point2D const &uv,
                               double              dTolerance);
+
+// Returns how many times the given polygon of points, which are assumed to 
+// be on the given surface wind around the surface in the U and V directions.
+
+SGM_EXPORT void FindWindingNumbers(SGM::Result                     &rResult,
+                                   SGM::Surface              const &SurfaceID,
+                                   std::vector<SGM::Point3D> const &aPolygon3D,
+                                   int                             &nUWinds,
+                                   int                             &nVWinds);
 
 //////////////////////////////////////////////////////////////////////////////
 //

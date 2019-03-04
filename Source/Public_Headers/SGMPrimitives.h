@@ -42,7 +42,8 @@ SGM_EXPORT SGM::Body CreateSphere(SGM::Result        &rResult,
 SGM_EXPORT SGM::Body CreateCylinder(SGM::Result        &rResult,
                                     SGM::Point3D const &BottomCenter,
                                     SGM::Point3D const &TopCenter,
-                                    double              dRadius);
+                                    double              dRadius,
+                                    bool                bSheetBody=false);
 
 SGM_EXPORT SGM::Body CreateCone(SGM::Result        &rResult,
                                 SGM::Point3D const &BottomCenter,
@@ -84,6 +85,12 @@ SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result                    &rResult,
                                      SGM::Surface                   &SurfaceID,
                                      std::vector<SGM::Edge>         &aEdges,
                                      std::vector<SGM::EdgeSideType> &aTypes);
+
+SGM_EXPORT SGM::Body CreateSheetBody(SGM::Result           &rResult,
+                                     SGM::Surface          &SurfaceID,
+                                     SGM::Interval2D const &Domain);
+
+// If edges are not given then the whole surface is used to make a sheet body.
 
 SGM_EXPORT SGM::Face CreateFaceFromSurface(SGM::Result                    &rResult,
                                            SGM::Surface                   &SurfaceID,

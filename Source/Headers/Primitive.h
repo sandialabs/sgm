@@ -19,7 +19,8 @@ body *CreateSphere(SGM::Result        &rResult,
 body *CreateCylinder(SGM::Result        &rResult,
                      SGM::Point3D const &BottomCenter,
                      SGM::Point3D const &TopCenter,
-                     double              dRadius);
+                     double              dRadius,
+                     bool                bSheetBody=false);
 
 body *CreateCone(SGM::Result        &rResult,
                  SGM::Point3D const &BottomCenter,
@@ -86,10 +87,15 @@ body *CreateSheetBody(SGM::Result                    &rResult,
                       std::vector<edge *>            &aEdges,
                       std::vector<SGM::EdgeSideType> &aTypes);
 
+body *CreateSheetBody(SGM::Result           &rResult,
+                      surface               *pSurface,
+                      SGM::Interval2D const &Domain);
+
 face *CreateFaceFromSurface(SGM::Result                    &rResult,
                             surface                        *pSurface,
                             std::vector<edge *>            &aEdges,
-                            std::vector<SGM::EdgeSideType> &aTypes);
+                            std::vector<SGM::EdgeSideType> &aTypes,
+                            SGM::Interval2D          const *pDomain=nullptr);
 
 body *CoverPlanarWire(SGM::Result &rResult,
                       body        *pPlanarWire);

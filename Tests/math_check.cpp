@@ -27,6 +27,99 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+TEST(math_check, bulge_area)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions options;
+    std::string file_path = get_models_file_path("bulge.stp");
+    options.m_bMerge=true;
+    SGM::ReadFile(rResult, file_path, aEntities, log, options);
+    ASSERT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,aEntities[0],sFaces);
+    EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);
+    auto iter=sFaces.begin();
+    ++iter;
+    SGM::Face FaceID=*(iter);
+    double dArea=SGM::FindArea(rResult,FaceID);
+   
+    EXPECT_NEAR(dArea,40.676307120618583750332669282937,SGM_MIN_TOL);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, ruled_surface)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1 = {{0,0,0}, {1,0,0}};
+    std::vector<SGM::Point3D> aPoints2 = {{0,1,0}, {1,1,.7}};
+    std::vector<std::vector<SGM::Point3D>> aaPoints;
+    aaPoints.push_back(aPoints1);
+    aaPoints.push_back(aPoints2);
+    SGM::Surface NUBID = SGM::CreateNUBSurface(rResult, aaPoints);
+
+    std::vector<SGM::Edge> aEdges;
+    std::vector<SGM::EdgeSideType> aTypes;
+    SGM::Body BodyID = SGM::CreateSheetBody(rResult, NUBID, aEdges, aTypes);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+
+TEST(math_check, top_level_faces)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints1 =
+        {
+            {-2, 0.5, 0},
+            {-1, 1.5, 0},
+            { 0, 1,   0},
+            { 1, 1.5, 0},
+            { 2, 2,   0}
+        };
+
+    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
+
+    SGM::Point3D Origin(-1,0,0);
+    SGM::UnitVector3D Axis(1,0,0);
+    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
+
+    std::vector<SGM::Edge> aEdges;
+    std::vector<SGM::EdgeSideType> aTypes;
+    SGM::CreateFaceFromSurface(rResult,RevolveID,aEdges,aTypes);
+
+    std::vector<SGM::Point3D> aHits;
+    std::vector<SGM::IntersectionType> aTypes2;
+    SGM::RayFire(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),SGM::Thing(),aHits,aTypes2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(math_check, disk_area)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    double dArea=SGM::FindArea(rResult,FaceID);
+    
+    EXPECT_NEAR(dArea,SGM_PI,SGM_MIN_TOL);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(math_check, edge_params)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -1150,14 +1243,12 @@ TEST(math_check, quartic_equation)
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
-
     // (x-1)(x-1)(x^2+1) -> x^4-2*x^3+2*x^2-2*x+1 One double root.
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_MIN_TOL);
     EXPECT_EQ(nRoots,1);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-
 
     // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 
@@ -2095,6 +2186,7 @@ TEST(math_check, sphere_area)
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,BodyID,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
+    std::cout << "sphere_area" << std::endl;
     double dArea=SGM::FindArea(rResult,FaceID);
     EXPECT_TRUE(SGM::NearEqual(dArea,6.283185307179586476925286766559,SGM_MIN_TOL,true));
     SGM::DeleteEntity(rResult,BodyID);
@@ -4176,37 +4268,6 @@ TEST(math_check, testing_the_thing)
     // make sure the Block's box also got updated
     SGM::Interval3D BlockBox2 = SGM::GetBoundingBox(rResult, BodyID);
     EXPECT_TRUE(SGM::NearEqual(ThingBox2.MidPoint(), BlockBox2.MidPoint(), SGM_MIN_TOL));
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
-
-TEST(math_check, top_level_faces)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    std::vector<SGM::Point3D> aPoints1 =
-        {
-            {-2, 0.5, 0},
-            {-1, 1.5, 0},
-            { 0, 1,   0},
-            { 1, 1.5, 0},
-            { 2, 2,   0}
-        };
-
-    SGM::Curve CurveID = SGM::CreateNUBCurve(rResult, aPoints1);
-
-    SGM::Point3D Origin(-1,0,0);
-    SGM::UnitVector3D Axis(1,0,0);
-    SGM::Surface RevolveID=SGM::CreateRevolveSurface(rResult,Origin,Axis,CurveID);
-
-    std::vector<SGM::Edge> aEdges;
-    std::vector<SGM::EdgeSideType> aTypes;
-    SGM::CreateFaceFromSurface(rResult,RevolveID,aEdges,aTypes);
-
-    std::vector<SGM::Point3D> aHits;
-    std::vector<SGM::IntersectionType> aTypes2;
-    SGM::RayFire(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),SGM::Thing(),aHits,aTypes2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

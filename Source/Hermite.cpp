@@ -279,4 +279,15 @@ void hermite::Transform(SGM::Result            &,//rResult,
     m_aSeedPoints.clear();
     }
 
+std::vector<double> hermite::SpecialFacetParams() const
+    {
+    if(m_bClosed==false)
+        {
+        return m_aParams;
+        }
+    std::vector<double> aAnswer;
+    return aAnswer;
+    }
+
+
 } // End of SGMInternal namespace
