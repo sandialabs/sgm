@@ -22,18 +22,18 @@ namespace SGM
     /////////////////////////////////////////////////////////////////////////
 
     SGM_EXPORT bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
-                                         Point3D                         &Origin,
-                                         UnitVector3D                    &XVec,
-                                         UnitVector3D                    &YVec,
-                                         UnitVector3D                    &ZVec);
+                                         Point3D                    &Origin,
+                                         UnitVector3D               &XVec,
+                                         UnitVector3D               &YVec,
+                                         UnitVector3D               &ZVec);
 
     // Returns the min and max X, Y, and Z value with Origin at (0,0,0).
 
     SGM_EXPORT Interval3D FindOrientedBox(std::vector<Point3D> const &aPoints,
-                                               Point3D                   const &Origin,
-                                               UnitVector3D              const &XVec,
-                                               UnitVector3D              const &YVec,
-                                               UnitVector3D              const &ZVec);
+                                               Point3D         const &Origin,
+                                               UnitVector3D    const &XVec,
+                                               UnitVector3D    const &YVec,
+                                               UnitVector3D    const &ZVec);
 
     SGM_EXPORT bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
                                           Point3D                    &Origin,
@@ -52,8 +52,8 @@ namespace SGM
 
     SGM_EXPORT bool ArePointsCoplanar(std::vector<Point3D> const &aPoints3D,
                                       double                      dTolerance,
-                                      Point3D                    *Origin = nullptr,
-                                      UnitVector3D               *Normal = nullptr);
+                                      Point3D                    *Origin=nullptr,
+                                      UnitVector3D               *Normal=nullptr);
 
     SGM_EXPORT Point2D FindCenterOfMass2D(std::vector<Point2D> const &aPoints);
     
@@ -91,7 +91,7 @@ namespace SGM
     // Optionaly a box may be given that the points must be in also.
 
     SGM_EXPORT void RemoveDuplicates3D(std::vector<Point3D> &aPoints,
-                                       double                     dTolerance,
+                                       double                dTolerance,
                                        Interval3D     const *Box=nullptr);
 
     // Returns the Hausdarff distance between the two point sets.
@@ -125,13 +125,6 @@ namespace SGM
 
     SGM_EXPORT bool PointInPolygon(Point2D              const &Pos,
                                    std::vector<Point2D> const &aPolygon);
-
-    // Returns the distances to the given polygon from the given point. 
-    // In other words the smallest distance to one of the defining line 
-    // segments of the polygon.
-
-    //SGM_EXPORT double DistanceToPolygon(Point2D              const &Pos,
-    //                                    std::vector<Point2D> const &aPolygon);
 
     // Returns true if the given point is inside the first polygon and outside the others,
     // If the given point is on one of the the polygon, then the returned answer may
@@ -248,7 +241,7 @@ namespace SGM
     // std::numeric_limits<unsigned int>::max() for that edges.
 
     SGM_EXPORT size_t FindAdjacencies2D(std::vector<unsigned int> const &aTriangles,
-                                        std::vector<unsigned int> &aAdjacences);
+                                        std::vector<unsigned int>       &aAdjacences);
 
     // Given segments in the form <a0,b0,a1,b1,b2,c2,...>
     // FindAdjacences1D returns a verctor of the form <Sa0,Sb0,Sa1,Sb1,...>
@@ -279,19 +272,14 @@ namespace SGM
     SGM_EXPORT double FindMinEdgeLength2D(std::vector<Point2D>      const &aPoints2D,
                                           std::vector<unsigned int> const &aTriangles);
 
-    // Returns the boundary edges of the given triangles.  Boundary edges are
-    // edges that belong to only one triangle. The direction of the triangle's edge
-    // is returned in the set.
-
-    //SGM_EXPORT void FindBoundaryEdges(std::vector<unsigned int>                 const &aTriangles,
-    //                                  std::set<std::pair<unsigned int,unsigned int> > &sBoundaryEdges);
-
     // Creates a vector of points and triangles for a grid of u and v values.
+    // Optionaly the distance to the closest point, for each point in the grid, is returned.
 
     SGM_EXPORT void CreateTrianglesFromGrid(std::vector<double> const &aUValues,
                                             std::vector<double> const &aVValues,
                                             std::vector<Point2D>      &aPoints2D,
-                                            std::vector<unsigned int> &aTriangles);
+                                            std::vector<unsigned int> &aTriangles,
+                                            std::vector<double>       *aDistances=nullptr);
 
     // Inserts a polygon into the given triangles and remove triangles that are outside
     // the polygon, where the polygon is assumed to go counter clockwise.  The indices 
@@ -301,12 +289,12 @@ namespace SGM
     // flags may be given that tell is a point is to be imprinted or not, with false
     // meaning to skip the imprinting of the point.
 
-    SGM_EXPORT bool InsertPolygon(Result                &rResult,
+    SGM_EXPORT bool InsertPolygon(Result                     &rResult,
                                   std::vector<Point2D> const &aPolygon,
                                   std::vector<Point2D>       &aPoints2D,
                                   std::vector<unsigned int>  &aTriangles,
                                   std::vector<unsigned int>  &aPolygonIndices,
-                                  Surface               *pSurfaceID=nullptr,
+                                  Surface                    *pSurfaceID=nullptr,
                                   std::vector<Point3D>       *pPoints3D=nullptr,
                                   std::vector<UnitVector3D>  *pNormals=nullptr,
                                   std::vector<bool>          *pImprintFlag=nullptr);
@@ -337,7 +325,7 @@ namespace SGM
     // point cannot be removed.  The function also returns the indices of the triangles 
     // that were removed or changed, and the point indices of the triangels that were replaced.
 
-    SGM_EXPORT bool RemovePointFromTriangles(Result               &rResult,
+    SGM_EXPORT bool RemovePointFromTriangles(Result                    &rResult,
                                              unsigned int               nRemoveIndex,
                                              std::vector<Point2D>      &aPoints2D,
                                              std::vector<unsigned int> &aTriangles,
@@ -351,7 +339,7 @@ namespace SGM
     // reduced to only the used points.  Moreover, if dMinDist is not zero, then interior points
     // that are within dMinDist of the boundary are also removed. 
 
-    SGM_EXPORT void RemoveOutsideTriangles(Result                                   &rResult,
+    SGM_EXPORT void RemoveOutsideTriangles(Result                                        &rResult,
                                            std::vector<std::vector<unsigned int> > const &aaPolygons,
                                            std::vector<Point2D>                          &aPoints2D,
                                            std::vector<unsigned int>                     &aTriangles,
@@ -416,12 +404,12 @@ namespace SGM
     // nB are not both positive.
 
     SGM_EXPORT size_t GreatestCommonDivisor(size_t nA,
-                                 size_t nB);
+                                            size_t nB);
     
     // Returns true if nA and nB are positive and relatively prime.
 
     SGM_EXPORT bool RelativelyPrime(size_t nA,
-                         size_t nB);
+                                    size_t nB);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -435,7 +423,7 @@ namespace SGM
     // element p, not equal to m, such that m<p.
     
     SGM_EXPORT size_t FindMaximalElements(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
-                               std::vector<size_t>                       &aMaximalElements);
+                                          std::vector<size_t>                       &aMaximalElements);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
     // such that a<b if and only if <a,b> is in the set, find the decendents of
@@ -450,8 +438,8 @@ namespace SGM
     // a given group of parent elements.  An element a is a decendent of b if a<b.
 
     SGM_EXPORT size_t FindDecendentsOfGroup(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
-                                 std::vector<size_t>                 const &aParents,
-                                 std::vector<size_t>                       &aDecendents);
+                                            std::vector<size_t>                 const &aParents,
+                                            std::vector<size_t>                       &aDecendents);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
     // such that a<b if and only if <a,b> is in the set, find the childern of
@@ -465,8 +453,8 @@ namespace SGM
     // Returns all the decendents by their generation from a given nParent.
 
     SGM_EXPORT size_t FindGenerations(std::set<std::pair<size_t,size_t> > const &sPartialOrder,
-                           size_t                                     nParent,
-                           std::vector<std::vector<size_t> >         &aaGenerations);
+                                      size_t                                     nParent,
+                                      std::vector<std::vector<size_t> >         &aaGenerations);
 
     // Subsets a partial order to the only contain the given elements.
 
@@ -601,15 +589,15 @@ namespace SGM
                               std::vector<double> &aRoots,
                               double dTolerance);
 
-    // Given a vector of N points in the XY-plane PolynomialFit returns
-    // the coefficients of a degree N-1 polynomial that passes through the
-    // given points.  For examples if four points are given, then a degree
-    // three polynomial with coefficients (a,b,c,d) of the form 
-    // a*x^3+b*x^2+c*x+d=y will be returned.  If any two points have the
-    // same x coordinate, then false will be returned.
+    // Given three points in the xy plane with different x values the
+    // coefficients of a quadratic of the form dA*x^2+dB*x+dC=y are returned.
 
-    //SGM_EXPORT bool PolynomialFit(std::vector<Point2D> &aPoints,
-    //                              std::vector<double>  &aCoefficients);
+    SGM_EXPORT bool FindQuadratic(SGM::Point2D const &xy1,
+                                  SGM::Point2D const &xy2,
+                                  SGM::Point2D const &xy3,
+                                  double             &dA,
+                                  double             &dB,
+                                  double             &dC);
 
     ///////////////////////////////////////////////////////////////////////////
     //

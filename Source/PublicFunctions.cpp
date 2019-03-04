@@ -2504,17 +2504,35 @@ std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
     }
 
 void SGM::UniteBodies(SGM::Result &rResult,
-                      SGM::Body   &ReturnedBodyID,
+                      SGM::Body   &KeepBodyID,
                       SGM::Body   &DeletedBodyID)
     {
-    auto pReturnedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(ReturnedBodyID.m_ID);
+    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
     auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
-    SGMInternal::UniteBodies(rResult,pReturnedBody,pDeletedBody);
+    SGMInternal::UniteBodies(rResult,pKeepBody,pDeletedBody);
+    }
+
+void SGM::SubtractBodies(SGM::Result &rResult,
+                         SGM::Body   &KeepBodyID,
+                         SGM::Body   &DeletedBodyID)
+    {
+    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
+    auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
+    SGMInternal::SubtractBodies(rResult,pKeepBody,pDeletedBody);
     }
 
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {
     SGMInternal::ImprintVerticesOnClosedEdges(rResult);
+    }
+
+void SGM::TweakFace(SGM::Result  &rResult,
+                    SGM::Face    &FaceID,
+                    SGM::Surface &SurfaceID)
+    {
+    auto pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    auto pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
+    SGMInternal::TweakFace(rResult,pFace,pSurface);
     }
 
 SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,

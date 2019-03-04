@@ -3,9 +3,12 @@
 #include "SGMModify.h"
 
 #include "EntityClasses.h"
+#include "EntityFunctions.h"
 #include "Curve.h"
 #include "Surface.h"
 #include "Intersectors.h"
+#include "Primitive.h"
+#include "Modify.h"
 
 #include <limits>
 #include <algorithm>
@@ -865,6 +868,124 @@ void ImprintVerticesOnClosedEdges(SGM::Result &rResult)
             pEdge->SetStart(pVertex);
             pEdge->SetEnd(pVertex);
             }
+        }
+    }
+
+void TweakFace(SGM::Result   &rResult,
+               face          *pFace,
+               surface const *pInSurface)
+    {
+    surface *pSurface=(surface *)CopyEntity(rResult,(entity *)pInSurface);
+
+    // Find the new curves for each edge of the face.
+
+    std::map<edge *,curve *> mEdgeMap;
+    std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+    for(edge *pEdge : sEdges)
+        {
+        std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+        for(face *pEdgeFace : sFaces)
+            {
+            if(pEdgeFace!=pFace)
+                {
+                surface const *pSurface2=pEdgeFace->GetSurface();
+                std::vector<curve *> aCurves;
+                IntersectSurfaces(rResult,pSurface,pSurface2,aCurves,SGM_MIN_TOL);
+                mEdgeMap[pEdge]=aCurves[0];
+                }
+            }
+        }
+
+    // Find the new points for each vertex of the face.
+
+    std::set<edge *> sAllEdges;
+    std::map<vertex *,SGM::Point3D> mVertexMap;
+    std::set<vertex *,EntityCompare> sVertices;
+    FindVertices(rResult,pFace,sVertices,false);
+    for(vertex *pVertex : sVertices)
+        {
+        std::set<edge *,EntityCompare> sVertexEdges=pVertex->GetEdges();
+        edge *pEdgeOffFace=nullptr;
+        edge *pEdgeOnFace=nullptr;
+        for(auto pVertexEdge : sVertexEdges)
+            {
+            sAllEdges.insert(pVertexEdge);
+            std::set<face *,EntityCompare> sFaces=pVertexEdge->GetFaces();
+            face *pFace1=*(++sFaces.begin());
+            face *pFace2=*(--sFaces.end());
+            if(pFace1!=pFace && pFace2!=pFace)
+                {
+                pEdgeOffFace=pVertexEdge;
+                }
+            else
+                {
+                pEdgeOnFace=pVertexEdge;
+                }
+            }
+        std::vector<SGM::Point3D> aPoints;
+        std::vector<SGM::IntersectionType> aTypes;
+        curve *pCurve2=mEdgeMap[pEdgeOnFace];
+        IntersectCurves(rResult,pEdgeOffFace->GetCurve(),pCurve2,aPoints,aTypes,SGM_FIT);
+        mVertexMap[pVertex]=aPoints[0];
+        }
+
+    // Replace the edge geometry.
+
+    for(auto EdgePair : mEdgeMap)
+        {
+        edge *pEdge=EdgePair.first;
+        curve *pCurve=EdgePair.second;
+        curve *pOldCurve=pEdge->GetCurve();
+        
+        // Make sure the curve is going the right way.
+
+        SGM::Point3D Pos=pEdge->FindMidPoint();
+        double t1=pCurve->Inverse(Pos);
+        double t2=pOldCurve->Inverse(Pos);
+        SGM::Vector3D Vec1,Vec2;
+        pCurve->Evaluate(t1,nullptr,&Vec1);
+        pOldCurve->Evaluate(t2,nullptr,&Vec2);
+        if(Vec1%Vec2<0)
+            {
+            pCurve->Negate();
+            }
+
+        pEdge->SetCurve(nullptr);
+        if(pOldCurve->GetEdges().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pOldCurve);
+            }
+        pEdge->SetCurve(pCurve);
+        }
+
+    // Replace the point of the vertices.
+
+    for(auto VertexPair : mVertexMap)
+        {
+        vertex *pVertex=VertexPair.first;
+        SGM::Point3D Pos=VertexPair.second;
+        pVertex->SetPoint(Pos);
+        }
+
+    // Replace the surface of the face.
+
+    surface *pOldSurface=pFace->GetSurface();
+    pFace->SetSurface(nullptr);
+    if(pOldSurface->GetFaces().empty())
+        {
+        rResult.GetThing()->DeleteEntity(pOldSurface);
+        }
+    pFace->SetSurface(pSurface);
+
+    // Fix the edge domains.
+
+    for(auto pEdge : sAllEdges)
+        {
+        SGM::Point3D StartPos=pEdge->GetStart()->GetPoint();
+        SGM::Point3D EndPos=pEdge->GetEnd()->GetPoint();
+        double t1=pEdge->GetCurve()->Inverse(StartPos);
+        double t2=pEdge->GetCurve()->Inverse(EndPos);
+        pEdge->SetDomain(rResult,SGM::Interval1D(t1,t2));
         }
     }
 

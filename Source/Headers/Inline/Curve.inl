@@ -19,7 +19,7 @@ namespace SGMInternal {
         entity::GetParents(sParents);
     }
 
-    inline SGM::Interval3D const &curve::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &curve::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; } // default box is max extent, derived class may override
 
     inline bool curve::IsTopLevel() const

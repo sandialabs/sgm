@@ -462,9 +462,17 @@ bool face::Check(SGM::Result              &rResult,
             CreateEdge(rResult,pLine2,&Domain2);
             CreateEdge(rResult,pLine3,&Domain3);
 #endif
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
+            // Check to see if this is at a singularity 
+
+            if( m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false)
+                {
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
+                }
             }
         }
     if(dMaxAngle!=0)

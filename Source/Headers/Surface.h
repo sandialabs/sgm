@@ -41,7 +41,7 @@ class surface : public entity
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override; // Default box is unbounded.
 
         bool IsTopLevel() const override;
 

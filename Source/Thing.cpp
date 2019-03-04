@@ -48,7 +48,7 @@ void thing::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     }
 }
 
-SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {

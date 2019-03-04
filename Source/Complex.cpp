@@ -161,7 +161,7 @@ complex::complex(SGM::Result &rResult,
         }
     }
 
-SGM::Interval3D const &complex::GetBox(SGM::Result &) const
+SGM::Interval3D const &complex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {

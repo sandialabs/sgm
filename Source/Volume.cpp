@@ -38,7 +38,7 @@ body *volume::GetBody() const
     return m_pBody;
     }
 
-SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &volume::GetBox(SGM::Result &rResult,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {

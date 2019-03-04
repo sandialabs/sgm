@@ -19,6 +19,129 @@
 
 #include "test_utility.h"
 
+TEST(modify, sphere_NUB_imprint_NUB)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(10,10,0),3);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfaceID,SphereID,aCurves);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
+    
+    SGM::Body SheetID=SGM::CreateSheetBody(rResult,SurfaceID,SGM::GetDomainOfSurface(rResult,SurfaceID));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,SheetID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, sphere_NUB_imprint_sphere)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(10,10,0),3);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfaceID,SphereID,aCurves);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
+    
+    SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, tweak_face_ambiguous)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CreateSphere(rResult,SGM::Point3D(5,5,10),sqrt(2)*5);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, tweak_face)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Body SheetID=SGM::CreateSheetBody(rResult,SurfaceID,SGM::GetDomainOfSurface(rResult,SurfaceID));
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(5,5,-10),SGM::Point3D(15,15,5));
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(--sFaces.end());
+    SGM::TweakFace(rResult,FaceID,SurfaceID);
+    SGM::DeleteEntity(rResult,SheetID);
+
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
+    SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(all_cases, peninsula_peninsula)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

@@ -19,7 +19,7 @@ void vertex::GetParents(std::set<entity *, EntityCompare> &sParents) const
     entity::GetParents(sParents);
 }
 
-SGM::Interval3D const &vertex::GetBox(SGM::Result &) const
+SGM::Interval3D const &vertex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         m_Box=SGM::Interval3D(GetPoint());
