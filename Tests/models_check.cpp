@@ -20,8 +20,10 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 using testing::internal::FilePath;
 
@@ -441,4 +443,7 @@ TEST(ModelDeathTest, sgm_models)
     concatenate_log_files();
     }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+

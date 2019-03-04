@@ -18,7 +18,7 @@
 #include "SGMChecker.h"
 
 #define SGM_TIMER 
-#include "Timer.h"
+#include "Util/timer.h"
 
 #include "test_utility.h"
 
@@ -1489,9 +1489,10 @@ TEST(math_check, min_cycles_odd)
     SGM::Graph graph(sVertices,sEdges);
 
     SGM::GraphEdge GE(0,1,0);
-    SGM::Graph GLoop=graph.FindMinCycle(GE);
-    EXPECT_EQ(GLoop.GetVertices().size(),7);
-    EXPECT_EQ(GLoop.GetEdges().size(),7);
+    SGM::Graph* pGLoop= graph.CreateMinCycle(GE);
+    EXPECT_EQ(pGLoop->GetVertices().size(),7);
+    EXPECT_EQ(pGLoop->GetEdges().size(),7);
+    delete pGLoop;
     }
 
 TEST(math_check, min_cycles_even)
@@ -1513,9 +1514,11 @@ TEST(math_check, min_cycles_even)
     SGM::Graph graph(sVertices,sEdges);
 
     SGM::GraphEdge GE(0,1,0);
-    SGM::Graph GLoop=graph.FindMinCycle(GE);
-    EXPECT_EQ(GLoop.GetVertices().size(),6);
-    EXPECT_EQ(GLoop.GetEdges().size(),6);
+    SGM::Graph *pGLoop=graph.CreateMinCycle(GE);
+    EXPECT_EQ(pGLoop->GetVertices().size(),6);
+    EXPECT_EQ(pGLoop->GetEdges().size(),6);
+
+    delete pGLoop;
     }
 
 TEST(math_check, triangulate_polygon_with_holes)
@@ -2213,12 +2216,12 @@ TEST(math_check, find_holes_stl)
         ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
         }
     std::vector<SGM::Complex> aHoles;
-    /*SGM::Complex HolesID=*/SGM::FindHoles(rResult,ComplexID,aHoles);
+    SGM::FindHoles(rResult,ComplexID,aHoles);
     SGM::DeleteEntity(rResult,ComplexID); 
 
     std::string OutputSGMLFile("STL Files/SNL-2024-T3-IMP1_Output.stl");
     SGM::TranslatorOptions Options;
-    SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);    
+    SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);
 
     SGMTesting::ReleaseTestThing(pThing);
 }

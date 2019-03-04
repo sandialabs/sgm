@@ -23,6 +23,31 @@
 namespace SGMInternal
 {
 
+// Like std::set_intersection, but return after finding the first intersection.
+
+template <class COMPARE, class INPUT1, class INPUT2, class OUTPUT>
+OUTPUT SetIntersectionFirst(INPUT1 pFirst1, INPUT1 pLast1,
+                            INPUT2 pFirst2, INPUT2 pLast2,
+                            OUTPUT pResult, COMPARE compareFunction)
+    {
+    while (pFirst1 != pLast1 && pFirst2 != pLast2)
+        {
+        if (compareFunction(*pFirst1, *pFirst2))
+            ++pFirst1;
+        else
+            {
+            if (!compareFunction(*pFirst2, *pFirst1))
+                {
+                *pResult = *pFirst1;
+                // ++pFirst1;
+                return ++pResult;
+                }
+            ++pFirst2;
+            }
+        }
+    return pResult;
+    }
+
 edge *FindEdge(entity *pEntA,entity *pEntB)
     {
     bool isAEdge = pEntA->GetType()==SGM::EdgeType;
@@ -46,15 +71,13 @@ edge *FindEdge(entity *pEntA,entity *pEntB)
     if( pEntA->GetType()==SGM::VertexType &&
         pEntB->GetType()==SGM::VertexType)
         {
-        auto pVertexA=(vertex *)pEntA;
-        auto pVertexB=(vertex *)pEntB;
-        std::set<edge *,EntityCompare> const &sEdgesA=pVertexA->GetEdges();
-        std::set<edge *,EntityCompare> const &sEdgesB=pVertexB->GetEdges();
+        auto const &sEdgesA=((vertex*)pEntA)->GetEdges();
+        auto const &sEdgesB=((vertex*)pEntB)->GetEdges();
         std::vector<edge*> aIntersection;
-        std::set_intersection(sEdgesA.begin(), sEdgesA.end(),
-                              sEdgesB.begin(), sEdgesB.end(),
-                              std::back_inserter(aIntersection),
-                              EntityCompare());
+        SetIntersectionFirst(sEdgesA.begin(), sEdgesA.end(),
+                             sEdgesB.begin(), sEdgesB.end(),
+                             std::back_inserter(aIntersection),
+                             EntityCompare());
         if (!aIntersection.empty())
             return (edge*)aIntersection[0];
         }
@@ -2602,7 +2625,15 @@ void FacetFace(SGM::Result                    &rResult,
         return;
         }
 
-    switch(pFace->GetSurface()->GetSurfaceType())
+    auto pSurface =pFace->GetSurface();
+    if (!pSurface)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeInconsistentData);
+        rResult.SetMessage(std::string("No surface on face ID ") + std::to_string(pFace->GetID()));
+        return;
+        }
+
+    switch(pSurface->GetSurfaceType())
         {
         case SGM::PlaneType:
             {

@@ -17,9 +17,10 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
-
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 bool TestIntersections(SGM::Result      &rResult,
                        SGM::Curve const &Curve1,
@@ -96,8 +97,8 @@ bool DoCurvesOverLap(SGM::Result      &rResult,
                      SGM::Curve const &CurveID1,
                      SGM::Curve const &CurveID2)
     {
-    if( SGM::GetCurveType(rResult,CurveID1)!=SGM::EntityType::HermiteCurveType && 
-        SGM::GetCurveType(rResult,CurveID1)!=SGM::EntityType::HermiteCurveType)
+    if( SGM::GetCurveType(rResult,CurveID1)!=SGM::EntityType::HermiteCurveType ||
+        SGM::GetCurveType(rResult,CurveID2)!=SGM::EntityType::HermiteCurveType)
         {
         return false;
         }
@@ -336,24 +337,19 @@ TEST(intersection_check, intersect_circle_hermite)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
     
-    std::vector<SGM::Point3D> aPoints;
-    std::vector<SGM::Vector3D> aVectors;
-    std::vector<double> aParams;
-    aPoints.push_back(SGM::Point3D(-1,-1,0));
-    aPoints.push_back(SGM::Point3D(0,-1,0));
-    aPoints.push_back(SGM::Point3D(0,0,0));
-    aPoints.push_back(SGM::Point3D(0,1,0));
-    aPoints.push_back(SGM::Point3D(3,1,0));
-    aVectors.push_back(SGM::Vector3D(1,0,0));
-    aVectors.push_back(SGM::Vector3D(2,0,0));
-    aVectors.push_back(SGM::Vector3D(-2,0,0));
-    aVectors.push_back(SGM::Vector3D(2,0,0));
-    aVectors.push_back(SGM::Vector3D(1,0,0));
-    aParams.push_back(0);
-    aParams.push_back(3);
-    aParams.push_back(4);
-    aParams.push_back(5);
-    aParams.push_back(8);
+    std::vector<SGM::Point3D> aPoints = {
+        {-1,-1, 0},
+        { 0,-1, 0},
+        { 0, 0, 0},
+        { 0, 1, 0},
+        { 3, 1, 0}};
+    std::vector<SGM::Vector3D> aVectors = {
+        {-1,-1, 0},
+        { 0,-1, 0},
+        { 0, 0, 0},
+        { 0, 1, 0},
+        { 3, 1, 0}};
+    std::vector<double> aParams = {0,3,4,5,8};
     SGM::Curve CurveID1=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
     SGM::CreateEdge(rResult,CurveID1);
 
@@ -820,7 +816,7 @@ TEST(intersection_check, intersect_plane_torus)
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID8,1));     // One Curve Spiric Section, Cassini oval
     EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID9,2));     // Two Curves Spiric Section
     EXPECT_TRUE(TestIntersections(rResult,TorusID2,PlaneID10,2));   // Two Touching Circles.
-    EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID11,2));    // Bernoulli’s lemniscate
+    EXPECT_TRUE(TestIntersections(rResult,TorusID,PlaneID11,2));    // Bernoulliï¿½s lemniscate
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -2286,14 +2282,13 @@ TEST(intersection_check, intersect_planar_NUBcurve_and_plane)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aInterpolate;
-    aInterpolate.reserve(5);
-
-    aInterpolate.emplace_back(0,-2,0);
-    aInterpolate.emplace_back(0,-1,0.5);
-    aInterpolate.emplace_back(0,0.0,0.25);
-    aInterpolate.emplace_back(0,1,0.1);
-    aInterpolate.emplace_back(0,2,.5);
+    std::vector<SGM::Point3D> aInterpolate = {
+        {0,-2.0, 0.0},
+        {0,-1.0, 0.5},
+        {0, 0.0, 0.25},
+        {0, 1.0, 0.1},
+        {0, 2.0, 0.5}
+    };
     
     SGM::Curve NUBcurveID = SGM::CreateNUBCurve(rResult, aInterpolate);
 
@@ -2367,15 +2362,14 @@ TEST(intersection_check, intersect_nonplanar_NUBcurve_and_plane)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aInterpolate;
-    aInterpolate.reserve(6);
-
-    aInterpolate.emplace_back(-2,3.01,0.01);
-    aInterpolate.emplace_back(-1,4,0);
-    aInterpolate.emplace_back(0,5,0);
-    aInterpolate.emplace_back(1,6,0);
-    aInterpolate.emplace_back(2,7,0);
-    aInterpolate.emplace_back(3,8,0);
+    std::vector<SGM::Point3D> aInterpolate = {
+        {-2,3.01,0.01},
+        {-1,4,0},
+        {0,5,0},
+        {1,6,0},
+        {2,7,0},
+        {3,8,0}
+    };
     
     SGM::Curve NUBcurveID = SGM::CreateNUBCurve(rResult, aInterpolate);
 
@@ -2620,26 +2614,27 @@ TEST(intersection_check, intersect_planar_NURBcurve_and_plane)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2);
-    aControlPoints.emplace_back(1,1,-1,1);
-    aControlPoints.emplace_back(1,1,-2,sqrt(2)/2);
-    aControlPoints.emplace_back(1,0,-2,1);
-    aControlPoints.emplace_back(1,-1,-2,sqrt(2)/2);
-    aControlPoints.emplace_back(1,-1,-3,1);
-        
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
+    std::vector<SGM::Point4D> aControlPoints = {
+        {1,0,0,1},
+        {1,1,0,sqrt(2)/2},
+        {1,1,-1,1},
+        {1,1,-2,sqrt(2)/2},
+        {1,0,-2,1},
+        {1,-1,-2,sqrt(2)/2},
+        {1,-1,-3,1}
+    };
+    std::vector<double> aKnots = {
+        0,
+        0,
+        0,
+        SGM_HALF_PI,
+        SGM_HALF_PI,
+        SGM_PI,
+        SGM_PI,
+        SGM_PI*1.5,
+        SGM_PI*1.5,
+        SGM_PI*1.5
+    };
 
     SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
@@ -2727,35 +2722,36 @@ TEST(intersection_check, intersect_nonplanar_NURBcurve_and_plane)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point4D> aControlPoints;
-    aControlPoints.emplace_back(1,0,0,1);
-    aControlPoints.emplace_back(1,1,0,sqrt(2)/2.0);
-    aControlPoints.emplace_back(1,1,-1,1);
-    aControlPoints.emplace_back(1,1,-2,sqrt(2)/2.0);
-    aControlPoints.emplace_back(1,0,-2,1);
-    aControlPoints.emplace_back(1,-1,-2,sqrt(2)/2.0);
-    aControlPoints.emplace_back(1,-1,-3,1);
-    aControlPoints.emplace_back(1,-1,-4,sqrt(2)/2.0);
-    aControlPoints.emplace_back(2,-1,-4,1);
-    //aControlPoints.emplace_back(0,1,0,1);
-    //aControlPoints.emplace_back(-1,1,0,sqrt(2)/2);
-    //aControlPoints.emplace_back(-1,1,-1,1);
-    //aControlPoints.emplace_back(-1,1,-2,sqrt(2)/2);
-    //aControlPoints.emplace_back(-1,0,-2,1);
-        
-    std::vector<double> aKnots;
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(0);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_HALF_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_PI*1.5);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
-    aKnots.push_back(SGM_TWO_PI);
+    std::vector<SGM::Point4D> aControlPoints = {
+        {1, 0, 0, 1},
+        {1, 1, 0, sqrt(2) / 2.0},
+        {1, 1,-1, 1},
+        {1, 1,-2, sqrt(2) / 2.0},
+        {1, 0,-2, 1},
+        {1,-1,-2, sqrt(2) / 2.0},
+        {1,-1,-3, 1},
+        {1,-1,-4, sqrt(2) / 2.0},
+        {2,-1,-4, 1}
+        //{0,1,0,1},
+        //{-1,1,0,sqrt(2)/2},
+        //{-1,1,-1,1},
+        //{-1,1,-2,sqrt(2)/2},
+        //{-1,0,-2,1},
+    };
+    std::vector<double> aKnots = {
+        0,
+        0,
+        0,
+        SGM_HALF_PI,
+        SGM_HALF_PI,
+        SGM_PI,
+        SGM_PI,
+        SGM_PI*1.5,
+        SGM_PI*1.5,
+        SGM_TWO_PI,
+        SGM_TWO_PI,
+        SGM_TWO_PI
+    };
 
     SGM::Curve NURBcurve = SGM::CreateNURBCurve(rResult, aControlPoints, aKnots);
 
@@ -2875,4 +2871,6 @@ TEST(intersection_check, intersect_line_and_cylinder)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

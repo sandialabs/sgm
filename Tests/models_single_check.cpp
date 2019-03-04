@@ -84,8 +84,10 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(models_single_check, inport_txt_points)
 {
@@ -589,4 +591,6 @@ TEST(assembly_check, import_two_level_assembly)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

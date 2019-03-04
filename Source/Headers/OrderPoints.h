@@ -2,9 +2,10 @@
 #define SGM_ORDERPOINTS_H
 
 #include "SGMVector.h"
-#include "buffer.h"
+#include "Util/buffer.h"
 
 #include <cmath>
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////
 //

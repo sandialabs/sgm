@@ -189,7 +189,9 @@ complex* ParseSTLCreateComplex(SGM::Result &rResult,
     if (bMerge)
         {
         // Merge the points and construct triangles indices.
-        pComplex = new complex(rResult, aPoints, 2.0 * std::numeric_limits<double>::epsilon());//numeric_tolerance<float>::relative);
+        // Note: STL files are stored as single precision float values.
+        double dTolerance = 2.0 * std::numeric_limits<float>::epsilon();
+        pComplex = new complex(rResult, aPoints, dTolerance);
         }
     else
         {
@@ -242,6 +244,7 @@ void ParseSTLTextSerial(SGM::Result &rResult,
 bool ParseSTLStreamChunk(StringLinesChunk          *p_aChunkLines,
                          std::vector<SGM::Point3D> *p_aPoints)
     {
+    p_aPoints->clear();
     for (std::string *pLine : *p_aChunkLines)
         {
         // If we are we at the end, notify the job.
@@ -252,14 +255,15 @@ bool ParseSTLStreamChunk(StringLinesChunk          *p_aChunkLines,
     return false;  // Notify job we are NOT at the end
     }
 
-void QueueSTLParseChunks(std::ifstream &inputFileStream,
-                         std::vector<StringLinesChunk*> &aChunkLines,
-                         std::vector<SGM::Point3D>      &aPoints,
-                         SGM::ThreadPool                &threadPool,
-                         std::vector<std::future<bool>> &futures)
+void QueueSTLParseChunks(std::ifstream                           &inputFileStream,
+                         std::vector<StringLinesChunk*>          &aChunkLines,
+                         std::vector<std::vector<SGM::Point3D>*> &aChunkPoints,
+                         SGM::ThreadPool                         &threadPool,
+                         std::vector<std::future<bool>>          &futures)
     {
     const size_t NUM_CHUNKS = aChunkLines.size();
     assert(NUM_CHUNKS > 0);
+    assert(NUM_CHUNKS == aChunkPoints.size());
     const size_t CHUNK_SIZE = aChunkLines[0]->size();
 
     // read and queue a number of chunks
@@ -268,7 +272,7 @@ void QueueSTLParseChunks(std::ifstream &inputFileStream,
         {
         bool isAtEnd = false;
         StringLinesChunk & aStringLinesChunk = *aChunkLines[k];
-
+        std::vector<SGM::Point3D> & aPointsChunk = *aChunkPoints[k];
         for (size_t iLine = 0; iLine < CHUNK_SIZE; ++iLine)
             {
             // read line from stream
@@ -285,16 +289,28 @@ void QueueSTLParseChunks(std::ifstream &inputFileStream,
         // add the chunk of strings task to the queue
         futures.emplace_back(threadPool.enqueue(std::bind(ParseSTLStreamChunk,
                                                           &aStringLinesChunk,
-                                                          &aPoints)));
+                                                          &aPointsChunk)));
         // check if no more jobs
         if (isAtEnd || !inputFileStream.good())
+            {
+            // signal the remaining strings chunks are empty and remaining points chunks are empty
+            for (size_t m = k+1; m < NUM_CHUNKS; ++m)
+                {
+                StringLinesChunk & aStringLinesChunkNext = *aChunkLines[m];
+                std::vector<SGM::Point3D> & aPointsChunkNext = *aChunkPoints[m];
+                (*aStringLinesChunkNext[0]).clear();
+                aPointsChunkNext.clear();
+                }
             break;
+            }
         }
     }
 
 
 // Returns true if the end of the "solid" was reached
-bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures)
+bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures,
+                        std::vector<std::vector<SGM::Point3D>*> &aChunkPoints,
+                        std::vector<SGM::Point3D> &aPoints)
     {
     bool isAtEnd = false;
 
@@ -307,16 +323,25 @@ bool SyncSTLParseChunks(std::vector<std::future<bool>> &futures)
         }
     futures.clear(); // ready to queue other jobs on the futures
 
+    // get points from each chunk
+    for (auto pPointsChunk : aChunkPoints)
+        {
+        aPoints.insert(aPoints.end(),pPointsChunk->cbegin(),pPointsChunk->cend());
+        }
+
     return isAtEnd;
     }
 
 
-void CreateSTLParseChunks(size_t nNumChunks,
-                          size_t nChunkLines,
-                          size_t nStringReserve,
-                          std::vector<StringLinesChunk*> &aChunkLines)
+void CreateSTLParseChunks(size_t                                   nNumChunks,
+                          size_t                                   nChunkLines,
+                          size_t                                   nStringReserve,
+                          size_t                                   nPointsReserve,
+                          std::vector<StringLinesChunk*>          &aChunkLines,
+                          std::vector<std::vector<SGM::Point3D>*> &aChunkPoints)
     {
     aChunkLines.reserve(nNumChunks);
+    aChunkPoints.reserve(nNumChunks);
     for (size_t i = 0; i < nNumChunks; ++i)
         {
         auto *pStringLinesChunk = new StringLinesChunk();
@@ -328,10 +353,15 @@ void CreateSTLParseChunks(size_t nNumChunks,
             pStringLinesChunk->push_back(pLine);
             }
         aChunkLines.push_back(pStringLinesChunk);
+
+        auto *pPointsChunk = new std::vector<SGM::Point3D>();
+        pPointsChunk->reserve(nPointsReserve);
+        aChunkPoints.push_back(pPointsChunk);
         }
     }
 
-void DestroySTLParseChunks(std::vector<StringLinesChunk*> &aChunkLines)
+void DestroySTLParseChunks(std::vector<StringLinesChunk*>          &aChunkLines,
+                           std::vector<std::vector<SGM::Point3D>*> &aChunkPoints)
     {
     // free the chunks of strings
     for (StringLinesChunk *pStringLinesChunk : aChunkLines)
@@ -339,6 +369,11 @@ void DestroySTLParseChunks(std::vector<StringLinesChunk*> &aChunkLines)
         for (std::string *pLine : *pStringLinesChunk)
             delete pLine;
         delete pStringLinesChunk;
+        }
+    // free the chunks of points
+    for (auto pPointsChunk : aChunkPoints)
+        {
+        delete pPointsChunk;
         }
     }
 
@@ -348,15 +383,17 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
                             bool                          bMerge)
     {
     const size_t STRING_RESERVE = 63;
-    const size_t CHUNK_SIZE = 2048;
-    const size_t NUM_CHUNKS = 1;
-    const size_t NUM_PARSE_THREADS = 1; // IMPORTANT: only one shared vector of points
+    const size_t CHUNK_SIZE = 1024;
+    const size_t NUM_PARSE_THREADS = 3;
+    const size_t NUM_CHUNKS = 6 * NUM_PARSE_THREADS;
+    const size_t NUM_POINTS_CHUNK = 43 * CHUNK_SIZE / 100;
 
     // make chunks of strings
     std::vector<StringLinesChunk *> aChunkLines;
-    CreateSTLParseChunks(NUM_CHUNKS, CHUNK_SIZE, STRING_RESERVE, aChunkLines);
+    std::vector<std::vector<SGM::Point3D>*> aChunkPoints;
+    CreateSTLParseChunks(NUM_CHUNKS, CHUNK_SIZE, STRING_RESERVE, NUM_POINTS_CHUNK, aChunkLines, aChunkPoints);
 
-    // storage for all the "vertex" points in the file
+    // storage for ALL the "vertex" points in the file
     std::vector<SGM::Point3D> aPoints;
 
     rResult.GetThing()->SetConcurrentActive();
@@ -385,18 +422,18 @@ void ParseSTLTextConcurrent(SGM::Result                  &rResult,
                 // read lines from file and queue jobs (futures) of chunks into the worker pool
                 QueueSTLParseChunks(inputFileStream,
                                     aChunkLines,
-                                    aPoints,
+                                    aChunkPoints,
                                     threadPool,
                                     futures);
 
-                // wait for jobs to complete, vertex points inserted into the main point vector
-                isAtEnd = SyncSTLParseChunks(futures);
+                // wait for jobs to complete, insert points from jobs into the main point vector
+                isAtEnd = SyncSTLParseChunks(futures, aChunkPoints, aPoints);
                 }
             }
         }
 
     inputFileStream.close();
-    DestroySTLParseChunks(aChunkLines);
+    DestroySTLParseChunks(aChunkLines, aChunkPoints);
 
     rResult.GetThing()->SetConcurrentInactive();
 

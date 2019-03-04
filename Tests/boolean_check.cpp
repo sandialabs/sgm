@@ -18,6 +18,11 @@
 
 #include "test_utility.h"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
+
 TEST(all_cases, peninsula_peninsula)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -439,6 +444,8 @@ TEST(boolean_check, imprint_edge_on_face)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 

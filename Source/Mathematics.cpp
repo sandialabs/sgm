@@ -17,16 +17,15 @@
 #include "Surface.h"
 
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
-#include "parallel_stable_sort.h"
-#include <boost/sort/sort.hpp>
+#include "Util/parallel_sort.h"
 #endif
 
 namespace SGMInternal
 {
 
 inline double sign(SGM::Point2D const &P1,
-                  SGM::Point2D const &P2,
-                  SGM::Point2D const &P3)
+                   SGM::Point2D const &P2,
+                   SGM::Point2D const &P3)
     {
     return (P1.m_u-P3.m_u)*(P2.m_v-P3.m_v)-(P2.m_u-P3.m_u)*(P1.m_v-P3.m_v);
     }
@@ -2130,7 +2129,7 @@ size_t FindAdjacencies2D(std::vector<unsigned> const &aTriangles,
     size_t nEdges = aEdges.size();
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
     if (nEdges > 10000)
-        boost::sort::block_indirect_sort(aEdges.begin(), aEdges.end());
+        parallel_sort(aEdges.begin(), aEdges.end());
     else
         std::sort(aEdges.begin(), aEdges.end());
 #else

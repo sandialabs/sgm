@@ -11,8 +11,10 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(volume_check, block_approximate)
 {
@@ -47,7 +49,7 @@ TEST(volume_check, sphere_sheet_body)
     SGM::Result rResult(pThing);
 
     SGM::Point3D Center(0,0,0);
-    SGM::UnitVector3D Norm(1,1,1),XAxis,YAxis;
+    SGM::UnitVector3D Norm(1,1,1);
     SGM::Curve CurveID=SGM::CreateCircle(rResult,Center,Norm,1.0);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
     SGM::Surface SurfaceID=SGM::CreateSphereSurface(rResult,Center,1.0);
@@ -137,4 +139,6 @@ TEST(volume_check, body_volumes)
 //    EXPECT_TIMEOUT_END(1)
 //}
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
