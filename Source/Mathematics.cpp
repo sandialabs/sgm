@@ -1543,8 +1543,6 @@ void ForceEdge(Result                                  &rResult,
         for(unsigned nPos : sRemove)
             {
             std::vector<unsigned> aRemovedOrChanged,aReplacedTriangles;
-            SGM::Point2D uv=aPoints2D[nPos];
-            SGM::Point3D Pos(uv.m_u,uv.m_v,0.0);
             SGM::RemovePointFromTriangles(rResult,nPos,aPoints2D,
                                           aTriangles,aRemovedOrChanged,
                                           aReplacedTriangles);

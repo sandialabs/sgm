@@ -415,6 +415,14 @@ SGM_EXPORT bool GetNURBSurfaceData(SGM::Result                             &rRes
                                    std::vector<std::vector<SGM::Point4D> > &aaControlPoints,
                                    std::vector<double>                     &aUKnots,
                                    std::vector<double>                     &aVKnots);
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Modification Functions
+//
+////////////////////////////////////////////////////////////////////////////////
+
+SGM_EXPORT void NegateCurve(SGM::Result &rResult,
+                            SGM::Curve  &CurveID);
 
     } // End of SGM namespace
 

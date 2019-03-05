@@ -34,10 +34,10 @@ void face::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     }
 
 void face::GetParents(std::set<entity *, EntityCompare> &sParents) const
-{
+    {
     sParents.emplace(m_pVolume);
     entity::GetParents(sParents);
-}
+    }
 
 SGM::Interval3D const &face::GetBox(SGM::Result &rResult,bool bContruct) const
     {

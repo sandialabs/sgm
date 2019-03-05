@@ -523,6 +523,10 @@ face *ImprintSplitter(SGM::Result &rResult,
         
     // Move the other loops to the face of the loop that they are inside.
 
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::Entity(pNewFace->GetID()),SGM::LogSplit);
+        }
     return pNewFace;
     }
 
@@ -563,6 +567,10 @@ face *ImprintAtoll(SGM::Result &rResult,
         }
     pFace->AddEdge(rResult,pEdge,pNewFace->GetSideType(pEdge)==SGM::FaceOnRightType ? SGM::FaceOnLeftType : SGM::FaceOnRightType);
     
+    if(rResult.GetLog())
+        {
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::Entity(pNewFace->GetID()),SGM::LogSplit);
+        }
     return pNewFace;
     }
 

@@ -318,6 +318,15 @@ std::vector<SGM::Point3D> const &edge::GetFacets(SGM::Result &rResult) const
     return m_aPoints3D;
     }
 
+
+void edge::AddFace(face *pFace) 
+    {
+    assert(nullptr == m_pVolume);
+    m_aPoints3D.clear();
+    m_aParams.clear();
+    m_sFaces.insert(pFace);
+    }
+
 std::vector<double> const &edge::GetParams(SGM::Result &rResult) const
     {
     if(m_aPoints3D.empty())

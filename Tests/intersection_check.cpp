@@ -2012,7 +2012,7 @@ TEST(intersection_check, cylinder_sphere_intersect)
 
     rResult.SetLog(true);
     /*SGM::Body CylinderID=*/SGM::CreateCylinder(rResult,Bottom,Top,dRadius);
-    std::vector<SGM::Entity> const &aLog=rResult.GetLogEntities();
+    std::vector<SGM::Entity> const &aLog=rResult.GetLogEntities1();
     SGM::Face CylinderFace(aLog[0].m_ID);
     SGM::Surface CylinderSurf=SGM::GetSurfaceOfFace(rResult,CylinderFace);
 
