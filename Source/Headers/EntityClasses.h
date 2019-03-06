@@ -134,7 +134,7 @@ public:
 
     virtual void DisconnectOwnedEntity(entity const *pEntity) = 0;
 
-    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
+    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const = 0;
 
     virtual void ResetBox(SGM::Result &rResult) const = 0;
 
@@ -220,7 +220,7 @@ class thing : public entity
         thing *Clone(SGM::Result &) const override
         { throw std::logic_error("not allowed"); }
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -379,7 +379,7 @@ class assembly : public topology
 
         assembly *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -422,7 +422,7 @@ class reference : public topology
 
         reference *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -472,7 +472,7 @@ class body : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -601,7 +601,7 @@ class complex : public topology
 
         complex *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -817,7 +817,7 @@ class volume : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
 
@@ -901,7 +901,7 @@ class face : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
 
@@ -1060,7 +1060,7 @@ class edge : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
@@ -1193,7 +1193,7 @@ class vertex : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
@@ -1217,6 +1217,8 @@ class vertex : public topology
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
+
+        void SetPoint(SGM::Point3D const &Pos) {m_Pos=Pos;}
 
         bool IsTopLevel() const override;
 
@@ -1257,7 +1259,7 @@ class attribute : public entity
 
         attribute *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 

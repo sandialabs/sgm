@@ -53,7 +53,7 @@ class curve : public entity
 
         void DisconnectOwnedEntity(entity const *) override {}
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 

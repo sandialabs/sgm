@@ -1,7 +1,3 @@
-#include "SGMMathematics.h"
-#include "SGMVector.h"
-#include "SGMGraph.h"
-
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
@@ -10,6 +6,11 @@
 #include "Curve.h"
 #include "Query.h"
 #include "Mathematics.h"
+
+#include "SGMGraph.h"
+#include "SGMMathematics.h"
+#include "SGMTriangle.h"
+#include "SGMVector.h"
 
 #include <cfloat>
 #include <algorithm>
@@ -39,9 +40,9 @@ void face::GetParents(std::set<entity *, EntityCompare> &sParents) const
     entity::GetParents(sParents);
 }
 
-SGM::Interval3D const &face::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &face::GetBox(SGM::Result &rResult,bool bContruct) const
     {
-    if (m_Box.IsEmpty())
+    if(m_Box.IsEmpty() && bContruct)
         {
         switch(GetSurface()->GetSurfaceType())
             {

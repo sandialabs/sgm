@@ -306,7 +306,7 @@ namespace SGMInternal {
     inline assembly *assembly::Clone(SGM::Result &rResult) const
     { return new assembly(rResult,*this); }
 
-    inline SGM::Interval3D const &assembly::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &assembly::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline bool assembly::IsTopLevel() const
@@ -342,7 +342,7 @@ namespace SGMInternal {
     inline reference *reference::Clone(SGM::Result &rResult) const
     { return new reference(rResult,*this); }
 
-    inline SGM::Interval3D const &reference::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &reference::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline bool reference::IsTopLevel() const
@@ -762,7 +762,7 @@ namespace SGMInternal {
     inline bool attribute::IsTopLevel() const
     { return m_sOwners.empty(); }
 
-    inline SGM::Interval3D const &attribute::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &attribute::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline void attribute::ReplacePointers(std::map<entity *,entity *> const &)

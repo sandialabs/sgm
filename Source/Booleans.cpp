@@ -1,8 +1,8 @@
-
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMModify.h"
 #include "SGMGraph.h"
+#include "SGMPolygon.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
@@ -169,10 +169,10 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
 
     // Add the end points of the curve and remove duplicates.
 
-    SGM::Interval3D Box=pFace0->GetBox(rResult);
+    SGM::Interval3D Box=pFace0->GetBox(rResult,false);
     if(pFace1)
         {
-        Box&=pFace1->GetBox(rResult);
+        Box&=pFace1->GetBox(rResult,false);
         }
     SGM::Interval1D const &Domain=pCurve->GetDomain();
     SGM::Point3D StartPos,EndPos;
@@ -180,7 +180,14 @@ void TrimCurveWithFaces(SGM::Result               &rResult,
     pCurve->Evaluate(Domain.m_dMax,&EndPos);
     aHits.push_back(StartPos);
     aHits.push_back(EndPos);
-    SGM::RemoveDuplicates3D(aHits,dTolerance,&Box);
+    if(Box.IsEmpty())
+        {
+        SGM::RemoveDuplicates3D(aHits,dTolerance);
+        }
+    else
+        {
+        SGM::RemoveDuplicates3D(aHits,dTolerance,&Box);
+        }
 
     // Find the parameters for each intersection.
 
@@ -896,9 +903,9 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     return aAnswer;
     }
 
-void UniteBodies(SGM::Result &rResult,
-                 body        *pKeepBody,
-                 body        *pDeleteBody)
+void ImprintBodies(SGM::Result &rResult,
+                   body        *pKeepBody,
+                   body        *pDeleteBody)
     {
     // To start with this is using an n^2 loop.  However, this should be replaced with a tree.
 
@@ -950,6 +957,20 @@ void UniteBodies(SGM::Result &rResult,
     // Orient the sheet body faces to be consistant with each other.
 
     OrientBody(rResult,pKeepBody);
+    }
+
+void SubtractBodies(SGM::Result &rResult,
+                    body        *pKeepBody,
+                    body        *pDeleteBody)
+    {
+    ImprintBodies(rResult,pKeepBody,pDeleteBody);
+    }
+
+void UniteBodies(SGM::Result &rResult,
+                 body        *pKeepBody,
+                 body        *pDeleteBody)
+    {
+    ImprintBodies(rResult,pKeepBody,pDeleteBody);
     }
 
 void FindWindingNumbers(surface                   const *pSurface,

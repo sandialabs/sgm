@@ -32,7 +32,7 @@ void edge::GetParents(std::set<entity *, EntityCompare> &sParents) const
     entity::GetParents(sParents);
 }
 
-SGM::Interval3D const &edge::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &edge::GetBox(SGM::Result &rResult,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {
@@ -270,7 +270,7 @@ void edge::SetCurve(curve *pCurve)
         {
         m_pCurve->RemoveEdge(this);
         }
-    // allow setting curve to nullptr for disconnecting during a delete operation
+    // Allow setting curve to nullptr for disconnecting during a delete operation.
     m_pCurve=pCurve;
     if (m_pCurve != nullptr)
         {

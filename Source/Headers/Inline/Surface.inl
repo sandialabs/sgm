@@ -7,7 +7,7 @@ namespace SGMInternal {
 // surface
 //
 
-inline SGM::Interval3D const &surface::GetBox(SGM::Result &) const
+inline SGM::Interval3D const &surface::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; } // default box is max extent made during constructors
 
 inline bool surface::IsTopLevel() const

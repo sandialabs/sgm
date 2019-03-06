@@ -191,7 +191,7 @@ TEST(models_single_check, import_Closed_Kelvin_BCC_4_4_4)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_single_check, import_check_OUO_Cone_definition)
+TEST(models_single_check, DISABLED_import_check_OUO_Cone_definition)
     {
     const char* file_name = "OUO_Cone_definition.stp";
     SCOPED_TRACE(file_name);

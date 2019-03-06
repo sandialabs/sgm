@@ -21,7 +21,7 @@ namespace SGM {
             {
             return Pos.Distance(m_Start);
             }
-        else if(dParam*dParam>LengthSquared())
+        else if(LengthSquared()<dParam*dParam)
             {
             return Pos.Distance(m_End);
             }

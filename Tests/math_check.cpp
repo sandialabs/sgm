@@ -16,6 +16,8 @@
 #include "SGMAttribute.h"
 #include "SGMTranslators.h"
 #include "SGMChecker.h"
+#include "SGMTriangle.h"
+#include "SGMPolygon.h"
 
 #define SGM_TIMER 
 #include "Util/timer.h"
@@ -2158,7 +2160,7 @@ TEST(math_check, torus_area)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(math_check, sphere_area)
+TEST(math_check, DISABLED_sphere_area)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -3836,11 +3838,13 @@ TEST(math_check, ray_fire_thing)
     SGM::Complex ComplexID=SGM::CreateComplex(rResult,BodyID);
     SGM::TransformEntity(rResult,SGM::Transform3D(SGM::Vector3D(1,1,1)),ComplexID);
 
+    SGM::DeleteEntity(rResult,BodyID);
+
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,SGM::Point3D(-1,-1,-1),SGM::UnitVector3D(1,1,1),SGM::Thing(),aPoints,aTypes);
 
-    EXPECT_EQ(aPoints.size(),4);
+    EXPECT_EQ(aPoints.size(),2);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 

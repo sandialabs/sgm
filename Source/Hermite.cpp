@@ -265,6 +265,7 @@ void hermite::Negate()
         tangent.Negate();
     m_aSeedParams.clear();
     m_aSeedPoints.clear();
+    m_aParams.clear();
     SGM::FindLengths3D(m_aPoints,m_aParams);
     }
 

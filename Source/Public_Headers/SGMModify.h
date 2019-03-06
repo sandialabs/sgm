@@ -67,6 +67,12 @@ SGM_EXPORT void Merge(SGM::Result &rResult,
 
 SGM_EXPORT void ImprintVerticesOnClosedEdges(SGM::Result &rResult);
 
+// Replaces the surface of FaceID with SurfaceID.
+
+SGM_EXPORT void TweakFace(SGM::Result  &rResult,
+                          SGM::Face    &FaceID,
+                          SGM::Surface &SurfaceID);
+
 // Unhook the given faces and return them in a different body.
 /*
 SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,

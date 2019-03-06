@@ -1,11 +1,14 @@
 #include <iostream>
 #include <iomanip>
-#include "SGMMathematics.h"
-#include "SGMComplex.h"
-#include "SGMTranslators.h"
+
 #include "SGMBoxTree.h"
-#include "SGMPrimitives.h"
+#include "SGMComplex.h"
 #include "SGMGraph.h"
+#include "SGMMathematics.h"
+#include "SGMPolygon.h"
+#include "SGMPrimitives.h"
+#include "SGMTranslators.h"
+#include "SGMTriangle.h"
 
 #include "EntityClasses.h"
 #include "Mathematics.h"
@@ -161,7 +164,7 @@ complex::complex(SGM::Result &rResult,
         }
     }
 
-SGM::Interval3D const &complex::GetBox(SGM::Result &) const
+SGM::Interval3D const &complex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {

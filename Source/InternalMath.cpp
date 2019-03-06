@@ -527,6 +527,7 @@ double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
     size_t nSameSize=0;
     bool bFound=false;
     double dF=(*f)(Answer,pData);
+    bool bDown=false;
     while(!bFound)
         {
         SGM::Point2D uvn0(Answer.m_u-dStepSize,Answer.m_v);
@@ -539,33 +540,65 @@ double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
         double duv0n=(*f)(uv0n,pData);
         double duv01=(*f)(uv01,pData);
 
+        SGM::Point2D xy1(Answer.m_u-dStepSize,duvn0),xy2(Answer.m_u,dF),xy3(Answer.m_u+dStepSize,duv10);
+        SGM::Point2D xy4(Answer.m_v-dStepSize,duv0n),xy5(Answer.m_v,dF),xy6(Answer.m_v+dStepSize,duv01);
+        double dAu,dBu,dCu,dAv,dBv,dCv;
+        FindQuadratic(xy1,xy2,xy3,dAu,dBu,dCu);
+        FindQuadratic(xy4,xy5,xy6,dAv,dBv,dCv);
+        SGM::Point2D uv1(-dBu/(2*dAu),-dBv/(2*dAv));
+
         SGM::UnitVector2D WalkDir(duvn0-duv10,duv0n-duv01);
         SGM::Vector2D Walk=WalkDir*dStepSize;
-        SGM::Point2D uv=Answer+Walk;
-        if(uv.m_u<Domain.m_UDomain.m_dMin)
+        SGM::Point2D uv2=Answer+Walk;
+
+        if(uv1.m_u<Domain.m_UDomain.m_dMin)
             {
-            uv.m_u=Domain.m_UDomain.m_dMin;
+            uv1.m_u=Domain.m_UDomain.m_dMin;
             }
-        else if(Domain.m_UDomain.m_dMax<uv.m_u)
+        else if(Domain.m_UDomain.m_dMax<uv1.m_u)
             {
-            uv.m_u=Domain.m_UDomain.m_dMax;
+            uv1.m_u=Domain.m_UDomain.m_dMax;
             }
-        if(uv.m_v<Domain.m_VDomain.m_dMin)
+        if(uv1.m_v<Domain.m_VDomain.m_dMin)
             {
-            uv.m_v=Domain.m_VDomain.m_dMin;
+            uv1.m_v=Domain.m_VDomain.m_dMin;
             }
-        else if(Domain.m_VDomain.m_dMax<uv.m_v)
+        else if(Domain.m_VDomain.m_dMax<uv1.m_v)
             {
-            uv.m_v=Domain.m_VDomain.m_dMax;
+            uv1.m_v=Domain.m_VDomain.m_dMax;
             }
 
-        double dNewF=(*f)(uv,pData);
+        if(uv2.m_u<Domain.m_UDomain.m_dMin)
+            {
+            uv2.m_u=Domain.m_UDomain.m_dMin;
+            }
+        else if(Domain.m_UDomain.m_dMax<uv2.m_u)
+            {
+            uv2.m_u=Domain.m_UDomain.m_dMax;
+            }
+        if(uv2.m_v<Domain.m_VDomain.m_dMin)
+            {
+            uv2.m_v=Domain.m_VDomain.m_dMin;
+            }
+        else if(Domain.m_VDomain.m_dMax<uv2.m_v)
+            {
+            uv2.m_v=Domain.m_VDomain.m_dMax;
+            }
+
+        double dNewF2=(*f)(uv1,pData);
+        double dNewF=(*f)(uv2,pData);
+        SGM::Point2D uv=uv2;
+        if(dNewF2<dNewF)
+            {
+            uv=uv1;
+            dNewF=dNewF2;
+            }
         if(dNewF<dF)
             {
             ++nSameSize;
             Answer=uv;
             dF=dNewF;
-            if(4<nSameSize)
+            if(bDown==false && 4<nSameSize)
                 {
                 dStepSize*=2.0;
                 }
@@ -577,6 +610,7 @@ double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
         else
             {
             nSameSize=0;
+            bDown=true;
             dStepSize*=0.5;
             }
         }

@@ -127,6 +127,10 @@ void RemoveFace(SGM::Result &rResult,
 void Merge(SGM::Result &rResult,
            entity      *pEntity);
 
+void TweakFace(SGM::Result   &rResult,
+               face          *pFace,
+               surface const *pSurface);
+
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces);
 

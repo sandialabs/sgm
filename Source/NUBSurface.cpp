@@ -41,26 +41,24 @@ NUBsurface::NUBsurface(SGM::Result                                  &rResult,
     size_t nUSize=aaInterpolatePoints.size();
     size_t nVSize=aaInterpolatePoints[0].size();
     std::vector<double> aULengths,aVLengths;
-    size_t nUDegree=FindKnots(aaInterpolatePoints[nUSize/2],m_aUKnots,aULengths);
+    size_t nVDegree=FindKnots(aaInterpolatePoints[nUSize/2],m_aVKnots,aVLengths);
     
     std::vector<std::vector<SGM::Point3D> > aaPoints;
     std::vector<SGM::Point3D> aMidVPoints;
     for(auto aPoints : aaInterpolatePoints)
         {
-        std::vector<double> aKnots;
         std::vector<SGM::Point3D> aControlPoints;
-        FindControlPoints(aPoints,m_aUKnots,aULengths,nUDegree,aControlPoints);
+        FindControlPoints(aPoints,m_aVKnots,aVLengths,nVDegree,aControlPoints);
         aaPoints.push_back(aControlPoints);
         aMidVPoints.push_back(aPoints[nVSize/2]);
         }
 
-    size_t nVDegree=FindKnots(aMidVPoints,m_aVKnots,aVLengths);
+    size_t nUDegree=FindKnots(aMidVPoints,m_aUKnots,aULengths);
     std::vector<std::vector<SGM::Point3D> > aaControlPoints;
     for(auto aPoints : aaPoints)
         {
-        std::vector<double> aKnots;
         std::vector<SGM::Point3D> aControlPoints;
-        FindControlPoints(aPoints,m_aVKnots,aVLengths,nVDegree,aControlPoints);
+        FindControlPoints(aPoints,m_aUKnots,aULengths,nUDegree,aControlPoints);
         m_aaControlPoints.push_back(aControlPoints);
         }
 
