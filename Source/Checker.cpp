@@ -4,6 +4,7 @@
 #include "Curve.h"
 #include "Surface.h"
 #include "Topology.h"
+#include "Primitive.h"
 
 #include <sstream>
 
@@ -448,7 +449,7 @@ bool face::Check(SGM::Result              &rResult,
         double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
         double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
         double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
-        double dTol=0.70710678118654752440084436210485; // cos(45) degrees
+        double dTol=0.64278760968653932632264340990726; // cos(50) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
 #if 0

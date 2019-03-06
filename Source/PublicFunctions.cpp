@@ -2519,6 +2519,23 @@ void SGM::UniteBodies(SGM::Result &rResult,
     SGMInternal::UniteBodies(rResult,pKeepBody,pDeletedBody);
     }
 
+void SGM::TrimCurveWithFace(SGM::Result               &rResult,
+                            SGM::Curve                &CurveID,
+                            SGM::Face           const &FaceID,
+                            std::vector<SGM::Edge>    &aEdges,
+                            std::vector<SGM::Point3D> &aPoints)
+    {
+    auto pCurve=(SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
+    auto pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    std::vector<SGMInternal::edge *> aedges;
+    std::map<double,SGMInternal::entity *> mHitMap1,aHitMap2;
+    SGMInternal::TrimCurveWithFaces(rResult,pCurve,pFace,nullptr,aedges,aPoints,mHitMap1,aHitMap2);
+    for(auto pEdge : aedges)
+        {
+        aEdges.push_back(SGM::Edge(pEdge->GetID()));
+        }
+    }
+
 void SGM::SubtractBodies(SGM::Result &rResult,
                          SGM::Body   &KeepBodyID,
                          SGM::Body   &DeletedBodyID)

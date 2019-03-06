@@ -890,6 +890,20 @@ void face::Negate()
             }
         }
     m_bFlipped=!m_bFlipped;
+    size_t nTriangles=m_aTriangles.size();
+    if(nTriangles)
+        {
+        size_t Index1;
+        for(Index1=0;Index1<nTriangles;Index1+=3)
+            {
+            std::swap(m_aTriangles[Index1],m_aTriangles[Index1+1]);
+            }
+        size_t nNormals=m_aNormals.size();
+        for(Index1=0;Index1<nNormals;++Index1)
+            {
+            m_aNormals[Index1].Negate();
+            }
+        }
     }
 
 bool face::HasBranchedVertex() const

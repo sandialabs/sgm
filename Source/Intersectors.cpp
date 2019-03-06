@@ -2162,7 +2162,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
         {
-        size_t nU=Index1*nUParams;
+        size_t nU=Index1*nVParams;
         for(Index2=0;Index2<nVParams;++Index2)
             {
             SGM::Point3D const &PlaneOrigin=aSeedPoints[nU+Index2];
@@ -2636,6 +2636,17 @@ void IntersectPlaneAndSphere(SGM::Point3D         const &Origin,
                                  std::vector<SGM::IntersectionType> &aTypes,
                                  double                              dTolerance)
     {
+    // Check for coincident curves
+    if( SGM::NearEqual(dRadius1,dRadius2,dTolerance,false) &&
+        SGM::NearEqual(Center1,Center2,dTolerance) &&
+        SGM::NearEqual(fabs(Norm1%Norm1),1.0,dTolerance,false))
+        {
+        SGM::UnitVector3D XVec=Norm1.Orthogonal();
+        aPoints.push_back(Center1+XVec*dRadius1);
+        aTypes.push_back(SGM::IntersectionType::CoincidentType);
+        return 1;
+        }
+
     SGM::Vector3D Vec=Center1-Center2;
     double dDist1=Vec%Norm1;
     double dDist2=Vec%Norm2;
@@ -4095,16 +4106,22 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
     SGM::Point3D const &Origin=pPlane->m_Origin;
     SGM::UnitVector3D const &Norm=pPlane->m_ZAxis;
     double dDist=fabs((Center-Origin)%Norm);
+    SGM::UnitVector3D const &Axis=pCylinder->m_ZAxis;
+    double dFABSDot=fabs(Norm%Axis);
     if(SGM::NearEqual(dRadius,dDist,dTolerance,false))
         {
         // One line.
         SGM::Point3D Pos=Center-Norm*((Center-Origin)%Norm);
         aCurves.push_back(new line(rResult,Pos,pCylinder->m_ZAxis));
         }
-    if(dDist<dRadius)
+    else if(SGM::NearEqual(dFABSDot,1.0,dTolerance,false))
         {
-        SGM::UnitVector3D const &Axis=pCylinder->m_ZAxis;
-        double dFABSDot=fabs(Norm%Axis);
+        // Circle.
+        SGM::Point3D CircleCenter=Center+(pCylinder->m_ZAxis)*((Origin-Center)%pCylinder->m_ZAxis);
+        aCurves.push_back(new circle(rResult,CircleCenter,pCylinder->m_ZAxis,dRadius,&(pCylinder->m_XAxis)));
+        }
+    else if(dDist<dRadius)
+        {
         if(dFABSDot<dTolerance)
             {
             // Two lines.
@@ -4115,12 +4132,6 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
             SGM::Point3D Pos1=Pos-UVec*dH;
             aCurves.push_back(new line(rResult,Pos0,pCylinder->m_ZAxis));
             aCurves.push_back(new line(rResult,Pos1,pCylinder->m_ZAxis));
-            }
-        else if(SGM::NearEqual(dFABSDot,1.0,dTolerance,false))
-            {
-            // Circle.
-            SGM::Point3D CircleCenter=Center+(pCylinder->m_ZAxis)*((Origin-Center)%pCylinder->m_ZAxis);
-            aCurves.push_back(new circle(rResult,CircleCenter,pCylinder->m_ZAxis,dRadius,&(pCylinder->m_XAxis)));
             }
         else
             {

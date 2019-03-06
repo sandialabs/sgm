@@ -19,6 +19,36 @@
 
 #include "test_utility.h"
 
+TEST(modify, block_cylinder_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,5));
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,SGM::Point3D(5,5,-1),SGM::Point3D(5,5,6),2);
+
+    SGM::SubtractBodies(rResult,BlockID,CylinderID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, trim_curve_cylinder)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,SGM::Point3D(5,5,0),SGM::Point3D(5,5,5),2);
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(5,5,0),SGM::UnitVector3D(0,0,1),2);
+    std::vector<SGM::Edge> aEdges;
+    std::vector<SGM::Point3D> aPoints;
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,CylinderID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::TrimCurveWithFace(rResult,CurveID,FaceID,aEdges,aPoints);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(modify, sphere_NUB_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -301,6 +331,26 @@ TEST(all_cases, split_split_vertex)
 }
 */
 ///////////////////////////////////////////////////////////////////////////////
+
+TEST(boolean_check, imprint_circle_on_cylinder)
+    {
+    // Boolean of two disks Peninsula
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateCylinder(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,8),2);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,4),SGM::UnitVector3D(0,0,1),2);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 TEST(boolean_check, Peninsula_Peninsula_Disks)
     {

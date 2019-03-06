@@ -26,12 +26,12 @@ namespace SGM
                               double                              dTolerance=SGM_MIN_TOL,
                               bool                                bUseWholeLine=false);
 
-    SGM_EXPORT size_t IntersectCurves(SGM::Result &rResult,
-                                      SGM::Curve const &CurveID1,
-                                      SGM::Curve const &CurveID2,
-                                      std::vector<SGM::Point3D> &aPoints,
+    SGM_EXPORT size_t IntersectCurves(SGM::Result                        &rResult,
+                                      SGM::Curve                   const &CurveID1,
+                                      SGM::Curve                   const &CurveID2,
+                                      std::vector<SGM::Point3D>          &aPoints,
                                       std::vector<SGM::IntersectionType> &aTypes,
-                                      double dTolerance = SGM_MIN_TOL);
+                                      double                              dTolerance=SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectCurveAndSurface(SGM::Result                        &rResult,
                                                SGM::Curve                   const &CurveID,

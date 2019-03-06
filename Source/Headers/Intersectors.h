@@ -549,5 +549,21 @@ bool PointOnCurves(SGM::Point3D         const &Pos,
                    surface              const *pSurface1,
                    surface              const *pSurface2);
 
+size_t RayFireFace(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   face                         const *pFace,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   double                              dTolerance,
+                   bool                                bUseWholeLine);
+
+size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
+                                SGM::UnitVector3D            const &Axis,
+                                double                              dTolerance,
+                                bool                                bUseWholeLine,
+                                std::vector<SGM::Point3D>          &aPoints,
+                                std::vector<SGM::IntersectionType> &aTypes);
+
 }
 #endif // INTERSECTOR_H
