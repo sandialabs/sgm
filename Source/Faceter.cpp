@@ -1088,14 +1088,6 @@ class SplitData
         size_t m_nSpan;
     };
 
-//class MergeData
-//    {
-//    public:
-//
-//        SplitData m_Split1;
-//        SplitData m_Split2;
-//    };
-
 static size_t AddNode(std::vector<Node>  &aNodes,
                       face         const *pFace,
                       double              dU,
@@ -1779,12 +1771,12 @@ static bool FindPolygons(std::vector<Node>                       &aNodes,
     }
 
 bool FacetFaceLoops(SGM::Result                             &rResult,
-                           face                              const *pFace,
-                           std::vector<SGM::Point2D>               &aPoints2D,
-                           std::vector<SGM::Point3D>               &aPoints3D,
-                           std::vector<std::vector<unsigned int> > &aaPolygons,
-                           edge                                    *pInputEdge,
-                           std::vector<bool>                       *pImprintFlags)
+                    face                              const *pFace,
+                    std::vector<SGM::Point2D>               &aPoints2D,
+                    std::vector<SGM::Point3D>               &aPoints3D,
+                    std::vector<std::vector<unsigned int> > &aaPolygons,
+                    edge                                    *pInputEdge,
+                    std::vector<bool>                       *pImprintFlags)
     {
     // Find all the needed face information.
 
@@ -2323,58 +2315,6 @@ static bool AngleGrid(SGM::Result                                   &rResult,
     return true;
     }
 
-static bool ImprintPolygons(SGM::Result                             &rResult,
-                            double                                   dBoundaryDist,
-                            std::vector<SGM::Point2D>         const &aPolygonPoints,
-                            std::vector<std::vector<unsigned int> > &aaPolygons,
-                            std::vector<SGM::Point2D>               &aPoints2D,
-                            std::vector<unsigned int>               &aTriangles,
-                            SGM::Surface                            *pSurfaceID,
-                            std::vector<SGM::Point3D>               *pPoints3D,
-                            std::vector<SGM::UnitVector3D>          *pNormals,
-                            std::vector<bool>                       *aImprintFlags)
-    {
-    // Insert the polygons.
-
-    size_t nPolygons=aaPolygons.size();
-    size_t Index1;
-    for(Index1=0;Index1<nPolygons;++Index1)
-        {
-        std::vector<unsigned int> aPolygonIndices;
-        if(aImprintFlags)
-            {
-            std::vector<bool> aFlags=ShuffleFlags(*aImprintFlags,aaPolygons[Index1]);
-            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
-                                   aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, &aFlags))
-                {
-                aPoints2D.clear();
-                aTriangles.clear();
-                pPoints3D->clear();
-                pNormals->clear();
-                return false;
-                }
-            }
-        else
-            {
-            if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aPolygonPoints, aaPolygons[Index1]),
-                                   aPoints2D, aTriangles, aPolygonIndices, pSurfaceID, pPoints3D, pNormals, nullptr))
-                {
-                aPoints2D.clear();
-                aTriangles.clear();
-                pPoints3D->clear();
-                pNormals->clear();
-                return false;
-                }
-            }
-        aaPolygons[Index1]=aPolygonIndices;
-        }
-    RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,dBoundaryDist,pPoints3D,pNormals);
-    //std::vector<unsigned int> aAdjacences;
-    //SGM::FindAdjacencies(aTriangles,aAdjacences);
-    //DelaunayFlips(aPoints2D,aTriangles,aAdjacences,pPoints3D,pNormals);
-    return true;
-    }
-
 void RemoveClosePoints(SGM::Result                               &rResult,
                        std::vector<SGM::Point2D>           const &aPolygonPoints,
                        std::vector<std::vector<unsigned> > const &aaPolygons,
@@ -2387,7 +2327,7 @@ void RemoveClosePoints(SGM::Result                               &rResult,
     size_t Index1,Index2;
     std::vector<unsigned> aNewTriangles=aTriangles;
 
-    // Build a tree for the aaPolygons line segments, and test all 
+    // Build a tree for the aaPolygons line segments, and test all
     // other points to see if they are within dMinDist to the tree.
 
     std::set<unsigned> sBoundary;
@@ -2460,6 +2400,7 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
                         std::vector<SGM::Point2D>               const &aPoints2D,
                         std::vector<unsigned>                   const &aTriangles,
                         std::vector<double>                     const &aDistances,
+                        surface                                 const *pSurface,
                         std::vector<unsigned int>                     &aRemovePoints)
     {
     // Build a tree for the aaPolygons line segments.
@@ -2474,7 +2415,27 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
             {
             SGM::Point2D const &Pos0=aPolygonPoints[aPolygon[Index1]];
             SGM::Point2D const &Pos1=aPolygonPoints[aPolygon[(Index1+1)%nPolygon]];
-            aSegments.emplace_back(Pos0,Pos1);
+            bool bSkip=false;
+            if(pSurface->ClosedInU())
+                {
+                double dMax=pSurface->GetDomain().m_UDomain.Length()*0.5;
+                if(dMax<fabs(Pos0.m_u-Pos1.m_u))
+                    {
+                    bSkip=true;
+                    }
+                }
+            if(pSurface->ClosedInV())
+                {
+                double dMax=pSurface->GetDomain().m_VDomain.Length()*0.5;
+                if(dMax<fabs(Pos0.m_v-Pos1.m_v))
+                    {
+                    bSkip=true;
+                    }
+                }
+            if(bSkip==false)
+                {
+                aSegments.emplace_back(Pos0,Pos1);
+                }
             }
         }
 
@@ -2598,10 +2559,10 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
 
     std::vector<double> aDistances;
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles,&aDistances);
-    
+
     std::vector<unsigned int> aRemovePoints;
-    FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,aRemovePoints);
-    
+    FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,pSurf,aRemovePoints);
+
     std::vector<SGM::Point3D> aRPoints;
     for(auto nWhere : aRemovePoints)
         {
@@ -2617,7 +2578,7 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
         std::vector<unsigned int> aPolygonIndices;
         std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
         SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
-            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+                           aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
@@ -2793,6 +2754,50 @@ static void FindSpherePoints(sphere                   const *pSphere,
     aTriangles.push_back((unsigned int)nHighMid);
     }
 
+void FindDistances(std::vector<SGM::Point2D> const &aPoints2D,
+                   std::vector<unsigned int> const &aTriangles,
+                   std::vector<double>             &aDistances)
+    {
+    aDistances.assign(aPoints2D.size(),SGM_MAX);
+    size_t nTriangles=aTriangles.size();
+    size_t Index1;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned a=aTriangles[Index1];
+        unsigned b=aTriangles[Index1+1];
+        unsigned c=aTriangles[Index1+2];
+        SGM::Point2D const &A=aPoints2D[a];
+        SGM::Point2D const &B=aPoints2D[b];
+        SGM::Point2D const &C=aPoints2D[c];
+        double dDistAB=A.Distance(B);
+        double dDistBC=B.Distance(C);
+        double dDistCA=C.Distance(A);
+        if(dDistAB<aDistances[b])
+            {
+            aDistances[b]=dDistAB;
+            }
+        if(dDistAB<aDistances[a])
+            {
+            aDistances[a]=dDistAB;
+            }
+        if(dDistBC<aDistances[b])
+            {
+            aDistances[b]=dDistBC;
+            }
+        if(dDistBC<aDistances[c])
+            {
+            aDistances[c]=dDistBC;
+            }
+        if(dDistCA<aDistances[a])
+            {
+            aDistances[a]=dDistCA;
+            }
+        if(dDistCA<aDistances[c])
+            {
+            aDistances[c]=dDistCA;
+            }
+        }
+    }
 
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
@@ -2887,19 +2892,45 @@ void FacetFace(SGM::Result                    &rResult,
             std::vector<SGM::Point2D> aPolygonPoints=aPoints2D;
             aPoints2D.clear();
             SGM::CreateOctahedron(pSphere->m_dRadius,
-                pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
-                aPoints3D,aTriangles,4); 
+                                  pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
+                                  aPoints3D,aTriangles,4);
             FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
-            if(!aaPolygons.empty())
+
+            if(aaPolygons.size())
                 {
-                double dBoundaryDist=aPoints3D[aTriangles[0]].Distance(aPoints3D[aTriangles[1]])*0.25;
-                SGM::Surface SurfID=pSphere->GetID();
-                ImprintPolygons(rResult,dBoundaryDist,aPolygonPoints,aaPolygons,
-                                aPoints2D,aTriangles,&SurfID,&aPoints3D,&aNormals,&aImprintFlags);
+                std::vector<double> aDistances;
+                FindDistances(aPoints2D,aTriangles,aDistances);
+                std::vector<unsigned int> aRemovePoints;
+                FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,pSphere,aRemovePoints);
+
+                std::vector<SGM::Point3D> aRPoints;
+                for(auto nWhere : aRemovePoints)
+                    {
+                    std::vector<unsigned> aRemovedOrChanged,aReplacedTriangles;
+                    SGM::RemovePointFromTriangles(rResult,nWhere,aPoints2D,aTriangles,aRemovedOrChanged,aReplacedTriangles);
+                    }
+                aPoints3D.clear();
+                aNormals.clear();
+                FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
+
+                SGM::Surface SurfID(pFace->GetSurface()->GetID());
+                size_t nPolygons=aaPolygons.size();
+                size_t Index1;
+                for(Index1=0;Index1<nPolygons;++Index1)
+                    {
+                    std::vector<unsigned int> aPolygonIndices;
+                    std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
+                    SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
+                                       aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+                    aaPolygons[Index1]=aPolygonIndices;
+                    }
+
+                RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
                 }
+
             break;
             }
-        case SGM::TorusType:
+            case SGM::TorusType:
             {
             // Angle based uniform grid.
 

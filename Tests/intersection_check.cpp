@@ -1093,19 +1093,24 @@ TEST(intersection_check, intersect_circle_hermite)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
     
-    std::vector<SGM::Point3D> aPoints = {
-        {-1,-1, 0},
-        { 0,-1, 0},
-        { 0, 0, 0},
-        { 0, 1, 0},
-        { 3, 1, 0}};
-    std::vector<SGM::Vector3D> aVectors = {
-        {-1,-1, 0},
-        { 0,-1, 0},
-        { 0, 0, 0},
-        { 0, 1, 0},
-        { 3, 1, 0}};
-    std::vector<double> aParams = {0,3,4,5,8};
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<SGM::Vector3D> aVectors;
+    std::vector<double> aParams;
+    aPoints.push_back(SGM::Point3D(-1,-1,0));
+    aPoints.push_back(SGM::Point3D(0,-1,0));
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(0,1,0));
+    aPoints.push_back(SGM::Point3D(3,1,0));
+    aVectors.push_back(SGM::Vector3D(1,0,0));
+    aVectors.push_back(SGM::Vector3D(2,0,0));
+    aVectors.push_back(SGM::Vector3D(-2,0,0));
+    aVectors.push_back(SGM::Vector3D(2,0,0));
+    aVectors.push_back(SGM::Vector3D(1,0,0));
+    aParams.push_back(0);
+    aParams.push_back(3);
+    aParams.push_back(4);
+    aParams.push_back(5);
+    aParams.push_back(8);
     SGM::Curve CurveID1=SGM::CreateHermiteCurve(rResult,aPoints,aVectors,aParams);
     SGM::CreateEdge(rResult,CurveID1);
 
@@ -2009,7 +2014,7 @@ TEST(intersection_check, cylinder_sphere_intersect)
 
     rResult.SetLog(true);
     /*SGM::Body CylinderID=*/SGM::CreateCylinder(rResult,Bottom,Top,dRadius);
-    std::vector<SGM::Entity> const &aLog=rResult.GetLogEntities();
+    std::vector<SGM::Entity> const &aLog=rResult.GetLogEntities1();
     SGM::Face CylinderFace(aLog[0].m_ID);
     SGM::Surface CylinderSurf=SGM::GetSurfaceOfFace(rResult,CylinderFace);
 

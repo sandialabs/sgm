@@ -105,8 +105,12 @@ namespace SGM
 
     enum LogType
         {
-        LogCreate,      // Indicates that the entity was created for an unknown reason.
-        LogDelete,      // Indicates that the entity was deleted for an unknown reason.
+        LogCreate,      // Entity one was created.
+        LogDelete,      // Entity one was deleted.
+        LogSplit,       // Entity one was split to form entity two.
+        
+        // Face creations types.
+
         LogBottom,      // Bottom Face of a primitive.
         LogTop,         // Top Face of a primitive.
         LogMain,        // Main Face of a primitive.

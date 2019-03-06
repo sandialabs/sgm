@@ -180,7 +180,7 @@ body *CreateTorus(SGM::Result             &rResult,
 
     if(rResult.GetLog())
         {
-        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
         }
 
     pVolume->AddFace(pFace);
@@ -243,7 +243,7 @@ body *CreateSphere(SGM::Result        &rResult,
 
     if(rResult.GetLog())
         {
-        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
+        rResult.AddLog(SGM::Entity(pFace->GetID()),SGM::Entity(pFace->GetID()),SGM::LogType::LogMain);
         }
 
     pVolume->AddFace(pFace);
@@ -276,11 +276,11 @@ body *CreateCylinder(SGM::Result        &rResult,
 
     if(rResult.GetLog())
         {
-        rResult.AddLog(SGM::Entity(pSide->GetID()),SGM::LogType::LogMain);
+        rResult.AddLog(SGM::Entity(pSide->GetID()),SGM::Entity(pSide->GetID()),SGM::LogType::LogMain);
         if(bSheetBody==false)
             {
-            rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
-            rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
+            rResult.AddLog(SGM::Entity(pBottom->GetID()),SGM::Entity(pBottom->GetID()),SGM::LogType::LogBottom);
+            rResult.AddLog(SGM::Entity(pTop->GetID()),SGM::Entity(pTop->GetID()),SGM::LogType::LogTop);
             }
         }
 

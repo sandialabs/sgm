@@ -1094,7 +1094,7 @@ class edge : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void AddFace(face *pFace) {assert(nullptr == m_pVolume); m_sFaces.insert(pFace);}
+        void AddFace(face *pFace);
 
         void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 

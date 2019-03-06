@@ -2185,6 +2185,13 @@ bool SGM::GetNUBSurfaceData(SGM::Result                             &rResult,
     aVKnots=pNUBSurface->m_aVKnots;
     return true;
     }
+
+void SGM::NegateCurve(SGM::Result &rResult,
+                      SGM::Curve  &CurveID)
+    {
+    SGMInternal::curve *pCurve=(SGMInternal::curve *)(rResult.GetThing()->FindEntity(CurveID.m_ID));
+    pCurve->Negate();
+    }
   
 bool SGM::GetNURBSurfaceData(SGM::Result                             &rResult,
                              SGM::Surface                      const &SurfaceID,

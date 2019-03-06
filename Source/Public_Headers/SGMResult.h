@@ -44,15 +44,28 @@ class Result
 
         SGM_EXPORT bool GetLog() const {return m_bLog;}
 
-        SGM_EXPORT std::vector<Entity> const &GetLogEntities() const {return m_aLog;}
+        SGM_EXPORT std::vector<Entity> const &GetLogEntities1() const {return m_aLogEntities1;}
+
+        SGM_EXPORT std::vector<Entity> const &GetLogEntities2() const {return m_aLogEntities2;}
 
         SGM_EXPORT std::vector<LogType> const &GetLogEntries() const {return m_aLogEntries;}
 
-        SGM_EXPORT void ClearLog() {m_aLog.clear(); m_aLogEntries.clear();}
+        SGM_EXPORT void ClearLog() {m_aLogEntities1.clear(); m_aLogEntities2.clear(); m_aLogEntries.clear();}
 
-        SGM_EXPORT void AddLog(Entity const &EntityID,LogType nLogEntry) {m_aLog.push_back(EntityID);m_aLogEntries.push_back(nLogEntry);}
+        SGM_EXPORT void AddLog(Entity const &EntityID1,
+                               Entity const &EntityID2,
+                               LogType       nLogEntry) 
+            {
+            m_aLogEntities1.push_back(EntityID1);
+            m_aLogEntities2.push_back(EntityID2);
+            m_aLogEntries.push_back(nLogEntry);
+            }
 
+        //////////////////////////////////////////////////////////////////////
+        //
         // For internal use only.
+        //
+        //////////////////////////////////////////////////////////////////////
 
         SGM_EXPORT void SetDebugFlag(size_t nFlag) {m_nDebugFlag=nFlag;}
 
@@ -72,7 +85,8 @@ class Result
         std::string          m_sMessage;
         SGMInternal::thing  *m_pThing;
         bool                 m_bLog;
-        std::vector<Entity>  m_aLog;
+        std::vector<Entity>  m_aLogEntities1;
+        std::vector<Entity>  m_aLogEntities2;
         std::vector<LogType> m_aLogEntries;
         size_t               m_nDebugFlag;
 };
