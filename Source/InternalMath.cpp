@@ -3,8 +3,7 @@
 #include "SGMVector.h"
 
 #include "Mathematics.h"
-
-#include <buffer.h>
+#include "Util/buffer.h"
 
 namespace SGMInternal
 {

@@ -10,7 +10,7 @@
 #include "SGMBoxTree.h"
 
 #define SGM_TIMER
-#include "Timer.h"
+#include "Util/timer.h"
 
 #if 0
 int main(int /*argc*/, char ** /*argv*/)

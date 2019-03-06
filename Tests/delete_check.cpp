@@ -10,8 +10,10 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(delete_check, delete_cannot_delete_entity)
 {
@@ -141,4 +143,6 @@ TEST(delete_check, delete_surface_with_shared_curve)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

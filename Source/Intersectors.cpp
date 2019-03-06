@@ -6,6 +6,7 @@
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMIntersector.h"
+#include "SGMTriangle.h"
 
 #include "Intersectors.h"
 #include "FacetToBRep.h"
@@ -670,6 +671,7 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         aTempTypes .reserve(nGoodHits);
         aTempPoints.push_back(aPoints[aParams[0].second]);
         aTempTypes .push_back( aTypes[aParams[0].second]);
+
         double dLastParam=aParams[0].first;
         for(size_t Index1=1;Index1<nGoodHits;++Index1)
             {
@@ -747,6 +749,7 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
         Domain.m_dMax=SGM_MAX;
         }
     size_t nHits=aHits.size();
+
     size_t Index1;
     std::vector<unsigned int> const &aTriangles=pComplex->GetTriangles();
     std::vector<SGM::Point3D> const &aComplexPoints=pComplex->GetPoints();
@@ -765,6 +768,7 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
 
         std::vector<SGM::Point3D> aIntPoints;
         std::vector<SGM::IntersectionType> aIntTypes;
+
         size_t nInts=IntersectLineAndPlane(Origin,Axis,Domain,A,Norm,dTolerance,aIntPoints,aIntTypes);
 
         if(nInts==1)
@@ -779,7 +783,8 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
             SGM::Point2D Cuv(XVec%CVec,YVec%CVec);
             SGM::Vector3D DVec=D-A;
             SGM::Point2D Duv(XVec%DVec,YVec%DVec);
-            if(SGM::InTriangle(Auv,Buv,Cuv,Duv))
+
+            if (SGM::InTriangle(Auv,Buv,Cuv,Duv))
                 {
                 aAllPoints.push_back(D);
                 aAllTypes.push_back(SGM::PointType);

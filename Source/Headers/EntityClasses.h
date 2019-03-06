@@ -10,7 +10,7 @@
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
-#include "SGMSharedMutex.h"
+#include "Util/shared_mutex.h"
 #include "SGMTranslators.h"
 
 #include "OrderPoints.h"

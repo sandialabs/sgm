@@ -16,6 +16,13 @@
 
 #include "sgm_export.h"
 
+#ifdef SGM_MULTITHREADED
+#include <thread>
+#include <future>
+#include "SGMThreadPool.h"
+#endif
+
+
 namespace SGM
 {
 
@@ -67,6 +74,8 @@ class SGM_EXPORT Graph
 
         std::set<GraphEdge> const &GetEdges() const {return m_sEdges;}
 
+        size_t GetNumEdges() const {return m_sEdges.size();}
+
         size_t GetDegree(size_t nVertex) const;
 
         std::vector<size_t> const &GetStar(size_t nVertex) const;
@@ -79,15 +88,21 @@ class SGM_EXPORT Graph
 
         bool IsCycle() const;
 
-        Graph FindMinCycle(GraphEdge const &GE) const;
+        Graph * CreateMinCycle(GraphEdge const &GE) const;
 
         void FindLargestMinCycleVertices(std::vector<size_t> &aVertices) const;
+
+#ifdef SGM_MULTITHREADED
+    void FindLargestMinCycleVerticesConcurrent(std::vector<size_t> &aVertices) const;
+#endif // SGM_MULTITHREADED
 
         bool OrderVertices(std::vector<size_t> &aVertices) const;
 
         // Methods for directed graphs.
 
         size_t FindSources(std::vector<size_t> &aSources) const;
+
+        typedef std::vector<SGM::GraphEdge const*> MinCycleChunk;
 
     private:
 

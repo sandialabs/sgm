@@ -16,8 +16,10 @@
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(complex_check, stl_file_not_exist)
     {
@@ -284,3 +286,6 @@ TEST(complex_check, DISABLED_merge_complex)
 //        }
 //    }
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

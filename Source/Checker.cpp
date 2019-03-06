@@ -1,4 +1,5 @@
 #include "SGMEntityFunctions.h"
+#include "SGMTriangle.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"

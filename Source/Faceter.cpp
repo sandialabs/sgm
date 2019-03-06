@@ -8,6 +8,8 @@
 #include "SGMSegment.h"
 #include "SGMEntityClasses.h"
 #include "SGMGraph.h"
+#include "SGMTriangle.h"
+#include "SGMPolygon.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -22,6 +24,31 @@
 
 namespace SGMInternal
 {
+
+// Like std::set_intersection, but return after finding the first intersection.
+
+template <class COMPARE, class INPUT1, class INPUT2, class OUTPUT>
+OUTPUT SetIntersectionFirst(INPUT1 pFirst1, INPUT1 pLast1,
+                            INPUT2 pFirst2, INPUT2 pLast2,
+                            OUTPUT pResult, COMPARE compareFunction)
+    {
+    while (pFirst1 != pLast1 && pFirst2 != pLast2)
+        {
+        if (compareFunction(*pFirst1, *pFirst2))
+            ++pFirst1;
+        else
+            {
+            if (!compareFunction(*pFirst2, *pFirst1))
+                {
+                *pResult = *pFirst1;
+                // ++pFirst1;
+                return ++pResult;
+                }
+            ++pFirst2;
+            }
+        }
+    return pResult;
+    }
 
 edge *FindEdge(entity *pEntA,entity *pEntB)
     {
@@ -46,15 +73,13 @@ edge *FindEdge(entity *pEntA,entity *pEntB)
     if( pEntA->GetType()==SGM::VertexType &&
         pEntB->GetType()==SGM::VertexType)
         {
-        auto pVertexA=(vertex *)pEntA;
-        auto pVertexB=(vertex *)pEntB;
-        std::set<edge *,EntityCompare> const &sEdgesA=pVertexA->GetEdges();
-        std::set<edge *,EntityCompare> const &sEdgesB=pVertexB->GetEdges();
+        auto const &sEdgesA=((vertex*)pEntA)->GetEdges();
+        auto const &sEdgesB=((vertex*)pEntB)->GetEdges();
         std::vector<edge*> aIntersection;
-        std::set_intersection(sEdgesA.begin(), sEdgesA.end(),
-                              sEdgesB.begin(), sEdgesB.end(),
-                              std::back_inserter(aIntersection),
-                              EntityCompare());
+        SetIntersectionFirst(sEdgesA.begin(), sEdgesA.end(),
+                             sEdgesB.begin(), sEdgesB.end(),
+                             std::back_inserter(aIntersection),
+                             EntityCompare());
         if (!aIntersection.empty())
             return (edge*)aIntersection[0];
         }
@@ -2302,7 +2327,7 @@ void RemoveClosePoints(SGM::Result                               &rResult,
     size_t Index1,Index2;
     std::vector<unsigned> aNewTriangles=aTriangles;
 
-    // Build a tree for the aaPolygons line segments, and test all 
+    // Build a tree for the aaPolygons line segments, and test all
     // other points to see if they are within dMinDist to the tree.
 
     std::set<unsigned> sBoundary;
@@ -2534,10 +2559,10 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
 
     std::vector<double> aDistances;
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles,&aDistances);
-    
+
     std::vector<unsigned int> aRemovePoints;
     FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,pSurf,aRemovePoints);
-    
+
     std::vector<SGM::Point3D> aRPoints;
     for(auto nWhere : aRemovePoints)
         {
@@ -2553,7 +2578,7 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
         std::vector<unsigned int> aPolygonIndices;
         std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
         SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
-            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+                           aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
         }
     RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
@@ -2828,7 +2853,15 @@ void FacetFace(SGM::Result                    &rResult,
         return;
         }
 
-    switch(pFace->GetSurface()->GetSurfaceType())
+    auto pSurface =pFace->GetSurface();
+    if (!pSurface)
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeInconsistentData);
+        rResult.SetMessage(std::string("No surface on face ID ") + std::to_string(pFace->GetID()));
+        return;
+        }
+
+    switch(pSurface->GetSurfaceType())
         {
         case SGM::PlaneType:
             {
@@ -2859,10 +2892,10 @@ void FacetFace(SGM::Result                    &rResult,
             std::vector<SGM::Point2D> aPolygonPoints=aPoints2D;
             aPoints2D.clear();
             SGM::CreateOctahedron(pSphere->m_dRadius,
-                pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
-                aPoints3D,aTriangles,4); 
+                                  pSphere->m_Center,pSphere->m_ZAxis,pSphere->m_XAxis,
+                                  aPoints3D,aTriangles,4);
             FindSpherePoints(pSphere,aPoints3D,aTriangles,aPoints2D,aNormals);
-            
+
             if(aaPolygons.size())
                 {
                 std::vector<double> aDistances;
@@ -2888,16 +2921,16 @@ void FacetFace(SGM::Result                    &rResult,
                     std::vector<unsigned int> aPolygonIndices;
                     std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
                     SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
-                        aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+                                       aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
                     aaPolygons[Index1]=aPolygonIndices;
                     }
-            
+
                 RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
                 }
 
             break;
             }
-        case SGM::TorusType:
+            case SGM::TorusType:
             {
             // Angle based uniform grid.
 

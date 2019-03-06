@@ -1,7 +1,3 @@
-#include "SGMMathematics.h"
-#include "SGMVector.h"
-#include "SGMGraph.h"
-
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Faceter.h"
@@ -10,6 +6,11 @@
 #include "Curve.h"
 #include "Query.h"
 #include "Mathematics.h"
+
+#include "SGMGraph.h"
+#include "SGMMathematics.h"
+#include "SGMTriangle.h"
+#include "SGMVector.h"
 
 #include <cfloat>
 #include <algorithm>

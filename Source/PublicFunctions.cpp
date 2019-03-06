@@ -318,13 +318,23 @@ std::vector<SGM::Entity> SGM::FindPointEntities(SGM::Result     &rResult,
                                                 SGM::Face const &FaceID)
     {
     auto pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    std::vector<SGMInternal::entity *> aEntities;
-    pFace->FindPointEntities(rResult, aEntities);
     std::vector<SGM::Entity> aAnswer;
-    aAnswer.reserve(aEntities.size());
-    for(auto *pEnt : aEntities)
+
+    auto pSurface=pFace->GetSurface();
+    if (pSurface)
         {
-        aAnswer.emplace_back(pEnt->GetID());
+        std::vector<SGMInternal::entity *> aEntities;
+        pFace->FindPointEntities(rResult, aEntities);
+        aAnswer.reserve(aEntities.size());
+        for(auto *pEnt : aEntities)
+            {
+            aAnswer.emplace_back(pEnt->GetID());
+            }
+        }
+    else
+        {
+        rResult.SetResult(SGM::ResultType::ResultTypeInconsistentData);
+        rResult.SetMessage(std::string("No surface on face ID ") + std::to_string(pFace->GetID()));
         }
     return aAnswer;
     }

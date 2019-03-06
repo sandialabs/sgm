@@ -1,5 +1,5 @@
 #include "SGMGraphicsWidget.hpp"
-#include "buffer.h"
+#include "Util/buffer.h"
 
 #include <QApplication>
 #include <QMatrix4x4>

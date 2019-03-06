@@ -16,10 +16,14 @@
 #include "SGMAttribute.h"
 
 #define SGM_TIMER 
-#include "Timer.h"
+#include "Util/timer.h"
 
 #include "test_utility.h"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(topology_check, find_adjacent_faces )
 {
@@ -86,3 +90,7 @@ TEST(topology_check, create_sheet_body_with_edges)
     
     SGMTesting::ReleaseTestThing(pThing);
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

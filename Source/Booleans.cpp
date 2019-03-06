@@ -1,9 +1,10 @@
-
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMModify.h"
 #include "SGMGraph.h"
 #include "SGMTopology.h"
+#include "SGMPolygon.h"
+#include "SGMTriangle.h"
 
 #include "EntityClasses.h"
 #include "EntityFunctions.h"

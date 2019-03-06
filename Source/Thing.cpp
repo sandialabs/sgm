@@ -6,7 +6,7 @@
 #include "Curve.h"
 
 //#define SGM_TIMER 
-#include "Timer.h"
+#include "Util/timer.h"
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"

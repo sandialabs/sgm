@@ -16,8 +16,15 @@
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
 #include "SGMDisplay.h"
+#include "SGMPolygon.h"
+#include "SGMTriangle.h"
 
 #include "test_utility.h"
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
 
 TEST(modify, block_cylinder_subtract)
 {
@@ -49,7 +56,7 @@ TEST(modify, trim_curve_cylinder)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, sphere_NUB_subtract)
+TEST(modify, DISABLED_sphere_NUB_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -164,7 +171,7 @@ TEST(modify, tweak_face_ambiguous)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, tweak_face)
+TEST(modify, DISABLED_tweak_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -516,7 +523,7 @@ TEST(boolean_check, Sphere_Sphere_Imprint2)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(boolean_check, Sphere_Sphere_Unite)
+TEST(boolean_check, DISABLED_sphere_sphere_unite)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -594,7 +601,7 @@ TEST(boolean_check, unite_bodies_peninsula )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(boolean_check, unite_bodies_island )
+TEST(boolean_check, DISABLED_unite_bodies_island )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -747,3 +754,7 @@ TEST(boolean_check, coincident_2)
 //
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

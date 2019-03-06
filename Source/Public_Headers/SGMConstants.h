@@ -22,6 +22,10 @@
 
 #define SGM_ZERO    1E-12
 
+// Used to test point in triangle
+
+#define SGM_ZERO_NEGATIVE -SGM_ZERO
+
 // Used as a lower bound on the size and parameters of all non-zero dimensional
 // topology and geometry. That is to say that edges, sphere radii, the difference
 // between the major and minor axes of an ellipse, the half angle of a cone...
