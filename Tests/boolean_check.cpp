@@ -47,16 +47,15 @@ TEST(modify, trim_curve_cylinder)
     SGM::Body CylinderID=SGM::CreateCylinder(rResult,SGM::Point3D(5,5,0),SGM::Point3D(5,5,5),2);
     SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(5,5,0),SGM::UnitVector3D(0,0,1),2);
     std::vector<SGM::Edge> aEdges;
-    std::vector<SGM::Point3D> aPoints;
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,CylinderID,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
-    SGM::TrimCurveWithFace(rResult,CurveID,FaceID,aEdges,aPoints);
+    SGM::TrimCurveWithFace(rResult,CurveID,FaceID,aEdges);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_sphere_NUB_subtract)
+TEST(modify, sphere_NUB_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -171,7 +170,7 @@ TEST(modify, tweak_face_ambiguous)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_tweak_face)
+TEST(modify, tweak_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -205,6 +204,10 @@ TEST(modify, DISABLED_tweak_face)
 
     SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
     SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -601,7 +604,7 @@ TEST(boolean_check, unite_bodies_peninsula )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(boolean_check, DISABLED_unite_bodies_island )
+TEST(boolean_check, unite_bodies_island )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

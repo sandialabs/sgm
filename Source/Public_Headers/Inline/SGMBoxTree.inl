@@ -41,6 +41,7 @@ namespace SGM {
     {
         Remove(IsAny(), RemoveLeaf());
         delete m_treeRoot;
+        m_treeRoot = nullptr;
         m_treeSize = 0;
     }
 

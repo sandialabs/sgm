@@ -96,12 +96,14 @@ void volume::SeverRelations(SGM::Result &)
 
 void volume::AddFace(face *pFace)
     {
+    m_FaceTree.Clear();
     m_sFaces.insert(pFace);
     pFace->SetVolume(this);
     }
 
 void volume::RemoveFace(face *pFace) 
     {
+    m_FaceTree.Clear();
     pFace->SetVolume(nullptr);
     m_sFaces.erase(pFace);
     }

@@ -32,23 +32,11 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
                           face                const *pFace0,
                           face                const *pFace1, 
                           std::vector<edge *>       &aEdges,
-                          std::vector<SGM::Point3D> &aPoints,
-                          std::map<double,entity *> &mHitMap1,
-                          std::map<double,entity *> &mHitMap2,
-                          edge                const *pLimitEdge=nullptr); 
+                          double                     dTolerance); 
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace);
-
-// This version of ImprintEdgeOnFace assumes that the whole edge
-// is on the face and the start and end entities are known.
-
-std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
-                                      edge        *pEdge,
-                                      face        *pFace,
-                                      entity      *pStartEntity,
-                                      entity      *pEndEntity);
 
 vertex *ImprintPoint(SGM::Result        &rResult,
                      SGM::Point3D const &Pos,
