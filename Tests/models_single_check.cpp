@@ -461,7 +461,7 @@ TEST(models_single_check, ACISNotchedBrickGeometry)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(DISABLED_models_single_check, import_check_brick10)
+TEST(models_single_check, import_check_brick10)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
