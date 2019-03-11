@@ -106,6 +106,34 @@ void RefineTriangles(SGM::Point3D        const &Pos,
 namespace SGM
 {
 
+double DistanceSquaredTriangle3D(Point3D const &A,
+                                 Point3D const &B,
+                                 Point3D const &C,
+                                 Point3D const &P)
+    {
+    Vector3D RawNorm=(B-A)*(C-A);
+    if(SGM_ZERO_SQUARED<RawNorm.MagnitudeSquared())
+        {
+        UnitVector3D Norm(RawNorm);
+        Point3D ProjectedP=P-Norm*(Norm%(A-P));
+        UnitVector3D X=C-A;
+        UnitVector3D Y=Norm*X;
+        Point2D a(0,0),b(X%(B-A),Y%(B-A)),c(X%(C-A),Y%(C-A)),p(X%(P-A),Y%(P-A));
+        if(InTriangle(a,b,c,p))
+            {
+            // Projection of P is in the triangle.
+
+            Point3D ClosePos=A+X*p.m_u+Y*p.m_v;
+            return ClosePos.DistanceSquared(P);
+            }
+        }
+    Segment3D AB(A,B),BC(B,C),CA(C,A);
+    double dDistAB=AB.ClosestPoint(P).DistanceSquared(P);
+    double dDistBC=BC.ClosestPoint(P).DistanceSquared(P);
+    double dDistCA=CA.ClosestPoint(P).DistanceSquared(P);
+    return std::min({dDistAB,dDistBC,dDistCA});
+    }
+
 bool InAngle(Point2D const &A,
              Point2D const &B,
              Point2D const &C,

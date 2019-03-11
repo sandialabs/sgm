@@ -88,6 +88,8 @@ namespace SGM {
         bool PointOnSegment(Point3D const &Pos,
                             double         dTolerance) const;
 
+        Point3D ClosestPoint(Point3D const &Pos) const;
+
         Point3D m_Start;
         Point3D m_End;
     };

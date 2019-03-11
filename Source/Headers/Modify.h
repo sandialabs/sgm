@@ -32,11 +32,18 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
                           face                const *pFace0,
                           face                const *pFace1, 
                           std::vector<edge *>       &aEdges,
-                          double                     dTolerance); 
+                          double                     dTolerance,
+                          SGM::Interval1D     const *pLimitDomain=nullptr); 
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace);
+
+// It is assumed that pEdge has been trimmed to the face.
+
+std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
+                                             edge        *pEdge,
+                                             face        *pFace);
 
 vertex *ImprintPoint(SGM::Result        &rResult,
                      SGM::Point3D const &Pos,

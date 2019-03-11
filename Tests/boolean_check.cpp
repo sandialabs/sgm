@@ -26,6 +26,49 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+//TEST(modify, block_sphere_subtract)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+//    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+//
+//    SGM::SubtractBodies(rResult,BlockID,SphereID);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+TEST(modify, block_top_face_sphere_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+
+    SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, square_circle_imprint)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(5,5,10),SGM::UnitVector3D(0,0,-1),6);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(modify, block_cylinder_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -147,6 +190,8 @@ TEST(modify, sphere_NUB_imprint_sphere)
     SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(10,10,0),3);
     std::vector<SGM::Curve> aCurves;
     SGM::IntersectSurfaces(rResult,SurfaceID,SphereID,aCurves);
+    SGM::DeleteEntity(rResult,SphereID);
+    SGM::DeleteEntity(rResult,SurfaceID);
     SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
     
     SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
@@ -428,7 +473,7 @@ TEST(boolean_check, Splitter_Island_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(boolean_check, Imprinting_Atoll_Bridge_Edge)
+TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     {
     // Imprinting an atoll edge on a face.
     

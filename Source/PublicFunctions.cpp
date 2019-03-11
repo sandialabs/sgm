@@ -2538,7 +2538,7 @@ void SGM::TrimCurveWithFace(SGM::Result               &rResult,
     auto pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
     std::vector<SGMInternal::edge *> aedges;
     std::map<double,SGMInternal::entity *> mHitMap1,aHitMap2;
-    SGMInternal::TrimCurveWithFaces(rResult,pCurve,pFace,nullptr,aedges,SGM_MIN_TOL);
+    SGMInternal::TrimCurveWithFaces(rResult,pCurve,pFace,nullptr,aedges,SGM_MIN_TOL,nullptr);
     for(auto pEdge : aedges)
         {
         aEdges.push_back(SGM::Edge(pEdge->GetID()));
