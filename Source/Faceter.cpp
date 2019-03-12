@@ -1776,8 +1776,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     std::vector<SGM::Point3D>               &aPoints3D,
                     std::vector<std::vector<unsigned int> > &aaPolygons,
                     edge                                    *pInputEdge,
-                    std::vector<bool>                       *pImprintFlags,
-                    bool                                     bForContainment)
+                    std::vector<bool>                       *pImprintFlags)
     {
     // Find all the needed face information.
 
@@ -1787,7 +1786,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
     size_t Index1,Index2,Index3;
     if(pInputEdge==nullptr)
         {
-        nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes,bForContainment);
+        nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
 
         // Check the loops.
         std::set<edge *> sLoopEdges;
@@ -1798,7 +1797,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                 sLoopEdges.insert(pEdge);
                 }
             }
-        if(bForContainment==false && sLoopEdges.size()!=pFace->GetEdges().size())
+        if(sLoopEdges.size()!=pFace->GetEdges().size())
             {
             return false;
             }
@@ -2796,45 +2795,6 @@ void FindDistances(std::vector<SGM::Point2D> const &aPoints2D,
         }
     }
 
-size_t FindContainmentPolygons(SGM::Result                         &rResult,
-                               face                          const *pFace,
-                               std::vector<SGM::Point2D>           &aPoints2D,
-                               std::vector<std::vector<unsigned> > &aaContainmentPolygons)
-    {
-    std::vector<SGM::Point2D> aTempPoints2D;
-    std::vector<SGM::Point3D> aTempPoints3D;
-    if(!FacetFaceLoops(rResult,pFace,aTempPoints2D,aTempPoints3D,aaContainmentPolygons,nullptr,nullptr,true))
-        {
-        return 0;
-        }
-    
-    size_t nAnswer=aaContainmentPolygons.size();
-    if(nAnswer)
-        {
-        SGM::BoxTree Tree;
-        size_t nPoints2D=aPoints2D.size();
-        size_t Index1;
-        for(Index1=0;Index1<nPoints2D;++Index1);
-            {
-            SGM::Point2D uv=aPoints2D[Index1];
-            Tree.Insert(&aPoints2D[Index1],SGM::Interval3D(SGM::Point3D(uv.m_u,uv.m_v,0)));
-            }
-        for(auto aPolygon : aaContainmentPolygons)
-            {
-            size_t nPolygon=aPolygon.size();
-            for(Index1=0;Index1<nPolygon;++Index1)
-                {
-                SGM::Point3D const &Pos=aTempPoints3D[Index1];
-                auto aHits=Tree.FindIntersectsPoint(Pos,SGM_MIN_TOL);
-                size_t nWhere=((SGM::Point2D const *)aHits[0].first)-&aPoints2D[0];
-                aPolygon[Index1]=(unsigned)nWhere;
-                }
-            }
-        }
-
-    return nAnswer;
-    }
-
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -2964,12 +2924,7 @@ void FacetFace(SGM::Result                    &rResult,
                                        aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
                     aaPolygons[Index1]=aPolygonIndices;
                     }
-                
-                std::vector<std::vector<unsigned> > aaContainmentPolygons;
-                if(FindContainmentPolygons(rResult,pFace,aPoints2D,aaContainmentPolygons))
-                    {
-                    RemoveOutsideTriangles(rResult,aaContainmentPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
-                    }
+                RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
                 }
 
             break;

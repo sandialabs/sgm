@@ -986,14 +986,11 @@ class face : public topology
 
         // Find methods
 
-        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;
-
-        // If bForContainment is true, then only single sided edges are considered.
+        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;\
 
         size_t FindLoops(SGM::Result                                  &rResult,
                          std::vector<std::vector<edge *> >            &aaLoops,
-                         std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped,
-                         bool                                          bForContainment=false) const;
+                         std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,

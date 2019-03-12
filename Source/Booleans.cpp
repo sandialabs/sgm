@@ -109,12 +109,19 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
     size_t nOldEdges=aEdges.size();
     std::vector<SGM::Point3D> aHits;
     std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
+    size_t Index1;
     for(edge *pEdge : sEdges0)
         {
         std::vector<SGM::Point3D> aIntersectionPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
-        aHits.insert(aHits.end(),aIntersectionPoints.begin(),aIntersectionPoints.end());
+        size_t nHits=IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            if(aTypes[Index1]!=SGM::CoincidentType)
+                {
+                aHits.push_back(aIntersectionPoints[Index1]);
+                }
+            }
         }
     if(pFace1)
         {
@@ -123,8 +130,14 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
             {
             std::vector<SGM::Point3D> aIntersectionPoints;
             std::vector<SGM::IntersectionType> aTypes;
-            IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
-            aHits.insert(aHits.end(),aIntersectionPoints.begin(),aIntersectionPoints.end());
+            size_t nHits=IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
+            for(Index1=0;Index1<nHits;++Index1)
+                {
+                if(aTypes[Index1]!=SGM::CoincidentType)
+                    {
+                    aHits.push_back(aIntersectionPoints[Index1]);
+                    }
+                }
             }
         }
 
@@ -155,7 +168,6 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
     std::vector<std::pair<double,SGM::Point3D> > aHitParams;
     size_t nHits=aHits.size();
     aHitParams.reserve(nHits);
-    size_t Index1;
     for(Index1=0;Index1<nHits;++Index1)
         {
         SGM::Point3D const &Pos=aHits[Index1];

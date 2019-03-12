@@ -726,17 +726,13 @@ SGM::UnitVector3D face::FindNormalOfFace(SGM::Point3D const &Pos) const
 
 size_t face::FindLoops(SGM::Result                                  &rResult,
                        std::vector<std::vector<edge *> >            &aaLoops,
-                       std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped,
-                       bool                                          bForContainment) const
+                       std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const
     {
     thing *pThing=rResult.GetThing();
     std::set<SGM::Edge> sEdges;
     for(auto pEdge : m_sEdges)
         {
-        if(bForContainment==false || GetSideType(pEdge)!=SGM::FaceOnBothSidesType)
-            {
-            sEdges.insert(SGM::Edge(pEdge->GetID()));
-            }
+        sEdges.insert(SGM::Edge(pEdge->GetID()));
         }
     SGM::Graph graph(rResult,sEdges);
     std::vector<SGM::Graph> aComponents;
