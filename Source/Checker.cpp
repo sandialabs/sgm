@@ -1,8 +1,11 @@
 #include "SGMEntityFunctions.h"
+#include "SGMTriangle.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
 #include "Surface.h"
+#include "Topology.h"
+#include "Primitive.h"
 
 #include <sstream>
 
@@ -107,6 +110,74 @@ bool CheckOwnersHaveChild(entity const *pChild, std::vector<std::string> &aCheck
     return bAnswer;
     }
 
+bool EdgesOverlap(edge const *pEdge1,edge const *pEdge2)
+    {
+    // Only check the end points of pEdge1, to see if they overlap.
+
+    if(pEdge1->GetStart())
+        {
+        if(pEdge2->GetStart()!=pEdge1->GetStart() && pEdge2->GetStart()!=pEdge1->GetEnd())
+            {
+            SGM::Point3D Pos=pEdge1->GetStart()->GetPoint();
+            SGM::Point3D CPos;
+            double t=pEdge2->GetCurve()->Inverse(Pos,&CPos);
+            if(Pos.Distance(CPos)<SGM_ZERO)
+                {
+                if(pEdge2->GetDomain().InInterval(t,SGM_MIN_TOL))
+                    {
+                    return true;
+                    }
+                }
+            }
+        }
+    if(pEdge2->GetStart())
+        {
+        if(pEdge1->GetStart()!=pEdge2->GetStart() && pEdge1->GetStart()!=pEdge2->GetEnd())
+            {
+            SGM::Point3D Pos=pEdge2->GetStart()->GetPoint();
+            SGM::Point3D CPos;
+            double t=pEdge1->GetCurve()->Inverse(Pos,&CPos);
+            if(Pos.Distance(CPos)<SGM_ZERO)
+                {
+                if(pEdge1->GetDomain().InInterval(t,SGM_MIN_TOL))
+                    {
+                    return true;
+                    }
+                }
+            }
+        }
+
+    return false;
+    }
+
+bool OverlappingEdges(SGM::Result              &rResult,
+                      entity             const *pEntity,
+                      std::vector<std::string> &aCheckStrings)
+    {
+    std::set<edge *,EntityCompare> sEdges;
+    FindEdges(rResult,pEntity,sEdges);
+
+    // Note that this is n^2 and could be n*ln(n).
+
+    for(edge *pEdge1 : sEdges)
+        {
+        for(edge *pEdge2 : sEdges)
+            {
+            if(pEdge1!=pEdge2)
+                {
+                if(EdgesOverlap(pEdge1,pEdge2))
+                    {
+                    std::stringstream ss;
+                    ss << pEntity << " has overlapping edges, " << pEdge1 << " and " << pEdge2 << " .";
+                    aCheckStrings.emplace_back(ss.str());
+                    return true;
+                    }
+                }
+            }
+        }
+    return false;
+    }
+
 bool body::Check(SGM::Result              &rResult,
                  SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings,
@@ -134,6 +205,11 @@ bool body::Check(SGM::Result              &rResult,
         ss << this << " has no volumes and no points.";
         aCheckStrings.emplace_back(ss.str());
         }
+
+    //if(OverlappingEdges(rResult,this,aCheckStrings))
+    //    {
+    //    bAnswer=false;
+    //    }
 
     if(bChildren)
         {
@@ -224,7 +300,7 @@ bool volume::Check(SGM::Result              &rResult,
 
     // Check to see if all its faces point to it.
 
-    if(m_sFaces.empty())
+    if(m_sFaces.empty() && m_sEdges.empty())
         {
         bAnswer=false;
         std::stringstream ss;
@@ -374,7 +450,7 @@ bool face::Check(SGM::Result              &rResult,
         double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
         double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
         double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
-        double dTol=0.70710678118654752440084436210485; // cos(45) degrees
+        double dTol=0.64278760968653932632264340990726; // cos(50) degrees
         if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
             {
 #if 0
@@ -388,9 +464,17 @@ bool face::Check(SGM::Result              &rResult,
             CreateEdge(rResult,pLine2,&Domain2);
             CreateEdge(rResult,pLine3,&Domain3);
 #endif
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
-            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
+            // Check to see if this is at a singularity 
+
+            if( m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false && 
+                m_pSurface->SingularHighU()==false)
+                {
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
+                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
+                }
             }
         }
     if(dMaxAngle!=0)

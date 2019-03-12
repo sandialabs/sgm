@@ -21,14 +21,47 @@ NUBsurface::NUBsurface(SGM::Result                                  &rResult,
     }
 
 NUBsurface::NUBsurface(SGM::Result                             &rResult,
-                       std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
+                       std::vector<std::vector<SGM::Point3D>> &&aaControlPoints,
                        std::vector<double>                    &&aUKnots,
                        std::vector<double>                    &&aVKnots):
     surface(rResult,SGM::NUBSurfaceType),
-    m_aaControlPoints(std::move(aControlPoints)),
+    m_aaControlPoints(std::move(aaControlPoints)),
     m_aUKnots(std::move(aUKnots)),
     m_aVKnots(std::move(aVKnots))
     {
+    Construct(rResult);
+    }
+
+NUBsurface::NUBsurface(SGM::Result                                  &rResult,
+                       std::vector<std::vector<SGM::Point3D>> const &aaInterpolatePoints):
+    surface(rResult,SGM::NUBSurfaceType)
+    {
+    // Find control points and knots from aaInterpolatePoints.
+
+    size_t nUSize=aaInterpolatePoints.size();
+    size_t nVSize=aaInterpolatePoints[0].size();
+    std::vector<double> aULengths,aVLengths;
+    size_t nVDegree=FindKnots(aaInterpolatePoints[nUSize/2],m_aVKnots,aVLengths);
+    
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    std::vector<SGM::Point3D> aMidVPoints;
+    for(auto aPoints : aaInterpolatePoints)
+        {
+        std::vector<SGM::Point3D> aControlPoints;
+        FindControlPoints(aPoints,m_aVKnots,aVLengths,nVDegree,aControlPoints);
+        aaPoints.push_back(aControlPoints);
+        aMidVPoints.push_back(aPoints[nVSize/2]);
+        }
+
+    size_t nUDegree=FindKnots(aMidVPoints,m_aUKnots,aULengths);
+    std::vector<std::vector<SGM::Point3D> > aaControlPoints;
+    for(auto aPoints : aaPoints)
+        {
+        std::vector<SGM::Point3D> aControlPoints;
+        FindControlPoints(aPoints,m_aUKnots,aULengths,nUDegree,aControlPoints);
+        m_aaControlPoints.push_back(aControlPoints);
+        }
+
     Construct(rResult);
     }
 

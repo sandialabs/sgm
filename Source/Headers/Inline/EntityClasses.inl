@@ -174,75 +174,75 @@ namespace SGMInternal {
 
     template<>
     inline thing::iterator<body*> thing::Begin<body*>(bool bTopLevel) const
-    { return {SGM::EntityType::BodyType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<body*> thing::End<body*>(bool bTopLevel) const
-    { return {SGM::EntityType::BodyType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<body*>(SGM::EntityType::BodyType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<volume*> thing::Begin<volume*>(bool bTopLevel) const
-    { return {SGM::EntityType::VolumeType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<volume*> thing::End<volume*>(bool bTopLevel) const
-    { return {SGM::EntityType::VolumeType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<volume*>(SGM::EntityType::VolumeType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<face*> thing::Begin<face*>(bool bTopLevel) const
-    { return {SGM::EntityType::FaceType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<face*> thing::End<face*>(bool bTopLevel) const
-    { return {SGM::EntityType::FaceType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<face*>(SGM::EntityType::FaceType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<edge*> thing::Begin<edge*>(bool bTopLevel) const
-    { return {SGM::EntityType::EdgeType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<edge*> thing::End<edge*>(bool bTopLevel) const
-    { return {SGM::EntityType::EdgeType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<edge*>(SGM::EntityType::EdgeType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<vertex*> thing::Begin<vertex*>(bool bTopLevel) const
-    { return {SGM::EntityType::VertexType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<vertex*> thing::End<vertex*>(bool bTopLevel) const
-    { return {SGM::EntityType::VertexType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<vertex*>(SGM::EntityType::VertexType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<complex*> thing::Begin<complex*>(bool bTopLevel) const
-    { return {SGM::EntityType::ComplexType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<complex*> thing::End<complex*>(bool bTopLevel) const
-    { return {SGM::EntityType::ComplexType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<complex*>(SGM::EntityType::ComplexType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<surface*> thing::Begin<surface*>(bool bTopLevel) const
-    { return {SGM::EntityType::SurfaceType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<surface*> thing::End<surface*>(bool bTopLevel) const
-    { return {SGM::EntityType::SurfaceType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<surface*>(SGM::EntityType::SurfaceType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<curve*> thing::Begin<curve*>(bool bTopLevel) const
-    { return {SGM::EntityType::CurveType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<curve*> thing::End<curve*>(bool bTopLevel) const
-    { return {SGM::EntityType::CurveType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<curve*>(SGM::EntityType::CurveType, m_mAllEntities.cend(), bTopLevel); }
 
     template<>
     inline thing::iterator<attribute*> thing::Begin<attribute*>(bool bTopLevel) const
-    { return {SGM::EntityType::AttributeType, m_mAllEntities, bTopLevel}; }
+    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities, bTopLevel); }
 
     template<>
     inline thing::iterator<attribute*> thing::End<attribute*>(bool bTopLevel) const
-    { return {SGM::EntityType::AttributeType, m_mAllEntities.cend(), bTopLevel}; }
+    { return thing::iterator<attribute*>(SGM::EntityType::AttributeType, m_mAllEntities.cend(), bTopLevel); }
 
     template <typename ENTITY_TYPE, typename ENTITY_SET>
     inline size_t thing::GetEntities(ENTITY_TYPE type, ENTITY_SET &sEntities, bool bTopLevel) const
@@ -306,7 +306,7 @@ namespace SGMInternal {
     inline assembly *assembly::Clone(SGM::Result &rResult) const
     { return new assembly(rResult,*this); }
 
-    inline SGM::Interval3D const &assembly::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &assembly::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline bool assembly::IsTopLevel() const
@@ -342,7 +342,7 @@ namespace SGMInternal {
     inline reference *reference::Clone(SGM::Result &rResult) const
     { return new reference(rResult,*this); }
 
-    inline SGM::Interval3D const &reference::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &reference::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline bool reference::IsTopLevel() const
@@ -762,7 +762,7 @@ namespace SGMInternal {
     inline bool attribute::IsTopLevel() const
     { return m_sOwners.empty(); }
 
-    inline SGM::Interval3D const &attribute::GetBox(SGM::Result &) const
+    inline SGM::Interval3D const &attribute::GetBox(SGM::Result &,bool /*bDoNotContruct*/) const
     { return m_Box; }
 
     inline void attribute::ReplacePointers(std::map<entity *,entity *> const &)

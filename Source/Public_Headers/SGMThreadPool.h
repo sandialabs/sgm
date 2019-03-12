@@ -1,6 +1,8 @@
 #ifndef SGM_THREADPOOL_H
 #define SGM_THREADPOOL_H
 
+#if defined(SGM_MULTITHREADED)
+
 #include <vector>
 #include <queue>
 #include <memory>
@@ -111,5 +113,6 @@ namespace SGM {
 
 } // namespace SGM
 
+#endif // defined(SGM_MULTITHREADED)
 
 #endif //SGM_THREADPOOL_H

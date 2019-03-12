@@ -1,12 +1,12 @@
 #include "SGMResult.h"
-#include "SGMTransform.h"
+#include "SGMTransform.h" 
 
 #include "EntityClasses.h"
 #include "Surface.h"
 #include "Curve.h"
 
-//#define SGM_TIMER
-#include "Timer.h"
+//#define SGM_TIMER 
+#include "Util/timer.h"
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -48,7 +48,7 @@ void thing::FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const
     }
 }
 
-SGM::Interval3D const &thing::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &thing::GetBox(SGM::Result &rResult,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {

@@ -103,12 +103,19 @@ void torus::Evaluate(SGM::Point2D const &uv,
         du+=SGM_PI;
         }
 
+//#ifdef __GNUC__  // make this portable on compiler/platform
+//    double dSinU,dCosU,dSinV,dCosV;
+//    __sincos(du, &dSinU, &dCosU);
+//    __sincos(uv.m_v, &dSinV, &dCosV);
+//#else
     double dCosU=cos(du);
     double dSinU=sin(du);
     double dCosV=cos(uv.m_v);
     double dSinV=sin(uv.m_v);
+//#endif
 
-    double dMCV=m_dMajorRadius+dCosV*m_dMinorRadius;
+    double dCosVMR = dCosV*m_dMinorRadius;
+    double dMCV= m_dMajorRadius + dCosVMR;
     if(Pos)
         {
         double dSM=dSinV*m_dMinorRadius;
@@ -125,14 +132,14 @@ void torus::Evaluate(SGM::Point2D const &uv,
     if(Dv)
         {
         double dVdMCV=-dSinV*m_dMinorRadius;
-        double dVdSM=dCosV*m_dMinorRadius;
+        double dVdSM=dCosVMR;
         Dv->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dVdMCV+m_ZAxis.m_x*dVdSM;
         Dv->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dVdMCV+m_ZAxis.m_y*dVdSM;
         Dv->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dVdMCV+m_ZAxis.m_z*dVdSM;
         }
     if(Norm)
         {
-        double dCM=dCosV*m_dMinorRadius;
+        double dCM=dCosVMR;
         double dSM=dSinV*m_dMinorRadius;
         Norm->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dCM+m_ZAxis.m_x*dSM;
         Norm->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dCM+m_ZAxis.m_y*dSM;
@@ -157,7 +164,7 @@ void torus::Evaluate(SGM::Point2D const &uv,
         }
     if(Dvv)
         {
-        double ddVdMCV=-dCosV*m_dMinorRadius;
+        double ddVdMCV=-dCosVMR;
         double ddVdSM=-dSinV*m_dMinorRadius;
         Dvv->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*ddVdMCV+m_ZAxis.m_x*ddVdSM;
         Dvv->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*ddVdMCV+m_ZAxis.m_y*ddVdSM;
@@ -385,5 +392,48 @@ std::vector<SGM::Point2D> const &torus::GetSeedParams() const
         FindSeedPoints(this,m_aSeedPoints,m_aSeedParams);
         }
     return m_aSeedParams;
+    }
+
+bool torus::IsMajorCircle(curve const *pCurve,double dTolerance,double &dV) const
+    {
+    if(pCurve->GetCurveType()==SGM::EntityType::CircleType)
+        {
+        circle const *pCircle=(circle const *)pCurve;
+        if(fabs(fabs(pCircle->m_Normal%m_ZAxis)-1.0)<dTolerance)
+            {
+            SGM::Point3D Pos1=m_Center+m_ZAxis*(m_ZAxis%(pCircle->m_Center-m_Center));
+            if(SGM::NearEqual(Pos1,pCircle->m_Center,dTolerance))
+                {
+                SGM::Point3D Pos,CPos;
+                pCircle->Evaluate(0,&Pos);
+                dV=Inverse(Pos,&CPos).m_v;
+                if(SGM::NearEqual(Pos,CPos,dTolerance))
+                    {
+                    return true;
+                    }
+                }
+            }
+        }
+    return false;
+    }
+
+bool torus::IsMinorCircle(curve const *pCurve,double dTolerance,double &dU) const
+    {
+    if(pCurve->GetCurveType()==SGM::EntityType::CircleType)
+        {
+        circle const *pCircle=(circle const *)pCurve;
+        if(fabs(m_dMinorRadius-pCircle->m_dRadius)<dTolerance)
+            {
+            SGM::Point3D Pos,CPos;
+            pCircle->Evaluate(0,&Pos);
+            pCurve->Inverse(Pos,&CPos);
+            if(SGM::NearEqual(Pos,CPos,dTolerance))
+                {
+                dU=Inverse(Pos).m_u;
+                return true;
+                }
+            }
+        }
+    return false;     
     }
 }

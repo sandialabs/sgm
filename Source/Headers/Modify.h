@@ -15,35 +15,35 @@ void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody);
 
+void SubtractBodies(SGM::Result &rResult,
+                    body        *pKeepBody,
+                    body        *pDeleteBody);
+
 void ReduceToVolumes(SGM::Result                      &rResult,
                      body                             *pBody,
                      std::set<volume *,EntityCompare> &sVolumes);
 
 // pFace1 may be a nullptr and mHitMap(n) returns the edges or vertices
-// hit by paramters on the curve on face n.
+// hit by paramters on the curve on face n.  The function returns the 
+// number of edges found.
 
-void TrimCurveWithFaces(SGM::Result               &rResult,
-                        curve                     *pCurve,
-                        face                const *pFace0,
-                        face                const *pFace1, 
-                        std::vector<edge *>       &aEdges,
-                        std::vector<SGM::Point3D> &aPoints,
-                        std::map<double,entity *> &mHitMap1,
-                        std::map<double,entity *> &mHitMap2,
-                        edge                const *pLimitEdge=nullptr); 
+size_t TrimCurveWithFaces(SGM::Result               &rResult,
+                          curve                     *pCurve,
+                          face                const *pFace0,
+                          face                const *pFace1, 
+                          std::vector<edge *>       &aEdges,
+                          double                     dTolerance,
+                          SGM::Interval1D     const *pLimitDomain=nullptr); 
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace);
 
-// This version of ImprintEdgeOnFace assumes that the whole edge
-// is on the face and the start and end entities are known.
+// It is assumed that pEdge has been trimmed to the face.
 
-std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
-                                      edge        *pEdge,
-                                      face        *pFace,
-                                      entity      *pStartEntity,
-                                      entity      *pEndEntity);
+std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
+                                             edge        *pEdge,
+                                             face        *pFace);
 
 vertex *ImprintPoint(SGM::Result        &rResult,
                      SGM::Point3D const &Pos,
@@ -55,9 +55,24 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
                            edge               *pEdge);
 
-void MergeVerices(SGM::Result &rResult,
-                  vertex      *pKeepVertex,
-                  vertex      *pDeleteVertex);
+void MergeVertices(SGM::Result &rResult,
+                   vertex      *pKeepVertex,
+                   vertex      *pDeleteVertex);
+
+void MergeVertexSet(SGM::Result &rResult,
+                    std::set<vertex *, EntityCompare> &sVertices);
+
+void MergeEdges(SGM::Result &rResult,
+                edge        *pKeepEdge,
+                edge        *pDeleteEdge);
+
+void FindWindingNumbers(surface                   const *pSurface,
+                        std::vector<SGM::Point3D> const &aPolygon3D,
+                        int                             &nUWinds,
+                        int                             &nVWinds);
+
+void OrientBody(SGM::Result &rResult,
+                body        *pBody);
 }
 
 #endif

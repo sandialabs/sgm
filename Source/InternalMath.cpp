@@ -1,6 +1,9 @@
-#include "Mathematics.h"
+#include "SGMMathematics.h"
 #include "SGMConstants.h"
 #include "SGMVector.h"
+
+#include "Mathematics.h"
+#include "Util/buffer.h"
 
 namespace SGMInternal
 {
@@ -258,43 +261,78 @@ double IntegrateTetra(double f(SGM::Point2D const &uv,void const *pData),
     return Integrate1D(SGMInternal::IntegrateTetraY,Domain,&XYData,dTolerance);
     }
 
-double Integrate1D(double f(double x, void const *pData),
+inline double * CreateRombergTableMemory(unsigned nMaxLevels)
+    {
+    nMaxLevels += 2;
+    size_t nLength = nMaxLevels*(nMaxLevels+1)/2; // (1+2+3+...+N+2)
+    return new double[nLength];
+    }
+
+double Integrate1D(double f(double, void const *),
                    SGM::Interval1D const &Domain,
                    void const *pData,
                    double dTolerance)
     {
-    std::vector<std::vector<double>> aaData;
-    double dAnswer = 0;
-    double dh = Domain.Length();
+    static const unsigned MIN_LEVELS = 3;
+    static const unsigned MAX_LEVELS = 14;
+
+    // Let N = MAX_LEVEL, number of arrays (extrapolations) in table is N+1,
+    // where the 0th extrapolation is the trapezoid rule.
+    // The size of ith array S_i needed for each extrapolation: S_i = (1,2,3,4,...,N+1,N+2)
+    // The start position P_i of ith array in table P_i = (0,1,3,6,P_{i-1}+S_{i-1},...,P_N+S_N,P_{N+1}+S_{N+1})
+
     double a = Domain.m_dMin;
     double b = Domain.m_dMax;
-    std::vector<double> aData;
-    aData.push_back(0.5 * dh * (f(a, pData) + f(b, pData)));
-    aaData.push_back(aData);
-    double dError = dTolerance + 1;
-    size_t Index1 = 0, Index2;
-    size_t nMin = 3;
-    while (Index1 < nMin || dTolerance < dError)
+    double dh = b - a;
+    if (dh == 0.0)
         {
-        ++Index1;
+        return 0.0;
+        }
+    double *pTable = CreateRombergTableMemory(MAX_LEVELS);
+
+    // 0th level is trapezoid rule
+    unsigned nLevelPosition = 0;
+    unsigned nLevelSize = 1;
+    double dAnswer = 0.5 * dh * (f(a, pData) + f(b, pData));
+    double *aExtrapolation = &pTable[nLevelPosition];
+    aExtrapolation[0] = dAnswer;
+    double dError = std::numeric_limits<double>::max();
+
+    unsigned iLevel;
+    for (iLevel = 1; iLevel <= MAX_LEVELS && (dError > dTolerance || iLevel < MIN_LEVELS); ++iLevel)
+        {
+        unsigned nLevelPositionPrevious = nLevelPosition;
+        unsigned nLevelSizePrevious = iLevel;
+        nLevelPosition = nLevelPositionPrevious + nLevelSize;
+        nLevelSize = nLevelSizePrevious + 1;
+        aExtrapolation = &pTable[nLevelPosition];
+
+        // sum the evaluation of the function at this level
         dh *= 0.5;
         double dSum = 0.0;
-        size_t nBound = (size_t) pow(2, Index1);
-        for (Index2 = 1; Index2 < nBound; Index2 += 2)
+        unsigned nBound = (unsigned) 1 << iLevel; // pow(2,Index1);
+        for (unsigned Index2 = 1; Index2 < nBound; Index2 += 2)
             {
             dSum += f(a + Index2 * dh, pData);
             }
-        aData.clear();
-        aData.push_back(0.5 * aaData[Index1 - 1][0] + dSum * dh);
-        for (Index2 = 1; Index2 <= Index1; ++Index2)
+
+        // calculate table entries for this level extrapolation
+        double *aExtrapolationPrevious = &pTable[nLevelPositionPrevious];
+        aExtrapolation[0] = 0.5 * aExtrapolationPrevious[0] + dSum * dh;
+        for (unsigned Index2 = 1; Index2 <= iLevel; ++Index2)
             {
-            aData.push_back(aData[Index2 - 1] +
-                            (aData[Index2 - 1] - aaData[Index1 - 1][Index2 - 1]) / (pow(4, Index2) - 1));
+            unsigned Index2m1 = Index2 - 1;
+            double aDataIndex2m1 = aExtrapolation[Index2m1];
+            double dDenom = (1 << (2*Index2)) - 1; // (pow(4,Index2) - 1)
+            aExtrapolation[Index2] = aDataIndex2m1 + (aDataIndex2m1 - aExtrapolationPrevious[Index2m1]) / dDenom;
             }
-        aaData.push_back(aData);
-        dAnswer = aData.back();
-        dError = fabs(aaData[Index1 - 1].back() - dAnswer);
+
+        double dPreviousAnswer = dAnswer;
+        dAnswer = aExtrapolation[iLevel]; // last entry
+        dError = std::abs(dPreviousAnswer - dAnswer);
         }
+
+    delete [] pTable;
     return dAnswer;
     }
 
@@ -437,5 +475,146 @@ double IntegrateTriangle(double f(SGM::Point2D const &uv, void const *pData),
     return dAnswer;
     }
 
+// Returns true if Pos0 is on the same side of the line
+// {Pos1,Pos2} as the point Pos3 in their common plane.
+
+//bool SameSide(SGM::Point3D const &Pos0,
+//              SGM::Point3D const &Pos1,
+//              SGM::Point3D const &Pos2,
+//              SGM::Point3D const &Pos3)
+//    {
+//    SGM::Vector3D LineVec=Pos2-Pos1;
+//    SGM::Vector3D Test0=Pos0-Pos1;
+//    SGM::Vector3D Test1=Pos3-Pos1;
+//    return 0<=(LineVec*Test0)%(LineVec*Test1);
+//    }
+//
+//double PizzaSliceArea(SGM::Point3D const &Pos0,
+//                      SGM::Point3D const &Pos1,
+//                      SGM::Point3D const &Pos2,
+//                      SGM::Point3D const &Pos3)
+//    {
+//    double dTA=((Pos1-Pos0)*(Pos2-Pos0)).Magnitude()/2.0;
+//    SGM::Point3D Center;
+//    SGM::UnitVector3D Normal;
+//    double dRadius;
+//    double dCordArea=0.0;
+//    if(SGM::FindCircle(Pos3,Pos1,Pos2,Center,Normal,dRadius))
+//        {
+//        SGM::UnitVector3D UVec1=Pos2-Center;
+//        SGM::UnitVector3D UVec2=Pos1-Center;
+//        double dAngle=UVec1.Angle(UVec2);
+//        double dTA2=((Pos2-Center)*(Pos1-Center)).Magnitude()/2.0;
+//        double dSlice=dRadius*dRadius*dAngle/2.0;
+//        dCordArea=dSlice-dTA2;
+//        if(SameSide(Pos3,Pos1,Pos2,Pos0))
+//            {
+//            dCordArea=-dCordArea;
+//            }
+//        }
+//    double dArea=dTA+dCordArea;
+//    return dArea;
+//    }
+
+double SteepestDescent2D(double f(SGM::Point2D const &uv,void const *pData),
+                         void            const *pData,
+                         SGM::Point2D    const &Start,
+                         double                 dStepSize,
+                         SGM::Interval2D const &Domain,
+                         SGM::Point2D          &Answer)
+    {
+    Answer=Start;
+    size_t nSameSize=0;
+    bool bFound=false;
+    double dF=(*f)(Answer,pData);
+    bool bDown=false;
+    while(!bFound)
+        {
+        SGM::Point2D uvn0(Answer.m_u-dStepSize,Answer.m_v);
+        SGM::Point2D uv10(Answer.m_u+dStepSize,Answer.m_v);
+        SGM::Point2D uv0n(Answer.m_u,Answer.m_v-dStepSize);
+        SGM::Point2D uv01(Answer.m_u,Answer.m_v+dStepSize);
+
+        double duvn0=(*f)(uvn0,pData);
+        double duv10=(*f)(uv10,pData);
+        double duv0n=(*f)(uv0n,pData);
+        double duv01=(*f)(uv01,pData);
+
+        SGM::Point2D xy1(Answer.m_u-dStepSize,duvn0),xy2(Answer.m_u,dF),xy3(Answer.m_u+dStepSize,duv10);
+        SGM::Point2D xy4(Answer.m_v-dStepSize,duv0n),xy5(Answer.m_v,dF),xy6(Answer.m_v+dStepSize,duv01);
+        double dAu,dBu,dCu,dAv,dBv,dCv;
+        FindQuadratic(xy1,xy2,xy3,dAu,dBu,dCu);
+        FindQuadratic(xy4,xy5,xy6,dAv,dBv,dCv);
+        SGM::Point2D uv1(-dBu/(2*dAu),-dBv/(2*dAv));
+
+        SGM::UnitVector2D WalkDir(duvn0-duv10,duv0n-duv01);
+        SGM::Vector2D Walk=WalkDir*dStepSize;
+        SGM::Point2D uv2=Answer+Walk;
+
+        if(uv1.m_u<Domain.m_UDomain.m_dMin)
+            {
+            uv1.m_u=Domain.m_UDomain.m_dMin;
+            }
+        else if(Domain.m_UDomain.m_dMax<uv1.m_u)
+            {
+            uv1.m_u=Domain.m_UDomain.m_dMax;
+            }
+        if(uv1.m_v<Domain.m_VDomain.m_dMin)
+            {
+            uv1.m_v=Domain.m_VDomain.m_dMin;
+            }
+        else if(Domain.m_VDomain.m_dMax<uv1.m_v)
+            {
+            uv1.m_v=Domain.m_VDomain.m_dMax;
+            }
+
+        if(uv2.m_u<Domain.m_UDomain.m_dMin)
+            {
+            uv2.m_u=Domain.m_UDomain.m_dMin;
+            }
+        else if(Domain.m_UDomain.m_dMax<uv2.m_u)
+            {
+            uv2.m_u=Domain.m_UDomain.m_dMax;
+            }
+        if(uv2.m_v<Domain.m_VDomain.m_dMin)
+            {
+            uv2.m_v=Domain.m_VDomain.m_dMin;
+            }
+        else if(Domain.m_VDomain.m_dMax<uv2.m_v)
+            {
+            uv2.m_v=Domain.m_VDomain.m_dMax;
+            }
+
+        double dNewF2=(*f)(uv1,pData);
+        double dNewF=(*f)(uv2,pData);
+        SGM::Point2D uv=uv2;
+        if(dNewF2<dNewF)
+            {
+            uv=uv1;
+            dNewF=dNewF2;
+            }
+        if(dNewF<dF)
+            {
+            ++nSameSize;
+            Answer=uv;
+            dF=dNewF;
+            if(bDown==false && 4<nSameSize)
+                {
+                dStepSize*=2.0;
+                }
+            }
+        else if(dStepSize<1E-10)
+            {
+            bFound=true;
+            }
+        else
+            {
+            nSameSize=0;
+            bDown=true;
+            dStepSize*=0.5;
+            }
+        }
+    return dF;
+    }
 
 } // End namespace SGMInternal

@@ -19,6 +19,9 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
+#include <fstream>
+#include <iostream>
+#include <ReadFile.h>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -80,7 +83,10 @@ bool ReadFilePoint(FILE         *pFile,
 void FindArguments(std::string        const &line,
                    std::vector<std::string> &aArgs)
     {
+    static const char WHITE_SPACE[] = " \n\r\t";
     char const *pString=line.c_str();
+    pString += strspn(pString, WHITE_SPACE);  // skip leading whitespace/control characters
+
     size_t nCount=1;
     size_t nStart=0;
     bool bInString=false;
@@ -139,7 +145,7 @@ size_t FindSubArguments(std::string        const &line,
                     }
                 }
             nStart=nCount+1;
-            aArgs.push_back(Arg);
+            aArgs.emplace_back(std::move(Arg));
             }
         ++nCount;
         }
@@ -166,7 +172,7 @@ size_t FindSubArguments2(std::string        const &line,
                     }
                 }
             nStart=nCount+1;
-            aArgs.push_back(Arg);
+            aArgs.emplace_back(std::move(Arg));
             }
         ++nCount;
         }
@@ -188,34 +194,37 @@ int GetInt(std::string const &aStr)
     return nInt;
     }
 
-unsigned int GetUnsignedInt(std::string const &aStr)
+inline unsigned int GetUnsignedInt(std::string const &aStr)
     {
-    unsigned int nInt;
-    sscanf(aStr.c_str(),"%d",&nInt);
-    return nInt;
+    char * end;
+    unsigned long nInt = std::strtoul(aStr.c_str(), &end, 10);
+    assert(errno != ERANGE);
+    assert(nInt < std::numeric_limits<unsigned>::max());
+    return (unsigned)nInt;
     }
 
-double GetDouble(std::string const &aStr)
+inline double GetDouble(std::string const &aStr)
     {
-    double d;
-    sscanf(aStr.c_str(),"%lf",&d);
+    char * end;
+    double d = std::strtod(aStr.c_str(), &end);
+    assert(errno != ERANGE);
     return d;
     }
 
-char const *GetFirstNumberPointer(std::string const &aStr)
+inline char const *GetFirstNumberPointer(std::string const &aStr)
     {
-    if(aStr[0]=='(' || aStr[0]==',')
-        {
-        return &aStr.c_str()[1];
-        }
-    return aStr.c_str();
+    return &aStr[aStr.find_first_not_of("(,")];
     }
 
-SGM::Point3D GetPoint3D(std::string const &aStr)
+inline SGM::Point3D GetPoint3D(std::string const &aStr)
     {
-    double x,y,z;
-    char const *pStr=GetFirstNumberPointer(aStr); 
-    sscanf(pStr,"%lf,%lf,%lf",&x,&y,&z);
+    char *pos = const_cast<char*>(GetFirstNumberPointer(aStr));
+    double x = std::strtod(pos, &pos);
+    assert(errno != ERANGE);
+    double y = std::strtod(SkipChar(pos,','), &pos);
+    assert(errno != ERANGE);
+    double z = std::strtod(SkipChar(pos,','), &pos);
+    assert(errno != ERANGE);
     return {x,y,z};
     }
 
@@ -305,7 +314,7 @@ size_t ReadPoints(std::vector<std::string> const &aArgs,
             aPoints.reserve(nPoints);
             for(Index2=0;Index2<nPoints;++Index2)
                 {
-                aPoints.push_back(GetPoint3D(aSubArgs[Index2]));
+                aPoints.emplace_back(GetPoint3D(aSubArgs[Index2]));
                 }
             return Index1+2;
             }
@@ -453,7 +462,7 @@ void ReadComplex(SGM::Result              &rResult,
     std::vector<unsigned int> aSegments,aTriangles;
     ReadUnsignedInts(aArgs,"Segments",aSegments);
     ReadUnsignedInts(aArgs,"Triangles",aTriangles);
-    complex *pComplex=new complex(rResult,aPoints,aSegments,aTriangles);
+    complex *pComplex=new complex(rResult,std::move(aPoints),std::move(aSegments),std::move(aTriangles));
     rSGMData.pEntity=pComplex;
     mEntityMap[GetID(aArgs[0])]=rSGMData;
     }
@@ -1027,20 +1036,34 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
                    SGM::TranslatorOptions const &)//Options)
     {
     // Open the file.
-
-    FILE *pFile = fopen(FileName.c_str(),"rt");
-    if(pFile==nullptr)
+    std::ifstream inputFileStream(FileName, std::ifstream::in);
+    if (!inputFileStream.good())
         {
         rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+        std::system_error open_error(errno, std::system_category(), "failed to open "+FileName);
+        std::cerr << open_error.what() << std::endl;
+        rResult.SetMessage(open_error.what());
+        //throw open_error;
         return 0;
         }
 
+//    FILE *pFile = fopen(FileName.c_str(),"rt");
+//    if(pFile==nullptr)
+//        {
+//        rResult.SetResult(SGM::ResultType::ResultTypeFileOpen);
+//        return 0;
+//        }
+
     std::map<size_t,SGMData> mEntityMap;
-    std::string line;
-    while(ReadFileLine(pFile,line))
+    std::string sLine;
+    sLine.reserve(2048);
+
+    while (std::getline(inputFileStream, sLine, ';'))
+    //while(ReadFileLine(pFile,sLine))
         {
+        sLine += ';';
         std::vector<std::string> aArgs;
-        FindArguments(line,aArgs);
+        FindArguments(sLine,aArgs);
         if(aArgs[1]=="of")
             {
             break;
@@ -1161,7 +1184,7 @@ size_t ReadSGMFile(SGM::Result                  &rResult,
         //    {
         //    ReadAssembly(rResult,aArgs,mEntityMap);
         //    }
-        line.clear();
+        // sLine.clear();
         }
 
     // Replace all IDs and populate the top level vector.

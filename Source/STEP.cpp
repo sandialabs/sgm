@@ -19,6 +19,7 @@
 // Lets us use fprintf
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
+__pragma(warning(disable: 4477 ))
 #endif
 
 namespace SGMInternal

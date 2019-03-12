@@ -50,9 +50,9 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
 
     if(Pos)
         {
-        Pos->m_x=m_Center.m_x+(m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*(m_dMajorRadius+dCosB)-m_Normal.m_x*dSinB;
-        Pos->m_y=m_Center.m_y+(m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*(m_dMajorRadius+dCosB)-m_Normal.m_y*dSinB;
-        Pos->m_z=m_Center.m_z+(m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*(m_dMajorRadius+dCosB)-m_Normal.m_z*dSinB;
+        Pos->m_x=m_Center.m_x+(m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.m_x*dSinB;
+        Pos->m_y=m_Center.m_y+(m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.m_y*dSinB;
+        Pos->m_z=m_Center.m_z+(m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.m_z*dSinB;
         }
     if(D1)
         {
@@ -60,9 +60,9 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         double dSinAnA=dSinA*m_nA;
         double dCosBnB=dCosB*m_nB;
         double dSinBnB=dSinB*m_nB;
-        D1->m_x=(m_YAxis.m_x*dCosAnA-m_XAxis.m_x*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*dSinBnB-m_Normal.m_x*dCosBnB;
-        D1->m_y=(m_YAxis.m_y*dCosAnA-m_XAxis.m_y*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*dSinBnB-m_Normal.m_y*dCosBnB;
-        D1->m_z=(m_YAxis.m_z*dCosAnA-m_XAxis.m_z*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*dSinBnB-m_Normal.m_z*dCosBnB;
+        D1->m_x=(m_YAxis.m_x*dCosAnA-m_XAxis.m_x*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*dSinBnB+m_Normal.m_x*dCosBnB;
+        D1->m_y=(m_YAxis.m_y*dCosAnA-m_XAxis.m_y*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*dSinBnB+m_Normal.m_y*dCosBnB;
+        D1->m_z=(m_YAxis.m_z*dCosAnA-m_XAxis.m_z*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*dSinBnB+m_Normal.m_z*dCosBnB;
         }
     if(D2)
         {
@@ -75,11 +75,11 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         double dCosBnBnB=dCosBnB*m_nB;
         double dSinBnBnB=dSinBnB*m_nB;
         D2->m_x=(-m_YAxis.m_x*dSinAnAnA-m_XAxis.m_x*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.m_x*dCosAnA-m_XAxis.m_x*dSinAnA)*dSinBnB-
-                (m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*dCosBnBnB+(m_XAxis.m_x*dSinAnA-m_YAxis.m_x*dCosAnA)*dSinBnB+m_Normal.m_x*dSinBnBnB;
+                (m_XAxis.m_x*dCosA+m_YAxis.m_x*dSinA)*dCosBnBnB+(m_XAxis.m_x*dSinAnA-m_YAxis.m_x*dCosAnA)*dSinBnB-m_Normal.m_x*dSinBnBnB;
         D2->m_y=(-m_YAxis.m_y*dSinAnAnA-m_XAxis.m_y*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.m_y*dCosAnA-m_XAxis.m_y*dSinAnA)*dSinBnB-
-                (m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*dCosBnBnB+(m_XAxis.m_y*dSinAnA-m_YAxis.m_y*dCosAnA)*dSinBnB+m_Normal.m_y*dSinBnBnB;
+                (m_XAxis.m_y*dCosA+m_YAxis.m_y*dSinA)*dCosBnBnB+(m_XAxis.m_y*dSinAnA-m_YAxis.m_y*dCosAnA)*dSinBnB-m_Normal.m_y*dSinBnBnB;
         D2->m_z=(-m_YAxis.m_z*dSinAnAnA-m_XAxis.m_z*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.m_z*dCosAnA-m_XAxis.m_z*dSinAnA)*dSinBnB-
-                (m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*dCosBnBnB+(m_XAxis.m_z*dSinAnA-m_YAxis.m_z*dCosAnA)*dSinBnB+m_Normal.m_z*dSinBnBnB;
+                (m_XAxis.m_z*dCosA+m_YAxis.m_z*dSinA)*dCosBnBnB+(m_XAxis.m_z*dSinAnA-m_YAxis.m_z*dCosAnA)*dSinBnB-m_Normal.m_z*dSinBnBnB;
         }
     }
 

@@ -2,10 +2,10 @@
 #define SGM_ORDERPOINTS_H
 
 #include "SGMVector.h"
-#include "../ModelViewer/buffer.h"
-#include "parallel_stable_sort.h"
+#include "Util/buffer.h"
 
 #include <cmath>
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -93,11 +93,14 @@ void MergePoints(std::vector<SGM::Point3D> const &aPoints,             // unmerg
         }
     }
 
+
 template <typename T>
 struct numeric_tolerance
     {
+#if !defined( _MSC_VER ) || _MSC_VER >= 1900
     static constexpr T relative = T(2.0) * std::numeric_limits<T>::epsilon();
     static constexpr T relative_squared = T(4.0) * std::numeric_limits<T>::epsilon() * std::numeric_limits<T>::epsilon();
+#endif
     };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -131,13 +134,18 @@ struct Point3DSeparate
 
     Point3DSeparate() = default;
 
-    explicit Point3DSeparate(const SGM::Point3D &p) :
-        data{DoubleSeparate(p.m_x),
-             DoubleSeparate(p.m_y),
-             DoubleSeparate(p.m_z)} {}
-
-    Point3DSeparate(double x, double y, double z) :
-        data{DoubleSeparate(x),DoubleSeparate(y),DoubleSeparate(z)} {}
+    explicit Point3DSeparate(const SGM::Point3D &p)
+    {
+        data[0] = DoubleSeparate(p.m_x);
+        data[1] = DoubleSeparate(p.m_y);
+        data[2] = DoubleSeparate(p.m_z);
+    }
+    Point3DSeparate(double x, double y, double z)
+    {
+        data[0] = DoubleSeparate(x);
+        data[1] = DoubleSeparate(y);
+        data[2] = DoubleSeparate(z);
+    }
 
     const DoubleSeparate& operator []( const size_t axis ) const { assert(axis < N); return data[axis]; }
     DoubleSeparate& operator []( const size_t axis )             { assert(axis < N); return data[axis]; }

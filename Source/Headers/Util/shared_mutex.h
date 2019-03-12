@@ -1,7 +1,7 @@
-#ifndef SGM_SHARED_MUTEX
-#define SGM_SHARED_MUTEX
+#ifndef SGM_INTERNAL_SHARED_MUTEX
+#define SGM_INTERNAL_SHARED_MUTEX
 
-// Use until std::shared_mutex is available (in C++14)
+// Use until std::shared_mutex is available (in C++14),
 // this is an implementation that works in C++11
 
 // Copyright Howard Hinnant 2007-2010. Distributed under the Boost
@@ -9,9 +9,11 @@
 
 /*
 
-<shared_mutex> synopsis
+<shared_mutex> Synopsis
 
-namespace SGM
+ (actual code follows).
+
+namespace SGMInternal
 {
 
 class shared_mutex
@@ -291,7 +293,7 @@ public:
 #include <climits>
 #include <system_error>
 
-namespace SGM {
+namespace SGMInternal {
 
     class shared_mutex
     {
@@ -1219,4 +1221,4 @@ _LIBCPP_END_NAMESPACE_STD
 
 #endif
 
-#endif // SGM_SHARED_MUTEX
+#endif // SGM_INTERNAL_SHARED_MUTEX

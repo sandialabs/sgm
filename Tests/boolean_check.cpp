@@ -15,8 +15,247 @@
 #include "SGMIntersector.h"
 #include "SGMEntityFunctions.h"
 #include "SGMTransform.h"
+#include "SGMDisplay.h"
+#include "SGMPolygon.h"
+#include "SGMTriangle.h"
 
 #include "test_utility.h"
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
+
+//TEST(modify, block_sphere_subtract)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+//    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+//
+//    SGM::SubtractBodies(rResult,BlockID,SphereID);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+TEST(modify, block_top_face_sphere_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+
+    SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, square_circle_imprint)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(5,5,10),SGM::UnitVector3D(0,0,-1),6);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, block_cylinder_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,5));
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,SGM::Point3D(5,5,-1),SGM::Point3D(5,5,6),2);
+
+    SGM::SubtractBodies(rResult,BlockID,CylinderID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, trim_curve_cylinder)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body CylinderID=SGM::CreateCylinder(rResult,SGM::Point3D(5,5,0),SGM::Point3D(5,5,5),2);
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(5,5,0),SGM::UnitVector3D(0,0,1),2);
+    std::vector<SGM::Edge> aEdges;
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,CylinderID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    SGM::TrimCurveWithFace(rResult,CurveID,FaceID,aEdges);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, sphere_NUB_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Body SheetID=SGM::CreateSheetBody(rResult,SurfaceID,SGM::GetDomainOfSurface(rResult,SurfaceID));
+    SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
+
+    SGM::SubtractBodies(rResult,SheetID,BodyID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, sphere_NUB_imprint_NUB)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(10,10,0),3);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfaceID,SphereID,aCurves);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
+    
+    SGM::Body SheetID=SGM::CreateSheetBody(rResult,SurfaceID,SGM::GetDomainOfSurface(rResult,SurfaceID));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,SheetID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, sphere_NUB_imprint_sphere)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Surface SphereID=SGM::CreateSphereSurface(rResult,SGM::Point3D(10,10,0),3);
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult,SurfaceID,SphereID,aCurves);
+    SGM::DeleteEntity(rResult,SphereID);
+    SGM::DeleteEntity(rResult,SurfaceID);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,aCurves[0]);
+    
+    SGM::Body BodyID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, tweak_face_ambiguous)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::CreateSphere(rResult,SGM::Point3D(5,5,10),sqrt(2)*5);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, tweak_face)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Body SheetID=SGM::CreateSheetBody(rResult,SurfaceID,SGM::GetDomainOfSurface(rResult,SurfaceID));
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(5,5,-10),SGM::Point3D(15,15,5));
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID,sFaces);
+    SGM::Face FaceID=*(--sFaces.end());
+    SGM::TweakFace(rResult,FaceID,SurfaceID);
+    SGM::DeleteEntity(rResult,SheetID);
+
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
+    SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(all_cases, peninsula_peninsula)
 {
@@ -148,7 +387,27 @@ TEST(all_cases, split_split_vertex)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(Boolean_check, Peninsula_Peninsula_Disks)
+TEST(boolean_check, imprint_circle_on_cylinder)
+    {
+    // Boolean of two disks Peninsula
+    
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID=SGM::CreateCylinder(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,0,8),2);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(0,0,4),SGM::UnitVector3D(0,0,1),2);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+    
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+TEST(boolean_check, Peninsula_Peninsula_Disks)
     {
     // Boolean of two disks Peninsula
     
@@ -181,7 +440,7 @@ TEST(Boolean_check, Peninsula_Peninsula_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Splitter_Island_Disks)
+TEST(boolean_check, Splitter_Island_Disks) 
     {
     // Boolean of two disks Splitter and Island
     
@@ -190,11 +449,11 @@ TEST(Boolean_check, DISABLED_Splitter_Island_Disks)
 
     SGM::Point3D Center0(0,0,0),Center1(0,0.5,0);
     SGM::UnitVector3D Normal0(0,0,1),Normal1(0,1,0);
-    SGM::Body KeepID=SGM::CreateDisk(rResult,Center0,Normal0,1.0);
+    SGM::Body KeepID=SGM::CreateDisk(rResult,Center0,Normal0,0.8);
     SGM::Body DeleteID=SGM::CreateDisk(rResult,Center1,Normal1,1.0);
 
     SGM::UniteBodies(rResult,KeepID,DeleteID);
-
+    
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,KeepID,sFaces);
     EXPECT_EQ(sFaces.size(), 3);
@@ -214,7 +473,7 @@ TEST(Boolean_check, DISABLED_Splitter_Island_Disks)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
+TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     {
     // Imprinting an atoll edge on a face.
     
@@ -246,7 +505,7 @@ TEST(Boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint1)
+TEST(boolean_check, Sphere_Sphere_Imprint1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -271,7 +530,7 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     SGM::FindFaces(rResult,Sphere1,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
-
+    
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere1,Options,aCheckStrings));
@@ -279,7 +538,7 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint2)
+TEST(boolean_check, Sphere_Sphere_Imprint2)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -312,7 +571,7 @@ TEST(Boolean_check, DISABLED_Sphere_Sphere_Imprint2)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(Boolean_check, Sphere_Sphere_Unite)
+TEST(boolean_check, DISABLED_sphere_sphere_unite)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -331,7 +590,7 @@ TEST(Boolean_check, Sphere_Sphere_Unite)
     }
 
 
-TEST(Boolean_check, imprint_face_on_face_through_vertex)
+TEST(boolean_check, imprint_face_on_face_through_vertex)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -343,7 +602,7 @@ TEST(Boolean_check, imprint_face_on_face_through_vertex)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face_vertex_hit)
+TEST(boolean_check, imprint_edge_on_face_vertex_hit)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -360,7 +619,7 @@ TEST(Boolean_check, imprint_edge_on_face_vertex_hit)
 }
 
 
-TEST(Boolean_check, tangent_imprint_case )
+TEST(boolean_check, tangent_imprint_case )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -376,7 +635,7 @@ TEST(Boolean_check, tangent_imprint_case )
 }
 
 
-TEST(Boolean_check, unite_bodies_peninsula )
+TEST(boolean_check, unite_bodies_peninsula )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -390,7 +649,7 @@ TEST(Boolean_check, unite_bodies_peninsula )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, unite_bodies_island )
+TEST(boolean_check, unite_bodies_island )
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -404,7 +663,7 @@ TEST(Boolean_check, unite_bodies_island )
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face_atoll)
+TEST(boolean_check, imprint_edge_on_face_atoll)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -423,7 +682,7 @@ TEST(Boolean_check, imprint_edge_on_face_atoll)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(Boolean_check, imprint_edge_on_face)
+TEST(boolean_check, imprint_edge_on_face)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -435,10 +694,115 @@ TEST(Boolean_check, imprint_edge_on_face)
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,2,0),SGM::Point3D(0,-2,0));
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
     SGM::Merge(rResult,DiskID);
+     
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(boolean_check, winding_numbers)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface SurfaceID=SGM::CreateTorusSurface(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    //SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Curve CurveID=SGM::CreateTorusKnot(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0),SGM::UnitVector3D(0,1,0),1,2,3,4);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::vector<SGM::Point3D> const &aPoints=SGM::GetEdgePoints(rResult,EdgeID);
+    int nUWinds,nVWinds;
+    SGM::FindWindingNumbers(rResult,SurfaceID,aPoints,nUWinds,nVWinds);
+
+    EXPECT_EQ(nUWinds,3);
+    EXPECT_EQ(nVWinds,4);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(boolean_check, lower_genus)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    SGM::Body BodyID=SGM::CreateTorus(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1,2);
+    SGM::Curve CurveID=SGM::CreateCircle(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0),1);
+    SGM::Edge EdgeID=SGM::CreateEdge(rResult,CurveID);
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+    
+    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
 
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
+TEST(boolean_check, coincident)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,0,0),SGM::Point3D(10,10,10));
+    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(boolean_check, coincident_2)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(5,0,0),SGM::Point3D(5,10,5));
+    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+//TEST(boolean_check, coincident_3)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+//    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,-2,0),SGM::Point3D(10,12,5));
+//    SGM::UniteBodies(rResult,BodyID1,BodyID2);
+//
+//    SGM::CheckOptions Options;
+//    std::vector<std::string> aCheckStrings;
+//    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+//TEST(boolean_check, imprint_line_sqaure)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    // TrimCurveWithFaces issue
+//
+//    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+//    std::set<SGM::Face> sFaces;
+//    SGM::FindFaces(rResult,BodyID1,sFaces);
+//    SGM::Face FaceID=*(sFaces.begin());
+//    SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(5,0,0),SGM::Point3D(5,5,0));
+//    SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
+//
+//    SGM::CheckOptions Options;
+//    std::vector<std::string> aCheckStrings;
+//    EXPECT_TRUE(SGM::CheckEntity(rResult,BodyID1,Options,aCheckStrings));
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

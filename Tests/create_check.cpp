@@ -2,6 +2,7 @@
 #include <string>
 #include <gtest/gtest.h>
 #include <FacetToBRep.h>
+#include <SGMDisplay.h>
 
 #include "SGMGeometry.h"
 #include "SGMEntityFunctions.h"
@@ -9,11 +10,35 @@
 #include "SGMAttribute.h"
 #include "SGMInterval.h"
 #include "SGMTopology.h"
+#include "SGMPrimitives.h"
 
 #include "test_utility.h"
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "cert-err58-cpp"
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
+#endif
+
+TEST(create_check, cover_wire_body)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::set<SGM::Edge> sEdges;
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,10,0),SGM::Point3D(10,10,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(0,10,0)));
+    sEdges.insert(SGM::CreateLinearEdge(rResult,SGM::Point3D(10,0,0),SGM::Point3D(10,10,0)));
+    SGM::Body WireID=SGM::CreateWireBody(rResult,sEdges);
+    SGM::CopyEntity(rResult,WireID);
+    SGM::CoverPlanarWire(rResult,WireID);
+
+    std::set<SGM::Edge> sOutEdges;
+    SGM::FindWireEdges(rResult,WireID,sOutEdges);
+    EXPECT_EQ(sOutEdges.size(),4);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
 
 TEST(create_check, create_cylinder_from_entities)
     {
@@ -32,6 +57,10 @@ TEST(create_check, create_cylinder_from_entities)
     SGM::Face BottomFaceID=SGM::CreateFace(rResult);
     SGM::Edge TopEdge=SGM::CreateEdge(rResult);
     SGM::Edge BottomEdge=SGM::CreateEdge(rResult);
+
+    // Ask for points entities of a face with no surface
+    SGM::FindPointEntities(rResult,SideFaceID);
+    EXPECT_NE(rResult.GetResult(), SGM::ResultTypeOK);
 
     // Create the curves.
 
@@ -65,6 +94,10 @@ TEST(create_check, create_cylinder_from_entities)
     SGM::SetSurfaceOfFace(rResult,BottomSurface,BottomFaceID);
     SGM::SetSurfaceOfFace(rResult,SideSurface,SideFaceID);
     SGM::SetFlippedOfFace(rResult,true,BottomFaceID);
+
+    // Ask for points entities of the side face
+    SGM::FindPointEntities(rResult,SideFaceID);
+    SGM::GetFacePoints2D(rResult,SideFaceID);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -364,4 +397,6 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
 
-//#pragma clang diagnostic pop
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

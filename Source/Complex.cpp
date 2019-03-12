@@ -1,15 +1,18 @@
 #include <iostream>
 #include <iomanip>
-#include "SGMMathematics.h"
-#include "SGMComplex.h"
-#include "SGMTranslators.h"
+
 #include "SGMBoxTree.h"
-#include "SGMPrimitives.h"
+#include "SGMComplex.h"
 #include "SGMGraph.h"
+#include "SGMMathematics.h"
+#include "SGMPolygon.h"
+#include "SGMPrimitives.h"
+#include "SGMTranslators.h"
+#include "SGMTriangle.h"
 
 #include "EntityClasses.h"
 #include "Mathematics.h"
-#include "../ModelViewer/buffer.h"
+#include "Util/buffer.h"
 #include "OrderPoints.h"
 
 namespace SGMInternal
@@ -93,7 +96,7 @@ complex::complex(SGM::Result                     &rResult,
 //    for (auto & Point : aPoints)
 //        std::cout << Point[0] << ' ' << Point[1] << ' ' << Point[2] << std::endl;
 
-    // Merge the points into this points array using Z-order sorting and matching.
+    // Merge the points into this points array using sorting and matching.
     // Set the triangles to be the same as the map from old to new point index.
     MergePoints(aPoints, dTolerance, m_aPoints, m_aTriangles);
 
@@ -161,7 +164,7 @@ complex::complex(SGM::Result &rResult,
         }
     }
 
-SGM::Interval3D const &complex::GetBox(SGM::Result &) const
+SGM::Interval3D const &complex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {
@@ -280,6 +283,7 @@ complex *complex::Cover(SGM::Result &rResult) const
         size_t nParts=aParts.size();
         size_t Index1;
         std::vector<complex *> aCovers;
+        aCovers.reserve(nParts);
         for(Index1=0;Index1<nParts;++Index1)
             {
             complex *pPart=aParts[Index1];
@@ -558,21 +562,30 @@ double complex::FindLength() const
 
 bool complex::FindPolygon(std::vector<unsigned> &aPolygon) const
     {
-    std::vector<unsigned> aAdjacences;
-    SGM::FindAdjacences1D(m_aSegments,aAdjacences);
-    if(!m_aSegments.empty())
+    if (IsCycle())
         {
-        unsigned nStart=m_aSegments[0];
-        unsigned nNext=m_aSegments[1];
-        unsigned nSeg=0;
-        aPolygon.push_back(nStart);
-        while(nNext!=nStart)
+        std::vector<unsigned> aAdjacences;
+        SGM::FindAdjacences1D(m_aSegments,aAdjacences);
+        if(!m_aSegments.empty())
             {
-            aPolygon.push_back(nNext);
-            nSeg=aAdjacences[nSeg+1];
-            nNext=m_aSegments[nSeg+1];
+            unsigned nStart=m_aSegments[0];
+            unsigned nNext=m_aSegments[1];
+            size_t nOldSize = aPolygon.size();
+            unsigned nSeg=0;
+            aPolygon.push_back(nStart);
+            while(nNext!=nStart)
+                {
+                aPolygon.push_back(nNext);
+                nSeg=aAdjacences[nSeg+1];
+                if (nSeg == std::numeric_limits<unsigned>::max())
+                    {
+                    aPolygon.erase(aPolygon.begin()+nOldSize,aPolygon.end());
+                    return false;
+                    }
+                nNext=m_aSegments[nSeg+1];
+                }
+            return true;
             }
-        return true;
         }
     return false;
     }
@@ -1048,7 +1061,7 @@ complex *complex::Merge(SGM::Result                  &rResult,
             {
             aSegments.push_back(nOffset + iSegment);
             }
-        nOffset += pComplex->m_aPoints.size();
+        nOffset += (unsigned)pComplex->m_aPoints.size();
         }
 
     // triangles
@@ -1061,7 +1074,7 @@ complex *complex::Merge(SGM::Result                  &rResult,
             {
             aTriangles.push_back(nOffset + iTriangle);
             }
-        nOffset += pComplex->m_aPoints.size();
+        nOffset += (unsigned)pComplex->m_aPoints.size();
         }
 
     auto *pAnswer=new complex(rResult,std::move(aPoints),std::move(aSegments),std::move(aTriangles));
@@ -1282,7 +1295,13 @@ void complex::ReduceToLargestMinCycle(SGM::Result &rResult)
     {
     SGM::Graph graph(rResult,SGM::Complex(this->GetID()));
     std::vector<size_t> aVertices;
+
+#ifdef SGM_MULTITHREADED
+    graph.FindLargestMinCycleVerticesConcurrent(aVertices);
+#else
     graph.FindLargestMinCycleVertices(aVertices);
+#endif
+    
     std::vector<SGM::Point3D> aNewPoints;
     std::vector<unsigned> aNewSegs;
     size_t nVertices=aVertices.size();
@@ -1699,8 +1718,9 @@ std::vector<complex *> complex::CloseWithBoundary(SGM::Result             &rResu
             unsigned nStart,nEnd;
             pPart->IsLinear(nStart,nEnd);
             SGM::Point3D const &Pos=pPart->m_aPoints[nStart];
-            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos);
-            double dDistStart=SGM::DistanceToPoints(aStarts,Pos);
+            size_t nWhere;
+            double dDistEnd=SGM::DistanceToPoints(aEnds,Pos,nWhere);
+            double dDistStart=SGM::DistanceToPoints(aStarts,Pos,nWhere);
             if(dDistStart<dDistEnd)
                 {
                 rResult.GetThing()->DeleteEntity(pPart);

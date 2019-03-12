@@ -10,7 +10,7 @@
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
-#include "SGMSharedMutex.h"
+#include "Util/shared_mutex.h"
 #include "SGMTranslators.h"
 
 #include "OrderPoints.h"
@@ -114,7 +114,9 @@ public:
 
     entity& operator=(const entity&) = delete;
 
-    virtual ~entity() = default;
+    virtual ~entity()
+        {
+        }
 
     virtual void Accept(EntityVisitor &) = 0;
 
@@ -134,7 +136,7 @@ public:
 
     virtual void DisconnectOwnedEntity(entity const *pEntity) = 0;
 
-    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult) const = 0;
+    virtual SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const = 0;
 
     virtual void ResetBox(SGM::Result &rResult) const = 0;
 
@@ -220,7 +222,7 @@ class thing : public entity
         thing *Clone(SGM::Result &) const override
         { throw std::logic_error("not allowed"); }
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -379,7 +381,7 @@ class assembly : public topology
 
         assembly *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -422,7 +424,7 @@ class reference : public topology
 
         reference *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -472,7 +474,7 @@ class body : public topology
 
         void FindAllChildren(std::set<entity *, EntityCompare> &sChildren) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -601,7 +603,7 @@ class complex : public topology
 
         complex *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 
@@ -802,7 +804,9 @@ class volume : public topology
     
         volume& operator=(const volume&) = delete;
         
-        ~volume() override = default;
+        ~volume() override
+            {
+            }
 
         void Accept(EntityVisitor &) override;
 
@@ -817,7 +821,7 @@ class volume : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool GetColor(int &nRed, int &nGreen, int &nBlue) const override;
 
@@ -901,7 +905,7 @@ class face : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
 
@@ -925,6 +929,10 @@ class face : public topology
         void AddEdge(SGM::Result       &rResult,
                      edge              *pEdge,
                      SGM::EdgeSideType nEdgeType);
+
+        void SetEdgeSideType(SGM::Result       &rResult,
+                             edge              *pEdge,
+                             SGM::EdgeSideType nEdgeType);
 
         void RemoveEdge(SGM::Result &rResult,
                         edge        *pEdge);
@@ -951,7 +959,7 @@ class face : public topology
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
 
-        std::vector<SGMInternal::entity *> FindPointEntities(SGM::Result &rResult) const;
+        void FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntities) const;
 
         surface *GetSurface() const {return m_pSurface;}
 
@@ -978,6 +986,8 @@ class face : public topology
 
         // Find methods
 
+        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;\
+
         size_t FindLoops(SGM::Result                                  &rResult,
                          std::vector<std::vector<edge *> >            &aaLoops,
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
@@ -1001,7 +1011,16 @@ class face : public topology
 
         bool HasBranchedVertex() const;
 
+        void Negate();
+
     private:
+
+        void InitializeFacetSubdivision(SGM::Result &rResult,
+                                        const size_t MAX_LEVELS,
+                                        std::vector<SGM::Point2D> &aPoints2D,
+                                        std::vector<SGM::Point3D> &aPoints3D,
+                                        std::vector<unsigned int> &aTriangles,
+                                        std::vector<entity *> &aEntities) const;
 
         std::set<edge *,EntityCompare>      m_sEdges;
         std::map<edge *,SGM::EdgeSideType>  m_mSideType;
@@ -1015,6 +1034,7 @@ class face : public topology
         mutable std::vector<unsigned>              m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
+
     };
 
 class edge : public topology
@@ -1044,7 +1064,7 @@ class edge : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
@@ -1078,7 +1098,7 @@ class edge : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void AddFace(face *pFace) {assert(nullptr == m_pVolume); m_sFaces.insert(pFace);}
+        void AddFace(face *pFace);
 
         void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 
@@ -1177,7 +1197,7 @@ class vertex : public topology
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         void RemoveParentsInSet(SGM::Result &rResult,
                                 std::set<entity *,EntityCompare>  const &) override;
@@ -1201,6 +1221,8 @@ class vertex : public topology
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
+
+        void SetPoint(SGM::Point3D const &Pos) {m_Pos=Pos;}
 
         bool IsTopLevel() const override;
 
@@ -1241,7 +1263,7 @@ class attribute : public entity
 
         attribute *Clone(SGM::Result &rResult) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &rResult) const override;
+        SGM::Interval3D const &GetBox(SGM::Result &rResult,bool bContruct=true) const override;
 
         bool IsTopLevel() const override;
 

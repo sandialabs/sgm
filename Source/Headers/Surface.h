@@ -41,7 +41,7 @@ class surface : public entity
 
         void GetParents(std::set<entity *, EntityCompare> &sParents) const override;
 
-        SGM::Interval3D const &GetBox(SGM::Result &) const override; // default surface box is max extent
+        SGM::Interval3D const &GetBox(SGM::Result &,bool bContruct=true) const override; // Default box is unbounded.
 
         bool IsTopLevel() const override;
 
@@ -136,7 +136,7 @@ class surface : public entity
         // Returns the two-dimensional unit vector in the parameters space 
         // of this surface that Vec projects onto at the point uv.
         
-        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D        &uv,
+        SGM::UnitVector2D FindSurfaceDirection(SGM::Point2D  const &uv,
                                                SGM::Vector3D const &Vec) const;
 
         SGM::Point2D NewtonsMethod(SGM::Point2D const &StartUV,
@@ -315,6 +315,13 @@ class cone : public surface
              double                   dHalfAngle,
              SGM::UnitVector3D const *XAxis=nullptr);
 
+        cone(SGM::Result             &rResult,
+             SGM::Point3D      const &Bottom,
+             SGM::Point3D      const &Top,
+             double                   dBottomRadius,
+             double                   dTopRadius,
+             SGM::UnitVector3D const *XAxis=nullptr);
+
         cone(SGM::Result &rResult, cone const &other);
 
         ~cone() override = default;
@@ -332,7 +339,7 @@ class cone : public surface
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        double FindHalfAngle() const {return SGM::SAFEacos(m_dCosHalfAngle);}
+        double FindHalfAngle() const;
 
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
@@ -358,11 +365,20 @@ class cone : public surface
         void Transform(SGM::Result            &rResult,
                        SGM::Transform3D const &Trans) override;
 
-        curve *UParamLine(SGM::Result &rResult, double dU) const override;
+        curve *UParamLine(SGM::Result &rResult,double dU) const override;
 
-        curve *VParamLine(SGM::Result &rResult, double dV) const override;
+        curve *VParamLine(SGM::Result &rResult,double dV) const override;
 
         SGM::Point3D FindApex() const {return m_Origin+(m_dRadius*m_dCosHalfAngle/m_dSinHalfAngle)*m_ZAxis;}
+
+        // Returns how far Pos is inside the cone.  A negative number indicates that Pos is outside the cone.
+
+        double PointInside(SGM::Point3D const &Pos) const;
+
+        // A positive value creates a cone that offsets to the outside of this cone,
+        // A negative value creates a cone that offsets to the inside of this cone,
+
+        cone *Offset(SGM::Result &rResult,double dValue) const;
 
     public:
 
@@ -468,7 +484,6 @@ class torus : public surface
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-
         void Evaluate(SGM::Point2D const &uv,
                       SGM::Point3D       *Pos,
                       SGM::Vector3D      *Du=nullptr,
@@ -497,6 +512,10 @@ class torus : public surface
 
         std::vector<SGM::Point2D> const &GetSeedParams() const;
 
+        bool IsMajorCircle(curve const *pCurve,double dTolerance,double &dV) const;
+
+        bool IsMinorCircle(curve const *pCurve,double dTolerance,double &dU) const;
+
     public:
 
         SGM::Point3D       m_Center;
@@ -524,6 +543,9 @@ class NUBsurface: public surface
                    std::vector<std::vector<SGM::Point3D>> &&aControlPoints,
                    std::vector<double>                    &&aUKnots,
                    std::vector<double>                    &&aVKnots);
+
+        NUBsurface(SGM::Result                                  &rResult,
+                   std::vector<std::vector<SGM::Point3D>> const &aaInterpolatePoints);
 
         NUBsurface(SGM::Result &rResult, NUBsurface const &other);
 

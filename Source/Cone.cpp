@@ -12,9 +12,9 @@ cone::cone(SGM::Result &rResult,
            double dRadius,
            double dHalfAngle,
            SGM::UnitVector3D const *XAxis) :
-                surface(rResult, SGM::ConeType),
-                m_Origin(Center),
-                m_ZAxis(ZAxis)
+    surface(rResult, SGM::ConeType),
+    m_Origin(Center),
+    m_ZAxis(ZAxis)
     {
     m_dSinHalfAngle = sin(dHalfAngle);
     m_dCosHalfAngle = cos(dHalfAngle);
@@ -39,20 +39,69 @@ cone::cone(SGM::Result &rResult,
         }
     m_YAxis = m_ZAxis * m_XAxis;
     }
+
+cone::cone(SGM::Result             &rResult,
+           SGM::Point3D      const &Bottom,
+           SGM::Point3D      const &Top,
+           double                   dBottomRadius,
+           double                   dTopRadius,
+           SGM::UnitVector3D const *XAxis):
+    surface(rResult, SGM::ConeType),
+    m_Origin(SGM::MidPoint(Bottom,Top)),
+    m_ZAxis(SGM::UnitVector3D(Top-Bottom))
+    {
+    if(dBottomRadius<dTopRadius)
+        {
+        m_ZAxis.Negate();
+        }
+    m_dRadius=(dBottomRadius+dTopRadius)*0.5;
+
+    double dHalfAngle=SGM::SAFEatan2(fabs(dTopRadius-dBottomRadius),Bottom.Distance(Top));
+
+    m_dSinHalfAngle = sin(dHalfAngle);
+    m_dCosHalfAngle = cos(dHalfAngle);
+
+    m_Domain.m_UDomain.m_dMin = 0.0;
+    m_Domain.m_UDomain.m_dMax = SGM_TWO_PI;
+    m_Domain.m_VDomain.m_dMin = -SGM_MAX;
+    m_Domain.m_VDomain.m_dMax = 1.0 / m_dSinHalfAngle;
+
+    m_bClosedU = true;
+    m_bClosedV = false;
+    m_bSingularHighV = true;
+
+    if (XAxis)
+        {
+        m_XAxis = *XAxis;
+        }
+    else
+        {
+        m_XAxis = m_ZAxis.Orthogonal();
+        }
+    m_YAxis = m_ZAxis * m_XAxis;
+    }
     
 cone::cone(SGM::Result &rResult, const SGMInternal::cone &other) :
-        surface(rResult, other),
-        m_Origin(other.m_Origin),
-        m_XAxis(other.m_XAxis),
-        m_YAxis(other.m_YAxis),
-        m_ZAxis(other.m_ZAxis),
-        m_dSinHalfAngle(other.m_dSinHalfAngle),
-        m_dCosHalfAngle(other.m_dCosHalfAngle),
-        m_dRadius(other.m_dRadius)
-    {}
+    surface(rResult, other),
+    m_Origin(other.m_Origin),
+    m_XAxis(other.m_XAxis),
+    m_YAxis(other.m_YAxis),
+    m_ZAxis(other.m_ZAxis),
+    m_dSinHalfAngle(other.m_dSinHalfAngle),
+    m_dCosHalfAngle(other.m_dCosHalfAngle),
+    m_dRadius(other.m_dRadius)
+    {
+    }
 
 cone *cone::Clone(SGM::Result &rResult) const
-{ return new cone(rResult, *this); }
+    { 
+    return new cone(rResult, *this); 
+    }
+
+double cone::FindHalfAngle() const
+    {
+    return SGM::SAFEacos(m_dCosHalfAngle);
+    }
 
 void cone::Evaluate(SGM::Point2D const &uv,
                     SGM::Point3D       *Pos,
@@ -115,6 +164,33 @@ void cone::Evaluate(SGM::Point2D const &uv,
         }
     }
 
+double cone::PointInside(SGM::Point3D const &Pos) const
+    {
+    SGM::Point3D SurfPos;
+    SGM::Point2D uv=Inverse(Pos,&SurfPos);
+    double dDist=Pos.Distance(SurfPos);
+    SGM::UnitVector3D Norm1,Norm2=SurfPos-Pos;
+    Evaluate(uv,nullptr,nullptr,nullptr,&Norm1);
+    if(Norm1%Norm2<0)
+        {
+        dDist=-dDist;
+        }
+    return dDist;
+    }
+
+cone *cone::Offset(SGM::Result &rResult,
+                   double       dValue) const
+    {
+    // Move the orign up or down to produce the offset.
+
+    double dHalfAngle=FindHalfAngle();
+    SGM::Point3D Apex=FindApex();
+    double m=Apex.Distance(m_Origin);
+    double w=-dValue/m_dSinHalfAngle;
+    SGM::Point3D NewOrigin=Apex-m_ZAxis*(w+m);
+    return new cone(rResult,NewOrigin,m_ZAxis,m_dRadius,dHalfAngle,&m_XAxis);
+    }
+
 SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
                            SGM::Point3D       *ClosePos,
                            SGM::Point2D const *pGuess) const
@@ -125,8 +201,17 @@ SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
 
     double dx=x*m_XAxis.m_x+y*m_XAxis.m_y+z*m_XAxis.m_z;
     double dy=x*m_YAxis.m_x+y*m_YAxis.m_y+z*m_YAxis.m_z;
-    double dz=x*m_ZAxis.m_x+y*m_ZAxis.m_y+z*m_ZAxis.m_z;
     double dU=SGM::SAFEatan2(dy,dx);
+
+    // Find the closest point to the parameter line at dU.
+
+    SGM::Point3D Apex=FindApex();
+    SGM::Point3D BasePos=m_Origin+m_XAxis*(cos(dU)*m_dRadius)+m_YAxis*(sin(dU)*m_dRadius);
+    SGM::UnitVector3D LineVec=BasePos-Apex;
+    SGM::Point3D LinePos=Apex+LineVec*((Pos-Apex)%LineVec);
+    z=LinePos.m_z-m_Origin.m_z;
+    double dz=x*m_ZAxis.m_x+y*m_ZAxis.m_y+z*m_ZAxis.m_z;
+
     double dV=dz/(m_dCosHalfAngle*m_dRadius);
 
     double dMaxV=1.0/m_dSinHalfAngle;

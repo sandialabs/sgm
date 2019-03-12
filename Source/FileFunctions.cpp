@@ -93,47 +93,47 @@ std::string GetFileName(std::string const &FileName)
     return("");
     }
 
-bool ReadToString(FILE              *pFile,
-                  std::string const &sData)
-    {
-    char const *str=sData.c_str();
-    size_t nLength=sData.length();
-    size_t nCount=0;
-    char data;
-    while(nCount<nLength)
-        {
-        if(fread(&data,1,1,pFile))
-            {
-            if(str[nCount]==data)
-                {
-                ++nCount;
-                }
-            }
-        else
-            {
-            break;
-            }
-        }
-    return nCount==nLength;
-    }
+//bool ReadToString(FILE              *pFile,
+//                  std::string const &sData)
+//    {
+//    char const *str=sData.c_str();
+//    size_t nLength=sData.length();
+//    size_t nCount=0;
+//    char data;
+//    while(nCount<nLength)
+//        {
+//        if(fread(&data,1,1,pFile))
+//            {
+//            if(str[nCount]==data)
+//                {
+//                ++nCount;
+//                }
+//            }
+//        else
+//            {
+//            break;
+//            }
+//        }
+//    return nCount==nLength;
+//    }
 
-bool ReadFileLine(FILE        *pFile,
-                  std::string &sFileLine)
-    {
-    char data;
-    while(fread(&data,1,1,pFile))
-        {
-        if(data>31) // ignore control characters
-            {
-            sFileLine+=data;
-            }
-        if(data==';')
-            {
-            return true;
-            }
-        }
-    return false;
-    }
+//bool ReadFileLine(FILE        *pFile,
+//                  std::string &sFileLine)
+//    {
+//    char data;
+//    while(fread(&data,1,1,pFile))
+//        {
+//        if(data>31) // ignore control characters
+//            {
+//            sFileLine+=data;
+//            }
+//        if(data==';')
+//            {
+//            return true;
+//            }
+//        }
+//    return false;
+//    }
 
 void ReadDirectory(std::string        const &DirName, 
                    std::vector<std::string> &aFileNames)

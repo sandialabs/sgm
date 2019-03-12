@@ -1,5 +1,5 @@
-#ifndef SGM_MODELVIEWER_BUFFER_H
-#define SGM_MODELVIEWER_BUFFER_H
+#ifndef SGM_BUFFER_H
+#define SGM_BUFFER_H
 
 #include <algorithm>
 #include <cstring>
@@ -22,6 +22,7 @@
  * without initializing its elements.
  *
  * Additional member functions other than those for std::vector<> are:
+ *
  *      insert_uninitialized(const_iterator position, size_t n)
  *      push_back(InputIterator first, InputIterator last)
  *      push_back(size_t n, const Tp& val)
@@ -32,7 +33,7 @@
 template<typename T, typename Alloc = std::allocator<T> >
 class buffer : private Alloc
 {
-    // TODO: uncomment if this works on MSVS C++
+    // TODO: uncomment once this works on MSVS C++
     // static_assert(std::is_standard_layout<T>::value, "buffer elements require standard layout");
 
 private:
@@ -1074,7 +1075,20 @@ private:
 template<class T, class Alloc>
 inline bool operator==(const buffer<T, Alloc> &lhs, const buffer<T, Alloc> &rhs) NOEXCEPT
 {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    if(lhs.size()!=rhs.size())
+        {
+        return false;
+        }
+    auto iter1=lhs.begin();
+    auto iter2=rhs.begin();
+    while(iter1!=lhs.end())
+        {
+        if(*iter1++!=*iter2++)
+            {
+            return false;
+            }
+        }
+    return true;
 }
 
 /// Compare two buffers for inequality.
@@ -1166,4 +1180,4 @@ inline void swap(buffer<T, Alloc> &x, buffer<T, Alloc> &y)
     x.swap(y);
 }
 
-#endif //SGM_MODELVIEWER_BUFFER_H
+#endif // SGM_BUFFER_H

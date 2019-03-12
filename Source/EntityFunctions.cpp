@@ -8,13 +8,7 @@
 
 #include <set>
 #include <SGMTransform.h>
-//#include <cstdio>
-
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#else
-#define snprintf snprintf
-#endif
+#include <sstream>
 
 #ifdef _MSC_VER
 __pragma(warning(disable: 4996 ))
@@ -60,12 +54,10 @@ void DeleteEntity(SGM::Result &rResult,
     // if this entity still has parents, don't delete it
     if (!pEntity->IsTopLevel())
     {
-        char Buffer[1000];
-        snprintf(Buffer,sizeof(Buffer),"%s %lu is not a top level entity and cannot be deleted",
-                 typeid(*pEntity).name(), pEntity->GetID());
+		std::stringstream ss;
+		ss << typeid(*pEntity).name() << " " << pEntity->GetID() << " is not a top level entity and cannot be deleted";
         rResult.SetResult(SGM::ResultTypeCannotDelete);
-        std::string const sMessage(Buffer);
-        rResult.SetMessage(sMessage);
+		rResult.SetMessage(ss.str());
         return;
     }
 
@@ -94,20 +86,23 @@ void DeleteEntity(SGM::Result &rResult,
 entity *CopyEntity(SGM::Result &rResult,
                    entity      *pEntity)
     {
-    std::set<entity *,EntityCompare> aChildren;
-    pEntity->FindAllChildren(aChildren);
+    std::set<entity *,EntityCompare> sChildren;
+    pEntity->FindAllChildren(sChildren);
+
     entity *pAnswer=pEntity->Clone(rResult);
     std::map<entity *,entity *> mCopyMap;
     mCopyMap[pEntity]=pAnswer;
-    for(auto pChild : aChildren)
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]=pChild->Clone(rResult);
         }
-    aChildren.insert(pEntity);
-    for(auto pChild : aChildren)
+
+    sChildren.insert(pEntity);
+    for(auto pChild : sChildren)
         {
         mCopyMap[pChild]->ReplacePointers(mCopyMap);
         }
+
     return pAnswer;
     }
 
@@ -212,13 +207,11 @@ void TransformEntity(SGM::Result            &rResult,
     {
         if (!pEntity->IsTopLevel())
         {
-            char Buffer[1000];
-            snprintf(Buffer,sizeof(Buffer),"%s %lu is not a top level entity and cannot be transformed",
-                     typeid(*pEntity).name(), pEntity->GetID());
-            rResult.SetResult(SGM::ResultTypeCannotTransform);
-            std::string const sMessage(Buffer);
-            rResult.SetMessage(sMessage);
-            return;
+			std::stringstream ss;
+			ss << typeid(*pEntity).name() << " " << pEntity->GetID() << " is not a top level entity and cannot be transformed";
+			rResult.SetResult(SGM::ResultTypeCannotTransform);
+			rResult.SetMessage(ss.str());
+			return;
         }
 
         

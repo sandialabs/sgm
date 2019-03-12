@@ -38,7 +38,7 @@ body *volume::GetBody() const
     return m_pBody;
     }
 
-SGM::Interval3D const &volume::GetBox(SGM::Result &rResult) const
+SGM::Interval3D const &volume::GetBox(SGM::Result &rResult,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
         {
@@ -96,12 +96,14 @@ void volume::SeverRelations(SGM::Result &)
 
 void volume::AddFace(face *pFace)
     {
+    m_FaceTree.Clear();
     m_sFaces.insert(pFace);
     pFace->SetVolume(this);
     }
 
 void volume::RemoveFace(face *pFace) 
     {
+    m_FaceTree.Clear();
     pFace->SetVolume(nullptr);
     m_sFaces.erase(pFace);
     }
@@ -170,7 +172,10 @@ double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const
     double dAnswer=0;
     for (auto pFace : m_sFaces)
         {
-        dAnswer+=pFace->FindVolume(rResult,bApproximate);
+        if (pFace->GetSides() == 1)
+            {
+            dAnswer += pFace->FindVolume(rResult, bApproximate);
+            }
         }
     return dAnswer/6;
     }
