@@ -486,6 +486,8 @@ TEST(boolean_check, Sphere_Sphere_Imprint1)
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere1,Options,aCheckStrings));
+    for (auto & String: aCheckStrings)
+        std::cout << String << std::endl;
     
     SGMTesting::ReleaseTestThing(pThing);
     }
