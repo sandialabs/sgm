@@ -1158,33 +1158,18 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         if (fabs(r) < SGM_ZERO)
             {
             aRoots.push_back(-b / (2 * a));
-            return 1;
             }
         else if (0 < r)
             {
-            // get the bigger-magnitude root first
             double Q = b < 0 ? -sqrt(r) : sqrt(r);
             double q = -0.5 * (b + Q);
-            const double r1 = q / a;
-            if (SGM_ZERO < fabs(r1))  //was q, but that is not scale invariant. I.e. it would give a different answer if the whole quadratic was multiplied by a constant
+            aRoots.push_back(q / a);
+            if (SGM_ZERO < fabs(q))
                 {
-                const double r2 = c / q;
-                if (r1 < r2)
-                    {
-                    aRoots.push_back(r1);
-                    aRoots.push_back(r2);
-                    } 
-                else
-                    {
-                    aRoots.push_back(r2);
-                    aRoots.push_back(r1);
-                    }
-                return 2;
+                aRoots.push_back(c / q);
                 }
-            // if bigger magnitude root was essentially zero, just return it as a single root
-            else
-                aRoots.push_back(r1);
             }
+        std::sort(aRoots.begin(), aRoots.end());
         return aRoots.size();
         }
 
