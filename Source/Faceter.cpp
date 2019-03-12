@@ -2401,6 +2401,7 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
                         std::vector<SGM::Point2D>               const &aPoints2D,
                         std::vector<double>                     const &aDistances,
                         surface                                 const *pSurface,
+                        std::vector<unsigned>                   const &aTriangles,
                         std::vector<unsigned int>                     &aRemovePoints)
     {
     // Build a tree for the aaPolygons line segments.
@@ -2455,26 +2456,33 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
         Tree.Insert(&(aSegments[Index1]),Box);
         }
 
+    std::vector<unsigned> aBoundary;
+    std::set<unsigned> sInterior;
+    SGM::FindBoundary(aTriangles,aBoundary,sInterior);
+
     size_t nPoints2D=aPoints2D.size();
     for(Index1=0;Index1<nPoints2D;++Index1)
         {
-        SGM::Point2D const &Pos2D=aPoints2D[Index1];
-        double dMinDist=aDistances[Index1];
-        SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
-        double dDist=std::numeric_limits<unsigned>::max();
-        for(auto hit : aHits)
+        if(sInterior.find((unsigned)Index1)!=sInterior.end())
             {
-            auto pSeg=(SGM::Segment2D const *)(hit.first);
-            double dTestDist=pSeg->Distance(Pos2D);
-            if(dTestDist<dDist)
+            SGM::Point2D const &Pos2D=aPoints2D[Index1];
+            double dMinDist=aDistances[Index1];
+            SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
+            std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
+            double dDist=std::numeric_limits<unsigned>::max();
+            for(auto hit : aHits)
                 {
-                dDist=dTestDist;
+                auto pSeg=(SGM::Segment2D const *)(hit.first);
+                double dTestDist=pSeg->Distance(Pos2D);
+                if(dTestDist<dDist)
+                    {
+                    dDist=dTestDist;
+                    }
                 }
-            }
-        if(dDist<dMinDist)
-            {
-            aRemovePoints.push_back((unsigned)Index1);
+            if(dDist<dMinDist)
+                {
+                aRemovePoints.push_back((unsigned)Index1);
+                }
             }
         }
     }
@@ -2557,7 +2565,7 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles,&aDistances);
 
     std::vector<unsigned int> aRemovePoints;
-    FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSurf,aRemovePoints);
+    FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSurf,aTriangles,aRemovePoints);
 
     std::vector<SGM::Point3D> aRPoints;
     for(auto nWhere : aRemovePoints)
@@ -2903,7 +2911,7 @@ void FacetFace(SGM::Result                    &rResult,
                     aDistances[Index1]*=0.5;
                     }
                 std::vector<unsigned int> aRemovePoints;
-                FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSphere,aRemovePoints);
+                FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSphere,aTriangles,aRemovePoints);
 
                 for(auto nWhere : aRemovePoints)
                     {
