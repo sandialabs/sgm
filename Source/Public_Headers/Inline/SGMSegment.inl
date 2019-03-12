@@ -254,11 +254,27 @@ namespace SGM {
         return bAnswer;
     }
 
+    inline Point3D Segment3D::ClosestPoint(Point3D const &Pos) const
+        {
+        double dLengthSquared=LengthSquared();
+        SGM::UnitVector3D Axis=m_End-m_Start;
+        double dProjectedLength=(Pos-m_Start)%Axis;
+        if(dProjectedLength<0)
+            {
+            return m_Start;
+            }
+        else if(dLengthSquared<dProjectedLength*dProjectedLength)
+            {
+            return m_End;
+            }
+        return m_Start+Axis*dProjectedLength;
+        }
+
     inline bool Segment3D::PointOnSegment(Point3D const &Pos,
                                           double         dTolerance) const
         {
-        SGM::UnitVector3D Axis=m_End-m_Start;
-        return Pos.DistanceSquared(m_Start+Axis*((Pos-m_Start)%Axis))<dTolerance*dTolerance;
+        SGM::Point3D ClosePos=ClosestPoint(Pos);
+        return ClosePos.DistanceSquared(Pos)<dTolerance*dTolerance;
         }
 
 } // namespace SGM

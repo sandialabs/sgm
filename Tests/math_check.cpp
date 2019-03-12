@@ -29,6 +29,84 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+TEST(math_check, distance_squared_to_triangle)
+{
+    {
+    SGM::Point3D A(0,0,0),B(10,0,0),C(0,10,0);
+    SGM::Point3D P1(10,10,10);
+    double dDistanceSquared1=DistanceSquaredTriangle3D(A,B,C,P1);
+
+    EXPECT_NEAR(dDistanceSquared1,150,SGM_ZERO);
+
+    SGM::Point3D P2(2,2,2);
+    double dDistanceSquared2=DistanceSquaredTriangle3D(A,B,C,P2);
+
+    EXPECT_NEAR(dDistanceSquared2,4,SGM_ZERO);
+
+    SGM::Point3D P3(5,-5,0);
+    double dDistanceSquared3=DistanceSquaredTriangle3D(A,B,C,P3);
+
+    EXPECT_NEAR(dDistanceSquared3,25,SGM_ZERO);
+
+    SGM::Point3D P4(-6,4,0);
+    double dDistanceSquared4=DistanceSquaredTriangle3D(A,B,C,P4);
+
+    EXPECT_NEAR(dDistanceSquared4,36,SGM_ZERO);
+
+    SGM::Point3D P5(-1,-1,0);
+    double dDistanceSquared5=DistanceSquaredTriangle3D(A,B,C,P5);
+
+    EXPECT_NEAR(dDistanceSquared5,2,SGM_ZERO);
+
+    SGM::Point3D P6(11,-1,-1);
+    double dDistanceSquared6=DistanceSquaredTriangle3D(A,B,C,P6);
+
+    EXPECT_NEAR(dDistanceSquared6,3,SGM_ZERO);
+
+    SGM::Point3D P7(11,-1,1);
+    double dDistanceSquared7=DistanceSquaredTriangle3D(A,B,C,P7);
+
+    EXPECT_NEAR(dDistanceSquared7,3,SGM_ZERO);
+
+    SGM::Point3D P8(2,2,-2);
+    double dDistanceSquared8=DistanceSquaredTriangle3D(A,B,C,P8);
+
+    EXPECT_NEAR(dDistanceSquared8,4,SGM_ZERO);
+    }
+    
+    {
+    SGM::Point3D A(0,0,0),B(10,10,0),C(5,0,0);
+    SGM::Point3D P1(2,1,1);
+    double dDistanceSquared1=DistanceSquaredTriangle3D(A,B,C,P1);
+
+    EXPECT_NEAR(dDistanceSquared1,1,SGM_ZERO);
+
+    double dDistanceSquared2=DistanceSquaredTriangle3D(A,C,B,P1);
+
+    EXPECT_NEAR(dDistanceSquared2,1,SGM_ZERO);
+
+    double dDistanceSquared3=DistanceSquaredTriangle3D(C,A,B,P1);
+
+    EXPECT_NEAR(dDistanceSquared3,1,SGM_ZERO);
+    }
+
+    {
+    SGM::Point3D A(0,0,0),B(10,10.00000000001,0),C(5,5,0);
+    SGM::Point3D P1(6,4,0);
+    double dDistanceSquared1=DistanceSquaredTriangle3D(A,B,C,P1);
+
+    EXPECT_NEAR(dDistanceSquared1,2,SGM_ZERO);
+    }
+
+    {
+    SGM::Point3D A(0,0,0),B(10,10.0000000000001,0),C(5,5,0);
+    SGM::Point3D P1(6,4,0);
+    double dDistanceSquared1=DistanceSquaredTriangle3D(A,B,C,P1);
+
+    EXPECT_NEAR(dDistanceSquared1,2,SGM_ZERO);
+    }
+}
+
 TEST(math_check, bulge_area)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

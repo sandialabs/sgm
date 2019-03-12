@@ -106,19 +106,19 @@ SGM_EXPORT bool FindPolygon(std::vector<unsigned int> const &aSegments,
 // the polygon, where the polygon is assumed to go counter clockwise.  The indices
 // of the inserted polygon points is returned in aPolygonIndices.  In addition, the
 // function will update a vector of 3D points and normals if the starting ones are
-// passed to the function along with their surface.  Moreover, an optional vector
-// flags may be given that tell is a point is to be imprinted or not, with false
+// passed to the function along with their surface.  Moreover, an optional vector of
+// flags may be given that tell if a point is to be imprinted or not, with false
 // meaning to skip the imprinting of the point.
 
-SGM_EXPORT bool InsertPolygon(Result &rResult,
+SGM_EXPORT bool InsertPolygon(Result                     &rResult,
                               std::vector<Point2D> const &aPolygon,
-                              std::vector<Point2D> &aPoints2D,
-                              std::vector<unsigned int> &aTriangles,
-                              std::vector<unsigned int> &aPolygonIndices,
-                              Surface *pSurfaceID = nullptr,
-                              std::vector<Point3D> *pPoints3D = nullptr,
-                              std::vector<UnitVector3D> *pNormals = nullptr,
-                              std::vector<bool> *pImprintFlag = nullptr);
+                              std::vector<Point2D>       &aPoints2D,
+                              std::vector<unsigned int>  &aTriangles,
+                              std::vector<unsigned int>  &aPolygonIndices,
+                              Surface                    *pSurfaceID = nullptr,
+                              std::vector<Point3D>       *pPoints3D = nullptr,
+                              std::vector<UnitVector3D>  *pNormals = nullptr,
+                              std::vector<bool>          *pImprintFlag = nullptr);
 
 }
 

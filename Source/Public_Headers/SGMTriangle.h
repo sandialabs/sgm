@@ -54,6 +54,11 @@ inline bool InTriangle(Point2D const &A,
                        Point2D const &C,
                        Point2D const &P);
 
+SGM_EXPORT double DistanceSquaredTriangle3D(Point3D const &A,
+                                            Point3D const &B,
+                                            Point3D const &C,
+                                            Point3D const &P);
+
 inline Point2D CenterOfMass(Point2D const &A,
                             Point2D const &B,
                             Point2D const &C);

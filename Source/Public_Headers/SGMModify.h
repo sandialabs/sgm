@@ -37,14 +37,12 @@ SGM_EXPORT void IntersectBodies(SGM::Result &rResult,
                                 SGM::Body   &DeletedBodyID);
 
 // Returns a vector of edges that consist of the given curve trimmed by
-// the given face, along with a vector of isolated points where the
-// curve intersects the face.
+// the given face.
 
 SGM_EXPORT void TrimCurveWithFace(SGM::Result               &rResult,
                                   SGM::Curve                &CurveID,
                                   SGM::Face           const &FaceID,
-                                  std::vector<SGM::Edge>    &aEdges,
-                                  std::vector<SGM::Point3D> &aPoints);
+                                  std::vector<SGM::Edge>    &aEdges);
 
 // Impints the given edge on the given face and returns a vector of the
 // resulting faces.  EdgeID is deleted and FaceID is changed.

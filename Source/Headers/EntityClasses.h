@@ -114,7 +114,9 @@ public:
 
     entity& operator=(const entity&) = delete;
 
-    virtual ~entity() = default;
+    virtual ~entity()
+        {
+        }
 
     virtual void Accept(EntityVisitor &) = 0;
 
@@ -802,7 +804,9 @@ class volume : public topology
     
         volume& operator=(const volume&) = delete;
         
-        ~volume() override = default;
+        ~volume() override
+            {
+            }
 
         void Accept(EntityVisitor &) override;
 
@@ -982,7 +986,7 @@ class face : public topology
 
         // Find methods
 
-        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;
+        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;\
 
         size_t FindLoops(SGM::Result                                  &rResult,
                          std::vector<std::vector<edge *> >            &aaLoops,

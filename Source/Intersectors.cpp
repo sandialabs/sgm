@@ -2843,6 +2843,18 @@ size_t IntersectCurves(curve                        const *pCurve1,
                        std::vector<SGM::IntersectionType> &aTypes,
                        double                              dTolerance)
     {
+    // Check for coincident curves.
+
+    if(pCurve1->IsSame(pCurve2,dTolerance))
+        {
+        double t=pCurve1->GetDomain().MidPoint();
+        SGM::Point3D Pos;
+        pCurve1->Evaluate(t,&Pos);
+        aPoints.push_back(Pos);
+        aTypes.push_back(SGM::CoincidentType);
+        return 1;
+        }
+
     // Facet the two curves.
 
     FacetOptions Options;
@@ -7651,9 +7663,14 @@ size_t IntersectSphereAndSurface(SGM::Result                &rResult,
             auto pExtrude=(extrude const *)pSurface;
             return IntersectSphereAndExtrude(rResult,pSphere,pExtrude,aCurves,dTolerance);
             }
+        case SGM::EntityType::NUBSurfaceType:
+            {
+            auto pNUB=(NUBsurface const *)pSurface;
+            return IntersectSphereAndNUB(rResult,pSphere,pNUB,aCurves,dTolerance);
+            }
         default:
             {
-            return IntersectSphereAndSurface(rResult,pSphere,pSurface,aCurves,dTolerance);
+            throw;
             }
         }
     }

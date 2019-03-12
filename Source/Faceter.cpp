@@ -1878,7 +1878,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
             }
         }
 
-    return FindPolygons(aNodes, aPoints2D, aPoints3D, aaPolygons, pImprintFlags);
+    return FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags);
     }
 
 static void FindNormals(face                     const *pFace,
@@ -2217,8 +2217,8 @@ void SplitTriangleUpdateTree(SGM::Point2D        const &D,
     Tree.Insert(pNew2,New2Box);
     }
 
-static std::vector<bool> ShuffleFlags(std::vector<bool> const &aInputFlags,
-                                      std::vector<unsigned int> &aPolygons)
+static std::vector<bool> FindPolygonImprintFlags(std::vector<bool> const &aInputFlags,
+                                                 std::vector<unsigned int> &aPolygons)
     {
     std::vector<bool> aFlags;
     size_t nPolygons=aPolygons.size();
@@ -2292,7 +2292,7 @@ static bool AngleGrid(SGM::Result                                   &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        std::vector<bool> aFlags=ShuffleFlags(*pImprintFlag,aaPolygons[Index1]);
+        std::vector<bool> aFlags=FindPolygonImprintFlags(*pImprintFlag,aaPolygons[Index1]);
         if(!SGM::InsertPolygon(rResult, SGM::PointsFromPolygon(aScaledPolygonPoints, aaPolygons[Index1]),
                                aScaled, aTriangles, aPolygonIndices, nullptr, nullptr, nullptr, &aFlags))
             {
@@ -2397,8 +2397,8 @@ void RemoveClosePoints(SGM::Result                               &rResult,
 
 void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonPoints,
                         std::vector<std::vector<unsigned int> > const &aaPolygons,
+                        std::vector<bool>                       const &aImprintFlags,
                         std::vector<SGM::Point2D>               const &aPoints2D,
-                        std::vector<unsigned>                   const &aTriangles,
                         std::vector<double>                     const &aDistances,
                         surface                                 const *pSurface,
                         std::vector<unsigned int>                     &aRemovePoints)
@@ -2432,6 +2432,11 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
                     bSkip=true;
                     }
                 }
+            if( aImprintFlags[aPolygon[Index1]]==false &&
+                aImprintFlags[aPolygon[(Index1+1)%nPolygon]]==false)
+                {
+                bSkip=true;
+                }
             if(bSkip==false)
                 {
                 aSegments.emplace_back(Pos0,Pos1);
@@ -2450,35 +2455,26 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
         Tree.Insert(&(aSegments[Index1]),Box);
         }
 
-    // Do not remove points from the boundary of the triangles.
-
-    std::vector<unsigned> aBoundary;
-    std::set<unsigned> sInterior;
-    SGM::FindBoundary(aTriangles,aBoundary,sInterior);
-
     size_t nPoints2D=aPoints2D.size();
     for(Index1=0;Index1<nPoints2D;++Index1)
         {
-        if(sInterior.find((unsigned)Index1)!=sInterior.end())
+        SGM::Point2D const &Pos2D=aPoints2D[Index1];
+        double dMinDist=aDistances[Index1];
+        SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
+        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
+        double dDist=std::numeric_limits<unsigned>::max();
+        for(auto hit : aHits)
             {
-            SGM::Point2D const &Pos2D=aPoints2D[Index1];
-            double dMinDist=aDistances[Index1];
-            SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
-            std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
-            double dDist=std::numeric_limits<unsigned>::max();
-            for(auto hit : aHits)
+            auto pSeg=(SGM::Segment2D const *)(hit.first);
+            double dTestDist=pSeg->Distance(Pos2D);
+            if(dTestDist<dDist)
                 {
-                auto pSeg=(SGM::Segment2D const *)(hit.first);
-                double dTestDist=pSeg->Distance(Pos2D);
-                if(dTestDist<dDist)
-                    {
-                    dDist=dTestDist;
-                    }
+                dDist=dTestDist;
                 }
-            if(dDist<dMinDist)
-                {
-                aRemovePoints.push_back((unsigned)Index1);
-                }
+            }
+        if(dDist<dMinDist)
+            {
+            aRemovePoints.push_back((unsigned)Index1);
             }
         }
     }
@@ -2561,7 +2557,7 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
     SGM::CreateTrianglesFromGrid(aUValues,aVValues,aPoints2D,aTriangles,&aDistances);
 
     std::vector<unsigned int> aRemovePoints;
-    FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,pSurf,aRemovePoints);
+    FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSurf,aRemovePoints);
 
     std::vector<SGM::Point3D> aRPoints;
     for(auto nWhere : aRemovePoints)
@@ -2576,7 +2572,7 @@ static void ParamCurveGrid(SGM::Result                             &rResult,
     for(Index1=0;Index1<nPolygons;++Index1)
         {
         std::vector<unsigned int> aPolygonIndices;
-        std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
+        std::vector<bool> aFlags=FindPolygonImprintFlags(aImprintFlags,aaPolygons[Index1]);
         SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
                            aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
         aaPolygons[Index1]=aPolygonIndices;
@@ -2845,8 +2841,8 @@ void FacetFace(SGM::Result                    &rResult,
             }
         }
     
-    std::vector<unsigned int> aAdjacencies;
-    std::vector<std::vector<unsigned int> > aaPolygons;
+    std::vector<unsigned> aAdjacencies;
+    std::vector<std::vector<unsigned> > aaPolygons;
     std::vector<bool> aImprintFlags;
     if(!FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags))
         {
@@ -2900,10 +2896,15 @@ void FacetFace(SGM::Result                    &rResult,
                 {
                 std::vector<double> aDistances;
                 FindDistances(aPoints2D,aTriangles,aDistances);
+                size_t nDistances=aDistances.size();
+                size_t Index1;
+                for(Index1=0;Index1<nDistances;++Index1)
+                    {
+                    aDistances[Index1]*=0.5;
+                    }
                 std::vector<unsigned int> aRemovePoints;
-                FindPointsToRemove(aPolygonPoints,aaPolygons,aPoints2D,aTriangles,aDistances,pSphere,aRemovePoints);
+                FindPointsToRemove(aPolygonPoints,aaPolygons,aImprintFlags,aPoints2D,aDistances,pSphere,aRemovePoints);
 
-                std::vector<SGM::Point3D> aRPoints;
                 for(auto nWhere : aRemovePoints)
                     {
                     std::vector<unsigned> aRemovedOrChanged,aReplacedTriangles;
@@ -2915,16 +2916,14 @@ void FacetFace(SGM::Result                    &rResult,
 
                 SGM::Surface SurfID(pFace->GetSurface()->GetID());
                 size_t nPolygons=aaPolygons.size();
-                size_t Index1;
                 for(Index1=0;Index1<nPolygons;++Index1)
                     {
-                    std::vector<unsigned int> aPolygonIndices;
-                    std::vector<bool> aFlags=ShuffleFlags(aImprintFlags,aaPolygons[Index1]);
+                    std::vector<unsigned> aPolygonIndices;
+                    std::vector<bool> aFlags=FindPolygonImprintFlags(aImprintFlags,aaPolygons[Index1]);
                     SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
                                        aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
                     aaPolygons[Index1]=aPolygonIndices;
                     }
-
                 RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
                 }
 
