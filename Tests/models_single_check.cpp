@@ -225,7 +225,7 @@ TEST(models_single_check, DISABLED_import_check_OUO_ZGeom) // TODO: Lots of face
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0001_Bbat)
+TEST(models_single_check, import_check_glom4_0001_Bbat)
 {
     const char* file_name = "Glom4/0001-_Bbat.stp";
     SCOPED_TRACE(file_name);
@@ -282,7 +282,7 @@ TEST(models_single_check, import_check_glom4_0007_Bflange)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0008_Bkey) 
+TEST(models_single_check, import_check_glom4_0008_Bkey) 
 {
     const char* file_name = "Glom4/0008-_Bkey.stp";
     SCOPED_TRACE(file_name);
@@ -303,7 +303,7 @@ TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) // TODO: Face
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0011_Bdice) 
+TEST(models_single_check, import_check_glom4_0011_Bdice) 
 {
     const char* file_name = "Glom4/0011-_Bdice.stp";
     SCOPED_TRACE(file_name);
@@ -366,7 +366,7 @@ TEST(models_single_check, DISABLED_import_check_glom4_0019_Bhinkey_A)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_ACISSphereGeometry_arbitraryCenter)
+TEST(models_single_check, ACISSphereGeometry_arbitraryCenter)
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);

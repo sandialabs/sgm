@@ -1169,7 +1169,7 @@ bool TriangulatePolygonWithHoles(Result                                        &
     }
 
 void GroupPolygons(std::vector<std::vector<unsigned> >         const &aaPolygons,
-                   std::vector<Point2D>                            const &aPoints2D,
+                   std::vector<Point2D>                        const &aPoints2D,
                    std::vector<std::vector<std::vector<unsigned> > > &aaaPolygonGroups)
     {
     // Find all the outside polygons that have positive area.
