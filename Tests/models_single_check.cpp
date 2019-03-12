@@ -465,8 +465,11 @@ TEST(models_single_check, import_check_brick10)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
+
     const char* file_name = "brick10.stp";
     expect_import_success(file_name, rResult);
+    SGMTesting::ReleaseTestThing(pThing);
+
 }
 
 TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
