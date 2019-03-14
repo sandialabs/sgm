@@ -589,10 +589,6 @@ bool PointOnCurves(SGM::Point3D         const &Pos,
         SGM::Point3D SPos3,SPos4;
         pSurface1->Inverse(Pos,&SPos3);
         pSurface2->Inverse(Pos,&SPos4);
-        double dSurface3Dist=Pos.Distance(SPos3);
-        double dSurface4Dist=Pos.Distance(SPos4);
-        dSurface3Dist;
-        dSurface4Dist;
 
         if(dPointToCurveDist<dSurface1Dist+dSurface2Dist+SGM_FIT)
             {
