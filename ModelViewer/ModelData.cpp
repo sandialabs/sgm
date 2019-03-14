@@ -40,6 +40,7 @@ struct pModelData
     ~pModelData()
     {
         SGM::DeleteThing(mThing);
+        mThing = nullptr;
     }
 };
 

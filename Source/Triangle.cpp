@@ -693,9 +693,12 @@ void RemoveOutsideTriangles(SGM::Result                               &rResult,
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
         SGM::Point2D CM = CenterOfMass(aPoints2D[a], aPoints2D[b], aPoints2D[c]);
+
         size_t nGroups=aaaPolygons.size();
+
         for(Index2=0;Index2<nGroups;++Index2)
             {
+
             if(aaaPolygons[Index2][0].empty())
                 {
                 if(PointInPolygonGroup(CM,aPoints2D,aaaPolygons[Index2])==false)
