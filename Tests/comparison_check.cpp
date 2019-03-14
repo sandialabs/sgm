@@ -13,12 +13,14 @@ void SetupFaces(SGM::Result &rResult,
 	SGM::Face &Face1,
 	SGM::Face &Translated,
 	SGM::Face &Different,
-    SGM::Face &Scaled)
+    SGM::Face &Scaled,
+    SGM::Face &Mirrored)
 {
 	SGM::Point3D Origin1(0, 0, 1);
 	SGM::Point3D Origin2(0, 0, -1);
 	SGM::Point3D Origin3(0, 0, 2);
     SGM::Point3D Origin4(1, 1, -3);
+    SGM::Point3D Origin5(0, 0, 1.5);
 	SGM::UnitVector3D Normal(0, 0, 1);
 	std::vector<SGM::EdgeSideType> aTypes = { SGM::FaceOnLeftType, SGM::FaceOnLeftType, SGM::FaceOnLeftType, SGM::FaceOnLeftType };
 
@@ -50,6 +52,13 @@ void SetupFaces(SGM::Result &rResult,
     SGM::Surface Plane4 = SGM::CreatePlane(rResult, Origin4, Normal);
     SGM::Body Body4 = SGM::CreateSheetBody(rResult, Plane4, aEdges4, aTypes);
 
+    std::vector<SGM::Point3D> aPoints5 = { {1, 1, 1},  {0, 1, 1},  {-0.1, 1.1, 1},  {0.9, 1.2, 1} };
+    std::vector<SGM::Edge> aEdges5(aPoints5.size());
+    for (size_t iPoint = 0; iPoint < aPoints5.size(); ++iPoint)
+        aEdges5[iPoint] = SGM::CreateLinearEdge(rResult, aPoints5[iPoint], aPoints5[(iPoint + 1) % 4]);
+    SGM::Surface Plane5 = SGM::CreatePlane(rResult, Origin5, Normal);
+    SGM::Body Body5 = SGM::CreateSheetBody(rResult, Plane5, aEdges5, aTypes);
+
     std::set<SGM::Face> sFaces;
 	SGM::FindFaces(rResult, Body1, sFaces);
 	Face1 = (*(sFaces.begin()));
@@ -65,6 +74,10 @@ void SetupFaces(SGM::Result &rResult,
     sFaces.clear();
     SGM::FindFaces(rResult, Body4, sFaces);
     Scaled = (*(sFaces.begin()));
+
+    sFaces.clear();
+    SGM::FindFaces(rResult, Body5, sFaces);
+    Mirrored = (*(sFaces.begin()));
 
 }
 
@@ -94,18 +107,18 @@ TEST(comparison_check, face_comparison)
 	SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
 	SGM::Result rResult(pThing);
 
-	SGM::Face Face1, Translated, Different, Scaled;
-	SetupFaces(rResult, Face1, Translated, Different, Scaled);
+    SGM::Face Face1, Translated, Different, Scaled, Mirrored;
+    SetupFaces(rResult, Face1, Translated, Different, Scaled, Mirrored);
 
     bool bIgnoreScale = false;
 	std::vector<SGM::Face> aSimilar;
 	SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
-    EXPECT_EQ(aSimilar.size(), 1);
+    EXPECT_EQ(aSimilar.size(), 2);
 
     aSimilar.clear();
     bIgnoreScale = true;
     SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
-    EXPECT_EQ(aSimilar.size(), 2);
+    EXPECT_EQ(aSimilar.size(), 3);
 
 	SGMTesting::ReleaseTestThing(pThing);
 }

@@ -2471,8 +2471,8 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
         SGM::Transform3D trans(pRevolve->m_Origin,pRevolve->m_ZAxis,dAngle);
         curve *pCurve=(curve *)CopyEntity(rResult,pRevolve->m_pCurve);
         pCurve->Transform(rResult,trans);
-        SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
-        IntersectLineAndCurve(rResult,Origin,Direction,Domain,pCurve,dTolerance,aPoints,aTypes);
+        SGM::Interval1D Domain1(-SGM_MAX,SGM_MAX);
+        IntersectLineAndCurve(rResult,Origin,Direction,Domain1,pCurve,dTolerance,aPoints,aTypes);
         rResult.GetThing()->DeleteEntity(pCurve);
         }
     else 
@@ -5040,15 +5040,15 @@ size_t IntersectTorusAndRevolve(SGM::Result                &rResult,
             {
             // Minor circle plus other curves.
 
-            SGM::Point3D Pos=aPoints[0];
-            SGM::UnitVector3D Spoke=Pos-TorusCenter;
+            SGM::Point3D Pos1=aPoints[0];
+            SGM::UnitVector3D Spoke=Pos1-TorusCenter;
             SGM::Point3D TestPos=TorusCenter+Spoke*(pTorus->m_dMajorRadius+pTorus->m_dMinorRadius);
             SGM::Point3D CPos;
             pRevolve->Inverse(TestPos,&CPos);
             double dDist=TestPos.Distance(CPos);
             if(dDist<dTolerance)
                 {
-                aCurves.push_back(new circle(rResult,Pos,RevolveAxis,pTorus->m_dMinorRadius,&pRevolve->m_XAxis));
+                aCurves.push_back(new circle(rResult,Pos1,RevolveAxis,pTorus->m_dMinorRadius,&pRevolve->m_XAxis));
                 }
             aPoints.clear();
             aTypes.clear();

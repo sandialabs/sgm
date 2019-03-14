@@ -14,6 +14,7 @@
 #include "SGMTranslators.h"
 
 #include "OrderPoints.h"
+#include "Signature.h"
 
 namespace SGMInternal
 {
@@ -53,8 +54,6 @@ class extrude;
 class offset; 
 class NUBsurface;
 class NURBsurface;
-
-class Signature;
 
 struct EntityCompare {
     bool operator()(entity* const& ent1, entity* const& ent2) const;
@@ -986,7 +985,9 @@ class face : public topology
 
         bool IsTopLevel() const override;
 
-        Signature GetSignature(SGM::Result &rResult) const;
+        Signature  const & GetSignature(SGM::Result &rResult) const;
+        void GetSignaturePoints(SGM::Result               &rResult,
+                                std::vector<SGM::Point3D> &aPoints) const;
 
         // Find methods
 
@@ -1038,6 +1039,7 @@ class face : public topology
         mutable std::vector<unsigned>              m_aTriangles;
         mutable std::vector<SGM::Point2D>          m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
+        mutable Signature                          m_Signature;
 
     };
 
@@ -1158,6 +1160,8 @@ class edge : public topology
 
         bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
 
+        void GetSignaturePoints(SGM::Result               &rResult,
+                                std::vector<SGM::Point3D> &aPoints) const;
     private:
 
         vertex                         *m_pStart;

@@ -1251,9 +1251,20 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
     return uv;
     }
 
-Signature face::GetSignature(SGM::Result &rResult) const
+Signature const & face::GetSignature(SGM::Result &rResult) const
 {
-    std::vector<SGM::Point3D> aPoints;
+    if (!m_Signature.Xsequence.size())
+    {
+        std::vector<SGM::Point3D> aFacePoints;
+        GetSignaturePoints(rResult, aFacePoints);
+        m_Signature.Initialize(aFacePoints);
+    }
+    return m_Signature;
+}
+
+void face::GetSignaturePoints(SGM::Result &rResult,
+                              std::vector<SGM::Point3D> &aPoints) const
+{
     std::set<vertex *, EntityCompare> sVertices;
     FindVertices(rResult, this, sVertices);
     if (sVertices.size() == 0)
@@ -1264,8 +1275,15 @@ Signature face::GetSignature(SGM::Result &rResult) const
         aPoints.emplace_back(pVert->GetPoint());
     }
 
-    Signature Sig(aPoints);
-    return Sig;
+    for (auto pEdge : m_sEdges)
+    {
+        std::vector<SGM::Point3D> aEdgePoints;
+        pEdge->GetSignaturePoints(rResult, aEdgePoints);
+        for (auto Pos : aEdgePoints)
+        {
+            aPoints.emplace_back(Pos);
+        }
+    }
 }
 
 } // End SGMInternal namespace
