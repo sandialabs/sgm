@@ -1704,7 +1704,7 @@ static bool FindSeamCrossings(face        const *pFace,
 
     return true;
     }
-
+    
 static bool FindPolygon(std::vector<Node>         &aNodes,
                         unsigned int               nStart,
                         std::vector<unsigned int> &aPolygon)
@@ -1756,7 +1756,7 @@ static bool FindPolygons(std::vector<Node>                       &aNodes,
         if(!aNodes[Index1].m_bMark)
             {
             std::vector<unsigned int> aPolygon;
-            if(!FindPolygon(aNodes, Index1, aPolygon))
+            if(!FindPolygon(aNodes,Index1,aPolygon))
                 {
                 return false;
                 }
@@ -1877,7 +1877,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
             return false;
             }
         }
-
+    
     return FindPolygons(aNodes,aPoints2D,aPoints3D,aaPolygons,pImprintFlags);
     }
 
@@ -2811,6 +2811,8 @@ void FacetFace(SGM::Result                    &rResult,
                std::vector<SGM::UnitVector3D> &aNormals,
                std::vector<unsigned int>      &aTriangles)
     {
+    // Code added for code coverage.
+
     if(rResult.GetDebugFlag())
         {
         if(rResult.GetDebugFlag()==1)
@@ -2848,6 +2850,8 @@ void FacetFace(SGM::Result                    &rResult,
             return;
             }
         }
+
+    // Start of main code.
     
     std::vector<unsigned> aAdjacencies;
     std::vector<std::vector<unsigned> > aaPolygons;

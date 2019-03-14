@@ -6,6 +6,8 @@
 #include "SGMPolygon.h"
 #include "SGMTriangle.h"
 
+#include "Mathematics.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Polygon Functions
@@ -1300,7 +1302,8 @@ std::vector<SGM::Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPo
 
 bool PointInPolygonGroup(Point2D                             const &Pos,
                          std::vector<Point2D>                const &aPoints2D,
-                         std::vector<std::vector<unsigned> > const &aaPolygons)
+                         std::vector<std::vector<unsigned> > const &aaPolygons,
+                         std::vector<double>                 const &aAreas)
     {
     size_t nPolygons=aaPolygons.size();
     if(nPolygons && PointInPolygon(Pos,PointsFromPolygon(aPoints2D,aaPolygons[0])))
@@ -1310,7 +1313,7 @@ bool PointInPolygonGroup(Point2D                             const &Pos,
             {
             std::vector<SGM::Point2D> aTemp=PointsFromPolygon(aPoints2D,aaPolygons[Index1]);
             std::reverse(aTemp.begin(),aTemp.end());
-            if(PointInPolygon(Pos,aTemp))
+            if(aAreas[Index1]<-SGM_ZERO && PointInPolygon(Pos,aTemp))
                 {
                 return false;
                 }

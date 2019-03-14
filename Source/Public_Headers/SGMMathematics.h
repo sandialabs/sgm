@@ -292,6 +292,18 @@ namespace SGM
     SGM_EXPORT size_t FindEigenVectors3D(double              const aaMatrix[3][3],
                                          std::vector<double>       &aValues,
                                          std::vector<UnitVector3D> &aVectors);
+
+    // Returns a point in the given coordinate system of the given point Pos.
+    // If X, Y, and Z are known to be mutually orthogonal, then bOrthogonal should 
+    // be set to true.  Either way it is assumed that the three vectors are 
+    // linearly independent.
+
+    SGM_EXPORT Point3D FindLocalCoordinates(Point3D      const &Origin,
+                                            UnitVector3D const &X,
+                                            UnitVector3D const &Y,
+                                            UnitVector3D const &Z,
+                                            Point3D      const &Pos,
+                                            bool                bOrthogonal);
     
     ///////////////////////////////////////////////////////////////////////////
     //

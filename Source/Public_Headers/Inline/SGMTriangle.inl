@@ -109,6 +109,31 @@ inline bool InTriangle2DImplementation(double dU, double dV,
         }
     }
 
+    // Cached triangle data for fast 2D point in 2D triangle tests.
+
+class TriangleData2D
+    {
+    public:
+
+    TriangleData2D(Point2D const &A,
+                   Point2D const &B,
+                   Point2D const &C);
+
+    bool InTriangle(Point2D const &P) const;
+
+    private:
+
+    SGM::Point2D m_dA;
+    SGM::Point2D m_dB;
+    SGM::Point2D m_dC;
+
+    double m_dU_CA;
+    double m_dV_CA;
+    double m_dU_BA;
+    double m_dV_BA;
+    double m_dD;
+    };
+
 inline TriangleData2D::TriangleData2D(Point2D const &A,
                                       Point2D const &B,
                                       Point2D const &C) :

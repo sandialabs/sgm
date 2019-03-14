@@ -38,11 +38,13 @@ SGM_EXPORT bool PointInPolygon(Point2D              const &Pos,
 
 // Returns true if the given point is inside the first polygon and outside the others,
 // If the given point is on one of the the polygon, then the returned answer may
-// be either true or false.
+// be either true or false.  So that the function can run fast on lots of points for
+// the same polygons the signed areas of the polygons is also required.
 
 SGM_EXPORT bool PointInPolygonGroup(Point2D                                 const &Pos,
                                     std::vector<Point2D>                    const &aPoints2D,
-                                    std::vector<std::vector<unsigned int> > const &aaPolygons);
+                                    std::vector<std::vector<unsigned int> > const &aaPolygons,
+                                    std::vector<double>                     const &aAreas);
 
 // Coverts a polygon from a vector of indices to a vector of points.
 
