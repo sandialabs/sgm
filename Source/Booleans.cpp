@@ -1069,9 +1069,9 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
         }
     std::vector<face *> aAnswer;
     aAnswer.reserve(sFaces.size());
-    for(auto pFace : sFaces)
+    for(auto pFace1 : sFaces)
         {
-        aAnswer.push_back(pFace);
+        aAnswer.push_back(pFace1);
         }
     return aAnswer;
     }

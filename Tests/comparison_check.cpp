@@ -57,6 +57,7 @@ void SetupFaces(SGM::Result &rResult,
     for (size_t iPoint = 0; iPoint < aPoints5.size(); ++iPoint)
         aEdges5[iPoint] = SGM::CreateLinearEdge(rResult, aPoints5[iPoint], aPoints5[(iPoint + 1) % 4]);
     SGM::Surface Plane5 = SGM::CreatePlane(rResult, Origin5, Normal);
+    aTypes = { SGM::FaceOnRightType, SGM::FaceOnRightType, SGM::FaceOnRightType, SGM::FaceOnRightType };
     SGM::Body Body5 = SGM::CreateSheetBody(rResult, Plane5, aEdges5, aTypes);
 
     std::set<SGM::Face> sFaces;
