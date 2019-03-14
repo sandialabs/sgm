@@ -90,10 +90,33 @@ vertex *ImprintPoint(SGM::Result        &rResult,
                      topology           *pTopology)
     {
     vertex *pAnswer=nullptr;
-    if(pTopology->GetType()==SGM::EntityType::EdgeType)
+    switch(pTopology->GetType())
         {
-        auto pEdge=(edge *)pTopology;
-        pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
+        case SGM::EdgeType:
+            {
+            auto pEdge=(edge *)pTopology;
+            pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
+            break;
+            }
+        case SGM::BodyType:
+            {
+            auto pBody=(body *)pTopology;
+            std::set<edge *,EntityCompare> sEdges;
+            FindEdges(rResult,pBody,sEdges,false);
+            for(auto pEdge : sEdges)
+                {
+                if(pEdge->PointInEdge(Pos,SGM_MIN_TOL))
+                    {
+                    pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
+                    break;
+                    }
+                }
+            break;
+            }
+        default:
+            {
+            throw; // Add more code.
+            }
         }
     return pAnswer;
     }

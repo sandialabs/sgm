@@ -2239,7 +2239,7 @@ TEST(math_check, NURB_curve)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(math_check, torus_area)
+TEST(math_check, DISABLED_torus_area)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -3460,7 +3460,7 @@ TEST(math_check, sgm_save_and_read_sphere)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(math_check, sgm_save_and_read_torus) 
+TEST(math_check, DISABLED_sgm_save_and_read_torus) 
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
