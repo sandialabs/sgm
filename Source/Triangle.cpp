@@ -680,6 +680,20 @@ void RemoveOutsideTriangles(SGM::Result                               &rResult,
 
     std::vector<std::vector<std::vector<unsigned> > > aaaPolygons;
     GroupPolygons(aaPolygons,aPoints2D,aaaPolygons);
+    std::vector<std::vector<double> > aaAreas;
+    size_t nGroups=aaaPolygons.size();
+    aaAreas.reserve(nGroups);
+    for(auto aGroup : aaaPolygons)
+        {
+        size_t nPolygons=aGroup.size();
+        std::vector<double> aAreas;
+        aAreas.reserve(nPolygons);
+        for(auto aPolygon : aGroup)
+            {
+            aAreas.push_back(SGM::PolygonArea(SGM::PointsFromPolygon(aPoints2D,aPolygon)));
+            }
+        aaAreas.push_back(aAreas);
+        }
 
     // Find the interior triangles.
 
@@ -693,26 +707,9 @@ void RemoveOutsideTriangles(SGM::Result                               &rResult,
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
         SGM::Point2D CM = CenterOfMass(aPoints2D[a], aPoints2D[b], aPoints2D[c]);
-
-        size_t nGroups=aaaPolygons.size();
-
         for(Index2=0;Index2<nGroups;++Index2)
             {
-
-            if(aaaPolygons[Index2][0].empty())
-                {
-                if(PointInPolygonGroup(CM,aPoints2D,aaaPolygons[Index2])==false)
-                    {
-                    aNewTriangles.push_back(a);
-                    aNewTriangles.push_back(b);
-                    aNewTriangles.push_back(c);
-                    sUsedPoint.insert(a);
-                    sUsedPoint.insert(b);
-                    sUsedPoint.insert(c);
-                    break;
-                    }
-                }
-            else if(PointInPolygonGroup(CM,aPoints2D,aaaPolygons[Index2]))
+            if(PointInPolygonGroup(CM,aPoints2D,aaaPolygons[Index2],aaAreas[Index2]))
                 {
                 aNewTriangles.push_back(a);
                 aNewTriangles.push_back(b);
@@ -914,6 +911,36 @@ void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
         {
         aTriangles[Index1]=mMap[aTriangles[Index1]];
         }
+    }
+
+double DihedralAngle(Point3D const &A,
+                     Point3D const &B,
+                     Point3D const &C,
+                     Point3D const &D)
+    {
+    SGM::UnitVector3D ABC=(B-A)*(C-A);
+    SGM::UnitVector3D ADB=(D-A)*(B-A);
+    double dAngle=ABC.Angle(ADB);
+    if((ABC*ADB)%(B-A)<0)
+        {
+        dAngle=-dAngle;
+        }
+    return dAngle;
+    }
+
+bool PointInTetrahedron(Point3D const &A,
+                        Point3D const &B,
+                        Point3D const &C,
+                        Point3D const &D,
+                        Point3D const &Pos)
+    {
+    UnitVector3D ABC=(C-A)*(B-A);  // Each of these point out of the tetrahedron.
+    UnitVector3D BCD=(C-B)*(D-B);
+    UnitVector3D ACD=(D-A)*(C-A);
+    UnitVector3D ABD=(B-A)*(D-A);
+    Vector3D PA=Pos-A;
+    Vector3D PB=Pos-B;
+    return PA%ABC<SGM_ZERO && PB%BCD<SGM_ZERO && PA%ACD<SGM_ZERO && PA%ABD<SGM_ZERO;
     }
 
 void CreateIcosahedron(double                     dRadius,

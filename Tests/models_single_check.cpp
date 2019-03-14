@@ -296,6 +296,13 @@ TEST(models_single_check, DISABLED_import_check_glom4_0009_Bcam)
     expect_import_check_success(file_name);
 }
 
+TEST(models_single_check, import_check_curved_cube_cubit) 
+{
+    const char* file_name = "curved_cube_cubit.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_check_success(file_name);
+}
+
 TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) // TODO: Face 388 infinite call
 {
     const char* file_name = "Glom4/0010-_Bsteer.stp";

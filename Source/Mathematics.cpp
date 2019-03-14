@@ -1001,6 +1001,46 @@ SGM::UnitVector3D UnitVectorSolve(std::vector<std::vector<double> > aaMat)
         }
     }
 
+Point3D FindLocalCoordinates(Point3D      const &Origin,
+                             UnitVector3D const &X,
+                             UnitVector3D const &Y,
+                             UnitVector3D const &Z,
+                             Point3D      const &Pos,
+                             bool                bOrthogonal)
+    {
+    Vector3D Vec=Pos-Origin;
+    if(bOrthogonal)
+        {
+        return Point3D(Vec%X,Vec%Y,Vec%Z);
+        }
+    else
+        {
+        std::vector<std::vector<double> > aaMat;
+        aaMat.reserve(3);
+        std::vector<double> aMat;
+        aMat.reserve(4);
+        aMat.push_back(X.m_x);
+        aMat.push_back(Y.m_x);
+        aMat.push_back(Z.m_x);
+        aMat.push_back(Vec.m_x);
+        aMat.clear();
+        aaMat.push_back(aMat);
+        aMat.push_back(X.m_y);
+        aMat.push_back(Y.m_y);
+        aMat.push_back(Z.m_y);
+        aMat.push_back(Vec.m_y);
+        aMat.clear();
+        aaMat.push_back(aMat);
+        aMat.push_back(X.m_z);
+        aMat.push_back(Y.m_z);
+        aMat.push_back(Z.m_z);
+        aMat.push_back(Vec.m_z);
+        aaMat.push_back(aMat);
+        LinearSolve(aaMat);
+        return Point3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back());
+        }
+    }
+
 size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                           std::vector<double>       &aValues,
                           std::vector<UnitVector3D> &aVectors)

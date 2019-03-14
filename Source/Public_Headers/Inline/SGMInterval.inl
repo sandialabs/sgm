@@ -161,6 +161,11 @@ namespace SGM {
         m_VDomain.m_dMax = -SGM_MAX;
     }
 
+    inline bool Interval2D::IsBounded() const
+    {
+        return m_UDomain.IsBounded() && m_VDomain.IsBounded();
+    }
+
     inline bool Interval2D::IsEmpty() const
     {
         return (m_UDomain.m_dMax < m_UDomain.m_dMin ||

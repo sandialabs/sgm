@@ -29,6 +29,27 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+TEST(math_check, point_in_tetrahedron)
+{
+    SGM::Point3D A(0,0,0),B(1,0,0),C(0,1,0),D(0,0,1);
+    SGM::Point3D Pos1(0.1,0.1,0.1),Pos2(1,1,1);
+    bool bIn1=SGM::PointInTetrahedron(A,B,C,D,Pos1);
+    bool bIn2=SGM::PointInTetrahedron(A,B,C,D,A);
+    bool bIn3=SGM::PointInTetrahedron(A,B,C,D,Pos2);
+    EXPECT_TRUE(bIn1);
+    EXPECT_TRUE(bIn2);
+    EXPECT_FALSE(bIn3);
+}
+
+TEST(math_check, dihedral_angle)
+{
+    SGM::Point3D A(1,0,0),B(1,1,0),C(0,0,0),D1(1,0,1),D2(1,0,-1);
+    double dAngle1=SGM::DihedralAngle(A,B,C,D1);
+    double dAngle2=SGM::DihedralAngle(A,B,C,D2);
+    EXPECT_NEAR(dAngle1,-SGM_HALF_PI,SGM_ZERO);
+    EXPECT_NEAR(dAngle2,SGM_HALF_PI,SGM_ZERO);
+}
+
 TEST(math_check, distance_squared_to_triangle)
 {
     {

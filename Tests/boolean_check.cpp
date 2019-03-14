@@ -49,6 +49,18 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
 
+TEST(modify, imprint_point_on_body)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+
+    SGM::ImprintPoint(rResult,SGM::Point3D(5,0,0),BlockID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(modify, block_top_face_sphere_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
