@@ -1,0 +1,45 @@
+3/14/19 bcarnes
+
+Below are my changes to Sierra files:
+
+[bcarnes@ceerws1409 code]$ git diff
+diff --git a/Jamroot b/Jamroot
+index eadd15a..c36dd20 100644
+--- a/Jamroot
++++ b/Jamroot
+@@ -978,6 +978,7 @@ rule votd-products ( sierra-products * )
+   new-register-product sierra    : selem                 : selem            : votd    :                       : base    : SM SD    : generic     : yes ;
+   new-register-product sierra    : scefire               : scefire          : votd    :                       : base    : FT       : generic     : yes ;
+   new-register-product sierra    : stk_exp               : stk              : votd    : stk_exp               : base    : TK       : generic     : no  ;
++  new-register-product sierra    : sgm                   : sgm              : votd    :                       : base    : VV       : generic     : yes ;
+   new-register-product sierra    : cubit                 : cubit            : votd    :                       : base    : VV       : generic     : yes ;
+   new-register-product sierra    : cubit_stk             : cubit_stk        : votd    :                       : base    : VV       : generic     : yes ;
+   new-register-product sierra    : cubit_acis            : cubit_acis       : votd    :                       : base    : VV       : generic     : no  ;
+diff --git a/Sierra/Sierra.xml b/Sierra/Sierra.xml
+index d46f4de..721dfe9 100644
+--- a/Sierra/Sierra.xml
++++ b/Sierra/Sierra.xml
+@@ -128,6 +128,7 @@
+       <Command product="fsiMimdCoupling"        alias="fsi_unit_tester"/>
+       <Command product="fsiMimdCoupuling"        alias="fsi_integration_tester"/>
+       <Command product="mesh_scale"             alias="mesh_scale"/>
++      <Command product="sgm"                    alias="sgm"/>
+       <Command product="cubit"                  alias="cubit"/>
+       <Command product="cubit_stk"              alias="cubit_stk"/>
+       <Command product="cubit_acis"             alias="cubit_acis"/>
+@@ -587,6 +588,15 @@
+ 
+   <!-- ****************************************** -->
+ 
++   <Product name="sgm" alias="SGM"
++    nightly_build="on"
++    nightly_rtests="on">
++    <Version branch="head" ignore_version="True">
++    </Version>
++  </Product>
++
++  <!-- ****************************************** -->
++
+    <Product name="cubit" alias="Cubit"
+     nightly_build="on"
+     nightly_rtests="on">
