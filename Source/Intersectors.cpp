@@ -8702,7 +8702,7 @@ void FindCurvePlaneIntersections(curve                                  const *p
                 bool bNewtonSuccess = false;
                 if (dDenominator > SGM_ZERO)
                     {
-                    double numer = PlaneNorm % (PlaneOrigin - CPos);
+//                    double numer = PlaneNorm % (PlaneOrigin - CPos);
 //                    std::cout << "FindCurvePlaneIntersections: PlaneNorm % (PlaneOrigin - CPos) = " << numer << std::endl;
                     double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
 //                    std::cout << "FindCurvePlaneIntersections: dT = " << dT << std::endl;

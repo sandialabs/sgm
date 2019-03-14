@@ -539,7 +539,7 @@ bool ForcePolygonEdgesIntoTriangles(SGM::Result                     &rResult,
                 //SGM::Point3D Pos0=(*pPoints3D)[a];
                 //SGM::Point3D Pos1=(*pPoints3D)[b];
                 //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
-                std::cout << "ForcePolygonEdgesIntoTriangles 4: edge {" << a << ',' << b << "} unable to force edge into the triangles" << std::endl;
+                //std::cout << "ForcePolygonEdgesIntoTriangles 4: edge {" << a << ',' << b << "} unable to force edge into the triangles" << std::endl;
                 return false;
                 }
             }
