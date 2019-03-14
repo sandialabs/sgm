@@ -165,6 +165,8 @@ namespace SGM {
 
         bool IsEmpty() const;
 
+        bool IsBounded() const;
+
         // Interrogation methods.
 
         double Area() const;

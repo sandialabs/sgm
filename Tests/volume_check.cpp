@@ -83,7 +83,7 @@ TEST(volume_check, sphere)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(volume_check, DISABLED_torus)
+TEST(volume_check, torus)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

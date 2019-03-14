@@ -2759,7 +2759,7 @@ static void FindSpherePoints(sphere                   const *pSphere,
     }
 
 void FindTorusPoints(torus                    const *pSurface,
-                     SGM::Interval2D          const &Box,
+                     SGM::Interval2D          const &InBox,
                      FacetOptions             const &Options,
                      std::vector<SGM::Point3D>      &aPoints3D,
                      std::vector<unsigned int>      &aTriangles,
@@ -2768,6 +2768,11 @@ void FindTorusPoints(torus                    const *pSurface,
     {
     // Create the base grid.
 
+    SGM::Interval2D Box=InBox;
+    if(Box.IsEmpty())
+        {
+        Box=pSurface->GetDomain();
+        }
     std::vector<double> aUValues,aVValues;
     size_t nU=(size_t)(Box.m_UDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL)*2;
     size_t nV=(size_t)(Box.m_VDomain.Length()/Options.m_dFaceAngleTol+SGM_MIN_TOL)*2;
