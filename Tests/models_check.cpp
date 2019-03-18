@@ -327,7 +327,7 @@ TEST(DataDirectoriesCheck, file_extensions)
     ASSERT_FALSE(has_model_extension(names[0]));
 
     filter_model_extension(names);
-    ASSERT_EQ(names.size(),4);
+    ASSERT_EQ(names.size(),4U);
     ASSERT_EQ(names[0],"testB.stp");
     ASSERT_EQ(names[1],"testE.STEP");
     ASSERT_EQ(names[2],"testG.STP");

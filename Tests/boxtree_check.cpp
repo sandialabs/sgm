@@ -23,7 +23,7 @@ TEST(boxtree_check, intersect_single_item_tree)
     boxTree.Insert(&point0, {3,3,3,3,0,0});
     Ray3D ray_start_outside_parallel_x({1.0,3.0,0.0}, {1., 0., 0.});
     auto container = boxTree.FindIntersectsLine(ray_start_outside_parallel_x);
-    EXPECT_EQ(container.size(), 1);
+    EXPECT_EQ(container.size(), 1U);
     EXPECT_EQ(container[0].first, &point0);
 }
 
@@ -110,7 +110,7 @@ TEST(boxtree_check, erase_enclosed)
     // erase the points
     Interval3D bound(-0.1,0.1,-0.1,0.1,-0.1,0.1);
     boxTree.EraseEnclosed(bound);
-    EXPECT_EQ(boxTree.Size(),1);
+    EXPECT_EQ(boxTree.Size(),1U);
     }
 
 #ifdef __clang__

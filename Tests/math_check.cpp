@@ -535,7 +535,7 @@ TEST(math_check, remove_duplicates_2d )
 {
     std::vector<SGM::Point2D> aPoints = {{0,0},{0,0}};
     SGM::RemoveDuplicates2D(aPoints,SGM_ZERO);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
 }
 
 TEST(math_check, lemon_torus )
@@ -740,7 +740,7 @@ TEST(math_check, vector_angle_and_transforms)
 TEST(math_check, find_comps_1d)
 {
     std::vector<unsigned> aSegments = {0,1};
-    EXPECT_EQ(SGM::FindComponents1D(aSegments),1);
+    EXPECT_EQ(SGM::FindComponents1D(aSegments),1U);
     }
 
 TEST(math_check, point_curve)
@@ -776,7 +776,7 @@ TEST(math_check, remove_duplicates)
     std::vector<SGM::Point3D> aPoints = {{0,0,0},{2,0,0},{0,0,0},{2,0,0}};
     SGM::Interval3D Box(0,1,0,1,0,1);
     SGM::RemoveDuplicates3D(aPoints,SGM_MIN_TOL,&Box);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
 }
 
 TEST(math_check, relatively_prime)
@@ -851,27 +851,27 @@ TEST(math_check, partial_order)
     sPartialOrder.insert({5,1});
     std::vector<size_t> aMaximalElements;
     size_t nMax=SGM::FindMaximalElements(sPartialOrder,aMaximalElements);
-    EXPECT_EQ(nMax,2);
+    EXPECT_EQ(nMax,2U);
 
     std::vector<size_t> aAllDecendents;
     size_t nAllDecendents=SGM::FindDecendentsOfGroup(sPartialOrder,aMaximalElements,aAllDecendents);
-    EXPECT_EQ(nAllDecendents,4);
+    EXPECT_EQ(nAllDecendents,4U);
 
     std::vector<std::vector<size_t>> aaGenerations;
     size_t nGenerations=SGM::FindGenerations(sPartialOrder,0,aaGenerations);
-    EXPECT_EQ(nGenerations,2);
+    EXPECT_EQ(nGenerations,2U);
 
     std::vector<size_t> aDecendents;
     size_t nDecendents= SGM::FindDescendants(sPartialOrder, 0, aDecendents);
-    EXPECT_EQ(nDecendents,3);
+    EXPECT_EQ(nDecendents,3U);
 
     std::vector<size_t> aChildren;
     size_t nChildern= SGM::FindChildren(sPartialOrder, 0, aChildren);
-    EXPECT_EQ(nChildern,2);
+    EXPECT_EQ(nChildern,2U);
 
     std::vector<size_t> aKeep = {0,2};
     SGM::SubsetPartialOrder(aKeep, sPartialOrder);
-    EXPECT_EQ(sPartialOrder.size(),1);
+    EXPECT_EQ(sPartialOrder.size(),1U);
 
     
 }
@@ -1168,12 +1168,12 @@ TEST(math_check, rectangle)
     SGM::UnitVector3D Axis(0,0,1);
     SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints1,aTypes1);
     SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints2,aTypes2,SGM_MIN_TOL,true);
-    EXPECT_EQ(aPoints1.size(),1);
-    EXPECT_EQ(aPoints2.size(),2);
+    EXPECT_EQ(aPoints1.size(),1U);
+    EXPECT_EQ(aPoints2.size(),2U);
 
     SGM::Segment3D Seg(Root,SGM::Point3D(5,5,15));
     SGM::IntersectSegment(rResult,Seg,IDBox,aPoints3);
-    EXPECT_EQ(aPoints3.size(),1);
+    EXPECT_EQ(aPoints3.size(),1U);
         
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1305,7 +1305,7 @@ TEST(math_check, quartic_equation)
 
     std::vector<double> aRoots;
     size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,4);
+    EXPECT_EQ(nRoots,4U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[2]-3),SGM_ZERO);
@@ -1315,7 +1315,7 @@ TEST(math_check, quartic_equation)
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-9,29,-39,18,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,3);
+    EXPECT_EQ(nRoots,3U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[2]-3),SGM_ZERO);
@@ -1324,7 +1324,7 @@ TEST(math_check, quartic_equation)
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-7,18,-20,8,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,2);
+    EXPECT_EQ(nRoots,2U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
@@ -1332,7 +1332,7 @@ TEST(math_check, quartic_equation)
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,2);
+    EXPECT_EQ(nRoots,2U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
@@ -1340,7 +1340,7 @@ TEST(math_check, quartic_equation)
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,2);
+    EXPECT_EQ(nRoots,2U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
@@ -1348,21 +1348,21 @@ TEST(math_check, quartic_equation)
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,1);
+    EXPECT_EQ(nRoots,1U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
 
     // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,1);
+    EXPECT_EQ(nRoots,1U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
 
     // (x^2+1)(x^2+1) -> x^4+2*x^2+1 No roots.
 
     aRoots.clear();
     nRoots=SGM::Quartic(1,0,2,0,1,aRoots,SGM_MIN_TOL);
-    EXPECT_EQ(nRoots,0);
+    EXPECT_EQ(nRoots,0U);
     }
 
 TEST(math_check, cubic_equation)
@@ -1373,7 +1373,7 @@ TEST(math_check, cubic_equation)
 
     std::vector<double> aRoots;
     size_t nRoots=SGM::Cubic(2,-12,22,-12,aRoots);
-    EXPECT_EQ(nRoots,3);
+    EXPECT_EQ(nRoots,3U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[2]-3),SGM_ZERO);
@@ -1382,7 +1382,7 @@ TEST(math_check, cubic_equation)
 
     aRoots.clear();
     nRoots=SGM::Cubic(1,-5,8,-4,aRoots);
-    EXPECT_EQ(nRoots,2);
+    EXPECT_EQ(nRoots,2U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
 
@@ -1390,21 +1390,21 @@ TEST(math_check, cubic_equation)
 
     aRoots.clear();
     nRoots=SGM::Cubic(1,-1,1,-1,aRoots);
-    EXPECT_EQ(nRoots,1);
+    EXPECT_EQ(nRoots,1U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
 
     // (x-1)*(x-1)*(x-1)=0 -> x^3-x^2+x-1=0 One triple root
 
     aRoots.clear();
     nRoots=SGM::Cubic(1,-3,3,-1,aRoots);
-    EXPECT_EQ(nRoots,1);
+    EXPECT_EQ(nRoots,1U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
 
     // (x-1)*(x-2)=0 -> x^2-3*x+2=0 Two roots and degenerate
 
     aRoots.clear();
     nRoots=SGM::Cubic(0,1,-3,2,aRoots);
-    EXPECT_EQ(nRoots,2);
+    EXPECT_EQ(nRoots,2U);
     EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
     EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
     }
@@ -1654,7 +1654,7 @@ TEST(math_check, triangulate_overlapping_polygon)
     std::vector<unsigned> aPolygon = {0,1,2,3};
     std::vector<unsigned> aTriangles;
     EXPECT_TRUE(SGM::TriangulatePolygon(rResult,aPoints,aPolygon,aTriangles));
-    EXPECT_EQ(aTriangles.size(),6);
+    EXPECT_EQ(aTriangles.size(),6U);
     
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -1682,8 +1682,8 @@ TEST(math_check, min_cycles_odd)
 
     SGM::GraphEdge GE(0,1,0);
     SGM::Graph* pGLoop= graph.CreateMinCycle(GE);
-    EXPECT_EQ(pGLoop->GetVertices().size(),7);
-    EXPECT_EQ(pGLoop->GetEdges().size(),7);
+    EXPECT_EQ(pGLoop->GetVertices().size(),7U);
+    EXPECT_EQ(pGLoop->GetEdges().size(),7U);
     delete pGLoop;
     }
 
@@ -1707,8 +1707,8 @@ TEST(math_check, min_cycles_even)
 
     SGM::GraphEdge GE(0,1,0);
     SGM::Graph *pGLoop=graph.CreateMinCycle(GE);
-    EXPECT_EQ(pGLoop->GetVertices().size(),6);
-    EXPECT_EQ(pGLoop->GetEdges().size(),6);
+    EXPECT_EQ(pGLoop->GetVertices().size(),6U);
+    EXPECT_EQ(pGLoop->GetEdges().size(),6U);
 
     delete pGLoop;
     }
@@ -1722,7 +1722,7 @@ TEST(math_check, triangulate_polygon_with_holes)
     std::vector<std::vector<unsigned>> aaPolygons = {{0,1,2}, {3}};
     std::vector<unsigned> aTriangles,aAdjacencies;
     SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies);
-    EXPECT_EQ(aTriangles.size(),9);
+    EXPECT_EQ(aTriangles.size(),9U);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -1972,7 +1972,7 @@ TEST(math_check, intersect_line_and_revolve)
     double dTolerance = SGM_MIN_TOL;
     SGM::IntersectCurveAndSurface(rResult, Line1ID, RevolveID, aPoints1, aTypes1, dTolerance);
 
-    EXPECT_EQ(aPoints1.size(),2);
+    EXPECT_EQ(aPoints1.size(),2U);
 
     for (SGM::IntersectionType IType : aTypes1 )
         EXPECT_EQ(IType,SGM::PointType);
@@ -1995,7 +1995,7 @@ TEST(math_check, intersect_line_and_revolve)
     std::vector<SGM::IntersectionType> aTypes2;
     SGM::IntersectCurveAndSurface(rResult, Line2ID, RevolveID, aPoints2, aTypes2, dTolerance);
 
-    EXPECT_EQ(aPoints2.size(),2);
+    EXPECT_EQ(aPoints2.size(),2U);
 
     for (SGM::IntersectionType IType : aTypes2)
         EXPECT_EQ(IType,SGM::PointType);
@@ -2041,7 +2041,7 @@ TEST(math_check, intersect_nubcurve_and_plane)
     double dTolerance = SGM_MIN_TOL;
     SGM::IntersectCurveAndSurface(rResult, CurveID, PlaneID, aPoints, aTypes, dTolerance);
 
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
     SGM::Point3D Expected(1, 1.5, 0);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0], Expected, dTolerance));
 
@@ -2078,7 +2078,7 @@ TEST(math_check, ray_fire)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,Origin,Axis,BodyID,aPoints,aTypes,SGM_MIN_TOL);
 
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-1,0,1),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(1,0,1),SGM_ZERO));
     EXPECT_EQ(aTypes[0],SGM::IntersectionType::PointType);
@@ -2313,7 +2313,7 @@ TEST(math_check, line_nub_curve_intersect)
     SGM::IntersectCurves(rResult,LineID1,NUBCurveID,aHits1,aTypes1);
 
     size_t nHits1=aHits1.size();
-    EXPECT_EQ(nHits1,2);
+    EXPECT_EQ(nHits1,2U);
     for(Index1=0;Index1<nHits1;++Index1)
         {
         SGM::Point3D const &Pos=aHits1[Index1];
@@ -2334,7 +2334,7 @@ TEST(math_check, line_nub_curve_intersect)
     SGM::IntersectCurves(rResult,LineID2,NUBCurveID,aHits2,aTypes2);
 
     size_t nHits2=aHits2.size();
-    EXPECT_EQ(nHits2,1);
+    EXPECT_EQ(nHits2,1U);
     EXPECT_EQ(aTypes2[0],SGM::IntersectionType::TangentType);
     for(Index1=0;Index1<nHits2;++Index1)
         {
@@ -2694,7 +2694,7 @@ TEST(math_check, line_torus_intersection)
     
     SGM::Curve Line1=SGM::CreateLine(rResult,Origin,Axis);
     size_t nHits=SGM::IntersectCurveAndSurface(rResult,Line1,TorusID,aPoints,aTypes,SGM_MIN_TOL);
-    EXPECT_EQ(nHits,4);
+    EXPECT_EQ(nHits,4U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D( 2.0,0.0,0.0),SGM_ZERO));
@@ -2705,7 +2705,7 @@ TEST(math_check, line_torus_intersection)
     Origin.m_y=2.0;
     SGM::Curve Line2=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line2,TorusID,aPoints,aTypes,SGM_MIN_TOL);
-    EXPECT_EQ(nHits,3);
+    EXPECT_EQ(nHits,3U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D(3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO));
@@ -2715,7 +2715,7 @@ TEST(math_check, line_torus_intersection)
     Origin.m_y=3.0;
     SGM::Curve Line3=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line3,TorusID,aPoints,aTypes,SGM_MIN_TOL);
-    EXPECT_EQ(nHits,2);
+    EXPECT_EQ(nHits,2U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
     EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
 
@@ -2724,7 +2724,7 @@ TEST(math_check, line_torus_intersection)
     Origin.m_y=4.0;
     SGM::Curve Line4=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line4,TorusID,aPoints,aTypes,SGM_MIN_TOL);
-    EXPECT_EQ(nHits,1);
+    EXPECT_EQ(nHits,1U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_ZERO));
 
     aPoints.clear();
@@ -2732,7 +2732,7 @@ TEST(math_check, line_torus_intersection)
     Origin.m_y=5.0;
     SGM::Curve Line5=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line5,TorusID,aPoints,aTypes,SGM_MIN_TOL);
-    EXPECT_EQ(nHits,0);
+    EXPECT_EQ(nHits,0U);
 
     SGM::DeleteEntity(rResult,TorusID);
     SGM::DeleteEntity(rResult,Line1);
@@ -3019,7 +3019,7 @@ TEST(math_check, test_complex_props)
 
     size_t nGenus=SGM::FindGenus(rResult,ComplexID);
 
-    EXPECT_EQ(nGenus,0);
+    EXPECT_EQ(nGenus,0U);
     
     bool bLinear=SGM::IsLinear(rResult,ComplexID);
 
@@ -3084,40 +3084,40 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,SGM::Thing(),sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,SGM::Thing(),sComplexes);
-        EXPECT_EQ(sComplexes.size(),1);
+        EXPECT_EQ(sComplexes.size(),1U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
         VolumeID=*(sVolumes.begin());
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,SGM::Thing(),sFaces);
-        EXPECT_EQ(sFaces.size(),6);
+        EXPECT_EQ(sFaces.size(),6U);
         FaceID=*(sFaces.begin());
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,SGM::Thing(),sEdges);
-        EXPECT_EQ(sEdges.size(),12);
+        EXPECT_EQ(sEdges.size(),12U);
         EdgeID=*(sEdges.begin());
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,SGM::Thing(),sVertex);
-        EXPECT_EQ(sVertex.size(),8);
+        EXPECT_EQ(sVertex.size(),8U);
         VertexID=*(sVertex.begin());
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,SGM::Thing(),sCurves);
-        EXPECT_EQ(sCurves.size(),12);
+        EXPECT_EQ(sCurves.size(),12U);
         CurveID=*(sCurves.begin());
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,SGM::Thing(),sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),6);
+        EXPECT_EQ(sSurfaces.size(),6U);
         SurfaceID=*(sSurfaces.begin());
     }
 
@@ -3126,35 +3126,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,BlockID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,BlockID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,BlockID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,BlockID,sFaces);
-        EXPECT_EQ(sFaces.size(),6);
+        EXPECT_EQ(sFaces.size(),6U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,BlockID,sEdges);
-        EXPECT_EQ(sEdges.size(),12);
+        EXPECT_EQ(sEdges.size(),12U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,BlockID,sVertex);
-        EXPECT_EQ(sVertex.size(),8);
+        EXPECT_EQ(sVertex.size(),8U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,BlockID,sCurves);
-        EXPECT_EQ(sCurves.size(),12);
+        EXPECT_EQ(sCurves.size(),12U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,BlockID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),6);
+        EXPECT_EQ(sSurfaces.size(),6U);
     }
 
     // Volume level checks.
@@ -3162,35 +3162,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,VolumeID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,VolumeID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,VolumeID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,VolumeID,sFaces);
-        EXPECT_EQ(sFaces.size(),6);
+        EXPECT_EQ(sFaces.size(),6U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,VolumeID,sEdges);
-        EXPECT_EQ(sEdges.size(),12);
+        EXPECT_EQ(sEdges.size(),12U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,VolumeID,sVertex);
-        EXPECT_EQ(sVertex.size(),8);
+        EXPECT_EQ(sVertex.size(),8U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,VolumeID,sCurves);
-        EXPECT_EQ(sCurves.size(),12);
+        EXPECT_EQ(sCurves.size(),12U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,VolumeID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),6);
+        EXPECT_EQ(sSurfaces.size(),6U);
     }
 
     // Face level checks.
@@ -3198,35 +3198,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,FaceID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,FaceID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,FaceID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,FaceID,sFaces);
-        EXPECT_EQ(sFaces.size(),1);
+        EXPECT_EQ(sFaces.size(),1U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,FaceID,sEdges);
-        EXPECT_EQ(sEdges.size(),4);
+        EXPECT_EQ(sEdges.size(),4U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,FaceID,sVertex);
-        EXPECT_EQ(sVertex.size(),4);
+        EXPECT_EQ(sVertex.size(),4U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,FaceID,sCurves);
-        EXPECT_EQ(sCurves.size(),4);
+        EXPECT_EQ(sCurves.size(),4U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,FaceID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),1);
+        EXPECT_EQ(sSurfaces.size(),1U);
     }
 
     // Surface level checks.
@@ -3234,35 +3234,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,SurfaceID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,SurfaceID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,SurfaceID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,SurfaceID,sFaces);
-        EXPECT_EQ(sFaces.size(),1);
+        EXPECT_EQ(sFaces.size(),1U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,SurfaceID,sEdges);
-        EXPECT_EQ(sEdges.size(),4);
+        EXPECT_EQ(sEdges.size(),4U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,SurfaceID,sVertex);
-        EXPECT_EQ(sVertex.size(),4);
+        EXPECT_EQ(sVertex.size(),4U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,SurfaceID,sCurves);
-        EXPECT_EQ(sCurves.size(),4);
+        EXPECT_EQ(sCurves.size(),4U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,SurfaceID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),1);
+        EXPECT_EQ(sSurfaces.size(),1U);
     }
 
     // Edge level checks.
@@ -3270,35 +3270,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,EdgeID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,EdgeID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,EdgeID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,EdgeID,sFaces);
-        EXPECT_EQ(sFaces.size(),2);
+        EXPECT_EQ(sFaces.size(),2U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,EdgeID,sEdges);
-        EXPECT_EQ(sEdges.size(),1);
+        EXPECT_EQ(sEdges.size(),1U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,EdgeID,sVertex);
-        EXPECT_EQ(sVertex.size(),2);
+        EXPECT_EQ(sVertex.size(),2U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,EdgeID,sCurves);
-        EXPECT_EQ(sCurves.size(),1);
+        EXPECT_EQ(sCurves.size(),1U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,EdgeID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),2);
+        EXPECT_EQ(sSurfaces.size(),2U);
     }
 
     // Curve level checks.
@@ -3306,35 +3306,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,CurveID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,CurveID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,CurveID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,CurveID,sFaces);
-        EXPECT_EQ(sFaces.size(),2);
+        EXPECT_EQ(sFaces.size(),2U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,CurveID,sEdges);
-        EXPECT_EQ(sEdges.size(),1);
+        EXPECT_EQ(sEdges.size(),1U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,CurveID,sVertex);
-        EXPECT_EQ(sVertex.size(),2);
+        EXPECT_EQ(sVertex.size(),2U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,CurveID,sCurves);
-        EXPECT_EQ(sCurves.size(),1);
+        EXPECT_EQ(sCurves.size(),1U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,CurveID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),2);
+        EXPECT_EQ(sSurfaces.size(),2U);
     }
 
     // Vertex level checks.
@@ -3342,35 +3342,35 @@ TEST(math_check, topology_traversal)
     {
         std::set<SGM::Body> sBodies;
         SGM::FindBodies(rResult,VertexID,sBodies);
-        EXPECT_EQ(sBodies.size(),1);
+        EXPECT_EQ(sBodies.size(),1U);
 
         std::set<SGM::Complex> sComplexes;
         SGM::FindComplexes(rResult,VertexID,sComplexes);
-        EXPECT_EQ(sComplexes.size(),0);
+        EXPECT_EQ(sComplexes.size(),0U);
 
         std::set<SGM::Volume> sVolumes;
         SGM::FindVolumes(rResult,VertexID,sVolumes);
-        EXPECT_EQ(sVolumes.size(),1);
+        EXPECT_EQ(sVolumes.size(),1U);
 
         std::set<SGM::Face> sFaces;
         SGM::FindFaces(rResult,VertexID,sFaces);
-        EXPECT_EQ(sFaces.size(),3);
+        EXPECT_EQ(sFaces.size(),3U);
 
         std::set<SGM::Edge> sEdges;
         SGM::FindEdges(rResult,VertexID,sEdges);
-        EXPECT_EQ(sEdges.size(),3);
+        EXPECT_EQ(sEdges.size(),3U);
 
         std::set<SGM::Vertex> sVertex;
         SGM::FindVertices(rResult,VertexID,sVertex);
-        EXPECT_EQ(sVertex.size(),1);
+        EXPECT_EQ(sVertex.size(),1U);
 
         std::set<SGM::Curve> sCurves;
         SGM::FindCurves(rResult,VertexID,sCurves);
-        EXPECT_EQ(sCurves.size(),3);
+        EXPECT_EQ(sCurves.size(),3U);
 
         std::set<SGM::Surface> sSurfaces;
         SGM::FindSurfaces(rResult,VertexID,sSurfaces);
-        EXPECT_EQ(sSurfaces.size(),3);
+        EXPECT_EQ(sSurfaces.size(),3U);
     }
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -3605,31 +3605,31 @@ TEST(math_check, circle_merge)
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
     SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
-    EXPECT_EQ(aHits.size(),1);
+    EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
     SGM::ImprintPoint(rResult,Pos0,EdgeID);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3659,31 +3659,31 @@ TEST(math_check, ellipse_merge)
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
     SGM::RayFire(rResult,SGM::Point3D(0,-2,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
-    EXPECT_EQ(aHits.size(),1);
+    EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
     SGM::ImprintPoint(rResult,Pos0,EdgeID);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos1,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(1,0,0));
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3702,12 +3702,12 @@ TEST(math_check, line_merge)
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3733,30 +3733,30 @@ TEST(math_check, parabola_merge)
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
     SGM::RayFire(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
-    EXPECT_EQ(aHits.size(),1);
+    EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(0,0,0);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(0,1,0),SGM::UnitVector3D(1,0,0));
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,1,0));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3779,30 +3779,30 @@ TEST(math_check, hyperbola_merge)
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
     SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
-    EXPECT_EQ(aHits.size(),1);
+    EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0);
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGM::Curve LineID=SGM::CreateLine(rResult,SGM::Point3D(2,0,0),SGM::UnitVector3D(0,1,0));
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGM::Curve LineID1=SGM::CreateLine(rResult,SGM::Point3D(1,0,0),SGM::UnitVector3D(0,1,0));
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID1,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3825,12 +3825,12 @@ TEST(math_check,hermite_merge)
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3863,12 +3863,12 @@ TEST(math_check, NUB_curve_merge)
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 
@@ -3918,12 +3918,12 @@ TEST(math_check, DISABLED_NURB_curve_merge)
     SGM::Vertex VertexID=SGM::ImprintPoint(rResult,Pos0,EdgeID);
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,VertexID,sEdges);
-    EXPECT_EQ(sEdges.size(),2);
+    EXPECT_EQ(sEdges.size(),2U);
     SGM::Body BodyID=SGM::CreateWireBody(rResult,sEdges);
     SGM::Merge(rResult,BodyID);
     sEdges.clear();
     SGM::FindEdges(rResult,BodyID,sEdges);
-    EXPECT_EQ(sEdges.size(),1);
+    EXPECT_EQ(sEdges.size(),1U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3943,7 +3943,7 @@ TEST(math_check, ray_fire_thing)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,SGM::Point3D(-1,-1,-1),SGM::UnitVector3D(1,1,1),SGM::Thing(),aPoints,aTypes);
 
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3959,7 +3959,7 @@ TEST(math_check, intersect_coincident_lines)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,LineID1,LineID2,aPoints,aTypes);
 
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3975,7 +3975,7 @@ TEST(math_check, intersect_line_cone)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurveAndSurface(rResult,LineID,SurfID,aPoints,aTypes);
 
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -3991,7 +3991,7 @@ TEST(math_check, intersect_circle_circle)
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurves(rResult,CircleID1,CircleID2,aPoints,aTypes);
 
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -4006,7 +4006,7 @@ TEST(math_check, intersect_sphere_cylinder)
     std::vector<SGM::Curve> aCurves;
     SGM::IntersectSurfaces(rResult,SphereID,PlaneID,aCurves);
 
-    EXPECT_EQ(aCurves.size(),2);
+    EXPECT_EQ(aCurves.size(),2U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -4034,12 +4034,12 @@ TEST(math_check, complex_tests)
     SGM::Complex SegmentsID=SGM::CreateSegments(rResult,aPoints,aSegments);
 
     std::vector<SGM::Complex> aComponents;
-    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),3);
+    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),3U);
     SGM::ReduceToUsedPoints(rResult,SegmentsID);
     aComponents.clear();
-    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),2);
+    EXPECT_EQ(SGM::FindComponents(rResult,SegmentsID,aComponents),2U);
     aComponents.clear();
-    EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),2);
+    EXPECT_EQ(SGM::FindPlanarParts(rResult,SegmentsID,aComponents,SGM_MIN_TOL),2U);
     SGM::FindBoundary(rResult,ComplexID);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
@@ -4202,9 +4202,9 @@ TEST(math_check, intersection_tests)
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,SGM::Point3D(0.9,0.9,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),0);
+    EXPECT_EQ(aPoints.size(),0U);
     SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),SphereID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
 
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0));
     EXPECT_TRUE(SGM::NearEqual(SGM::FindEdgeLength(rResult,EdgeID),1,SGM_MIN_TOL,false));
@@ -4223,7 +4223,7 @@ TEST(math_check, intersection_tests)
     aPoints.clear();
     aTypes.clear();
     SGM::IntersectCurves(rResult,LineID2,CurveID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),1);
+    EXPECT_EQ(aPoints.size(),1U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -4240,9 +4240,9 @@ TEST(math_check, volume_ray_fire)
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),VolumeID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
     SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),SGM::Thing(),aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),2);
+    EXPECT_EQ(aPoints.size(),2U);
     
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -4471,7 +4471,7 @@ TEST(math_check, line_cone_intersect_empty)
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     SGM::IntersectCurveAndSurface(rResult,LineID,ConeID,aPoints,aTypes);
-    EXPECT_EQ(aPoints.size(),0);
+    EXPECT_EQ(aPoints.size(),0U);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -4502,7 +4502,7 @@ TEST(math_check, line_nub_surface_intersect)
     std::vector<SGM::IntersectionType> aTypes2;
     size_t nHits2=SGM::IntersectCurveAndSurface(rResult,LineID2,NUBSurfaceID,aHits2,aTypes2);
 
-    EXPECT_EQ(nHits2,2);
+    EXPECT_EQ(nHits2,2U);
     for(auto const & Pos : aHits2)
         {
         SGM::Point3D CPos1,CPos2;
@@ -4541,7 +4541,7 @@ TEST(math_check, line_nurb_surface_intersect)
     std::vector<SGM::IntersectionType> aTypes2;
     size_t nHits2=SGM::IntersectCurveAndSurface(rResult,LineID2,NUBSurfaceID,aHits2,aTypes2);
 
-    EXPECT_EQ(nHits2,2);
+    EXPECT_EQ(nHits2,2U);
     for(SGM::Point3D const &Pos : aHits2)
         {
         SGM::Point3D CPos1,CPos2;

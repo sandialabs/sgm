@@ -36,7 +36,7 @@ TEST(topology_check, find_adjacent_faces )
     auto iter=sFaces.begin();
     SGM::Face FaceID1=*iter;
     std::vector<SGM::Face> aFaces;
-    EXPECT_EQ(SGM::FindAdjacentFaces(rResult,FaceID1,aFaces),5);
+    EXPECT_EQ(SGM::FindAdjacentFaces(rResult,FaceID1,aFaces),5U);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -54,7 +54,7 @@ TEST(topology_check, find_common_edges )
     ++iter;
     SGM::Face FaceID2=*iter;
     std::vector<SGM::Edge> aEdges;
-    EXPECT_EQ(SGM::FindCommonEdgesFromFaces(rResult,FaceID1,FaceID2,aEdges),1);
+    EXPECT_EQ(SGM::FindCommonEdgesFromFaces(rResult,FaceID1,FaceID2,aEdges),1U);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
