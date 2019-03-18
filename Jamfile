@@ -41,8 +41,8 @@ project votd
     $(sierra-warnings)
     <include>$(sgm-root)/Source/Public_Headers
     <include>$(sgm-root)/Source/Headers
-    <define>SGM_MODELS_DIRECTORY
-    <define>SGM_MODELS_OUO_DIRECTORY
+    <define>SGM_MODELS_DIRECTORY="\\\"$(sgm-root)/../sgm-models/\\\""
+    <define>SGM_MODELS_OUO_DIRECTORY="\\\"$(sgm-root)/../sgm-models-ouo/\\\""
   : usage-requirements
     <include>$(sgm-root)/Source/Public_Headers
   : build-dir $(sgm-builddir)
@@ -52,7 +52,7 @@ project votd
 # must be installed for both developers and end users. Unless they need to
 # be visible to end users, unittests should not be placed here.
 local installed-end-user-files = 
-  sgm_tests
+  sgm
   ;
 #
 # This variable should contain the applications and associated files that will
@@ -60,7 +60,7 @@ local installed-end-user-files =
 # Note that if the --install-developer-files option is passed to bjam these will also
 # be installed for end-users. (This is only intended to be used for testing.)
 local installed-developer-files = 
-    sgm_tests
+    sgm
     ;
 
 #
@@ -127,7 +127,7 @@ install install-user-lib
   ;
 
 explicit install-exe-targets ;
-alias install-exe-targets : sgm_tests ;
+alias install-exe-targets :  ;
 
 #
 # SECTION 4: Build configuration
@@ -155,21 +155,6 @@ exe sgm_viewer
     [ glob $(sgm-root)/Source/ModelViewer/*.cpp ]
   :
     <tag>@sierra-exec-tag
-    <target-os>linux,<toolset>gcc,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>gcc,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>clang,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>clang,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>intel,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>intel,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>pgi,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>pgi,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>vacpp,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>vacpp,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>cray,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>cray,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>nvidia,<runtime-link>shared:<linkflags>"-Xlinker --export-dynamic"
-    <target-os>linux,<toolset>nvidia,<runtime-link>shared:<linkflags>"-Xlinker --export-dynamic"
-    <target-os>darwin,<runtime-link>shared:<linkflags>"-Wl,-dynamic"
   ;
 
 exe sgm_tests
@@ -178,20 +163,5 @@ exe sgm_tests
     /tpl/gtest//gtest
     sgm
   : <tag>@sierra-exec-tag
-    <target-os>linux,<toolset>gcc,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>gcc,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>clang,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>clang,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>intel,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>intel,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>pgi,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>pgi,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>vacpp,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>vacpp,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>cray,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>cray,<runtime-link>shared:<linkflags>-Wl,-E
-    <target-os>linux,<toolset>nvidia,<runtime-link>shared:<linkflags>"-Xlinker --export-dynamic"
-    <target-os>linux,<toolset>nvidia,<runtime-link>shared:<linkflags>"-Xlinker --export-dynamic"
-    <target-os>darwin,<runtime-link>shared:<linkflags>"-Wl,-dynamic"
-  ;
+ ;
 
