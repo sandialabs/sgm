@@ -93,7 +93,7 @@ TEST(delete_check, delete_edge_with_shared_vertex)
     SGM::Vertex Vertex3 = SGM::CreateVertex(rResult, SGM::Point3D(30,0,0));
 
     SGM::Edge Edge1=SGM::CreateEdge(rResult, CurveID, Vertex1, Vertex2);
-    SGM::Edge Edge2=SGM::CreateEdge(rResult, CurveID, Vertex2, Vertex3);
+    /* SGM::Edge Edge2= */ SGM::CreateEdge(rResult, CurveID, Vertex2, Vertex3);
 
     EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult,SGM::Thing()));
 
@@ -115,7 +115,7 @@ TEST(delete_check, delete_surface_with_shared_curve)
     SGM::Curve NUBID=SGM::CreateNUBCurveWithControlPointsAndKnots(rResult,aControlPoints,aKnots);
 
     SGM::Surface ExtrudeID1 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
-    SGM::Surface ExtrudeID2 = SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
+    /* SGM::Surface ExtrudeID2 = */ SGM::CreateExtrudeSurface(rResult, SGM::UnitVector3D(0,0,1), NUBID);
 
     SGM::DeleteEntity(rResult, ExtrudeID1);
     EXPECT_EQ(rResult.GetResult(), SGM::ResultTypeOK);

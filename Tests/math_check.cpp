@@ -168,7 +168,7 @@ TEST(math_check, ruled_surface)
 
     std::vector<SGM::Edge> aEdges;
     std::vector<SGM::EdgeSideType> aTypes;
-    SGM::Body BodyID = SGM::CreateSheetBody(rResult, NUBID, aEdges, aTypes);
+    /*SGM::Body BodyID = */SGM::CreateSheetBody(rResult, NUBID, aEdges, aTypes);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -1078,8 +1078,8 @@ TEST(math_check, revolve_hermite)
     SGM::GetHermiteCurveData(rResult,CurveID,aPoints,aVectors,aParams);
 
     SGM::UnitVector3D Axis(0,0,1);
-    SGM::Surface SurfID=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
-    SGM::Surface SurfIDCopy=SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    /*SGM::Surface SurfID=*/SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
+    /*SGM::Surface SurfIDCopy=*/SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
 }
 
 TEST(math_check, closest_point)

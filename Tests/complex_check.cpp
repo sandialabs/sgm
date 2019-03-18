@@ -200,7 +200,7 @@ TEST(complex_check, DISABLED_merge_complex)
     auto aTrianglesComplex1 = SGM::GetComplexTriangles(rResult, ComplexID1);
     EXPECT_EQ(aTrianglesComplex1.size(),6);
     std::cout << "aTrianglesComplex1" << std::endl;
-    for (int i = 0; i < aTrianglesComplex1.size(); i += 3)
+    for (size_t i = 0; i < aTrianglesComplex1.size(); i += 3)
         std::cout << aTrianglesComplex1[i] << ' ' << aTrianglesComplex1[i+1] << ' ' << aTrianglesComplex1[i+2] << std::endl;
 
     EXPECT_EQ(aTrianglesComplex1, std::vector<unsigned>({3,0,2,3,1,0}));
@@ -216,7 +216,7 @@ TEST(complex_check, DISABLED_merge_complex)
     auto aTrianglesComplex2 = SGM::GetComplexTriangles(rResult, ComplexID2);
     EXPECT_EQ(aTrianglesComplex2.size(),6);
     std::cout << "aTrianglesComplex2" << std::endl;
-    for (int i = 0; i < aTrianglesComplex2.size(); i += 3)
+    for (size_t i = 0; i < aTrianglesComplex2.size(); i += 3)
         std::cout << aTrianglesComplex2[i] << ' ' << aTrianglesComplex2[i+1] << ' ' << aTrianglesComplex2[i+2] << std::endl;
 
     EXPECT_EQ(aTrianglesComplex2, std::vector<unsigned>({3,0,2,3,1,0}));
@@ -235,7 +235,7 @@ TEST(complex_check, DISABLED_merge_complex)
     auto aTrianglesComplex3 = SGM::GetComplexTriangles(rResult, ComplexID3);
     EXPECT_EQ(aTrianglesComplex2.size(),12);
     std::cout << "aTrianglesComplex3" << std::endl;
-    for (int i = 0; i < aTrianglesComplex3.size(); i += 3)
+    for (size_t i = 0; i < aTrianglesComplex3.size(); i += 3)
         std::cout << aTrianglesComplex3[i] << ' ' << aTrianglesComplex3[i+1] << ' ' << aTrianglesComplex3[i+2] << std::endl;
 
 

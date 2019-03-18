@@ -210,7 +210,7 @@ void NURBsurface::Evaluate(SGM::Point2D const &uv,
     // Convert to three-dimensional points.
 
     SGM::Vector3D values[3][3],Aders[3][3];
-    double wders[3][3];
+    double wders[3][3] = {0};
 
     Aders[0][0].m_x=SKL[0][0].m_x;
     Aders[0][0].m_y=SKL[0][0].m_y;

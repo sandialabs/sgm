@@ -129,8 +129,8 @@ void FindClosestPointOnVolume(SGM::Result        &rResult,
                               bool                bBoundary)
     {
     std::set<face *,EntityCompare> const &sFaces=pVolume->GetFaces();
-    SGM::Point3D TestPos;
-    entity *TestEnt;
+    SGM::Point3D TestPos(0,0,0);
+    entity *TestEnt = nullptr;
     double dMinDist=std::numeric_limits<double>::max();
     for(auto pFace : sFaces)
         {
@@ -164,8 +164,8 @@ void FindClosestPointOnBody(SGM::Result        &rResult,
                             bool                bBoundary)
     {
     std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
-    SGM::Point3D TestPos;
-    entity *TestEnt;
+    SGM::Point3D TestPos(0,0,0);
+    entity *TestEnt = nullptr;
     double dMinDist=std::numeric_limits<double>::max();
     for(auto pVolume : sVolumes)
         {
@@ -188,8 +188,8 @@ void FindClosestPointOnThing(SGM::Result        &rResult,
                              bool                bBoundary)
     {
     std::unordered_set<body *> sBodies=pThing->GetBodies(true);
-    SGM::Point3D TestPos;
-    entity *TestEnt;
+    SGM::Point3D TestPos(0,0,0);
+    entity *TestEnt = nullptr;
     double dMinDist=std::numeric_limits<double>::max();
     for(auto pBody : sBodies)
         {
