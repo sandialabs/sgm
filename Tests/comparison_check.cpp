@@ -114,12 +114,12 @@ TEST(comparison_check, face_comparison)
     bool bIgnoreScale = false;
 	std::vector<SGM::Face> aSimilar;
 	SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
-    EXPECT_EQ(aSimilar.size(), 2);
+    EXPECT_EQ(aSimilar.size(), 2U);
 
     aSimilar.clear();
     bIgnoreScale = true;
     SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
-    EXPECT_EQ(aSimilar.size(), 3);
+    EXPECT_EQ(aSimilar.size(), 3U);
 
 	SGMTesting::ReleaseTestThing(pThing);
 }

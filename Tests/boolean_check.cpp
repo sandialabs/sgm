@@ -445,15 +445,15 @@ TEST(boolean_check, Peninsula_Peninsula_Disks)
 
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,KeepID,sFaces);
-    EXPECT_EQ(sFaces.size(), 2);
+    EXPECT_EQ(sFaces.size(), 2U);
 
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,KeepID,sEdges);
-    EXPECT_EQ(sEdges.size(), 3);
+    EXPECT_EQ(sEdges.size(), 3U);
 
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(rResult,KeepID,sVertices);
-    EXPECT_EQ(sVertices.size(), 2);
+    EXPECT_EQ(sVertices.size(), 2U);
     
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
@@ -478,15 +478,15 @@ TEST(boolean_check, Splitter_Island_Disks)
     
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,KeepID,sFaces);
-    EXPECT_EQ(sFaces.size(), 3);
+    EXPECT_EQ(sFaces.size(), 3U);
     
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,KeepID,sEdges);
-    EXPECT_EQ(sEdges.size(), 4);
+    EXPECT_EQ(sEdges.size(), 4U);
     
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(rResult,KeepID,sVertices);
-    EXPECT_EQ(sVertices.size(), 2);
+    EXPECT_EQ(sVertices.size(), 2U);
     
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;

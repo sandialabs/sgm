@@ -26,7 +26,7 @@ TEST(area_check, area_of_sphere_single_face)
     SGM::Body UnitSphereID = SGM::CreateSphere(rResult, Center, dRadius);
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,UnitSphereID,sFaces);
-    EXPECT_EQ(1, sFaces.size());
+    EXPECT_EQ(1U, sFaces.size());
 
     SGM::Face FaceID=*(sFaces.begin());
     double dArea=SGM::FindArea(rResult,FaceID);

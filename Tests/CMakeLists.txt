@@ -28,8 +28,8 @@ set(SGM_VIEWER_GTEST_SOURCES ${SGM_GTEST_SOURCES} PARENT_SCOPE)
 #
 find_package(Threads)
 
-add_executable(sgm_tests ${SGM_GTEST_SOURCES})
-target_link_libraries(sgm_tests gtest_main gtest SGM)
+add_executable(sgm_tests ${SGM_GTEST_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/tests_main.cpp)
+target_link_libraries(sgm_tests gtest SGM)
 
 add_executable(sgm_model_tests "Model Tests/models_check.cpp" test_utility.cpp)
 target_link_libraries(sgm_model_tests gtest_main gtest SGM)
