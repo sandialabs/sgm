@@ -237,7 +237,7 @@ SGM_EXPORT void CreateOctahedron(double                    dCircumscribedRadius,
                                  UnitVector3D        const &XAxis,
                                  std::vector<Point3D>      &aPoints3D,
                                  std::vector<unsigned int> &aTriangles,
-                                 int                        nRefine=0);
+                                 size_t                     nRefine=0);
 
 
 } // namespace SGM

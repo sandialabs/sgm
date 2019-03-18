@@ -730,17 +730,17 @@ bool RunInternalTest(SGM::Result &rResult,
 
         SP1.SetTolerance(0.01);
 
-        bool bTest=SP1<SP2;
-        bTest=SP2<SP1;
-        bTest=SP1<SP1;
-        bTest=(SP1==SP2);
+//        bool bTest=SP1<SP2;
+//        bTest=SP2<SP1;
+//        bTest=SP1<SP1;
+//        bTest=(SP1==SP2);
 
         SP1.Origin();
         SP1.Normal();
         SP1.Tolerance();
 
         SGM::Vector3D Offset;
-        bTest=SP1.Parallel(SP2,Offset,0.001);
+        //bTest=SP1.Parallel(SP2,Offset,0.001);
 
         bAnswer=true;
         }
@@ -932,7 +932,7 @@ bool RunInternalTest(SGM::Result &rResult,
 
         // every consecutive pair in the sorted list should be close
         bool bExpectedAlmostEqual = true;
-        for (int i = 0; i+1 < aIndexOrdered3.size(); i+=2)
+        for (size_t i = 0; i+1 < aIndexOrdered3.size(); i+=2)
             {
             bExpectedAlmostEqual = bExpectedAlmostEqual &&
                 SGMInternal::AlmostEqual(aPoints3[aIndexOrdered3[i]],

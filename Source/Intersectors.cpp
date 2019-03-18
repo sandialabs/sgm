@@ -1359,7 +1359,7 @@ size_t IntersectCoplanarLineAndParabola(SGM::Point3D                 const &Line
     {
     std::vector<SGM::Point3D> aPoints2;
     std::vector<SGM::IntersectionType> aTypes2;
-    SGM::UnitVector3D ParabolaNormal = ParabolaXAxis*ParabolaYAxis;
+    //SGM::UnitVector3D ParabolaNormal = ParabolaXAxis*ParabolaYAxis;
     SGM::Point3D const &Center=ParabolaCenter;
 
     double a=ParabolaA;
@@ -2124,8 +2124,8 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     SGM::Transform3D Inverse;
     Trans.Inverse(Inverse);
 
-    SGM::Point3D TOrigin=Inverse*Origin;
-    SGM::UnitVector3D TAxis=Inverse*Axis;
+    //SGM::Point3D TOrigin=Inverse*Origin;
+    //SGM::UnitVector3D TAxis=Inverse*Axis;
 
     double dMajorRadius=pTorus->m_dMajorRadius;
     double dMinorRadius=pTorus->m_dMinorRadius;
@@ -4554,7 +4554,7 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
         }
     else if(dAngle<SGM_MIN_TOL)                                             // Major radius circles.
         {
-        SGM::Point3D Center=TorusCenter-PlaneNormal*((TorusCenter-PlaneOrigin)%PlaneNormal);
+        //SGM::Point3D Center=TorusCenter-PlaneNormal*((TorusCenter-PlaneOrigin)%PlaneNormal);
         if(fabs(dPlaneDistFromCenter)<pTorus->m_dMinorRadius+dTolerance)
             {
             SGM::Point3D Center2=TorusCenter-PlaneNormal*dPlaneDistFromCenter;
@@ -4780,12 +4780,12 @@ size_t IntersectCylinders(SGM::Result                &rResult,
             SGM::Point3D H2=aPoints3[0];
 
             SGM::UnitVector3D XAxis1=H1-Center;
-            SGM::UnitVector3D Normal1=Up*Axis1;
+            //SGM::UnitVector3D Normal1=Up*Axis1;
             double dA1=H1.Distance(Center);
             aCurves.push_back(new ellipse(rResult,Center,XAxis1,Up,dA1,dRadius1));
 
             SGM::UnitVector3D XAxis2=H2-Center;
-            SGM::UnitVector3D Normal2=Up*Axis2;
+            //SGM::UnitVector3D Normal2=Up*Axis2;
             double dA2=H2.Distance(Center);
             aCurves.push_back(new ellipse(rResult,Center,XAxis2,Up,dA2,dRadius2));
             }
@@ -8643,13 +8643,11 @@ void FindCurvePlaneIntersections(curve                                  const *p
 
                 if (aParabolaPoints.size() == 2)
                 {
-//                    std::cout << "FindCurvePlaneIntersections: aParabolaPoints.size() == 2" << std::endl;
                     if ( (aParabolaTypes[0] == SGM::IntersectionType::CoincidentType) &&
                          (aParabolaTypes[1] == SGM::IntersectionType::CoincidentType) )
                     {
                         // if parabola and plane are coincident
                         Pos = CPos;
-//                        std::cout << "FindCurvePlaneIntersections: Pos = CPos = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                     }
                     else
                     {
@@ -8658,20 +8656,16 @@ void FindCurvePlaneIntersections(curve                                  const *p
                         if (dDS1 <= dDS2)
                             {
                             Pos = aParabolaPoints[0];
-//                            std::cout << "FindCurvePlaneIntersections: Pos = aParabolaPoints[0] = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                             }
                         else
                             {
                             Pos = aParabolaPoints[1];
-//                            std::cout << "FindCurvePlaneIntersections: Pos = aParabolaPoints[1] = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                             }
                     }
                 }
                 else if (aParabolaPoints.size() == 1)
                 {
-//                    std::cout << "FindCurvePlaneIntersections: aParabolaPoints.size() == 1" << std::endl;
                     Pos = aParabolaPoints[0];
-//                    std::cout << "FindCurvePlaneIntersections: Pos = aParabolaPoints[0] = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                 }
                 else if (aParabolaPoints.empty())
                 {
@@ -8693,43 +8687,29 @@ void FindCurvePlaneIntersections(curve                                  const *p
             {
                 // parabola is a line so fall back to Newton
                 SGM::UnitVector3D uLocalTan(LocalTan);
-//                std::cout << "FindCurvePlaneIntersections: LocalTan = " << LocalTan.m_x << ' ' << LocalTan.m_y << ' ' << LocalTan.m_z << std::endl;
-//                std::cout << "FindCurvePlaneIntersections: uLocalTan = " << uLocalTan.m_x << ' ' << uLocalTan.m_y << ' ' << uLocalTan.m_z << std::endl;
-//                std::cout << "FindCurvePlaneIntersections: PlaneNorm = " << PlaneNorm.m_x << ' ' << PlaneNorm.m_y << ' ' << PlaneNorm.m_z << std::endl;
-//                std::cout << "FindCurvePlaneIntersections: PlaneOrigin = " << PlaneOrigin.m_x << ' ' << PlaneOrigin.m_y << ' ' << PlaneOrigin.m_z << std::endl;
-//                std::cout << "FindCurvePlaneIntersections: CPos = " << CPos.m_x << ' ' << CPos.m_y << ' ' << CPos.m_z << std::endl;
                 double dDenominator = PlaneNorm % uLocalTan;
-//                std::cout << "FindCurvePlaneIntersections: PlaneNorm % uLocalTan = " << dDenominator << std::endl;
                 bool bNewtonSuccess = false;
                 if (dDenominator > SGM_ZERO)
                     {
-                    double numer = PlaneNorm % (PlaneOrigin - CPos);
-//                    std::cout << "FindCurvePlaneIntersections: PlaneNorm % (PlaneOrigin - CPos) = " << numer << std::endl;
                     double dT = (PlaneNorm % (PlaneOrigin - CPos)) / (PlaneNorm % uLocalTan);
-//                    std::cout << "FindCurvePlaneIntersections: dT = " << dT << std::endl;
+
                     SGM::Point3D Temp = CPos + dT * uLocalTan;
                     double dDist=Temp.Distance(CPos);
-//                    std::cout << "FindCurvePlaneIntersections: dDist = " << dDist << std::endl;
-//                    std::cout << "FindCurvePlaneIntersections: dOldDist = " << dOldDist << std::endl;
                     if (dDist < dOldDist)
                         {
                         Pos=Temp;
-//                        std::cout << "FindCurvePlaneIntersections: Pos=Temp = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                         bNewtonSuccess = true;
                         }
                     }
                 if (!bNewtonSuccess)
                     {
                     // Newton led us astray.  Just project to plane.
-//                    std::cout << "FindCurvePlaneIntersections: NewtonFailed = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                     double Dist=(CPos-PlaneOrigin)%PlaneNorm;
                     Pos=CPos - Dist*PlaneNorm;
-//                    std::cout << "FindCurvePlaneIntersections: Pos=CPos - Dist*PlaneNorm = " << Pos.m_x << ' ' << Pos.m_y << ' ' << Pos.m_z << std::endl;
                     }
             }
             double dDist=Pos.Distance(CPos);
 #endif
-//            std::cout << "FindCurvePlaneIntersections: dDist = " << dDist << std::endl;
             if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
             {
                 if (dDist<dTolerance)
@@ -8971,8 +8951,7 @@ size_t IntersectHyperbolaAndPlane(hyperbola                     const *pHyperbol
         {
         if(fabs((pHyperbola->m_Center-PlaneOrigin)%PlaneNormal)<dTolerance)
             {
-            SGM::UnitVector3D XAxis=pHyperbola->m_Normal.Orthogonal();
-
+            //SGM::UnitVector3D XAxis=pHyperbola->m_Normal.Orthogonal();
             SGM::Point3D Pos;
             pHyperbola->Evaluate(pHyperbola->GetDomain().m_dMin, &Pos);
             aPoints.push_back(Pos);

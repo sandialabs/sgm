@@ -115,7 +115,7 @@ double DistanceSquaredTriangle3D(Point3D const &A,
     if(SGM_ZERO_SQUARED<RawNorm.MagnitudeSquared())
         {
         UnitVector3D Norm(RawNorm);
-        Point3D ProjectedP=P-Norm*(Norm%(A-P));
+        //Point3D ProjectedP=P-Norm*(Norm%(A-P));
         UnitVector3D X=C-A;
         UnitVector3D Y=Norm*X;
         Point2D a(0,0),b(X%(B-A),Y%(B-A)),c(X%(C-A),Y%(C-A)),p(X%(P-A),Y%(P-A));
@@ -948,8 +948,8 @@ void CreateIcosahedron(double                     dRadius,
                        SGM::UnitVector3D   const &ZAxis,
                        SGM::UnitVector3D   const &XAxis,
                        std::vector<SGM::Point3D> &aPoints3D,
-                       std::vector<unsigned> &aTriangles,
-                       int                        nRefine)
+                       std::vector<unsigned>     &aTriangles,
+                       size_t                     nRefine)
     {
     // (  0,+-1,+-G)
     // (+-1,+-G,  0) * dScale
@@ -1007,7 +1007,7 @@ void CreateIcosahedron(double                     dRadius,
     SGM::Transform3D Trans2;
     Trans1.Inverse(Trans2);
     SGM::Transform3D Trans3(XAxis,YAxis,ZAxis,CenterVec);
-    SGM::Transform3D Trans4=Trans2*Trans3;
+    //SGM::Transform3D Trans4=Trans2*Trans3;
 
     size_t nPoints=aPoints3D.size();
     size_t Index1;
@@ -1027,8 +1027,8 @@ void CreateOctahedron(double                     dRadius,
                       SGM::UnitVector3D   const &ZAxis,
                       SGM::UnitVector3D   const &XAxis,
                       std::vector<SGM::Point3D> &aPoints3D,
-                      std::vector<unsigned> &aTriangles,
-                      int                        nRefine)
+                      std::vector<unsigned>     &aTriangles,
+                      size_t                     nRefine)
     {
     aPoints3D={{       0,        0,  dRadius},
                { dRadius,        0,        0},

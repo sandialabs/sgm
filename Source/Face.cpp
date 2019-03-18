@@ -356,7 +356,7 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else // The vertex case.
         {
-        SGM::Point2D Buv=m_pSurface->Inverse(CPos);
+        //SGM::Point2D Buv=m_pSurface->Inverse(CPos);
         auto pVertex=(vertex *)pEntity;
         SGM::Point3D const &VertexPos=pVertex->GetPoint();
         if(pPos)
