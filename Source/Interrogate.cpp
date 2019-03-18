@@ -8,6 +8,7 @@
 #include "Curve.h"
 #include "Interrogate.h"
 #include "Intersectors.h"
+#include "Signature.h"
 
 namespace SGMInternal
 {
@@ -143,5 +144,30 @@ bool PointInEntity(SGM::Result        &rResult,
 
     return bAnswer;
     }
+
+void FindSimilarFaces(SGM::Result         &rResult,
+                      face          const *pFace,
+                      std::vector<face *> &aSimilar,
+                      bool                 bIgnoreScale)
+{
+    Signature signature = pFace->GetSignature(rResult);
+
+    std::set<face *, EntityCompare> sFaces;
+    FindFaces(rResult, rResult.GetThing(), sFaces);
+
+    for (auto pEnt : sFaces)
+    {
+        if (pEnt != pFace)
+        {
+            Signature sigCheck = pEnt->GetSignature(rResult);
+            if (signature.Matches(sigCheck, bIgnoreScale))
+            {
+                aSimilar.emplace_back(pEnt);
+            }
+        }
+    }
+
+
+}
 
 } // End SGMInternal namespace

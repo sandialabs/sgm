@@ -222,7 +222,7 @@ SGM_EXPORT void CreateIcosahedron(double                     dCircumscribedRadiu
                                   UnitVector3D        const &XAxis,
                                   std::vector<Point3D>      &aPoints3D,
                                   std::vector<unsigned int> &aTriangles,
-                                  int                        nRefine=0);
+                                  size_t                     nRefine=0);
 
 // Creaete the triangles and vertices of a octahedron, with the given
 // center and circumscribed radius.  In addition a vertex of the octahedron

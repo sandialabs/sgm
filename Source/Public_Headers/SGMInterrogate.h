@@ -73,6 +73,11 @@ namespace SGM
                                     std::vector<std::vector<SGM::Volume> > &aaVolumeIDs,
                                     double                                  dTolerance=SGM_MIN_TOL);
 
+    SGM_EXPORT void FindSimilarFaces(SGM::Result            &rResult,
+                                     SGM::Face        const &FaceID,
+                                     std::vector<SGM::Face> &aSimilar,
+                                     bool                   bIgnoreScale);
+
     } // End of SGM namespace
 
 #endif // SGM_QUERY_H

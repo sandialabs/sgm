@@ -25,6 +25,11 @@ void PointsInVolumes(SGM::Result                         &rResult,
                      std::vector<std::vector<volume *> > &aaVolumes,
                      double                               dTolerance=SGM_MIN_TOL);
 
+void FindSimilarFaces(SGM::Result         &rResult,
+                      face          const *pFace,
+                      std::vector<face *> &aSimilar,
+                      bool                 bIgnoreScale);
+
 } // End of SGMInternal namespace
 
 

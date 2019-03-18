@@ -4579,6 +4579,24 @@ TEST(math_check, line_extrude_intersect_conicident)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+TEST(math_check, local_coordinates)
+{
+    SGM::Point3D Origin(1, 1, 1);
+    SGM::UnitVector3D Vec1(1, 0, 0);
+    SGM::UnitVector3D Vec2(1, 1, 0);
+    SGM::UnitVector3D Vec3(1, 0, 1);
+    SGM::Point3D Pos(2, 2, 2);
+    SGM::Point3D Local = SGM::FindLocalCoordinates(Origin, Vec1, Vec2, Vec3, Pos, false);
+
+    SGM::Point3D TestPos = Origin + Local.m_x*Vec1 + Local.m_y*Vec2 + Local.m_z*Vec3;
+    EXPECT_TRUE(SGM::NearEqual(TestPos, Pos, SGM_ZERO));
+
+    Pos = {1, 1, 1};
+    Local = SGM::FindLocalCoordinates(Origin, Vec1, Vec2, Vec3, Pos, false);
+
+    EXPECT_TRUE(SGM::NearEqual(Local, SGM::Point3D(0, 0, 0), SGM_ZERO));
+}
+
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
