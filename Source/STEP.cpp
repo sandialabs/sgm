@@ -134,7 +134,7 @@ void WriteNUBCurve(FILE                    *pFile,
     std::string sMultiplicity="(";
     for(Index1=0;Index1<nUniqueKnots;++Index1)
         {
-        char Arg[10];
+        char Arg[100];
         snprintf(Arg,sizeof(Arg),"%ld",(long)(aMultiplicity[Index1]));
         sMultiplicity+=Arg;
         if(Index1<nUniqueKnots-1)
