@@ -50,6 +50,6 @@ namespace SGM {
         return bi1->m_Bound.IntersectingVolume(*m_bound) < bi2->m_Bound.IntersectingVolume(*m_bound);
     }
 
-}; // namespace SGM
+} // namespace SGM
 
 #endif // SGM_BOUNDED_INL

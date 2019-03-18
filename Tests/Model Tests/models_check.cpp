@@ -18,7 +18,7 @@
 #include <dirent.h>
 #endif
 
-#include "test_utility.h"
+#include "../test_utility.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push

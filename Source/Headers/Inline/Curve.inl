@@ -44,10 +44,10 @@ namespace SGMInternal {
     }
 
     inline void curve::AddEdge(edge *pEdge)
-    { m_sEdges.insert(pEdge); };
+    { m_sEdges.insert(pEdge); }
 
     inline void curve::RemoveEdge(edge *pEdge)
-    { m_sEdges.erase(pEdge); };
+    { m_sEdges.erase(pEdge); }
 
     inline std::set<edge *, EntityCompare> const &curve::GetEdges() const
     { return m_sEdges; }

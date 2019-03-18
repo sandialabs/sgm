@@ -58,7 +58,7 @@ template<class Iter_t, typename Compare = compare_iter<Iter_t> >
 void sort(Iter_t first, Iter_t last, Compare comp = Compare())
     {
     detail::intro_sort(first, last, comp);
-    };
+    }
 
 /// Indirect sort.
 //  Sort a vector of iterators to the elements, and after, move the elements
@@ -72,7 +72,7 @@ void indirect_sort(Iter_t first, Iter_t last, Compare comp = Compare())
     detail::create_index(first, last, v_iter);
     detail::intro_sort(v_iter.begin(), v_iter.end(), compare_ptr(comp));
     detail::sort_index(first, v_iter);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -86,7 +86,7 @@ void parallel_sort(Iter_t first, Iter_t last)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::select_block_indirect(first, last, Compare());
-    };
+    }
 
 ///  A non stable parallel sort, default comparison, specifying number of threads.
 template<class Iter_t>
@@ -94,14 +94,14 @@ void parallel_sort(Iter_t first, Iter_t last, uint32_t nthread)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::select_block_indirect(first, last, Compare(), nthread);
-    };
+    }
 
 /// A non stable parallel sort, given a comparison, specifying number of threads.
 template<class Iter_t, class Compare>
 void parallel_sort(Iter_t first, Iter_t last, Compare comp, uint32_t nthread)
     {
     detail::select_block_indirect(first, last, comp, nthread);
-    };
+    }
 
 /// A non stable parallel sort, given a comparison, default number of threads.
 template<class Iter_t, class Compare,
@@ -109,7 +109,7 @@ template<class Iter_t, class Compare,
 void parallel_sort(Iter_t first, Iter_t last, Compare comp)
     {
     detail::select_block_indirect(first, last, comp);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -122,7 +122,7 @@ template<class Iter_t, class Compare = compare_iter<Iter_t> >
 void stable_sort(Iter_t first, Iter_t last, Compare comp = Compare())
     {
     detail::spin_sort<Iter_t, Compare>(first, last, comp);
-    };
+    }
 
 /// Stable single threaded indirect sort.
 //  Sort a vector of iterators to the elements, and after, move the elements
@@ -139,7 +139,7 @@ void indirect_stable_sort(Iter_t first, Iter_t last,
     detail::spin_sort<iter_ptr, compare_ptr>
         (v_iter.begin(), v_iter.end(), compare_ptr(comp));
     detail::sort_index(first, v_iter);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -153,7 +153,7 @@ void parallel_stable_sort(Iter_t first, Iter_t last)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::parallel_stable_sort<Iter_t, Compare>(first, last);
-    };
+    }
 
 /// Parallel stable sort, default comparison, specifying number of threads.
 template<class Iter_t>
@@ -161,7 +161,7 @@ void parallel_stable_sort(Iter_t first, Iter_t last, uint32_t nthread)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::parallel_stable_sort<Iter_t, Compare>(first, last, nthread);
-    };
+    }
 
 /// Parallel stable sort, given comparison, default number of threads.
 template<class Iter_t, class Compare,
@@ -169,7 +169,7 @@ template<class Iter_t, class Compare,
 void parallel_stable_sort(Iter_t first, Iter_t last, Compare comp)
     {
     detail::parallel_stable_sort<Iter_t, Compare>(first, last, comp);
-    };
+    }
 
 /// Parallel_stable_sort, given comparison, specifying number of threads.
 template<class Iter_t, typename Compare>
@@ -178,7 +178,7 @@ void parallel_stable_sort(Iter_t first, Iter_t last, Compare comp,
     {
     detail::parallel_stable_sort<Iter_t, Compare>(first, last, comp,
                                                   nthread);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -192,7 +192,7 @@ void sample_sort(Iter_t first, Iter_t last)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::sample_sort<Iter_t, Compare>(first, last);
-    };
+    }
 
 /// Parallel stable sort using sample algorithm, specifying number of threads.
 template<class Iter_t>
@@ -200,7 +200,7 @@ void sample_sort(Iter_t first, Iter_t last, uint32_t nthread)
     {
     typedef compare_iter<Iter_t> Compare;
     detail::sample_sort<Iter_t, Compare>(first, last, nthread);
-    };
+    }
 
 /// Parallel stable sort using sample algorithm, given comparison, default number of threads.
 template<class Iter_t, class Compare,
@@ -208,15 +208,15 @@ template<class Iter_t, class Compare,
 void sample_sort(Iter_t first, Iter_t last, Compare comp)
     {
     detail::sample_sort<Iter_t, Compare>(first, last, comp);
-    };
+    }
 
 /// Parallel stable sort using sample algorithm, given comparison, specifying number of threads.
 template<class Iter_t, class Compare>
 void sample_sort(Iter_t first, Iter_t last, Compare comp, uint32_t nthread)
     {
     detail::sample_sort<Iter_t, Compare>(first, last, comp, nthread);
-    };
+    }
 
-};   // End namespace SGMInternal
+}   // End namespace SGMInternal
 
 #endif

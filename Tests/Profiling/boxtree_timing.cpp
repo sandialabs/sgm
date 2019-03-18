@@ -73,7 +73,7 @@ void boxtree_timing()
     const void * ptr = nullptr;
     SGM_TIMER_START("Insert nodes:");
     std::cout << "    Insert: " << nodes << " nodes " << std::flush;
-    for (int i = 0; i<nodes; i++) {
+    for (size_t i = 0; i<nodes; i++) {
         double xmin = dist_origin();
         double ymin = dist_origin();
         double zmin = dist_origin();

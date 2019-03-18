@@ -1,12 +1,17 @@
+#if defined(SGM_MULTITHREADED) && !(defined(_MSC_VER) && (_MSC_VER < 1910))
+
+#include <atomic>
+#include <chrono>
+#include <deque>
 #include <vector>
-#include <gtest/gtest.h>
 #include <cmath>
+#include <gtest/gtest.h>
 
 #include "SGMThreadPool.h"
 
 TEST(threadpool_check, future_lambda)
 {
-    ThreadPool pool(4);
+    SGM::ThreadPool pool(4);
     std::vector< std::future<int> > results;
 
     for(int i = 0; i < 8; ++i)
@@ -31,10 +36,10 @@ TEST(threadpool_check, future_lambda)
 
 // example of calling a function that is sometimes expensive when initial is a multiple of an odd number
 #define ODD_NUMBER 5
-long long sum_function(long long initial, size_t count, const std::atomic_bool& run)
+uint64_t sum_function(uint64_t initial, uint64_t count, const std::atomic_bool& run)
 {
-    long long number = 0;
-    long long i = initial;
+    uint64_t number = 0;
+    uint64_t i = initial;
         if (i % ODD_NUMBER == 0)
             { // do expensive operation for certain multiples of i
             while(i <= count && run)
@@ -54,13 +59,13 @@ long long sum_function(long long initial, size_t count, const std::atomic_bool& 
 
 TEST(threadpool_check, future_timeout_function)
 {
-    ThreadPool pool(4);
-    std::vector< std::future<long long> > results;
+    SGM::ThreadPool pool(4);
+    std::vector<std::future<uint64_t>> results;
     std::deque<std::atomic_bool> run_flags;
 
-    size_t count = 2000000000;
+    uint64_t count = 2000000000;
 
-    for (long long x = 1; x <= ODD_NUMBER*6; ++x) // make this many calls
+    for (uint64_t x = 1; x <= ODD_NUMBER*6; ++x) // make this many calls
         {
         // an atomic run flag for each task
         run_flags.emplace_back(true);
@@ -89,23 +94,4 @@ TEST(threadpool_check, future_timeout_function)
     std::cout << std::endl;
 }
 
-TEST(threadpool_check,child_process_timeout)
-{
-    int num_children;
-    pid_t child_pid, wpid;
-    int status = 0;
-
-    // parent code (before child processes start)
-    for (int id=0; id<num_children; id++) {
-        if ((child_pid = fork()) == 0) {
-            //child code
-            exit(0);
-            }
-        }
-
-    while ((wpid = wait(&status)) > 0); // the parent waits for all the child processes
-
-// continue parent process code
-
-
-}
+#endif // SGM_MULTITHREADED
