@@ -833,7 +833,7 @@ void ReadTorus(SGM::Result              &rResult,
             dMajor=GetDouble(aArgs[Index1+1]);
             }
         }
-    SGM::UnitVector3D YAxis=Normal*XAxis;
+    //SGM::UnitVector3D YAxis=Normal*XAxis;
     bool bApple=true;
     torus *pTorus=new torus(rResult,Center,Normal,dMinor,dMajor,bApple,&XAxis);
     mEntityMap[GetID(aArgs[0])].pEntity=pTorus;

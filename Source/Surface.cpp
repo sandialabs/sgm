@@ -29,8 +29,8 @@ surface::surface(SGM::Result &rResult,SGM::EntityType nType) :
 surface::surface(SGM::Result &rResult, surface const &other) :
         entity(rResult, other),
         m_sFaces(other.m_sFaces),
-        m_Domain(other.m_Domain),
         m_SurfaceType(other.m_SurfaceType),
+        m_Domain(other.m_Domain),
         m_bClosedU(other.m_bClosedU),
         m_bClosedV(other.m_bClosedV),
         m_bSingularLowU(other.m_bSingularLowU),

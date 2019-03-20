@@ -20,10 +20,10 @@ inline void surface::TransformBox(SGM::Result &, SGM::Transform3D const &)
     { /* do nothing for default max extent box */ }
 
 inline void surface::AddFace(face *pFace)
-    { m_sFaces.insert(pFace); };
+    { m_sFaces.insert(pFace); }
 
 inline void surface::RemoveFace(face *pFace)
-    { m_sFaces.erase(pFace); };
+    { m_sFaces.erase(pFace); }
 
 inline std::set<face *,EntityCompare> const &surface::GetFaces() const
     {return m_sFaces;}

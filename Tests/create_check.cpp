@@ -35,7 +35,7 @@ TEST(create_check, cover_wire_body)
 
     std::set<SGM::Edge> sOutEdges;
     SGM::FindWireEdges(rResult,WireID,sOutEdges);
-    EXPECT_EQ(sOutEdges.size(),4);
+    EXPECT_EQ(sOutEdges.size(),4U);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 
@@ -293,7 +293,7 @@ TEST(create_check, create_attributes)
 
     std::set<SGM::Attribute> sAttributes;
     SGM::GetAttributes(rResult,BodyID,sAttributes);
-    EXPECT_EQ(sAttributes.size(),5);
+    EXPECT_EQ(sAttributes.size(),5U);
 
     SGM::SaveSGM(rResult,"CoverageTest.sgm",SGM::Thing(),SGM::TranslatorOptions());
 

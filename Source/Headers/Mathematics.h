@@ -86,9 +86,9 @@ namespace SGMInternal
     //  if P3 is not in the triangle.
     //
     //      P0-------------P2
-    //        \
-    //         \          P3
-    //          \
+    //        .
+    //         .          P3
+    //          .
     //           P1
     //
     //double PizzaSliceArea(SGM::Point3D const &Pos0,

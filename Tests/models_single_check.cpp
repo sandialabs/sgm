@@ -472,8 +472,11 @@ TEST(models_single_check, import_check_brick10)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
+
     const char* file_name = "brick10.stp";
     expect_import_success(file_name, rResult);
+    SGMTesting::ReleaseTestThing(pThing);
+
 }
 
 TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
@@ -514,8 +517,8 @@ TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_inters
     const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];
 
     EXPECT_NEAR(dot_prod, 0.0, tolerance);
-    EXPECT_EQ(1, aPointsEdgePlane.size());
-    EXPECT_EQ(1, aPointsFaceLine.size());
+    EXPECT_EQ(1U, aPointsEdgePlane.size());
+    EXPECT_EQ(1U, aPointsFaceLine.size());
     EXPECT_NEAR(aPointsEdgePlane[0].m_x, aPointsFaceLine[0].m_x, tolerance);
     EXPECT_NEAR(aPointsEdgePlane[0].m_x, aPointsFaceLine[0].m_x, tolerance);
 }
@@ -543,7 +546,7 @@ TEST(intersection_check, intersect_line_and_extrude)
 
     SGM::CreatePoints(rResult,aPoints);
 
-    EXPECT_EQ(3, aPoints.size());
+    EXPECT_EQ(3U, aPoints.size());
 
     SGMTesting::ReleaseTestThing(pThing); 
 }
@@ -559,7 +562,7 @@ TEST(assembly_check, import_one_level_assembly)
     std::set<SGM::Body> sBodies;
     bool bTopLevel = true;
     SGM::FindBodies(rResult, SGM::Thing(), sBodies, bTopLevel);
-    EXPECT_EQ(sBodies.size(), 2);
+    EXPECT_EQ(sBodies.size(), 2U);
 
     SGM::Interval3D BodyBoxes[2];
     BodyBoxes[0] = SGM::Interval3D(0.0,2.5,0.0,1.7,0.0,0.5);
@@ -587,7 +590,7 @@ TEST(assembly_check, import_two_level_assembly)
     std::set<SGM::Body> sBodies;
     bool bTopLevel = true;
     SGM::FindBodies(rResult, SGM::Thing(), sBodies, bTopLevel);
-    EXPECT_EQ(sBodies.size(), 4);
+    EXPECT_EQ(sBodies.size(), 4U);
 
     SGM::Interval3D BodyBoxes[4];
     BodyBoxes[0] = SGM::Interval3D(0.0,0.5,0.0,0.25,1.5,1.9);

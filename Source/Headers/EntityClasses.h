@@ -14,6 +14,7 @@
 #include "SGMTranslators.h"
 
 #include "OrderPoints.h"
+#include "Signature.h"
 
 namespace SGMInternal
 {
@@ -988,6 +989,10 @@ class face : public topology
 
         bool IsTopLevel() const override;
 
+        Signature  const & GetSignature(SGM::Result &rResult) const;
+        void GetSignaturePoints(SGM::Result               &rResult,
+                                std::vector<SGM::Point3D> &aPoints) const;
+
         // Find methods
 
         SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;\
@@ -1044,6 +1049,7 @@ class face : public topology
         mutable std::vector<SGM::Point2D>                   m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType>          m_mSeamType;
         mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
+        mutable Signature                                   m_Signature;
     };
 
 class edge : public topology
@@ -1167,6 +1173,9 @@ class edge : public topology
         bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
 
         void ClearFacets(SGM::Result &rResult);
+
+        void GetSignaturePoints(SGM::Result               &rResult,
+                                std::vector<SGM::Point3D> &aPoints) const;
 
     private:
 

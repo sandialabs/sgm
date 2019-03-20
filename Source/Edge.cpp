@@ -455,4 +455,15 @@ void edge::SnapToDomain(double &t,double dTol) const
             }
         }
     }
+
+void edge::GetSignaturePoints(SGM::Result               &,//rResult,
+                              std::vector<SGM::Point3D> &aPoints) const
+{
+    SGM::Interval1D domain = GetDomain();
+    SGM::Point3D Pos;
+    m_pCurve->Evaluate(domain.MidPoint(), &Pos);
+    aPoints.emplace_back(Pos);
 }
+
+}
+

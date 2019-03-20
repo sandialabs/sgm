@@ -1023,20 +1023,21 @@ Point3D FindLocalCoordinates(Point3D      const &Origin,
         aMat.push_back(Y.m_x);
         aMat.push_back(Z.m_x);
         aMat.push_back(Vec.m_x);
-        aMat.clear();
         aaMat.push_back(aMat);
+        aMat.clear();
         aMat.push_back(X.m_y);
         aMat.push_back(Y.m_y);
         aMat.push_back(Z.m_y);
         aMat.push_back(Vec.m_y);
-        aMat.clear();
         aaMat.push_back(aMat);
+        aMat.clear();
         aMat.push_back(X.m_z);
         aMat.push_back(Y.m_z);
         aMat.push_back(Z.m_z);
         aMat.push_back(Vec.m_z);
         aaMat.push_back(aMat);
-        LinearSolve(aaMat);
+        if (LinearSolve(aaMat) == false)
+            throw std::runtime_error("Vectors are not independent in FindLocalCoordinates");
         return Point3D(aaMat[0].back(),aaMat[1].back(),aaMat[2].back());
         }
     }

@@ -319,8 +319,6 @@ inline void ParseBSplineSurface(char const *pLineAfterTag,
     // Uknots, VKnots,
     // Weights
 
-    int nUDegree, nVDegree;
-
     std::vector<size_t> &aIDs = STEPData.m_aIDs;
     std::vector<double> &aDoubles = STEPData.m_aDoubles;
     std::vector<int> &aInts = STEPData.m_aInts;
@@ -334,12 +332,10 @@ inline void ParseBSplineSurface(char const *pLineAfterTag,
     const char *pos = SkipChar(pLineAfterTag, '(');
 
     pos = AppendInt(pos, aInts); // UDegree
-    nUDegree = aInts.back();
-    assert(nUDegree > 0);
+    assert(aInts.back() > 0);
 
     pos = FindInt(pos, aInts);   // VDegree
-    nVDegree = aInts.back();
-    assert(nVDegree > 0);
+    assert(aInts.back() > 0);
 
     size_t nRows, nColumns;
 

@@ -52,6 +52,9 @@ if(BUILD_MULTITHREADED)
   find_package(OpenMP)
 endif()
 
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
 
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
 

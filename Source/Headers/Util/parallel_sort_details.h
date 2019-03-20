@@ -89,7 +89,7 @@ template <typename T>
 inline T atomic_read(std::atomic<T> &at_var)
     {
     return std::atomic_load_explicit<T>(&at_var, std::memory_order_acquire);
-    };
+    }
 
 /// Add a number to an atomic variable, using a memory model
 template <typename T, typename T2>
@@ -97,7 +97,7 @@ inline T atomic_add(std::atomic<T> &at_var, T2 num)
     {
     static_assert(std::is_integral<T2>::value, "Bad parameter");
     return std::atomic_fetch_add_explicit<T>(&at_var, (T) num, std::memory_order_acq_rel);
-    };
+    }
 
 /// Subtract from an atomic variable using memory model
 template <typename T, typename T2>
@@ -106,7 +106,7 @@ inline T atomic_sub(std::atomic<T> &at_var, T2 num)
     static_assert(std::is_integral<T2>::value, "Bad parameter");
     return std::atomic_fetch_sub_explicit<T>(&at_var, (T) num,
                                              std::memory_order_acq_rel);
-    };
+    }
 
 /// Write a value in an atomic variable using memory model
 template <typename T, typename T2>
@@ -114,7 +114,7 @@ inline void atomic_write(std::atomic<T> &at_var, T2 num)
     {
     static_assert(std::is_integral<T2>::value, "Bad parameter");
     std::atomic_store_explicit<T>(&at_var, (T) num, std::memory_order_release);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -163,7 +163,7 @@ inline void construct(Value_t *ptr, Args &&... args)
     {
     (::new(static_cast<void *> (ptr))
         Value_t(std::forward<Args>(args)...));
-    };
+    }
 
 /// destroy an object in the memory specified by ptr
 /// @param ptr : pointer to the object to destroy
@@ -171,7 +171,7 @@ template <class Value_t>
 inline void destroy_object(Value_t *ptr)
     {
     ptr->~Value_t();
-    };
+    }
 
 /// initialize a range of objects with the object val moving across them
 ///
@@ -190,7 +190,7 @@ void init(Iter_t first, Iter_t last, typename std::iterator_traits<Iter_t>::valu
         construct(&(*(it2++)), std::move(*(it1++)));
         };
     val = std::move(*(last - 1));
-    };
+    }
 
 /// Move initialized objects
 /// @param it_dest : iterator to the final place of the objects
@@ -201,7 +201,7 @@ Iter2_t init_move(Iter2_t it_dest, Iter1_t first, Iter1_t last)
     {
     while (first != last) *(it_dest++) = std::move(*(first++));
     return it_dest;
-    };
+    }
 
 /// Move objects to uninitialized memory
 ///
@@ -218,7 +218,7 @@ Value_t *uninit_move(Value_t *ptr, Iter_t first, Iter_t last)
         ::new(static_cast<void *> (ptr++)) Value_t(std::move(*(first++)));
         };
     return ptr;
-    };
+    }
 
 /// destroy the elements between first and last
 /// @param first : iterator to the first element to destroy
@@ -231,7 +231,7 @@ void destroy(Iter_t first, const Iter_t last)
         {
         (&(*(first++)))->~value_t();
         };
-    };
+    }
 
 /// Merge two contiguous buffers pointed by buf1 and buf2, and put
 ///        in the buffer pointed by buf_out
@@ -256,7 +256,7 @@ Iter2_t full_merge(Iter1_t buf1, const Iter1_t end_buf1, Iter1_t buf2,
         };
     return (buf1 == end_buf1) ? init_move(buf_out, buf2, end_buf2)
                               : init_move(buf_out, buf1, end_buf1);
-    };
+    }
 
 /// Merge two contiguous buffers pointed by first1 and first2, and put
 ///        in the uninitialized buffer pointed by it_out
@@ -281,7 +281,7 @@ Value_t *uninit_full_merge(Iter_t first1, const Iter_t last1, Iter_t first2,
         };
     return (first1 == last1) ? uninit_move(it_out, first2, last2)
                              : uninit_move(it_out, first1, last1);
-    };
+    }
 
 /// Merge two buffers. The first buffer is in a separate memory.
 ///          The second buffer have a empty space before buf2 of the same size
@@ -309,7 +309,7 @@ Iter2_t half_merge(Iter1_t buf1, const Iter1_t end_buf1, Iter2_t buf2,
                                                 : std::move(*(buf2++));
         };
     return (buf2 == end_buf2) ? init_move(buf_out, buf1, end_buf1) : end_buf2;
-    };
+    }
 
 /// merge two uncontiguous buffers, placing the results in the buffers
 ///          Use an auxiliary buffer pointed by aux
@@ -357,7 +357,7 @@ bool in_place_merge_uncontiguous(Iter1_t src1, const Iter1_t end_src1,
         half_merge(aux, end_aux, src2, end_src2, src2_first, comp);
         };
     return false;
-    };
+    }
 
 /// merge two contiguous buffers,using an auxiliary buffer pointed
 ///          by buf. The results are in src1 and src2
@@ -389,7 +389,7 @@ bool in_place_merge(Iter1_t src1, Iter1_t src2, Iter1_t end_src2, Iter2_t buf,
     init_move(buf, src1, end_src1);
     half_merge(buf, buf + nx, src2, end_src2, src1, comp);
     return false;
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -454,7 +454,7 @@ template <class Iter_t>
 range<Iter_t> concat(const range<Iter_t> &it1, const range<Iter_t> &it2)
     {
     return range<Iter_t>(it1.first, it2.last);
-    };
+    }
 
 /// Move initialized objects from the range src to dest
 /// @param dest : range where move the objects
@@ -474,7 +474,7 @@ inline range<Iter2_t> init_move(const range<Iter2_t> &dest,
         };
     init_move(dest.first, src.first, src.last);
     return range<Iter2_t>(dest.first, dest.first + src.size());
-    };
+    }
 
 /// Move uninitialized objects from the range src creating them in  dest
 ///
@@ -495,7 +495,7 @@ inline range<Iter2_t> uninit_move(const range<Iter2_t> &dest,
         };
     uninit_move(dest.first, src.first, src.last);
     return range<Iter2_t>(dest.first, dest.first + src.size());
-    };
+    }
 
 /// Destroy a range of objects
 /// @param rng : range to destroy
@@ -503,7 +503,7 @@ template <class Iter_t>
 inline void destroy(range<Iter_t> rng)
     {
     destroy(rng.first, rng.last);
-    };
+    }
 
 /// Initialize a range of objects with the object val moving across them
 /// @param rng : range of elements not initialized
@@ -516,7 +516,7 @@ init(const range<Iter_t> &rng,
     {
     init(rng.first, rng.last, val);
     return rng;
-    };
+    }
 
 /// Indicate if two ranges have a possible merge
 /// @param src1 : first range
@@ -533,7 +533,7 @@ inline bool is_mergeable(const range<Iter1_t> &src1,
     static_assert(std::is_same<type1, type2>::value, "Incompatible iterators\n");
 
     return comp(*(src2.front()), *(src1.back()));
-    };
+    }
 
 /// Merge two contiguous ranges src1 and src2, and put the result in
 ///        the range dest, returning the range merged
@@ -559,7 +559,7 @@ inline range<Iter3_t> full_merge(const range<Iter3_t> &dest,
     return range<Iter3_t>(dest.first,
                           full_merge(src1.first, src1.last, src2.first,
                                      src2.last, dest.first, comp));
-    };
+    }
 
 /// Merge two contiguous uninitialized ranges src1 and src2, and create
 ///        and move the result in the uninitialized range dest, returning the
@@ -586,7 +586,7 @@ inline range<Value_t *> uninit_full_merge(const range<Value_t *> &dest,
     return range<Value_t *>(
         dest.first, uninit_full_merge(src1.first, src1.last, src2.first,
                                       src2.last, dest.first, comp));
-    };
+    }
 
 /// Merge two initialized buffers. The first buffer is in a separate
 ///          memory
@@ -610,7 +610,7 @@ inline range<Iter2_t> half_merge(const range<Iter2_t> &dest,
     return range<Iter2_t>(dest.first,
                           half_merge(src1.first, src1.last, src2.first,
                                      src2.last, dest.first, comp));
-    };
+    }
 
 /// Merge two non contiguous ranges src1, src2, using the range
 ///          aux as auxiliary memory. The results are in the original ranges
@@ -634,7 +634,7 @@ inline bool in_place_merge_uncontiguous(const range<Iter1_t> &src1,
 
     return in_place_merge_uncontiguous(src1.first, src1.last, src2.first,
                                        src2.last, aux.first, comp);
-    };
+    }
 
 /// Merge two contiguous ranges ( src1, src2) using buf as
 ///          auxiliary memory. The results are in the same ranges
@@ -653,7 +653,7 @@ inline range<Iter1_t> in_place_merge(const range<Iter1_t> &src1, const range<Ite
 
     in_place_merge(src1.first, src1.last, src2.last, buf.first, comp);
     return concat(src1, src2);
-    };
+    }
 
 /// Merge two ranges, as part of a merge the ranges in a list. This
 ///         function reduce the number of movements compared with inplace_merge
@@ -688,7 +688,7 @@ void merge_flow(range<Iter1_t> rng1, range<Iter2_t> rbuf,
         util::init_move(rbuf, rng2);
     else
         util::half_merge(rbuf, rx2, rbx, cmp);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -711,7 +711,7 @@ inline bool less_range(Iter_t it1, uint32_t pos1, Iter_t it2, uint32_t pos2,
     {
     return (comp(*it1, *it2)) ? true : (pos2 < pos1) ? false
                                                      : not(comp(*it2, *it1));
-    };
+    }
 
 /// Merge four ranges
 ///
@@ -828,7 +828,7 @@ range<Iter1_t> full_merge4(const range<Iter1_t> &rdest,
         return concat(raux1, full_merge(raux2, vrange_input[pos[1]],
                                         vrange_input[pos[0]], comp));
         };
-    };
+    }
 
 /// Merge four ranges and put the result in uninitialized memory
 ///
@@ -945,7 +945,7 @@ range<Value_t *> uninit_full_merge4(const range<Value_t *> &dest,
                       uninit_full_merge(raux2, vrange_input[pos[1]],
                                         vrange_input[pos[0]], comp));
         };
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -990,7 +990,7 @@ void merge_level4 (range<Iter1_t> dest,
         pos_ini += nelem;
         nrange -= nelem;
         };
-    };
+    }
 
 /// Merge the ranges moving the objects and constructing them in
 ///        uninitialized memory, in the vector v_input
@@ -1031,7 +1031,7 @@ void uninit_merge_level4 (range<Value_t *> dest,
         pos_ini += nelem;
         nrange -= nelem;
         };
-    };
+    }
 
 /// Merge the ranges in the vector v_input using the merge_level4
 ///        function. The v_output vector is used as auxiliary memory in the
@@ -1079,7 +1079,7 @@ range<Iter2_t> merge_vector4 (range<Iter1_t> range_input, range<Iter2_t> range_o
             };
         };
     return (sw) ? v_output[0] : init_move (range_output, v_input[0]);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1211,7 +1211,7 @@ public:
         {
         std::lock_guard<spinlock_t> guard(spl);
         v_t.emplace_back(std::forward<Args>(args)...);
-        };
+        }
 
     /// If it exists, move the last element to P, and delete it
     /// @param P : reference to a variable where move the element
@@ -1224,12 +1224,12 @@ public:
         P = std::move(v_t.back());
         v_t.pop_back();
         return true;
-        };
+        }
 
     }; // end class stack_cnc
 
 ///////////////////////////////////////////////////////////////////////////////
-}; // End namespace util
+} // End namespace util
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -1267,7 +1267,7 @@ struct compare_block_pos;
 template <uint32_t Block_size, uint32_t Group_size, class Iter_t, class Compare>
 struct merge_blocks;
 
-};
+}
 
 /// @struct block_indirect_sort
 /// This class is the entry point of the block indirect sort.
@@ -1432,7 +1432,7 @@ block_indirect_sort< Block_size, Group_size, Iter_t,
         destroy_all();
         throw;
         }
-    };
+    }
 
 /// Splits a range of positions in the index, and
 ///        depending of the size, sort directly or make to a recursive call
@@ -1485,7 +1485,7 @@ void block_indirect_sort< Block_size, Group_size, Iter_t, Compare>::split_range(
     bk.exec (son_counter);
     if (bk.error) return;
     merge_blocks_t (bk, pos_index1, pos_index_mid, pos_index2);
-    };
+    }
 
 /// Initialize the process; when the number of threads is lower
 /// than a predefined value, sort the elements with a parallel introsort.
@@ -1502,7 +1502,7 @@ void block_indirect_sort< Block_size, Group_size, Iter_t, Compare>::start_functi
         if (bk.error) return;
         move_blocks_t k (bk);
         };
-    };
+    }
 
 /// @struct spin_sort
 ///  This class implements stable sort algorithm with 1 thread, with
@@ -1632,7 +1632,7 @@ spin_sort< Iter_t, Compare>
         range_sort (range_1, range_2, comp, nlevel);
         half_merge (range_input, range_aux, range_2, comp);
         };
-    };
+    }
 
 /// Heap sort algorithm
 /// @remarks This algorithm is O(NLogN)
@@ -1824,7 +1824,7 @@ void create_index (Iter_t first, Iter_t last, std::vector<Iter_t> &index)
     index.clear();
     index.reserve (nelem);
     for (; first != last; ++first) index.push_back (first);
-    };
+    }
 
 /// This function transform a logical sort of the elements in the index
 ///        in a physical sort
@@ -1867,7 +1867,7 @@ void sort_index (Iter_t global_first, std::vector<Iter_t> &index)
         index[pos_dest] = it_dest;
         ++pos_in_vector;
         };
-    };
+    }
 
 /// Insertion sort algorithm
 /// @param first: iterator to the first element of the range
@@ -1891,7 +1891,7 @@ void insertion_sort (Iter_t first, Iter_t last, Compare comp)
             };
         *it_insertion = std::move (Aux);
         };
-    };
+    }
 
 using util::compare_iter;
 using util::nbits64;
@@ -1913,7 +1913,7 @@ inline Iter_t mid3 (Iter_t iter_1, Iter_t iter_2, Iter_t iter_3, Compare comp)
            : (comp (*iter_3, *iter_2)
               ? iter_2
               : (comp (*iter_3, *iter_1) ? iter_3 : iter_1));
-    };
+    }
 
 /// Receive a range between first and last, calcule the mid iterator
 ///          with the first, the previous to the last, and the central
@@ -1927,7 +1927,7 @@ inline void pivot3 (Iter_t first, Iter_t last, Compare comp)
     auto N2 = (last - first) >> 1;
     Iter_t it_val = mid3 (first + 1, first + N2, last - 1, comp);
     std::swap (*first, *it_val);
-    };
+    }
 
 /// Return the iterator to the mid value of the nine values passsed
 ///          as parameters
@@ -1949,7 +1949,7 @@ inline Iter_t mid9 (Iter_t iter_1, Iter_t iter_2, Iter_t iter_3, Iter_t iter_4,
     return mid3 (mid3 (iter_1, iter_2, iter_3, comp),
                  mid3 (iter_4, iter_5, iter_6, comp),
                  mid3 (iter_7, iter_8, iter_9, comp), comp);
-    };
+    }
 
 /// Receive a range between first and last, obtain 9 values between
 ///          the elements  including the first and the previous to the last.
@@ -1966,7 +1966,7 @@ inline void pivot9 (Iter_t first, Iter_t last, Compare comp)
                          first + 3 * cupo, first + 4 * cupo, first + 5 * cupo,
                          first + 6 * cupo, first + 7 * cupo, last - 1, comp);
     std::swap (*first, *itaux);
-    };
+    }
 
 /// Internal function for to divide and sort the ranges
 //
@@ -2006,7 +2006,7 @@ void intro_sort_internal (Iter_t first, Iter_t last, uint32_t level,
     std::swap (*first, *c_last);
     intro_sort_internal (first, c_last, level - 1, comp);
     intro_sort_internal (c_first, last, level - 1, comp);
-    };
+    }
 
 /// Function for to sort range [first, last )
 /// @param first : iterator to the first element
@@ -2027,7 +2027,7 @@ void intro_sort (Iter_t first, Iter_t last, Compare comp)
 
     uint32_t level = ((nbits64 (nelem) - 4) * 3) / 2;
     intro_sort_internal (first, last, level, comp);
-    };
+    }
 
 /// @struct parallel_stable_sort
 /// This a structure for to implement a parallel stable sort, exception safe
@@ -2147,7 +2147,7 @@ parallel_stable_sort< Iter_t, Compare>::parallel_stable_sort(
     range_buffer = init_move (range_buffer, range_first);
     range_initial = half_merge (range_initial, range_buffer, range_second, cmp);
 
-    }; // end of constructor
+    } // end of constructor
 
 /// @struct sample_sort
 /// This a structure for to implement a sample sort, exception safe
@@ -2358,7 +2358,7 @@ sample_sort< Iter_t, Compare>::sample_sort (Iter_t first, Iter_t last, Compare c
         destroy_all();
         throw std::bad_alloc();
         };
-    };
+    }
 
 /// Destructor, destroy the temporary buffer used in the sorting process
 template <class Iter_t, typename Compare>
@@ -2370,7 +2370,7 @@ void sample_sort< Iter_t, Compare>::destroy_all()
         }
     if (global_buf.first != nullptr and owner)
         std::return_temporary_buffer (global_buf.first);
-    };
+    }
 
 /// Create the internal data structures, and obtain the inital set of
 /// ranges to merge
@@ -2482,7 +2482,7 @@ void sample_sort< Iter_t, Compare>::initial_configuration()
         it += nelem_interval;
         it_buf += nelem_interval;
         };
-    };
+    }
 
 using SGMInternal::detail::util::TMSB;
 
@@ -2492,7 +2492,7 @@ template <class Iter_t, class Compare, util::enable_if_string< util::value_iter<
 void select_block_indirect (Iter_t first, Iter_t last, Compare cmp, uint32_t nthr = std::thread::hardware_concurrency())
     {
     block_indirect_sort< 128, 128, Iter_t, Compare> (first, last, cmp, nthr);
-    };
+    }
 
 template <size_t Size>
 struct block_size
@@ -2511,7 +2511,7 @@ void select_block_indirect (Iter_t first, Iter_t last, Compare cmp, uint32_t nth
     {
     block_indirect_sort<block_size< sizeof(util::value_iter< Iter_t>)>::data,
         28, Iter_t, Compare> (first, last, cmp, nthr);
-    };
+    }
 
 using util::nbits64;
 using std::iterator_traits;
@@ -2550,7 +2550,7 @@ void range_sort (const range<Iter1_t> &range_input,
         };
 
     full_merge (range_buffer, range_input1, range_input2, comp);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -2633,7 +2633,7 @@ bool compare_block (block<Block_size, Iter_t> block1,
                     Compare cmp = Compare())
     {
     return cmp (*block1.first, *block2.first);
-    };
+    }
 
 /// Compare two block_pos objects
 template <uint32_t Block_size, class Iter_t, class Compare>
@@ -2784,7 +2784,7 @@ backbone<Block_size, Iter_t, Compare>
     range_tail.first =
         (ntail == 0) ? last : (first + ((nblock - 1) * Block_size));
     range_tail.last = last;
-    };
+    }
 
 /// execute the function_t stored in works, until counter is zero
 /// @param counter : atomic counter. When 0 exits the function
@@ -2798,7 +2798,7 @@ void backbone<Block_size, Iter_t, Compare>::exec (atomic_t &counter)
         else
             std::this_thread::yield();
         };
-    };
+    }
 
 /// @struct merge_blocks
 /// This class merge the blocks. The blocks to merge are defined by two
@@ -2941,7 +2941,7 @@ merge_blocks<Block_size, Group_size, Iter_t, Compare>::merge_blocks(
     if (bk.error) return;
     // Extracting the ranges for to merge the elements
     extract_ranges (range_pos (pos_index1, pos_index1 + nblock1 + nblock2));
-    };
+    }
 
 /// make the process when the second vector of block_pos to merge is
 ///        the last, and have an incomplete block ( tail)
@@ -2972,7 +2972,7 @@ void merge_blocks<Block_size, Group_size, Iter_t, Compare>::tail_process(
                 };
             };
         };
-    };
+    }
 
 /// when the rng_input is greather than Group_size, this function divide
 ///        it in several parts creating function_t elements, which are inserted
@@ -3015,7 +3015,7 @@ void merge_blocks<Block_size, Group_size, Iter_t, Compare>::cut_range (range_pos
         pos_ini = pos;
         };
     bk.exec (counter); // wait until finish all the ranges
-    };
+    }
 
 /// make the indirect merge of the blocks inside the rng_input
 /// @param rng_input : range of positions of the blocks to merge
@@ -3036,7 +3036,7 @@ void merge_blocks<Block_size, Group_size, Iter_t, Compare>::merge_range_pos (ran
 
         };
     init_move (rng_posx, rbuf);
-    };
+    }
 
 /// From a big range of positions of blocks in the index. Examine which
 ///        are mergeable, and generate a couple of ranges for to be merged.
@@ -3102,7 +3102,7 @@ void merge_blocks<Block_size, Group_size, Iter_t, Compare>::extract_ranges (rang
             };
         };
     bk.exec (counter);
-    };
+    }
 
 /// @struct move_blocks
 /// This class move the blocks, transforming a logical sort by an index, in physical sort
@@ -3236,7 +3236,7 @@ move_blocks<Block_size, Group_size, Iter_t, Compare>::move_blocks (backbone_t &b
             };
         };
     bk.exec (counter);
-    };
+    }
 
 /// Move the blocks, following the positions of the init_sequence
 /// @param init_sequence : vector with the positions from and where move the
@@ -3257,7 +3257,7 @@ void move_blocks<Block_size, Group_size, Iter_t, Compare>::move_sequence (const 
         init_move (range1, range2);
         };
     init_move (range2, rbuf);
-    };
+    }
 
 /// Move the blocks, following the positions of the init_sequence.
 ///        if the sequence is greater than Group_size, it is divided in small
@@ -3295,7 +3295,7 @@ void move_blocks<Block_size, Group_size, Iter_t, Compare>::move_long_sequence (c
     bk.exec (son_counter);
     if (bk.error) return;
     move_long_sequence (index_seq);
-    };
+    }
 
 using SGMInternal::detail::util::nbits64;
 
@@ -3397,7 +3397,7 @@ parallel_sort<Block_size, Iter_t, Compare>::parallel_sort (backbone_t &bkbn, Ite
 
     // wait until all the parts are finished
     bk.exec (counter);
-    };
+    }
 
 /// Divide the data in two parts, to be sorted in a parallel mode.
 /// @param first : iterator to the first element to sort
@@ -3441,13 +3441,13 @@ void parallel_sort<Block_size, Iter_t, Compare>::divide_sort (Iter_t first, Iter
 
     // The first half is done by the same thread
     function_divide_sort (first, c_last, level - 1, counter, bk.error);
-    };
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
-}; //    End namespace bis
+} //    End namespace bis
 ///////////////////////////////////////////////////////////////////////////////
-}; // end namespace detail
+} // end namespace detail
 ///////////////////////////////////////////////////////////////////////////////
-}; // end namespace SGMInternal
+} // end namespace SGMInternal
 
 #endif //SGM_INTERNAL_SORTIMPLEMENTATION_H

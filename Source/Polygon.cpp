@@ -227,6 +227,7 @@ void ForceEdge(SGM::Result                             &rResult,
     SGM::Point3D StartPos(Startuv.m_u,Startuv.m_v,0.0);
     SGM::Point3D EndPos(Enduv.m_u,Enduv.m_v,0.0);
     SGM::Interval3D SegBox(StartPos,EndPos);
+
     std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsBox(SegBox);
     size_t nHits=aHits.size();
     size_t Index1,Index2;
@@ -358,6 +359,7 @@ void ForceEdge(SGM::Result                             &rResult,
         SGM::Point2D const &A=aPoints2D[a];
         SGM::Point2D const &B=aPoints2D[b];
         SGM::Point2D const &C=aPoints2D[c];
+
         if(SegmentCrossesTriangle(Seg,A,B,C))
             {
             aCuts.push_back(nHitTri);
@@ -481,12 +483,7 @@ void ForceEdge(SGM::Result                             &rResult,
         SGM::Point2D const &A=aPoints2D[a];
         SGM::Point2D const &B=aPoints2D[b];
         SGM::Point2D const &C=aPoints2D[c];
-        SGM::Point3D A3D(A.m_u,A.m_v,0.0),B3D(B.m_u,B.m_v,0.0),C3D(C.m_u,C.m_v,0.0);
-        std::vector<SGM::Point3D> aPoints;
-        aPoints.reserve(3);
-        aPoints.push_back(A3D);
-        aPoints.push_back(B3D);
-        aPoints.push_back(C3D);
+        std::vector<SGM::Point3D> aPoints = {{A.m_u,A.m_v,0.0},{B.m_u,B.m_v,0.0},{C.m_u,C.m_v,0.0}};
         SGM::Interval3D Box(aPoints);
         Tree.Insert(aCutHits[Index1],Box);
         }
@@ -508,6 +505,12 @@ bool ForcePolygonEdgesIntoTriangles(SGM::Result                     &rResult,
         unsigned a=aTriangles[Index1];
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
+
+        if (Index1 == 73)
+            {
+            std::cout << "ForcePolygonEdgesIntoTriangles 1: aTriangles[73] = " << aTriangles[73] << std::endl;
+            std::cout << "ForcePolygonEdgesIntoTriangles 1: a,b,c " << a << ',' << b << ',' << c << std::endl;
+            }
         sEdges.insert({a,b});
         sEdges.insert({b,c});
         sEdges.insert({c,a});
@@ -536,6 +539,7 @@ bool ForcePolygonEdgesIntoTriangles(SGM::Result                     &rResult,
                 //SGM::Point3D Pos0=(*pPoints3D)[a];
                 //SGM::Point3D Pos1=(*pPoints3D)[b];
                 //SGM::CreateLinearEdge(rResult,Pos0,Pos1);
+                //std::cout << "ForcePolygonEdgesIntoTriangles 4: edge {" << a << ',' << b << "} unable to force edge into the triangles" << std::endl;
                 return false;
                 }
             }
@@ -974,8 +978,9 @@ bool InsertPolygon(Result                     &rResult,
 
     // Force polygon edges to be in the triangles.
 
-    return SGMInternal::ForcePolygonEdgesIntoTriangles(rResult,aPolygon,aPoints2D,aTriangles,aPolygonIndices,
+    auto value = SGMInternal::ForcePolygonEdgesIntoTriangles(rResult,aPolygon,aPoints2D,aTriangles,aPolygonIndices,
                                                        pImprintFlag,aTris,Tree);
+    return value;
     }
 
 double PolygonArea(std::vector<Point2D> const &aPolygon)

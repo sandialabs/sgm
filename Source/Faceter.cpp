@@ -2999,6 +2999,7 @@ void FacetFace(SGM::Result                    &rResult,
                     std::vector<unsigned> aRemovedOrChanged,aReplacedTriangles;
                     SGM::RemovePointFromTriangles(rResult,nWhere,aPoints2D,aTriangles,aRemovedOrChanged,aReplacedTriangles);
                     }
+
                 aPoints3D.clear();
                 aNormals.clear();
                 FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
@@ -3007,8 +3008,8 @@ void FacetFace(SGM::Result                    &rResult,
                 size_t nPolygons=aaPolygons.size();
                 for(Index1=0;Index1<nPolygons;++Index1)
                     {
-                    std::vector<unsigned> aPolygonIndices;
                     std::vector<bool> aFlags=FindPolygonImprintFlags(aImprintFlags,aaPolygons[Index1]);
+                    std::vector<unsigned> aPolygonIndices;
                     SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPolygonPoints,aaPolygons[Index1]),
                                        aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
                     aaPolygons[Index1]=aPolygonIndices;

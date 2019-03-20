@@ -26,6 +26,16 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
+    {
+    SGM::CheckOptions Options;
+    std::vector<std::string> aCheckStrings;
+    bool bValue = SGM::CheckEntity(rResult,entity,Options,aCheckStrings);
+    for (auto & String: aCheckStrings)
+        std::cout << String << std::endl;
+    return bValue;
+    }
+
 //TEST(modify, block_sphere_subtract_2)
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -535,15 +545,15 @@ TEST(boolean_check, Peninsula_Peninsula_Disks)
 
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,KeepID,sFaces);
-    EXPECT_EQ(sFaces.size(), 2);
+    EXPECT_EQ(sFaces.size(), 2U);
 
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,KeepID,sEdges);
-    EXPECT_EQ(sEdges.size(), 3);
+    EXPECT_EQ(sEdges.size(), 3U);
 
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(rResult,KeepID,sVertices);
-    EXPECT_EQ(sVertices.size(), 2);
+    EXPECT_EQ(sVertices.size(), 2U);
     
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
@@ -568,15 +578,15 @@ TEST(boolean_check, Splitter_Island_Disks)
     
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,KeepID,sFaces);
-    EXPECT_EQ(sFaces.size(), 3);
+    EXPECT_EQ(sFaces.size(), 3U);
     
     std::set<SGM::Edge> sEdges;
     SGM::FindEdges(rResult,KeepID,sEdges);
-    EXPECT_EQ(sEdges.size(), 4);
+    EXPECT_EQ(sEdges.size(), 4U);
     
     std::set<SGM::Vertex> sVertices;
     SGM::FindVertices(rResult,KeepID,sVertices);
-    EXPECT_EQ(sVertices.size(), 2);
+    EXPECT_EQ(sVertices.size(), 2U);
     
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
@@ -618,7 +628,7 @@ TEST(boolean_check, DISABLED_Imprinting_Atoll_Bridge_Edge)
     }
 
 TEST(boolean_check, Sphere_Sphere_Imprint1)
-    {
+{
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
@@ -642,11 +652,9 @@ TEST(boolean_check, Sphere_Sphere_Imprint1)
     SGM::FindFaces(rResult,Sphere1,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
-    
-    SGM::CheckOptions Options;
-    std::vector<std::string> aCheckStrings;
-    EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere1,Options,aCheckStrings));
-    
+
+    EXPECT_TRUE(check_entity_verbose(rResult,Sphere1));
+
     SGMTesting::ReleaseTestThing(pThing);
     }
 
@@ -676,10 +684,8 @@ TEST(boolean_check, Sphere_Sphere_Imprint2)
     SGM::Face FaceID=*(sFaces.begin());
     SGM::ImprintEdgeOnFace(rResult,EdgeID,FaceID);
 
-    SGM::CheckOptions Options;
-    std::vector<std::string> aCheckStrings;
-    EXPECT_TRUE(SGM::CheckEntity(rResult,Sphere2,Options,aCheckStrings));
-    
+    EXPECT_TRUE(check_entity_verbose(rResult,Sphere2));
+
     SGMTesting::ReleaseTestThing(pThing);
     }
 

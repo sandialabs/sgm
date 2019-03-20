@@ -611,9 +611,9 @@ namespace SGMInternal {
             m_bFlipped(other.m_bFlipped),
             m_nSides(other.m_nSides),
             m_aPoints3D(other.m_aPoints3D),
-            m_aPoints2D(other.m_aPoints2D),
-            m_aTriangles(other.m_aTriangles),
             m_aNormals(other.m_aNormals),
+            m_aTriangles(other.m_aTriangles),
+            m_aPoints2D(other.m_aPoints2D),
             m_mSeamType(other.m_mSeamType)
     {}
 
