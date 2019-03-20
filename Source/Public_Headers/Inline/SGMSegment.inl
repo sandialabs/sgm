@@ -13,22 +13,52 @@ namespace SGM {
         return m_Start.Distance(m_End);
         }
 
-    inline double Segment2D::Distance(Point2D const &Pos) const
+    inline double Segment2D::Distance(Point2D const &Pos,Point2D *pClosePoint) const
         {
         SGM::UnitVector2D Axis=m_End-m_Start;
         double dParam=Axis%(Pos-m_Start);
+        Point2D ClosePos;
         if(dParam<0)
             {
-            return Pos.Distance(m_Start);
+            ClosePos=m_Start;
             }
         else if(LengthSquared()<dParam*dParam)
             {
-            return Pos.Distance(m_End);
+            ClosePos=m_End;
             }
         else
             {
-            return Pos.Distance(m_Start+Axis*dParam);
+            ClosePos=m_Start+Axis*dParam;
             }
+        if(pClosePoint)
+            {
+            *pClosePoint=ClosePos;
+            }
+        return Pos.Distance(ClosePos);
+        }
+
+    inline double Segment2D::DistanceSquared(Point2D const &Pos,Point2D *pClosePoint) const
+        {
+        SGM::UnitVector2D Axis=m_End-m_Start;
+        double dParam=Axis%(Pos-m_Start);
+        Point2D ClosePos;
+        if(dParam<0)
+            {
+            ClosePos=m_Start;
+            }
+        else if(LengthSquared()<dParam*dParam)
+            {
+            ClosePos=m_End;
+            }
+        else
+            {
+            ClosePos=m_Start+Axis*dParam;
+            }
+        if(pClosePoint)
+            {
+            *pClosePoint=ClosePos;
+            }
+        return Pos.DistanceSquared(ClosePos);
         }
 
     inline bool Segment2D::Overlap(Segment2D const &Seg) const

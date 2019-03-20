@@ -19,6 +19,10 @@ void SubtractBodies(SGM::Result &rResult,
                     body        *pKeepBody,
                     body        *pDeleteBody);
 
+void ImprintBodies(SGM::Result &rResult,
+                   body        *pKeepBody,
+                   body        *pDeleteBody);
+
 void ReduceToVolumes(SGM::Result                      &rResult,
                      body                             *pBody,
                      std::set<volume *,EntityCompare> &sVolumes);

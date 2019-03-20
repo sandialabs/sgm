@@ -914,19 +914,20 @@ void ReplaceBodyIDs(body                     *pBody,
         }
     }
 
-void ReplaceVolumeIDs(volume                   *pVolume,
+void ReplaceVolumeIDs(SGM::Result              &rResult,
+                      volume                   *pVolume,
                       SGMData                  &rSGMData,
                       std::map<size_t,SGMData> &mEntityMap)
     {
     for(size_t nID : rSGMData.aIDs1)
         {
         face *pFace=(face *)mEntityMap[nID].pEntity;
-        pVolume->AddFace(pFace);
+        pVolume->AddFace(rResult,pFace);
         }
     for(size_t nID : rSGMData.aIDs2)
         {
         edge *pEdge=(edge *)mEntityMap[nID].pEntity;
-        pVolume->AddEdge(pEdge);
+        pVolume->AddEdge(rResult,pEdge);
         }
     }
 
@@ -948,21 +949,22 @@ void ReplaceFaceIDs(SGM::Result              &rResult,
     pFace->SetSurface(pSurface);
     }
 
-void ReplaceEdgeIDs(edge                     *pEdge,
+void ReplaceEdgeIDs(SGM::Result              &rResult,
+                    edge                     *pEdge,
                     SGMData                  &rSGMData,
                     std::map<size_t,SGMData> &mEntityMap)
     {
     size_t nCurveID=rSGMData.aIDs1[0];
     curve *pCurve=(curve *)mEntityMap[nCurveID].pEntity;
-    pEdge->SetCurve(pCurve);
+    pEdge->SetCurve(rResult,pCurve);
     if(1<rSGMData.aIDs1.size())
         {
         size_t nStartID=rSGMData.aIDs1[1];
         vertex *pStart=(vertex *)mEntityMap[nStartID].pEntity;
-        pEdge->SetStart(pStart);
+        pEdge->SetStart(rResult,pStart);
         size_t nEndID=rSGMData.aIDs1[2];
         vertex *pEnd=(vertex *)mEntityMap[nEndID].pEntity;
-        pEdge->SetEnd(pEnd);
+        pEdge->SetEnd(rResult,pEnd);
         }
     }
 
@@ -994,7 +996,7 @@ void ReplaceIDs(SGM::Result              &rResult,
             }
         case SGM::VolumeType:
             {
-            ReplaceVolumeIDs((volume *)pEntity,rSGMData,mEntityMap);
+            ReplaceVolumeIDs(rResult,(volume *)pEntity,rSGMData,mEntityMap);
             break;
             }
         case SGM::FaceType:
@@ -1004,7 +1006,7 @@ void ReplaceIDs(SGM::Result              &rResult,
             }
         case SGM::EdgeType:
             {
-            ReplaceEdgeIDs((edge *)pEntity,rSGMData,mEntityMap);
+            ReplaceEdgeIDs(rResult,(edge *)pEntity,rSGMData,mEntityMap);
             break;
             }
         case SGM::CurveType:

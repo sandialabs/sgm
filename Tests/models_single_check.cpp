@@ -200,7 +200,7 @@ TEST(models_single_check, DISABLED_import_check_OUO_Cone_definition)
 
 TEST(models_single_check, DISABLED_import_check_OUO_TSLhousingGeom)
 {
-    std::cout << std::endl << std::flush;
+    //std::cout << std::endl << std::flush;
     expect_import_ouo_check_success("OUO_TSLhousingGeom.stp");
 }
 

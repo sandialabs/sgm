@@ -123,9 +123,9 @@ class TriangleData2D
 
     private:
 
-    SGM::Point2D m_dA;
-    SGM::Point2D m_dB;
-    SGM::Point2D m_dC;
+    SGM::Point2D m_A;
+    SGM::Point2D m_B;
+    SGM::Point2D m_C;
 
     double m_dU_CA;
     double m_dV_CA;
@@ -137,9 +137,9 @@ class TriangleData2D
 inline TriangleData2D::TriangleData2D(Point2D const &A,
                                       Point2D const &B,
                                       Point2D const &C) :
-    m_dA(A),
-    m_dB(B),
-    m_dC(C),
+    m_A(A),
+    m_B(B),
+    m_C(C),
     m_dU_CA(C.m_u - A.m_u),
     m_dV_CA(C.m_v - A.m_v),
     m_dU_BA(B.m_u - A.m_u),
@@ -149,8 +149,8 @@ inline TriangleData2D::TriangleData2D(Point2D const &A,
 
 inline bool TriangleData2D::InTriangle(Point2D const &P) const
     {
-    double dU = P.m_u - m_dA.m_u;
-    double dV = P.m_v - m_dA.m_v;
+    double dU = P.m_u - m_A.m_u;
+    double dV = P.m_v - m_A.m_v;
     return InTriangle2DImplementation(dU, dV, m_dU_CA, m_dV_CA, m_dU_BA, m_dV_BA, m_dD);
     }
 

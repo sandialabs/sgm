@@ -111,6 +111,10 @@ namespace SGM
     SGM_EXPORT int GetSidesOfFace(SGM::Result     &rResult,
                                   SGM::Face const &FaceID);
 
+    SGM_EXPORT SGM::EdgeSideType GetEdgeSideType(SGM::Result     &rResult,
+                                                 SGM::Edge const &EdgeID,
+                                                 SGM::Face const &FaceID);
+
     SGM_EXPORT bool IsFaceFlipped(SGM::Result     &rResult,
                                   SGM::Face const &FaceID);
 

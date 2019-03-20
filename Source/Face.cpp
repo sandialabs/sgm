@@ -87,16 +87,16 @@ void face::RemoveParentsInSet(SGM::Result &rResult,
 {
     if (sParents.find(GetVolume()) != sParents.end())
     {
-        GetVolume()->RemoveFace(this);
+        GetVolume()->RemoveFace(rResult,this);
         SetVolume(nullptr);        
     }
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void face::SeverRelations(SGM::Result &)
+void face::SeverRelations(SGM::Result &rResult)
     {
     if(GetVolume())
-        GetVolume()->RemoveFace(this);
+        GetVolume()->RemoveFace(rResult,this);
     std::set<edge *,EntityCompare> sEdges=GetEdges();
     for(edge *pEdge : sEdges)
         pEdge->RemoveFace(this);
@@ -275,10 +275,7 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
     }
 
 bool face::PointInFace(SGM::Result        &rResult,
-                       SGM::Point2D const &uv,
-                       SGM::Point3D       *ClosePos,    // The closest point.
-                       entity            **pBoundary,   // The closest sub element.
-                       SGM::Point3D       *pPos) const  // Found point on boundary.
+                       SGM::Point2D const &uv) const
     {
     // First check for the closed face case.
 
@@ -289,214 +286,223 @@ bool face::PointInFace(SGM::Result        &rResult,
 
     // Find the closest edge or vertex.
 
-    SGM::Point3D Pos,CPos,TPos;
-    auto pEntity= (entity *)this;
-    double dDist=DBL_MAX;
-    if(ClosePos)
+    SGM::Interval1D const &UDomain=m_pSurface->GetDomain().m_UDomain;
+    SGM::Interval1D const &VDomain=m_pSurface->GetDomain().m_VDomain;
+    double dULength=UDomain.Length();
+    double dVLength=VDomain.Length();
+    double dUMaxLength=dULength*0.5;
+    double dVMaxLength=dVLength*0.5;
+    double dMinDist=std::numeric_limits<double>::max();
+    edge *pCloseEdge=nullptr;
+    SGM::Segment2D CloseSeg;
+    size_t nSegment=0;
+    for(auto pEdge : m_sEdges)
         {
-        Pos=*ClosePos;
-        }
-    else
-        {
-        m_pSurface->Evaluate(uv,&Pos);
-        }
-    for (auto pEdge : m_sEdges)
-        {
-        entity *pTempEnt=nullptr;
-        FindClosestPointOnEdge3D(rResult,Pos,pEdge,TPos,pTempEnt);
-        double dTempDist=Pos.DistanceSquared(TPos);
-        if(dTempDist<dDist)
+        std::vector<SGM::Point2D> const &aUVParams=GetUVBoundary(rResult,pEdge);
+        size_t nUVParams=aUVParams.size();
+        size_t Index1;
+        for(Index1=1;Index1<nUVParams;++Index1)
             {
-            dDist=dTempDist;
-            pEntity=pTempEnt;
-            CPos=TPos;
-            }
-        }
-
-    // Find the parameter line to check sided-ness from.
-
-    if(pBoundary)
-        {
-        *pBoundary=pEntity;
-        }
-    if(pEntity->GetType()==SGM::EntityType::EdgeType)
-        {
-        auto pEdge=(edge *)pEntity;
-        auto EdgeTypeIter=m_mSideType.find(pEdge);
-        SGM::Point2D Buv=EvaluateParamSpace(pEdge,EdgeTypeIter->second,CPos);
-
-        SGM::Vector3D VecU,VecV,Vec;
-        m_pSurface->Evaluate(Buv,nullptr,&VecU,&VecV);
-        curve const *pCurve=pEdge->GetCurve();
-        double t=pCurve->Inverse(CPos);
-        if(pPos)
-            {
-            *pPos=CPos;
-            }
-        pCurve->Evaluate(t,nullptr,&Vec);
-        SGM::Vector2D VecUV(Vec%VecU,Vec%VecV);
-        SGM::Vector2D TestVec=uv-Buv;
-        double dZ=VecUV.m_u*TestVec.m_v-VecUV.m_v*TestVec.m_u;
-        if(EdgeTypeIter->second==SGM::FaceOnRightType)
-            {
-            dZ=-dZ;
-            }
-        if(SGM_ZERO<=dZ)
-            {
-            return !m_bFlipped;
-            }
-        else if(-SGM_ZERO>=dZ)
-            {
-            return m_bFlipped;
-            }
-        else
-            {
-            return true;
-            }
-        }
-    else // The vertex case.
-        {
-        SGM::Point2D Buv=m_pSurface->Inverse(CPos);
-        auto pVertex=(vertex *)pEntity;
-        SGM::Point3D const &VertexPos=pVertex->GetPoint();
-        if(pPos)
-            {
-            *pPos=VertexPos;
-            }
-        if(SGM::NearEqual(VertexPos, Pos, SGM_ZERO))
-            {
-            return true;
-            }
-        else
-            {
-            // Consider the non-seam edges of the vertex on this face.
-            
-            std::set<edge *,EntityCompare> const &sVertexEdges=pVertex->GetEdges();
-            std::vector<edge *> aTestEdges;
-            for(auto *pEdge : sVertexEdges)
+            SGM::Point2D uv0=aUVParams[Index1-1];
+            SGM::Point2D uv1=aUVParams[Index1];
+            if(m_pSurface->ClosedInU())
                 {
-                std::set<face *,EntityCompare> const &sEdgeFaces=pEdge->GetFaces();
-                if(sEdgeFaces.find((face *)this)!=sEdgeFaces.end())
+                if(dUMaxLength<fabs(uv0.m_u-uv1.m_u))
                     {
-                    aTestEdges.push_back(pEdge);
+                    if(SGM::NearEqual(UDomain.m_dMin,uv0.m_u,SGM_MIN_TOL,false))
+                        {
+                        uv0.m_u+=dULength;
+                        }
+                    else if(SGM::NearEqual(UDomain.m_dMax,uv0.m_u,SGM_MIN_TOL,false))
+                        {
+                        uv0.m_u-=dULength;
+                        }
+                    else if(SGM::NearEqual(UDomain.m_dMin,uv1.m_u,SGM_MIN_TOL,false))
+                        {
+                        uv1.m_u+=dULength;
+                        }
+                    else if(SGM::NearEqual(UDomain.m_dMax,uv1.m_u,SGM_MIN_TOL,false))
+                        {
+                        uv0.m_u-=dULength;
+                        }
                     }
                 }
-            if(aTestEdges.size()==1)
+            if(m_pSurface->ClosedInV())
                 {
-                edge *pEdge=aTestEdges[0];
-                SGM::EdgeSideType nSideType=GetSideType(pEdge);
-                SGM::Vector3D StartDir=pEdge->FindStartVector();
-                SGM::Vector3D EndDir=pEdge->FindEndVector();
-                EndDir.Negate();
-                SGM::Point2D uvC=EvaluateParamSpace(pEdge,nSideType,VertexPos);
-                SGM::Point2D uvA=uvC,uvB=uvC;
-                if(nSideType==SGM::FaceOnLeftType)
+                if(dVMaxLength<fabs(uv0.m_v-uv1.m_v))
                     {
-                    uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
-                    uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
+                    if(SGM::NearEqual(VDomain.m_dMin,uv0.m_v,SGM_MIN_TOL,false))
+                        {
+                        uv0.m_v+=dVLength;
+                        }
+                    else if(SGM::NearEqual(VDomain.m_dMax,uv0.m_v,SGM_MIN_TOL,false))
+                        {
+                        uv0.m_v-=dVLength;
+                        }
+                    else if(SGM::NearEqual(VDomain.m_dMin,uv1.m_v,SGM_MIN_TOL,false))
+                        {
+                        uv1.m_v+=dVLength;
+                        }
+                    else if(SGM::NearEqual(VDomain.m_dMax,uv1.m_v,SGM_MIN_TOL,false))
+                        {
+                        uv1.m_v-=dVLength;
+                        }
                     }
-                else if(nSideType==SGM::FaceOnRightType)
-                    {
-                    uvA=uvC+m_pSurface->FindSurfaceDirection(uvC,StartDir);
-                    uvB=uvC+m_pSurface->FindSurfaceDirection(uvC,EndDir);
-                    }
-                else
-                    {
-                    return true;
-                    }
-
-                return InAngle(uvC,uvA,uvB,uv);
                 }
-            else if(aTestEdges.size()==2)
+            SGM::Segment2D Seg(uv0,uv1);
+            SGM::Point2D cuv;
+            double dDist=Seg.DistanceSquared(uv);
+            if(dDist<dMinDist)
                 {
-                edge *pEdge0=aTestEdges[0];
-                edge *pEdge1=aTestEdges[1];
-                SGM::EdgeSideType nSideType0=GetSideType(pEdge0);
-                SGM::EdgeSideType nSideType1=GetSideType(pEdge1);
-                SGM::Point2D uvA=EvaluateParamSpace(pEdge0,nSideType0,VertexPos);
-                SGM::Point2D uvB=uvA,uvC=uvA;
+                dMinDist=dDist;
+                pCloseEdge=pEdge;
+                CloseSeg=Seg;
+                nSegment=Index1;
+                }
+            }
+        }
 
-                if(nSideType0==SGM::FaceOnLeftType)
-                    {
-                    if(pEdge0->GetStart()==pVertex)
-                        {
-                        SGM::Vector3D StartDir=pEdge0->FindStartVector();
-                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
-                        }
-                    else
-                        {
-                        SGM::Vector3D EndDir=pEdge0->FindEndVector();
-                        EndDir.Negate();
-                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
-                        }
-                    }
-                else if(nSideType0==SGM::FaceOnRightType)
-                    {
-                    if(pEdge0->GetStart()==pVertex)
-                        {
-                        SGM::Vector3D StartDir=pEdge0->FindStartVector();
-                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
-                        }
-                    else
-                        {
-                        SGM::Vector3D EndDir=pEdge0->FindEndVector();
-                        EndDir.Negate();
-                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
-                        }
-                    }
-                else
-                    {
-                    return true;
-                    }
+    // Check to see if the point is on the close edge, or if the
+    // close edge is double sided.
 
-                if(nSideType1==SGM::FaceOnLeftType)
-                    {
-                    if(pEdge1->GetStart()==pVertex)
-                        {
-                        SGM::Vector3D StartDir=pEdge1->FindStartVector();
-                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
-                        }
-                    else
-                        {
-                        SGM::Vector3D EndDir=pEdge1->FindEndVector();
-                        EndDir.Negate();
-                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
-                        }
-                    }
-                else if(nSideType1==SGM::FaceOnRightType)
-                    {
-                    if(pEdge1->GetStart()==pVertex)
-                        {
-                        SGM::Vector3D StartDir=pEdge1->FindStartVector();
-                        uvC=uvA+m_pSurface->FindSurfaceDirection(uvA,StartDir);
-                        }
-                    else
-                        {
-                        SGM::Vector3D EndDir=pEdge1->FindEndVector();
-                        EndDir.Negate();
-                        uvB=uvA+m_pSurface->FindSurfaceDirection(uvA,EndDir);
-                        }
-                    }
-                else
-                    {
-                    throw;  // A case that has not been considered.
-                    }
-                if (m_bFlipped)
-                    {
-                    return InAngle(uvA,uvC,uvB,uv);
-                    }
-                else
-                    {
-                    return InAngle(uvA,uvB,uvC,uv);
-                    }
+    SGM::EdgeSideType nType=GetSideType(pCloseEdge);
+    if(nType==SGM::FaceOnBothSidesType)
+        {
+        return true;
+        }
+    SGM::Point3D Pos;
+    m_pSurface->Evaluate(uv,&Pos);
+    SGM::Point3D ClosePos;
+    entity *pCloseEnt;
+    FindClosestPointOnEdge3D(rResult,Pos,pCloseEdge,ClosePos,pCloseEnt);
+    if(SGM::NearEqual(Pos,ClosePos,SGM_MIN_TOL))
+        {
+        return true;
+        }
+
+    // Look for close vertex.
+
+    std::set<vertex *,EntityCompare> sVertices;
+    FindVertices(rResult,this,sVertices);
+    vertex *pFoundVertex=nullptr;
+    for(vertex *pVertex : sVertices)
+        {
+        SGM::Point2D VertexUV=m_pSurface->Inverse(pVertex->GetPoint());
+        if(SGM::NearEqual(uv.DistanceSquared(VertexUV),dMinDist,SGM_MIN_TOL,false))
+            {
+            pFoundVertex=pVertex;
+            break;
+            }
+        }
+        
+    if(pFoundVertex==nullptr)
+        {
+        // Test to see if we are to the left or right of pEdge at CloseUV.
+
+        std::vector<double> const &aParams=pCloseEdge->GetParams(rResult);
+        double t1=aParams[nSegment];
+        double t0=aParams[nSegment-1];
+        double t=(t1+t0)*0.5;
+        SGM::Point3D TestPos;
+        SGM::Vector3D Vec;
+        pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
+        SGM::Point2D a2=m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
+        SGM::Point3D A2(a2.m_u,a2.m_v,0);
+        SGM::Point3D B2(b2.m_u,b2.m_v,0);
+        SGM::Point3D C2(uv.m_u,uv.m_v,0);
+        double dTest2=((B2-A2)*(C2-A2)).m_z;
+        if(SGM_MIN_TOL<dTest2)
+            {
+            if(nType==SGM::FaceOnLeftType)
+                {
+                return true;
                 }
             else
                 {
-                throw;  // More code has to be added for the 
-                // case of being closest to a vertex with more than 
-                // two edges on the given face.
+                return false;
                 }
             }
+        else if(dTest2<-SGM_MIN_TOL)
+            {
+            if(nType==SGM::FaceOnLeftType)
+                {
+                return false;
+                }
+            else
+                {
+                return true;
+                }
+            }
+        else
+            {
+            return true;
+            }
+        }
+    else
+        {
+        if(pFoundVertex)
+            {
+            if(SGM::NearEqual(Pos,pFoundVertex->GetPoint(),SGM_MIN_TOL))
+                {
+                return true;
+                }
+            std::vector<edge *> aEdges;
+            FindEdgesOnFaceAtVertex(rResult,pFoundVertex,this,aEdges);
+            if(aEdges.size()==2)
+                {
+                edge *pEdge0=aEdges[0];
+                edge *pEdge1=aEdges[1];
+                SGM::Point2D uv0,uv1;
+                bool bOut0=true,bOut1=true;
+                if(pEdge0->GetStart()==pFoundVertex)
+                    {
+                    uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.001));
+                    }
+                else
+                    {
+                    uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.999));
+                    bOut0=false;
+                    }
+                if(pEdge1->GetStart()==pFoundVertex)
+                    {
+                    uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.001));
+                    }
+                else
+                    {
+                    uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.999));
+                    bOut1=false;
+                    }
+                if(GetSideType(pEdge0)==SGM::FaceOnRightType)
+                    {
+                    bOut0=!bOut0;
+                    }
+                if(GetSideType(pEdge1)==SGM::FaceOnRightType)
+                    {
+                    bOut1=!bOut1;
+                    }
+                SGM::Point2D Auv=m_pSurface->Inverse(pFoundVertex->GetPoint());
+                bool bAnswer;
+                if(bOut1)
+                    {
+                    bAnswer=InAngle(Auv,uv1,uv0,uv);
+                    }
+                else
+                    {
+                    bAnswer=InAngle(Auv,uv0,uv1,uv);
+                    }
+                if(m_bFlipped)
+                    {
+                    bAnswer=!bAnswer;
+                    }
+                return bAnswer;
+                }
+            else
+                {
+                throw; // Add more code
+                }
+            }
+        return true;
         }
     }
 
@@ -556,12 +562,12 @@ void face::ClearFacets(SGM::Result &rResult) const
         m_aPoints2D.clear();
         m_aTriangles.clear();
         m_aNormals.clear();
-        m_Box.Reset();
         m_mSeamType.clear();
-        if(m_pVolume)
-            {
-            m_pVolume->ResetBox(rResult);
-            }
+        }
+    m_Box.Reset();
+    if(m_pVolume)
+        {
+        m_pVolume->ResetBox(rResult);
         }
     }
 
@@ -820,7 +826,7 @@ void face::AddEdge(SGM::Result       &rResult,
     {
     m_sEdges.insert(pEdge);
     m_mSideType[pEdge]=nEdgeType;
-    pEdge->AddFace(this);
+    pEdge->AddFace(rResult,this);
     ClearFacets(rResult);
     }
 
@@ -838,6 +844,7 @@ void face::RemoveEdge(SGM::Result &rResult,
     m_sEdges.erase(pEdge);
     m_mSideType.erase(pEdge);
     m_mSeamType.erase(pEdge);
+    m_mUVBoundary.erase(pEdge);
     pEdge->RemoveFace(this);
     ClearFacets(rResult);
     }
@@ -905,6 +912,27 @@ void face::Negate()
             m_aNormals[Index1].Negate();
             }
         }
+    }
+
+std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
+                                                     edge        *pEdge) const
+    {
+    if(m_mUVBoundary.find(pEdge)==m_mUVBoundary.end())
+        {
+        pEdge->GetFacets(rResult);
+        }
+    return m_mUVBoundary[pEdge];
+    }
+
+void face::SetUVBoundary(edge                const *pEdge,
+                         std::vector<SGM::Point2D> &aSurfParams)
+    {
+    m_mUVBoundary[(edge *)pEdge]=aSurfParams;
+    }
+
+void face::ClearUVBoundary(edge const *pEdge)
+    {
+    m_mUVBoundary.erase((edge *)pEdge);
     }
 
 bool face::HasBranchedVertex() const

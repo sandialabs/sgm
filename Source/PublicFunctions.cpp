@@ -951,6 +951,15 @@ int SGM::GetSidesOfFace(SGM::Result     &rResult,
     return pFace->GetSides();
     }
 
+SGM::EdgeSideType SGM::GetEdgeSideType(SGM::Result     &rResult,
+                                       SGM::Edge const &EdgeID,
+                                       SGM::Face const &FaceID)
+    {
+    auto pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+    auto pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
+    return pFace->GetSideType(pEdge);
+    }
+
 bool SGM::IsFaceFlipped(SGM::Result     &rResult,
                         SGM::Face const &FaceID)
     {
@@ -1019,7 +1028,7 @@ void SGM::AddFaceToVolume(SGM::Result &rResult,
     {
     SGMInternal::volume *pVolume=(SGMInternal::volume *)rResult.GetThing()->FindEntity(VolumeID.m_ID);
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    pVolume->AddFace(pFace);
+    pVolume->AddFace(rResult,pFace);
     }
 
 void SGM::SetSurfaceOfFace(SGM::Result  &rResult,
@@ -1063,7 +1072,7 @@ void SGM::SetStartOfEdge(SGM::Result &rResult,
     {
     SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     SGMInternal::vertex *pVertex=(SGMInternal::vertex *)rResult.GetThing()->FindEntity(VertexID.m_ID);
-    pEdge->SetStart(pVertex);
+    pEdge->SetStart(rResult,pVertex);
     }
 
 void SGM::SetEndOfEdge(SGM::Result &rResult,
@@ -1072,7 +1081,7 @@ void SGM::SetEndOfEdge(SGM::Result &rResult,
     {
     SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     SGMInternal::vertex *pVertex=(SGMInternal::vertex *)rResult.GetThing()->FindEntity(VertexID.m_ID);
-    pEdge->SetEnd(pVertex);
+    pEdge->SetEnd(rResult,pVertex);
     }
 
 void SGM::SetCurveOfEdge(SGM::Result &rResult,
@@ -1081,7 +1090,7 @@ void SGM::SetCurveOfEdge(SGM::Result &rResult,
     {
     SGMInternal::edge *pEdge=(SGMInternal::edge *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     SGMInternal::curve *pCurve=(SGMInternal::curve *)rResult.GetThing()->FindEntity(CurveID.m_ID);
-    pEdge->SetCurve(pCurve);
+    pEdge->SetCurve(rResult,pCurve);
     }
 
 size_t SGM::FindAdjacentFaces(SGM::Result            &rResult,
@@ -2554,6 +2563,15 @@ void SGM::SubtractBodies(SGM::Result &rResult,
     SGMInternal::SubtractBodies(rResult,pKeepBody,pDeletedBody);
     }
 
+void SGM::ImprintBodies(SGM::Result &rResult,
+                        SGM::Body   &KeepBodyID,
+                        SGM::Body   &DeletedBodyID)
+    {
+    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
+    auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
+    SGMInternal::ImprintBodies(rResult,pKeepBody,pDeletedBody);
+    }
+
 void SGM::ImprintVerticesOnClosedEdges(SGM::Result &rResult)
     {
     SGMInternal::ImprintVerticesOnClosedEdges(rResult);
@@ -2573,7 +2591,12 @@ SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,
                               SGM::Topology      &TopologyID)
     {
     auto pTopology=(SGMInternal::topology *)rResult.GetThing()->FindEntity(TopologyID.m_ID);
-    return {SGMInternal::ImprintPoint(rResult,Pos,pTopology)->GetID()};
+    SGMInternal::vertex *pVertex=SGMInternal::ImprintPoint(rResult,Pos,pTopology);
+    if(pVertex==nullptr)
+        {
+        return {0};
+        }
+    return {pVertex->GetID()};
     }
 
 void SGM::Merge(SGM::Result &rResult,

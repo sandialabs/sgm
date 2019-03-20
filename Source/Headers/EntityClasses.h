@@ -842,13 +842,17 @@ class volume : public topology
                       FILE                         *pFile,
                       SGM::TranslatorOptions const &Options) const override;
 
-        void AddFace(face *pFace);
+        void AddFace(SGM::Result &rResult,
+                     face        *pFace);
 
-        void RemoveFace(face *pFace);
+        void RemoveFace(SGM::Result &rResult,
+                        face        *pFace);
 
-        void AddEdge(edge *pEdge);
+        void AddEdge(SGM::Result &rResult,
+                     edge        *pEdge);
 
-        void RemoveEdge(edge *pEdge);
+        void RemoveEdge(SGM::Result &rResult,
+                        edge        *pEdge);
 
         void SetBody(body *pBody) {m_pBody=pBody;}
         
@@ -993,10 +997,7 @@ class face : public topology
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
         bool PointInFace(SGM::Result        &rResult,
-                         SGM::Point2D const &uv,
-                         SGM::Point3D       *ClosePos=nullptr,    // The closest point.
-                         entity            **pBoundary=nullptr,   // The closest sub element.
-                         SGM::Point3D       *pPos=nullptr) const; // Found point on boundary.
+                         SGM::Point2D const &uv) const;
 
         double FindArea(SGM::Result &rResult) const;
 
@@ -1012,6 +1013,14 @@ class face : public topology
         bool HasBranchedVertex() const;
 
         void Negate();
+
+        std::vector<SGM::Point2D> const &GetUVBoundary(SGM::Result &rResult,
+                                                       edge        *pEdge) const;
+
+        void SetUVBoundary(edge                const *pEdge,
+                           std::vector<SGM::Point2D> &aSurfParams);
+
+        void ClearUVBoundary(edge const *pEdge);
 
     private:
 
@@ -1029,12 +1038,12 @@ class face : public topology
         bool                                m_bFlipped;
         int                                 m_nSides;
 
-        mutable std::vector<SGM::Point3D>          m_aPoints3D;
-        mutable std::vector<SGM::UnitVector3D>     m_aNormals;
-        mutable std::vector<unsigned>              m_aTriangles;
-        mutable std::vector<SGM::Point2D>          m_aPoints2D;
-        mutable std::map<edge *,SGM::EdgeSeamType> m_mSeamType;
-
+        mutable std::vector<SGM::Point3D>                   m_aPoints3D;
+        mutable std::vector<SGM::UnitVector3D>              m_aNormals;
+        mutable std::vector<unsigned>                       m_aTriangles;
+        mutable std::vector<SGM::Point2D>                   m_aPoints2D;
+        mutable std::map<edge *,SGM::EdgeSeamType>          m_mSeamType;
+        mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
     };
 
 class edge : public topology
@@ -1085,11 +1094,14 @@ class edge : public topology
 
         // Set and Remove Methods
 
-        void SetStart(vertex *pStart);
+        void SetStart(SGM::Result &rResult,
+                      vertex      *pStart);
 
-        void SetEnd(vertex *pEnd);
+        void SetEnd(SGM::Result &rResult,
+                    vertex      *pEnd);
 
-        void SetCurve(curve *pCurve);
+        void SetCurve(SGM::Result &rResult,
+                      curve       *pCurve);
 
         void SetDomain(SGM::Result           &rResult,
                        SGM::Interval1D const &Domain);
@@ -1098,7 +1110,7 @@ class edge : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void AddFace(face *pFace);
+        void AddFace(SGM::Result &rResult,face *pFace);
 
         void RemoveFace(face *pFace) {m_sFaces.erase(pFace);}
 
@@ -1153,6 +1165,8 @@ class edge : public topology
         // to see if it is in the domain of this edge.
 
         bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
+
+        void ClearFacets(SGM::Result &rResult);
 
     private:
 

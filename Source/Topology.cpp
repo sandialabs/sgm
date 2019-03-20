@@ -865,8 +865,8 @@ void ImprintVerticesOnClosedEdges(SGM::Result &rResult)
             curve const *pCurve = pEdge->GetCurve();
             pCurve->Evaluate(pCurve->GetDomain().m_dMin,&VertexPos);
             vertex *pVertex=new vertex(rResult,VertexPos);
-            pEdge->SetStart(pVertex);
-            pEdge->SetEnd(pVertex);
+            pEdge->SetStart(rResult,pVertex);
+            pEdge->SetEnd(rResult,pVertex);
             }
         }
     }
@@ -950,12 +950,12 @@ void TweakFace(SGM::Result   &rResult,
             pCurve->Negate();
             }
 
-        pEdge->SetCurve(nullptr);
+        pEdge->SetCurve(rResult,nullptr);
         if(pOldCurve->GetEdges().empty())
             {
             rResult.GetThing()->DeleteEntity(pOldCurve);
             }
-        pEdge->SetCurve(pCurve);
+        pEdge->SetCurve(rResult,pCurve);
         }
 
     // Replace the point of the vertices.
@@ -1241,7 +1241,7 @@ void MergeFaces(SGM::Result &rResult,
         pSurface->RemoveFace(pFace2);
         rResult.GetThing()->DeleteEntity(pSurface);
         }
-    pFace2->GetVolume()->RemoveFace(pFace2);
+    pFace2->GetVolume()->RemoveFace(rResult,pFace2);
     rResult.GetThing()->DeleteEntity(pFace2);
     }
 
@@ -1319,8 +1319,8 @@ void Merge(SGM::Result &rResult,
             edge *pEdge0=*(sVertexEdges.begin());
             if(pEdge0->GetCurve()->GetClosed())
                 {
-                pEdge0->SetStart(nullptr);
-                pEdge0->SetEnd(nullptr);
+                pEdge0->SetStart(rResult,nullptr);
+                pEdge0->SetEnd(rResult,nullptr);
                 rResult.GetThing()->DeleteEntity(pVertex);
                 sFixEdges.insert(pEdge0);
                 }
@@ -1335,22 +1335,22 @@ void Merge(SGM::Result &rResult,
                     {
                     if(pEdge1->GetStart()==pVertex)
                         {
-                        pEdge0->SetStart(pEdge1->GetEnd());
+                        pEdge0->SetStart(rResult,pEdge1->GetEnd());
                         }
                     else
                         {
-                        pEdge0->SetStart(pEdge1->GetStart());
+                        pEdge0->SetStart(rResult,pEdge1->GetStart());
                         }
                     }
                 else
                     {
                     if(pEdge1->GetStart()==pVertex)
                         {
-                        pEdge0->SetEnd(pEdge1->GetEnd());
+                        pEdge0->SetEnd(rResult,pEdge1->GetEnd());
                         }
                     else
                         {
-                        pEdge0->SetEnd(pEdge1->GetStart());
+                        pEdge0->SetEnd(rResult,pEdge1->GetStart());
                         }
                     }
                 curve *pCurve=pEdge1->GetCurve();

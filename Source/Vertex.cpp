@@ -36,9 +36,9 @@ void vertex::RemoveParentsInSet(SGM::Result &rResult,
         if (sParents.find(pEdge) != sParents.end())
             {
             if (pEdge->GetStart() == this)
-                pEdge->SetStart(nullptr);
+                pEdge->SetStart(rResult,nullptr);
             if (pEdge->GetEnd() == this)
-                pEdge->SetEnd(nullptr);
+                pEdge->SetEnd(rResult,nullptr);
             RemoveEdge(pEdge);
             }
         else
@@ -50,15 +50,15 @@ void vertex::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void vertex::SeverRelations(SGM::Result &)
+void vertex::SeverRelations(SGM::Result &rResult)
     {
     std::set<edge *,EntityCompare> sEdges=GetEdges();
     for(auto pEdge : sEdges)
         {
         if (pEdge->GetStart() == this)
-            pEdge->SetStart(nullptr);
+            pEdge->SetStart(rResult,nullptr);
         if (pEdge->GetEnd() == this)
-            pEdge->SetEnd(nullptr);
+            pEdge->SetEnd(rResult,nullptr);
         }
     RemoveAllOwners();
     }

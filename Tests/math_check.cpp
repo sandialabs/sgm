@@ -2287,7 +2287,7 @@ TEST(math_check, DISABLED_sphere_area)
     std::set<SGM::Face> sFaces;
     SGM::FindFaces(rResult,BodyID,sFaces);
     SGM::Face FaceID=*(sFaces.begin());
-    std::cout << "sphere_area" << std::endl;
+    //std::cout << "sphere_area" << std::endl;
     double dArea=SGM::FindArea(rResult,FaceID);
     EXPECT_TRUE(SGM::NearEqual(dArea,6.283185307179586476925286766559,SGM_MIN_TOL,true));
     SGM::DeleteEntity(rResult,BodyID);

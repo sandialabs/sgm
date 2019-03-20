@@ -81,42 +81,24 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
     surface const *pSurface=pFace->GetSurface();
     SGM::Point2D uv=pSurface->Inverse(Point,&ClosestPoint);
     double dDist=DBL_MAX;
-    entity *pBoundary=nullptr;
     SGM::Point3D BoundaryPos;
-    if(pFace->PointInFace(rResult,uv,&ClosestPoint,&pBoundary,&BoundaryPos))
+    if(pFace->PointInFace(rResult,uv))
         {
         dDist=Point.DistanceSquared(ClosestPoint);
         pCloseEntity=(entity *)pFace;
         }
-    else
+    std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+    for(auto pEdge : sEdges)
         {
-        switch(pSurface->GetSurfaceType())
+        entity *pEnt;
+        SGM::Point3D CPos;
+        FindClosestPointOnEdge3D(rResult,Point,pEdge,CPos,pEnt);
+        double dEdgeDist=CPos.DistanceSquared(Point);
+        if(dEdgeDist<dDist)
             {
-            case SGM::EntityType::CylinderType:
-            case SGM::EntityType::PlaneType:
-            case SGM::EntityType::SphereType:
-            case SGM::EntityType::ConeType:
-            case SGM::EntityType::TorusType:
-                {
-                break;
-                }
-            default:
-                {
-                // Look for local mins
-                throw;
-                }
-            }
-        }
-
-    // Also check pBoundary.
-
-    if(pBoundary)
-        {
-        double dBoundaryDist=Point.DistanceSquared(BoundaryPos);
-        if(dBoundaryDist<dDist)
-            {
-            ClosestPoint=BoundaryPos;
-            pCloseEntity=pBoundary;
+            dDist=dEdgeDist;
+            pCloseEntity=pEnt;
+            ClosestPoint=CPos;
             }
         }
     }

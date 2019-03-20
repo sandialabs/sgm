@@ -485,12 +485,6 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
         {
         Evaluate(uv,ClosePos);
         }
-    if(pGuess)
-        {
-        //TODO: implement pGuess in NURBSurface::Inverse
-        throw std::logic_error("pGuess not implemented in NURBsurface::Inverse");
-        }
-
     return uv;
     }
 

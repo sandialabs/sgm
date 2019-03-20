@@ -81,37 +81,43 @@ void volume::RemoveParentsInSet(SGM::Result &rResult,
     topology::RemoveParentsInSet(rResult, sParents);
 }
 
-void volume::SeverRelations(SGM::Result &)
+void volume::SeverRelations(SGM::Result &rResult)
     {
     if(GetBody())
         GetBody()->RemoveVolume(this);
     std::set<edge *,EntityCompare> sEdges=GetEdges();
     for(edge *pEdge : sEdges)
-        RemoveEdge(pEdge);
+        RemoveEdge(rResult,pEdge);
     std::set<face *,EntityCompare> sFaces=GetFaces();
     for(face *pFace : sFaces)
-        RemoveFace(pFace);
+        RemoveFace(rResult,pFace);
     RemoveAllOwners();
     }
 
-void volume::AddFace(face *pFace)
+void volume::AddFace(SGM::Result &rResult,
+                     face *pFace)
     {
     m_FaceTree.Clear();
     m_sFaces.insert(pFace);
     pFace->SetVolume(this);
+    ResetBox(rResult);
     }
 
-void volume::RemoveFace(face *pFace) 
+void volume::RemoveFace(SGM::Result &rResult,
+                        face *pFace) 
     {
     m_FaceTree.Clear();
     pFace->SetVolume(nullptr);
     m_sFaces.erase(pFace);
+    ResetBox(rResult);
     }
 
-void volume::RemoveEdge(edge *pEdge) 
+void volume::RemoveEdge(SGM::Result &rResult,
+                        edge *pEdge) 
     {
     pEdge->SetVolume(nullptr);
     m_sEdges.erase(pEdge);
+    ResetBox(rResult);
     }
 
 void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
@@ -161,10 +167,12 @@ void volume::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
     OwnerAndAttributeReplacePointers(mEntityMap);
     }
 
-void volume::AddEdge(edge *pEdge) 
+void volume::AddEdge(SGM::Result &rResult,
+                     edge        *pEdge) 
     {
     m_sEdges.insert(pEdge);
     pEdge->SetVolume(this);
+    ResetBox(rResult);
     }
 
 double volume::FindVolume(SGM::Result &rResult,bool bApproximate) const

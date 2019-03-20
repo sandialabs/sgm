@@ -98,7 +98,7 @@ void edge::RemoveParentsInSet(SGM::Result &rResult,
     {
         if(sParents.find(m_pVolume) != sParents.end())
         {
-            m_pVolume->RemoveEdge(this);
+            m_pVolume->RemoveEdge(rResult,this);
             m_pVolume = nullptr;
         }
     }
@@ -116,7 +116,11 @@ void edge::SeverRelations(SGM::Result &rResult)
         GetEnd()->RemoveEdge(this);
     if(m_pVolume)
         {
-        m_pVolume->RemoveEdge(this);
+        m_pVolume->RemoveEdge(rResult,this);
+        }
+    if(m_pCurve)
+        {
+        m_pCurve->RemoveEdge(this);
         }
     RemoveAllOwners();
     }
@@ -200,7 +204,8 @@ void edge::TransformFacets(SGM::Transform3D const &Trans)
         }
     }
 
-void edge::SetStart(vertex *pStart) 
+void edge::SetStart(SGM::Result &rResult,
+                    vertex      *pStart) 
     {
     if(m_pStart)
         {
@@ -211,9 +216,11 @@ void edge::SetStart(vertex *pStart)
         {
         pStart->AddEdge(this);
         }
+    ResetBox(rResult);
     }
 
-void edge::SetEnd(vertex *pEnd) 
+void edge::SetEnd(SGM::Result &rResult,
+                  vertex      *pEnd) 
     {
     if(m_pEnd)
         {
@@ -224,6 +231,7 @@ void edge::SetEnd(vertex *pEnd)
         {
         pEnd->AddEdge(this);
         }
+    ResetBox(rResult);
     }
 
 SGM::Interval1D const &edge::GetDomain() const 
@@ -264,7 +272,8 @@ SGM::Interval1D const &edge::GetDomain() const
     return m_Domain;
     }
 
-void edge::SetCurve(curve *pCurve)
+void edge::SetCurve(SGM::Result &rResult,
+                    curve       *pCurve)
     {
     if(m_pCurve)
         {
@@ -276,6 +285,7 @@ void edge::SetCurve(curve *pCurve)
         {
         m_pCurve->AddEdge(this);
         }
+    ResetBox(rResult);
     }
 
 void edge::FixDomain(SGM::Result &rResult)
@@ -292,19 +302,25 @@ void edge::FixDomain(SGM::Result &rResult)
         }
     }
 
+void edge::ClearFacets(SGM::Result &rResult)
+    {
+    m_aPoints3D.clear();
+    m_aParams.clear();
+    m_Box.Reset();
+    for (auto pFace : m_sFaces)
+        {
+        pFace->ClearFacets(rResult);
+        pFace->ClearUVBoundary(this);
+        }
+    }
+
 void edge::SetDomain(SGM::Result           &rResult,
                      SGM::Interval1D const &Domain)
     {
     m_Domain=Domain;
     if(!m_aPoints3D.empty())
         {
-        m_aPoints3D.clear();
-        m_aParams.clear();
-        m_Box.Reset();
-        for (auto pFace : m_sFaces)
-            {
-            pFace->ClearFacets(rResult);
-            }
+        ClearFacets(rResult);
         }
     }
 
@@ -319,11 +335,11 @@ std::vector<SGM::Point3D> const &edge::GetFacets(SGM::Result &rResult) const
     }
 
 
-void edge::AddFace(face *pFace) 
+void edge::AddFace(SGM::Result &rResult,
+                   face        *pFace) 
     {
     assert(nullptr == m_pVolume);
-    m_aPoints3D.clear();
-    m_aParams.clear();
+    ClearFacets(rResult);
     m_sFaces.insert(pFace);
     }
 

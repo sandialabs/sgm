@@ -570,7 +570,7 @@ bool SegmentIntersectPolygon(std::vector<SGM::Point2D> const &aPoints,
     return false;
     }
 
-void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
+bool BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
                    std::vector<unsigned> const     &aInsidePolygon,
                    unsigned                         nExtreamPoint,
                    std::vector<unsigned>           &aOutsidePolygon)
@@ -589,6 +589,7 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
         aSpans.emplace_back(dLengthSquared,(unsigned)Index1);
         }
     std::sort(aSpans.begin(),aSpans.end());
+    bool bAnswer=false;
     for(Index1=0;Index1<nOutside;++Index1)
         {
         unsigned nSpanHit=aSpans[Index1].second;
@@ -599,6 +600,7 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
             // Connect nExtreamPoint on the inner polygon to
             // nSpanHit on the outer polygon.
 
+            bAnswer=true;
             std::vector<unsigned> aNewPoly;
             aNewPoly.reserve(nInside+nOutside+2);
             for(Index2=0;Index2<=nSpanHit;++Index2)
@@ -624,6 +626,7 @@ void BridgePolygon(std::vector<SGM::Point2D> const &aPoints,
             break;
             }
         }
+    return bAnswer;
     }
 
 inline unsigned GetPrevious(unsigned                 nEar,
@@ -659,12 +662,12 @@ inline unsigned GetNext(unsigned                 nEar,
     }
 
 inline bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
-             std::vector<unsigned>           &aPolygon,
-             std::vector<bool>         const &aCutOff,
-             unsigned                         nEar,
-             unsigned                         nEarA,
-             unsigned                         nEarB,
-             unsigned                         nEarC)
+                    std::vector<unsigned>           &aPolygon,
+                    std::vector<bool>         const &aCutOff,
+                    unsigned                         nEar,
+                    unsigned                         nEarA,
+                    unsigned                         nEarB,
+                    unsigned                         nEarC)
     {
     if(aCutOff[nEar])
         {
@@ -679,7 +682,7 @@ inline bool GoodEar(std::vector<SGM::Point2D> const &aPoints,
         unsigned nPos=aPolygon[Index1];
         if (nPos!=nEarA && nPos!=nEarB && nPos!=nEarC)
             {
-            if (Triangle.InTriangle(aPoints[nPos]))
+            if(Triangle.InTriangle(aPoints[nPos])==true)
                 {
                 return false;
                 }
@@ -832,50 +835,54 @@ void TriangulatePolygonSubSub(std::vector<SGM::Point2D> const &aPoints,
         }
     }
 
-void TriangulatePolygonSub(SGM::Result                                   &,//rResult,
-                           std::vector<SGM::Point2D>               const &aPoints,
-                           std::vector<std::vector<unsigned> > const &aaPolygons,
-                           std::vector<unsigned>                     &aTriangles,
-                           std::vector<unsigned>                     &aAdjacencies,
-                           bool                                           bSelfIntersect)
+void TriangulatePolygonSub(SGM::Result                         &rResult,
+                           std::vector<SGM::Point2D>           &aPoints,
+                           std::vector<std::vector<unsigned> > &aaPolygons,
+                           std::vector<unsigned>               &aTriangles,
+                           std::vector<unsigned>               &aAdjacencies,
+                           bool                                 bSelfIntersect)
 
     {
     // Create one polygon.
 
-    std::vector<unsigned> aPolygon = aaPolygons[0];
-    size_t nPolygons = aaPolygons.size();
-    size_t Index1, Index2;
-    if (1 < nPolygons)
+    std::vector<unsigned> aPolygon=aaPolygons[0];
+    size_t nPolygons=aaPolygons.size();
+    size_t Index1,Index2;
+    std::vector<size_t> aHardImprint;
+    if(1<nPolygons)
         {
         // Sort the inside polygons by extream u value.
 
         std::vector<SGMInternal::PolyData> aUValues;
-        aUValues.reserve(nPolygons - 1);
-        for (Index1 = 1; Index1 < nPolygons; ++Index1)
+        aUValues.reserve(nPolygons-1);
+        for(Index1=1;Index1<nPolygons;++Index1)
             {
-            double dUValue = -std::numeric_limits<double>::max();
-            std::vector<unsigned> const &aInsidePoly = aaPolygons[Index1];
-            size_t nInsidePoly = aInsidePoly.size();
-            unsigned nWhere = 0;
-            for (Index2 = 0; Index2 < nInsidePoly; ++Index2)
+            double dUValue=-std::numeric_limits<double>::max();
+            std::vector<unsigned> const &aInsidePoly=aaPolygons[Index1];
+            size_t nInsidePoly=aInsidePoly.size();
+            unsigned nWhere=0;
+            for(Index2=0;Index2<nInsidePoly;++Index2)
                 {
-                SGM::Point2D const &Pos = aPoints[aInsidePoly[Index2]];
-                if (dUValue < Pos.m_u)
+                SGM::Point2D const &Pos=aPoints[aInsidePoly[Index2]];
+                if (dUValue<Pos.m_u)
                     {
-                    dUValue = Pos.m_u;
-                    nWhere = (unsigned)Index2;
+                    dUValue=Pos.m_u;
+                    nWhere=(unsigned)Index2;
                     }
                 }
             aUValues.emplace_back(dUValue,(unsigned)Index1,nWhere);
             }
         std::sort(aUValues.begin(), aUValues.end());
 
-        for (Index1 = 0; Index1 < nPolygons - 1; ++Index1)
+        for(Index1=0;Index1<nPolygons-1;++Index1)
             {
-            BridgePolygon(aPoints,
-                          aaPolygons[aUValues[Index1].nWhichPoly],
-                          aUValues[Index1].nWhichPoint,
-                          aPolygon);
+            if(BridgePolygon(aPoints,
+                             aaPolygons[aUValues[Index1].nWhichPoly],
+                             aUValues[Index1].nWhichPoint,
+                             aPolygon)==false)
+                {
+                aHardImprint.push_back(aUValues[Index1].nWhichPoly);
+                }
             }
         }
 
@@ -883,11 +890,18 @@ void TriangulatePolygonSub(SGM::Result                                   &,//rRe
     // Triangulate and delaunay flip the triangles.
 
     TriangulatePolygonSubSub(aPoints,aPolygon,aTriangles,bSelfIntersect);
-    SGM::FindAdjacencies2D(aTriangles, aAdjacencies);
-    DelaunayFlips(aPoints, aTriangles, aAdjacencies);
+
+    for(auto nWhichPolygon : aHardImprint)
+        {
+        std::vector<unsigned> aPolygonIndices;
+        SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPoints,aaPolygons[nWhichPolygon]),
+                           aPoints,aTriangles,aPolygonIndices);
+        aaPolygons[nWhichPolygon]=aPolygonIndices;
+        }
+
+    SGM::FindAdjacencies2D(aTriangles,aAdjacencies);
+    DelaunayFlips(aPoints,aTriangles,aAdjacencies);
     }
-
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1126,12 +1140,12 @@ bool PointInPolygon(Point2D const &Pos,
     return nCrosses % 2 == 1;
     }
 
-bool TriangulatePolygonWithHoles(Result                                        &rResult,
-                                 std::vector<Point2D>                    const &aPoints,
-                                 std::vector<std::vector<unsigned> > const &aaPolygons,
-                                 std::vector<unsigned>                     &aTriangles,
-                                 std::vector<unsigned>                     &aAdjacencies,
-                                 bool                                           bSelfIntersect)
+bool TriangulatePolygonWithHoles(Result                              &rResult,
+                                 std::vector<Point2D>                &aPoints,
+                                 std::vector<std::vector<unsigned> > &aaPolygons,
+                                 std::vector<unsigned>               &aTriangles,
+                                 std::vector<unsigned>               &aAdjacencies,
+                                 bool                                 bSelfIntersect)
     {
     if (aaPolygons.empty() || aPoints.empty())
         {
@@ -1144,12 +1158,12 @@ bool TriangulatePolygonWithHoles(Result                                        &
 
     std::vector<std::vector<std::vector<unsigned> > > aaaPolygonGroups;
     GroupPolygons(aaPolygons,aPoints,aaaPolygonGroups);
-    size_t nOutside = aaaPolygonGroups.size();
+    size_t nOutside=aaaPolygonGroups.size();
 
     // Triangulate each of the outside groups.
 
     size_t Index1,Index2;
-    for (Index1 = 0; Index1 < nOutside; ++Index1)
+    for(Index1=0;Index1<nOutside;++Index1)
         {
         std::vector<unsigned> aSubTriangles, aSubAdjacencies;
         SGMInternal::TriangulatePolygonSub(rResult,
@@ -1159,8 +1173,8 @@ bool TriangulatePolygonWithHoles(Result                                        &
                                            aSubAdjacencies,
                                            bSelfIntersect);
         size_t nSubTriangles = aSubTriangles.size();
-        aTriangles.reserve(aTriangles.size() + nSubTriangles);
-        for (Index2 = 0; Index2 < nSubTriangles; ++Index2)
+        aTriangles.reserve(aTriangles.size()+nSubTriangles);
+        for(Index2=0;Index2<nSubTriangles;++Index2)
             {
             aTriangles.push_back(aSubTriangles[Index2]);
             }
@@ -1323,11 +1337,11 @@ bool PointInPolygonGroup(Point2D                             const &Pos,
     return false;
     }
 
-bool TriangulatePolygon(Result                      &rResult,
-                        std::vector<Point2D>  const &aPoints2D,
-                        std::vector<unsigned> const &aPolygon,
-                        std::vector<unsigned>       &aTriangles,
-                        bool                         bSelfIntersect)
+bool TriangulatePolygon(Result                &rResult,
+                        std::vector<Point2D>  &aPoints2D,
+                        std::vector<unsigned> &aPolygon,
+                        std::vector<unsigned> &aTriangles,
+                        bool                   bSelfIntersect)
     {
     if(aPolygon.empty() || aPoints2D.empty())
         {

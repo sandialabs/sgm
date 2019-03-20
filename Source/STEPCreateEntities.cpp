@@ -400,10 +400,10 @@ void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
             !SGM::NearEqual(ZAxis, SGM::UnitVector3D(0.,0.,1.), SGM_MIN_TOL) &&
             !SGM::NearEqual(XAxis, SGM::UnitVector3D(1.,0.,0.), SGM_MIN_TOL) )
             {
-            std::cout << "Body Axes" << std::endl;
-            std::cout << "Center " << Center.m_x << " " << Center.m_y << " " << Center.m_z << std::endl;
-            std::cout << "ZAxis " << ZAxis.m_x << " " << ZAxis.m_y << " " << ZAxis.m_z << std::endl;
-            std::cout << "XAxis " << XAxis.m_x << " " << XAxis.m_y << " " << XAxis.m_z << std::endl;
+            //std::cout << "Body Axes" << std::endl;
+            //std::cout << "Center " << Center.m_x << " " << Center.m_y << " " << Center.m_z << std::endl;
+            //std::cout << "ZAxis " << ZAxis.m_x << " " << ZAxis.m_y << " " << ZAxis.m_z << std::endl;
+            //std::cout << "XAxis " << XAxis.m_x << " " << XAxis.m_y << " " << XAxis.m_z << std::endl;
 
             SGM::Transform3D BodyTransform(XAxis, ZAxis*XAxis, ZAxis, SGM::Vector3D(Center));
             mBodyToTransforms.emplace(std::pair<body*, SGM::Transform3D>(pBody, BodyTransform));
@@ -504,7 +504,7 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
                                 SGM::Point3D const &Pos0 = aControlPoints[Index3 - 1];
                                 SGM::Point3D const &Pos1 = aControlPoints[Index3];
                                 edge *pEdge = CreateEdge(rResult, Pos0, Pos1);
-                                pVolume->AddEdge(pEdge);
+                                pVolume->AddEdge(rResult,pEdge);
                                 }
                             rResult.GetThing()->DeleteEntity(pNUB);
                             }
@@ -529,7 +529,7 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
                     size_t mEdgeId = aVolumeChildIDs[Index3];
                     entity *pEdgeEntity = mIDToEntityMap.at(mEdgeId);
                     edge *pEdge = dynamic_cast<edge *>(pEdgeEntity);
-                    pVolume->AddEdge(pEdge);
+                    pVolume->AddEdge(rResult,pEdge);
                     }
                 }
             else
@@ -564,7 +564,7 @@ void ConnectFacesAndEdgesToVolumes(SGM::Result               &rResult,
                         {
                         pFace->SetFlipped(true);
                         }
-                    pVolume->AddFace(pFace);
+                    pVolume->AddFace(rResult,pFace);
                     }
                 }
             }
@@ -727,9 +727,9 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
                 SGM::Interval1D Domain(dStartParam, dStartParam + SGM_TWO_PI);
                 pCurve->SetDomain(Domain);
                 }
-            pEdge->SetStart(pStart);
-            pEdge->SetEnd(pEnd);
-            pEdge->SetCurve(pCurve);
+            pEdge->SetStart(rResult,pStart);
+            pEdge->SetEnd(rResult,pEnd);
+            pEdge->SetCurve(rResult,pCurve);
             SGM::Interval1D Domain = pEdge->GetDomain();
             if (Domain.IsEmpty())
                 {
@@ -757,9 +757,9 @@ void ConnectCurvesAndVerticesToEdges(SGM::Result               &rResult,
             vertex *pStart = new vertex(rResult, StartPos);
             vertex *pEnd = new vertex(rResult, EndPos);
 
-            pEdge->SetStart(pStart);
-            pEdge->SetEnd(pEnd);
-            pEdge->SetCurve(pCurve);
+            pEdge->SetStart(rResult,pStart);
+            pEdge->SetEnd(rResult,pEnd);
+            pEdge->SetCurve(rResult,pCurve);
             }
         }
     }

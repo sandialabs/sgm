@@ -12,12 +12,6 @@
 namespace SGM
 {
 
-// Strip bodies from volumes.
-
-SGM_EXPORT void ReduceToVolumes(SGM::Result           &rResult,
-                                SGM::Body             &BodyID,
-                                std::set<SGM::Volume> &sVolumes);
-
 // Unite the two given bodies
 
 SGM_EXPORT void UniteBodies(SGM::Result &rResult,
@@ -35,6 +29,18 @@ SGM_EXPORT void SubtractBodies(SGM::Result &rResult,
 SGM_EXPORT void IntersectBodies(SGM::Result &rResult,
                                 SGM::Body   &KeepBodyID,
                                 SGM::Body   &DeletedBodyID);
+
+// Imprints the deleted body onto the returned body.
+
+SGM_EXPORT void ImprintBodies(SGM::Result &rResult,
+                              SGM::Body   &KeepBodyID,
+                              SGM::Body   &DeletedBodyID);
+
+// Strip bodies from volumes.
+
+SGM_EXPORT void ReduceToVolumes(SGM::Result           &rResult,
+                                SGM::Body             &BodyID,
+                                std::set<SGM::Volume> &sVolumes);
 
 // Returns a vector of edges that consist of the given curve trimmed by
 // the given face.

@@ -72,22 +72,22 @@ SGM_EXPORT double SmallestPolygonEdge(std::vector<Point2D> const &aPolygon);
 // self-intersect, then bSelfIntersect may be set to false and the function
 // will run faster.
 
-SGM_EXPORT bool TriangulatePolygonWithHoles(Result                                        &rResult,
-                                            std::vector<Point2D>                    const &aPoints2D,
-                                            std::vector<std::vector<unsigned int> > const &aaPolygons,
-                                            std::vector<unsigned int>                     &aTriangles,
-                                            std::vector<unsigned int>                     &aAdjacencies,
-                                            bool                                           bSelfIntersecting=true);
+SGM_EXPORT bool TriangulatePolygonWithHoles(Result                                  &rResult,
+                                            std::vector<Point2D>                    &aPoints2D,
+                                            std::vector<std::vector<unsigned int> > &aaPolygons,
+                                            std::vector<unsigned int>               &aTriangles,
+                                            std::vector<unsigned int>               &aAdjacencies,
+                                            bool                                     bSelfIntersecting=true);
 
 // Same as TriangulatePolygonWithHoles but works on only one polygon.  If the polygon
 // is known to not self-intersect, then bSelfIntersect may be set to false and the
 // function will run faster.
 
-SGM_EXPORT bool TriangulatePolygon(Result                          &rResult,
-                                   std::vector<Point2D>      const &aPoints2D,
-                                   std::vector<unsigned int> const &aPolygon,
-                                   std::vector<unsigned int>       &aTriangles,
-                                   bool                             bSelfIntersecting=true);
+SGM_EXPORT bool TriangulatePolygon(Result                    &rResult,
+                                   std::vector<Point2D>      &aPoints2D,
+                                   std::vector<unsigned int> &aPolygon,
+                                   std::vector<unsigned int> &aTriangles,
+                                   bool                       bSelfIntersecting=true);
 
 // Given a vector of points along, with a vector of polygons, on the given points, divide the polygons into
 // nested groups of polygons where each first polygon is an outside polygon and the following polygons are

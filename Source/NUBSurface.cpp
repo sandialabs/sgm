@@ -349,12 +349,6 @@ SGM::Point2D NUBsurface::Inverse(SGM::Point3D const &Pos,
         {
         Evaluate(uv,ClosePos);
         }
-    if(pGuess)
-        {
-        //TODO: implement pGuess in NUBSurface::Inverse
-        throw std::logic_error("pGuess not implemented in NUBsurface::Inverse");
-        }
-
     return uv;
     }
 

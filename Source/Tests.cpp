@@ -644,9 +644,9 @@ bool RunInternalTest(SGM::Result &rResult,
         auto *pOffset = new SGMInternal::offset(rResult, 1.0, pOtherPlane);
         aEntities.push_back(pOffset);
 
-        pEdge->SetCurve(pLine);
-        pEdge->SetStart(pVertex);
-        pEdge->SetEnd(pVertex);
+        pEdge->SetCurve(rResult,pLine);
+        pEdge->SetStart(rResult,pVertex);
+        pEdge->SetEnd(rResult,pVertex);
         pFace->SetSurface(pSphere);
 
         // create NUBsurface
@@ -814,7 +814,7 @@ bool RunInternalTest(SGM::Result &rResult,
         {
         bAnswer=true;
 
-        SGMInternal::PrintOrderedPoints("order points", {0}, {{0,0,0}}); // call once for coverage
+        //SGMInternal::PrintOrderedPoints("order points", {0}, {{0,0,0}}); // call once for coverage
 
         std::vector<SGM::Point3D> aPoints0 =
             {

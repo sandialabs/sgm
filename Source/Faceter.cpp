@@ -523,19 +523,22 @@ class FacetNodeNormal
     public:
 
     FacetNodeNormal(double              dParam,
-                    SGM::Point3D const &Pos):m_dParam(dParam),m_Pos(Pos),m_Norm(),m_bSingular(false) {}
+                    SGM::Point3D const &Pos,
+                    SGM::Point2D const &uv):
+    m_dParam(dParam),m_Pos(Pos),m_uv(uv),m_Norm(),m_bSingular(false) {}
 
     double            m_dParam;
     SGM::Point3D      m_Pos;
+    SGM::Point2D      m_uv;
     SGM::UnitVector3D m_Norm;
     bool              m_bSingular;
     };
 
 void FacetCurve(curve               const *pCurve,
-                       SGM::Interval1D     const &Domain,
-                       FacetOptions        const &Options,
-                       std::vector<SGM::Point3D> &aPoints3D,
-                       std::vector<double>       &aParams)
+                SGM::Interval1D     const &Domain,
+                FacetOptions        const &Options,
+                std::vector<SGM::Point3D> &aPoints3D,
+                std::vector<double>       &aParams)
     {
     SGM::EntityType nCurveType=pCurve->GetCurveType();
     switch(nCurveType)
@@ -854,7 +857,7 @@ static bool SplitFacet(curve                          const *pCurve,
     SGM::Point3D Pos;
     pCurve->Evaluate(dParamC,&Pos);
     SGM::Point2D uv=pSurface->Inverse(Pos);
-    FacetNodeNormal NodeC(dParamC,Pos);
+    FacetNodeNormal NodeC(dParamC,Pos,uv);
     pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&NodeC.m_Norm);
     lNodes.insert(NodeB,NodeC);
     NodeB=NodeA;
@@ -862,8 +865,7 @@ static bool SplitFacet(curve                          const *pCurve,
     return true;
     }
 
-static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
-                                    FacetOptions        const &Options,
+static void SplitWithSurfaceNormals(FacetOptions        const &Options,
                                     surface             const *pSurface,
                                     curve               const *pCurve,
                                     std::vector<SGM::Point3D> &aPoints3D,
@@ -888,6 +890,14 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
             pCurve->Evaluate(dParam,&ClosePos);
             SGM::Point2D CloseUV=pSurface->Inverse(ClosePos);
             pSurface->Evaluate(CloseUV,nullptr,nullptr,nullptr,&Norm);
+            if(pSurface->SingularHighU() || pSurface->SingularHighV())
+                {
+                uv.m_v=CloseUV.m_v;
+                }
+            else
+                {
+                uv.m_u=CloseUV.m_u;
+                }
             }
         else if(Index1==nPoints-1 && pSurface->IsSingularity(uv,SGM_MIN_TOL))
             {
@@ -899,13 +909,21 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
             pCurve->Evaluate(dParam,&ClosePos);
             SGM::Point2D CloseUV=pSurface->Inverse(ClosePos);
             pSurface->Evaluate(CloseUV,nullptr,nullptr,nullptr,&Norm);
+            if(pSurface->SingularHighU() || pSurface->SingularHighV())
+                {
+                uv.m_v=CloseUV.m_v;
+                }
+            else
+                {
+                uv.m_u=CloseUV.m_u;
+                }
             }
         else
             {
             SGM::Point3D TestPos;
             pSurface->Evaluate(uv,&TestPos,nullptr,nullptr,&Norm);
             }
-        FacetNodeNormal Node(aParams[Index1],Pos);
+        FacetNodeNormal Node(aParams[Index1],Pos,uv);
         if(bSingular)
             {
             Node.m_bSingular=true;
@@ -914,7 +932,6 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
         lNodes.push_back(Node);
         }
 
-    bool bSplit = false;
     double dDotTol=std::cos(Options.m_dFaceAngleTol);
     auto iter=lNodes.begin();
     auto LastIter=iter;
@@ -934,7 +951,6 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
                 }
             else
                 {
-                bSplit = true;
                 ++nCount;
                 if(nMaxSplit<nCount)
                     {
@@ -961,23 +977,20 @@ static void SplitWithSurfaceNormals(SGM::Result               &,//rResult,
         double dParamC=(dParamA+dParamB)*0.5;
         SGM::Point3D Pos;
         pCurve->Evaluate(dParamC,&Pos);
-        FacetNodeNormal NodeC(dParamC,Pos);
+        SGM::Point2D uv=pSurface->Inverse(Pos);
+        FacetNodeNormal NodeC(dParamC,Pos,uv);
         lNodes.insert(NodeB,NodeC);
         NodeB=NodeA;
-        bSplit=true;
         }
-
-    if(bSplit)
+    
+    aPoints3D.clear();
+    aParams.clear();
+    auto iterNodeSplit=lNodes.begin();
+    while(iterNodeSplit!=lNodes.end())
         {
-        aPoints3D.clear();
-        aParams.clear();
-        auto iterNodeSplit=lNodes.begin();
-        while(iterNodeSplit!=lNodes.end())
-            {
-            aPoints3D.push_back(iterNodeSplit->m_Pos);
-            aParams.push_back(iterNodeSplit->m_dParam);
-            ++iterNodeSplit;
-            }
+        aPoints3D.push_back(iterNodeSplit->m_Pos);
+        aParams.push_back(iterNodeSplit->m_dParam);
+        ++iterNodeSplit;
         }
     }
 
@@ -1068,7 +1081,18 @@ void FacetEdge(SGM::Result               &rResult,
 
     for (auto pSurface : sSurfaces)
         {
-        SplitWithSurfaceNormals(rResult,Options,pSurface,pCurve,aPoints3D,aParams);
+        SplitWithSurfaceNormals(Options,pSurface,pCurve,aPoints3D,aParams);
+        }
+    std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+    for(face *pFace : sFaces)
+        {
+        SGM::EdgeSideType nSideType=pFace->GetSideType(pEdge);
+        std::vector<SGM::Point2D> aParams;
+        for(SGM::Point3D const &Pos : aPoints3D)
+            {
+            aParams.push_back(pFace->EvaluateParamSpace(pEdge,nSideType,Pos));
+            }
+        pFace->SetUVBoundary(pEdge,aParams);
         }
     }
 
@@ -2928,7 +2952,9 @@ void FacetFace(SGM::Result                    &rResult,
             // No refining.
 
             SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaPolygons,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
-            FindNormals(pFace,aPoints2D,aNormals);
+            aPoints3D.clear();
+            aNormals.clear();
+            FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
             break;
             }
         case SGM::CylinderType:

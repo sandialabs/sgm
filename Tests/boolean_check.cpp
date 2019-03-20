@@ -26,20 +26,120 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
-//TEST(modify, block_sphere_subtract)
+//TEST(modify, block_sphere_subtract_2)
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
 //    SGM::Result rResult(pThing); 
 //
-//    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+//    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,5));
 //    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
 //
-//    SGM::SubtractBodies(rResult,BlockID,SphereID);
+//    std::set<SGM::Face> sSphereFaces;
+//    SGM::FindFaces(rResult,SphereID,sSphereFaces);
+//    SGM::Face SphereFaceID=*(sSphereFaces.begin());
+//    SGM::Surface SphereSurfaceID=SGM::GetSurfaceOfFace(rResult,SphereFaceID);
+//    std::set<SGM::Face> sFaces;
+//    SGM::FindFaces(rResult,BlockID,sFaces);
+//    std::vector<SGM::Edge> aEdges;
+//    for(SGM::Face FaceID : sFaces)
+//        {
+//        SGM::Surface PlaneID=SGM::GetSurfaceOfFace(rResult,FaceID);
+//        std::vector<SGM::Curve> aCurves;
+//        SGM::IntersectSurfaces(rResult,SphereSurfaceID,PlaneID,aCurves);
+//        SGM::TrimCurveWithFace(rResult,aCurves[0],FaceID,aEdges);
+//        }
+//    SGM::DeleteEntity(rResult,BlockID);
+//
+//    size_t nEdges=aEdges.size();
+//    size_t Index1;
+//    for(Index1=0;Index1<nEdges;++Index1)
+//        {
+//        SGM::Edge EdgeID=aEdges[Index1];
+//        SGM::ImprintEdgeOnFace(rResult,EdgeID,SphereFaceID);
+//        if(Index1==10)
+//            break;
+//        }
 //
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
 
-TEST(modify, imprint_point_on_body)
+TEST(modify, block_sphere_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    // Checked (5,5,5) and (10,5,5) (5,10,5) (5,5,10)
+    // Could not do (10,10,5);
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,5,5));
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+
+    SGM::SubtractBodies(rResult,BlockID,SphereID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, close_island_imprint)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BodyID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),2);
+    SGM::Edge Edge1=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0));
+    SGM::Edge Edge2=SGM::CreateLinearEdge(rResult,SGM::Point3D(1,0,0),SGM::Point3D(0,1,0));
+    SGM::Edge Edge3=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,1,0),SGM::Point3D(0,0,0));
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BodyID1,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    SGM::ImprintEdgeOnFace(rResult,Edge1,FaceID);
+    SGM::ImprintEdgeOnFace(rResult,Edge2,FaceID);
+    SGM::ImprintEdgeOnFace(rResult,Edge3,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, point_intersection_body_and_vertex)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BodyID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Body BodyID2=SGM::CreateDisk(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(1,0,0),1);
+
+    SGM::ImprintPoint(rResult,SGM::Point3D(0,0,0),BodyID2);
+    SGM::ImprintBodies(rResult,BodyID1,BodyID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, point_intersection_body_and_edge)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BodyID1=SGM::CreateDisk(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),1);
+    SGM::Body BodyID2=SGM::CreateDisk(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(1,0,0),1);
+
+    SGM::ImprintBodies(rResult,BodyID1,BodyID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, imprint_point_on_body_face)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+
+    SGM::ImprintPoint(rResult,SGM::Point3D(5,5,10),BlockID);
+    SGM::ImprintPoint(rResult,SGM::Point3D(5,5,0),BlockID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, imprint_point_on_body_edge)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -261,7 +361,7 @@ TEST(modify, tweak_face)
 
     SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(10,10,0),3);
     SGM::SubtractBodies(rResult,BlockID,SphereID);
-
+    
     SGM::CheckOptions Options;
     std::vector<std::string> aCheckStrings;
     EXPECT_TRUE(SGM::CheckEntity(rResult,BlockID,Options,aCheckStrings));

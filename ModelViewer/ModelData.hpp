@@ -200,7 +200,7 @@ private:
 
     void add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID);
 
-    void add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID);
+    void add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID, SGM::Face *pFaceID);
 
     void add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID);
 

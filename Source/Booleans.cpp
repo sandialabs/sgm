@@ -49,8 +49,8 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
 
     if(pEnd==nullptr)
         {
-        pEdge->SetStart(pAnswer);
-        pEdge->SetEnd(pAnswer);
+        pEdge->SetStart(rResult,pAnswer);
+        pEdge->SetEnd(rResult,pAnswer);
 
         SGM::Interval1D Domain(t,pEdge->GetCurve()->GetDomain().Length()+t);
         pEdge->SetDomain(rResult,Domain);
@@ -58,12 +58,12 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
     else
         {
         auto pNewEdge=new edge(rResult);
-        pNewEdge->SetCurve(pEdge->GetCurve());
+        pNewEdge->SetCurve(rResult,pEdge->GetCurve());
     
         SGM::Interval1D Domain=pEdge->GetDomain();
-        pNewEdge->SetEnd(pEnd);
-        pNewEdge->SetStart(pAnswer);
-        pEdge->SetEnd(pAnswer);
+        pNewEdge->SetEnd(rResult,pEnd);
+        pNewEdge->SetStart(rResult,pAnswer);
+        pEdge->SetEnd(rResult,pAnswer);
         if(pEdge->GetStart()==pEnd)
             {
             pEdge->GetStart()->AddEdge(pEdge);
@@ -103,12 +103,31 @@ vertex *ImprintPoint(SGM::Result        &rResult,
             auto pBody=(body *)pTopology;
             std::set<edge *,EntityCompare> sEdges;
             FindEdges(rResult,pBody,sEdges,false);
+            bool bFound=false;
             for(auto pEdge : sEdges)
                 {
                 if(pEdge->PointInEdge(Pos,SGM_MIN_TOL))
                     {
                     pAnswer=ImprintPointOnEdge(rResult,Pos,pEdge);
+                    bFound=true;
                     break;
+                    }
+                }
+            if(!bFound)
+                {
+                std::set<face *,EntityCompare> sFaces;
+                FindFaces(rResult,pBody,sFaces,false);
+                for(auto pFace : sFaces)
+                    {
+                    SGM::Point3D CPos;
+                    SGM::Point2D uv=pFace->GetSurface()->Inverse(Pos,&CPos);
+                    if(SGM::NearEqual(Pos,CPos,SGM_MIN_TOL) && pFace->PointInFace(rResult,uv))
+                        {
+                        curve *pCurve=new PointCurve(rResult,Pos);
+                        edge *pEdge=CreateEdge(rResult,pCurve,&pCurve->GetDomain());
+                        ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace);
+                        break;
+                        }
                     }
                 }
             break;
@@ -194,7 +213,19 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
     for(Index1=0;Index1<nHits;++Index1)
         {
         SGM::Point3D const &Pos=aHits[Index1];
-        aHitParams.emplace_back(pCurve->Inverse(Pos),Pos);
+        double dParam=pCurve->Inverse(Pos);
+        aHitParams.emplace_back(dParam,Pos);
+        if(pCurve->GetClosed() && pCurve->GetDomain().OnBoundary(dParam,SGM_MIN_TOL))
+            {
+            if(dParam<pCurve->GetDomain().MidPoint())
+                {
+                aHitParams.emplace_back(dParam+pCurve->GetDomain().Length(),Pos);
+                }
+            else
+                {
+                aHitParams.emplace_back(dParam-pCurve->GetDomain().Length(),Pos);
+                }
+            }
         }
     std::sort(aHitParams.begin(),aHitParams.end());
 
@@ -203,8 +234,9 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
     surface const *pSurface0=pFace0->GetSurface();
     surface const *pSurface1=pFace1 ? pFace1->GetSurface() : nullptr;
     std::vector<bool> aIsolated;
-    aIsolated.assign(nHits,true);
-    for(Index1=1;Index1<nHits;++Index1)
+    size_t nHitParams=aHitParams.size();
+    aIsolated.assign(nHitParams,true);
+    for(Index1=1;Index1<nHitParams;++Index1)
         {
         double dParam0=aHitParams[Index1-1].first;
         double dParam1=aHitParams[Index1].first;
@@ -221,9 +253,16 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
                     {
                     ParamDomain&=*pLimitDomain;
                     }
-                aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
-                aIsolated[Index1-1]=false;
-                aIsolated[Index1]=false;
+                if(ParamDomain.Length()<SGM_MIN_TOL)
+                    {
+                    // Could add isolated point here?
+                    }
+                else
+                    {
+                    aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
+                    aIsolated[Index1-1]=false;
+                    aIsolated[Index1]=false;
+                    }
                 }
             else
                 {
@@ -271,7 +310,7 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
 
     // Check for isolated points.
 
-    for(Index1=0;Index1<nHits;++Index1)
+    for(Index1=0;Index1<nHitParams;++Index1)
         {
         if(aIsolated[Index1])
             {
@@ -321,11 +360,11 @@ void MergeVertices(SGM::Result &rResult,
         {
         if(pEdge->GetStart()==pDeleteVertex)
             {
-            pEdge->SetStart(pKeepVertex);
+            pEdge->SetStart(rResult,pKeepVertex);
             }
         if(pEdge->GetEnd()==pDeleteVertex)
             {
-            pEdge->SetEnd(pKeepVertex);
+            pEdge->SetEnd(rResult,pKeepVertex);
             }
         }
     rResult.GetThing()->DeleteEntity(pDeleteVertex);
@@ -430,9 +469,9 @@ size_t FindLoop(entity                                  *pStartEntity,
     return nAnswer;
     }
 
-bool ShouldFlip(std::vector<edge *>            const &aLoop,
-                std::vector<SGM::EdgeSideType> const &aSides,
-                edge                           const *pNewEdge)
+bool ShouldEdgeFlip(std::vector<edge *>            const &aLoop,
+                    std::vector<SGM::EdgeSideType> const &aSides,
+                    edge                           const *pNewEdge)
     {
     vertex *pVertex=pNewEdge->GetEnd();
     size_t nLoop=aLoop.size();
@@ -449,11 +488,13 @@ bool ShouldFlip(std::vector<edge *>            const &aLoop,
     return false;
     }
 
-void SplitLoop(std::vector<edge *>            const &aLoop,
+void SplitLoop(SGM::Result                          &rResult,
+               std::vector<edge *>            const &aLoop,
                std::vector<SGM::EdgeSideType> const &aSides,
                entity                               *pStartEntity,
                entity                               *pEndEntity,
                edge                                 *pNewEdge,
+               face                                 *pFace,
                std::vector<edge *>                  &aLoopA,
                std::vector<edge *>                  &aLoopB,
                std::vector<SGM::EdgeSideType>       &aSidesA,
@@ -517,10 +558,10 @@ void SplitLoop(std::vector<edge *>            const &aLoop,
 
     // Add the new edge to the two loops.
 
-    bool bFlip=ShouldFlip(aLoopA,aSidesA,pNewEdge);
+    bool bFlipEdge=ShouldEdgeFlip(aLoopA,aSidesA,pNewEdge);
     aLoopA.push_back(pNewEdge);
     aLoopB.push_back(pNewEdge);
-    if(bFlip)
+    if(bFlipEdge)
         {
         aSidesA.push_back(SGM::FaceOnRightType);
         aSidesB.push_back(SGM::FaceOnLeftType);
@@ -529,6 +570,58 @@ void SplitLoop(std::vector<edge *>            const &aLoop,
         {
         aSidesA.push_back(SGM::FaceOnLeftType);
         aSidesB.push_back(SGM::FaceOnRightType);
+        }
+
+    // Check to see if everything needs flipping.
+
+    surface *pSurface=pFace->GetSurface();
+    //std::vector<SGM::Point3D> aPolygonB3D;
+    std::vector<SGM::Point2D> aPolygonB2D;
+    size_t nLoopB=aLoopB.size();
+    for(Index1=0;Index1<nLoopB;++Index1)
+        {
+        edge *pEdge=aLoopB[Index1];
+        std::vector<SGM::Point3D> aPoints3D=pEdge->GetFacets(rResult);
+        if(aSidesB[Index1]==SGM::FaceOnRightType)
+            {
+            std::reverse(aPoints3D.begin(),aPoints3D.end());
+            }
+        for(auto Pos : aPoints3D)
+            {
+            //aPolygonB3D.push_back(Pos);
+            aPolygonB2D.push_back(pSurface->Inverse(Pos));
+            }
+        }
+
+    //int nUWinds,nVWinds;
+    //FindWindingNumbers(pSurface,aPolygonB3D,nUWinds,nVWinds);
+    double dAreaB=SGM::PolygonArea(aPolygonB2D);
+    if(dAreaB<0)// && nUWinds==0 && nVWinds==0)
+        {
+        size_t nSidesA=aSidesA.size();
+        for(Index1=0;Index1<nSidesA;++Index1)
+            {
+            if(aSidesA[Index1]==SGM::FaceOnLeftType)
+                {
+                aSidesA[Index1]=SGM::FaceOnRightType;
+                }
+            else if(aSidesA[Index1]==SGM::FaceOnRightType)
+                {
+                aSidesA[Index1]=SGM::FaceOnLeftType;
+                }
+            }
+        size_t nSidesB=aSidesB.size();
+        for(Index1=0;Index1<nSidesB;++Index1)
+            {
+            if(aSidesB[Index1]==SGM::FaceOnLeftType)
+                {
+                aSidesB[Index1]=SGM::FaceOnRightType;
+                }
+            else if(aSidesB[Index1]==SGM::FaceOnRightType)
+                {
+                aSidesB[Index1]=SGM::FaceOnLeftType;
+                }
+            }
         }
     }
 
@@ -555,39 +648,67 @@ face *ImprintSplitter(SGM::Result &rResult,
 
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaEdgeSideTypes;
-    pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
+    size_t nLoops=pFace->FindLoops(rResult,aaLoops,aaEdgeSideTypes);
 
-    size_t nLoop=FindLoop(pStartEntity,aaLoops);
+    size_t nSplitLoop=FindLoop(pStartEntity,aaLoops);
     std::vector<edge *> aLoopA,aLoopB;
     std::vector<SGM::EdgeSideType> aEdgeSideTypesA,aEdgeSideTypesB;
-    SplitLoop(aaLoops[nLoop],aaEdgeSideTypes[nLoop],pStartEntity,pEndEntity,
-              pEdge,aLoopA,aLoopB,aEdgeSideTypesA,aEdgeSideTypesB);
-    pFace->AddEdge(rResult,pEdge,SGM::FaceOnBothSidesType);
+    SplitLoop(rResult,aaLoops[nSplitLoop],aaEdgeSideTypes[nSplitLoop],pStartEntity,
+              pEndEntity,pEdge,pFace,aLoopA,aLoopB,aEdgeSideTypesA,aEdgeSideTypesB);
+
+    // Take all the aLoopB edges out of pFace.
+
+    size_t Index1,Index2;
+    size_t nLoopB=aLoopB.size();
+    for(Index1=0;Index1<nLoopB;++Index1)
+        {
+        edge *pLoopEdge=aLoopB[Index1];
+        pFace->RemoveEdge(rResult,pLoopEdge);
+        }
 
     // Make a new face for the second part of the split loop.
 
     auto pNewFace=new face(rResult);
     pNewFace->SetSurface(pFace->GetSurface());
     pNewFace->SetSides(pFace->GetSides());
-    pFace->GetVolume()->AddFace(pNewFace);
-    size_t nLoopB=aLoopB.size();
-    size_t Index1;
+    pFace->GetVolume()->AddFace(rResult,pNewFace);
+    size_t nLoopA=aLoopA.size();
+    for(Index1=0;Index1<nLoopA;++Index1)
+        {
+        edge *pLoopEdge=aLoopA[Index1];
+        SGM::EdgeSideType nType=aEdgeSideTypesA[Index1];
+        pFace->AddEdge(rResult,pLoopEdge,nType);
+        }
     for(Index1=0;Index1<nLoopB;++Index1)
         {
         edge *pLoopEdge=aLoopB[Index1];
         SGM::EdgeSideType nType=aEdgeSideTypesB[Index1];
-        if(pEdge==pLoopEdge)
-            {
-            pFace->AddEdge(rResult,pLoopEdge,nType==SGM::FaceOnLeftType ? SGM::FaceOnRightType : SGM::FaceOnLeftType);
-            }
-        else
-            {
-            pFace->RemoveEdge(rResult,pLoopEdge);
-            }
         pNewFace->AddEdge(rResult,pLoopEdge,nType);
         }
         
-    // Move the other loops to the face of the loop that they are inside.
+    // Move the other loops to the correct face.
+
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        if(Index1!=nSplitLoop)
+            {
+            edge *pEdge=aaLoops[Index1].front();
+            SGM::Point3D TestPos=pEdge->FindMidPoint();
+            SGM::Point2D uv=pNewFace->GetSurface()->Inverse(TestPos);
+            if(pNewFace->PointInFace(rResult,uv))
+                {
+                std::vector<edge *> const &aLoop=aaLoops[Index1];
+                std::vector<SGM::EdgeSideType> const &aType=aaEdgeSideTypes[Index1];
+                size_t nLoop=aLoop.size();
+                for(Index2=0;Index2<nLoop;++Index2)
+                    {
+                    edge *pLoopEdge=aLoop[Index2];
+                    pFace->RemoveEdge(rResult,pLoopEdge);
+                    pNewFace->AddEdge(rResult,pLoopEdge,aType[Index2]);
+                    }
+                }
+            }
+        }
 
     if(rResult.GetLog())
         {
@@ -635,7 +756,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     pNewFace->SetSurface(pFace->GetSurface());
     pNewFace->SetSides(pFace->GetSides());
     pNewFace->AddEdge(rResult,pEdge,SGM::FaceOnLeftType);
-    pFace->GetVolume()->AddFace(pNewFace);
+    pFace->GetVolume()->AddFace(rResult,pNewFace);
 
     int nUWinds,nVWinds;
     FindWindingNumbers(pFace->GetSurface(),pEdge->GetFacets(rResult),nUWinds,nVWinds);
@@ -733,6 +854,11 @@ bool AreEdgesCoincident(edge const *pImprintEdge,
             return true;
             }
         }
+    else if(pImprintEdge->GetDomain().Length()<SGM_MIN_TOL &&
+            pFaceEdge->PointInEdge(pImprintEdge->FindStartPoint(),SGM_MIN_TOL))
+        {
+        return true;
+        }
     return false;
     }
 
@@ -768,13 +894,19 @@ void MergeEdges(SGM::Result &rResult,
         if(pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO)
             {
             MergeVertices(rResult,pStartKeep,pStartDelete);
-            MergeVertices(rResult,pEndKeep,pEndDelete);
+            if(pStartDelete!=pEndDelete)
+                {
+                MergeVertices(rResult,pEndKeep,pEndDelete);
+                }
             }
         else
             {
             bFlip=true;
             MergeVertices(rResult,pStartKeep,pEndDelete);
-            MergeVertices(rResult,pEndKeep,pStartDelete);
+            if(pStartDelete!=pEndDelete)
+                {
+                MergeVertices(rResult,pEndKeep,pStartDelete);
+                }
             }
         }
     else
@@ -866,6 +998,25 @@ bool IsIsland(SGM::Result &rResult,
     return pFace->PointInFace(rResult,uv);
     }
 
+void ImprintPointCurveOnEdge(SGM::Result &rResult,
+                             edge        *pPointCurveEdge,
+                             entity      *pEntity)
+    {
+    vertex *pVertex1=pPointCurveEdge->GetStart();
+    if(pEntity->GetType()==SGM::VertexType)
+        {
+        vertex *pVertex2=(vertex *)pEntity;
+        MergeVertices(rResult,pVertex1,pVertex2);
+        }
+    else
+        {
+        edge *pEdge=(edge *)pEntity;
+        SGM::Point3D Pos=pVertex1->GetPoint();
+        vertex *pVertex2=ImprintPointOnEdge(rResult,Pos,pEdge);
+        MergeVertices(rResult,pVertex1,pVertex2);
+        }
+    }
+
 std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
                                              edge        *pEdge,
                                              face        *pFace)
@@ -901,9 +1052,18 @@ std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
         size_t nEndLoop=FindLoop(pEndEntity,aaLoops);
         if(nStartLoop==nEndLoop)
             {
-            // Splitter
+            if(pEdge->GetCurve()->GetCurveType()==SGM::PointCurveType)
+                {
+                // Coincident point on edge
 
-            aFaces.push_back(ImprintSplitter(rResult,pEdge,pFace,pStartEntity,pEndEntity));
+                ImprintPointCurveOnEdge(rResult,pEdge,pStartEntity);
+                }
+            else
+                {
+                // Splitter
+
+                aFaces.push_back(ImprintSplitter(rResult,pEdge,pFace,pStartEntity,pEndEntity));
+                }
             }
         else
             {
@@ -1110,14 +1270,14 @@ void MergeAndMoveVolumes(SGM::Result            &rResult,
                 std::set<face *,EntityCompare> sFaces=pVolume->GetFaces();
                 for(face *pFace : sFaces)
                     {
-                    pVolume->RemoveFace(pFace);
-                    pKeepVolume->AddFace(pFace);
+                    pVolume->RemoveFace(rResult,pFace);
+                    pKeepVolume->AddFace(rResult,pFace);
                     }
                 std::set<edge *,EntityCompare> sEdges=pVolume->GetEdges();
                 for(edge *pEdge : sEdges)
                     {
-                    pVolume->RemoveEdge(pEdge);
-                    pKeepVolume->AddEdge(pEdge);
+                    pVolume->RemoveEdge(rResult,pEdge);
+                    pKeepVolume->AddEdge(rResult,pEdge);
                     }
                 body *pBody=pVolume->GetBody();
                 pBody->RemoveVolume(pVolume);
@@ -1192,6 +1352,19 @@ void ImprintBodies(SGM::Result                            &rResult,
             sMergedVolumes.insert({FacePair.first->GetVolume()->GetID(),FacePair.second->GetVolume()->GetID()});
             }
         AddFacePairs(nOldSplits,aSplits,aFacePairs);
+        }
+
+    // Delete unused curves.
+
+    for(auto InPair : mIntersections)
+        {
+        for(auto pCurve : InPair.second)
+            {
+            if(pCurve->GetEdges().empty())
+                {
+                rResult.GetThing()->DeleteEntity(pCurve);
+                }
+            }
         }
 
     // Merge volumes and bodies.
@@ -1315,6 +1488,14 @@ bool FaceInFaces(SGM::Result        &rResult,
     return nHits%2==1;
     }
 
+void ImprintBodies(SGM::Result &rResult,
+                   body        *pKeepBody,
+                   body        *pDeleteBody)
+    {
+    std::vector<std::pair<face *,face *> > aSplits;
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    }
+
 void SubtractBodies(SGM::Result &rResult,
                     body        *pKeepBody,
                     body        *pDeleteBody)
@@ -1343,7 +1524,7 @@ void SubtractBodies(SGM::Result &rResult,
             }
         }
 
-    // Turn on the log on, imprint the bodies and find all the faces
+    // Imprint the bodies and find all the faces
     // that came from each body.
 
     std::vector<std::pair<face *,face *> > aSplits;
@@ -1370,7 +1551,7 @@ void SubtractBodies(SGM::Result &rResult,
             }
         }
 
-    static int bImprintOnly=false;
+    int bImprintOnly=false;
     if(bImprintOnly)
         {
         return;
@@ -1426,18 +1607,35 @@ void SubtractBodies(SGM::Result &rResult,
             }
         }
     std::set<curve *,EntityCompare> sCurves;
+    std::set<vertex *,EntityCompare> sVertices;
     for(edge *pEdge : sEdges)
         {
         if(pEdge->GetFaces().empty())
             {
-            sCurves.insert(pEdge->GetCurve());
+            if(pEdge->GetStart())
+                {
+                sVertices.insert(pEdge->GetStart());
+                sVertices.insert(pEdge->GetEnd());
+                }
+            curve *pCurve=pEdge->GetCurve();
+            sCurves.insert(pCurve);
             pEdge->SeverRelations(rResult);
             rResult.GetThing()->DeleteEntity(pEdge);
             }
         }
     for(curve *pCurve : sCurves)
         {
-        rResult.GetThing()->DeleteEntity(pCurve);
+        if(pCurve->GetEdges().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
+        }
+    for(vertex *pVertex : sVertices)
+        {
+        if(pVertex->GetEdges().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pVertex);
+            }
         }
 
     // Flip the filp faces.

@@ -747,7 +747,7 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
 
     for (const SGM::Edge &EdgeID : sEdges)
         {
-        add_edge_to_tree(volume_item, EdgeID);
+        add_edge_to_tree(volume_item, EdgeID, nullptr);
         }
 }
 
@@ -797,11 +797,11 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
 
     for (const SGM::Edge &EdgeID : sEdges)
         {
-        add_edge_to_tree(face_item, EdgeID);
+        add_edge_to_tree(face_item, EdgeID, &FaceID);
         }
 }
 
-void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
+void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID, SGM::Face *pFaceID)
 {
     std::map<QTreeWidgetItem *, SGM::Entity> &mMap = dPtr->mTree->mTreeMap;
     auto *edge_item = new QTreeWidgetItem(parent);
@@ -840,6 +840,24 @@ void ModelData::add_edge_to_tree(QTreeWidgetItem *parent, SGM::Edge EdgeID)
     char Data[100];
     snprintf(Data, sizeof(Data), "%.15G", dTol);
     tol_data_item->setText(1, Data);
+
+    if(pFaceID)
+        {
+        auto *face_side_data_item = new QTreeWidgetItem(edge_item);
+        SGM::EdgeSideType nType=SGM::GetEdgeSideType(dPtr->mResult,EdgeID,*pFaceID);
+        if(nType==SGM::FaceOnLeftType)
+            {
+            face_side_data_item->setText(0,"Left");
+            }
+        else if(nType==SGM::FaceOnRightType)
+            {
+            face_side_data_item->setText(0,"Right");
+            }
+        else if(nType==SGM::FaceOnBothSidesType)
+            {
+            face_side_data_item->setText(0,"Both");
+            }
+        }
 }
 
 void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID)
@@ -1507,7 +1525,7 @@ void ModelData::rebuild_tree()
     SGM::FindEdges(dPtr->mResult, SGM::Thing(), top_level_edges, true);
     for (const SGM::Edge &top_edge : top_level_edges)
         {
-        add_edge_to_tree(ThingItem, top_edge);
+        add_edge_to_tree(ThingItem, top_edge, nullptr);
         }
 
     std::set<SGM::Face> top_level_faces;

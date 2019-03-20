@@ -41,7 +41,7 @@ void curve::RemoveParentsInSet(SGM::Result &rResult,
     }
     for (auto pEdge : aToDisconnect)
     {
-        pEdge->SetCurve(nullptr);
+        pEdge->SetCurve(rResult,nullptr);
     }
     m_sEdges = sRemainingParents;
     entity::RemoveParentsInSet(rResult, sToRemove);

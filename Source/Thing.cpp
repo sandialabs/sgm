@@ -75,6 +75,7 @@ SGM::Interval3D const &thing::GetBox(SGM::Result &rResult,bool /*bContruct*/) co
 
 void thing::SeverOwners(entity *pEntity)
     {
+    SGM::Result rResult(this);
     switch (pEntity->GetType())
         {
         case SGM::EdgeType:
@@ -88,10 +89,10 @@ void thing::SeverOwners(entity *pEntity)
                 }
             if (volume *pVolume = pEdge->GetVolume())
                 {
-                pVolume->RemoveEdge(pEdge);
+                pVolume->RemoveEdge(rResult,pEdge);
                 }
-            pEdge->SetStart(nullptr);
-            pEdge->SetEnd(nullptr);
+            pEdge->SetStart(rResult,nullptr);
+            pEdge->SetEnd(rResult,nullptr);
             break;
             }
         case SGM::FaceType:
@@ -99,7 +100,7 @@ void thing::SeverOwners(entity *pEntity)
             auto pFace = reinterpret_cast<face *>(pEntity);
             if (volume *pVolume = pFace->GetVolume())
                 {
-                pVolume->RemoveFace(pFace);
+                pVolume->RemoveFace(rResult,pFace);
                 }
             break;
             }
