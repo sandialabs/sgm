@@ -9,6 +9,7 @@
 #include "STL.h"
 #include "Topology.h"
 #include "OrderPoints.h"
+#include "Modify.h"
 
 //#define SGM_TIMER
 #include "Util/timer.h"
@@ -1141,13 +1142,18 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         Heal(rResult,aEntities,Options);
         }
     */
-    if(Options.m_bMerge)
+    
+    size_t nEntities=aEntities.size();
+    size_t Index1;
+    for(Index1=0;Index1<nEntities;++Index1)
         {
-        size_t nEntities=aEntities.size();
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
+        if(Options.m_bMerge)
             {
             Merge(rResult,aEntities[Index1]);
+            }
+        if(aEntities[Index1]->GetType()==SGM::BodyType)
+            {
+            FixVolumes(rResult,(body *)aEntities[Index1]);
             }
         }
 

@@ -19,6 +19,10 @@ void SubtractBodies(SGM::Result &rResult,
                     body        *pKeepBody,
                     body        *pDeleteBody);
 
+void IntersectBodies(SGM::Result &rResult,
+                     body        *pKeepBody,
+                     body        *pDeleteBody);
+
 void ImprintBodies(SGM::Result &rResult,
                    body        *pKeepBody,
                    body        *pDeleteBody);
@@ -77,6 +81,9 @@ void FindWindingNumbers(surface                   const *pSurface,
 
 void OrientBody(SGM::Result &rResult,
                 body        *pBody);
+
+void FixVolumes(SGM::Result &rResult,
+                body        *pKeepBody);
 }
 
 #endif

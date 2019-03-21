@@ -1,5 +1,6 @@
 #include "SGMEntityFunctions.h"
 #include "SGMTriangle.h"
+#include "SGMGraph.h"
 
 #include "EntityClasses.h"
 #include "Curve.h"
@@ -320,6 +321,23 @@ bool volume::Check(SGM::Result              &rResult,
                 aCheckStrings.emplace_back(ss.str());
                 }
             }
+        }
+
+    // Check for disjoint volumes
+
+    std::set<SGM::Face> sFaces;
+    for(auto pFace : m_sFaces)
+        {
+        sFaces.insert(SGM::Face(pFace->GetID()));
+        }
+    SGM::Graph graph(rResult,sFaces,false);
+    std::vector<SGM::Graph> aComponents;
+    if(1<graph.FindComponents(aComponents))
+        {
+        bAnswer=false;
+        std::stringstream ss;
+        ss << SGM::EntityTypeName(GetType()) << ' ' << GetID() << " is not connected.";
+        aCheckStrings.emplace_back(ss.str());
         }
 
     if(bChildren)

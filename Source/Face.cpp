@@ -500,6 +500,13 @@ bool face::PointInFace(SGM::Result        &rResult,
                 }
             else
                 {
+                for(auto pEdge : aEdges)
+                    {
+                    if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+                        {
+                        return true;
+                        }
+                    }
                 throw; // Add more code
                 }
             }

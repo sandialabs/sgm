@@ -1488,6 +1488,38 @@ bool FaceInFaces(SGM::Result        &rResult,
     return nHits%2==1;
     }
 
+void FixVolumes(SGM::Result &rResult,
+                body        *pKeepBody)
+    {
+    std::set<volume *,EntityCompare> sVolumes=pKeepBody->GetVolumes();
+    for(volume *pVolume : sVolumes)
+        {
+        std::set<SGM::Face> sFaces;
+        std::set<face *,EntityCompare> const &sfaces=pVolume->GetFaces();
+        for(auto pFace : sfaces)
+            {
+            sFaces.insert(SGM::Face(pFace->GetID()));
+            }
+        SGM::Graph graph(rResult,sFaces,false);
+        std::vector<SGM::Graph> aComponents;
+        size_t nComponents=graph.FindComponents(aComponents);
+        size_t Index1;
+        for(Index1=1;Index1<nComponents;++Index1)
+            {
+            volume *pNewVolume=new volume(rResult);
+            SGM::Graph const &comp=aComponents[Index1];
+            std::set<size_t> const &sVertices=comp.GetVertices();
+            for(size_t FaceID : sVertices)
+                {
+                face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID);
+                pVolume->RemoveFace(rResult,pFace);
+                pNewVolume->AddFace(rResult,pFace);
+                }
+            pKeepBody->AddVolume(pNewVolume);
+            }
+        }
+    }
+
 void ImprintBodies(SGM::Result &rResult,
                    body        *pKeepBody,
                    body        *pDeleteBody)
@@ -1496,17 +1528,16 @@ void ImprintBodies(SGM::Result &rResult,
     ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
     }
 
-void SubtractBodies(SGM::Result &rResult,
-                    body        *pKeepBody,
-                    body        *pDeleteBody)
+void FindFaceTrees(SGM::Result         &rResult,
+                   body                *pKeepBody,
+                   body                *pDeleteBody,
+                   std::set<SGM::Face> &sFaces1,
+                   std::set<SGM::Face> &sFaces2,
+                   SGM::BoxTree        &Tree1,
+                   SGM::BoxTree        &Tree2)
     {
-    // Find all the faces before imprinting.  Also build box trees
-    // of the one sided faces.
-
-    std::set<SGM::Face> sFaces1,sFaces2;
     SGM::FindFaces(rResult,SGM::Body(pKeepBody->GetID()),sFaces1);
     SGM::FindFaces(rResult,SGM::Body(pDeleteBody->GetID()),sFaces2);
-    SGM::BoxTree Tree1,Tree2;
     for(SGM::Face FaceID : sFaces1)
         {
         face *pFace1=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
@@ -1523,12 +1554,15 @@ void SubtractBodies(SGM::Result &rResult,
             Tree2.Insert(pFace2,pFace2->GetBox(rResult));
             }
         }
+    }
 
-    // Imprint the bodies and find all the faces
-    // that came from each body.
-
-    std::vector<std::pair<face *,face *> > aSplits;
-    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+void UpdateFaceTrees(SGM::Result                            &rResult,
+                     std::vector<std::pair<face *,face *> > &aSplits,
+                     std::set<SGM::Face>                    &sFaces1,
+                     std::set<SGM::Face>                    &sFaces2,
+                     SGM::BoxTree                           &Tree1,
+                     SGM::BoxTree                           &Tree2)
+    {
     for(auto FacePair : aSplits)
         {
         face *pFace1=FacePair.first;
@@ -1550,43 +1584,11 @@ void SubtractBodies(SGM::Result &rResult,
                 }
             }
         }
+    }
 
-    int bImprintOnly=false;
-    if(bImprintOnly)
-        {
-        return;
-        }
-
-    // Delete faces from pKeepBody that are inside of pDeleteBody.
-    
-    std::vector<face *> aDelete,aFlip;
-    for(SGM::Face FaceID : sFaces1)
-        {
-        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-        if(FaceInFaces(rResult,pFace,Tree2))
-            {
-            aDelete.push_back(pFace);
-            }
-        }
-
-    // Flip faces from pDeleteBody that are inside of pKeepBody.
-    // Delete faces from pDeleteBody that are outside of pKeepBody.
-
-    for(SGM::Face FaceID : sFaces2)
-        {
-        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-        if(FaceInFaces(rResult,pFace,Tree1))
-            {
-            aFlip.push_back(pFace);
-            }
-        else
-            {
-            aDelete.push_back(pFace);
-            }
-        }
-
-    // Delete the delete faces.
-
+void DeleteFaces(SGM::Result         &rResult,
+                 std::vector<face *> &aDelete)
+    {
     std::set<surface *,EntityCompare> sSurfaces;
     std::set<edge *,EntityCompare> sEdges;
     for(face *pFace : aDelete)
@@ -1637,6 +1639,57 @@ void SubtractBodies(SGM::Result &rResult,
             rResult.GetThing()->DeleteEntity(pVertex);
             }
         }
+    }
+
+void SubtractBodies(SGM::Result &rResult,
+                    body        *pKeepBody,
+                    body        *pDeleteBody)
+    {
+    // Find all the faces before imprinting.  Also build box trees
+    // of the one sided faces.
+
+    std::set<SGM::Face> sFaces1,sFaces2;
+    SGM::BoxTree Tree1,Tree2;
+    FindFaceTrees(rResult,pKeepBody,pDeleteBody,sFaces1,sFaces2,Tree1,Tree2);
+
+    // Imprint the bodies and find all the faces
+    // that came from each body.
+
+    std::vector<std::pair<face *,face *> > aSplits;
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
+    
+    // Delete faces from pKeepBody that are outside of pDeleteBody.
+    
+    std::vector<face *> aDelete,aFlip;
+    for(SGM::Face FaceID : sFaces1)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree2))
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+
+    // Flip faces from pDeleteBody that are inside of pKeepBody.
+    // Delete faces from pDeleteBody that are outside of pKeepBody.
+
+    for(SGM::Face FaceID : sFaces2)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree1))
+            {
+            aFlip.push_back(pFace);
+            }
+        else
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+
+    // Delete the delete faces.
+
+    DeleteFaces(rResult,aDelete);
 
     // Flip the filp faces.
 
@@ -1644,14 +1697,100 @@ void SubtractBodies(SGM::Result &rResult,
         {
         pFace->Negate();
         }
+
+    FixVolumes(rResult,pKeepBody);
     }
 
 void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody)
     {
+    // Find all the faces before imprinting.  Also build box trees
+    // of the one sided faces.
+
+    std::set<SGM::Face> sFaces1,sFaces2;
+    SGM::BoxTree Tree1,Tree2;
+    FindFaceTrees(rResult,pKeepBody,pDeleteBody,sFaces1,sFaces2,Tree1,Tree2);
+
+    // Imprint the bodies and find all the faces
+    // that came from each body.
+
     std::vector<std::pair<face *,face *> > aSplits;
     ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
+    
+    // Delete faces from pKeepBody that are inside of pDeleteBody,
+    // face from pDeleteBody that are inside pKeepBody.
+    
+    std::vector<face *> aDelete;
+    for(SGM::Face FaceID : sFaces1)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree2))
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+    for(SGM::Face FaceID : sFaces2)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree1))
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+
+    // Delete the delete faces.
+
+    DeleteFaces(rResult,aDelete);
+
+    FixVolumes(rResult,pKeepBody);
+    }
+
+void IntersectBodies(SGM::Result &rResult,
+                     body        *pKeepBody,
+                     body        *pDeleteBody)
+    {
+    // Find all the faces before imprinting.  Also build box trees
+    // of the one sided faces.
+
+    std::set<SGM::Face> sFaces1,sFaces2;
+    SGM::BoxTree Tree1,Tree2;
+    FindFaceTrees(rResult,pKeepBody,pDeleteBody,sFaces1,sFaces2,Tree1,Tree2);
+
+    // Imprint the bodies and find all the faces
+    // that came from each body.
+
+    std::vector<std::pair<face *,face *> > aSplits;
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
+
+    // Delete faces from pKeepBody that are outside of pDeleteBody,
+    // and faces from pDeleteBody that are outside of pKeepBody.
+    
+    std::vector<face *> aDelete;
+    for(SGM::Face FaceID : sFaces1)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree2)==false)
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+    for(SGM::Face FaceID : sFaces2)
+        {
+        face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
+        if(FaceInFaces(rResult,pFace,Tree1)==false)
+            {
+            aDelete.push_back(pFace);
+            }
+        }
+    
+    // Delete the delete faces.
+
+    DeleteFaces(rResult,aDelete);
+
+    FixVolumes(rResult,pKeepBody);
     }
 
 void FindWindingNumbers(surface                   const *pSurface,

@@ -97,35 +97,31 @@ SGM::Graph::Graph(SGM::Result               &rResult,
                   bool                       bEdgeConnected)
     {
     auto pThing = rResult.GetThing();
-    if(bEdgeConnected)
+    for (auto FaceID : sFaces)
         {
-        for (auto FaceID : sFaces)
+        auto pFace=(SGMInternal::face *)(pThing->FindEntity(FaceID.m_ID));
+        size_t nStart=pFace->GetID();
+        m_sVertices.insert(pFace->GetID());
+        auto const &sEdges=pFace->GetEdges();
+        for (auto pEdge : sEdges)
             {
-            auto pFace=(SGMInternal::face *)(pThing->FindEntity(FaceID.m_ID));
-            size_t nStart=pFace->GetID();
-            m_sVertices.insert(pFace->GetID());
-            auto const &sEdges=pFace->GetEdges();
-            for (auto pEdge : sEdges)
+            size_t nEdge=pEdge->GetID();
+            auto const &sEdgeFaces=pEdge->GetFaces();
+            for (auto pEdgeFace : sEdgeFaces)
                 {
-                size_t nEdge=pEdge->GetID();
-                auto const &sEdgeFaces=pEdge->GetFaces();
-                for (auto pEdgeFace : sEdgeFaces)
+                if(pEdgeFace!=pFace)
                     {
-                    if(pEdgeFace!=pFace)
-                        {
-                        m_sEdges.emplace(nStart,pEdgeFace->GetID(),nEdge);
-                        }
+                    m_sEdges.emplace(nStart,pEdgeFace->GetID(),nEdge);
                     }
                 }
             }
         }
-    else
+    if(bEdgeConnected==false)
         {
         for (auto FaceID : sFaces)
             {
             auto pFace=(SGMInternal::face *)(pThing->FindEntity(FaceID.m_ID));
             size_t nStart=pFace->GetID();
-            m_sVertices.insert(pFace->GetID());
             std::set<SGMInternal::vertex *,SGMInternal::EntityCompare> sVertices;
             FindVertices(rResult,pFace,sVertices);
             for (auto pVertex : sVertices)
