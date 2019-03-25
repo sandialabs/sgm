@@ -1,6 +1,8 @@
 #include "SGMVector.h"
 #include "SGMTransform.h"
+
 #include "Curve.h"
+#include "Intersectors.h"
 
 namespace SGMInternal
 {
@@ -33,11 +35,11 @@ bool line::IsSame(curve const *pOther,double dTolerance) const
         return false;
         }
     auto *pLine2=(line const *)pOther;
-    if(SGM::NearEqual(m_Origin,pLine2->m_Origin,dTolerance)==false)
+    if(dTolerance<m_Origin.Distance(ClosestPointOnLine(m_Origin,pLine2->m_Origin,pLine2->m_Axis)))
         {
         return false;
         }
-    if(SGM::NearEqual(m_Axis,pLine2->m_Axis,dTolerance)==false)
+    if(SGM::NearEqual(fabs(m_Axis%pLine2->m_Axis),1.0,dTolerance,false)==false)
         {
         return false;
         }

@@ -47,11 +47,12 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace);
 
-// It is assumed that pEdge has been trimmed to the face.
+// ImprintTrimmedEdgeOnFace assumes that pEdge has been trimmed to the face.
 
-std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
-                                             edge        *pEdge,
-                                             face        *pFace);
+std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rResult,
+                                             edge                            *pEdge,
+                                             face                            *pFace,
+                                             std::set<curve *,EntityCompare> &sDeleteCurves);
 
 vertex *ImprintPoint(SGM::Result        &rResult,
                      SGM::Point3D const &Pos,

@@ -580,23 +580,21 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
      return IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,dTolerance);
      }
 
- 
-size_t SGM::IntersectSurfaces(SGM::Result               &rResult,
-                              SGM::Surface        const &SurfaceID1,
-                              SGM::Surface        const &SurfaceID2,
-                              std::vector<SGM::Curve>   &aCurves,
-                              double                     dTolerance)
+bool SGM::IntersectSurfaces(SGM::Result               &rResult,
+                            SGM::Surface        const &SurfaceID1,
+                            SGM::Surface        const &SurfaceID2,
+                            std::vector<SGM::Curve>   &aCurves,
+                            double                     dTolerance)
     {
     auto const *pSurface1=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID1.m_ID);
     auto const *pSurface2=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID2.m_ID);
     std::vector<SGMInternal::curve *> acurves;
-    size_t nAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,dTolerance);
-    size_t Index1;
-    for(Index1=0;Index1<nAnswer;++Index1)
+    bool bAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,dTolerance);
+    for(auto pCurve : acurves)
         {
-        aCurves.emplace_back(acurves[Index1]->GetID());
+        aCurves.emplace_back(pCurve->GetID());
         }
-    return nAnswer;
+    return bAnswer;
     }
 
 SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
@@ -1682,6 +1680,15 @@ SGM::Surface SGM::CreateNUBSurface(SGM::Result                                  
                                    std::vector<double>                     const *)//pVParams)
     {
     SGMInternal::surface *pSurface=new SGMInternal::NUBsurface(rResult,aaInterpolatePoints);
+    return {pSurface->GetID()};
+    }
+
+SGM::Surface SGM::CreateOffsetSurface(SGM::Result  &rResult,
+                                      SGM::Surface &BaseSurfaceID,
+                                      double        dOffset)
+    {
+    SGMInternal::surface *pBaseSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(BaseSurfaceID.m_ID);
+    SGMInternal::surface *pSurface=new SGMInternal::offset(rResult,dOffset,pBaseSurface);
     return {pSurface->GetID()};
     }
 

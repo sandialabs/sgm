@@ -1284,8 +1284,13 @@ void Merge(SGM::Result &rResult,
             }
         std::set<face *,EntityCompare> sFaces;
         FindFaces(rResult,pEdge,sFaces,false);
+        curve *pCurve=pEdge->GetCurve();
         pEdge->SeverRelations(rResult);
         rResult.GetThing()->DeleteEntity(pEdge);
+        if(pCurve->GetEdges().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
         if(sFaces.size()==2)
             {
             auto iter=sFaces.begin();
@@ -1328,7 +1333,7 @@ void Merge(SGM::Result &rResult,
         else if(sVertexEdges.size()==2)
             {
             edge *pEdge0=*(sVertexEdges.begin());
-            edge *pEdge1=*(sVertexEdges.begin()++);
+            edge *pEdge1=*(++sVertexEdges.begin());
             if(pEdge0->GetCurve()->IsSame(pEdge1->GetCurve(),SGM_MIN_TOL))
                 {
                 if(pEdge0->GetStart()==pVertex)

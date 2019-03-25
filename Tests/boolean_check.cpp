@@ -36,18 +36,59 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
     return bValue;
     }
 
-//TEST(modify, block_block_coincident_unite)
-//{
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing); 
-//
-//    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
-//    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,20));
-//
-//    SGM::UniteBodies(rResult,BlockID1,BlockID2);
-//
-//    SGMTesting::ReleaseTestThing(pThing);
-//}
+TEST(modify, block_block_coincident_edge_unite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(10,0,10),SGM::Point3D(20,10,20));
+    
+    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, block_block_coincident_unite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,20));
+
+    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, square_sqaure_full_coincident_unite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(10,10,0),SGM::Point3D(0,0,0));
+
+    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, square_sqaure_coincident_edge_unite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,0,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,0,20));
+    SGM::Body BlockID3=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+
+    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+    SGM::UniteBodies(rResult,BlockID1,BlockID3);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(modify, block_sphere_unite)
 {

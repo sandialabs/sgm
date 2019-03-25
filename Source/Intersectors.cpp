@@ -3551,7 +3551,7 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
      return Pos.Distance(Pos1)<dTolerance && Pos.Distance(Pos2)<dTolerance;
      }
 
- size_t IntersectConeAndCone(SGM::Result                        &rResult,
+ bool IntersectConeAndCone(SGM::Result                        &rResult,
                              cone                         const *pCone1,
                              cone                         const *pCone2,
                              std::vector<curve *>               &aCurves,
@@ -3974,10 +3974,10 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
                  }
              }
          }
-     return aCurves.size();
+     return false;
      }
 
- size_t IntersectPlaneAndCone(SGM::Result                        &rResult,
+ bool IntersectPlaneAndCone(SGM::Result                        &rResult,
                               plane                        const *pPlane,
                               cone                         const *pCone,
                               std::vector<curve *>               &aCurves,
@@ -4062,14 +4062,14 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
              aCurves.push_back(FindHyperbola(rResult,aPoints[0],Norm,Down,pCone));
              }
          }
-     return aCurves.size();
+     return false;
      }
 
-size_t IntersectPlaneAndPlane(SGM::Result                &rResult,
-                              plane                const *pPlane1,
-                              plane                const *pPlane2,
-                              std::vector<curve *>       &aCurves,
-                              double                      dTolerance)
+bool IntersectPlaneAndPlane(SGM::Result                &rResult,
+                            plane                const *pPlane1,
+                            plane                const *pPlane2,
+                            std::vector<curve *>       &aCurves,
+                            double                      dTolerance)
      {
      SGM::UnitVector3D const &Norm1=pPlane1->m_ZAxis;
      SGM::UnitVector3D const &Norm2=pPlane2->m_ZAxis;
@@ -4082,10 +4082,14 @@ size_t IntersectPlaneAndPlane(SGM::Result                &rResult,
          IntersectNonParallelPlanes(Origin1,Norm1,Origin2,Norm2,Origin,Axis);
          aCurves.push_back(new line(rResult,Origin,Axis));
          }
-     return aCurves.size();
+     else if(fabs((pPlane2->m_Origin-pPlane1->m_Origin)%Norm1)<dTolerance)
+         {
+         return true;
+         }
+     return false;
      }
 
-size_t IntersectPlaneAndSphere(SGM::Result                &rResult,
+bool IntersectPlaneAndSphere(SGM::Result                &rResult,
                                plane                const *pPlane,
                                sphere               const *pSphere,
                                std::vector<curve *>       &aCurves,
@@ -4102,10 +4106,10 @@ size_t IntersectPlaneAndSphere(SGM::Result                &rResult,
         {
         aCurves.push_back(new circle(rResult,Center,pPlane->m_ZAxis,dRadius));
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
+bool IntersectPlaneAndCylinder(SGM::Result                &rResult,
                                  plane                const *pPlane,
                                  cylinder             const *pCylinder,
                                  std::vector<curve *>       &aCurves,
@@ -4159,7 +4163,7 @@ size_t IntersectPlaneAndCylinder(SGM::Result                &rResult,
             aCurves.push_back(new ellipse(rResult,EllipseCenter,Major,Minor,dA,dRadius));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
 bool PlaneIsTangentToTorus(plane        const *pPlane,
@@ -4307,7 +4311,7 @@ void OrderWalkingPoints(surface             const *pSurface1,
     std::reverse(aWalkPoints.begin(),aWalkPoints.end());
     }
 
-size_t IntersectPlaneAndRevolve(SGM::Result          &rResult,
+bool IntersectPlaneAndRevolve(SGM::Result          &rResult,
                                 plane          const *pPlane,
                                 revolve        const *pRevolve,
                                 std::vector<curve *> &aCurves,
@@ -4383,7 +4387,7 @@ size_t IntersectPlaneAndRevolve(SGM::Result          &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
 void FindWalkingPoints(cone                const *pCone,
@@ -4405,7 +4409,7 @@ void FindWalkingPoints(cone                const *pCone,
         }
     }
 
-size_t IntersectConeAndExtrude(SGM::Result          &rResult,
+bool IntersectConeAndExtrude(SGM::Result          &rResult,
                                cone           const *pCone,
                                extrude        const *pExtrude,
                                std::vector<curve *> &aCurves,
@@ -4447,10 +4451,10 @@ size_t IntersectConeAndExtrude(SGM::Result          &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone,pExtrude));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectPlaneAndExtrude(SGM::Result          &rResult,
+bool IntersectPlaneAndExtrude(SGM::Result          &rResult,
                                 plane          const *pPlane,
                                 extrude        const *pExtrude,
                                 std::vector<curve *> &aCurves,
@@ -4496,10 +4500,10 @@ size_t IntersectPlaneAndExtrude(SGM::Result          &rResult,
         std::vector<SGM::Point3D> aEndPoints;
         aCurves.push_back(WalkFromTo(rResult,aPoints[0],aEndPoints,pPlane,pExtrude));
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
+bool IntersectPlaneAndTorus(SGM::Result                &rResult,
                               plane                const *pPlane,
                               torus                const *pTorus,
                               std::vector<curve *>       &aCurves,
@@ -4617,14 +4621,14 @@ size_t IntersectPlaneAndTorus(SGM::Result                &rResult,
             }
         }
     
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
-                                plane                const *pPlane,
-                                surface              const *pSurface,
-                                std::vector<curve *>       &aCurves,
-                                double                      dTolerance)
+bool IntersectPlaneAndSurface(SGM::Result                &rResult,
+                              plane                const *pPlane,
+                              surface              const *pSurface,
+                              std::vector<curve *>       &aCurves,
+                              double                      dTolerance)
      {
      switch(pSurface->GetSurfaceType())
         {
@@ -4670,7 +4674,7 @@ size_t IntersectPlaneAndSurface(SGM::Result                &rResult,
         }
      }
 
-size_t IntersectSphereAndSphere(SGM::Result                &rResult,
+bool IntersectSphereAndSphere(SGM::Result                &rResult,
                                 sphere               const *pSphere1,
                                 sphere               const *pSphere2,
                                 std::vector<curve *>       &aCurves,
@@ -4713,10 +4717,10 @@ size_t IntersectSphereAndSphere(SGM::Result                &rResult,
             aCurves.push_back(new circle(rResult,Center2+Norm*sqrt(dR2*dR2-dRadius*dRadius),Norm,dRadius));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectCylinders(SGM::Result                &rResult,
+bool IntersectCylinders(SGM::Result                &rResult,
                           cylinder             const *pCylinder1,
                           cylinder             const *pCylinder2,
                           std::vector<curve *>       &aCurves,
@@ -4837,10 +4841,10 @@ size_t IntersectCylinders(SGM::Result                &rResult,
             }
         }
 
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndCone(SGM::Result                &rResult,
+bool IntersectSphereAndCone(SGM::Result                &rResult,
                               sphere               const *pSphere,
                               cone                 const *pCone,
                               std::vector<curve *>       &aCurves,
@@ -4940,10 +4944,10 @@ size_t IntersectSphereAndCone(SGM::Result                &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndExtrude(SGM::Result                &rResult,
+bool IntersectSphereAndExtrude(SGM::Result                &rResult,
                                  sphere               const *pSphere,
                                  extrude              const *pExtrude,
                                  std::vector<curve *>       &aCurves,
@@ -4969,10 +4973,10 @@ size_t IntersectSphereAndExtrude(SGM::Result                &rResult,
         }
     rResult.GetThing()->DeleteEntity(pCircle);
     rResult.GetThing()->DeleteEntity(pCurve);
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndRevolve(SGM::Result                &rResult,
+bool IntersectSphereAndRevolve(SGM::Result                &rResult,
                                  sphere               const *pSphere,
                                  revolve              const *pRevolve,
                                  std::vector<curve *>       &aCurves,
@@ -4997,10 +5001,10 @@ size_t IntersectSphereAndRevolve(SGM::Result                &rResult,
             aCurves.push_back(new circle(rResult,Center,RevolveAxis,dRadius,&pRevolve->m_XAxis));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectTorusAndRevolve(SGM::Result                &rResult,
+bool IntersectTorusAndRevolve(SGM::Result                &rResult,
                                 torus                const *pTorus,
                                 revolve              const *pRevolve,
                                 std::vector<curve *>       &aCurves,
@@ -5071,10 +5075,10 @@ size_t IntersectTorusAndRevolve(SGM::Result                &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectCylinderAndExtrude(SGM::Result                &rResult,
+bool IntersectCylinderAndExtrude(SGM::Result                &rResult,
                                    cylinder             const *pCylinder,
                                    extrude              const *pExtrude,
                                    std::vector<curve *>       &aCurves,
@@ -5095,10 +5099,10 @@ size_t IntersectCylinderAndExtrude(SGM::Result                &rResult,
             }
         rResult.GetThing()->DeleteEntity(pCircle);
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectRevolveAndRevolve(SGM::Result                &rResult,
+bool IntersectRevolveAndRevolve(SGM::Result                &rResult,
                                   revolve              const *pRevolve1,
                                   revolve              const *pRevolve2,
                                   std::vector<curve *>       &aCurves,
@@ -5129,10 +5133,10 @@ size_t IntersectRevolveAndRevolve(SGM::Result                &rResult,
             aCurves.push_back(new circle(rResult,Center,RevolveAxis1,dRadius,&pRevolve1->m_XAxis));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectConeAndRevolve(SGM::Result                &rResult,
+bool IntersectConeAndRevolve(SGM::Result                &rResult,
                                cone                 const *pCone,
                                revolve              const *pRevolve,
                                std::vector<curve *>       &aCurves,
@@ -5160,10 +5164,10 @@ size_t IntersectConeAndRevolve(SGM::Result                &rResult,
             aCurves.push_back(new circle(rResult,Center,ConeAxis,dRadius,&pCone->m_XAxis));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectCylinderAndRevolve(SGM::Result                &rResult,
+bool IntersectCylinderAndRevolve(SGM::Result                &rResult,
                                    cylinder             const *pCylinder,
                                    revolve              const *pRevolve,
                                    std::vector<curve *>       &aCurves,
@@ -5190,10 +5194,10 @@ size_t IntersectCylinderAndRevolve(SGM::Result                &rResult,
             aCurves.push_back(new circle(rResult,Center,CylinderAxis,dRadius,&pCylinder->m_XAxis));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectConeAndCylinder(SGM::Result                &rResult,
+bool IntersectConeAndCylinder(SGM::Result                &rResult,
                                 cone                 const *pCone,
                                 cylinder             const *pCylinder,
                                 std::vector<curve *>       &aCurves,
@@ -5547,7 +5551,7 @@ size_t IntersectConeAndCylinder(SGM::Result                &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
 void FindClosePassWalkingPoints(cylinder            const *pCylinder,
@@ -5762,7 +5766,7 @@ void FindWalkingPoints(SGM::Result               &rResult,
         }
     }
 
-size_t IntersectCylinderAndTorus(SGM::Result                &rResult,
+bool IntersectCylinderAndTorus(SGM::Result                &rResult,
                                  torus                const *pTorus,
                                  cylinder             const *pCylinder,
                                  std::vector<curve *>       &aCurves,
@@ -5819,7 +5823,7 @@ size_t IntersectCylinderAndTorus(SGM::Result                &rResult,
                 aCurves.push_back(WalkFromTo(rResult,Pos3,aPoints,pTorus,pCylinder));
                 aCurves.push_back(WalkFromTo(rResult,Pos4,aPoints,pTorus,pCylinder));
 
-                return 3;
+                return false;
                 }
             }
         }
@@ -6065,7 +6069,7 @@ size_t IntersectCylinderAndTorus(SGM::Result                &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
 bool PointOnCircle(SGM::Point3D      const &Pos,
@@ -6452,7 +6456,7 @@ void CheckForVillarceauCircles(SGM::Result               &rResult,
         }
     }
 
-size_t IntersectTorusAndTorus(SGM::Result               &rResult,
+bool IntersectTorusAndTorus(SGM::Result               &rResult,
                               torus               const *pTorus1,
                               torus               const *pTorus2,
                               std::vector<curve *>      &aCurves,
@@ -6613,7 +6617,7 @@ size_t IntersectTorusAndTorus(SGM::Result               &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
 void FindTangentPoints(SGM::Result               &rResult,
@@ -6758,7 +6762,7 @@ double FindHowFarToWalk(surface           const *pSurface1,
     return std::min(dMax1,dMax2);
     }
 
-size_t IntersectConeAndNUB(SGM::Result               &rResult,
+bool IntersectConeAndNUB(SGM::Result               &rResult,
                            cone                const *pCone,
                            NUBsurface          const *pNUB,
                            std::vector<curve *>      &aCurves,
@@ -6834,10 +6838,10 @@ size_t IntersectConeAndNUB(SGM::Result               &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCone,pNUB));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectTorusAndNUB(SGM::Result               &rResult,
+bool IntersectTorusAndNUB(SGM::Result               &rResult,
                             torus               const *pTorus,
                             NUBsurface          const *pNUB,
                             std::vector<curve *>      &aCurves,
@@ -6905,10 +6909,10 @@ size_t IntersectTorusAndNUB(SGM::Result               &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pTorus,pNUB));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndNUB(SGM::Result               &rResult,
+bool IntersectSphereAndNUB(SGM::Result               &rResult,
                              sphere              const *pSphere,
                              NUBsurface          const *pNUB,
                              std::vector<curve *>      &aCurves,
@@ -6975,10 +6979,10 @@ size_t IntersectSphereAndNUB(SGM::Result               &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pSphere,pNUB));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectCylinderAndNUB(SGM::Result               &rResult,
+bool IntersectCylinderAndNUB(SGM::Result               &rResult,
                                cylinder            const *pCylinder,
                                NUBsurface          const *pNUB,
                                std::vector<curve *>      &aCurves,
@@ -7046,10 +7050,10 @@ size_t IntersectCylinderAndNUB(SGM::Result               &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pCylinder,pNUB));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
+bool IntersectPlaneAndNUB(SGM::Result               &rResult,
                             plane               const *pPlane,
                             NUBsurface          const *pNUB,
                             std::vector<curve *>      &aCurves,
@@ -7119,10 +7123,10 @@ size_t IntersectPlaneAndNUB(SGM::Result               &rResult,
             aCurves.push_back(WalkFromTo(rResult,Pos,aEndPoints,pPlane,pNUB));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectConeAndTorus(SGM::Result               &rResult,
+bool IntersectConeAndTorus(SGM::Result               &rResult,
                              cone                const *pCone,
                              torus               const *pTorus,
                              std::vector<curve *>      &aCurves,
@@ -7245,10 +7249,10 @@ size_t IntersectConeAndTorus(SGM::Result               &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndTorus(SGM::Result                &rResult,
+bool IntersectSphereAndTorus(SGM::Result                &rResult,
                                sphere               const *pSphere,
                                torus                const *pTorus,
                                std::vector<curve *>       &aCurves,
@@ -7506,10 +7510,10 @@ size_t IntersectSphereAndTorus(SGM::Result                &rResult,
                 }
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndCylinder(SGM::Result                &rResult,
+bool IntersectSphereAndCylinder(SGM::Result                &rResult,
                                   sphere               const *pSphere,
                                   cylinder             const *pCylinder,
                                   std::vector<curve *>       &aCurves,
@@ -7617,10 +7621,10 @@ size_t IntersectSphereAndCylinder(SGM::Result                &rResult,
             aCurves.push_back(WalkFromTo(rResult,aPoints[0],aEndPoints,pSphere,pCylinder));
             }
         }
-    return aCurves.size();
+    return false;
     }
 
-size_t IntersectSphereAndSurface(SGM::Result                &rResult,
+bool IntersectSphereAndSurface(SGM::Result                &rResult,
                                  sphere               const *pSphere,
                                  surface              const *pSurface,
                                  std::vector<curve *>       &aCurves,
@@ -7670,7 +7674,7 @@ size_t IntersectSphereAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
+bool IntersectCylinderAndSurface(SGM::Result                &rResult,
                                    cylinder             const *pCylinder,
                                    surface              const *pSurface,
                                    std::vector<curve *>       &aCurves,
@@ -7715,7 +7719,7 @@ size_t IntersectCylinderAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectConeAndSurface(SGM::Result                &rResult,
+bool IntersectConeAndSurface(SGM::Result                &rResult,
                                cone                 const *pCone,
                                surface              const *pSurface,
                                std::vector<curve *>       &aCurves,
@@ -7760,7 +7764,7 @@ size_t IntersectConeAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectNUBAndSurface(SGM::Result                &rResult,
+bool IntersectNUBAndSurface(SGM::Result                &rResult,
                               NUBsurface           const *pNUBSurface,
                               surface              const *pSurface,
                               std::vector<curve *>       &aCurves,
@@ -7800,7 +7804,7 @@ size_t IntersectNUBAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectRevolveAndSurface(SGM::Result                &rResult,
+bool IntersectRevolveAndSurface(SGM::Result                &rResult,
                                   revolve              const *pRevolve,
                                   surface              const *pSurface,
                                   std::vector<curve *>       &aCurves,
@@ -7820,7 +7824,7 @@ size_t IntersectRevolveAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectExtrudeAndSurface(SGM::Result                &rResult,
+bool IntersectExtrudeAndSurface(SGM::Result                &rResult,
                                   extrude              const *pExtrude,
                                   surface              const *pSurface,
                                   std::vector<curve *>       &aCurves,
@@ -7845,7 +7849,7 @@ size_t IntersectExtrudeAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectTorusAndSurface(SGM::Result                &rResult,
+bool IntersectTorusAndSurface(SGM::Result                &rResult,
                                 torus                const *pTorus,
                                 surface              const *pSurface,
                                 std::vector<curve *>       &aCurves,
@@ -7890,11 +7894,11 @@ size_t IntersectTorusAndSurface(SGM::Result                &rResult,
         }
     }
 
-size_t IntersectSurfaces(SGM::Result                &rResult,
-                         surface              const *pSurface1,
-                         surface              const *pSurface2,
-                         std::vector<curve *>       &aCurves,
-                         double                      dInTolerance)
+bool IntersectSurfaces(SGM::Result                &rResult,
+                       surface              const *pSurface1,
+                       surface              const *pSurface2,
+                       std::vector<curve *>       &aCurves,
+                       double                      dInTolerance)
     {
     double dTolerance=dInTolerance;
     if(dTolerance<SGM_MIN_TOL)

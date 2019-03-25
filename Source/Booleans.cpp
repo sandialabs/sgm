@@ -125,7 +125,8 @@ vertex *ImprintPoint(SGM::Result        &rResult,
                         {
                         curve *pCurve=new PointCurve(rResult,Pos);
                         edge *pEdge=CreateEdge(rResult,pCurve,&pCurve->GetDomain());
-                        ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace);
+                        std::set<curve *,EntityCompare> sDeleteCurves;
+                        ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace,sDeleteCurves);
                         break;
                         }
                     }
@@ -149,26 +150,25 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
                           SGM::Interval1D     const *pLimitDomain)
     {
     size_t nOldEdges=aEdges.size();
-    std::vector<SGM::Point3D> aHits;
-    std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
-    size_t Index1;
-    for(edge *pEdge : sEdges0)
+    if(pCurve==nullptr)
         {
-        std::vector<SGM::Point3D> aIntersectionPoints;
-        std::vector<SGM::IntersectionType> aTypes;
-        size_t nHits=IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
-        for(Index1=0;Index1<nHits;++Index1)
+        std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
+        for(auto pEdge : sEdges0)
             {
-            if(aTypes[Index1]!=SGM::CoincidentType)
-                {
-                aHits.push_back(aIntersectionPoints[Index1]);
-                }
+            TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace1,nullptr,aEdges,dTolerance,&pEdge->GetDomain());
+            }
+        std::set<edge *,EntityCompare> const &sEdges1=pFace1->GetEdges();
+        for(auto pEdge : sEdges1)
+            {
+            TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace0,nullptr,aEdges,dTolerance,&pEdge->GetDomain());
             }
         }
-    if(pFace1)
+    else
         {
-        std::set<edge *,EntityCompare> const &sEdges1=pFace1->GetEdges();
-        for(edge *pEdge : sEdges1)
+        std::vector<SGM::Point3D> aHits;
+        std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
+        size_t Index1;
+        for(edge *pEdge : sEdges0)
             {
             std::vector<SGM::Point3D> aIntersectionPoints;
             std::vector<SGM::IntersectionType> aTypes;
@@ -181,163 +181,180 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
                     }
                 }
             }
-        }
-
-    // Add the end points of the curve and remove duplicates.
-
-    SGM::Interval3D Box=pFace0->GetBox(rResult,false);
-    if(pFace1)
-        {
-        Box&=pFace1->GetBox(rResult,false);
-        }
-    SGM::Interval1D const &Domain=pCurve->GetDomain();
-    SGM::Point3D StartPos,EndPos;
-    pCurve->Evaluate(Domain.m_dMin,&StartPos);
-    pCurve->Evaluate(Domain.m_dMax,&EndPos);
-    aHits.push_back(StartPos);
-    aHits.push_back(EndPos);
-    if(Box.IsEmpty())
-        {
-        SGM::RemoveDuplicates3D(aHits,dTolerance);
-        }
-    else
-        {
-        SGM::RemoveDuplicates3D(aHits,dTolerance,&Box);
-        }
-
-    // Find the parameters for each intersection.
-
-    std::vector<std::pair<double,SGM::Point3D> > aHitParams;
-    size_t nHits=aHits.size();
-    aHitParams.reserve(nHits);
-    for(Index1=0;Index1<nHits;++Index1)
-        {
-        SGM::Point3D const &Pos=aHits[Index1];
-        double dParam=pCurve->Inverse(Pos);
-        aHitParams.emplace_back(dParam,Pos);
-        if(pCurve->GetClosed() && pCurve->GetDomain().OnBoundary(dParam,SGM_MIN_TOL))
+        if(pFace1)
             {
-            if(dParam<pCurve->GetDomain().MidPoint())
+            std::set<edge *,EntityCompare> const &sEdges1=pFace1->GetEdges();
+            for(edge *pEdge : sEdges1)
                 {
-                aHitParams.emplace_back(dParam+pCurve->GetDomain().Length(),Pos);
-                }
-            else
-                {
-                aHitParams.emplace_back(dParam-pCurve->GetDomain().Length(),Pos);
+                std::vector<SGM::Point3D> aIntersectionPoints;
+                std::vector<SGM::IntersectionType> aTypes;
+                size_t nHits=IntersectCurves(rResult,pCurve,pEdge->GetCurve(),aIntersectionPoints,aTypes,dTolerance);
+                for(Index1=0;Index1<nHits;++Index1)
+                    {
+                    if(aTypes[Index1]!=SGM::CoincidentType)
+                        {
+                        aHits.push_back(aIntersectionPoints[Index1]);
+                        }
+                    }
                 }
             }
-        }
-    std::sort(aHitParams.begin(),aHitParams.end());
 
-    // Check each segment to see if it is inside or outside of the face(s).
+        // Add the end points of the curve and remove duplicates.
 
-    surface const *pSurface0=pFace0->GetSurface();
-    surface const *pSurface1=pFace1 ? pFace1->GetSurface() : nullptr;
-    std::vector<bool> aIsolated;
-    size_t nHitParams=aHitParams.size();
-    aIsolated.assign(nHitParams,true);
-    for(Index1=1;Index1<nHitParams;++Index1)
-        {
-        double dParam0=aHitParams[Index1-1].first;
-        double dParam1=aHitParams[Index1].first;
-        double dMidParam=(dParam0+dParam1)*0.5;
-        SGM::Point3D Pos;
-        pCurve->Evaluate(dMidParam,&Pos);
-        SGM::Point2D uv0=pSurface0->Inverse(Pos);
-        if(pFace0->PointInFace(rResult,uv0))
+        SGM::Interval3D Box=pFace0->GetBox(rResult,false);
+        if(pFace1)
             {
-            if(pFace1==nullptr)
+            Box&=pFace1->GetBox(rResult,false);
+            }
+        SGM::Interval1D const &Domain=pCurve->GetDomain();
+        SGM::Point3D StartPos,EndPos;
+        pCurve->Evaluate(Domain.m_dMin,&StartPos);
+        pCurve->Evaluate(Domain.m_dMax,&EndPos);
+        aHits.push_back(StartPos);
+        aHits.push_back(EndPos);
+        if(Box.IsEmpty())
+            {
+            SGM::RemoveDuplicates3D(aHits,dTolerance);
+            }
+        else
+            {
+            SGM::RemoveDuplicates3D(aHits,dTolerance,&Box);
+            }
+
+        // Find the parameters for each intersection.
+
+        std::vector<std::pair<double,SGM::Point3D> > aHitParams;
+        size_t nHits=aHits.size();
+        aHitParams.reserve(nHits);
+        for(Index1=0;Index1<nHits;++Index1)
+            {
+            SGM::Point3D const &Pos=aHits[Index1];
+            double dParam=pCurve->Inverse(Pos);
+            aHitParams.emplace_back(dParam,Pos);
+            if(pCurve->GetClosed() && pCurve->GetDomain().OnBoundary(dParam,SGM_MIN_TOL))
                 {
-                SGM::Interval1D ParamDomain(dParam0,dParam1);
-                if(pLimitDomain)
+                if(dParam<pCurve->GetDomain().MidPoint())
                     {
-                    ParamDomain&=*pLimitDomain;
-                    }
-                if(ParamDomain.Length()<SGM_MIN_TOL)
-                    {
-                    // Could add isolated point here?
+                    aHitParams.emplace_back(dParam+pCurve->GetDomain().Length(),Pos);
                     }
                 else
                     {
-                    aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
-                    aIsolated[Index1-1]=false;
-                    aIsolated[Index1]=false;
+                    aHitParams.emplace_back(dParam-pCurve->GetDomain().Length(),Pos);
                     }
                 }
-            else
+            }
+        std::sort(aHitParams.begin(),aHitParams.end());
+
+        // Check each segment to see if it is inside or outside of the face(s).
+
+        surface const *pSurface0=pFace0->GetSurface();
+        surface const *pSurface1=pFace1 ? pFace1->GetSurface() : nullptr;
+        std::vector<bool> aIsolated;
+        size_t nHitParams=aHitParams.size();
+        aIsolated.assign(nHitParams,true);
+        for(Index1=1;Index1<nHitParams;++Index1)
+            {
+            double dParam0=aHitParams[Index1-1].first;
+            double dParam1=aHitParams[Index1].first;
+            double dMidParam=(dParam0+dParam1)*0.5;
+            SGM::Point3D Pos;
+            pCurve->Evaluate(dMidParam,&Pos);
+            SGM::Point2D uv0=pSurface0->Inverse(Pos);
+            if(pFace0->PointInFace(rResult,uv0))
                 {
-                SGM::Point2D uv1=pSurface1->Inverse(Pos);
-                if(pFace1->PointInFace(rResult,uv1))
+                if(pFace1==nullptr)
                     {
                     SGM::Interval1D ParamDomain(dParam0,dParam1);
                     if(pLimitDomain)
                         {
                         ParamDomain&=*pLimitDomain;
                         }
-                    aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
-                    aIsolated[Index1-1]=false;
-                    aIsolated[Index1]=false;
-                    }
-                }
-            }
-        }
-
-    // Check for closed curves inside the face.
-
-    if(aHits.size()==1)
-        {
-        aIsolated[0]=false;
-        SGM::Point3D Pos=aHitParams[0].second;
-        bool bInFaces=true;
-        SGM::Point2D uv0=pSurface0->Inverse(Pos);
-        if(pFace0->PointInFace(rResult,uv0)==false)
-            {
-            bInFaces=false;
-            }
-        if(bInFaces && pFace1)
-            {
-            SGM::Point2D uv1=pSurface1->Inverse(Pos);
-            if(pFace1->PointInFace(rResult,uv1)==false)
-                {
-                bInFaces=false;
-                }
-            }
-        if(bInFaces)
-            {
-            aEdges.push_back(CreateEdge(rResult,pCurve,pLimitDomain));
-            }
-        }
-
-    // Check for isolated points.
-
-    for(Index1=0;Index1<nHitParams;++Index1)
-        {
-        if(aIsolated[Index1])
-            {
-            SGM::Point3D Pos=aHitParams[Index1].second;
-            if(pLimitDomain)
-                {
-                double dParam=pCurve->Inverse(Pos);
-                if(pLimitDomain->InInterior(dParam,dTolerance)==false)
-                    {
-                    continue;
-                    }
-                }
-            SGM::Point2D uv0=pSurface0->Inverse(Pos);
-            if(pFace0->PointInFace(rResult,uv0))
-                {
-                if(pFace1==nullptr)
-                    {
-                    PointCurve *pPointCurve=new PointCurve(rResult,Pos);
-                    aEdges.push_back(CreateEdge(rResult,pPointCurve,&pPointCurve->GetDomain()));
+                    if(ParamDomain.Length()<SGM_MIN_TOL)
+                        {
+                        // Could add isolated point here?
+                        }
+                    else
+                        {
+                        aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
+                        aIsolated[Index1-1]=false;
+                        aIsolated[Index1]=false;
+                        }
                     }
                 else
                     {
                     SGM::Point2D uv1=pSurface1->Inverse(Pos);
                     if(pFace1->PointInFace(rResult,uv1))
                         {
+                        SGM::Interval1D ParamDomain(dParam0,dParam1);
+                        if(pLimitDomain)
+                            {
+                            ParamDomain&=*pLimitDomain;
+                            }
+                        aEdges.push_back(CreateEdge(rResult,pCurve,&ParamDomain));
+                        aIsolated[Index1-1]=false;
+                        aIsolated[Index1]=false;
+                        }
+                    }
+                }
+            }
+
+        // Check for closed curves inside the face.
+
+        if(aHits.size()==1 && pCurve->GetClosed())
+            {
+            aIsolated[0]=false;
+            SGM::Point3D Pos=aHitParams[0].second;
+            bool bInFaces=true;
+            SGM::Point2D uv0=pSurface0->Inverse(Pos);
+            if(pFace0->PointInFace(rResult,uv0)==false)
+                {
+                bInFaces=false;
+                }
+            if(bInFaces && pFace1)
+                {
+                SGM::Point2D uv1=pSurface1->Inverse(Pos);
+                if(pFace1->PointInFace(rResult,uv1)==false)
+                    {
+                    bInFaces=false;
+                    }
+                }
+            if(bInFaces)
+                {
+                aEdges.push_back(CreateEdge(rResult,pCurve,pLimitDomain));
+                }
+            }
+
+        // Check for isolated points.
+
+        for(Index1=0;Index1<nHitParams;++Index1)
+            {
+            if(aIsolated[Index1])
+                {
+                SGM::Point3D Pos=aHitParams[Index1].second;
+                if(pLimitDomain)
+                    {
+                    double dParam=pCurve->Inverse(Pos);
+                    if(pLimitDomain->InInterior(dParam,dTolerance)==false)
+                        {
+                        continue;
+                        }
+                    }
+                SGM::Point2D uv0=pSurface0->Inverse(Pos);
+                if(pFace0->PointInFace(rResult,uv0))
+                    {
+                    if(pFace1==nullptr)
+                        {
                         PointCurve *pPointCurve=new PointCurve(rResult,Pos);
                         aEdges.push_back(CreateEdge(rResult,pPointCurve,&pPointCurve->GetDomain()));
+                        }
+                    else
+                        {
+                        SGM::Point2D uv1=pSurface1->Inverse(Pos);
+                        if(pFace1->PointInFace(rResult,uv1))
+                            {
+                            PointCurve *pPointCurve=new PointCurve(rResult,Pos);
+                            aEdges.push_back(CreateEdge(rResult,pPointCurve,&pPointCurve->GetDomain()));
+                            }
                         }
                     }
                 }
@@ -875,10 +892,15 @@ edge *AreCoincident(edge        *pEdge,
     return nullptr;
     }
 
-void MergeEdges(SGM::Result &rResult,
-                edge        *pKeepEdge,
-                edge        *pDeleteEdge)
+void MergeEdges(SGM::Result                     &rResult,
+                edge                            *pKeepEdge,
+                edge                            *pDeleteEdge,
+                std::set<curve *,EntityCompare> &sDeleteCurves)
     {
+    if(pKeepEdge->GetDomain().Length()<SGM_MIN_TOL)
+        {
+        return;
+        }
     if(pKeepEdge==pDeleteEdge)
         {
         return;
@@ -950,7 +972,7 @@ void MergeEdges(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pDeleteEdge);
     if(pCurve->GetEdges().empty())
         {
-        rResult.GetThing()->DeleteEntity(pCurve);
+        sDeleteCurves.insert(pCurve);
         }
     }
 
@@ -1017,10 +1039,14 @@ void ImprintPointCurveOnEdge(SGM::Result &rResult,
         }
     }
 
-std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
-                                             edge        *pEdge,
-                                             face        *pFace)
+std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rResult,
+                                             edge                            *pEdge,
+                                             face                            *pFace,
+                                             std::set<curve *,EntityCompare> &sDeleteCurves)
     {
+    double dLength=pEdge->GetDomain().Length();
+    dLength*=1;
+
     std::vector<face *> aFaces;
     aFaces.push_back(pFace);
 
@@ -1039,7 +1065,7 @@ std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
 
     if(edge *pConincentEdge=AreCoincident(pEdge,pFace))
         {
-        MergeEdges(rResult,pEdge,pConincentEdge);
+        MergeEdges(rResult,pEdge,pConincentEdge,sDeleteCurves);
         }
     else if(pStartEntity && pEndEntity)
         {
@@ -1156,7 +1182,9 @@ bool ImprintFaces(SGM::Result                                                   
                   face                                                                       *pFace2,
                   std::vector<std::pair<face *,face *> >                                     &aSplits,
                   std::map<std::pair<surface const *,surface const *>,std::vector<curve *> > &mIntersections,
-                  SGM::Interval1D                                                      const *pLimitDomain)
+                  std::set<curve *,EntityCompare>                                            &sDeleteCurves,
+                  SGM::Interval1D                                                      const *pLimitDomain,
+                  std::set<std::pair<surface const *,surface const *> >                      *pConincidentSurfaces)
     {
     // Find the new edges.
 
@@ -1171,7 +1199,14 @@ bool ImprintFaces(SGM::Result                                                   
         }
     if(mIntersections.find({pSurface1,pSurface2})==mIntersections.end())
         {
-        IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,dTolerance);
+        if(IntersectSurfaces(rResult,pSurface1,pSurface2,aCurves,dTolerance))
+            {
+            aCurves.push_back(nullptr);
+            if(pConincidentSurfaces)
+                {
+                pConincidentSurfaces->insert({pSurface1,pSurface2});
+                }
+            }
         mIntersections[{pSurface1,pSurface2}]=aCurves;
         }
     else
@@ -1184,7 +1219,7 @@ bool ImprintFaces(SGM::Result                                                   
         TrimCurveWithFaces(rResult,pCurve,pFace1,pFace2,aEdges,SGM_MIN_TOL,pLimitDomain);
         for(edge *pEdge : aEdges)
             {
-            std::vector<face *> aFaces1=ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace1);
+            std::vector<face *> aFaces1=ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace1,sDeleteCurves);
             for(face *pFace : aFaces1)
                 {
                 bAnswer=true;
@@ -1195,7 +1230,7 @@ bool ImprintFaces(SGM::Result                                                   
                 }
             if(pFace2)
                 {
-                std::vector<face *> aFaces2=ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace2);
+                std::vector<face *> aFaces2=ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace2,sDeleteCurves);
                 for(face *pFace : aFaces2)
                     {
                     bAnswer=true;
@@ -1204,6 +1239,16 @@ bool ImprintFaces(SGM::Result                                                   
                         aSplits.push_back({pFace2,pFace});
                         }
                     }
+                }
+            if(pEdge->GetFaces().empty())
+                {
+                vertex *pVertex=pEdge->GetStart();
+                pVertex->SeverRelations(rResult);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                curve *pPointCurve=pEdge->GetCurve();
+                pEdge->SeverRelations(rResult);
+                rResult.GetThing()->DeleteEntity(pEdge);
+                rResult.GetThing()->DeleteEntity(pPointCurve);
                 }
             }
         }
@@ -1220,7 +1265,8 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
     aCurves.push_back(pEdge->GetCurve());
     mIntersections[{pFace->GetSurface(),nullptr}]=aCurves;
     SGM::Interval1D Domain=pEdge->GetDomain();
-    ImprintFaces(rResult,pFace,nullptr,aSplits,mIntersections,&Domain);
+    std::set<curve *,EntityCompare> sDeleteCurves;
+    ImprintFaces(rResult,pFace,nullptr,aSplits,mIntersections,sDeleteCurves,&Domain,nullptr);
     std::set<face *> sFaces;
     for(auto FacePair : aSplits)
         {
@@ -1315,7 +1361,8 @@ void AddFacePairs(size_t                                  nOldSplits,
 void ImprintBodies(SGM::Result                            &rResult,
                    body                                   *pKeepBody,
                    body                                   *pDeleteBody,
-                   std::vector<std::pair<face *,face *> > &aSplits)
+                   std::vector<std::pair<face *,face *> > &aSplits,
+                   std::set<std::pair<surface const *,surface const *> > *sCoincidentSurfaces)
     {
     // Find the face pairs to consider.
 
@@ -1340,6 +1387,7 @@ void ImprintBodies(SGM::Result                            &rResult,
 
     // Imprint the faces with each other.
 
+    std::set<curve *,EntityCompare> sDeleteCurves;
     std::set<std::pair<size_t,size_t> > sMergedVolumes;
     std::map<std::pair<surface const *,surface const *>,std::vector<curve *> > mIntersections;
     size_t Index1;
@@ -1347,24 +1395,29 @@ void ImprintBodies(SGM::Result                            &rResult,
         {
         auto FacePair=aFacePairs[Index1];
         size_t nOldSplits=aSplits.size();
-        if(ImprintFaces(rResult,FacePair.first,FacePair.second,aSplits,mIntersections,nullptr))
+        if(ImprintFaces(rResult,FacePair.first,FacePair.second,aSplits,mIntersections,
+                        sDeleteCurves,nullptr,sCoincidentSurfaces))
             {
             sMergedVolumes.insert({FacePair.first->GetVolume()->GetID(),FacePair.second->GetVolume()->GetID()});
             }
         AddFacePairs(nOldSplits,aSplits,aFacePairs);
         }
 
-    // Delete unused curves.
+    // Delete unused intersection curves and check all edges of hit faces.
 
     for(auto InPair : mIntersections)
         {
         for(auto pCurve : InPair.second)
             {
-            if(pCurve->GetEdges().empty())
+            if(pCurve && pCurve->GetEdges().empty())
                 {
-                rResult.GetThing()->DeleteEntity(pCurve);
+                sDeleteCurves.insert(pCurve);
                 }
             }
+        }
+    for(curve *pCurve : sDeleteCurves)
+        {
+        rResult.GetThing()->DeleteEntity(pCurve);
         }
 
     // Merge volumes and bodies.
@@ -1525,7 +1578,7 @@ void ImprintBodies(SGM::Result &rResult,
                    body        *pDeleteBody)
     {
     std::vector<std::pair<face *,face *> > aSplits;
-    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits,nullptr);
     }
 
 void FindFaceTrees(SGM::Result         &rResult,
@@ -1656,7 +1709,7 @@ void SubtractBodies(SGM::Result &rResult,
     // that came from each body.
 
     std::vector<std::pair<face *,face *> > aSplits;
-    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits,nullptr);
     UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
     
     // Delete faces from pKeepBody that are outside of pDeleteBody.
@@ -1701,6 +1754,74 @@ void SubtractBodies(SGM::Result &rResult,
     FixVolumes(rResult,pKeepBody);
     }
 
+bool AreCoincidentFaces(face *pFace0,face *pFace1,bool &bFlipped)
+    {
+    if(pFace0->GetEdges()==pFace1->GetEdges())
+        {
+        if(pFace0->GetEdges().empty())
+            {
+            return true;
+            }
+        else
+            {
+            edge *pEdge=*(pFace0->GetEdges().begin());
+            SGM::Point3D Pos=pEdge->FindMidPoint();
+            SGM::UnitVector3D Norm0=pFace0->FindNormalOfFace(Pos);
+            SGM::UnitVector3D Norm1=pFace1->FindNormalOfFace(Pos);
+            if(SGM::NearEqual(Norm0,Norm1,SGM_MIN_TOL))
+                {
+                bFlipped=false;
+                return pFace0->GetSides()==pFace1->GetSides();
+                }
+            else
+                {
+                std::map<edge *,SGM::EdgeSideType>::const_iterator iter0=pFace0->GetEdgeSides().begin();
+                std::map<edge *,SGM::EdgeSideType>::const_iterator iter1=pFace1->GetEdgeSides().begin();
+                while(iter0!=pFace0->GetEdgeSides().end())
+                    {
+                    SGM::EdgeSideType nType0=iter0->second;
+                    SGM::EdgeSideType nType1=iter1->second;
+                    if( (nType0==SGM::FaceOnLeftType && nType1==SGM::FaceOnLeftType) ||
+                        (nType0==SGM::FaceOnRightType && nType1==SGM::FaceOnRightType))
+                        {
+                        return false;
+                        }
+                    ++iter0;
+                    ++iter1;
+                    }
+                bFlipped=true;
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
+void LookForCoincidentFaces(std::set<std::pair<surface const *,surface const *> > &aCoincidentSurfaces,
+                            std::vector<std::pair<face *,face *> >                &aCoincidentFaces,
+                            std::vector<bool>                                     &aFlippedFace)
+    {
+    for(auto SurfPair : aCoincidentSurfaces)
+        {
+        surface const *pSurface0=SurfPair.first;
+        surface const *pSurface1=SurfPair.second;
+        std::set<face *,EntityCompare> const &sFaces0=pSurface0->GetFaces();
+        std::set<face *,EntityCompare> const &sFaces1=pSurface1->GetFaces();
+        for(face *pFace0 : sFaces0)
+            {
+            for(face *pFace1 : sFaces1)
+                {
+                bool bFlipped;
+                if(AreCoincidentFaces(pFace0,pFace1,bFlipped))
+                    {
+                    aCoincidentFaces.push_back({pFace0,pFace1});
+                    aFlippedFace.push_back(bFlipped);
+                    }
+                }
+            }
+        }
+    }
+
 void UniteBodies(SGM::Result &rResult,
                  body        *pKeepBody,
                  body        *pDeleteBody)
@@ -1716,17 +1837,43 @@ void UniteBodies(SGM::Result &rResult,
     // that came from each body.
 
     std::vector<std::pair<face *,face *> > aSplits;
-    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    std::set<std::pair<surface const *,surface const *> > aCoincidentSurfaces;
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits,&aCoincidentSurfaces);
     UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
     
     // Delete faces from pKeepBody that are inside of pDeleteBody,
     // face from pDeleteBody that are inside pKeepBody.
     
     std::vector<face *> aDelete;
+    std::vector<std::pair<face *,face *> > aCoincidentFaces;
+    std::vector<bool> aFlippedFace;
+    std::set<face *> sCoincident;
+    LookForCoincidentFaces(aCoincidentSurfaces,aCoincidentFaces,aFlippedFace);
+    size_t nCoincidentFaces=aCoincidentFaces.size();
+    size_t Index1;
+    for(Index1=0;Index1<nCoincidentFaces;++Index1)
+        {
+        auto FacePair=aCoincidentFaces[Index1];
+        bool bFlip=aFlippedFace[Index1];
+        face *pFace0=FacePair.first;
+        face *pFace1=FacePair.second;
+        sCoincident.insert(pFace0);
+        sCoincident.insert(pFace1);
+        if(pFace1->GetSides()==2)
+            {
+            aDelete.push_back(pFace1);
+            }
+        else if(bFlip)
+            {
+            aDelete.push_back(pFace0);
+            aDelete.push_back(pFace1);
+            }
+        }
+
     for(SGM::Face FaceID : sFaces1)
         {
         face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-        if(FaceInFaces(rResult,pFace,Tree2))
+        if(FaceInFaces(rResult,pFace,Tree2) && sCoincident.find(pFace)==sCoincident.end())
             {
             aDelete.push_back(pFace);
             }
@@ -1734,7 +1881,7 @@ void UniteBodies(SGM::Result &rResult,
     for(SGM::Face FaceID : sFaces2)
         {
         face *pFace=(face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-        if(FaceInFaces(rResult,pFace,Tree1))
+        if(FaceInFaces(rResult,pFace,Tree1) && sCoincident.find(pFace)==sCoincident.end())
             {
             aDelete.push_back(pFace);
             }
@@ -1745,6 +1892,8 @@ void UniteBodies(SGM::Result &rResult,
     DeleteFaces(rResult,aDelete);
 
     FixVolumes(rResult,pKeepBody);
+
+    Merge(rResult,pKeepBody);
     }
 
 void IntersectBodies(SGM::Result &rResult,
@@ -1762,7 +1911,7 @@ void IntersectBodies(SGM::Result &rResult,
     // that came from each body.
 
     std::vector<std::pair<face *,face *> > aSplits;
-    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits);
+    ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits,nullptr);
     UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
 
     // Delete faces from pKeepBody that are outside of pDeleteBody,

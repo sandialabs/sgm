@@ -10,14 +10,20 @@
 namespace SGMInternal
 {
 
-void vertex::GetParents(std::set<entity *, EntityCompare> &sParents) const
-{
-    for (auto pEdge : m_sEdges)
+vertex::vertex(SGM::Result &rResult,SGM::Point3D const &Pos) :
+            topology(rResult,SGM::EntityType::VertexType),
+            m_Pos(Pos)
     {
-      sParents.emplace(pEdge);
     }
+
+void vertex::GetParents(std::set<entity *, EntityCompare> &sParents) const
+    {
+    for (auto pEdge : m_sEdges)
+        {
+         sParents.emplace(pEdge);
+        }
     entity::GetParents(sParents);
-}
+    }
 
 SGM::Interval3D const &vertex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
@@ -87,6 +93,11 @@ void vertex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 void vertex::RemoveEdge(edge *pEdge)
     {
     m_sEdges.erase(pEdge);
+    }
+
+void vertex::AddEdge(edge *pEdge) 
+    {
+    m_sEdges.insert(pEdge);
     }
 
 void vertex::TransformData(SGM::Transform3D const &Trans)
