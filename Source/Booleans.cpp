@@ -1186,6 +1186,23 @@ bool ImprintFaces(SGM::Result                                                   
                   SGM::Interval1D                                                      const *pLimitDomain,
                   std::set<std::pair<surface const *,surface const *> >                      *pConincidentSurfaces)
     {
+    // Check for conicident vertices.
+
+    std::set<vertex *,EntityCompare> sVertices1;
+    FindVertices(rResult,pFace1,sVertices1);
+    for(vertex *pVertex1 : sVertices1)
+        {
+        std::set<vertex *,EntityCompare> sVertices2;
+        FindVertices(rResult,pFace2,sVertices2);
+        for(vertex *pVertex2 : sVertices2)
+            {
+            if(pVertex1!=pVertex2 && SGM::NearEqual(pVertex1->GetPoint(),pVertex2->GetPoint(),SGM_MIN_TOL))
+                {
+                MergeVertices(rResult,pVertex1,pVertex2);
+                }
+            }
+        }
+
     // Find the new edges.
 
     bool bAnswer=false;
