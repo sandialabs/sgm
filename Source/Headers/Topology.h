@@ -2,7 +2,10 @@
 #define TOPOLOGY_H
 
 #include "SGMVector.h"
+#include "SGMModify.h"
+
 #include "EntityClasses.h"
+
 #include <set>
 
 namespace SGMInternal
@@ -130,6 +133,10 @@ void Merge(SGM::Result &rResult,
 void TweakFace(SGM::Result   &rResult,
                face          *pFace,
                surface const *pSurface);
+
+void Repair(SGM::Result         &rResult,
+            std::vector<body *> &aBodies,
+            SGM::RepairOptions  *pOptions=nullptr);
 
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces);

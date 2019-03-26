@@ -9,7 +9,7 @@
 #include "SGMChecker.h"
 #include "SGMPrimitives.h"
 #include "SGMTranslators.h"
-
+#include "SGMModify.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -88,6 +88,27 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
+
+TEST(repair, auto_match)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::string sFile=get_models_path();
+    sFile+="/Plato/Panel1.STEP";
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::ReadFile(rResult,sFile,aEntities,aLog,SGM::TranslatorOptions());
+
+    SGM::Body BodyID0=SGM::Body(aEntities[0].m_ID);
+    SGM::Body BodyID1=SGM::Body(aEntities[1].m_ID);
+    std::vector<SGM::Body> aBodies;
+    aBodies.push_back(BodyID0);
+    aBodies.push_back(BodyID1);
+    SGM::Repair(rResult,aBodies);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(models_single_check, inport_txt_points)
 {

@@ -9,6 +9,7 @@
 #include "Intersectors.h"
 #include "Primitive.h"
 #include "Modify.h"
+#include "Topology.h"
 
 #include <limits>
 #include <algorithm>
@@ -1527,4 +1528,71 @@ body *UnhookFaces(SGM::Result         &rResult,
     return pAnswer;
     }
 */
+
+double MinEdge(vertex *pVertex)
+    {
+    double dMin=SGM_MAX;
+    for(edge *pEdge : pVertex->GetEdges())
+        {
+        double dLength=pEdge->FindLength(SGM_MIN_TOL);
+        if(dLength<dMin)
+            {
+            dMin=dLength;
+            }
+        }
+    return dMin;
+    }
+
+void Repair(SGM::Result         &rResult,
+            std::vector<body *> &aBodies,
+            SGM::RepairOptions  *pOptions)
+    {
+    SGM::RepairOptions Options;
+    if(pOptions)
+        {
+        Options=*pOptions;
+        }
+
+    if(Options.m_bAutoMatch)
+        {
+        double dMinDist=SGM_MAX;
+        double dRatio=0;
+        vertex *pVert1=nullptr;
+        vertex *pVert2=nullptr;
+        size_t nBodies=aBodies.size();
+        size_t Index1,Index2;
+        for(Index1=0;Index1<nBodies;++Index1)
+            {
+            body *pBody1=aBodies[Index1];
+            std::set<vertex *,EntityCompare> sVertices1;
+            FindVertices(rResult,pBody1,sVertices1);
+            for(Index2=Index1+1;Index2<nBodies;++Index2)
+                {
+                body *pBody2=aBodies[Index2];
+                std::set<vertex *,EntityCompare> sVertices2;
+                FindVertices(rResult,pBody2,sVertices2);
+                for(vertex *pVertex1 : sVertices1)
+                    {
+                    double dMin1=MinEdge(pVertex1);
+                    for(vertex *pVertex2 : sVertices2)
+                        {
+                        double dDist=pVertex1->GetPoint().Distance(pVertex2->GetPoint());
+                        double dMin2=MinEdge(pVertex2);
+                        if(SGM_FIT<dDist && dDist<dMinDist && dMin1*10<dDist && dMin2*10<dDist)
+                            {
+                            pVert1=pVertex1;
+                            pVert2=pVertex2;
+                            dMinDist=dDist;
+                            dRatio=dDist/std::min(dMin1,dMin2);
+                            }
+                        }
+                    }
+                }
+            }
+
+        int a=0;
+        a*=1;
+        }
+    }
+
 } // end namespace SGMInternal

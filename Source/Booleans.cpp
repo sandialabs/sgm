@@ -35,7 +35,8 @@ void ReduceToVolumes(SGM::Result                      &rResult,
 
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
-                           edge               *pEdge)
+                           edge               *pEdge,
+                           edge               **pOutNewEdge)
     {
     // Create the new vertex.
 
@@ -58,6 +59,10 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
     else
         {
         auto pNewEdge=new edge(rResult);
+        if(pOutNewEdge)
+            {
+            *pOutNewEdge=pNewEdge;
+            }
         pNewEdge->SetCurve(rResult,pEdge->GetCurve());
     
         SGM::Interval1D Domain=pEdge->GetDomain();
@@ -141,6 +146,31 @@ vertex *ImprintPoint(SGM::Result        &rResult,
     return pAnswer;
     }
 
+void PreImprintVertices(SGM::Result &rResult,
+                        face  const *pFace0,
+                        face  const *pFace1)
+    {
+    std::set<vertex *,EntityCompare> sVertices;
+    FindVertices(rResult,pFace0,sVertices);
+    for(vertex *pVertex : sVertices)
+        {
+        SGM::Point3D const &Pos=pVertex->GetPoint();
+        std::set<edge *,EntityCompare> sEdges=pFace1->GetEdges();
+        for(edge *pEdge : sEdges)
+            {
+            if(pEdge->PointInEdge(Pos,SGM_MIN_TOL))
+                {
+                if( SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL)==false && 
+                    SGM::NearEqual(Pos,pEdge->GetEnd()->GetPoint(),SGM_MIN_TOL)==false)
+                    {
+                    ImprintPointOnEdge(rResult,Pos,pEdge);
+                    break;
+                    }
+                }
+            }
+        }
+    }
+
 size_t TrimCurveWithFaces(SGM::Result               &rResult,
                           curve                     *pCurve,
                           face                const *pFace0,
@@ -152,6 +182,8 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
     size_t nOldEdges=aEdges.size();
     if(pCurve==nullptr)
         {
+        PreImprintVertices(rResult,pFace0,pFace1);
+        PreImprintVertices(rResult,pFace1,pFace0);
         std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
         for(auto pEdge : sEdges0)
             {
@@ -913,22 +945,33 @@ void MergeEdges(SGM::Result                     &rResult,
         vertex *pEndKeep=pKeepEdge->GetEnd();
         vertex *pStartDelete=pDeleteEdge->GetStart();
         vertex *pEndDelete=pDeleteEdge->GetEnd();
-        if(pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO)
+      
+        if( pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
+            pEndKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
             {
+            // Complete match.
+
             MergeVertices(rResult,pStartKeep,pStartDelete);
             if(pStartDelete!=pEndDelete)
                 {
                 MergeVertices(rResult,pEndKeep,pEndDelete);
                 }
             }
-        else
+        else if( pEndKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
+                 pStartKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
             {
+            // Flipped complete match.
+
             bFlip=true;
             MergeVertices(rResult,pStartKeep,pEndDelete);
             if(pStartDelete!=pEndDelete)
                 {
                 MergeVertices(rResult,pEndKeep,pStartDelete);
                 }
+            }
+        else 
+            {
+            throw; 
             }
         }
     else
@@ -1044,9 +1087,6 @@ std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rR
                                              face                            *pFace,
                                              std::set<curve *,EntityCompare> &sDeleteCurves)
     {
-    double dLength=pEdge->GetDomain().Length();
-    dLength*=1;
-
     std::vector<face *> aFaces;
     aFaces.push_back(pFace);
 

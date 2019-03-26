@@ -2603,6 +2603,20 @@ void SGM::TweakFace(SGM::Result  &rResult,
     SGMInternal::TweakFace(rResult,pFace,pSurface);
     }
 
+SGM_EXPORT void SGM::Repair(SGM::Result            &rResult,
+                            std::vector<SGM::Body> &aBodies,
+                            SGM::RepairOptions     *pOptions)
+    {
+    std::vector<SGMInternal::body *> abodies;
+    abodies.reserve(aBodies.size());
+    for(auto BodyID : aBodies)
+        {
+        auto pBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+        abodies.push_back(pBody);
+        }
+    SGMInternal::Repair(rResult,abodies,pOptions);
+    }
+
 SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,
                               SGM::Point3D const &Pos,
                               SGM::Topology      &TopologyID)
