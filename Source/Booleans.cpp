@@ -947,7 +947,15 @@ void MergeEdges(SGM::Result                     &rResult,
     {
     if(pKeepEdge->GetDomain().Length()<SGM_MIN_TOL)
         {
-        //SGM::Point3D Pos=pKeepEdge->GetStart()->GetPoint();
+        SGM::Point3D Pos=pKeepEdge->GetStart()->GetPoint();
+        if(SGM::NearEqual(Pos,pDeleteEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+            {
+            MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetStart());
+            }
+        else if(SGM::NearEqual(Pos,pDeleteEdge->GetEnd()->GetPoint(),SGM_MIN_TOL))
+            {
+            MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetEnd());
+            }
         return;
         }
     if(pKeepEdge==pDeleteEdge)
@@ -1917,6 +1925,12 @@ void UniteBodies(SGM::Result &rResult,
     std::set<std::pair<surface const *,surface const *> > aCoincidentSurfaces;
     ImprintBodies(rResult,pKeepBody,pDeleteBody,aSplits,&aCoincidentSurfaces);
     UpdateFaceTrees(rResult,aSplits,sFaces1,sFaces2,Tree1,Tree2);
+
+    int a=0;
+    if(a)
+        {
+        return;
+        }
     
     // Delete faces from pKeepBody that are inside of pDeleteBody,
     // face from pDeleteBody that are inside pKeepBody.

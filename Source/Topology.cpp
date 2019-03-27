@@ -552,6 +552,10 @@ size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
         {
         aEdges.push_back(aEdgePair[Index1].second);
         }
+    if(pFace->GetFlipped()==false)
+        {
+        std::reverse(aEdges.begin(),aEdges.end());
+        }
     return nEdges;
     }
 
@@ -630,10 +634,7 @@ edge *FindNextEdge(SGM::Result  &rResult,
         }
     std::vector<edge *> aEdges;
     size_t nEdges=OrderEdgesAboutVertexOnFace(rResult,pVertex,pFace,aEdges);
-    //if(pFace->GetFlipped())
-    //    {
-    //    std::reverse(aEdges.begin(),aEdges.end());
-    //    }
+    //std::reverse(aEdges.begin(),aEdges.end());
     edge *pAnswer=nullptr;
     size_t Index1;
     for(Index1=0;Index1<nEdges;++Index1)
