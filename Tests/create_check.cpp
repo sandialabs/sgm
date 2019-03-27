@@ -20,6 +20,33 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+TEST(create_check, output_segments_to_sgm)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.push_back(SGM::Point3D(0,0,0));
+    aPoints.push_back(SGM::Point3D(10,0,0));
+    aPoints.push_back(SGM::Point3D(10,10,0));
+    aPoints.push_back(SGM::Point3D(0,10,0));
+    std::vector<unsigned> aSegements,aTriangles;
+    aSegements.push_back(0);
+    aSegements.push_back(1);
+    aSegements.push_back(1);
+    aSegements.push_back(2);
+    aSegements.push_back(2);
+    aSegements.push_back(3);
+    aSegements.push_back(3);
+    aSegements.push_back(0);
+
+    SGM::Complex ComplexID=SGM::CreateComplex(rResult,aPoints,aSegements,aTriangles);
+
+    SGM::SaveSGM(rResult,"Segments.sgm",ComplexID,SGM::TranslatorOptions());
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
+
 TEST(create_check, offset_surface)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

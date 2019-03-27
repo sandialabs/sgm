@@ -417,22 +417,22 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             if(nType==SGM::FaceOnLeftType)
                 {
-                return true;
+                return m_bFlipped ? false : true;
                 }
             else
                 {
-                return false;
+                return m_bFlipped ? true : false;
                 }
             }
         else if(dTest2<-SGM_MIN_TOL)
             {
             if(nType==SGM::FaceOnLeftType)
                 {
-                return false;
+                return m_bFlipped ? true : false;
                 }
             else
                 {
-                return true;
+                return m_bFlipped ? false : true;
                 }
             }
         else
@@ -989,6 +989,11 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                                    face const *pFace)
     {
     surface const *pSurface=pFace->GetSurface();
+    bool bFlip=pFace->GetFlipped();
+    if(pFace->GetSideType(pEdge)==SGM::FaceOnRightType)
+        {
+        bFlip=!bFlip;
+        }
     if(pSurface->ClosedInU() || pSurface->ClosedInV())
         {
         SGM::Point3D MidPos=pEdge->FindMidPoint();
@@ -1004,22 +1009,22 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                     {
                     if(uv.m_v<uvPlus.m_v && fabs(uv.m_v-uvPlus.m_v)<Domain.m_UDomain.Length()*0.5)
                         {
-                        return SGM::EdgeSeamType::UpperUSeamType;
+                        return bFlip ? SGM::EdgeSeamType::LowerUSeamType : SGM::EdgeSeamType::UpperUSeamType;
                         }
                     else
                         {
-                        return SGM::EdgeSeamType::LowerUSeamType;
+                        return bFlip ? SGM::EdgeSeamType::UpperUSeamType : SGM::EdgeSeamType::LowerUSeamType;
                         }
                     }
                 if(pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                     {
                     if(uv.m_u<uvPlus.m_u && fabs(uv.m_u-uvPlus.m_u)<Domain.m_VDomain.Length()*0.5)
                         {
-                        return SGM::EdgeSeamType::LowerVSeamType;
+                        return bFlip ? SGM::EdgeSeamType::UpperVSeamType : SGM::EdgeSeamType::LowerVSeamType;
                         }
                     else
                         {
-                        return SGM::EdgeSeamType::UpperVSeamType;
+                        return bFlip ? SGM::EdgeSeamType::LowerVSeamType : SGM::EdgeSeamType::UpperVSeamType;
                         }
                     }
                 }
@@ -1069,11 +1074,11 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     {
                     if(nType==SGM::EdgeSideType::FaceOnRightType)
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        uv.m_v=Domain.m_VDomain.m_dMin;
                         }
                     else
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        uv.m_v=Domain.m_VDomain.m_dMax;
                         }
                     }
                 else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
@@ -1091,11 +1096,11 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     {
                     if(nType==SGM::EdgeSideType::FaceOnRightType)
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        uv.m_v=Domain.m_VDomain.m_dMax;
                         }
                     else
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        uv.m_v=Domain.m_VDomain.m_dMin;
                         }
                     }
                 }
@@ -1116,11 +1121,11 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     {
                     if(nType==SGM::EdgeSideType::FaceOnRightType)
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
                         }
                     else
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
                         }
                     }
                 else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
@@ -1138,11 +1143,11 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                     {
                     if(nType==SGM::EdgeSideType::FaceOnRightType)
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
+                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
                         }
                     else
                         {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
+                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
                         }
                     }
                 }

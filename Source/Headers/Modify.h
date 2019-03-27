@@ -32,16 +32,16 @@ void ReduceToVolumes(SGM::Result                      &rResult,
                      std::set<volume *,EntityCompare> &sVolumes);
 
 // pFace1 may be a nullptr and mHitMap(n) returns the edges or vertices
-// hit by paramters on the curve on face n.  The function returns the 
-// number of edges found.
+// hit by paramters on the curve on face n.  The function returns true 
+// if a vertex from one face is imprinted on the other.
 
-size_t TrimCurveWithFaces(SGM::Result               &rResult,
-                          curve                     *pCurve,
-                          face                const *pFace0,
-                          face                const *pFace1, 
-                          std::vector<edge *>       &aEdges,
-                          double                     dTolerance,
-                          SGM::Interval1D     const *pLimitDomain=nullptr); 
+bool TrimCurveWithFaces(SGM::Result               &rResult,
+                        curve                     *pCurve,
+                        face                const *pFace0,
+                        face                const *pFace1, 
+                        std::vector<edge *>       &aEdges,
+                        double                     dTolerance,
+                        SGM::Interval1D     const *pLimitDomain=nullptr); 
 
 std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
