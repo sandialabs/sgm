@@ -19,6 +19,10 @@ void SubtractBodies(SGM::Result &rResult,
                     body        *pKeepBody,
                     body        *pDeleteBody);
 
+void IntersectBodies(SGM::Result &rResult,
+                     body        *pKeepBody,
+                     body        *pDeleteBody);
+
 void ImprintBodies(SGM::Result &rResult,
                    body        *pKeepBody,
                    body        *pDeleteBody);
@@ -43,11 +47,12 @@ std::vector<face *> ImprintEdgeOnFace(SGM::Result &rResult,
                                       edge        *pEdge,
                                       face        *pFace);
 
-// It is assumed that pEdge has been trimmed to the face.
+// ImprintTrimmedEdgeOnFace assumes that pEdge has been trimmed to the face.
 
-std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result &rResult,
-                                             edge        *pEdge,
-                                             face        *pFace);
+std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rResult,
+                                             edge                            *pEdge,
+                                             face                            *pFace,
+                                             std::set<curve *,EntityCompare> &sDeleteCurves);
 
 vertex *ImprintPoint(SGM::Result        &rResult,
                      SGM::Point3D const &Pos,
@@ -77,6 +82,9 @@ void FindWindingNumbers(surface                   const *pSurface,
 
 void OrientBody(SGM::Result &rResult,
                 body        *pBody);
+
+void FixVolumes(SGM::Result &rResult,
+                body        *pKeepBody);
 }
 
 #endif

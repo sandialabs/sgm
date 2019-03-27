@@ -1263,6 +1263,20 @@ void GroupPolygons(std::vector<std::vector<unsigned> >         const &aaPolygons
             aaaPolygonGroups.push_back(aaPolys);
             }
         }
+
+    // Regroup polygons to account for holes on a closed surface.
+
+    if(aaaPolygonGroups.size() && aaaPolygonGroups[0][0].empty())
+        {
+        std::vector<std::vector<std::vector<unsigned> > > aaaTemp=aaaPolygonGroups;
+        aaaPolygonGroups.clear();
+        aaaPolygonGroups.push_back(aaaTemp[0]);
+        size_t naaaTemp=aaaTemp.size();
+        for(Index1=1;Index1<naaaTemp;++Index1)
+            {
+            aaaPolygonGroups[0].push_back(aaaTemp[Index1][1]);
+            }
+        }
     }
 
 std::vector<unsigned> MergePolygon(std::vector<Point2D>      const &aPoints2D,

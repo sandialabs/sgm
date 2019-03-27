@@ -40,11 +40,13 @@ namespace SGM
                                                std::vector<SGM::IntersectionType> &aTypes,
                                                double                              dTolerance = SGM_MIN_TOL);
 
-    SGM_EXPORT size_t IntersectSurfaces(SGM::Result             &rResult,
-                                        SGM::Surface      const &SurfaceID1,
-                                        SGM::Surface      const &SurfaceID2,
-                                        std::vector<SGM::Curve> &aCurves,
-                                        double                   dTolerance = SGM_MIN_TOL);
+    // Returns true if coincident.
+
+    SGM_EXPORT bool IntersectSurfaces(SGM::Result             &rResult,
+                                      SGM::Surface      const &SurfaceID1,
+                                      SGM::Surface      const &SurfaceID2,
+                                      std::vector<SGM::Curve> &aCurves,
+                                      double                   dTolerance = SGM_MIN_TOL);
 
     SGM_EXPORT size_t IntersectSegment(SGM::Result               &rResult,
                                        SGM::Segment3D      const &Segment,

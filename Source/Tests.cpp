@@ -1201,11 +1201,6 @@ bool RunCPPTest(SGM::Result &rResult,
         aPolygon.push_back(3);
         std::vector<unsigned int> aTriangles;
         bool bAnswer=SGM::TriangulatePolygon(rResult,aPoints,aPolygon,aTriangles);
-        int a=0;
-        a*=1;
-//        bAnswer = (found == 2);
-//        return bAnswer;
-
         }
 
     return false;

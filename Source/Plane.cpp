@@ -86,11 +86,11 @@ bool plane::IsSame(surface const *pOther,double dTolerance) const
         }
     bool bAnswer=true;
     auto pPlane2=(plane const *)pOther;
-    if(SGM::NearEqual(m_Origin,pPlane2->m_Origin,dTolerance)==false)
+    if(dTolerance<fabs((pPlane2->m_Origin-m_Origin)%m_ZAxis))
         {
         bAnswer=false;
         }
-    if(SGM::NearEqual(m_ZAxis,pPlane2->m_ZAxis,dTolerance)==false)
+    if(SGM::NearEqual(fabs(m_ZAxis%pPlane2->m_ZAxis),1.0,dTolerance,false)==false)
         {
         bAnswer=false;
         }

@@ -580,23 +580,21 @@ size_t SGM::IntersectCurves(SGM::Result                        &rResult,
      return IntersectCurveAndSurface(rResult,pCurve,pSurface,aPoints,aTypes,dTolerance);
      }
 
- 
-size_t SGM::IntersectSurfaces(SGM::Result               &rResult,
-                              SGM::Surface        const &SurfaceID1,
-                              SGM::Surface        const &SurfaceID2,
-                              std::vector<SGM::Curve>   &aCurves,
-                              double                     dTolerance)
+bool SGM::IntersectSurfaces(SGM::Result               &rResult,
+                            SGM::Surface        const &SurfaceID1,
+                            SGM::Surface        const &SurfaceID2,
+                            std::vector<SGM::Curve>   &aCurves,
+                            double                     dTolerance)
     {
     auto const *pSurface1=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID1.m_ID);
     auto const *pSurface2=(SGMInternal::surface const *)rResult.GetThing()->FindEntity(SurfaceID2.m_ID);
     std::vector<SGMInternal::curve *> acurves;
-    size_t nAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,dTolerance);
-    size_t Index1;
-    for(Index1=0;Index1<nAnswer;++Index1)
+    bool bAnswer=IntersectSurfaces(rResult,pSurface1,pSurface2,acurves,dTolerance);
+    for(auto pCurve : acurves)
         {
-        aCurves.emplace_back(acurves[Index1]->GetID());
+        aCurves.emplace_back(pCurve->GetID());
         }
-    return nAnswer;
+    return bAnswer;
     }
 
 SGM::Complex SGM::CreatePoints(SGM::Result                     &rResult,
@@ -1685,6 +1683,15 @@ SGM::Surface SGM::CreateNUBSurface(SGM::Result                                  
     return {pSurface->GetID()};
     }
 
+SGM::Surface SGM::CreateOffsetSurface(SGM::Result  &rResult,
+                                      SGM::Surface &BaseSurfaceID,
+                                      double        dOffset)
+    {
+    SGMInternal::surface *pBaseSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(BaseSurfaceID.m_ID);
+    SGMInternal::surface *pSurface=new SGMInternal::offset(rResult,dOffset,pBaseSurface);
+    return {pSurface->GetID()};
+    }
+
 SGM::Surface SGM::CreateNURBSurface(SGM::Result                                   &rResult,
                                     std::vector<std::vector<SGM::Point4D> > const &aaControlPoints,
                                     std::vector<double>                     const &aUKnots,
@@ -2530,15 +2537,6 @@ std::vector<SGM::Face> SGM::ImprintEdgeOnFace(SGM::Result &rResult,
     return aAnswer;
     }
 
-void SGM::UniteBodies(SGM::Result &rResult,
-                      SGM::Body   &KeepBodyID,
-                      SGM::Body   &DeletedBodyID)
-    {
-    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
-    auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
-    SGMInternal::UniteBodies(rResult,pKeepBody,pDeletedBody);
-    }
-
 void SGM::TrimCurveWithFace(SGM::Result               &rResult,
                             SGM::Curve                &CurveID,
                             SGM::Face           const &FaceID,
@@ -2555,6 +2553,15 @@ void SGM::TrimCurveWithFace(SGM::Result               &rResult,
         }
     }
 
+void SGM::UniteBodies(SGM::Result &rResult,
+                      SGM::Body   &KeepBodyID,
+                      SGM::Body   &DeletedBodyID)
+    {
+    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
+    auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
+    SGMInternal::UniteBodies(rResult,pKeepBody,pDeletedBody);
+    }
+
 void SGM::SubtractBodies(SGM::Result &rResult,
                          SGM::Body   &KeepBodyID,
                          SGM::Body   &DeletedBodyID)
@@ -2562,6 +2569,15 @@ void SGM::SubtractBodies(SGM::Result &rResult,
     auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
     auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
     SGMInternal::SubtractBodies(rResult,pKeepBody,pDeletedBody);
+    }
+
+void SGM::IntersectBodies(SGM::Result &rResult,
+                          SGM::Body   &KeepBodyID,
+                          SGM::Body   &DeletedBodyID)
+    {
+    auto pKeepBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(KeepBodyID.m_ID);
+    auto pDeletedBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(DeletedBodyID.m_ID);
+    SGMInternal::IntersectBodies(rResult,pKeepBody,pDeletedBody);
     }
 
 void SGM::ImprintBodies(SGM::Result &rResult,

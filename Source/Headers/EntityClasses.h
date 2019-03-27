@@ -954,6 +954,8 @@ class face : public topology
 
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
+        std::map<edge *,SGM::EdgeSideType> const &GetEdgeSides() const {return m_mSideType;}
+
         volume *GetVolume() const; 
 
         std::vector<SGM::Point2D> const &GetPoints2D(SGM::Result &rResult) const;
@@ -1237,7 +1239,7 @@ class vertex : public topology
 
         void Swap(vertex &other);
 
-        void AddEdge(edge *pEdge) {m_sEdges.insert(pEdge);}
+        void AddEdge(edge *pEdge);
 
         void RemoveEdge(edge *pEdge);
 

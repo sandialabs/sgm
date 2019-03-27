@@ -11,6 +11,7 @@
 #include "SGMInterval.h"
 #include "SGMTopology.h"
 #include "SGMPrimitives.h"
+#include "SGMComplex.h"
 
 #include "test_utility.h"
 
@@ -18,6 +19,48 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
+
+TEST(create_check, offset_surface)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<std::vector<SGM::Point3D> > aaPoints;
+    size_t Index1,Index2;
+    double dStep=SGM_PI/8.0;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double x=Index1*dStep;
+        std::vector<SGM::Point3D> aPoints;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double y=Index2*dStep;
+            double z=sin(x)*cos(y);
+            SGM::Point3D Pos(x,y,z);
+            aPoints.push_back(Pos);
+            }
+        aaPoints.push_back(aPoints);
+        }
+    SGM::Surface SurfaceID=SGM::CreateNUBSurface(rResult,aaPoints);
+    SGM::Surface OffsetID=SGM::CreateOffsetSurface(rResult,SurfaceID,0.1);
+
+    std::vector<SGM::Point3D> aTemp;
+    for(Index1=0;Index1<49;++Index1)
+        {
+        double u=Index1/48.0;
+        for(Index2=0;Index2<49;++Index2)
+            {
+            double v=Index2/48.0;
+            SGM::Point3D Pos;
+            SGM::EvaluateSurface(rResult,OffsetID,SGM::Point2D(u,v),&Pos);
+            aTemp.push_back(Pos);
+            }
+       }
+    SGM::CreatePoints(rResult,aTemp);
+    SGM::TestSurface(rResult,OffsetID,SGM::Point2D(0.1,0.2));
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
 
 TEST(create_check, cover_wire_body)
 {

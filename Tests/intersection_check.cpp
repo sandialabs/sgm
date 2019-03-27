@@ -134,7 +134,8 @@ bool TestIntersections(SGM::Result        &rResult,
     {
     bool bAnswer=true;
     std::vector<SGM::Curve> aCurves;
-    size_t nCurves=SGM::IntersectSurfaces(rResult,Surface1,Surface2,aCurves);
+    SGM::IntersectSurfaces(rResult,Surface1,Surface2,aCurves);
+    size_t nCurves=aCurves.size();
     size_t Index1,Index2;
    
     if(nCurves!=nExpectedCurves)

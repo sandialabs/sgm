@@ -407,7 +407,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Point3D TestPos;
         SGM::Vector3D Vec;
         pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
-        SGM::Point2D a2=m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);
@@ -417,22 +418,22 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             if(nType==SGM::FaceOnLeftType)
                 {
-                return true;
+                return m_bFlipped ? false : true;
                 }
             else
                 {
-                return false;
+                return m_bFlipped ? true : false;
                 }
             }
         else if(dTest2<-SGM_MIN_TOL)
             {
             if(nType==SGM::FaceOnLeftType)
                 {
-                return false;
+                return m_bFlipped ? true : false;
                 }
             else
                 {
-                return true;
+                return m_bFlipped ? false : true;
                 }
             }
         else
@@ -500,6 +501,13 @@ bool face::PointInFace(SGM::Result        &rResult,
                 }
             else
                 {
+                for(auto pEdge : aEdges)
+                    {
+                    if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+                        {
+                        return true;
+                        }
+                    }
                 throw; // Add more code
                 }
             }
@@ -997,22 +1005,22 @@ SGM::EdgeSeamType FindEdgeSeamType(edge const *pEdge,
                     {
                     if(uv.m_v<uvPlus.m_v && fabs(uv.m_v-uvPlus.m_v)<Domain.m_UDomain.Length()*0.5)
                         {
-                        return SGM::EdgeSeamType::UpperUSeamType;
+                        return pFace->GetFlipped() ? SGM::EdgeSeamType::LowerUSeamType : SGM::EdgeSeamType::UpperUSeamType;
                         }
                     else
                         {
-                        return SGM::EdgeSeamType::LowerUSeamType;
+                        return pFace->GetFlipped() ? SGM::EdgeSeamType::UpperUSeamType : SGM::EdgeSeamType::LowerUSeamType;
                         }
                     }
                 if(pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL))
                     {
                     if(uv.m_u<uvPlus.m_u && fabs(uv.m_u-uvPlus.m_u)<Domain.m_VDomain.Length()*0.5)
                         {
-                        return SGM::EdgeSeamType::LowerVSeamType;
+                        return pFace->GetFlipped() ? SGM::EdgeSeamType::UpperVSeamType : SGM::EdgeSeamType::LowerVSeamType;
                         }
                     else
                         {
-                        return SGM::EdgeSeamType::UpperVSeamType;
+                        return pFace->GetFlipped() ? SGM::EdgeSeamType::LowerVSeamType : SGM::EdgeSeamType::UpperVSeamType;
                         }
                     }
                 }

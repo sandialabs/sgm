@@ -159,6 +159,10 @@ SGM_EXPORT SGM::Surface CreateNUBSurface(SGM::Result                            
                                          std::vector<double>                     const *pUParams=nullptr,
                                          std::vector<double>                     const *pVParams=nullptr);
 
+SGM_EXPORT SGM::Surface CreateOffsetSurface(SGM::Result  &rResult,
+                                            SGM::Surface &BaseSurfaceID,
+                                            double        dOffset);
+
 SGM_EXPORT SGM::Surface CreateNUBSurfaceFromControlPoints(SGM::Result                                   &rResult,
                                                           std::vector<std::vector<SGM::Point3D> > const &aaControlPoints,
                                                           std::vector<double>                     const &aUKnots,

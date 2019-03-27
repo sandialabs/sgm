@@ -693,11 +693,6 @@ namespace SGMInternal {
     // vertex
     //
 
-    inline vertex::vertex(SGM::Result &rResult,SGM::Point3D const &Pos) :
-            topology(rResult,SGM::EntityType::VertexType),
-            m_Pos(Pos)
-    {}
-
     inline vertex::vertex(SGM::Result &rResult, vertex const &other) :
             topology(rResult, other),
             m_Pos(other.m_Pos),
