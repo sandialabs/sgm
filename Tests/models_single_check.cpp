@@ -289,6 +289,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     SGM::Point3D BadRayPoint(0.74947436837428805,2.4434600583278501,-1.495508280942853);
     bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(20));
+    bValue;
     
     SGM::CreateLinearEdge(rResult,TestPoint, BadRayPoint+SGM::Vector3D(0,0,3));
 

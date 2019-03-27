@@ -36,18 +36,18 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
     return bValue;
     }
 
-TEST(modify, square_square_clean_unite)
-{
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing); 
-
-    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
-    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,-5),SGM::Point3D(15,5,5));
-
-    SGM::UniteBodies(rResult,BlockID1,BlockID2);
-
-    SGMTesting::ReleaseTestThing(pThing);
-}
+//TEST(modify, square_square_clean_unite)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
+//    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,-5),SGM::Point3D(15,5,5));
+//
+//    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
 
 TEST(modify, square_square_coincident_face_vertex_unite)
 {

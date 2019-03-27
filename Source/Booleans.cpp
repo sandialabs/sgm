@@ -947,15 +947,15 @@ void MergeEdges(SGM::Result                     &rResult,
     {
     if(pKeepEdge->GetDomain().Length()<SGM_MIN_TOL)
         {
-        SGM::Point3D Pos=pKeepEdge->GetStart()->GetPoint();
-        if(SGM::NearEqual(Pos,pDeleteEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
-            {
-            MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetStart());
-            }
-        else if(SGM::NearEqual(Pos,pDeleteEdge->GetEnd()->GetPoint(),SGM_MIN_TOL))
-            {
-            MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetEnd());
-            }
+        //SGM::Point3D Pos=pKeepEdge->GetStart()->GetPoint();
+        //if(SGM::NearEqual(Pos,pDeleteEdge->GetStart()->GetPoint(),SGM_MIN_TOL))
+        //    {
+        //    MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetStart());
+        //    }
+        //else if(SGM::NearEqual(Pos,pDeleteEdge->GetEnd()->GetPoint(),SGM_MIN_TOL))
+        //    {
+        //    MergeVertices(rResult,pKeepEdge->GetStart(),pDeleteEdge->GetEnd());
+        //    }
         return;
         }
     if(pKeepEdge==pDeleteEdge)

@@ -1058,6 +1058,23 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
         {
         if(nSeamType!=SGM::EdgeSeamType::NotASeamType)
             {
+            if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
+                {
+                uv.m_u=Domain.m_UDomain.m_dMax;
+                }
+            else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
+                {
+                uv.m_v=Domain.m_VDomain.m_dMax;
+                }
+            else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
+                {
+                uv.m_u=Domain.m_UDomain.m_dMin;
+                }
+            else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
+                {
+                uv.m_v=Domain.m_VDomain.m_dMin;
+                }
+            /*
             if(m_bFlipped)
                 {
                 if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
@@ -1152,6 +1169,7 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                         }
                     }
                 }
+            */
             }
         else if((m_pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL)) ||
                 (m_pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL)))
