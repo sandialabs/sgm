@@ -77,11 +77,26 @@ SGM_EXPORT void TweakFace(SGM::Result  &rResult,
                           SGM::Face    &FaceID,
                           SGM::Surface &SurfaceID);
 
-// Unhook the given faces and return them in a different body.
-/*
-SGM_EXPORT SGM::Body UnhookFaces(SGM::Result            &rResult,
-                                 std::vector<SGM::Face> &aFaces);
-*/
+// Repair the relative placement of a vector of bodies.
+
+class SGM_EXPORT RepairOptions
+    {
+    public:
+
+        RepairOptions():
+            m_bAutoMatch(true),
+            m_bExtremeMerge(true),
+            m_bRotateCircles(true)
+            {}
+
+        bool m_bAutoMatch;
+        bool m_bExtremeMerge;
+        bool m_bRotateCircles;
+    };
+
+SGM_EXPORT void Repair(SGM::Result            &rResult,
+                       std::vector<SGM::Body> &aBodies,
+                       SGM::RepairOptions     *pOptions=nullptr);
 
 } // End of SGM namespace
 

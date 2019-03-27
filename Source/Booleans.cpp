@@ -35,7 +35,8 @@ void ReduceToVolumes(SGM::Result                      &rResult,
 
 vertex *ImprintPointOnEdge(SGM::Result        &rResult,
                            SGM::Point3D const &Pos,
-                           edge               *pEdge)
+                           edge               *pEdge,
+                           edge               **pOutNewEdge)
     {
     // Create the new vertex.
 
@@ -58,6 +59,10 @@ vertex *ImprintPointOnEdge(SGM::Result        &rResult,
     else
         {
         auto pNewEdge=new edge(rResult);
+        if(pOutNewEdge)
+            {
+            *pOutNewEdge=pNewEdge;
+            }
         pNewEdge->SetCurve(rResult,pEdge->GetCurve());
     
         SGM::Interval1D Domain=pEdge->GetDomain();
@@ -141,26 +146,69 @@ vertex *ImprintPoint(SGM::Result        &rResult,
     return pAnswer;
     }
 
-size_t TrimCurveWithFaces(SGM::Result               &rResult,
-                          curve                     *pCurve,
-                          face                const *pFace0,
-                          face                const *pFace1,
-                          std::vector<edge *>       &aEdges,
-                          double                     dTolerance,
-                          SGM::Interval1D     const *pLimitDomain)
+bool PreImprintVertices(SGM::Result &rResult,
+                        face  const *pFace0,
+                        face  const *pFace1)
     {
-    size_t nOldEdges=aEdges.size();
+    bool bAnswer=false;
+    std::set<vertex *,EntityCompare> sVertices;
+    FindVertices(rResult,pFace0,sVertices);
+    for(vertex *pVertex : sVertices)
+        {
+        SGM::Point3D const &Pos=pVertex->GetPoint();
+        std::set<edge *,EntityCompare> sEdges=pFace1->GetEdges();
+        for(edge *pEdge : sEdges)
+            {
+            if(pEdge->PointInEdge(Pos,SGM_MIN_TOL))
+                {
+                if( SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_MIN_TOL)==false && 
+                    SGM::NearEqual(Pos,pEdge->GetEnd()->GetPoint(),SGM_MIN_TOL)==false)
+                    {
+                    vertex *pTempVertex=ImprintPointOnEdge(rResult,Pos,pEdge);
+                    MergeVertices(rResult,pVertex,pTempVertex);
+                    bAnswer=true;
+                    break;
+                    }
+                }
+            }
+        }
+    return bAnswer;
+    }
+
+bool TrimCurveWithFaces(SGM::Result               &rResult,
+                        curve                     *pCurve,
+                        face                const *pFace0,
+                        face                const *pFace1,
+                        std::vector<edge *>       &aEdges,
+                        double                     dTolerance,
+                        SGM::Interval1D     const *pLimitDomain)
+    {
+    bool bAnswer=false;
     if(pCurve==nullptr)
         {
+        if(PreImprintVertices(rResult,pFace0,pFace1))
+            {
+            bAnswer=true;
+            }
+        if(PreImprintVertices(rResult,pFace1,pFace0))
+            {
+            bAnswer=true;
+            }
         std::set<edge *,EntityCompare> const &sEdges0=pFace0->GetEdges();
         for(auto pEdge : sEdges0)
             {
-            TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace1,nullptr,aEdges,dTolerance,&pEdge->GetDomain());
+            if(TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace1,nullptr,aEdges,dTolerance,&pEdge->GetDomain()))
+                {
+                bAnswer=true;
+                }
             }
         std::set<edge *,EntityCompare> const &sEdges1=pFace1->GetEdges();
         for(auto pEdge : sEdges1)
             {
-            TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace0,nullptr,aEdges,dTolerance,&pEdge->GetDomain());
+            if(TrimCurveWithFaces(rResult,pEdge->GetCurve(),pFace0,nullptr,aEdges,dTolerance,&pEdge->GetDomain()))
+                {
+                bAnswer=true;
+                }
             }
         }
     else
@@ -361,7 +409,7 @@ size_t TrimCurveWithFaces(SGM::Result               &rResult,
             }
         }
 
-    return aEdges.size()-nOldEdges;
+    return bAnswer;
     }
 
 void MergeVertices(SGM::Result &rResult,
@@ -899,6 +947,7 @@ void MergeEdges(SGM::Result                     &rResult,
     {
     if(pKeepEdge->GetDomain().Length()<SGM_MIN_TOL)
         {
+        //SGM::Point3D Pos=pKeepEdge->GetStart()->GetPoint();
         return;
         }
     if(pKeepEdge==pDeleteEdge)
@@ -913,22 +962,33 @@ void MergeEdges(SGM::Result                     &rResult,
         vertex *pEndKeep=pKeepEdge->GetEnd();
         vertex *pStartDelete=pDeleteEdge->GetStart();
         vertex *pEndDelete=pDeleteEdge->GetEnd();
-        if(pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO)
+      
+        if( pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
+            pEndKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
             {
+            // Complete match.
+
             MergeVertices(rResult,pStartKeep,pStartDelete);
             if(pStartDelete!=pEndDelete)
                 {
                 MergeVertices(rResult,pEndKeep,pEndDelete);
                 }
             }
-        else
+        else if( pEndKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
+                 pStartKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
             {
+            // Flipped complete match.
+
             bFlip=true;
             MergeVertices(rResult,pStartKeep,pEndDelete);
             if(pStartDelete!=pEndDelete)
                 {
                 MergeVertices(rResult,pEndKeep,pStartDelete);
                 }
+            }
+        else 
+            {
+            throw; 
             }
         }
     else
@@ -1044,9 +1104,6 @@ std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rR
                                              face                            *pFace,
                                              std::set<curve *,EntityCompare> &sDeleteCurves)
     {
-    double dLength=pEdge->GetDomain().Length();
-    dLength*=1;
-
     std::vector<face *> aFaces;
     aFaces.push_back(pFace);
 
@@ -1233,7 +1290,10 @@ bool ImprintFaces(SGM::Result                                                   
     for(auto pCurve : aCurves)
         {
         std::vector<edge *> aEdges;
-        TrimCurveWithFaces(rResult,pCurve,pFace1,pFace2,aEdges,SGM_MIN_TOL,pLimitDomain);
+        if(TrimCurveWithFaces(rResult,pCurve,pFace1,pFace2,aEdges,SGM_MIN_TOL,pLimitDomain))
+            {
+            bAnswer=true;
+            }
         for(edge *pEdge : aEdges)
             {
             std::vector<face *> aFaces1=ImprintTrimmedEdgeOnFace(rResult,pEdge,pFace1,sDeleteCurves);

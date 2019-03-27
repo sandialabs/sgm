@@ -9,8 +9,7 @@
 #include "SGMChecker.h"
 #include "SGMPrimitives.h"
 #include "SGMTranslators.h"
-#include "SGMGeometry.h"
-
+#include "SGMModify.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -90,7 +89,28 @@ void expect_import_ouo_check_success(std::string const &ouo_file_name)
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
-TEST(models_single_check, inport_txt_points)
+TEST(repair, auto_match)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::string sFile=get_models_path();
+    sFile+="/Plato/Panel1.STEP";
+    std::vector<SGM::Entity> aEntities;
+    std::vector<std::string> aLog;
+    SGM::ReadFile(rResult,sFile,aEntities,aLog,SGM::TranslatorOptions());
+
+    SGM::Body BodyID0=SGM::Body(aEntities[0].m_ID);
+    SGM::Body BodyID1=SGM::Body(aEntities[1].m_ID);
+    std::vector<SGM::Body> aBodies;
+    aBodies.push_back(BodyID0);
+    aBodies.push_back(BodyID1);
+    SGM::Repair(rResult,aBodies);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(models_single_check, import_txt_points)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -253,37 +273,24 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
 
-#if 0
+#if 1
 
     // a point that should be outside
-    SGM::Point3D TestPoint(-2.5142985590643376,
-                            0.61694493379797566,
-                           -6.011742721183575);
+    SGM::Point3D TestPoint(0.7494743683742880,2.443460058327850,-6.011742721183575);
     aPoints.emplace_back(TestPoint);
 
     // make a complex with the intersections (that appear internal in PointInVolume()
 
     std::vector<SGM::Point3D> aRayIntersections =
         {
-            {-2.5142985590643376, 0.61694493379797566, -5.3659999999999997},
-            {-2.5142985590643376, 0.61694493379797566, -4.4404903190646232},
-            {-2.5142985590643376, 0.61694493379797566, -2.758},
-            {-2.5142985590643376, 0.61694493379797566, -2.3080409749569655},
-            {-2.5142985590643376, 0.61694493379797566, -2.1934822597029946},
-            {-2.5142985590643376, 0.61694493379797566, -1.7316187273124584},
-            {-2.5142985590643376, 0.61694493379797566, -1.4329999999999998},
-            {-2.5142985590643376, 0.61694493379797566, -0.85700000000000021},
-            {-2.5142985590643376, 0.61694493379797566, -0.72299999999999986},
-            {-2.5142985590643376, 0.61694493379797566,  0.44987086556196959},
-            {-2.5142985590643376, 0.61694493379797566, .75199999999999978}
+            {0.74947436837428805,2.4434600583278501,-1.495508280942853}
         };
     SGM::CreateComplex(rResult,aRayIntersections,aEmpty,aEmpty);
 
-    SGM::Point3D BadRayPoint(-2.5142985590643376,
-                              0.61694493379797566,
-                             -2.1934822597029946);
-
-    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(535));
+    SGM::Point3D BadRayPoint(0.74947436837428805,2.4434600583278501,-1.495508280942853);
+    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(20));
+    
+    SGM::CreateLinearEdge(rResult,TestPoint, BadRayPoint+SGM::Vector3D(0,0,3));
 
 //    SGM::Curve CurveID = SGM::CreateLine(rResult,TestPoint, SGM::UnitVector3D(0,0,1));
 //    SGM::Surface SurfaceID = SGM::GetSurfaceOfFace(rResult,SGM::Face(498));
@@ -331,6 +338,11 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
             aPointsInside.push_back(rPoint);
             }
         }
+
+    SGM::Point3D& LastPoint = aPointsInside.back();
+    std::cout.setf(std::ios::floatfield,std::ios::scientific);
+    std::cout << std::setprecision(15);
+    std::cout << "==> LastPoint = " << std::setw(23) << LastPoint.m_x << ',' << LastPoint.m_y << ',' << LastPoint.m_z << std::endl;
 
     SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
 
