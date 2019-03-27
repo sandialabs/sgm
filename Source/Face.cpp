@@ -118,10 +118,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSeamType[(edge *)MapValue->second]=SeamType.second;
             }
-        //else
-        //    {
-        //    m_sFixedSeamType[SeamType.first]=SeamType.second;
-        //    }
         }
     m_mSeamType=m_sFixedSeamType;
 
@@ -133,10 +129,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSideType[(edge *)MapValue->second]=SideType.second;
             }
-        //else
-        //    {
-        //    m_sFixedSideType[SideType.first]=SideType.second;
-        //    }
         }
     m_mSideType=m_sFixedSideType;
 
@@ -166,10 +158,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        //else
-        //    {
-        //    m_sFixedEdges.insert(pEdge);
-        //    }
         }
     m_sEdges=m_sFixedEdges;
     OwnerAndAttributeReplacePointers(mEntityMap);
@@ -1074,102 +1062,6 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 {
                 uv.m_v=Domain.m_VDomain.m_dMin;
                 }
-            /*
-            if(m_bFlipped)
-                {
-                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
-                        }
-                    }
-                }
-            else
-                {
-                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
-                    {
-                     if(nType==SGM::EdgeSideType::FaceOnRightType)
-                         {
-                         uv.m_u=Domain.m_UDomain.m_dMin;
-                         }
-                     else
-                         {
-                         uv.m_u=Domain.m_UDomain.m_dMax;
-                         }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
-                        }
-                    }
-                }
-            */
             }
         else if((m_pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL)) ||
                 (m_pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL)))
