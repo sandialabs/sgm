@@ -110,7 +110,7 @@ TEST(repair, auto_match)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(models_single_check, inport_txt_points)
+TEST(models_single_check, import_txt_points)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -231,6 +231,123 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     SCOPED_TRACE(file_name);
     expect_import_ouo_check_success(file_name);
 }
+
+TEST(speed_check, point_in_volume_OUO_full_model_volume1)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+
+    std::cout << "point_in_volume_OUO_full_model_volume1:" << std::endl;
+
+    SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
+
+    std::cout << "  Bounds = ([" << Bounds.m_XDomain.m_dMin << "," << Bounds.m_XDomain.m_dMax << "]," <<
+                             "[" << Bounds.m_YDomain.m_dMin << "," << Bounds.m_YDomain.m_dMax << "]," <<
+                             "[" << Bounds.m_ZDomain.m_dMin << "," << Bounds.m_ZDomain.m_dMax << "])" << std::endl;
+
+    // make a regular grid of equally spaced points that covers the bounding box
+
+    // start and end slightly outside the bounding box
+    double dExtraX = (Bounds.m_XDomain.m_dMax - Bounds.m_XDomain.m_dMin)/10.;
+    double dExtraY = (Bounds.m_YDomain.m_dMax - Bounds.m_YDomain.m_dMin)/10.;
+    double dExtraZ = (Bounds.m_ZDomain.m_dMax - Bounds.m_ZDomain.m_dMin)/10.;
+
+    double dStartX = Bounds.m_XDomain.m_dMin - dExtraX;
+    double dStartY = Bounds.m_YDomain.m_dMin - dExtraY;
+    double dStartZ = Bounds.m_ZDomain.m_dMin - dExtraZ;
+
+    double dEndX = Bounds.m_XDomain.m_dMax + dExtraX;
+    double dEndY = Bounds.m_YDomain.m_dMax + dExtraY;
+    double dEndZ = Bounds.m_ZDomain.m_dMax + dExtraZ;
+
+    // equal spacing in all three directions
+    double dIncrement = std::min({std::abs(dEndX - dStartX),
+                                  std::abs(dEndY - dStartY),
+                                  std::abs(dEndZ - dStartZ)});
+    dIncrement /= 100.;
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned> aEmpty;
+
+#if 1
+
+    // a point that should be outside
+    SGM::Point3D TestPoint(0.7494743683742880,2.443460058327850,-6.011742721183575);
+    aPoints.emplace_back(TestPoint);
+
+    // make a complex with the intersections (that appear internal in PointInVolume()
+
+    std::vector<SGM::Point3D> aRayIntersections =
+        {
+            {0.74947436837428805,2.4434600583278501,-1.495508280942853}
+        };
+    SGM::CreateComplex(rResult,aRayIntersections,aEmpty,aEmpty);
+
+    SGM::Point3D BadRayPoint(0.74947436837428805,2.4434600583278501,-1.495508280942853);
+    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(20));
+    
+    SGM::CreateLinearEdge(rResult,TestPoint, BadRayPoint+SGM::Vector3D(0,0,3));
+
+//    SGM::Curve CurveID = SGM::CreateLine(rResult,TestPoint, SGM::UnitVector3D(0,0,1));
+//    SGM::Surface SurfaceID = SGM::GetSurfaceOfFace(rResult,SGM::Face(498));
+//    std::vector<SGM::Point3D> aSurfacePoints;
+//    std::vector<SGM::IntersectionType> aSurfaceIntersectionTypes;
+//    size_t nPoints=SGM::IntersectCurveAndSurface(rResult,CurveID,SurfaceID,aPoints,aSurfaceIntersectionTypes);
+
+#else
+
+
+    double dX = dStartX;
+    while (dX < dEndX)
+        {
+        double dY = dStartY;
+        while (dY < dEndY)
+            {
+            double dZ = dStartZ;
+
+            aPoints.emplace_back(dX,dY,dZ); ///////
+
+//            while (dZ < dEndZ)
+//                {
+//                aPoints.emplace_back(dX,dY,dZ);
+//                dZ += dIncrement;
+//                }
+            dY += dIncrement;
+            }
+        dX += dIncrement;
+        }
+
+#endif
+
+
+    //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    std::vector<SGM::Point3D> aPointsInside;
+    for (auto & rPoint : aPoints)
+        {
+        if (SGM::PointInEntity(rResult,rPoint,VolumeID))
+            {
+            aPointsInside.push_back(rPoint);
+            }
+        }
+
+    SGM::Point3D& LastPoint = aPointsInside.back();
+    std::cout.setf(std::ios::floatfield,std::ios::scientific);
+    std::cout << std::setprecision(15);
+    std::cout << "==> LastPoint = " << std::setw(23) << LastPoint.m_x << ',' << LastPoint.m_y << ',' << LastPoint.m_z << std::endl;
+
+    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 TEST(models_single_check, import_check_OUO_grv_geom)
 {

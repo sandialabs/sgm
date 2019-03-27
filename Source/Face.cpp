@@ -407,7 +407,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         SGM::Point3D TestPos;
         SGM::Vector3D Vec;
         pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
-        SGM::Point2D a2=m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);
