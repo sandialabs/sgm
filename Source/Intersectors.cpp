@@ -2282,7 +2282,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
         {
-        size_t nU=Index1*nUParams;
+        size_t nU=Index1*nVParams;
         for(Index2=0;Index2<nVParams;++Index2)
             {
             SGM::Point3D const &PlaneOrigin=aSeedPoints[nU+Index2];
