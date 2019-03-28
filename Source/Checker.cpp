@@ -511,26 +511,17 @@ bool face::Check(SGM::Result              &rResult,
         }
     else 
         {
-        std::vector<unsigned int> aTemp=m_aTriangles;
-        SGM::MergeTriangles3D(m_aPoints3D,aTemp,SGM_MIN_TOL);
-        if(SGM::AreEdgeConnected(aTemp)==false)
+        //std::vector<unsigned int> aTemp=m_aTriangles;
+        //SGM::MergeTriangles3D(m_aPoints3D,aTemp,SGM_MIN_TOL);
+        if( m_pSurface->ClosedInU()==false && 
+            m_pSurface->ClosedInV()==false &&
+            SGM::AreEdgeConnected(m_aTriangles)==false)
             {
             bAnswer=false;
             std::stringstream ss;
             ss << this << " has facets that are not edge connected.";
             aCheckStrings.emplace_back(ss.str());
             }
-        //std::vector<unsigned int> aBoundary;
-        //std::set<unsigned int> sInterior;
-        //SGM::FindBoundary(aTemp,aBoundary,sInterior);
-        //size_t nComps=SGM::FindComponents1D(aBoundary);
-        //if(nComps!=nLoops)
-        //    {
-        //    bAnswer=false;
-        //    std::stringstream ss;
-        //    ss << this << " has facets with boundary components " << nComps << " not equal to " << nLoops << " loops.";
-        //    aCheckStrings.emplace_back(ss.str());
-        //    }
         }
 
     if(bChildren)

@@ -1346,27 +1346,6 @@ size_t complex::FindHoles(SGM::Result            &rResult,
 
     DeleteHoles(rResult, aBottomHoles, aTopHoles, sKeep);
 
-    /////////////////////
-    // PRINT smaller holes to stdout
-    ////////////////////
-#if 0
-    for (auto pHole : aHoles)
-        {
-        if (pHole->m_aSegments.size() <= 12)
-            {
-            std::cout << "Hole ID " << pHole->m_ID << " with " << pHole->m_aSegments.size() << " Segments:" << std::endl;
-            std::cout << std::fixed << std::setprecision(15);
-            std::cout << "Points" << std::endl;
-            for (auto & Point : pHole->m_aPoints)
-                std::cout << Point[0] << ' ' << Point[1] << ' ' << Point[2] << std::endl;
-
-            std::cout << "Segments" << std::endl;
-            for (int i = 0; i < pHole->m_aSegments.size(); ++i)
-                std::cout << pHole->m_aSegments[i] << std::endl;
-            }
-        }
-#endif
-
     return aHoles.size();
     }
 

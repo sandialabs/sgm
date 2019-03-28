@@ -505,12 +505,7 @@ bool ForcePolygonEdgesIntoTriangles(SGM::Result                     &rResult,
         unsigned a=aTriangles[Index1];
         unsigned b=aTriangles[Index1+1];
         unsigned c=aTriangles[Index1+2];
-
-        if (Index1 == 73)
-            {
-            std::cout << "ForcePolygonEdgesIntoTriangles 1: aTriangles[73] = " << aTriangles[73] << std::endl;
-            std::cout << "ForcePolygonEdgesIntoTriangles 1: a,b,c " << a << ',' << b << ',' << c << std::endl;
-            }
+        
         sEdges.insert({a,b});
         sEdges.insert({b,c});
         sEdges.insert({c,a});

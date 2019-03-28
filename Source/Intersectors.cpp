@@ -8479,7 +8479,6 @@ size_t IntersectCurveAndPlane(SGM::Result                        &rResult,
             {
             auto pNUBCurve = (NUBcurve const *)pCurve;
             IntersectNUBCurveAndPlane(rResult, pNUBCurve, PlaneOrigin, PlaneNorm, aPoints, aTypes, dTolerance);
-//            std::cout << "IntersectCurveAndPlane: aPoints.size() = " << aPoints.size() << std::endl;
             break;
             }
         case SGM::NURBCurveType:

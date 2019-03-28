@@ -885,7 +885,7 @@ bool AreEdgeConnected(std::vector<unsigned> const &aTriangles)
     }
 
 void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
-                      std::vector<unsigned>  &aTriangles,
+                      std::vector<unsigned>      &aTriangles,
                       double                      dTolerance)
     {
     SGM::BoxTree Tree;

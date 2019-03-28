@@ -232,6 +232,28 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
+//TEST(speed_check, point)
+//    {
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    const char* ouo_file_name = "OUO_full_model_volume1-face399.stp";
+//    SCOPED_TRACE(ouo_file_name);
+//    expect_import_ouo_success(ouo_file_name, rResult);
+//
+//    SGM::Point3D BadRayPoint(-1.7956696576099629,
+//                                  1.9515,
+//                                 -0.29265438044251146);
+//    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(3));
+//    if(bValue || !bValue)
+//        {
+//        int a=0;
+//        a*=1;
+//        }
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//    }
+
 //TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 //    {
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -273,7 +295,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //    std::vector<SGM::Point3D> aPoints;
 //    std::vector<unsigned> aEmpty;
 //
-//#if 0
+//#if 1
 //
 //    // a point that should be outside
 //    SGM::Point3D TestPoint(-1.1369264979434492, 2.1739742202824597, -6.011742721183575);
@@ -322,11 +344,15 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //
 ////    SGM::CreateComplex(rResult,aRayIntersections,aEmpty,aEmpty);
 ////
-////    SGM::Point3D BadRayPoint(-1.1369264979434492,
-////        2.1739742202824597,
-////        -2.4966915725959233);
-////    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(9));
-////    bValue;
+//        SGM::Point3D BadRayPoint(-1.7956696576099629,
+//                                  1.9515,
+//                                 -0.29265438044251146);
+//        bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(401));
+//        if(bValue || !bValue)
+//            {
+//            int a=0;
+//            a*=1;
+//            }
 ////
 ////    SGM::CreateLinearEdge(rResult,TestPoint, TestPoint+SGM::Vector3D(0,0,10));
 //
@@ -512,7 +538,7 @@ TEST(models_single_check, import_check_glom4_0008_Bkey)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0009_Bcam) 
+TEST(models_single_check, import_check_glom4_0009_Bcam) 
 {
     const char* file_name = "Glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
@@ -526,7 +552,7 @@ TEST(models_single_check, import_check_curved_cube_cubit)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) // TODO: Face 388 infinite call
+TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) 
 {
     const char* file_name = "Glom4/0010-_Bsteer.stp";
     SCOPED_TRACE(file_name);
@@ -582,14 +608,14 @@ TEST(models_single_check, import_check_glom4_0017_Bcube)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0018_Bhinkey) // TODO: Lots of faces off.
+TEST(models_single_check, DISABLED_import_check_glom4_0018_Bhinkey) 
 {
     const char* file_name = "Glom4/0018-_Bhinkey.stp";
     SCOPED_TRACE(file_name);
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0019_Bhinkey_A)
+TEST(models_single_check, import_check_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "Glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);

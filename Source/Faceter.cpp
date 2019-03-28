@@ -994,6 +994,50 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
         }
     }
 
+double MoreFacetChecks(edge const *pEdge)
+    {
+    if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
+        {
+        std::set<edge *,EntityCompare> sAllEdges;
+        if(pEdge->GetStart())
+            {
+            std::set<edge *,EntityCompare> sStartEdges=pEdge->GetStart()->GetEdges();
+            for(edge *pStartEdge : sStartEdges)
+                {
+                if(pStartEdge!=pEdge && pStartEdge->GetCurve()->GetCurveType()==SGM::CircleType)
+                    {
+                    sAllEdges.insert(pStartEdge);
+                    }
+                }
+            }
+        if(pEdge->GetEnd())
+            {
+            std::set<edge *,EntityCompare> sEndEdges=pEdge->GetEnd()->GetEdges();
+            for(edge *pEndEdge : sEndEdges)
+                {
+                if(pEndEdge!=pEdge && pEndEdge->GetCurve()->GetCurveType()==SGM::CircleType)
+                    {
+                    sAllEdges.insert(pEndEdge);
+                    }
+                }
+            }
+        if(sAllEdges.empty()==false)
+            {
+            double dMinRadius=SGM_MAX;
+            for(edge *pTestEdge : sAllEdges)
+                {
+                circle *pCircle=(circle *)(pTestEdge->GetCurve());
+                if(pCircle->GetRadius()<dMinRadius)
+                    {
+                    dMinRadius=pCircle->GetRadius();
+                    }
+                }
+            return dMinRadius/((circle *)(pEdge->GetCurve()))->GetRadius();
+            }
+        }
+    return 1.0;
+    }
+
 void FacetEdge(SGM::Result               &rResult,
                edge                const *pEdge,
                FacetOptions        const &Options,
@@ -1002,7 +1046,17 @@ void FacetEdge(SGM::Result               &rResult,
     {
     curve const *pCurve=pEdge->GetCurve();
     SGM::Interval1D const &Domain=pEdge->GetDomain();
-    FacetCurve(pCurve,Domain,Options,aPoints3D,aParams);
+    double dFactor=MoreFacetChecks(pEdge);
+    if(dFactor!=1.0)
+        {
+        FacetOptions TempOptions=Options;
+        TempOptions.m_dEdgeAngleTol*=dFactor;
+        FacetCurve(pCurve,Domain,TempOptions,aPoints3D,aParams);
+        }
+    else
+        {
+        FacetCurve(pCurve,Domain,Options,aPoints3D,aParams);
+        }
 
     // Added so that this will be found at this time so that things will be thread safe after.
 
@@ -3063,22 +3117,6 @@ void FacetFace(SGM::Result                    &rResult,
                 }
 
             break;
-            //// Angle based uniform grid.
-            //
-            //std::vector<SGM::Point2D> aGridUVs;
-            //if(!AngleGrid(rResult,pFace->GetSurface(),Options,aPoints2D,
-            //              aaPolygons,aGridUVs,aTriangles,&aImprintFlags))
-            //    {
-            //    aTriangles.clear();
-            //    return;
-            //    }
-            //else
-            //    {
-            //    aPoints2D=aGridUVs;
-            //    aPoints3D.clear();
-            //    FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
-            //    }
-            //break;
             }
         case SGM::RevolveType:
         case SGM::OffsetType:
