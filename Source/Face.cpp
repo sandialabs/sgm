@@ -118,10 +118,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSeamType[(edge *)MapValue->second]=SeamType.second;
             }
-        //else
-        //    {
-        //    m_sFixedSeamType[SeamType.first]=SeamType.second;
-        //    }
         }
     m_mSeamType=m_sFixedSeamType;
 
@@ -133,10 +129,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedSideType[(edge *)MapValue->second]=SideType.second;
             }
-        //else
-        //    {
-        //    m_sFixedSideType[SideType.first]=SideType.second;
-        //    }
         }
     m_mSideType=m_sFixedSideType;
 
@@ -166,10 +158,6 @@ void face::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
             {
             m_sFixedEdges.insert((edge *)MapValue->second);
             }
-        //else
-        //    {
-        //    m_sFixedEdges.insert(pEdge);
-        //    }
         }
     m_sEdges=m_sFixedEdges;
     OwnerAndAttributeReplacePointers(mEntityMap);
@@ -324,7 +312,7 @@ bool face::PointInFace(SGM::Result        &rResult,
                         }
                     else if(SGM::NearEqual(UDomain.m_dMax,uv1.m_u,SGM_MIN_TOL,false))
                         {
-                        uv0.m_u-=dULength;
+                        uv1.m_u-=dULength;
                         }
                     }
                 }
@@ -386,11 +374,17 @@ bool face::PointInFace(SGM::Result        &rResult,
     std::set<vertex *,EntityCompare> sVertices;
     FindVertices(rResult,this,sVertices);
     vertex *pFoundVertex=nullptr;
+    SGM::Point2D FoundVertexUV(0,0);
     for(vertex *pVertex : sVertices)
         {
-        SGM::Point2D VertexUV=m_pSurface->Inverse(pVertex->GetPoint());
+        std::vector<edge *> aVertexEdge;
+        FindEdgesOnFaceAtVertex(rResult,pVertex,this,aVertexEdge);
+        edge *pVertexEdge=aVertexEdge[0];
+        SGM::EdgeSideType nVertexEdgeType=GetSideType(pVertexEdge);
+        SGM::Point2D VertexUV=EvaluateParamSpace(pVertexEdge,nVertexEdgeType,pVertex->GetPoint());
         if(SGM::NearEqual(uv.DistanceSquared(VertexUV),dMinDist,SGM_MIN_TOL,false))
             {
+            FoundVertexUV=VertexUV;
             pFoundVertex=pVertex;
             break;
             }
@@ -400,13 +394,22 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         // Test to see if we are to the left or right of pEdge at CloseUV.
 
-        std::vector<double> const &aParams=pCloseEdge->GetParams(rResult);
-        double t1=aParams[nSegment];
-        double t0=aParams[nSegment-1];
-        double t=(t1+t0)*0.5;
+        //std::vector<double> const &aParams=pCloseEdge->GetParams(rResult);
+        //double t1=aParams[nSegment];
+        //double t0=aParams[nSegment-1];
+        //double t=(t1+t0)*0.5;
+        //SGM::Point3D TestPos;
+        //SGM::Vector3D Vec;
+        //pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
+
+        SGM::Point2D CloseUV;
+        CloseSeg.Distance(uv,&CloseUV);
         SGM::Point3D TestPos;
+        m_pSurface->Evaluate(CloseUV,&TestPos);
+        double t=pCloseEdge->GetCurve()->Inverse(TestPos);
         SGM::Vector3D Vec;
         pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
+
         //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
         SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
@@ -459,20 +462,24 @@ bool face::PointInFace(SGM::Result        &rResult,
                 bool bOut0=true,bOut1=true;
                 if(pEdge0->GetStart()==pFoundVertex)
                     {
-                    uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.001));
+                    //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.001));
+                    uv0=EvaluateParamSpace(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.001));
                     }
                 else
                     {
-                    uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.999));
+                    //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.999));
+                    uv0=EvaluateParamSpace(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.999));
                     bOut0=false;
                     }
                 if(pEdge1->GetStart()==pFoundVertex)
                     {
-                    uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.001));
+                    //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.001));
+                    uv1=EvaluateParamSpace(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.001));
                     }
                 else
                     {
-                    uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.999));
+                    //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.999));
+                    uv1=EvaluateParamSpace(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.999));
                     bOut1=false;
                     }
                 if(GetSideType(pEdge0)==SGM::FaceOnRightType)
@@ -483,15 +490,14 @@ bool face::PointInFace(SGM::Result        &rResult,
                     {
                     bOut1=!bOut1;
                     }
-                SGM::Point2D Auv=m_pSurface->Inverse(pFoundVertex->GetPoint());
                 bool bAnswer;
                 if(bOut1)
                     {
-                    bAnswer=InAngle(Auv,uv1,uv0,uv);
+                    bAnswer=InAngle(FoundVertexUV,uv1,uv0,uv);
                     }
                 else
                     {
-                    bAnswer=InAngle(Auv,uv0,uv1,uv);
+                    bAnswer=InAngle(FoundVertexUV,uv0,uv1,uv);
                     }
                 if(m_bFlipped)
                     {
@@ -1074,102 +1080,6 @@ SGM::Point2D face::EvaluateParamSpace(edge         const *pEdge,
                 {
                 uv.m_v=Domain.m_VDomain.m_dMin;
                 }
-            /*
-            if(m_bFlipped)
-                {
-                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin;
-                        }
-                    }
-                }
-            else
-                {
-                if(nSeamType==SGM::EdgeSeamType::UpperUSeamType)
-                    {
-                     if(nType==SGM::EdgeSideType::FaceOnRightType)
-                         {
-                         uv.m_u=Domain.m_UDomain.m_dMin;
-                         }
-                     else
-                         {
-                         uv.m_u=Domain.m_UDomain.m_dMax;
-                         }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::UpperVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerUSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMax;
-                        }
-                    else
-                        {
-                        uv.m_u=Domain.m_UDomain.m_dMin;
-                        }
-                    }
-                else if(nSeamType==SGM::EdgeSeamType::LowerVSeamType)
-                    {
-                    if(nType==SGM::EdgeSideType::FaceOnRightType)
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMax; // PRS ?
-                        }
-                    else
-                        {
-                        uv.m_v=Domain.m_VDomain.m_dMin; // PRS ?
-                        }
-                    }
-                }
-            */
             }
         else if((m_pSurface->ClosedInU() && Domain.m_UDomain.OnBoundary(uv.m_u,SGM_MIN_TOL)) ||
                 (m_pSurface->ClosedInV() && Domain.m_VDomain.OnBoundary(uv.m_v,SGM_MIN_TOL)))
