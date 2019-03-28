@@ -927,14 +927,95 @@ bool AreEdgesCoincident(edge const *pImprintEdge,
     return false;
     }
 
-edge *AreCoincident(edge        *pEdge,
+edge *CutEdgeToEdge(SGM::Result &rResult,
+                    edge        *pBigEdge,
+                    edge        *pSmallEdge)
+    {
+    bool bImprintStartPos=false;
+    if(pSmallEdge->GetStart())
+        {
+        bImprintStartPos=true;
+        SGM::Point3D StartPos=pSmallEdge->GetStart()->GetPoint();
+        if(pBigEdge->GetStart() && SGM::NearEqual(pBigEdge->GetStart()->GetPoint(),StartPos,SGM_MIN_TOL))
+            {
+            bImprintStartPos=false;
+            }
+        else if(pBigEdge->GetEnd() && SGM::NearEqual(pBigEdge->GetEnd()->GetPoint(),StartPos,SGM_MIN_TOL))
+            {
+            bImprintStartPos=false;
+            }
+        }
+    bool bImprintEndPos=false;
+    if(pSmallEdge->GetEnd() && pSmallEdge->GetStart()!=pSmallEdge->GetEnd())
+        {
+        bImprintEndPos=true;
+        SGM::Point3D EndPos=pSmallEdge->GetEnd()->GetPoint();
+        if(pBigEdge->GetStart() && SGM::NearEqual(pBigEdge->GetStart()->GetPoint(),EndPos,SGM_MIN_TOL))
+            {
+            bImprintEndPos=false;
+            }
+        else if(pBigEdge->GetEnd() && SGM::NearEqual(pBigEdge->GetEnd()->GetPoint(),EndPos,SGM_MIN_TOL))
+            {
+            bImprintEndPos=false;
+            }
+        }
+    std::set<edge *> sAllEdges;
+    sAllEdges.insert(pBigEdge);
+    if(bImprintStartPos)
+        {
+        SGM::Point3D StartPos=pSmallEdge->GetStart()->GetPoint();
+        vertex *pNewVertex1=ImprintPointOnEdge(rResult,StartPos,pBigEdge);
+        edge *pOnEdge=nullptr;
+        for(auto pEdge : pNewVertex1->GetEdges())
+            {
+            if(pEdge->PointInEdge(StartPos,SGM_MIN_TOL))
+                {
+                pOnEdge=pEdge;
+                }
+            sAllEdges.insert(pEdge);
+            }
+        if(bImprintEndPos)
+            {
+            SGM::Point3D EndPos=pSmallEdge->GetEnd()->GetPoint();
+            vertex *pNewVertex2=ImprintPointOnEdge(rResult,EndPos,pOnEdge);
+            for(auto pEdge : pNewVertex2->GetEdges())
+                {
+                sAllEdges.insert(pEdge);
+                }
+            }
+        }
+    else if(bImprintEndPos)
+        {
+        SGM::Point3D EndPos=pSmallEdge->GetEnd()->GetPoint();
+        vertex *pNewVertex1=ImprintPointOnEdge(rResult,EndPos,pBigEdge);
+        for(auto pEdge : pNewVertex1->GetEdges())
+            {
+            sAllEdges.insert(pEdge);
+            }
+        }
+    edge *pAnswer=nullptr;
+    SGM::Point3D TestPos=pSmallEdge->FindMidPoint();
+    for(auto pEdge : sAllEdges)
+        {
+        if(pEdge->PointInEdge(TestPos,SGM_MIN_TOL))
+            {
+            pAnswer=pEdge;
+            break;
+            }
+        }
+
+    return pAnswer;
+    }
+
+edge *AreCoincident(SGM::Result &rResult,
+                    edge        *pEdge,
                     face        *pFace)
     {
     for(auto pTestEdge : pFace->GetEdges())
         {
         if(AreEdgesCoincident(pEdge,pTestEdge))
             {
-            return pTestEdge;
+            return CutEdgeToEdge(rResult,pTestEdge,pEdge);
             }
         }
     return nullptr;
@@ -1001,7 +1082,7 @@ void MergeEdges(SGM::Result                     &rResult,
             }
         else 
             {
-            throw; 
+            throw; // The edges should already been made to match.
             }
         }
     else
@@ -1133,7 +1214,7 @@ std::vector<face *> ImprintTrimmedEdgeOnFace(SGM::Result                     &rR
     // Non-Contractible (The edge is not contractible in the face.)
     // Coincident (The edge is coincident with an existing edge of the face.)
 
-    if(edge *pConincentEdge=AreCoincident(pEdge,pFace))
+    if(edge *pConincentEdge=AreCoincident(rResult,pEdge,pFace))
         {
         MergeEdges(rResult,pEdge,pConincentEdge,sDeleteCurves);
         }

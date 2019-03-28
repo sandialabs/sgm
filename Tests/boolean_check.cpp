@@ -36,18 +36,99 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
     return bValue;
     }
 
-//TEST(modify, square_square_clean_unite)
+//TEST(modify, block_block_slot)
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
 //    SGM::Result rResult(pThing); 
 //
-//    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
-//    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,-5),SGM::Point3D(15,5,5));
+//    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+//    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(4,0,8),SGM::Point3D(6,10,10));
 //
-//    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+//    SGM::SubtractBodies(rResult,BlockID1,BlockID2);
+//
+//    check_entity_verbose(rResult,BlockID1);
 //
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
+
+TEST(modify, block_block_slot_face2)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult,BlockID1,sFaces);
+    SGM::Face FaceID=*(sFaces.begin());
+
+    //SGM::Edge EdgeID1=SGM::CreateLinearEdge(rResult,SGM::Point3D(4,0,10),SGM::Point3D(4,10,10));
+    SGM::Edge EdgeID2=SGM::CreateLinearEdge(rResult,SGM::Point3D(4,0,10),SGM::Point3D(6,0,10));
+    
+    //SGM::ImprintEdgeOnFace(rResult,EdgeID1,FaceID);
+    SGM::ImprintEdgeOnFace(rResult,EdgeID2,FaceID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+//TEST(modify, block_block_slot_face)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,10),SGM::Point3D(10,10,10));
+//    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(4,0,10),SGM::Point3D(6,10,10));
+//
+//    SGM::SubtractBodies(rResult,BlockID1,BlockID2);
+//
+//    check_entity_verbose(rResult,BlockID1);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+TEST(modify, block_block_one_eighth_intersect)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,5),SGM::Point3D(15,15,15));
+
+    SGM::IntersectBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, block_block_one_eighth_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,5),SGM::Point3D(15,15,15));
+
+    SGM::SubtractBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(modify, block_block_one_eighth_unite)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,5),SGM::Point3D(15,15,15));
+
+    SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
 
 TEST(modify, square_square_coincident_face_vertex_unite)
 {
@@ -64,6 +145,8 @@ TEST(modify, square_square_coincident_face_vertex_unite)
     SGM::TransformEntity(rResult,Trans3,BlockID2);
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -82,6 +165,8 @@ TEST(modify, square_square_coincident_edge_vertex_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
+    check_entity_verbose(rResult,BlockID1);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -94,6 +179,8 @@ TEST(modify, square_square_over_coincident_edge_unite)
     SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(10,-5,0),SGM::Point3D(20,15,0));
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -108,6 +195,8 @@ TEST(modify, square_square_half_coincident_edge_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
+    check_entity_verbose(rResult,BlockID1);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -120,6 +209,8 @@ TEST(modify, block_block_coincident_vertex_unite)
     SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(10,10,10),SGM::Point3D(20,20,20));
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -134,6 +225,8 @@ TEST(modify, block_block_coincident_edge_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
+    check_entity_verbose(rResult,BlockID1);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -147,6 +240,8 @@ TEST(modify, block_block_coincident_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
+    check_entity_verbose(rResult,BlockID1);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -159,6 +254,8 @@ TEST(modify, square_sqaure_full_coincident_unite)
     SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(10,10,0),SGM::Point3D(0,0,0));
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
+
+    check_entity_verbose(rResult,BlockID1);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -175,6 +272,8 @@ TEST(modify, square_sqaure_coincident_edge_unite)
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
     SGM::UniteBodies(rResult,BlockID1,BlockID3);
 
+    check_entity_verbose(rResult,BlockID1);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -187,6 +286,8 @@ TEST(modify, block_sphere_unite)
     SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
 
     SGM::UniteBodies(rResult,BlockID,SphereID);
+
+    check_entity_verbose(rResult,BlockID);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -201,6 +302,8 @@ TEST(modify, block_sphere_subtract)
 
     SGM::SubtractBodies(rResult,BlockID,SphereID);
 
+    check_entity_verbose(rResult,BlockID);
+
     SGMTesting::ReleaseTestThing(pThing);
 }
 
@@ -213,6 +316,8 @@ TEST(modify, block_sphere_intersect)
     SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
 
     SGM::IntersectBodies(rResult,BlockID,SphereID);
+
+    check_entity_verbose(rResult,BlockID);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
