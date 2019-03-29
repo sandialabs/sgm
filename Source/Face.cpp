@@ -284,7 +284,6 @@ bool face::PointInFace(SGM::Result        &rResult,
     double dMinDist=std::numeric_limits<double>::max();
     edge *pCloseEdge=nullptr;
     SGM::Segment2D CloseSeg;
-    size_t nSegment=0;
     for(auto pEdge : m_sEdges)
         {
         std::vector<SGM::Point2D> const &aUVParams=GetUVBoundary(rResult,pEdge);
@@ -346,7 +345,6 @@ bool face::PointInFace(SGM::Result        &rResult,
                 dMinDist=dDist;
                 pCloseEdge=pEdge;
                 CloseSeg=Seg;
-                nSegment=Index1;
                 }
             }
         }
