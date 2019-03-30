@@ -1557,9 +1557,6 @@ void Repair(SGM::Result         &rResult,
     if(Options.m_bAutoMatch)
         {
         double dMinDist=SGM_MAX;
-        double dRatio=0;
-        vertex *pVert1=nullptr;
-        vertex *pVert2=nullptr;
         size_t nBodies=aBodies.size();
         size_t Index1,Index2;
         for(Index1=0;Index1<nBodies;++Index1)
@@ -1581,10 +1578,7 @@ void Repair(SGM::Result         &rResult,
                         double dMin2=MinEdge(pVertex2);
                         if(SGM_FIT<dDist && dDist<dMinDist && dMin1*10<dDist && dMin2*10<dDist)
                             {
-                            pVert1=pVertex1;
-                            pVert2=pVertex2;
                             dMinDist=dDist;
-                            dRatio=dDist/std::min(dMin1,dMin2);
                             }
                         }
                     }
