@@ -237,14 +237,18 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
 //    SGM::Result rResult(pThing);
 //
-//    const char* ouo_file_name = "OUO_full_model_volume1-face399.stp";
+//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
 //    SCOPED_TRACE(ouo_file_name);
 //    expect_import_ouo_success(ouo_file_name, rResult);
 //
-//    SGM::Point3D BadRayPoint(-1.7956696576099629,
-//                                  1.9515,
-//                                 -0.29265438044251146);
-//    bool bValue = PointInEntity(rResult, BadRayPoint, SGM::Face(3));
+//    SGM::Point3D BadRayPoint(-1.1084955790085864, -0.27914126292080965, -4.7551501116111261);
+//    SGM::CreateLinearEdge(rResult,BadRayPoint,BadRayPoint+SGM::Vector3D(0,9,0));
+//
+//    std::set<SGM::Volume> sVolumes;
+//    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+//    SGM::Volume VolumeID = *(sVolumes.begin());
+//
+//    bool bValue = PointInEntity(rResult,BadRayPoint,VolumeID);
 //    if(bValue || !bValue)
 //        {
 //        int a=0;
@@ -754,13 +758,14 @@ TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_inters
     // face node
     std::vector<SGM::Point3D> aPointsFaceLine;
     std::vector<SGM::IntersectionType> aTypesFaceLine;
+    std::vector<SGM::Entity> aEntity;
     //Euclid::Point3D line_vect = {0.9946543569679107, 0.1032603997898127, -1.270825582042912e-14};
     SGM::UnitVector3D line_vect = {plane_normal[1],-plane_normal[0],plane_normal[2]}; // choose orthog to plane_normals
     {
         size_t surf_id = 7; //26;
 
         bool bUseWholeLine = true;
-        SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, tolerance, bUseWholeLine);
+        SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, aEntity, tolerance, bUseWholeLine);
     }
 
     const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];

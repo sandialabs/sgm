@@ -23,6 +23,7 @@ namespace SGM
                               SGM::Entity                  const &EntityID,
                               std::vector<SGM::Point3D>          &aPoints,
                               std::vector<SGM::IntersectionType> &aTypes,
+                              std::vector<SGM::Entity>           &aEntitiy,
                               double                              dTolerance=SGM_MIN_TOL,
                               bool                                bUseWholeLine=false);
 

@@ -1004,7 +1004,8 @@ class face : public topology
                          std::vector<std::vector<SGM::EdgeSideType> > &aaFlipped) const;
 
         bool PointInFace(SGM::Result        &rResult,
-                         SGM::Point2D const &uv) const;
+                         SGM::Point2D const &uv,
+                         edge               **pCloseEdge=nullptr) const;
 
         double FindArea(SGM::Result &rResult) const;
 
@@ -1173,6 +1174,8 @@ class edge : public topology
         // to see if it is in the domain of this edge.
 
         bool PointInEdge(SGM::Point3D const &Pos,double dTolerance) const;
+
+        double DistanceToEdge(SGM::Point3D const &Pos) const;
 
         void ClearFacets(SGM::Result &rResult);
 

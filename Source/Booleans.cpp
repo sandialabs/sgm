@@ -1635,6 +1635,7 @@ size_t RayFireFaceSet(SGM::Result                        &rResult,
                       SGM::BoxTree                 const &FaceTree,
                       std::vector<SGM::Point3D>          &aPoints,
                       std::vector<SGM::IntersectionType> &aTypes,
+                      std::vector<entity *>              &aEntities,
                       double                              dTolerance,
                       bool                                bUseWholeLine)
     {
@@ -1644,22 +1645,26 @@ size_t RayFireFaceSet(SGM::Result                        &rResult,
 
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<entity *> aAllEntities;
     for (auto boundedItem : aHitFaces)
         {
         face * pFace = (face*)boundedItem.first;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        std::vector<entity *> aEntity;
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aEntity,dTolerance,bUseWholeLine);
         for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
+            aAllEntities.push_back(aEntity[Index1]);
             }
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntities);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
+    aEntities=aAllEntities;
     return nAnswer;
     }
 
@@ -1694,7 +1699,8 @@ bool FaceInFaces(SGM::Result        &rResult,
         bFound=false;
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        nHits=RayFireFaceSet(rResult,Point,Axis,FaceTree,aPoints,aTypes,SGM_MIN_TOL,false);
+        std::vector<entity *> aEntities;
+        nHits=RayFireFaceSet(rResult,Point,Axis,FaceTree,aPoints,aTypes,aEntities,SGM_MIN_TOL,false);
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
