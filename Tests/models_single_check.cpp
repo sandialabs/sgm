@@ -241,14 +241,21 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //    SCOPED_TRACE(ouo_file_name);
 //    expect_import_ouo_success(ouo_file_name, rResult);
 //
-//    SGM::Point3D BadRayPoint(-1.1084955790085864, -0.27914126292080965, -4.7551501116111261);
-//    SGM::CreateLinearEdge(rResult,BadRayPoint,BadRayPoint+SGM::Vector3D(0,9,0));
+//    SGM::Point3D TestPoint(-2.9933844933672531,0.02004745364405721,-1.1948043844891936);
+//    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(9,0,0));
 //
 //    std::set<SGM::Volume> sVolumes;
 //    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
 //    SGM::Volume VolumeID = *(sVolumes.begin());
 //
-//    bool bValue = PointInEntity(rResult,BadRayPoint,VolumeID);
+//    rResult.SetDebugFlag(6);
+//    std::vector<double> aData;
+//    aData.push_back(1);
+//    aData.push_back(0);
+//    aData.push_back(0);
+//    rResult.SetDebugData(aData);
+//
+//    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
 //    if(bValue || !bValue)
 //        {
 //        int a=0;

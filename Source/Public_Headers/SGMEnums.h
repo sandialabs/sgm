@@ -67,6 +67,7 @@ namespace SGM
         PointType,
         TangentType,
         CoincidentType,
+        
         };
 
     enum EdgeSideType
