@@ -39,7 +39,7 @@ namespace SGM
 
         typedef double type;
 
-        Point2D():m_u(0),m_v(0) {};
+        Point2D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Point2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -71,7 +71,7 @@ namespace SGM
 
         typedef double type;
 
-        Point3D():m_x(0),m_y(0),m_z(0) {};
+        Point3D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Point3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -105,7 +105,7 @@ namespace SGM
     {
     public:
 
-        Point4D():m_x(0),m_y(0),m_z(0),m_w(0) {};
+        Point4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 
@@ -135,7 +135,7 @@ namespace SGM
     {
     public:
 
-        Vector2D():m_u(0),m_v(0) {};
+        Vector2D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
 
@@ -153,7 +153,7 @@ namespace SGM
 
         enum { N = 3 };
 
-        Vector3D():m_x(0),m_y(0),m_z(0) {};
+        Vector3D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector3D(double x,double y,double z):m_x(x),m_y(y),m_z(z) {}
 
@@ -191,7 +191,7 @@ namespace SGM
     {
     public:
 
-        Vector4D():m_x(0),m_y(0),m_z(0),m_w(0) {};
+        Vector4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
 

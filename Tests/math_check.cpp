@@ -200,7 +200,8 @@ TEST(math_check, top_level_faces)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aTypes2;
-    SGM::RayFire(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),SGM::Thing(),aHits,aTypes2);
+    std::vector<SGM::Entity> aEntities2;
+    SGM::RayFire(rResult,SGM::Point3D(0,0,0),SGM::UnitVector3D(0,0,1),SGM::Thing(),aHits,aTypes2,aEntities2);
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -1164,10 +1165,11 @@ TEST(math_check, rectangle)
 
     std::vector<SGM::Point3D> aPoints1,aPoints2,aPoints3;
     std::vector<SGM::IntersectionType> aTypes1,aTypes2;
+    std::vector<SGM::Entity> aEntities1,aEntities2;
     SGM::Point3D Root(5,5,5);
     SGM::UnitVector3D Axis(0,0,1);
-    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints1,aTypes1);
-    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints2,aTypes2,SGM_MIN_TOL,true);
+    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints1,aTypes1,aEntities1);
+    SGM::RayFire(rResult,Root,Axis,IDComplexBox,aPoints2,aTypes2,aEntities2,SGM_MIN_TOL,true);
     EXPECT_EQ(aPoints1.size(),1U);
     EXPECT_EQ(aPoints2.size(),2U);
 
@@ -2076,7 +2078,8 @@ TEST(math_check, ray_fire)
     SGM::UnitVector3D Axis(1,0,0);
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
-    SGM::RayFire(rResult,Origin,Axis,BodyID,aPoints,aTypes,SGM_MIN_TOL);
+    std::vector<SGM::Entity> aEntites;
+    SGM::RayFire(rResult,Origin,Axis,BodyID,aPoints,aTypes,aEntites,SGM_MIN_TOL);
 
     EXPECT_EQ(aPoints.size(),2U);
     EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-1,0,1),SGM_ZERO));
@@ -3604,7 +3607,8 @@ TEST(math_check, circle_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes,aEntities);
     EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
@@ -3658,7 +3662,8 @@ TEST(math_check, ellipse_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(0,-2,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
+    std::vector<SGM::Entity> aEntites;
+    SGM::RayFire(rResult,SGM::Point3D(0,-2,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes,aEntites);
     EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0),Pos1(-1,0,0);
@@ -3732,7 +3737,8 @@ TEST(math_check, parabola_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(0,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes,aEntities);
     EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(0,0,0);
@@ -3778,7 +3784,8 @@ TEST(math_check, hyperbola_merge)
 
     std::vector<SGM::Point3D> aHits;
     std::vector<SGM::IntersectionType> aHitTypes;
-    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(1,0,1),SGM::UnitVector3D(0,0,-1),EdgeID,aHits,aHitTypes,aEntities);
     EXPECT_EQ(aHits.size(),1U);
 
     SGM::Point3D Pos0(1,0,0);
@@ -3941,7 +3948,8 @@ TEST(math_check, ray_fire_thing)
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
-    SGM::RayFire(rResult,SGM::Point3D(-1,-1,-1),SGM::UnitVector3D(1,1,1),SGM::Thing(),aPoints,aTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(-1,-1,-1),SGM::UnitVector3D(1,1,1),SGM::Thing(),aPoints,aTypes,aEntities);
 
     EXPECT_EQ(aPoints.size(),2U);
 
@@ -4201,9 +4209,10 @@ TEST(math_check, intersection_tests)
     SGM::Body SphereID=SGM::CreateSphere(rResult,{0,0,0},1);
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
-    SGM::RayFire(rResult,SGM::Point3D(0.9,0.9,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(0.9,0.9,0),SGM::UnitVector3D(1,0,0),SphereID,aPoints,aTypes,aEntities);
     EXPECT_EQ(aPoints.size(),0U);
-    SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),SphereID,aPoints,aTypes);
+    SGM::RayFire(rResult,SGM::Point3D(1,-1,0),SGM::UnitVector3D(0,1,0),SphereID,aPoints,aTypes,aEntities);
     EXPECT_EQ(aPoints.size(),1U);
 
     SGM::Edge EdgeID=SGM::CreateLinearEdge(rResult,SGM::Point3D(0,0,0),SGM::Point3D(1,0,0));
@@ -4239,9 +4248,10 @@ TEST(math_check, volume_ray_fire)
     SGM::Volume VolumeID=*(sVolumes.begin());
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
-    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),VolumeID,aPoints,aTypes);
+    std::vector<SGM::Entity> aEntities;
+    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),VolumeID,aPoints,aTypes,aEntities);
     EXPECT_EQ(aPoints.size(),2U);
-    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),SGM::Thing(),aPoints,aTypes);
+    SGM::RayFire(rResult,SGM::Point3D(-2,0,0),SGM::UnitVector3D(1,0,0),SGM::Thing(),aPoints,aTypes,aEntities);
     EXPECT_EQ(aPoints.size(),2U);
     
     SGMTesting::ReleaseTestThing(pThing);

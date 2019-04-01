@@ -264,12 +264,17 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
     }
 
 bool face::PointInFace(SGM::Result        &rResult,
-                       SGM::Point2D const &uv) const
+                       SGM::Point2D const &uv,
+                       edge               **pInCloseEdge) const
     {
     // First check for the closed face case.
 
     if(m_sEdges.empty())
         {
+        if(pInCloseEdge)
+            {
+            *pInCloseEdge=nullptr;
+            }
         return true;
         }
 
@@ -283,7 +288,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     double dVMaxLength=dVLength*0.5;
     double dMinDist=std::numeric_limits<double>::max();
     edge *pCloseEdge=nullptr;
-    SGM::Segment2D CloseSeg;
+    SGM::Segment2D CloseSeg(uv,uv);// init with something
     for(auto pEdge : m_sEdges)
         {
         std::vector<SGM::Point2D> const &aUVParams=GetUVBoundary(rResult,pEdge);
@@ -347,6 +352,11 @@ bool face::PointInFace(SGM::Result        &rResult,
                 CloseSeg=Seg;
                 }
             }
+        }
+
+    if(pInCloseEdge)
+        {
+        *pInCloseEdge=pCloseEdge;
         }
 
     // Check to see if the point is on the close edge, or if the

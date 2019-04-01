@@ -194,6 +194,29 @@ bool edge::PointInEdge(SGM::Point3D const &Pos,double dTolerance) const
     return m_Domain.InInterval(t,dTolerance);
     }
 
+double edge::DistanceToEdge(SGM::Point3D const &Pos) const
+    {
+    SGM::Point3D CPos;
+    double t=m_pCurve->Inverse(Pos,&CPos);
+    SnapToDomain(t,SGM_ZERO);
+    m_pCurve->Evaluate(t,&CPos);
+    double dDist=CPos.Distance(Pos);
+    SGM::Point3D Start,End;
+    m_pCurve->Evaluate(m_Domain.m_dMin,&Start);
+    m_pCurve->Evaluate(m_Domain.m_dMax,&End);
+    double dDistStart=Start.Distance(Pos);
+    if(dDistStart<dDist)
+        {
+        dDist=dDistStart;
+        }
+    double dDistEnd=End.Distance(Pos);
+    if(dDistEnd<dDist)
+        {
+        dDist=dDistEnd;
+        }
+    return dDist;
+    }
+
 void edge::TransformFacets(SGM::Transform3D const &Trans)
     {
     size_t nPoints=m_aPoints3D.size();

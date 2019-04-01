@@ -22,6 +22,7 @@ size_t RayFire(SGM::Result                        &rResult,
                entity                       const *pEntity,
                std::vector<SGM::Point3D>          &aPoints,
                std::vector<SGM::IntersectionType> &aTypes,
+               std::vector<entity *>              &aEntites,
                double                              dTolerance=SGM_ZERO,
                bool                                bUseWholeLine=false);
 
@@ -31,6 +32,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    body                         const *pBody,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
+                   std::vector<entity *>              &aEntites,
                    double                              dTolerance,
                    bool                                bUseWholeLine=false);
 
@@ -40,8 +42,20 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      volume                       const *pVolume,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
+                     std::vector<entity *>              &aEntites,
                      double                              dTolerance,
                      bool                                bUseWholeLine=false);
+
+
+size_t RayFireFace(SGM::Result                        &rResult,
+                   SGM::Point3D                 const &Origin,
+                   SGM::UnitVector3D            const &Axis,
+                   face                         const *pFace,
+                   std::vector<SGM::Point3D>          &aPoints,
+                   std::vector<SGM::IntersectionType> &aTypes,
+                   std::vector<entity *>              &aEntites,
+                   double                              dTolerance,
+                   bool                                bUseWholeLine);
 
 size_t IntersectSegment(SGM::Result               &rResult,
                         SGM::Segment3D      const &Segment,
@@ -551,21 +565,13 @@ bool PointOnCurves(SGM::Point3D         const &Pos,
                    surface              const *pSurface1,
                    surface              const *pSurface2);
 
-size_t RayFireFace(SGM::Result                        &rResult,
-                   SGM::Point3D                 const &Origin,
-                   SGM::UnitVector3D            const &Axis,
-                   face                         const *pFace,
-                   std::vector<SGM::Point3D>          &aPoints,
-                   std::vector<SGM::IntersectionType> &aTypes,
-                   double                              dTolerance,
-                   bool                                bUseWholeLine);
-
 size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                                 SGM::UnitVector3D            const &Axis,
                                 double                              dTolerance,
                                 bool                                bUseWholeLine,
                                 std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes);
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                std::vector<entity *>              &aEntities);
 
  SGM::Point3D ClosestPointOnLine(SGM::Point3D      const &Pos,
                                  SGM::Point3D      const &LineOrigin,

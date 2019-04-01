@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <SGMGeometry.h>
 #include "test_utility.h"
 
 #include "SGMInterrogate.h"
@@ -233,6 +232,32 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
+//TEST(speed_check, point)
+//    {
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+//    SCOPED_TRACE(ouo_file_name);
+//    expect_import_ouo_success(ouo_file_name, rResult);
+//
+//    SGM::Point3D BadRayPoint(-1.1084955790085864, -0.27914126292080965, -4.7551501116111261);
+//    SGM::CreateLinearEdge(rResult,BadRayPoint,BadRayPoint+SGM::Vector3D(0,9,0));
+//
+//    std::set<SGM::Volume> sVolumes;
+//    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+//    SGM::Volume VolumeID = *(sVolumes.begin());
+//
+//    bool bValue = PointInEntity(rResult,BadRayPoint,VolumeID);
+//    if(bValue || !bValue)
+//        {
+//        int a=0;
+//        a*=1;
+//        }
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//    }
+
 TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -247,8 +272,8 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
 
     std::cout << "  Bounds = ([" << Bounds.m_XDomain.m_dMin << "," << Bounds.m_XDomain.m_dMax << "]," <<
-                             "[" << Bounds.m_YDomain.m_dMin << "," << Bounds.m_YDomain.m_dMax << "]," <<
-                             "[" << Bounds.m_ZDomain.m_dMin << "," << Bounds.m_ZDomain.m_dMax << "])" << std::endl;
+              "[" << Bounds.m_YDomain.m_dMin << "," << Bounds.m_YDomain.m_dMax << "]," <<
+              "[" << Bounds.m_ZDomain.m_dMin << "," << Bounds.m_ZDomain.m_dMax << "])" << std::endl;
 
     // make a regular grid of equally spaced points that covers the bounding box
 
@@ -274,25 +299,41 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
 
-#if 0
+#if 1
 
     // a point that should be outside
-    SGM::Point3D TestPoint(-1.1084955790085864, -0.27914126292080965, -4.7551501116111261);
+    SGM::Point3D TestPoint(-2.9933844933672531,0.02004745364405721,-1.1948043844891936);
     aPoints.emplace_back(TestPoint);
 
     std::vector<SGM::Point3D> aRayIntersections =
     {
-        {-1.1084955790085864,
-        2.1644531557140123,
-        -4.7551501116111261},
+        {-2.6419999999999999,
+        0.02004745364405721,
+        -1.1948043844891936},
 
-        {-1.1084955790085864,
-        2.2186405328576591,
-        -4.7551501116111261},
+        {-2.1430009479311889,
+        0.02004745364405721,
+        -1.1948043844891936},
 
-        {-1.1084955790085864,
-        2.3110172203193531,
-        -4.7551501116111261}
+        {-1.7357589903911748,
+        0.020047453644267937,
+        -1.1948043844893057},
+
+        {-0.51990540249910955,
+        0.02004745364405721,
+        -1.1948043844891936},
+
+        {0.53116701498726382,
+        0.02004745364405721,
+        -1.1948043844891936},
+
+        {0.59683298501273629,
+        0.02004745364405721,
+        -1.1948043844891936},
+        
+        {0.73720977951579103,
+        0.02004745364405721,
+        -1.1948043844891936}
     };
 
 
@@ -520,7 +561,7 @@ TEST(models_single_check, import_check_glom4_0008_Bkey)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0009_Bcam) 
+TEST(models_single_check, import_check_glom4_0009_Bcam) 
 {
     const char* file_name = "Glom4/0009-_Bcam.stp";
     SCOPED_TRACE(file_name);
@@ -534,7 +575,7 @@ TEST(models_single_check, import_check_curved_cube_cubit)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) // TODO: Face 388 infinite call
+TEST(models_single_check, DISABLED_import_check_glom4_0010_Bsteer) 
 {
     const char* file_name = "Glom4/0010-_Bsteer.stp";
     SCOPED_TRACE(file_name);
@@ -590,14 +631,14 @@ TEST(models_single_check, import_check_glom4_0017_Bcube)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0018_Bhinkey) // TODO: Lots of faces off.
+TEST(models_single_check, DISABLED_import_check_glom4_0018_Bhinkey) 
 {
     const char* file_name = "Glom4/0018-_Bhinkey.stp";
     SCOPED_TRACE(file_name);
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_import_check_glom4_0019_Bhinkey_A)
+TEST(models_single_check, import_check_glom4_0019_Bhinkey_A)
 {
     const char* file_name = "Glom4/0019-_Bhinkey_A.stp";
     SCOPED_TRACE(file_name);
@@ -736,13 +777,14 @@ TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_inters
     // face node
     std::vector<SGM::Point3D> aPointsFaceLine;
     std::vector<SGM::IntersectionType> aTypesFaceLine;
+    std::vector<SGM::Entity> aEntity;
     //Euclid::Point3D line_vect = {0.9946543569679107, 0.1032603997898127, -1.270825582042912e-14};
     SGM::UnitVector3D line_vect = {plane_normal[1],-plane_normal[0],plane_normal[2]}; // choose orthog to plane_normals
     {
         size_t surf_id = 7; //26;
 
         bool bUseWholeLine = true;
-        SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, tolerance, bUseWholeLine);
+        SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, aEntity, tolerance, bUseWholeLine);
     }
 
     const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];

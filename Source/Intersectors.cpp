@@ -624,7 +624,8 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                                 double                              dTolerance,
                                 bool                                bUseWholeLine,
                                 std::vector<SGM::Point3D>          &aPoints,
-                                std::vector<SGM::IntersectionType> &aTypes)
+                                std::vector<SGM::IntersectionType> &aTypes,
+                                std::vector<entity *>              &aEntities)
     {
     if(size_t nAllHits=aPoints.size())
         {
@@ -663,10 +664,13 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         const size_t nGoodHits=aParams.size();
         std::vector<SGM::Point3D> aTempPoints;
         std::vector<SGM::IntersectionType> aTempTypes;
+        std::vector<entity *> aTempEntities;
         aTempPoints.reserve(nGoodHits);
         aTempTypes .reserve(nGoodHits);
+        aTempEntities .reserve(nGoodHits);
         aTempPoints.push_back(aPoints[aParams[0].second]);
         aTempTypes .push_back( aTypes[aParams[0].second]);
+        aTempEntities.push_back(aEntities[aParams[0].second]);
 
         double dLastParam=aParams[0].first;
         for(size_t Index1=1;Index1<nGoodHits;++Index1)
@@ -675,11 +679,18 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                 {
                 dLastParam=aParams[Index1].first;
                 aTempPoints.push_back(aPoints[aParams[Index1].second]);
-                aTempTypes .push_back( aTypes[aParams[Index1].second]);
+                aTempTypes .push_back(aTypes[aParams[Index1].second]);
+                aTempEntities.push_back(aEntities[aParams[Index1].second]);
+                }
+            else
+                {
+                int a=0;
+                a*=1;
                 }
             }
         aPoints.swap(aTempPoints);
-        aTypes .swap(aTempTypes);
+        aTypes.swap(aTempTypes);
+        aEntities.swap(aTempEntities);
         }
     return aPoints.size();
     }
@@ -695,6 +706,7 @@ size_t RayFireEdge(SGM::Result                        &rResult,
     {
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<entity *> aAllEntities;
     SGM::Interval1D Domain(-dTolerance,SGM_MAX);
     curve const *pCurve=pEdge->GetCurve();
     std::vector<SGM::Point3D> aTempPoints;
@@ -709,9 +721,10 @@ size_t RayFireEdge(SGM::Result                        &rResult,
             {
             aAllPoints.push_back(Pos);
             aAllTypes.push_back(aTempTypes[Index1]);
+            aAllEntities.push_back((edge *)pEdge);
             }
         }
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntities);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -723,11 +736,13 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
                       complex                      const *pComplex,
                       std::vector<SGM::Point3D>          &aInPoints,
                       std::vector<SGM::IntersectionType> &aInTypes,
+                      std::vector<entity *>              &aInEntities,
                       double                              dTolerance,
                       bool                                bUseWholeLine)
     {
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<entity *> aAllEntities;
     SGM::BoxTree const &BTree=pComplex->GetTree();
     std::vector<SGM::BoxTree::BoundedItemType> aHits;
     SGM::Ray3D ray(Origin,Axis);
@@ -784,13 +799,15 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
                 {
                 aAllPoints.push_back(D);
                 aAllTypes.push_back(SGM::PointType);
+                aAllEntities.push_back(nullptr);
                 }
             }
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntities);
     aInPoints=aAllPoints;
     aInTypes=aAllTypes;
+    aInEntities=aAllEntities;
     return nAnswer;
     }
 
@@ -800,11 +817,13 @@ size_t RayFireFace(SGM::Result                        &rResult,
                    face                         const *pFace,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
+                   std::vector<entity *>              &aEntities,
                    double                              dTolerance,
                    bool                                bUseWholeLine)
     {
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<entity *> aAllEntites;
     SGM::Interval1D Domain(-dTolerance,SGM_MAX);
     surface const *pSurface=pFace->GetSurface();
     std::vector<SGM::Point3D> aTempPoints;
@@ -822,6 +841,7 @@ size_t RayFireFace(SGM::Result                        &rResult,
                 {
                 aAllPoints.push_back(Origin);
                 aAllTypes.push_back(SGM::CoincidentType);
+                aAllEntites.push_back((face *)pFace);
                 }
             else
                 {
@@ -836,23 +856,36 @@ size_t RayFireFace(SGM::Result                        &rResult,
                         {
                         aAllPoints.push_back(aRayFirePoints[Index2]);
                         aAllTypes.push_back(SGM::CoincidentType);
+                        aAllEntites.push_back((edge *)pEdge);
                         }
                     }
                 }
             }
         else
             {
-            if(pFace->PointInFace(rResult,uv))
+            edge *pCloseEdge;
+            if(pFace->PointInFace(rResult,uv,&pCloseEdge))
                 {
                 aAllPoints.push_back(Pos);
                 aAllTypes.push_back(aTempTypes[Index1]);
+                entity *pEnt=(face *)pFace;
+                if(pCloseEdge)
+                    {
+                    double dDist=pCloseEdge->DistanceToEdge(Pos);
+                    if(dDist<SGM_MIN_TOL)
+                        {
+                        pEnt=pCloseEdge;
+                        }
+                    }
+                aAllEntites.push_back(pEnt);
                 }
             }
         }
     
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntites);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
+    aEntities=aAllEntites;
     return nAnswer;
     }
 
@@ -862,6 +895,7 @@ size_t RayFireVolume(SGM::Result                        &rResult,
                      volume                       const *pVolume,
                      std::vector<SGM::Point3D>          &aPoints,
                      std::vector<SGM::IntersectionType> &aTypes,
+                     std::vector<entity *>              &aEntities,
                      double                              dTolerance,
                      bool                                bUseWholeLine)
     {
@@ -873,22 +907,26 @@ size_t RayFireVolume(SGM::Result                        &rResult,
 
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<entity *> aAllEntities;
     for (auto boundedItem : aHitFaces)
         {
         face * pFace = (face*)boundedItem.first;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        std::vector<entity *> aSubEntites;
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntites,dTolerance,bUseWholeLine);
         for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
+            aAllEntities.push_back(aSubEntites[Index1]);
             }
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntities);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
+    aEntities=aAllEntities;
     return nAnswer;
     }
 
@@ -898,6 +936,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    body                         const *pBody,
                    std::vector<SGM::Point3D>          &aPoints,
                    std::vector<SGM::IntersectionType> &aTypes,
+                   std::vector<entity *>              &aEntitiy,
                    double                              dTolerance,
                    bool                                bUseWholeLine)
     {
@@ -910,7 +949,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
         {
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,aEntitiy,dTolerance,bUseWholeLine);
         for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
@@ -918,7 +957,7 @@ size_t RayFireBody(SGM::Result                        &rResult,
             }
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aEntitiy);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     return nAnswer;
@@ -926,8 +965,10 @@ size_t RayFireBody(SGM::Result                        &rResult,
 
 inline void MovePointsAndTypes(std::vector<SGM::Point3D>          &aSubPoints,
                                std::vector<SGM::IntersectionType> &aSubTypes,
+                               std::vector<entity *>              &aSubEntities,
                                std::vector<SGM::Point3D>          &aPoints,
-                               std::vector<SGM::IntersectionType> &aTypes)
+                               std::vector<SGM::IntersectionType> &aTypes,
+                               std::vector<entity *>              &aEntities)
     {
     aPoints.reserve(aPoints.size() + aSubPoints.size());
     aPoints.insert(aPoints.end(), aSubPoints.begin(), aSubPoints.end());
@@ -936,6 +977,10 @@ inline void MovePointsAndTypes(std::vector<SGM::Point3D>          &aSubPoints,
     aTypes.reserve(aTypes.size() + aSubTypes.size());
     aTypes.insert(aTypes.end(), aSubTypes.begin(), aSubTypes.end());
     aSubTypes.clear();
+
+    aEntities.reserve(aEntities.size() + aSubEntities.size());
+    aEntities.insert(aEntities.end(), aSubEntities.begin(), aSubEntities.end());
+    aSubEntities.clear();
     }
 
 size_t RayFireThing(SGM::Result                        &rResult,
@@ -944,6 +989,7 @@ size_t RayFireThing(SGM::Result                        &rResult,
                     thing                        const *pThing,
                     std::vector<SGM::Point3D>          &aPoints,
                     std::vector<SGM::IntersectionType> &aTypes,
+                    std::vector<entity *>              &aEntities,
                     double                              dTolerance,
                     bool                                bUseWholeLine)
     {
@@ -954,40 +1000,41 @@ size_t RayFireThing(SGM::Result                        &rResult,
 
     std::vector<SGM::Point3D> aSubPoints;
     std::vector<SGM::IntersectionType> aSubTypes;
+    std::vector<entity *> aSubEntities;
 
     std::set<body *,EntityCompare> sBodies;
     FindBodies(rResult,pThing,sBodies,true);
     for (auto pBody : sBodies)
         {
-        RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
+        RayFireBody(rResult,Origin,Axis,pBody,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aSubEntities, aPoints, aTypes, aEntities);
         }
 
     std::set<volume *,EntityCompare> sVolumes;
     FindVolumes(rResult,pThing,sVolumes,true);
     for (auto pVolume : sVolumes)
         {
-        RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
+        RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aSubEntities, aPoints, aTypes, aEntities);
         }
 
     std::set<complex *,EntityCompare> sComplexes;
     FindComplexes(rResult,pThing,sComplexes,true);
     for (auto pComplex : sComplexes)
         {
-        RayFireComplex(rResult,Origin,Axis,pComplex,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
+        RayFireComplex(rResult,Origin,Axis,pComplex,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aSubEntities, aPoints, aTypes, aEntities);
         }
     
     std::set<face *,EntityCompare> sFaces;
     FindFaces(rResult,pThing,sFaces,true);
     for (auto pFace : sFaces)
         {
-        RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,dTolerance,bUseWholeLine);
-        MovePointsAndTypes(aSubPoints, aSubTypes, aPoints, aTypes);
+        RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+        MovePointsAndTypes(aSubPoints, aSubTypes, aSubEntities, aPoints, aTypes, aEntities);
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
     return nAnswer;
     }
 
@@ -999,9 +1046,10 @@ size_t IntersectSegment(SGM::Result               &rResult,
     {
     std::vector<SGM::IntersectionType> aTypes;
     std::vector<SGM::Point3D> aTempPoints;
+    std::vector<entity *> aEntities;
     SGM::Point3D Origin=Segment.m_Start;
     SGM::UnitVector3D Axis=Segment.m_End-Origin;
-    size_t nHits=RayFire(rResult,Origin,Axis,pEntity,aTempPoints,aTypes,dTolerance);
+    size_t nHits=RayFire(rResult,Origin,Axis,pEntity,aTempPoints,aTypes,aEntities,dTolerance);
     double dLengthSquared=Segment.LengthSquared();
     size_t Index1,nAnswer=0;
     for(Index1=0;Index1<nHits;++Index1)
@@ -1022,6 +1070,7 @@ size_t RayFire(SGM::Result                        &rResult,
                entity                       const *pEntity,
                std::vector<SGM::Point3D>          &aPoints,
                std::vector<SGM::IntersectionType> &aTypes,
+               std::vector<entity *>              &aEntities,    
                double                              dTolerance,
                bool                                bUseWholeLine)
     {
@@ -1029,19 +1078,19 @@ size_t RayFire(SGM::Result                        &rResult,
         {
         case SGM::ThingType:
             {
-            return RayFireThing(rResult,Origin,Axis,(thing const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            return RayFireThing(rResult,Origin,Axis,(thing const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         case SGM::BodyType:
             {
-            return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            return RayFireBody(rResult,Origin,Axis,(body const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         case SGM::VolumeType:
             {
-            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         case SGM::FaceType:
             {
-            return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            return RayFireFace(rResult,Origin,Axis,(face const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         case SGM::EdgeType:
             {
@@ -1049,7 +1098,7 @@ size_t RayFire(SGM::Result                        &rResult,
             }
         case SGM::ComplexType:
             {
-            return RayFireComplex(rResult,Origin,Axis,(complex const *)pEntity,aPoints,aTypes,dTolerance,bUseWholeLine);
+            return RayFireComplex(rResult,Origin,Axis,(complex const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         default:
             {

@@ -27,11 +27,13 @@ bool PointInVolume(SGM::Result        &rResult,
         bFound=false;
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
-        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,dTolerance,false);
+        std::vector<entity *> aEntity;
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false);
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
-            if(aTypes[Index1]!=SGM::IntersectionType::PointType)
+            if( aTypes[Index1]!=SGM::IntersectionType::PointType ||
+                aEntity[Index1]->GetType()==SGM::EdgeType)
                 {
                 if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
                     {

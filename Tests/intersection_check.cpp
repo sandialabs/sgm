@@ -3695,11 +3695,12 @@ TEST(intersection_check, intersect_line_and_cylinder)
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<SGM::IntersectionType> aTypes;
+    std::vector<SGM::Entity> aEntities;
       
     double dTolerance = SGM_MIN_TOL;
     const bool bUseWholeLine = false;
 
-    RayFire(rResult,Origin,Axis, BodyID, aPoints, aTypes, dTolerance, bUseWholeLine);
+    RayFire(rResult,Origin,Axis,BodyID,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
 
     EXPECT_EQ(aPoints.size(), 1U);
     EXPECT_EQ(aTypes.size(), 1U);
