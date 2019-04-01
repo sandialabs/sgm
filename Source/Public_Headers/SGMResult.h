@@ -71,6 +71,10 @@ class Result
 
         SGM_EXPORT size_t GetDebugFlag() {return m_nDebugFlag;}
 
+        SGM_EXPORT void SetDebugData(std::vector<double> const &aData) {m_aDebugData=aData;}
+
+        SGM_EXPORT std::vector<double> GetDebugData() {return m_aDebugData;}
+
         // Debug flags
         // 0 turned off. (Default)
         // 1 make bad face facets.
@@ -78,6 +82,7 @@ class Result
         // 3 return bad curve tests.
         // 4 return bad surface tests.
         // 5 make blocks with bad topology connections.
+        // 6 set the ray fire direction to m_aDebugData[0-2].
 
     private:
 
@@ -89,6 +94,7 @@ class Result
         std::vector<Entity>  m_aLogEntities2;
         std::vector<LogType> m_aLogEntries;
         size_t               m_nDebugFlag;
+        std::vector<double>  m_aDebugData;
 };
 
 } // End of SGM namespace

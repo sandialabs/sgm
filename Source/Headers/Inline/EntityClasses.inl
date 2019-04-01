@@ -276,8 +276,7 @@ namespace SGMInternal {
     {}
 
     inline topology::topology(SGM::Result &rResult, topology const &other) : 
-            entity(rResult, other),
-            m_Box(other.m_Box)
+            entity(rResult, other)
     {}
 
     inline void topology::ResetBox(SGM::Result &rResult) const
@@ -286,7 +285,6 @@ namespace SGMInternal {
     inline void topology::Swap(topology &other)
     {
     entity::Swap(other);
-    m_Box.Swap(other.m_Box);
     }
 
     //

@@ -21,7 +21,14 @@ bool PointInVolume(SGM::Result        &rResult,
     size_t nHits=0;
     bool bFound=true;
     size_t nCount=1;
-    SGM::UnitVector3D Axis(1,0,0);
+    SGM::UnitVector3D Axis(0,1,0);
+    if(rResult.GetDebugFlag()==6)
+        {
+        std::vector<double> aData=rResult.GetDebugData();
+        Axis.m_x=aData[0];
+        Axis.m_y=aData[1];
+        Axis.m_z=aData[2];
+        }
     while(bFound)
         {
         bFound=false;

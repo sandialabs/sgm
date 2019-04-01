@@ -357,9 +357,6 @@ class topology : public entity
 
         void Swap(topology &other);
 
-protected:
-
-        mutable SGM::Interval3D m_Box; // TODO: this box should go away because it is defined in class entity
 };
 
 class assembly : public topology

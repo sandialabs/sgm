@@ -307,6 +307,21 @@ TEST(modify, block_sphere_subtract)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(modify, sphere_block_subtract)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body SphereID=SGM::CreateSphere(rResult,SGM::Point3D(5,5,5),7.5);
+
+    SGM::SubtractBodies(rResult,SphereID,BlockID);
+
+    check_entity_verbose(rResult,SphereID);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 TEST(modify, block_sphere_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

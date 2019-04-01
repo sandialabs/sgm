@@ -1798,7 +1798,10 @@ void FindLineCurveIntersections(SGM::Point3D                           const &Or
             double tNUB = pCurve->Inverse(Pos, nullptr, &dNUBt);
             if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
             {
-                aRefinedPoints.emplace_back(tNUB,Pos);
+                if(dDist<dTolerance)
+                    {
+                    aRefinedPoints.emplace_back(tNUB,Pos);
+                    }
                 break;
             }
             if(nCount==nCountLimit-1 && dDist<dTolerance)
@@ -2264,7 +2267,10 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
                 double t=(Pos-Origin)%Axis;
                 if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
                     {
-                    aRefinedPoints.emplace_back(t,Pos);
+                    if(dDist<dTolerance)
+                        {
+                        aRefinedPoints.emplace_back(t,Pos);
+                        }
                     break;
                     }
                 if(nCount==nCountLimit-1 && dDist<dTolerance)
@@ -2383,7 +2389,10 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
                 double t=(Pos-Origin)%Axis;
                 if(dDist<SGM_ZERO || fabs(dDist-dOldDist)<SGM_ZERO)
                     {
-                    aRefinedPoints.emplace_back(t,Pos);
+                    if(dDist<dTolerance)
+                        {
+                        aRefinedPoints.emplace_back(t,Pos);
+                        }
                     break;
                     }
                 if(nCount==nCountLimit-1 && dDist<dTolerance)
