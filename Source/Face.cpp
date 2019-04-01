@@ -288,7 +288,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     double dVMaxLength=dVLength*0.5;
     double dMinDist=std::numeric_limits<double>::max();
     edge *pCloseEdge=nullptr;
-    SGM::Segment2D CloseSeg;
+    SGM::Segment2D CloseSeg(uv,uv);// init with something
     for(auto pEdge : m_sEdges)
         {
         std::vector<SGM::Point2D> const &aUVParams=GetUVBoundary(rResult,pEdge);
