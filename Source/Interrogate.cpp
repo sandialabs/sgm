@@ -21,7 +21,7 @@ bool PointInVolume(SGM::Result        &rResult,
     size_t nHits=0;
     bool bFound=true;
     size_t nCount=1;
-    SGM::UnitVector3D Axis(0,1,0);
+    SGM::UnitVector3D Axis(1,0,0);
     if(rResult.GetDebugFlag()==6)
         {
         std::vector<double> aData=rResult.GetDebugData();
@@ -39,13 +39,13 @@ bool PointInVolume(SGM::Result        &rResult,
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
+            if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
+                {
+                return true;
+                }
             if( aTypes[Index1]!=SGM::IntersectionType::PointType ||
                 aEntity[Index1]->GetType()==SGM::EdgeType)
                 {
-                if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
-                    {
-                    return true;
-                    }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
                 break;
