@@ -390,24 +390,54 @@ double edge::GetTolerance() const
     {
     if(m_dTolerance==0)
         {
-        SGM::Point3D Pos0=FindMidPoint(0.3923344);
-        SGM::Point3D Pos1=FindMidPoint(0.8943321);
-        m_dTolerance=SGM_ZERO;
-        for(auto pFace : m_sFaces)
+        if(m_pCurve->GetCurveType()==SGM::NUBCurveType)
             {
-            surface const *pSurface=pFace->GetSurface();
-            SGM::Point3D Pos0B,Pos1B;
-            pSurface->Inverse(Pos0,&Pos0B);
-            pSurface->Inverse(Pos1,&Pos1B);
-            double dDist0=Pos0.Distance(Pos0B);
-            if(m_dTolerance<dDist0)
+            NUBcurve const *pNUB=(NUBcurve const *)m_pCurve;
+            std::vector<double> const &aKnots=pNUB->GetKnots();
+            size_t nKnots=aKnots.size();
+            size_t Index1;
+            m_dTolerance=SGM_ZERO;
+            for(Index1=1;Index1<nKnots;++Index1)
                 {
-                m_dTolerance=dDist0;
+                if(SGM_FIT<aKnots[Index1]-aKnots[Index1-1])
+                    {
+                    double t=(aKnots[Index1]+aKnots[Index1-1])*0.5;
+                    for(auto pFace : m_sFaces)
+                        {
+                        surface const *pSurface=pFace->GetSurface();
+                        SGM::Point3D Pos,CPos;
+                        m_pCurve->Evaluate(t,&Pos);
+                        pSurface->Inverse(Pos,&CPos);
+                        double dDist=Pos.Distance(CPos);
+                        if(m_dTolerance<dDist)
+                            {
+                            m_dTolerance=dDist;
+                            }
+                        }
+                    }
                 }
-            double dDist1=Pos1.Distance(Pos1B);
-            if(m_dTolerance<dDist1)
+            }
+        else
+            {
+            SGM::Point3D Pos0=FindMidPoint(0.3923344);
+            SGM::Point3D Pos1=FindMidPoint(0.8943321);
+            m_dTolerance=SGM_ZERO;
+            for(auto pFace : m_sFaces)
                 {
-                m_dTolerance=dDist1;
+                surface const *pSurface=pFace->GetSurface();
+                SGM::Point3D Pos0B,Pos1B;
+                pSurface->Inverse(Pos0,&Pos0B);
+                pSurface->Inverse(Pos1,&Pos1B);
+                double dDist0=Pos0.Distance(Pos0B);
+                if(m_dTolerance<dDist0)
+                    {
+                    m_dTolerance=dDist0;
+                    }
+                double dDist1=Pos1.Distance(Pos1B);
+                if(m_dTolerance<dDist1)
+                    {
+                    m_dTolerance=dDist1;
+                    }
                 }
             }
         }

@@ -232,38 +232,34 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-//TEST(speed_check, point)
-//    {
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-//    SCOPED_TRACE(ouo_file_name);
-//    expect_import_ouo_success(ouo_file_name, rResult);
-//
-//    SGM::Point3D TestPoint(-2.9933844933672531,0.02004745364405721,-1.1948043844891936);
-//    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(9,0,0));
-//
-//    std::set<SGM::Volume> sVolumes;
-//    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-//    SGM::Volume VolumeID = *(sVolumes.begin());
-//
-//    rResult.SetDebugFlag(6);
-//    std::vector<double> aData;
-//    aData.push_back(1);
-//    aData.push_back(0);
-//    aData.push_back(0);
-//    rResult.SetDebugData(aData);
-//
-//    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
-//    if(bValue || !bValue)
-//        {
-//        int a=0;
-//        a*=1;
-//        }
-//
-//    SGMTesting::ReleaseTestThing(pThing);
-//    }
+TEST(speed_check, point)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+
+    SGM::Point3D TestPoint(-2.9933844933672531,0.25939842689595072,-0.98537228289378697);
+    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(9,0,0));
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    rResult.SetDebugFlag(6);
+    std::vector<double> aData;
+    aData.push_back(1);
+    aData.push_back(0);
+    aData.push_back(0);
+    rResult.SetDebugData(aData);
+
+    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+    EXPECT_FALSE(bValue);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 //TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 //    {

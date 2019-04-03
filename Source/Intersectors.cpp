@@ -15,6 +15,7 @@
 #include "Primitive.h"
 #include "Mathematics.h"
 #include "EntityFunctions.h"
+#include "Curve.h"
 
 // Lets us use fprintf
 #ifdef _MSC_VER
