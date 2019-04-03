@@ -7,6 +7,7 @@
 #include "Query.h"
 #include "Mathematics.h"
 #include "Signature.h"
+#include "Intersectors.h"
 
 #include "SGMGraph.h"
 #include "SGMMathematics.h"
@@ -404,11 +405,35 @@ bool face::PointInFace(SGM::Result        &rResult,
 
         SGM::Point2D CloseUV;
         CloseSeg.Distance(uv,&CloseUV);
-        SGM::Point3D TestPos;
+        SGM::Point3D TestPos,ClosePos;
         m_pSurface->Evaluate(CloseUV,&TestPos);
         double t=pCloseEdge->GetCurve()->Inverse(TestPos);
         SGM::Vector3D Vec;
-        pCloseEdge->GetCurve()->Evaluate(t,&TestPos,&Vec);
+        pCloseEdge->GetCurve()->Evaluate(t,&ClosePos,&Vec);
+        double dDist=ClosePos.Distance(Pos);
+        if( dDist<pCloseEdge->GetTolerance()*20 &&
+            pCloseEdge->GetFaces().size()==2)
+            {
+            std::set<face *,EntityCompare> const &sFaces=pCloseEdge->GetFaces();
+            auto iter=sFaces.begin();
+            face *pOtherFace=*iter;
+            if(pOtherFace==this)
+                {
+                ++iter;
+                pOtherFace=*iter;
+                }
+           
+            SGM::Point3D OtherPos;
+            SGM::Point2D OtherUV=pOtherFace->GetSurface()->Inverse(TestPos,&OtherPos);
+            SGM::UnitVector3D Norm;
+            pOtherFace->GetSurface()->Evaluate(OtherUV,nullptr,nullptr,nullptr,&Norm);
+            if(pOtherFace->GetFlipped())
+                {
+                Norm.Negate();
+                }
+            double dDot=(Pos-OtherPos)%Norm;
+            return dDot<SGM_MIN_TOL;
+            }
 
         //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
         SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
