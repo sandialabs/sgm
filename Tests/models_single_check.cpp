@@ -248,12 +248,9 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
 //    SGM::Volume VolumeID = *(sVolumes.begin());
 //
+//    // set ray fire direction
 //    rResult.SetDebugFlag(6);
-//    std::vector<double> aData;
-//    aData.push_back(1);
-//    aData.push_back(0);
-//    aData.push_back(0);
-//    rResult.SetDebugData(aData);
+//    rResult.SetDebugData({1.,0.,0.});
 //
 //    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
 //    if(bValue || !bValue)
@@ -269,6 +266,10 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
+
+    enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
+
+    const int RAY_FIRE_DIRECTION = DIRECTION_Z;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -301,10 +302,12 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 100.;
+    dIncrement /= 500.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
+
+    SGM::Vector3D FireDirection;
 
 #if 0
 
@@ -392,71 +395,91 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
 #else
 
-//      // points in all planes
-//    double dX = dStartX;
-//    while (dX < dEndX)
-//        {
-//        double dY = dStartY;
-//        while (dY < dEndY)
-//            {
-//            double dZ = dStartZ;
-//            while (dZ < dEndZ)
-//                {
-//                aPoints.emplace_back(dX,dY,dZ);
-//                dZ += dIncrement;
-//                }
-//            dY += dIncrement;
-//            }
-//        dX += dIncrement;
-//        }
-
-    // points in the constant X plane
-    double dX = dStartX;
-    double dY = dStartY;
-    while (dY < dEndY)
+    switch(RAY_FIRE_DIRECTION)
         {
-        double dZ = dStartZ;
-        while (dZ < dEndZ)
+        case DIRECTION_X:
             {
-            aPoints.emplace_back(dX,dY,dZ);
-            dZ += dIncrement;
+            // points in the constant X plane
+            FireDirection = {1.,0.,0.};
+            double dX = dStartX;
+            double dY = dStartY;
+            while (dY < dEndY)
+                {
+                double dZ = dStartZ;
+                while (dZ < dEndZ)
+                    {
+                    aPoints.emplace_back(dX,dY,dZ);
+                    dZ += dIncrement;
+                    }
+                dY += dIncrement;
+                }
+            break;
             }
-        dY += dIncrement;
+        case DIRECTION_Y:
+            {
+            // points in the constant Y plane
+            FireDirection = {0.,1.,0.};
+            double dX = dStartX;
+            double dY = dStartY;
+            while (dX < dEndX)
+                {
+                double dZ = dStartZ;
+                while (dZ < dEndZ)
+                    {
+                    aPoints.emplace_back(dX,dY,dZ);
+                    dZ += dIncrement;
+                    }
+                dX += dIncrement;
+                }
+            break;
+            }
+        case DIRECTION_Z:
+            {
+            // points in the constant Z plane
+            FireDirection = {0.,0.,1.};
+            double dX = dStartX;
+            double dZ = dStartZ;
+            while (dX < dEndX)
+                {
+                double dY = dStartY;
+                while (dY < dEndY)
+                    {
+                    aPoints.emplace_back(dX,dY,dZ);
+                    dY += dIncrement;
+                    }
+                dX += dIncrement;
+                }
+            break;
+            }
+        case DIRECTION_ALL:
+            {
+            // points in all planes
+            FireDirection = {0.,0.,1.};
+            double dX = dStartX;
+            while (dX < dEndX)
+                {
+                double dY = dStartY;
+                while (dY < dEndY)
+                    {
+                    double dZ = dStartZ;
+                    while (dZ < dEndZ)
+                        {
+                        aPoints.emplace_back(dX, dY, dZ);
+                        dZ += dIncrement;
+                        }
+                    dY += dIncrement;
+                    }
+                dX += dIncrement;
+                }
+            break;
+            }
         }
-
-//    // points in the constant Y plane
-//    double dX = dStartX;
-//    double dY = dStartY;
-//    while (dX < dEndX)
-//        {
-//        double dZ = dStartZ;
-//        while (dZ < dEndZ)
-//            {
-//            aPoints.emplace_back(dX,dY,dZ);
-//            dZ += dIncrement;
-//            }
-//        dX += dIncrement;
-//        }
-
-//    // points in the constant Z plane
-//    double dX = dStartX;
-//    double dZ = dStartZ;
-//    while (dX < dEndX)
-//        {
-//        double dY = dStartY;
-//        while (dY < dEndY)
-//            {
-//            aPoints.emplace_back(dX,dY,dZ);
-//            dY += dIncrement;
-//            }
-//        dX += dIncrement;
-//        }
 
 #endif
 
     // set ray fire direction
     rResult.SetDebugFlag(6);
-    rResult.SetDebugData({1.,0.,0.});
+    rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
 
     //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
 
@@ -488,7 +511,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     //////////////////////////
     for (SGM::Point3D const &rPoint : aPointsInside)
         {
-        SGM::CreateLinearEdge(rResult,rPoint, rPoint+SGM::Vector3D(8,0,0));
+        SGM::CreateLinearEdge(rResult,rPoint, rPoint+FireDirection);
         }
 
     SGMTesting::ReleaseTestThing(pThing);

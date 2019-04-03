@@ -71,6 +71,8 @@ and if the variable has one, its default value.
 
     ```brew install qt```
     
+* To use the GDB debugger on Mac you may need to install gdb with Homebrew and [add a certificate](https://sourceware.org/gdb/wiki/PermissionsDarwin).
+    
 ### Linux Prerequisites
 
 * Ensure you have CMake.

@@ -39,7 +39,7 @@ if(BUILD_MULTITHREADED)
       SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
       SET(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include")
       SET(OpenMP_CXX_LIB_NAMES "omp")
-      SET(OpenMP_omp_LIBRARY "/usr/local/opt/llvm@7/lib/libiomp5.dylib")
+      SET(OpenMP_omp_LIBRARY "/usr/local/opt/llvm/lib/libiomp5.dylib")
     endif()
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -march=native -funroll-loops")
@@ -52,19 +52,24 @@ if(BUILD_MULTITHREADED)
   find_package(OpenMP)
 endif()
 
+# increase warnings and disable warnings that do not work
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
-
-#if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#  add_compile_options(-Wno-user-defined-warnings)
-#endif()
-
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-user-defined-warnings)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DDEBUG=2")
+endif()
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+
+## force use of stdc++ library on clang to reveal types in debugger
+#if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#  add_compile_options(--gcc-toolchain=/usr/local/Cellar/gcc@7)
+#  add_compile_options(-stdlib=stdlibc++)
+#endif()
 
 # use the version number from the CMake project in the compile
 add_definitions(-DSGM_PRODUCT_VERSION=${SGM_VERSION}) # not a quoted string, like a float literal
-
 
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)
