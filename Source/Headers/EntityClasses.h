@@ -1002,7 +1002,8 @@ class face : public topology
 
         bool PointInFace(SGM::Result        &rResult,
                          SGM::Point2D const &uv,
-                         edge               **pCloseEdge=nullptr) const;
+                         edge               **pCloseEdge=nullptr,
+                         bool               *bOnEdge=nullptr) const;
 
         double FindArea(SGM::Result &rResult) const;
 

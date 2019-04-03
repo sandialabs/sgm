@@ -865,20 +865,34 @@ size_t RayFireFace(SGM::Result                        &rResult,
         else
             {
             edge *pCloseEdge;
-            if(pFace->PointInFace(rResult,uv,&pCloseEdge))
+            bool bOnEdge;
+            if(pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
                 {
                 aAllPoints.push_back(Pos);
                 aAllTypes.push_back(aTempTypes[Index1]);
                 entity *pEnt=(face *)pFace;
                 if(pCloseEdge)
                     {
-                    double dDist=pCloseEdge->DistanceToEdge(Pos);
-                    if(dDist<SGM_MIN_TOL)
+                    if(bOnEdge)
                         {
                         pEnt=pCloseEdge;
                         }
+                    else
+                        {
+                        double dDist=pCloseEdge->DistanceToEdge(Pos);
+                        if(dDist<SGM_MIN_TOL)
+                            {
+                            pEnt=pCloseEdge;
+                            }
+                        }
                     }
                 aAllEntites.push_back(pEnt);
+                }
+            else if(bOnEdge && pCloseEdge)
+                {
+                aAllPoints.push_back(Pos);
+                aAllTypes.push_back(SGM::PointType);
+                aAllEntites.push_back(pCloseEdge);
                 }
             }
         }

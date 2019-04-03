@@ -241,8 +241,9 @@ TEST(speed_check, point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.9933844933672531,0.25939842689595072,-0.98537228289378697);
-    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(9,0,0));
+    SGM::Point3D TestPoint(-2.4548448035504893,1.8750174963462307,-6.011742721183575);
+
+    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(0,0,9));
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -250,9 +251,9 @@ TEST(speed_check, point)
 
     rResult.SetDebugFlag(6);
     std::vector<double> aData;
+    aData.push_back(0);
+    aData.push_back(0);
     aData.push_back(1);
-    aData.push_back(0);
-    aData.push_back(0);
     rResult.SetDebugData(aData);
 
     bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
@@ -735,7 +736,7 @@ TEST(models_single_check, import_check_brick10)
 
 }
 
-TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
+TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_line_intersections)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

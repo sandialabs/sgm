@@ -266,7 +266,8 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
 
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
-                       edge               **pInCloseEdge) const
+                       edge               **pInCloseEdge,
+                       bool               *bOnEdge) const
     {
     // First check for the closed face case.
 
@@ -425,17 +426,28 @@ bool face::PointInFace(SGM::Result        &rResult,
            
             SGM::Point3D OtherPos;
             SGM::Point2D OtherUV=pOtherFace->GetSurface()->Inverse(TestPos,&OtherPos);
-            SGM::UnitVector3D Norm;
+            SGM::UnitVector3D Norm,OldNorm;
             pOtherFace->GetSurface()->Evaluate(OtherUV,nullptr,nullptr,nullptr,&Norm);
+            m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&OldNorm);
             if(pOtherFace->GetFlipped())
                 {
                 Norm.Negate();
                 }
             double dDot=(Pos-OtherPos)%Norm;
-            return dDot<SGM_MIN_TOL;
+            if(bOnEdge)
+                {
+                *bOnEdge=true;
+                }
+            if(fabs(OldNorm%Norm)<0.9)
+                {
+                return dDot<SGM_MIN_TOL;
+                }
             }
 
-        //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        if(bOnEdge)
+            {
+            *bOnEdge=false;
+            }
         SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
