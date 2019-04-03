@@ -232,35 +232,46 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-//TEST(speed_check, point)
-//    {
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-//    SCOPED_TRACE(ouo_file_name);
-//    expect_import_ouo_success(ouo_file_name, rResult);
-//
-//    SGM::Point3D TestPoint(-2.9933844933672531,0.02004745364405721,-1.1948043844891936);
-//    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(9,0,0));
-//
-//    std::set<SGM::Volume> sVolumes;
-//    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-//    SGM::Volume VolumeID = *(sVolumes.begin());
-//
-//    // set ray fire direction
-//    rResult.SetDebugFlag(6);
-//    rResult.SetDebugData({1.,0.,0.});
-//
-//    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
-//    if(bValue || !bValue)
-//        {
-//        int a=0;
-//        a*=1;
-//        }
-//
-//    SGMTesting::ReleaseTestThing(pThing);
-//    }
+TEST(speed_check, point)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+
+    SGM::Point3D TestPoint(-2.5505851928512473, 1.839114850358456, -6.011742721183575);
+//    SGM::Point3D TestPoint(-2.5386176441886525, 1.8331310760271586, -6.011742721183575);
+//    SGM::Point3D TestPoint(-2.4907474495382735, 1.9169039166653219, -6.011742721183575);
+//    SGM::Point3D TestPoint(-2.1436885383230257, 1.5459099081248846, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8863862420772386, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8804024677459412, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8744186934146438, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8684349190833465, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8624511447520491, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.8564673704207517, 1.7493582353889954, -6.011742721183575);
+//    SGM::Point3D TestPoint(0.16006457922645917, 2.030595628959972, -6.011742721183575);
+
+    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(0,0,15));
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    // set ray fire direction
+    rResult.SetDebugFlag(6);
+    rResult.SetDebugData({0,0.,1.});
+
+    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+    if(bValue || !bValue)
+        {
+        int a=0;
+        a*=1;
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
 
 TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
