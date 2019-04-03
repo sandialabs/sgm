@@ -280,7 +280,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_Z;
+    const int RAY_FIRE_DIRECTION = DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -313,7 +313,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 500.;
+    dIncrement /= 100.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
@@ -482,6 +482,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
                     }
                 dX += dIncrement;
                 }
+            SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
             break;
             }
         }
@@ -491,8 +492,6 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     // set ray fire direction
     rResult.SetDebugFlag(6);
     rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
-
-    //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -509,20 +508,14 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
             }
         }
 
-//    SGM::Point3D& LastPoint = aPointsInside.back();
-//    std::cout.setf(std::ios::floatfield,std::ios::scientific);
-//    std::cout << std::setprecision(15);
-//    std::cout << "==> LastPoint = " << std::setw(23) << LastPoint.m_x << ',' << LastPoint.m_y << ',' << LastPoint.m_z << std::endl;
-
-    // make a complex of the inside points
     SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
-
-    //////////////////////////
-    // make linear edges for the inside points
-    //////////////////////////
-    for (SGM::Point3D const &rPoint : aPointsInside)
+    if (RAY_FIRE_DIRECTION != DIRECTION_ALL)
         {
-        SGM::CreateLinearEdge(rResult,rPoint, rPoint+FireDirection);
+        // make linear edges for the inside points
+        for (SGM::Point3D const &rPoint : aPointsInside)
+            {
+            SGM::CreateLinearEdge(rResult,rPoint, rPoint+FireDirection);
+            }
         }
 
     SGMTesting::ReleaseTestThing(pThing);
