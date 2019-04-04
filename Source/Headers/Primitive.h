@@ -110,6 +110,8 @@ complex *CreateComplex(SGM::Result                     &rResult,
                        std::vector<unsigned int> const &aSegments,
                        std::vector<unsigned int> const &aTriangles);
 
+// pEntity should be a bod, volume, or face.
+
 complex *CreateComplex(SGM::Result  &rResult,
                        entity const *pEntity);
     }

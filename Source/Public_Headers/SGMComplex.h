@@ -38,8 +38,14 @@ namespace SGM
                                             SGM::Point2D const &Pos1,
                                             bool                bFilled);
 
+    // pEntity should be a body, volume, or face.
+
     SGM_EXPORT SGM::Complex CreateComplex(SGM::Result       &rResult,
                                           SGM::Entity const &EntityID);
+
+    SGM_EXPORT SGM::Complex CreateVoxels(SGM::Result                     &rResult,
+                                         std::vector<SGM::Point3D> const &aPoints,
+                                         double                           dLength);
 
     // Find functions
 

@@ -582,6 +582,11 @@ class complex : public topology
                 std::vector<unsigned> const     &aTriangles,
                 double                           dTolerance);
 
+        // Create coordinate aligned boxes at each point with 
+        complex(SGM::Result                      &rResult,
+                double                            dLength,
+                std::vector<SGM::Point3D>  const &aPoints);
+
         complex() = delete;
 
         complex(const complex&) = delete;
@@ -911,8 +916,8 @@ class face : public topology
 
         bool GetColor(int &nRed,int &nGreen,int &nBlue) const override;
 
-        void RemoveParentsInSet(SGM::Result &rResult,
-                                std::set<entity *,EntityCompare>  const &) override;
+        void RemoveParentsInSet(SGM::Result                      &rResult,
+                                std::set<entity *,EntityCompare> const &) override;
 
         void DisconnectOwnedEntity(entity const *) override {}
 
@@ -941,7 +946,8 @@ class face : public topology
 
         void SetVolume(volume *pVolume) {m_pVolume=pVolume;}
 
-        void SetSurface(surface *pSurface);
+        void SetSurface(SGM::Result &rResult,
+                        surface     *pSurface);
 
         void SetSides(int nSides) {m_nSides=nSides;}
 
@@ -951,10 +957,12 @@ class face : public topology
 
         std::set<edge *,EntityCompare> const &GetEdges() const {return m_sEdges;}
 
+        std::set<vertex *,EntityCompare> const &GetVertices() const;
+
         std::map<edge *,SGM::EdgeSideType> const &GetEdgeSides() const {return m_mSideType;}
 
         volume *GetVolume() const; 
-
+        
         std::vector<SGM::Point2D> const &GetPoints2D(SGM::Result &rResult) const;
 
         std::vector<SGM::Point3D> const &GetPoints3D(SGM::Result &rResult) const;
@@ -962,6 +970,9 @@ class face : public topology
         std::vector<unsigned> const &GetTriangles(SGM::Result &rResult) const;
 
         std::vector<SGM::UnitVector3D> const &GetNormals(SGM::Result &rResult) const; 
+
+        // Associate an entity with each of the facet points. 
+        // Hence, aEntities is the same size as m_aPoints3D.
 
         void FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntities) const;
 
@@ -975,10 +986,13 @@ class face : public topology
 
         SGM::EdgeSeamType GetSeamType(edge const *pEdge) const;
 
-        SGM::Point2D EvaluateParamSpace(edge         const *pEdge,
-                                        SGM::EdgeSideType   nType,
-                                        SGM::Point3D const &Pos,
-                                        bool                bFirstCall=true) const;
+        // Returns the UV coordinates of the point Pos.  
+        // This function is the main centralzation of the complexitiy of the modeler.
+
+        SGM::Point2D AdvancedInverse(edge         const *pEdge,
+                                     SGM::EdgeSideType   nType,
+                                     SGM::Point3D const &Pos,
+                                     bool                bFirstCall=true) const;
 
         // Return true if the normal of the surface points into the body.
 
@@ -988,13 +1002,14 @@ class face : public topology
 
         bool IsTopLevel() const override;
 
-        Signature  const & GetSignature(SGM::Result &rResult) const;
+        Signature const & GetSignature(SGM::Result &rResult) const;
+
         void GetSignaturePoints(SGM::Result               &rResult,
                                 std::vector<SGM::Point3D> &aPoints) const;
 
         // Find methods
 
-        SGM::UnitVector3D FindNormalOfFace(SGM::Point3D const &Pos) const;\
+        SGM::UnitVector3D FindNormal(SGM::Point3D const &Pos) const;
 
         size_t FindLoops(SGM::Result                                  &rResult,
                          std::vector<std::vector<edge *> >            &aaLoops,
@@ -1012,8 +1027,7 @@ class face : public topology
 
         double FindVolume(SGM::Result &rResult,bool bApproximate) const;
 
-        void ClearFacets(SGM::Result &rResult) const;
-
+        
         void TransformFacets(SGM::Transform3D const &Trans);
 
         bool HasBranchedVertex() const;
@@ -1028,8 +1042,12 @@ class face : public topology
 
         void ClearUVBoundary(edge const *pEdge);
 
-    private:
+        void ClearFacets(SGM::Result &rResult) const;
+        
+        void ClearVertices() {m_sVertices.clear();}
 
+    private:
+        
         void InitializeFacetSubdivision(SGM::Result &rResult,
                                         const size_t MAX_LEVELS,
                                         std::vector<SGM::Point2D> &aPoints2D,
@@ -1050,6 +1068,7 @@ class face : public topology
         mutable std::vector<SGM::Point2D>                   m_aPoints2D;
         mutable std::map<edge *,SGM::EdgeSeamType>          m_mSeamType;
         mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
+        mutable std::set<vertex *,EntityCompare>            m_sVertices;
         mutable Signature                                   m_Signature;
     };
 

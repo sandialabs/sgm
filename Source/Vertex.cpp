@@ -92,6 +92,11 @@ void vertex::ReplacePointers(std::map<entity *,entity *> const &mEntityMap)
 
 void vertex::RemoveEdge(edge *pEdge)
     {
+    std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+    for(face *pFace : sFaces)
+        {
+        pFace->ClearVertices();
+        }
     m_sEdges.erase(pEdge);
     }
 

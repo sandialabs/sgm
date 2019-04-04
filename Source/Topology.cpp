@@ -438,14 +438,10 @@ void FindVertices(SGM::Result        &,//rResult,
         }
     else if(Type==SGM::EntityType::FaceType)
         {
-        std::set<edge *,EntityCompare> const &sFaceEdges=((face *)pEntity)->GetEdges();
-        for (auto pEdge : sFaceEdges)
+        std::set<vertex *,EntityCompare> const &sFaceVertices=((face *)pEntity)->GetVertices();
+        for(auto pVertex : sFaceVertices)
             {
-            if(pEdge->GetStart())
-                {
-                sVertices.insert(pEdge->GetStart());
-                sVertices.insert(pEdge->GetEnd());
-                }
+            sVertices.insert(pVertex);
             }
         }
     else if(Type==SGM::EntityType::EdgeType)
@@ -972,12 +968,12 @@ void TweakFace(SGM::Result   &rResult,
     // Replace the surface of the face.
 
     surface *pOldSurface=pFace->GetSurface();
-    pFace->SetSurface(nullptr);
+    pFace->SetSurface(rResult,nullptr);
     if(pOldSurface->GetFaces().empty())
         {
         rResult.GetThing()->DeleteEntity(pOldSurface);
         }
-    pFace->SetSurface(pSurface);
+    pFace->SetSurface(rResult,pSurface);
 
     // Fix the edge domains.
 

@@ -435,7 +435,7 @@ void MergeVertices(SGM::Result &rResult,
     rResult.GetThing()->DeleteEntity(pDeleteVertex);
     }
 
-void MergeVertexSet(SGM::Result &rResult,
+void MergeVertexSet(SGM::Result                       &rResult,
                     std::set<vertex *, EntityCompare> &sVertices)
 {
     // Note that this only works on single volume wires.
@@ -734,7 +734,7 @@ face *ImprintSplitter(SGM::Result &rResult,
     // Make a new face for the second part of the split loop.
 
     auto pNewFace=new face(rResult);
-    pNewFace->SetSurface(pFace->GetSurface());
+    pNewFace->SetSurface(rResult,pFace->GetSurface());
     pNewFace->SetSides(pFace->GetSides());
     pFace->GetVolume()->AddFace(rResult,pNewFace);
     size_t nLoopA=aLoopA.size();
@@ -818,7 +818,7 @@ face *ImprintAtoll(SGM::Result &rResult,
     // Create a new face and add pEdge to both pFace and pNewFace.
 
     auto *pNewFace=new face(rResult);
-    pNewFace->SetSurface(pFace->GetSurface());
+    pNewFace->SetSurface(rResult,pFace->GetSurface());
     pNewFace->SetSides(pFace->GetSides());
     pNewFace->AddEdge(rResult,pEdge,SGM::FaceOnLeftType);
     pFace->GetVolume()->AddFace(rResult,pNewFace);
@@ -1946,8 +1946,8 @@ bool AreCoincidentFaces(face *pFace0,face *pFace1,bool &bFlipped)
             {
             edge *pEdge=*(pFace0->GetEdges().begin());
             SGM::Point3D Pos=pEdge->FindMidPoint();
-            SGM::UnitVector3D Norm0=pFace0->FindNormalOfFace(Pos);
-            SGM::UnitVector3D Norm1=pFace1->FindNormalOfFace(Pos);
+            SGM::UnitVector3D Norm0=pFace0->FindNormal(Pos);
+            SGM::UnitVector3D Norm1=pFace1->FindNormal(Pos);
             if(SGM::NearEqual(Norm0,Norm1,SGM_MIN_TOL))
                 {
                 bFlipped=false;
