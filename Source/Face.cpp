@@ -295,6 +295,104 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
         }
     }
 
+edge* face::FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const
+    {
+    edge *pCloseEdge = nullptr;
+    SGM::Interval1D const &UDomain = m_pSurface->GetDomain().m_UDomain;
+    SGM::Interval1D const &VDomain = m_pSurface->GetDomain().m_VDomain;
+    double dULength = UDomain.Length();
+    double dVLength = VDomain.Length();
+    double dUMaxLength = dULength * 0.5;
+    double dVMaxLength = dVLength * 0.5;// init with something
+    for (auto pEdge : m_sEdges)
+        {
+        std::vector<SGM::Point2D> const &aUVParams = GetUVBoundary(rResult, pEdge);
+        size_t nUVParams = aUVParams.size();
+        size_t Index1;
+        for (Index1 = 1; Index1 < nUVParams; ++Index1)
+            {
+            SGM::Point2D uv0 = aUVParams[Index1 - 1];
+            SGM::Point2D uv1 = aUVParams[Index1];
+            if (m_pSurface->ClosedInU())
+                {
+                if (dUMaxLength < fabs(uv0.m_u - uv1.m_u))
+                    {
+                    if (SGM::NearEqual(UDomain.m_dMin, uv0.m_u, SGM_MIN_TOL, false))
+                        {
+                        uv0.m_u += dULength;
+                        }
+                    else if (SGM::NearEqual(UDomain.m_dMax, uv0.m_u, SGM_MIN_TOL, false))
+                        {
+                        uv0.m_u -= dULength;
+                        }
+                    else if (SGM::NearEqual(UDomain.m_dMin, uv1.m_u, SGM_MIN_TOL, false))
+                        {
+                        uv1.m_u += dULength;
+                        }
+                    else if (SGM::NearEqual(UDomain.m_dMax, uv1.m_u, SGM_MIN_TOL, false))
+                        {
+                        uv1.m_u -= dULength;
+                        }
+                    }
+                }
+            if (m_pSurface->ClosedInV())
+                {
+                if (dVMaxLength < fabs(uv0.m_v - uv1.m_v))
+                    {
+                    if (SGM::NearEqual(VDomain.m_dMin, uv0.m_v, SGM_MIN_TOL, false))
+                        {
+                        uv0.m_v += dVLength;
+                        }
+                    else if (SGM::NearEqual(VDomain.m_dMax, uv0.m_v, SGM_MIN_TOL, false))
+                        {
+                        uv0.m_v -= dVLength;
+                        }
+                    else if (SGM::NearEqual(VDomain.m_dMin, uv1.m_v, SGM_MIN_TOL, false))
+                        {
+                        uv1.m_v += dVLength;
+                        }
+                    else if (SGM::NearEqual(VDomain.m_dMax, uv1.m_v, SGM_MIN_TOL, false))
+                        {
+                        uv1.m_v -= dVLength;
+                        }
+                    }
+                }
+            SGM::Segment2D Seg(uv0, uv1);
+            SGM::Point2D cuv;
+            double dDist = Seg.DistanceSquared(uv);
+            if (dDist < dMinDist)
+                {
+                dMinDist = dDist;
+                pCloseEdge = pEdge;
+                CloseSeg = Seg;
+                }
+            }
+        }
+        return pCloseEdge;
+    }
+
+vertex* face::FindClosestVertex(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Point2D &FoundVertexUV) const
+    {
+    vertex *pFoundVertex = nullptr;
+    std::set<vertex *, EntityCompare> const & sVertices = GetVertices();
+    for (vertex *pVertex : sVertices)
+        {
+        edge *pVertexEdge = FindFirstEdgeOnFaceAtVertex(rResult, pVertex, this);
+        if (pVertexEdge)
+            {
+            SGM::EdgeSideType nVertexEdgeType = GetSideType(pVertexEdge);
+            SGM::Point2D VertexUV = AdvancedInverse(pVertexEdge, nVertexEdgeType, pVertex->GetPoint());
+            if (SGM::NearEqual(uv.DistanceSquared(VertexUV), dMinDist, SGM_MIN_TOL, false))
+                {
+                FoundVertexUV = VertexUV;
+                pFoundVertex = pVertex;
+                break;
+                }
+            }
+        }
+    return pFoundVertex;
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        edge               **pInCloseEdge,
@@ -313,80 +411,9 @@ bool face::PointInFace(SGM::Result        &rResult,
 
     // Find the closest edge or vertex.
 
-    SGM::Interval1D const &UDomain=m_pSurface->GetDomain().m_UDomain;
-    SGM::Interval1D const &VDomain=m_pSurface->GetDomain().m_VDomain;
-    double dULength=UDomain.Length();
-    double dVLength=VDomain.Length();
-    double dUMaxLength=dULength*0.5;
-    double dVMaxLength=dVLength*0.5;
-    double dMinDist=std::numeric_limits<double>::max();
-    edge *pCloseEdge=nullptr;
-    SGM::Segment2D CloseSeg(uv,uv);// init with something
-    for(auto pEdge : m_sEdges)
-        {
-        std::vector<SGM::Point2D> const &aUVParams=GetUVBoundary(rResult,pEdge);
-        size_t nUVParams=aUVParams.size();
-        size_t Index1;
-        for(Index1=1;Index1<nUVParams;++Index1)
-            {
-            SGM::Point2D uv0=aUVParams[Index1-1];
-            SGM::Point2D uv1=aUVParams[Index1];
-            if(m_pSurface->ClosedInU())
-                {
-                if(dUMaxLength<fabs(uv0.m_u-uv1.m_u))
-                    {
-                    if(SGM::NearEqual(UDomain.m_dMin,uv0.m_u,SGM_MIN_TOL,false))
-                        {
-                        uv0.m_u+=dULength;
-                        }
-                    else if(SGM::NearEqual(UDomain.m_dMax,uv0.m_u,SGM_MIN_TOL,false))
-                        {
-                        uv0.m_u-=dULength;
-                        }
-                    else if(SGM::NearEqual(UDomain.m_dMin,uv1.m_u,SGM_MIN_TOL,false))
-                        {
-                        uv1.m_u+=dULength;
-                        }
-                    else if(SGM::NearEqual(UDomain.m_dMax,uv1.m_u,SGM_MIN_TOL,false))
-                        {
-                        uv1.m_u-=dULength;
-                        }
-                    }
-                }
-            if(m_pSurface->ClosedInV())
-                {
-                if(dVMaxLength<fabs(uv0.m_v-uv1.m_v))
-                    {
-                    if(SGM::NearEqual(VDomain.m_dMin,uv0.m_v,SGM_MIN_TOL,false))
-                        {
-                        uv0.m_v+=dVLength;
-                        }
-                    else if(SGM::NearEqual(VDomain.m_dMax,uv0.m_v,SGM_MIN_TOL,false))
-                        {
-                        uv0.m_v-=dVLength;
-                        }
-                    else if(SGM::NearEqual(VDomain.m_dMin,uv1.m_v,SGM_MIN_TOL,false))
-                        {
-                        uv1.m_v+=dVLength;
-                        }
-                    else if(SGM::NearEqual(VDomain.m_dMax,uv1.m_v,SGM_MIN_TOL,false))
-                        {
-                        uv1.m_v-=dVLength;
-                        }
-                    }
-                }
-            SGM::Segment2D Seg(uv0,uv1);
-            SGM::Point2D cuv;
-            double dDist=Seg.DistanceSquared(uv);
-            if(dDist<dMinDist)
-                {
-                dMinDist=dDist;
-                pCloseEdge=pEdge;
-                CloseSeg=Seg;
-                }
-            }
-        }
-
+    double dMinDist = std::numeric_limits<double>::max();
+    SGM::Segment2D CloseSeg;
+    edge *pCloseEdge = FindClosestEdge(rResult, uv, dMinDist, CloseSeg);
     if(pInCloseEdge)
         {
         *pInCloseEdge=pCloseEdge;
@@ -400,9 +427,8 @@ bool face::PointInFace(SGM::Result        &rResult,
         {
         return true;
         }
-    SGM::Point3D Pos;
+    SGM::Point3D Pos,ClosePos;
     m_pSurface->Evaluate(uv,&Pos);
-    SGM::Point3D ClosePos;
     entity *pCloseEnt;
     FindClosestPointOnEdge3D(rResult,Pos,pCloseEdge,ClosePos,pCloseEnt);
     if(SGM::NearEqual(Pos,ClosePos,SGM_MIN_TOL))
@@ -411,43 +437,17 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
 
     // Look for close vertex.
+    vertex *pFoundVertex;
+    SGM::Point2D FoundVertexUV;
+    pFoundVertex = FindClosestVertex(rResult, uv, dMinDist, FoundVertexUV);
 
-    // FindVertices
-    std::set<vertex *,EntityCompare> sVertices;
-    for (auto pEdge : m_sEdges)
-        {
-        if(pEdge->GetStart())
-            {
-            sVertices.insert(pEdge->GetStart());
-            sVertices.insert(pEdge->GetEnd());
-            }
-        }
-
-    vertex *pFoundVertex=nullptr;
-    SGM::Point2D FoundVertexUV(0,0);
-    for(vertex *pVertex : sVertices)
-        {
-        edge *pVertexEdge=FindFirstEdgeOnFaceAtVertex(rResult,pVertex,this);
-        if (pVertexEdge)
-            {
-            SGM::EdgeSideType nVertexEdgeType=GetSideType(pVertexEdge);
-            SGM::Point2D VertexUV=AdvancedInverse(pVertexEdge,nVertexEdgeType,pVertex->GetPoint());
-            if(SGM::NearEqual(uv.DistanceSquared(VertexUV),dMinDist,SGM_MIN_TOL,false))
-                {
-                FoundVertexUV=VertexUV;
-                pFoundVertex=pVertex;
-                break;
-                }
-            }
-        }
-        
     if(pFoundVertex==nullptr)
         {
         // Test to see if we are to the left or right of pEdge at CloseUV.
 
         SGM::Point2D CloseUV;
         CloseSeg.Distance(uv,&CloseUV);
-        SGM::Point3D TestPos,ClosePos;
+        SGM::Point3D TestPos;
         m_pSurface->Evaluate(CloseUV,&TestPos);
         double t=pCloseEdge->GetCurve()->Inverse(TestPos);
         SGM::Vector3D Vec;
@@ -498,25 +498,11 @@ bool face::PointInFace(SGM::Result        &rResult,
         double dTest2=((B2-A2)*(C2-A2)).m_z;
         if(SGM_MIN_TOL<dTest2)
             {
-            if(nType==SGM::FaceOnLeftType)
-                {
-                return m_bFlipped ? false : true;
-                }
-            else
-                {
-                return m_bFlipped ? true : false;
-                }
+            return nType == SGM::FaceOnLeftType ? !m_bFlipped : m_bFlipped;
             }
         else if(dTest2<-SGM_MIN_TOL)
             {
-            if(nType==SGM::FaceOnLeftType)
-                {
-                return m_bFlipped ? true : false;
-                }
-            else
-                {
-                return m_bFlipped ? false : true;
-                }
+            return nType == SGM::FaceOnLeftType ? m_bFlipped : !m_bFlipped;
             }
         else
             {
@@ -525,65 +511,62 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     else
         {
-        if(pFoundVertex)
+        if(SGM::NearEqual(Pos,pFoundVertex->GetPoint(),SGM_MIN_TOL))
             {
-            if(SGM::NearEqual(Pos,pFoundVertex->GetPoint(),SGM_MIN_TOL))
+            return true;
+            }
+        std::vector<edge *> aEdges;
+        FindEdgesOnFaceAtVertex(rResult,pFoundVertex,this,aEdges);
+        if(aEdges.size()==2)
+            {
+            edge *pEdge0=aEdges[0];
+            edge *pEdge1=aEdges[1];
+            SGM::Point2D uv0,uv1;
+            bool bOut0=true,bOut1=true;
+            if(pEdge0->GetStart()==pFoundVertex)
                 {
-                return true;
+                //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.001));
+                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.001));
                 }
-            std::vector<edge *> aEdges;
-            FindEdgesOnFaceAtVertex(rResult,pFoundVertex,this,aEdges);
-            if(aEdges.size()==2)
+            else
                 {
-                edge *pEdge0=aEdges[0];
-                edge *pEdge1=aEdges[1];
-                SGM::Point2D uv0,uv1;
-                bool bOut0=true,bOut1=true;
-                if(pEdge0->GetStart()==pFoundVertex)
-                    {
-                    //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.001));
-                    uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.001));
-                    }
-                else
-                    {
-                    //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.999));
-                    uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.999));
-                    bOut0=false;
-                    }
-                if(pEdge1->GetStart()==pFoundVertex)
-                    {
-                    //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.001));
-                    uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.001));
-                    }
-                else
-                    {
-                    //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.999));
-                    uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.999));
-                    bOut1=false;
-                    }
-                if(GetSideType(pEdge0)==SGM::FaceOnRightType)
-                    {
-                    bOut0=!bOut0;
-                    }
-                if(GetSideType(pEdge1)==SGM::FaceOnRightType)
-                    {
-                    bOut1=!bOut1;
-                    }
-                bool bAnswer;
-                if(bOut1)
-                    {
-                    bAnswer=InAngle(FoundVertexUV,uv1,uv0,uv);
-                    }
-                else
-                    {
-                    bAnswer=InAngle(FoundVertexUV,uv0,uv1,uv);
-                    }
-                if(m_bFlipped)
-                    {
-                    bAnswer=!bAnswer;
-                    }
-                return bAnswer;
+                //uv0=m_pSurface->Inverse(pEdge0->FindMidPoint(0.999));
+                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.999));
+                bOut0=false;
                 }
+            if(pEdge1->GetStart()==pFoundVertex)
+                {
+                //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.001));
+                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.001));
+                }
+            else
+                {
+                //uv1=m_pSurface->Inverse(pEdge1->FindMidPoint(0.999));
+                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.999));
+                bOut1=false;
+                }
+            if(GetSideType(pEdge0)==SGM::FaceOnRightType)
+                {
+                bOut0=!bOut0;
+                }
+            if(GetSideType(pEdge1)==SGM::FaceOnRightType)
+                {
+                bOut1=!bOut1;
+                }
+            bool bAnswer;
+            if(bOut1)
+                {
+                bAnswer=InAngle(FoundVertexUV,uv1,uv0,uv);
+                }
+            else
+                {
+                bAnswer=InAngle(FoundVertexUV,uv0,uv1,uv);
+                }
+            if(m_bFlipped)
+                {
+                bAnswer=!bAnswer;
+                }
+            return bAnswer;
             }
         return true;
         }

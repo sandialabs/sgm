@@ -262,7 +262,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
 //    SGMTesting::ReleaseTestThing(pThing);
 //    }
 
-TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
+TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -479,8 +479,8 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 #endif
 
     // set ray fire direction
-    rResult.SetDebugFlag(6);
-    rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
+//    rResult.SetDebugFlag(6);
+//    rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
