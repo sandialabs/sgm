@@ -1,12 +1,18 @@
 #ifndef SGM_RESULT_H
 #define SGM_RESULT_H
 
+#define SGM_TIMING_RAY_FIRE
+
 #include "SGMEnums.h"
 #include "SGMEntityClasses.h"
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#ifdef SGM_TIMING_RAY_FIRE
+#include <map>
+#endif
 
 #include "sgm_export.h"
 
@@ -75,6 +81,12 @@ class Result
 
         SGM_EXPORT std::vector<double> GetDebugData() {return m_aDebugData;}
 
+#ifdef SGM_TIMING_RAY_FIRE
+        SGM_EXPORT void IncrementIntersectLineAndEntityCount(SGM::EntityType EntityType);
+
+        SGM_EXPORT void PrintIntersectLineAndEntityCount() const;
+#endif
+
         // Debug flags
         // 0 turned off. (Default)
         // 1 make bad face facets.
@@ -95,6 +107,11 @@ class Result
         std::vector<LogType> m_aLogEntries;
         size_t               m_nDebugFlag;
         std::vector<double>  m_aDebugData;
+
+#ifdef SGM_TIMING_RAY_FIRE
+    std::map<SGM::EntityType,size_t> m_mIntersectLineAndEntityCount;
+#endif
+
 };
 
 } // End of SGM namespace

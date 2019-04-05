@@ -13,6 +13,53 @@
 namespace SGMInternal
 {
 
+bool IsGoodRay(std::vector<SGM::IntersectionType> aTypes,
+               std::vector<entity *> aEntity)
+{
+    size_t nSize = aEntity.size();
+    for (size_t Index1 = 0; Index1 < nSize; ++Index1)
+        {
+        if (aTypes[Index1]!=SGM::IntersectionType::PointType)
+            {
+            return false;
+            }
+        if (aEntity[Index1]->GetType()!=SGM::FaceType)
+            {
+            return false;
+            }
+        }
+    return true;
+}
+
+bool IsRayExpensive(SGM::Result                                &rResult,
+                    SGM::Point3D      const                    &Origin,
+                    SGM::UnitVector3D const                    &Axis,
+                    volume            const                    *pVolume,
+                    double                                      dTolerance,
+                    std::vector<SGM::BoxTree::BoundedItemType> &aHitFaces)
+    {
+    SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
+    SGM::Ray3D Ray(Origin, Axis);
+    aHitFaces = FaceTree.FindIntersectsRay(Ray, dTolerance);
+
+    // skip if debugging ray firing
+    if (rResult.GetDebugFlag()==6)
+        {
+        return false;
+        }
+
+    for (auto boundedItem : aHitFaces)
+        {
+        face *pFace = (face *) boundedItem.first;
+        auto FaceType = pFace->GetSurface()->GetSurfaceType();
+        if (FaceType == SGM::NURBSurfaceType || FaceType == SGM::NUBSurfaceType)
+            {
+            return true;
+            }
+        }
+        return false;
+    }
+
 bool PointInVolume(SGM::Result        &rResult,
                    SGM::Point3D const &Point,
                    volume       const *pVolume,
@@ -21,7 +68,7 @@ bool PointInVolume(SGM::Result        &rResult,
     size_t nHits=0;
     bool bFound=true;
     size_t nCount=1;
-    SGM::UnitVector3D Axis(1,0,0);
+    SGM::UnitVector3D Axis(0,0,1);
     if(rResult.GetDebugFlag()==6)
         {
         std::vector<double> aData=rResult.GetDebugData();
@@ -31,11 +78,24 @@ bool PointInVolume(SGM::Result        &rResult,
         }
     while(bFound)
         {
+        std::vector<SGM::BoxTree::BoundedItemType> aHitFaces;
+        bool bIsRayExpensive=true;
+        while (nCount<7 && bIsRayExpensive)
+            {
+            aHitFaces.clear();
+            bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,dTolerance,aHitFaces);
+            if (bIsRayExpensive)
+                {
+                Axis=SGM::UnitVector3D(cos(nCount),sin(nCount),cos(nCount+17));
+                ++nCount;
+                }
+            }
+
         bFound=false;
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *> aEntity;
-        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false);
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitFaces);
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
@@ -43,8 +103,7 @@ bool PointInVolume(SGM::Result        &rResult,
                 {
                 return true;
                 }
-            if( aTypes[Index1]!=SGM::IntersectionType::PointType ||
-                aEntity[Index1]->GetType()==SGM::EdgeType)
+            if(!IsGoodRay(aTypes,aEntity))
                 {
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;

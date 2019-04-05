@@ -266,7 +266,8 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
 
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
-                       edge               **pInCloseEdge) const
+                       edge               **pInCloseEdge,
+                       bool               *bOnEdge) const
     {
     // First check for the closed face case.
 
@@ -380,15 +381,23 @@ bool face::PointInFace(SGM::Result        &rResult,
 
     // Look for close vertex.
 
+    // FindVertices
     std::set<vertex *,EntityCompare> sVertices;
-    FindVertices(rResult,this,sVertices);
+    for (auto pEdge : m_sEdges)
+        {
+        if(pEdge->GetStart())
+            {
+            sVertices.insert(pEdge->GetStart());
+            sVertices.insert(pEdge->GetEnd());
+            }
+        }
+
     vertex *pFoundVertex=nullptr;
     SGM::Point2D FoundVertexUV(0,0);
     for(vertex *pVertex : sVertices)
         {
-        std::vector<edge *> aVertexEdge;
-        FindEdgesOnFaceAtVertex(rResult,pVertex,this,aVertexEdge);
-        edge *pVertexEdge=aVertexEdge[0];
+        edge *pVertexEdge=FindFirstEdgeOnFaceAtVertex(rResult,pVertex,this);
+        if (!pVertexEdge) throw std::runtime_error("No edge found at vertex");
         SGM::EdgeSideType nVertexEdgeType=GetSideType(pVertexEdge);
         SGM::Point2D VertexUV=EvaluateParamSpace(pVertexEdge,nVertexEdgeType,pVertex->GetPoint());
         if(SGM::NearEqual(uv.DistanceSquared(VertexUV),dMinDist,SGM_MIN_TOL,false))
@@ -425,17 +434,28 @@ bool face::PointInFace(SGM::Result        &rResult,
            
             SGM::Point3D OtherPos;
             SGM::Point2D OtherUV=pOtherFace->GetSurface()->Inverse(TestPos,&OtherPos);
-            SGM::UnitVector3D Norm;
+            SGM::UnitVector3D Norm,OldNorm;
             pOtherFace->GetSurface()->Evaluate(OtherUV,nullptr,nullptr,nullptr,&Norm);
+            m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&OldNorm);
             if(pOtherFace->GetFlipped())
                 {
                 Norm.Negate();
                 }
             double dDot=(Pos-OtherPos)%Norm;
-            return dDot<SGM_MIN_TOL;
+            if(bOnEdge)
+                {
+                *bOnEdge=true;
+                }
+            if(fabs(OldNorm%Norm)<0.9)
+                {
+                return dDot<SGM_MIN_TOL;
+                }
             }
 
-        //m_pSurface->Inverse(TestPos,nullptr,&CloseSeg.m_Start);
+        if(bOnEdge)
+            {
+            *bOnEdge=false;
+            }
         SGM::Point2D a2=EvaluateParamSpace(pCloseEdge,nType,TestPos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);

@@ -241,17 +241,13 @@ TEST(speed_check, point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.5505851928512473, 1.839114850358456, -6.011742721183575);
-//    SGM::Point3D TestPoint(-2.5386176441886525, 1.8331310760271586, -6.011742721183575);
-//    SGM::Point3D TestPoint(-2.4907474495382735, 1.9169039166653219, -6.011742721183575);
-//    SGM::Point3D TestPoint(-2.1436885383230257, 1.5459099081248846, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8863862420772386, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8804024677459412, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8744186934146438, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8684349190833465, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8624511447520491, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.8564673704207517, 1.7493582353889954, -6.011742721183575);
-//    SGM::Point3D TestPoint(0.16006457922645917, 2.030595628959972, -6.011742721183575);
+    SGM::Point3D TestPoint(-2.3650881885810286, 1.0073702183081177, -6.011742721183575);
+//    SGM::Point3D TestPoint(-2.3650881885810286, 1.6356665230943375, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.7367918837948062, 1.6057476514378508, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.5273597821993996, 1.4561532931554175, -6.011742721183575);
+//    SGM::Point3D TestPoint(-1.0486578356956131, 2.3238005711935328, -6.011742721183575);
+//    SGM::Point3D TestPoint(-0.89906347741317982, 0.79793811671271098, -6.011742721183575);
+//    SGM::Point3D TestPoint(-0.0613350710315528, 2.1442873412546115, -6.011742721183575);
 
     SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(0,0,15));
 
@@ -273,14 +269,14 @@ TEST(speed_check, point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, point_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_ALL;
+    const int RAY_FIRE_DIRECTION = DIRECTION_ALL;// DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -514,9 +510,12 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
         // make linear edges for the inside points
         for (SGM::Point3D const &rPoint : aPointsInside)
             {
-            SGM::CreateLinearEdge(rResult,rPoint, rPoint+FireDirection);
+            SGM::CreateLinearEdge(rResult,rPoint, rPoint+10*FireDirection);
             }
         }
+
+    // print counts of face types that were hit
+    rResult.PrintIntersectLineAndEntityCount();
 
     SGMTesting::ReleaseTestThing(pThing);
     }

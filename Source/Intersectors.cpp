@@ -865,20 +865,34 @@ size_t RayFireFace(SGM::Result                        &rResult,
         else
             {
             edge *pCloseEdge;
-            if(pFace->PointInFace(rResult,uv,&pCloseEdge))
+            bool bOnEdge;
+            if(pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
                 {
                 aAllPoints.push_back(Pos);
                 aAllTypes.push_back(aTempTypes[Index1]);
                 entity *pEnt=(face *)pFace;
                 if(pCloseEdge)
                     {
-                    double dDist=pCloseEdge->DistanceToEdge(Pos);
-                    if(dDist<SGM_MIN_TOL)
+                    if(bOnEdge)
                         {
                         pEnt=pCloseEdge;
                         }
+                    else
+                        {
+                        double dDist=pCloseEdge->DistanceToEdge(Pos);
+                        if(dDist<SGM_MIN_TOL)
+                            {
+                            pEnt=pCloseEdge;
+                            }
+                        }
                     }
                 aAllEntites.push_back(pEnt);
+                }
+            else if(bOnEdge && pCloseEdge)
+                {
+                aAllPoints.push_back(Pos);
+                aAllTypes.push_back(SGM::PointType);
+                aAllEntites.push_back(pCloseEdge);
                 }
             }
         }
@@ -890,26 +904,36 @@ size_t RayFireFace(SGM::Result                        &rResult,
     return nAnswer;
     }
 
-size_t RayFireVolume(SGM::Result                        &rResult,
-                     SGM::Point3D                 const &Origin,
-                     SGM::UnitVector3D            const &Axis,
-                     volume                       const *pVolume,
-                     std::vector<SGM::Point3D>          &aPoints,
-                     std::vector<SGM::IntersectionType> &aTypes,
-                     std::vector<entity *>              &aEntities,
-                     double                              dTolerance,
-                     bool                                bUseWholeLine)
+size_t RayFireVolume(SGM::Result                                      &rResult,
+                     SGM::Point3D                               const &Origin,
+                     SGM::UnitVector3D                          const &Axis,
+                     volume                                     const *pVolume,
+                     std::vector<SGM::Point3D>                        &aPoints,
+                     std::vector<SGM::IntersectionType>               &aTypes,
+                     std::vector<entity *>                            &aEntities,
+                     double                                            dTolerance,
+                     bool                                              bUseWholeLine,
+                     std::vector<SGM::BoxTree::BoundedItemType>       *aHitFacesSupplied)
     {
     // Find all ray hits for all faces.
 
     SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin,Axis);
-    std::vector<SGM::BoxTree::BoundedItemType> aHitFaces=FaceTree.FindIntersectsRay(Ray,dTolerance);
+    std::vector<SGM::BoxTree::BoundedItemType> *aHitFaces;
+    if (aHitFacesSupplied == nullptr)
+        {
+        aHitFaces = new std::vector<SGM::BoxTree::BoundedItemType>;
+        *aHitFaces = FaceTree.FindIntersectsRay(Ray,dTolerance);
+        }
+    else
+        {
+        aHitFaces = aHitFacesSupplied;
+        }
 
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
     std::vector<entity *> aAllEntities;
-    for (auto boundedItem : aHitFaces)
+    for (auto boundedItem : *aHitFaces)
         {
         face * pFace = (face*)boundedItem.first;
         std::vector<SGM::Point3D> aSubPoints;
@@ -928,6 +952,11 @@ size_t RayFireVolume(SGM::Result                        &rResult,
     aPoints=aAllPoints;
     aTypes=aAllTypes;
     aEntities=aAllEntities;
+
+    if (aHitFacesSupplied == nullptr)
+        {
+        delete aHitFaces;
+        }
     return nAnswer;
     }
 
@@ -2582,6 +2611,9 @@ size_t IntersectLineAndSurface(SGM::Result                        &rResult,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes)
     {
+#ifdef SGM_TIMING_RAY_FIRE
+    rResult.IncrementIntersectLineAndEntityCount(pSurface->GetSurfaceType());
+#endif
     switch(pSurface->GetSurfaceType())
         {
         case SGM::EntityType::CylinderType:
