@@ -61,7 +61,7 @@ void surface::RemoveParentsInSet(SGM::Result &rResult,
     {
         if (sParents.find(pFace) != sParents.end())
         {
-            pFace->SetSurface(nullptr);
+            pFace->SetSurface(rResult,nullptr);
         }
         else
         {

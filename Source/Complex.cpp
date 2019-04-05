@@ -126,6 +126,50 @@ complex::complex(SGM::Result                     &rResult,
     // we constructed the triangle array, there can be no unused points
     }
 
+//complex::complex(SGM::Result                                         &rResult,
+//                 SGM::Point3D                                  const &Origin,
+//                 double                                               dLength,
+//                 std::vector<std::vector<std::vector<bool> > > const &aaaVoxels):
+//    topology(rResult, SGM::EntityType::ComplexType),
+//    m_aPoints(),
+//    m_aSegments(),
+//    m_aTriangles(),
+//    m_Tree()
+//    {
+//    size_t nX=aaaVoxels.size();
+//    size_t nY=aaaVoxels[0].size();
+//    size_t nZ=aaaVoxels[0][0].size();
+//    size_t XIndex,YIndex,ZIndex;
+//    for(XIndex=0;XIndex<nX;++XIndex)
+//        {
+//        for(YIndex=0;YIndex<nY;++YIndex)
+//            {
+//            for(ZIndex=0;ZIndex<nZ;++ZIndex)
+//                {
+//                if(aaaVoxels[XIndex][YIndex][ZIndex])
+//                    {
+//                    SGM::Point3D Root000=Origin+XIndex*SGM::Vector3D(dLength,0,0)+YIndex*SGM::Vector3D(0,dLength,0)+ZIndex*SGM::Vector3D(0,0,dLength);
+//                    SGM::Point3D Root100=Root000+SGM::Vector3D(dLength,0,0);
+//                    SGM::Point3D Root010=Root000+SGM::Vector3D(0,dLength,0);
+//                    SGM::Point3D Root110=Root100+SGM::Vector3D(0,dLength,0);
+//                    SGM::Point3D Root001=Root000+SGM::Vector3D(0,0,dLength);
+//                    SGM::Point3D Root101=Root100+SGM::Vector3D(0,0,dLength);
+//                    SGM::Point3D Root011=Root010+SGM::Vector3D(0,0,dLength);
+//                    SGM::Point3D Root111=Root110+SGM::Vector3D(0,0,dLength);
+//                    m_aPoints.push_back(Root000);
+//                    m_aPoints.push_back(Root100);
+//                    m_aPoints.push_back(Root010);
+//                    m_aPoints.push_back(Root110);
+//                    m_aPoints.push_back(Root001);
+//                    m_aPoints.push_back(Root101);
+//                    m_aPoints.push_back(Root011);
+//                    m_aPoints.push_back(Root111);
+//                    }
+//                }
+//            }
+//        }
+//    }
+
 complex::complex(SGM::Result &rResult,
                  std::vector<SGM::Point3D> const &aPoints,
                  std::vector<unsigned> const     &aSegments,

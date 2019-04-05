@@ -946,7 +946,7 @@ void ReplaceFaceIDs(SGM::Result              &rResult,
         pFace->AddEdge(rResult,pEdge,nType);
         }
     surface *pSurface=(surface *)mEntityMap[rSGMData.aIDs3[0]].pEntity;
-    pFace->SetSurface(pSurface);
+    pFace->SetSurface(rResult,pSurface);
     }
 
 void ReplaceEdgeIDs(SGM::Result              &rResult,

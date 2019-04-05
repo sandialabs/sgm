@@ -1144,7 +1144,7 @@ void FacetEdge(SGM::Result               &rResult,
         std::vector<SGM::Point2D> aParams;
         for(SGM::Point3D const &Pos : aPoints3D)
             {
-            aParams.push_back(pFace->EvaluateParamSpace(pEdge,nSideType,Pos));
+            aParams.push_back(pFace->AdvancedInverse(pEdge,nSideType,Pos));
             }
         pFace->SetUVBoundary(pEdge,aParams);
         }
@@ -1937,7 +1937,7 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     aNodes[Index3].m_nPrevious=Index3-1;
                     }
                 aNodes[Index3].m_nNext=Index3+1;
-                SGM::Point2D uv=pFace->EvaluateParamSpace(pEdge,nSide,aNodes[Index3].m_Pos);
+                SGM::Point2D uv=pFace->AdvancedInverse(pEdge,nSide,aNodes[Index3].m_Pos);
                 aNodes[Index3].m_uv=uv;
                 }
             }

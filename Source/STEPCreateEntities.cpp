@@ -599,7 +599,7 @@ void ConnectEdgesAndSurfacesToFaces(SGM::Result               &rResult,
         std::vector<size_t> const &aBoundIDs = SLD.m_aIDs;
         size_t nSurfaceID = aBoundIDs.back();
         surface *pSurface = dynamic_cast<surface *>(mIDToEntityMap.at(nSurfaceID));
-        pFace->SetSurface(pSurface);
+        pFace->SetSurface(rResult,pSurface);
         switch (pSurface->GetSurfaceType())
             {
             case SGM::RevolveType:

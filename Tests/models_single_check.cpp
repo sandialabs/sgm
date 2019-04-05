@@ -232,42 +232,35 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, point)
-    {
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-    SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
-
-    SGM::Point3D TestPoint(-2.3650881885810286, 1.0073702183081177, -6.011742721183575);
-//    SGM::Point3D TestPoint(-2.3650881885810286, 1.6356665230943375, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.7367918837948062, 1.6057476514378508, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.5273597821993996, 1.4561532931554175, -6.011742721183575);
-//    SGM::Point3D TestPoint(-1.0486578356956131, 2.3238005711935328, -6.011742721183575);
-//    SGM::Point3D TestPoint(-0.89906347741317982, 0.79793811671271098, -6.011742721183575);
-//    SGM::Point3D TestPoint(-0.0613350710315528, 2.1442873412546115, -6.011742721183575);
-
-    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(0,0,15));
-
-    std::set<SGM::Volume> sVolumes;
-    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-    SGM::Volume VolumeID = *(sVolumes.begin());
-
-    // set ray fire direction
-    rResult.SetDebugFlag(6);
-    rResult.SetDebugData({0,0.,1.});
-
-    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
-    if(bValue || !bValue)
-        {
-        int a=0;
-        a*=1;
-        }
-
-    SGMTesting::ReleaseTestThing(pThing);
-    }
+//TEST(speed_check, point)
+//    {
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+//    SCOPED_TRACE(ouo_file_name);
+//    expect_import_ouo_success(ouo_file_name, rResult);
+//
+//    SGM::Point3D TestPoint(-2.3650881885810286, 1.0073702183081177, -6.011742721183575);
+//
+//    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+SGM::Vector3D(0,0,9));
+//
+//    std::set<SGM::Volume> sVolumes;
+//    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+//    SGM::Volume VolumeID = *(sVolumes.begin());
+//
+//    rResult.SetDebugFlag(6);
+//    std::vector<double> aData;
+//    aData.push_back(0);
+//    aData.push_back(0);
+//    aData.push_back(1);
+//    rResult.SetDebugData(aData);
+//
+//    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+//    EXPECT_FALSE(bValue);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//    }
 
 TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {

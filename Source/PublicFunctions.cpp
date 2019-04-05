@@ -935,12 +935,12 @@ SGM::Surface SGM::GetSurfaceOfFace(SGM::Result     &rResult,
     return pFace->GetSurface()->GetID();
     }
 
-SGM::UnitVector3D SGM::FindNormalOfFace(SGM::Result        &rResult,
+SGM::UnitVector3D SGM::FindNormal(SGM::Result        &rResult,
                                         SGM::Face    const &FaceID,
                                         SGM::Point3D const &Pos)
     {
     auto pFace=(SGMInternal::face const *)rResult.GetThing()->FindEntity(FaceID.m_ID);
-    return pFace->FindNormalOfFace(Pos);
+    return pFace->FindNormal(Pos);
     }
 
 SGM::Curve SGM::GetCurveOfEdge(SGM::Result     &rResult,
@@ -1043,7 +1043,7 @@ void SGM::SetSurfaceOfFace(SGM::Result  &rResult,
     {
     SGMInternal::face *pFace=(SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
     SGMInternal::surface *pSurface=(SGMInternal::surface *)rResult.GetThing()->FindEntity(SurfaceID.m_ID);
-    pFace->SetSurface(pSurface);
+    pFace->SetSurface(rResult,pSurface);
     }
 
 void SGM::SetSidesOfFace(SGM::Result  &rResult,

@@ -638,6 +638,8 @@ namespace SGMInternal {
         m_aTriangles.swap(other.m_aTriangles);
         m_aPoints2D.swap(other.m_aPoints2D);
         m_mSeamType.swap(other.m_mSeamType);
+        m_sVertices.swap(other.m_sVertices);
+        //m_Signature.swap(other.m_Signature);
     }
 
     //

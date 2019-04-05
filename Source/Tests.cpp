@@ -647,7 +647,7 @@ bool RunInternalTest(SGM::Result &rResult,
         pEdge->SetCurve(rResult,pLine);
         pEdge->SetStart(rResult,pVertex);
         pEdge->SetEnd(rResult,pVertex);
-        pFace->SetSurface(pSphere);
+        pFace->SetSurface(rResult,pSphere);
 
         // create NUBsurface
         std::vector<double> aUKnots = {0, 0, 0, 1, 1, 1};

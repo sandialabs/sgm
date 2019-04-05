@@ -83,7 +83,7 @@ namespace SGM
     SGM_EXPORT bool IsWireBody(SGM::Result     &rResult,
                                SGM::Body const &BodyID);
 
-    SGM_EXPORT SGM::UnitVector3D FindNormalOfFace(SGM::Result        &rResult,
+    SGM_EXPORT SGM::UnitVector3D FindNormal(SGM::Result        &rResult,
                                                   SGM::Face    const &FaceID,
                                                   SGM::Point3D const &Pos);
 
