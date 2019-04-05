@@ -52,7 +52,7 @@ bool IsRayExpensive(SGM::Result                                &rResult,
         {
         face *pFace = (face *) boundedItem.first;
         auto FaceType = pFace->GetSurface()->GetSurfaceType();
-        if (FaceType == SGM::NURBSurfaceType || FaceType == SGM::NUBSurfaceType)
+        if (FaceType == SGM::NURBSurfaceType || FaceType == SGM::NUBSurfaceType) // || FaceType == SGM::CylinderType)
             {
             return true;
             }
@@ -80,7 +80,7 @@ bool PointInVolume(SGM::Result        &rResult,
         {
         std::vector<SGM::BoxTree::BoundedItemType> aHitFaces;
         bool bIsRayExpensive=true;
-        while (nCount<7 && bIsRayExpensive)
+        while (nCount<=12 && bIsRayExpensive)
             {
             aHitFaces.clear();
             bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,dTolerance,aHitFaces);

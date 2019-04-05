@@ -642,6 +642,29 @@ namespace SGMInternal {
         //m_Signature.swap(other.m_Signature);
     }
 
+    inline std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
+                                                         edge        *pEdge) const
+        {
+        auto iter=m_mUVBoundary.find(pEdge);
+        if(iter==m_mUVBoundary.end())
+            {
+            pEdge->GetFacets(rResult); // as a side effect will fill in this->m_mUVBoundary
+            iter=m_mUVBoundary.find(pEdge);
+            }
+        return iter->second;
+        }
+
+    inline void face::SetUVBoundary(edge                const *pEdge,
+                             std::vector<SGM::Point2D> &aSurfParams)
+        {
+        m_mUVBoundary[(edge *)pEdge]=aSurfParams;
+        }
+
+    inline void face::ClearUVBoundary(edge const *pEdge)
+        {
+        m_mUVBoundary.erase((edge *)pEdge);
+        }
+
     //
     // edge
     //

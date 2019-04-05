@@ -295,6 +295,54 @@ void face::FindPointEntities(SGM::Result &rResult, std::vector<entity *> &aEntit
         }
     }
 
+inline void AdjustUVSegment(const SGM::Interval1D &DirDomain,
+                            double                 dDirLength,
+                            double                 dDirMaxLength,
+                            double                &uv0_dir,
+                            double                &uv1_dir)
+    {
+    if (dDirMaxLength < fabs(uv0_dir - uv1_dir))
+        {
+        if (fabs(DirDomain.m_dMin - uv0_dir) < SGM_MIN_TOL)
+            {
+            uv0_dir += dDirLength;
+            }
+        else if (fabs(DirDomain.m_dMax - uv0_dir) < SGM_MIN_TOL)
+            {
+            uv0_dir -= dDirLength;
+            }
+        else if (fabs(DirDomain.m_dMin - uv1_dir) < SGM_MIN_TOL)
+            {
+            uv1_dir += dDirLength;
+            }
+        else if (fabs(DirDomain.m_dMax - uv1_dir) < SGM_MIN_TOL)
+            {
+            uv1_dir -= dDirLength;
+            }
+        }
+    }
+
+
+inline edge * UpdateClosestEdge(const SGM::Point2D &uv,
+                                const SGM::Point2D &uv0,
+                                const SGM::Point2D &uv1,
+                                edge               *pEdge,
+                                edge               *pCloseEdge,
+                                double             &dMinDist,
+                                SGM::Segment2D     &CloseSeg)
+    {
+    SGM::Segment2D Seg(uv0, uv1);
+    double dDist = Seg.DistanceSquared(uv);
+    if (dDist < dMinDist)
+        {
+        dMinDist = dDist;
+        pCloseEdge = pEdge;
+        CloseSeg = Seg;
+        }
+    return pCloseEdge;
+    }
+
+
 edge* face::FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const
     {
     edge *pCloseEdge = nullptr;
@@ -304,67 +352,45 @@ edge* face::FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double
     double dVLength = VDomain.Length();
     double dUMaxLength = dULength * 0.5;
     double dVMaxLength = dVLength * 0.5;// init with something
-    for (auto pEdge : m_sEdges)
+    if (m_pSurface->ClosedInU())
         {
-        std::vector<SGM::Point2D> const &aUVParams = GetUVBoundary(rResult, pEdge);
-        size_t nUVParams = aUVParams.size();
-        size_t Index1;
-        for (Index1 = 1; Index1 < nUVParams; ++Index1)
+        for (auto pEdge : m_sEdges)
             {
-            SGM::Point2D uv0 = aUVParams[Index1 - 1];
-            SGM::Point2D uv1 = aUVParams[Index1];
-            if (m_pSurface->ClosedInU())
+            std::vector<SGM::Point2D> const &aUVParams = GetUVBoundary(rResult, pEdge);
+            size_t nUVParams = aUVParams.size();
+            for (size_t Index1 = 1; Index1 < nUVParams; ++Index1)
                 {
-                if (dUMaxLength < fabs(uv0.m_u - uv1.m_u))
-                    {
-                    if (SGM::NearEqual(UDomain.m_dMin, uv0.m_u, SGM_MIN_TOL, false))
-                        {
-                        uv0.m_u += dULength;
-                        }
-                    else if (SGM::NearEqual(UDomain.m_dMax, uv0.m_u, SGM_MIN_TOL, false))
-                        {
-                        uv0.m_u -= dULength;
-                        }
-                    else if (SGM::NearEqual(UDomain.m_dMin, uv1.m_u, SGM_MIN_TOL, false))
-                        {
-                        uv1.m_u += dULength;
-                        }
-                    else if (SGM::NearEqual(UDomain.m_dMax, uv1.m_u, SGM_MIN_TOL, false))
-                        {
-                        uv1.m_u -= dULength;
-                        }
-                    }
+                SGM::Point2D uv0 = aUVParams[Index1 - 1];
+                SGM::Point2D uv1 = aUVParams[Index1];
+                AdjustUVSegment(UDomain, dULength, dUMaxLength, uv0.m_u, uv1.m_u);
+                pCloseEdge = UpdateClosestEdge(uv, uv0, uv1, pEdge, pCloseEdge, dMinDist, CloseSeg);
                 }
-            if (m_pSurface->ClosedInV())
+            }
+        }
+    else if (m_pSurface->ClosedInV())
+        {
+        for (auto pEdge : m_sEdges)
+            {
+            std::vector<SGM::Point2D> const &aUVParams = GetUVBoundary(rResult, pEdge);
+            size_t nUVParams = aUVParams.size();
+            for (size_t Index1 = 1; Index1 < nUVParams; ++Index1)
                 {
-                if (dVMaxLength < fabs(uv0.m_v - uv1.m_v))
-                    {
-                    if (SGM::NearEqual(VDomain.m_dMin, uv0.m_v, SGM_MIN_TOL, false))
-                        {
-                        uv0.m_v += dVLength;
-                        }
-                    else if (SGM::NearEqual(VDomain.m_dMax, uv0.m_v, SGM_MIN_TOL, false))
-                        {
-                        uv0.m_v -= dVLength;
-                        }
-                    else if (SGM::NearEqual(VDomain.m_dMin, uv1.m_v, SGM_MIN_TOL, false))
-                        {
-                        uv1.m_v += dVLength;
-                        }
-                    else if (SGM::NearEqual(VDomain.m_dMax, uv1.m_v, SGM_MIN_TOL, false))
-                        {
-                        uv1.m_v -= dVLength;
-                        }
-                    }
+                SGM::Point2D uv0 = aUVParams[Index1 - 1];
+                SGM::Point2D uv1 = aUVParams[Index1];
+                AdjustUVSegment(VDomain, dVLength, dVMaxLength, uv0.m_v, uv1.m_v);
+                pCloseEdge = UpdateClosestEdge(uv, uv0, uv1, pEdge, pCloseEdge, dMinDist, CloseSeg);
                 }
-            SGM::Segment2D Seg(uv0, uv1);
-            SGM::Point2D cuv;
-            double dDist = Seg.DistanceSquared(uv);
-            if (dDist < dMinDist)
+            }
+        }
+    else
+        {
+        for (auto pEdge : m_sEdges)
+            {
+            std::vector<SGM::Point2D> const &aUVParams = GetUVBoundary(rResult, pEdge);
+            size_t nUVParams = aUVParams.size();
+            for (size_t Index1 = 1; Index1 < nUVParams; ++Index1)
                 {
-                dMinDist = dDist;
-                pCloseEdge = pEdge;
-                CloseSeg = Seg;
+                pCloseEdge = UpdateClosestEdge(uv, aUVParams[Index1-1], aUVParams[Index1], pEdge, pCloseEdge, dMinDist, CloseSeg);
                 }
             }
         }
@@ -984,27 +1010,6 @@ void face::Negate()
             m_aNormals[Index1].Negate();
             }
         }
-    }
-
-std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
-                                                     edge        *pEdge) const
-    {
-    if(m_mUVBoundary.find(pEdge)==m_mUVBoundary.end())
-        {
-        pEdge->GetFacets(rResult);
-        }
-    return m_mUVBoundary[pEdge];
-    }
-
-void face::SetUVBoundary(edge                const *pEdge,
-                         std::vector<SGM::Point2D> &aSurfParams)
-    {
-    m_mUVBoundary[(edge *)pEdge]=aSurfParams;
-    }
-
-void face::ClearUVBoundary(edge const *pEdge)
-    {
-    m_mUVBoundary.erase((edge *)pEdge);
     }
 
 bool face::HasBranchedVertex() const
