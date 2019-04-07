@@ -445,37 +445,48 @@ bool face::PointInFace(SGM::Result        &rResult,
         double t=pCloseEdge->GetCurve()->Inverse(TestPos);
         SGM::Vector3D Vec;
         pCloseEdge->GetCurve()->Evaluate(t,&ClosePos,&Vec);
-
-        double dDist=ClosePos.Distance(Pos);
-        if( dDist<pCloseEdge->GetTolerance()*20 &&
-            pCloseEdge->GetFaces().size()==2)
+        if(pCloseEdge->GetFaces().size()==2)
             {
-            std::set<face *,EntityCompare> const &sFaces=pCloseEdge->GetFaces();
-            auto iter=sFaces.begin();
-            face *pOtherFace=*iter;
-            if(pOtherFace==this)
+            bool bUseOtherFace=false;
+            double dDist=ClosePos.Distance(Pos);
+            if(dDist<pCloseEdge->GetTolerance()*100)
                 {
-                ++iter;
-                pOtherFace=*iter;
+                bUseOtherFace=true;
                 }
+            if( pCloseEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType &&
+                dDist<0.005)
+                {
+                bUseOtherFace=true;
+                }
+            if(bUseOtherFace)
+                {
+                std::set<face *,EntityCompare> const &sFaces=pCloseEdge->GetFaces();
+                auto iter=sFaces.begin();
+                face *pOtherFace=*iter;
+                if(pOtherFace==this)
+                    {
+                    ++iter;
+                    pOtherFace=*iter;
+                    }
            
-            SGM::Point3D OtherPos;
-            SGM::Point2D OtherUV=pOtherFace->m_pSurface->Inverse(TestPos,&OtherPos);
-            SGM::UnitVector3D Norm,OldNorm;
-            pOtherFace->m_pSurface->Evaluate(OtherUV,nullptr,nullptr,nullptr,&Norm);
-            m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&OldNorm);
-            if(pOtherFace->GetFlipped())
-                {
-                Norm.Negate();
-                }
-            double dDot=(Pos-OtherPos)%Norm;
-            if(bOnEdge)
-                {
-                *bOnEdge=true;
-                }
-            if(fabs(OldNorm%Norm)<0.9)
-                {
-                return dDot<SGM_MIN_TOL;
+                SGM::Point3D OtherPos;
+                SGM::Point2D OtherUV=pOtherFace->m_pSurface->Inverse(TestPos,&OtherPos);
+                SGM::UnitVector3D Norm,OldNorm;
+                pOtherFace->m_pSurface->Evaluate(OtherUV,nullptr,nullptr,nullptr,&Norm);
+                m_pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&OldNorm);
+                if(pOtherFace->GetFlipped())
+                    {
+                    Norm.Negate();
+                    }
+                double dDot=(Pos-OtherPos)%Norm;
+                if(bOnEdge)
+                    {
+                    *bOnEdge=true;
+                    }
+                if(fabs(OldNorm%Norm)<0.9)
+                    {
+                    return dDot<SGM_MIN_TOL;
+                    }
                 }
             }
 

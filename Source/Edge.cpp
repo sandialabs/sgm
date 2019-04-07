@@ -416,6 +416,23 @@ double edge::GetTolerance() const
                         }
                     }
                 }
+            // And seven more points for good measure.
+            for(Index1=0;Index1<7;++Index1)
+                {
+                double t=m_Domain.MidPoint(Index1/6.0);
+                for(auto pFace : m_sFaces)
+                    {
+                    surface const *pSurface=pFace->GetSurface();
+                    SGM::Point3D Pos,CPos;
+                    m_pCurve->Evaluate(t,&Pos);
+                    pSurface->Inverse(Pos,&CPos);
+                    double dDist=Pos.Distance(CPos);
+                    if(m_dTolerance<dDist)
+                        {
+                        m_dTolerance=dDist;
+                        }
+                    }
+                }
             }
         else
             {

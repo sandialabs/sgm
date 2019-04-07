@@ -865,7 +865,7 @@ size_t RayFireFace(SGM::Result                        &rResult,
         else
             {
             edge *pCloseEdge;
-            bool bOnEdge;
+            bool bOnEdge=false;
             if(pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
                 {
                 aAllPoints.push_back(Pos);
