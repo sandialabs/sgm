@@ -86,6 +86,10 @@ size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
                                face          const *pFace,
                                std::vector<edge *> &aEdges);
 
+edge* FindFirstEdgeOnFaceAtVertex(SGM::Result  &rResult,
+                                  vertex const *pVertex,
+                                  face   const *pFace);
+
 // Returns all faces including the given one that share a vertex or
 // edge with the given face.
 

@@ -412,17 +412,24 @@ bool face::PointInFace(SGM::Result        &rResult,
 
     // Look for close vertex.
 
+    // FindVertices
     std::set<vertex *,EntityCompare> sVertices;
-    FindVertices(rResult,this,sVertices);
+    for (auto pEdge : m_sEdges)
+        {
+        if(pEdge->GetStart())
+            {
+            sVertices.insert(pEdge->GetStart());
+            sVertices.insert(pEdge->GetEnd());
+            }
+        }
+
     vertex *pFoundVertex=nullptr;
     SGM::Point2D FoundVertexUV(0,0);
     for(vertex *pVertex : sVertices)
         {
-        std::vector<edge *> aVertexEdge;
-        FindEdgesOnFaceAtVertex(rResult,pVertex,this,aVertexEdge);
-        if(aVertexEdge.size())
+        edge *pVertexEdge=FindFirstEdgeOnFaceAtVertex(rResult,pVertex,this);
+        if (pVertexEdge)
             {
-            edge *pVertexEdge=aVertexEdge[0];
             SGM::EdgeSideType nVertexEdgeType=GetSideType(pVertexEdge);
             SGM::Point2D VertexUV=AdvancedInverse(pVertexEdge,nVertexEdgeType,pVertex->GetPoint());
             if(SGM::NearEqual(uv.DistanceSquared(VertexUV),dMinDist,SGM_MIN_TOL,false))

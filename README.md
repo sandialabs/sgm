@@ -58,7 +58,11 @@ and if the variable has one, its default value.
     ```brew install cmake```
 
 * Ensure you have a compiler, preferably either:
-  * Clang (from your XCode install, or Homebrew),
+  * Clang (from your XCode install, or llvm Homebrew),
+    * If you do use llvm from Homebrew and MacOS Mojave with XCode 10.14 or later, you must complete this additional step to install standard C/C++ headers:
+    
+      ```open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg```
+  
   * GCC (we recommend version 7.0+, from Homebrew for example).
   
     ```brew install gcc@7```  
@@ -66,6 +70,8 @@ and if the variable has one, its default value.
 * Optionally, if you would like to build the viewer application, install QT (download from [QT web page](https://www.qt.io/) or Homebrew).
 
     ```brew install qt```
+    
+* To use the GDB debugger on Mac you may need to install gdb with Homebrew and [add a certificate](https://sourceware.org/gdb/wiki/PermissionsDarwin).
     
 ### Linux Prerequisites
 

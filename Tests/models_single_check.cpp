@@ -344,8 +344,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
         {
         SGM::CreateLinearEdge(rResult,rPoint, rPoint+SGM::Vector3D(0,4,0));
         }
-   }
-    
+    }
 
     // Starting points in the constant X plane
     {
@@ -385,7 +384,6 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
         SGM::CreateLinearEdge(rResult,rPoint, rPoint+SGM::Vector3D(9,0,0));
         }
     }
-
     
     {
     // Starting points in the constant Z plane
@@ -700,7 +698,7 @@ TEST(models_single_check, import_check_brick10)
 
 }
 
-TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_line_intersections)
+TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

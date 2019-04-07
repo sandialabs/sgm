@@ -92,6 +92,7 @@ void NURBsurface::Construct(SGM::Result &rResult)
     size_t nParams=m_nUParams*m_nVParams;
     m_aSeedParams.reserve(nParams);
     m_aSeedPoints.reserve(nParams);
+
     for(Index1=0;Index1<m_nUParams;++Index1)
         {
         double u=aUParams[Index1];

@@ -487,24 +487,39 @@ void FindVertices(SGM::Result        &,//rResult,
         }
     }
 
-size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
+size_t FindEdgesOnFaceAtVertex(SGM::Result         &,//rResult,
                                vertex        const *pVertex,
                                face          const *pFace,
                                std::vector<edge *> &aEdges)
     {
-    std::set<edge *,EntityCompare> sEdges;
-    FindEdges(rResult,pVertex,sEdges,false);
+    std::set<edge *,EntityCompare> const &sEdges = pVertex->GetEdges();
     for (auto pEdge : sEdges)
         {
-        std::set<face *,EntityCompare> sFaces;
-        FindFaces(rResult,pEdge,sFaces,false);
-        if(sFaces.find((face *)pFace)!=sFaces.end())
+        std::set<face *,EntityCompare> const &sFaces = pEdge->GetFaces();
+        if(sFaces.find(const_cast<face *>(pFace))!=sFaces.end())
             {
             aEdges.push_back(pEdge);
             }
         }
     return aEdges.size();
     }
+
+edge* FindFirstEdgeOnFaceAtVertex(SGM::Result  &,//rResult,
+                                  vertex const *pVertex,
+                                  face   const *pFace)
+    {
+    std::set<edge *,EntityCompare> const &sEdges = pVertex->GetEdges();
+    for (auto pEdge : sEdges)
+        {
+        std::set<face *,EntityCompare> const &sFaces = pEdge->GetFaces();
+        if (sFaces.find(const_cast<face *>(pFace))!=sFaces.end())
+            {
+            return pEdge;
+            }
+        }
+    return nullptr;
+    }
+
 
 size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
                                    vertex        const *pVertex,

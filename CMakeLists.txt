@@ -52,15 +52,24 @@ if(BUILD_MULTITHREADED)
   find_package(OpenMP)
 endif()
 
+# increase warnings and disable warnings that do not work
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
-
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-user-defined-warnings)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DDEBUG=2")
+endif()
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+
+## force use of stdc++ library on clang to reveal types in debugger
+#if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#  add_compile_options(--gcc-toolchain=/usr/local/Cellar/gcc@7)
+#  add_compile_options(-stdlib=stdlibc++)
+#endif()
 
 # use the version number from the CMake project in the compile
 add_definitions(-DSGM_PRODUCT_VERSION=${SGM_VERSION}) # not a quoted string, like a float literal
-
 
 # convenience function to set common properties on SGM libraries
 function(add_sgm_library NAME)
