@@ -318,6 +318,29 @@ namespace SGM {
             }
     }
 
+    inline Interval3D::Interval3D(const std::vector<Point3D> &aPoints,
+                                  SGM::Point3D               &Origin,
+                                  SGM::UnitVector3D          &XAxis,
+                                  SGM::UnitVector3D          &YAxis,
+                                  SGM::UnitVector3D          &ZAxis) :
+        m_XDomain(), m_YDomain(), m_ZDomain()
+    {
+        for (auto &&p : aPoints)
+        {
+            double x = (p - Origin) % XAxis;
+            m_XDomain.m_dMin = m_XDomain.m_dMin < x ? m_XDomain.m_dMin : x;
+            m_XDomain.m_dMax = m_XDomain.m_dMax > x ? m_XDomain.m_dMax : x;
+
+            double y = (p - Origin) % YAxis;
+            m_YDomain.m_dMin = m_YDomain.m_dMin < y ? m_YDomain.m_dMin : y;
+            m_YDomain.m_dMax = m_YDomain.m_dMax > y ? m_YDomain.m_dMax : y;
+
+            double z = (p - Origin) % ZAxis;
+            m_ZDomain.m_dMin = m_ZDomain.m_dMin < z ? m_ZDomain.m_dMin : z;
+            m_ZDomain.m_dMax = m_ZDomain.m_dMax > z ? m_ZDomain.m_dMax : z;
+        }
+    }
+
     inline Interval3D::Interval3D(std::vector<Interval3D> const &aIntervals) :
             m_XDomain(), m_YDomain(), m_ZDomain()
     {

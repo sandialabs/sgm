@@ -1423,8 +1423,6 @@ void face::GetSignaturePoints(SGM::Result &rResult,
 {
     std::set<vertex *, EntityCompare> sVertices;
     FindVertices(rResult, this, sVertices);
-    if (sVertices.size() == 0)
-        throw std::logic_error("Signature for face without vertices is not implemented");
 
     for (auto pVert : sVertices)
     {
@@ -1439,6 +1437,40 @@ void face::GetSignaturePoints(SGM::Result &rResult,
         {
             aPoints.emplace_back(Pos);
         }
+    }
+
+    if (m_pSurface->GetSurfaceType() != SGM::PlaneType)
+    {
+        SGM::Point3D Origin;
+        SGM::UnitVector3D XAxis, YAxis, ZAxis;
+        FindLeastSquarePlane(aPoints, Origin, XAxis, YAxis, ZAxis);
+
+        SGM::Interval3D Aligned(aPoints, Origin, XAxis, YAxis, ZAxis);
+
+        for (double iz=0; iz<2; iz++)
+        {
+            double dZFraction = 0.25 + iz*0.5;
+            for (size_t iy=0; iy<2; iy++)
+            {
+                double dYFraction = 0.25 + iy*0.5;
+                for (size_t ix=0; ix<2; ix++)
+                {
+                    double dXFraction = 0.25 + ix*0.5;
+                    SGM::Point3D Coords = Aligned.MidPoint(dXFraction, dYFraction, dZFraction);
+                    SGM::Point3D Pos = Origin + (Coords.m_x * XAxis)
+                                              + (Coords.m_y * YAxis)
+                                              + (Coords.m_z * ZAxis);
+
+                    SGM::Point3D pClosest;
+                    entity *pCloseEntity = nullptr;
+                    FindClosestPointOnFace(rResult, Pos, this, pClosest, pCloseEntity);
+
+                    aPoints.emplace_back(pClosest);
+                }
+            }
+        }
+
+
     }
 }
 

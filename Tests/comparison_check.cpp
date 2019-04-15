@@ -6,6 +6,7 @@
 #include "SGMTopology.h"
 #include "SGMGeometry.h"
 #include "SGMInterrogate.h"
+#include "SGMIntersector.h"
 
 #include "test_utility.h"
 
@@ -122,6 +123,52 @@ TEST(comparison_check, face_comparison)
     EXPECT_EQ(aSimilar.size(), 3U);
 
 	SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(comparison_check, compare_faces_bounded_by_circles)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+//    SGM::Body Disk1 = SGM::CreateDisk(rResult, SGM::Point3D(5, 0, 0), SGM::UnitVector3D(1, 0, 0), SGM_SQRT_2);
+//    SGM::Body Disk2 = SGM::CreateDisk(rResult, SGM::Point3D(5, 0, 0), SGM::UnitVector3D(1, 0, 0), SGM_SQRT_2);
+//
+    // create a sphere surface
+    SGM::Surface SphereID = SGM::CreateSphereSurface(rResult, SGM::Point3D(0, 0, 0), 2.0);
+    SGM::Surface PlaneID = SGM::CreatePlane(rResult, SGM::Point3D(1, 0, 0), SGM::UnitVector3D(1, 0, 0));
+    std::vector<SGM::Curve> aCurves;
+    SGM::IntersectSurfaces(rResult, SphereID, PlaneID, aCurves);
+
+    EXPECT_EQ(aCurves.size(), 1);
+    if (aCurves.size() == 1)
+    {
+        SGM::Edge EdgeID = SGM::CreateEdge(rResult, aCurves[0]);
+        std::vector<SGM::Edge> aEdges;
+        aEdges.emplace_back(EdgeID);
+        std::vector<SGM::EdgeSideType> aTypes;
+        aTypes.emplace_back(SGM::FaceOnLeftType);
+        SGM::Body LargeSphereSheet = SGM::CreateSheetBody(rResult, SphereID, aEdges, aTypes);
+
+        aTypes.clear();
+        aTypes.emplace_back(SGM::FaceOnRightType);
+        SGM::CreateSheetBody(rResult, SphereID, aEdges, aTypes);
+
+        aTypes.clear();
+        aTypes.emplace_back(SGM::FaceOnLeftType);
+        SGM::CreateSheetBody(rResult, PlaneID, aEdges, aTypes);
+
+        std::set<SGM::Face> sFaces;
+        SGM::FindFaces(rResult, LargeSphereSheet, sFaces);
+        EXPECT_EQ(sFaces.size(), 1);
+        SGM::Face Face1 = (*(sFaces.begin()));
+
+        bool bIgnoreScale = false;
+        std::vector<SGM::Face> aSimilar;
+        SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
+        EXPECT_EQ(aSimilar.size(), 0U);
+    }
+
+    SGMTesting::ReleaseTestThing(pThing);
 }
 
 
