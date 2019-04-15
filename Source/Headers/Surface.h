@@ -620,7 +620,7 @@ class NUBsurface: public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
-        void ReParam(SGM::Result &rResult);
+        double ReParam(SGM::Result &rResult);
 
     public:
 
@@ -724,7 +724,7 @@ class NURBsurface: public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
-        void ReParam(SGM::Result &rResult);
+        double ReParam(SGM::Result &rResult);
 
     public:
 

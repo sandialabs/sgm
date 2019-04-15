@@ -149,7 +149,7 @@ void NUBsurface::Construct(SGM::Result &rResult)
         }
     }
 
-void NUBsurface::ReParam(SGM::Result &rResult)
+double NUBsurface::ReParam(SGM::Result &rResult)
     {
     for(auto *pFace : m_sFaces)
         {
@@ -175,6 +175,8 @@ void NUBsurface::ReParam(SGM::Result &rResult)
         }
     
     Construct(rResult);
+
+    return std::max(std::max(dUScale,1.0/dUScale),std::max(dVScale,1.0/dVScale));
 
     //SGM::Vector3D dU,dV;
     //SGM::Point2D uv=m_Domain.MidPoint();

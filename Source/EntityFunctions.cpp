@@ -380,6 +380,7 @@ void Heal(SGM::Result           &rResult,
                 {
                 if(surface *pSimplify=SimplifySurface(rResult,pSurface))
                     {
+                    std::cout << " Simplified " << pSurface->GetID() << "\n";
                     std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
                     for(auto *pFace : sFaces)
                         {
@@ -397,6 +398,8 @@ void Heal(SGM::Result           &rResult,
         }
     if(Options.m_bReparamNURBS)
         {
+        std::vector<size_t> aScales;
+        aScales.assign(6,0);
         for(auto pEntity : aEntities)
             {
             std::set<surface *,EntityCompare> sSurfaces;
@@ -406,14 +409,86 @@ void Heal(SGM::Result           &rResult,
                 if(pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
                     {
                     NUBsurface *pNUB=(NUBsurface *)pSurface;
-                    pNUB->ReParam(rResult);
+                    double dScale=pNUB->ReParam(rResult);
+                    if(1000000<dScale)
+                        {
+                        ++aScales[5];
+                        }
+                    else if(100000<dScale)
+                        {
+                        ++aScales[4];
+                        }
+                    else if(10000<dScale)
+                        {
+                        ++aScales[3];
+                        }
+                    else if(1000<dScale)
+                        {
+                        ++aScales[2];
+                        }
+                    else if(100<dScale)
+                        {
+                        ++aScales[1];
+                        }
+                    else if(10<dScale)
+                        {
+                        ++aScales[0];
+                        }
                     }
                 else if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
                     {
                     NURBsurface *pNURB=(NURBsurface *)pSurface;
-                    pNURB->ReParam(rResult);
+                    double dScale=pNURB->ReParam(rResult);
+                    if(1000000<dScale)
+                        {
+                        ++aScales[5];
+                        }
+                    else if(100000<dScale)
+                        {
+                        ++aScales[4];
+                        }
+                    else if(10000<dScale)
+                        {
+                        ++aScales[3];
+                        }
+                    else if(1000<dScale)
+                        {
+                        ++aScales[2];
+                        }
+                    else if(100<dScale)
+                        {
+                        ++aScales[1];
+                        }
+                    else if(10<dScale)
+                        {
+                        ++aScales[0];
+                        }
                     }
                 }
+            }
+        if(aScales[5])
+            {
+            std::cout << " Scaled NURB by more than 1,000,000 " << aScales[5] << "\n";
+            }
+        if(aScales[4])
+            {
+            std::cout << " Scaled NURB by more than 100,000 " << aScales[4] << "\n";
+            }
+        if(aScales[3])
+            {
+            std::cout << " Scaled NURB by more than 10,000 " << aScales[3] << "\n";
+            }
+        if(aScales[2])
+            {
+            std::cout << " Scaled NURB by more than 1,000 " << aScales[2] << "\n";
+            }
+        if(aScales[1])
+            {
+            std::cout << " Scaled NURB by more than 100 " << aScales[1] << "\n";
+            }
+        if(aScales[0])
+            {
+            std::cout << " Scaled NURB by more than 10 " << aScales[0] << "\n";
             }
         }
     if(Options.m_bRemoveSlivers)
@@ -426,6 +501,7 @@ void Heal(SGM::Result           &rResult,
                 {
                 if(pFace->IsSliver())
                     {
+                    std::cout << " Removed Sliver " << pFace->GetID() << "\n";
                     RemoveSliver(rResult,pFace);
                     }
                 }

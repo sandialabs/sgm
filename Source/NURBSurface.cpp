@@ -491,7 +491,7 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
     return uv;
     }
 
-void NURBsurface::ReParam(SGM::Result &rResult)
+double NURBsurface::ReParam(SGM::Result &rResult)
     {
     // Clear data that will change.
 
@@ -519,8 +519,10 @@ void NURBsurface::ReParam(SGM::Result &rResult)
     size_t nVKnots=m_aVKnots.size();
     double dUScale=1.0/m_Domain.m_UDomain.Length();
     double dVScale=1.0/m_Domain.m_VDomain.Length();
+    double dMaxScale=0;
     if(dUScale*10<dVScale || dVScale*10<dUScale || bTight)
         {
+        dMaxScale=std::max(std::max(dUScale,1.0/dUScale),std::max(dVScale,1.0/dVScale));
         for(Index1=0;Index1<nUKnots;++Index1)
             {
             m_aUKnots[Index1]*=dUScale;
@@ -543,6 +545,7 @@ void NURBsurface::ReParam(SGM::Result &rResult)
     Evaluate(uv,nullptr,&dU,&dV);
     double dUMag=dU.Magnitude();
     double dVMag=dV.Magnitude();
+    double dMaxMag=std::max(std::max(dUMag,1.0/dUMag),std::max(dVMag,1.0/dVMag));
     for(Index1=0;Index1<nUKnots;++Index1)
         {
         m_aUKnots[Index1]*=dUMag;
@@ -553,6 +556,8 @@ void NURBsurface::ReParam(SGM::Result &rResult)
         }
 
     Construct(rResult);
+
+    return dMaxScale<dMaxMag ? dMaxMag : dMaxScale;
     }
 
 void NURBsurface::Transform(SGM::Result            &,//rResult,
