@@ -465,7 +465,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             bool bUseOtherFace=false;
             double dDist=ClosePos.Distance(Pos);
-            if(dDist<pCloseEdge->GetTolerance()*100)
+            if(dDist<pCloseEdge->GetTolerance()*100 || dDist<SGM_FIT)
                 {
                 bUseOtherFace=true;
                 }

@@ -241,9 +241,7 @@ TEST(speed_check, DISABLED_point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-1.1384144506650731, -0.27914126292080965, -2.7505857106265053);
-
-    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+6*SGM::Vector3D(0.45087572710671003, 0.70219734025538583, 0.55102629160890060));
+    SGM::Point3D TestPoint(-2.99338449336725,   1.78114559759887, -0.112058775609127);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -251,12 +249,16 @@ TEST(speed_check, DISABLED_point)
 
     rResult.SetDebugFlag(6);
     std::vector<double> aData;
-    aData.push_back(0.45087572710671003);
-    aData.push_back(0.70219734025538583);
-    aData.push_back(0.55102629160890060);
+    aData.push_back(1);
+    aData.push_back(0);
+    aData.push_back(0);
     rResult.SetDebugData(aData);
 
     bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+    
+    std::vector<double> aData2=rResult.GetDebugData();
+    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+6*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
+
     EXPECT_FALSE(bValue);
 
     SGMTesting::ReleaseTestThing(pThing);
