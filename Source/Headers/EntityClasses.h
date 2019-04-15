@@ -115,9 +115,7 @@ public:
 
     entity& operator=(const entity&) = delete;
 
-    virtual ~entity()
-        {
-        }
+    virtual ~entity();
 
     virtual void Accept(EntityVisitor &) = 0;
 
@@ -902,7 +900,7 @@ class face : public topology
     
         face& operator=(const face&) = delete;
 
-        ~face() override = default;
+        ~face() override;
 
         void Accept(EntityVisitor &) override;
 
@@ -1102,7 +1100,7 @@ class edge : public topology
     
         edge& operator=(const edge&) = delete;
 
-        ~edge() override = default;
+        ~edge() override;
 
         void Accept(EntityVisitor &) override;
 
@@ -1243,7 +1241,7 @@ class vertex : public topology
     
         vertex& operator=(const vertex&) = delete;
 
-        ~vertex() override = default;
+        ~vertex() override;
 
         void Accept(EntityVisitor &) override;
 

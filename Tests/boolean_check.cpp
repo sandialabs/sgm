@@ -85,7 +85,7 @@ TEST(modify, block_block_slot_face2)
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
 
-TEST(modify, block_block_one_eighth_intersect)
+TEST(modify, DISABLED_block_block_one_eighth_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -100,7 +100,7 @@ TEST(modify, block_block_one_eighth_intersect)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_block_one_eighth_subtract)
+TEST(modify, DISABLED_block_block_one_eighth_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -115,7 +115,7 @@ TEST(modify, block_block_one_eighth_subtract)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_block_one_eighth_unite)
+TEST(modify, DISABLED_block_block_one_eighth_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
