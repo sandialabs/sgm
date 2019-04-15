@@ -513,6 +513,148 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+//TEST(speed_check, dodecahedron_rays)
+//    {
+//    //  draw rays through vertices of dodecahedron
+//    // where \phi is golden ratio
+//    static const double A = 0.57735026918962576451; // 1 / \sqrt(3)
+//    static const double B = 0.35682208977308993194; // 1 / (\phi * \sqrt(3)
+//    static const double C = 0.93417235896271569645; // \phi / \sqrt(3)
+//    EXPECT_NE(sqrt(3*(A*A)),1.0);
+//    EXPECT_NE(sqrt(B*B+C*C),1.0);
+//    static const double DodecahedronVertices[20][3] =
+//        {
+//            {  A,  A,  A}, { -A, -A, -A},
+//            {  A,  A, -A}, { -A, -A,  A},
+//            {  A, -A,  A}, { -A,  A, -A},
+//            { -A,  A,  A}, {  A, -A, -A},
+//            {  0,  B,  C}, {  0, -B, -C},
+//            {  B,  C,  0}, { -B, -C,  0},
+//            {  C,  0,  B}, { -C,  0, -B},
+//            {  0,  B, -C}, {  0, -B,  C},
+//            {  B, -C,  0}, { -B,  C,  0},
+//            { -C,  0,  B}, {  C,  0, -B}
+//        };
+//    SGM::Point3D Origin(0,0,0);
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//    for (unsigned i = 0; i < 20; ++i)
+//        {
+//        const double *pData = DodecahedronVertices[i];
+//        SGM::Point3D Vertex(pData[0], pData[1], pData[2]);
+//        SGM::CreateLinearEdge(rResult, Origin, Vertex);
+//        }
+//    SGMTesting::ReleaseTestThing(pThing);
+//    }
+
+TEST(speed_check, points_in_volume_OUO_full_model_volume1)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+
+    SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
+
+    // make a regular grid of equally spaced points that covers the bounding box
+
+    // start and end slightly outside the bounding box
+    double dExtraX = (Bounds.m_XDomain.m_dMax - Bounds.m_XDomain.m_dMin)/10.;
+    double dExtraY = (Bounds.m_YDomain.m_dMax - Bounds.m_YDomain.m_dMin)/10.;
+    double dExtraZ = (Bounds.m_ZDomain.m_dMax - Bounds.m_ZDomain.m_dMin)/10.;
+
+    double dStartX = Bounds.m_XDomain.m_dMin - dExtraX;
+    double dStartY = Bounds.m_YDomain.m_dMin - dExtraY;
+    double dStartZ = Bounds.m_ZDomain.m_dMin - dExtraZ;
+
+    double dEndX = Bounds.m_XDomain.m_dMax + dExtraX;
+    double dEndY = Bounds.m_YDomain.m_dMax + dExtraY;
+    double dEndZ = Bounds.m_ZDomain.m_dMax + dExtraZ;
+
+    // equal spacing in all three directions
+    double dIncrement = std::min({std::abs(dEndX - dStartX),
+                                  std::abs(dEndY - dStartY),
+                                  std::abs(dEndZ - dStartZ)});
+    dIncrement /= 100.;
+
+    std::vector<SGM::Point3D> aPoints;
+    std::vector<unsigned> aEmpty;
+
+//    ALL DIRECTIONS
+    double dX = dStartX;
+    while (dX < dEndX)
+        {
+        double dY = dStartY;
+        while (dY < dEndY)
+            {
+            double dZ = dStartZ;
+            while (dZ < dEndZ)
+                {
+                aPoints.emplace_back(dX, dY, dZ);
+                dZ += dIncrement;
+                }
+            dY += dIncrement;
+            }
+        dX += dIncrement;
+        }
+
+    //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    std::vector<bool> aIsPointInside = SGM::PointsInVolume(rResult, aPoints, VolumeID);
+
+    std::vector<SGM::Point3D> aPointsInside;
+    for (size_t i = 0; i < aPoints.size(); ++i)
+        {
+        if (aIsPointInside[i])
+            {
+            aPointsInside.push_back(aPoints[i]);
+            }
+        }
+    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+TEST(speed_check, single_points_in_volume_OUO_full_model_volume1)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+
+    SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
+
+    std::vector<SGM::Point3D> aPoints = {{0,0,0}};
+    std::vector<unsigned> aEmpty;
+    //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    std::vector<bool> aIsPointInside = SGM::PointsInVolume(rResult, aPoints, VolumeID);
+    std::vector<SGM::Point3D> aPointsInside;
+    for (size_t i = 0; i < aPoints.size(); ++i)
+        {
+        if (aIsPointInside[i])
+            {
+            aPointsInside.push_back(aPoints[i]);
+            }
+        }
+    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+
+
 TEST(models_single_check, import_check_OUO_grv_geom)
 {
     const char* file_name = "OUO_grv_geom.stp";

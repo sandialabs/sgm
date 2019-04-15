@@ -162,6 +162,7 @@ size_t thing::AddToMap(entity *pEntity)
 void thing::DeleteEntity(entity *pEntity)
     {
     assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+    assert(m_mAllEntities.count(pEntity->GetID()));
     m_mAllEntities.erase(pEntity->GetID());
     delete pEntity;
     }

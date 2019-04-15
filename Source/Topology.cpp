@@ -487,7 +487,7 @@ void FindVertices(SGM::Result        &,//rResult,
         }
     }
 
-size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
+size_t FindEdgesOnFaceAtVertex(SGM::Result         &,//rResult,
                                vertex        const *pVertex,
                                face          const *pFace,
                                std::vector<edge *> &aEdges)
@@ -504,7 +504,7 @@ size_t FindEdgesOnFaceAtVertex(SGM::Result         &rResult,
     return aEdges.size();
     }
 
-edge* FindFirstEdgeOnFaceAtVertex(SGM::Result  &rResult,
+edge* FindFirstEdgeOnFaceAtVertex(SGM::Result  &,//rResult,
                                   vertex const *pVertex,
                                   face   const *pFace)
     {

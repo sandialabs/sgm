@@ -865,7 +865,7 @@ size_t RayFireFace(SGM::Result                        &rResult,
         else
             {
             edge *pCloseEdge;
-            bool bOnEdge;
+            bool bOnEdge=false;
             if(pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
                 {
                 aAllPoints.push_back(Pos);
@@ -913,17 +913,21 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
                      std::vector<entity *>                            &aEntities,
                      double                                            dTolerance,
                      bool                                              bUseWholeLine,
-                     std::vector<SGM::BoxTree::BoundedItemType>       *aHitFacesSupplied)
+                     std::vector<face*>                               *aHitFacesSupplied)
     {
     // Find all ray hits for all faces.
 
     SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin,Axis);
-    std::vector<SGM::BoxTree::BoundedItemType> *aHitFaces;
+    std::vector<face*> *aHitFaces;
     if (aHitFacesSupplied == nullptr)
         {
-        aHitFaces = new std::vector<SGM::BoxTree::BoundedItemType>;
-        *aHitFaces = FaceTree.FindIntersectsRay(Ray,dTolerance);
+        auto aHitFacesTree = FaceTree.FindIntersectsRay(Ray,dTolerance);
+        aHitFaces = new std::vector<face*>();
+        for (auto const &PairIter : aHitFacesTree)
+            {
+            aHitFaces->push_back((face*)PairIter.first);
+            }
         }
     else
         {
@@ -933,18 +937,17 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
     std::vector<entity *> aAllEntities;
-    for (auto boundedItem : *aHitFaces)
+    for (auto *pFace : *aHitFaces)
         {
-        face * pFace = (face*)boundedItem.first;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        std::vector<entity *> aSubEntites;
-        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntites,dTolerance,bUseWholeLine);
+        std::vector<entity *> aSubEntities;
+        size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
         for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
-            aAllEntities.push_back(aSubEntites[Index1]);
+            aAllEntities.push_back(aSubEntities[Index1]);
             }
         }
 

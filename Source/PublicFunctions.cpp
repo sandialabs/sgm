@@ -2317,6 +2317,16 @@ bool SGM::PointInEntity(SGM::Result        &rResult,
     return SGMInternal::PointInEntity(rResult,Point,pEntity,dTolerance);
     }
 
+std::vector<bool> SGM::PointsInVolume(SGM::Result                     &rResult,
+                                      std::vector<SGM::Point3D> const &aPoints,
+                                      SGM::Volume               const &VolumeID,
+                                      double                           dTolerance)
+    {
+    SGMInternal::thing *pThing=rResult.GetThing();
+    SGMInternal::volume const *pVolume=(SGMInternal::volume*)pThing->FindEntity(VolumeID.m_ID);
+    return SGMInternal::PointsInVolume(rResult,aPoints,pVolume,dTolerance);
+    }
+
 void SGM::PointsInVolumes(SGM::Result                            &rResult,
                           std::vector<SGM::Point3D>        const &aPoints,
                           std::vector<std::vector<SGM::Volume> > &aaVolumeIDs,
