@@ -5,6 +5,7 @@
 #include "SGMGraph.h"
 #include "SGMPolygon.h"
 #include "SGMTriangle.h"
+#include "SGMSegment.h"
 
 #include "Mathematics.h"
 
@@ -412,7 +413,7 @@ void ForceEdge(SGM::Result                             &rResult,
         std::vector<std::vector<unsigned> > aaPolygons1,aaPolygons2;
         aaPolygons1.push_back(aPoly1);
         aaPolygons2.push_back(aPoly2);
-        std::vector<SGM::Point2D> aPolyPoints1=SGM::PointsFromPolygon(aPoints2D,aPoly1);
+        std::vector<SGM::Point2D> aPolyPoints1=SGM::PointsFromPolygon2D(aPoints2D,aPoly1);
         for(unsigned nHole : sInterior)
             {
             if(SGM::PointInPolygon(aPoints2D[nHole],aPolyPoints1))
@@ -893,7 +894,7 @@ void TriangulatePolygonSub(SGM::Result                         &rResult,
     for(auto nWhichPolygon : aHardImprint)
         {
         std::vector<unsigned> aPolygonIndices;
-        SGM::InsertPolygon(rResult,SGM::PointsFromPolygon(aPoints,aaPolygons[nWhichPolygon]),
+        SGM::InsertPolygon(rResult,SGM::PointsFromPolygon2D(aPoints,aaPolygons[nWhichPolygon]),
                            aPoints,aTriangles,aPolygonIndices);
         aaPolygons[nWhichPolygon]=aPolygonIndices;
         }
@@ -1014,47 +1015,56 @@ double SmallestPolygonEdge(std::vector<Point2D> const &aPolygon)
         }
     }
 
-//size_t SGM::FindConcavePoints(std::vector<Point2D> const &aPolygon,
-//                              std::vector<size_t> &aConcavePoints)
-//    {
-//    double dArea = PolygonArea(aPolygon);
-//    size_t nPoints = aPolygon.size();
-//    size_t Index1;
-//    for (Index1 = 0; Index1 < nPoints; ++Index1)
-//        {
-//        Point2D const &Pos0 = aPolygon[(Index1 + nPoints - 1) % nPoints];
-//        Point2D const &Pos1 = aPolygon[Index1];
-//        Point2D const &Pos2 = aPolygon[(Index1 + 1) % nPoints];
-//        double dVec0u = Pos2.m_u - Pos1.m_u;
-//        double dVec0v = Pos2.m_v - Pos1.m_v;
-//        double dVec1u = Pos0.m_u - Pos1.m_u;
-//        double dVec1v = Pos0.m_v - Pos1.m_v;
-//        double dAngle = dVec0u * dVec1v - dVec1u * dVec0v;
-//        if (0 < dAngle * dArea)
-//            {
-//            aConcavePoints.push_back(Index1);
-//            }
-//        }
-//    return aConcavePoints.size();
-//    }
+// FindGlobalPinchPoints returns pairs of points on the given polygon such that 
+// the ration of the distance between them to the distance along the polygon between
+// them is less than the given dMaxRadio.  The ratio for each pair is also returned.
 
-//double DistanceToPolygon(Point2D              const &Pos,
-//                         std::vector<Point2D> const &aPolygon)
-//    {
-//    double dAnswer=std::numeric_limits<double>::max();
-//    size_t nPolygon=aPolygon.size();
-//    size_t Index1;
-//    for(Index1=0;Index1<nPolygon;++Index1)
-//        {
-//        Segment2D Seg(aPolygon[Index1],aPolygon[(Index1+1)%nPolygon]);
-//        double dDist=Seg.Distance(Pos);
-//        if(dDist<dAnswer)
-//            {
-//            dAnswer=dDist;
-//            }
-//        }
-//    return dAnswer;
-//    }
+size_t FindGlobalPinchPoints(std::vector<Point3D> const &aPolygon,
+                             double                      dMaxRatio,
+                             std::vector<SGM::Point3D>   &aFirstPoints,
+                             std::vector<SGM::Point3D>   &aSecondPoints,
+                             std::vector<double>         &aRatios)
+    {
+    std::vector<double> aLengths;
+    size_t nPolygon=aPolygon.size();
+    aLengths.reserve(nPolygon);
+    size_t Index1,Index2;
+    double dTotalLength=0;
+    for(Index1=1;Index1<nPolygon;++Index1)
+        {
+        double dLength=aPolygon[Index1].Distance(aPolygon[Index1-1]);
+        aLengths.push_back(dLength);
+        dTotalLength+=dLength;
+        }
+    double dEndLength=aPolygon.front().Distance(aPolygon.back());
+    aLengths.push_back(dEndLength);
+    dTotalLength+=dEndLength;
+    for(Index1=0;Index1<nPolygon;++Index1)
+        {
+        double dPolyDist=aLengths[Index1];
+        SGM::Segment3D Seg1(aPolygon[Index1],aPolygon[Index1+1<nPolygon ? Index1+1 : 0]);
+        for(Index2=Index1+2;Index2<(Index1 ? nPolygon : nPolygon-1);++Index2)
+            {
+            dPolyDist+=aLengths[Index2];
+            SGM::Segment3D Seg2(aPolygon[Index2],aPolygon[Index2+1<nPolygon ? Index2+1 : 0]);
+            SGM::Point3D Pos1,Pos2;
+            double dDist=Seg1.DistanceBetween(Seg2,Pos1,Pos2);
+            double dShortPolyDist=dPolyDist;
+            if(dTotalLength-dPolyDist<dPolyDist)
+                {
+                dShortPolyDist=dTotalLength-dPolyDist;
+                }
+            double dRatio=dDist/dShortPolyDist;
+            if(dRatio<dMaxRatio)
+                {
+                aFirstPoints.push_back(Pos1);
+                aSecondPoints.push_back(Pos2);
+                aRatios.push_back(dRatio);
+                }
+            }
+        }
+    return aFirstPoints.size();
+    }
 
 bool PointInPolygon(Point2D const &Pos,
                     std::vector<Point2D> const &aPolygon)
@@ -1314,7 +1324,7 @@ std::vector<unsigned> MergePolygon(std::vector<Point2D>      const &aPoints2D,
     return aAnswer;
     }
 
-std::vector<SGM::Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPoints2D,
+std::vector<SGM::Point2D> PointsFromPolygon2D(std::vector<Point2D>      const &aPoints2D,
                                             std::vector<unsigned> const &aPolygons)
     {
     std::vector<SGM::Point2D> aAnswer;
@@ -1328,18 +1338,32 @@ std::vector<SGM::Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPo
     return aAnswer;
     }
 
+std::vector<SGM::Point3D> PointsFromPolygon3D(std::vector<Point3D>      const &aPoints3D,
+                                              std::vector<unsigned> const &aPolygons)
+    {
+    std::vector<SGM::Point3D> aAnswer;
+    size_t nPolygons=aPolygons.size();
+    aAnswer.reserve(nPolygons);
+    size_t Index1;
+    for(Index1=0;Index1<nPolygons;++Index1)
+        {
+        aAnswer.push_back(aPoints3D[aPolygons[Index1]]);
+        }
+    return aAnswer;
+    }
+
 bool PointInPolygonGroup(Point2D                             const &Pos,
                          std::vector<Point2D>                const &aPoints2D,
                          std::vector<std::vector<unsigned> > const &aaPolygons,
                          std::vector<double>                 const &aAreas)
     {
     size_t nPolygons=aaPolygons.size();
-    if(nPolygons && PointInPolygon(Pos,PointsFromPolygon(aPoints2D,aaPolygons[0])))
+    if(nPolygons && PointInPolygon(Pos,PointsFromPolygon2D(aPoints2D,aaPolygons[0])))
         {
         size_t Index1;
         for(Index1=1;Index1<nPolygons;++Index1)
             {
-            std::vector<SGM::Point2D> aTemp=PointsFromPolygon(aPoints2D,aaPolygons[Index1]);
+            std::vector<SGM::Point2D> aTemp=PointsFromPolygon2D(aPoints2D,aaPolygons[Index1]);
             std::reverse(aTemp.begin(),aTemp.end());
             if(aAreas[Index1]<-SGM_ZERO && PointInPolygon(Pos,aTemp))
                 {

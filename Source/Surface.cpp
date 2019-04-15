@@ -105,10 +105,15 @@ SGM::Point2D surface::NewtonsMethod(SGM::Point2D const &StartUV,
     SGM::Vector3D DU,DV;
     SGM::UnitVector3D Norm;
     SGM::Point2D Answer=StartUV;
-    while(nCount<100 && 
-       (SGM_ZERO<DeltaU || DeltaU<-SGM_ZERO ||
-        SGM_ZERO<DeltaV || DeltaV<-SGM_ZERO))
+    double dEndTol=SGM_ZERO;
+    while(nCount<200 && 
+       (dEndTol<DeltaU || DeltaU<-dEndTol ||
+        dEndTol<DeltaV || DeltaV<-dEndTol))
         {
+        if(nCount==100)
+            {
+            dEndTol=SGM_MIN_TOL*0.1;
+            }
         Evaluate(Answer,&SurfPos,&DU,&DV,&Norm);
         dDot=(Pos-SurfPos)%Norm;
         SGM::Point3D ProjectPos=Pos-Norm*dDot;

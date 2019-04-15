@@ -254,32 +254,195 @@ void TransformEntity(SGM::Result            &rResult,
         }
     }
 
-/*
+surface *SimplifySurface(SGM::Result &rResult,
+                         surface     *pSurface)
+
+    {
+    if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+        {
+        NURBsurface *pNURB=(NURBsurface *)pSurface;
+
+        // Check to see if this NURB is close to a plane.
+
+        std::vector<SGM::Point3D> aPoints;
+        auto aControlPoints=pNURB->GetControlPoints();
+        aPoints.reserve(aControlPoints.size()*aControlPoints[0].size());
+        for(auto Row : aControlPoints)
+            {
+            for(SGM::Point4D Pos : Row)
+                {
+                aPoints.push_back(SGM::Point3D(Pos.m_x,Pos.m_y,Pos.m_z));
+                }
+            }
+        SGM::Point3D Origin;
+        SGM::UnitVector3D XVec,YVec,ZVec;
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+        double dError=0;
+        for(SGM::Point3D const &Pos : aPoints)
+            {
+            double dDist=fabs((Pos-Origin)%ZVec);
+            if(dError<dDist)
+                {
+                dError=dDist;
+                }
+            }
+        SGM::Point2D uv=pSurface->GetDomain().MidPoint();
+        if(dError<SGM_FIT)
+            {
+            SGM::UnitVector3D Norm;
+            pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+            if(Norm%ZVec<0)
+                {
+                ZVec.Negate();
+                }
+            return new plane(rResult,Origin,ZVec);
+            }
+        }
+    return nullptr;
+    }
+
+void RemoveSliver(SGM::Result &rResult,
+                  face        *pFace)
+    {
+    std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+    if(sEdges.size()==2)
+        {
+        auto iter=sEdges.begin();
+        edge *pEdge0=*iter;
+        ++iter;
+        edge *pEdge1=*iter;
+        
+        auto iter0=pEdge0->GetFaces().begin();
+        face *pFace0=*iter0;
+        if(pFace0==pFace)
+            {
+            ++iter0;
+            pFace0=*iter0;
+            }
+
+        auto iter1=pEdge1->GetFaces().begin();
+        face *pFace1=*iter1;
+        if(pFace1==pFace)
+            {
+            ++iter1;
+            pFace1=*iter1;
+            }
+
+        // Keep pEdge0.
+
+        auto nType=pFace1->GetSideType(pEdge1);
+        SGM::Vector3D Vec0,Vec1;
+        SGM::Point3D Pos=pEdge0->FindMidPoint();
+        double t0=pEdge0->GetCurve()->Inverse(Pos);
+        pEdge0->GetCurve()->Evaluate(t0,nullptr,&Vec0);
+        double t1=pEdge1->GetCurve()->Inverse(Pos);
+        pEdge1->GetCurve()->Evaluate(t1,nullptr,&Vec1);
+        if(Vec0%Vec1<0)
+            {
+            if(nType==SGM::FaceOnLeftType)
+                {
+                nType=SGM::FaceOnRightType;
+                }
+            else
+                {
+                nType=SGM::FaceOnLeftType;
+                }
+            }
+        pFace1->AddEdge(rResult,pEdge0,nType);
+        curve *pCurve1=pEdge1->GetCurve();
+        pEdge1->SeverRelations(rResult);
+        rResult.GetThing()->DeleteEntity(pEdge1);
+        if(pCurve1->GetEdges().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pCurve1);
+            }
+        surface *pSurf=pFace->GetSurface();
+        pFace->SeverRelations(rResult);
+        rResult.GetThing()->DeleteEntity(pFace);
+        if(pSurf->GetFaces().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pSurf);
+            }
+        }
+    }
+
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,
           HealOptions     const &Options)
     {
-    if(Options.m_bRemoveZeroFacetFaces)
+    if(Options.m_bSimplifySurfaces)
         {
-        size_t nEntities=aEntities.size();
-        size_t Index1;
-        for(Index1=0;Index1<nEntities;++Index1)
+        for(auto pEntity : aEntities)
             {
-            entity *pEntity=aEntities[Index1];
+            std::set<surface *,EntityCompare> sSurfaces;
+            FindSurfaces(rResult,pEntity,sSurfaces);
+            for(auto pSurface : sSurfaces)
+                {
+                if(surface *pSimplify=SimplifySurface(rResult,pSurface))
+                    {
+                    std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
+                    for(auto *pFace : sFaces)
+                        {
+                        pFace->ClearFacets(rResult);
+                        for(edge *pEdge : pFace->GetEdges())
+                            {
+                            pFace->ClearUVBoundary(pEdge);
+                            }
+                        pFace->SetSurface(rResult,pSimplify);
+                        }
+                    rResult.GetThing()->DeleteEntity(pSurface);
+                    }
+                }
+            }
+        }
+    if(Options.m_bReparamNURBS)
+        {
+        for(auto pEntity : aEntities)
+            {
+            std::set<surface *,EntityCompare> sSurfaces;
+            FindSurfaces(rResult,pEntity,sSurfaces);
+            for(auto pSurface : sSurfaces)
+                {
+                if(pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
+                    {
+                    NUBsurface *pNUB=(NUBsurface *)pSurface;
+                    pNUB->ReParam(rResult);
+                    }
+                else if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+                    {
+                    NURBsurface *pNURB=(NURBsurface *)pSurface;
+                    pNURB->ReParam(rResult);
+                    }
+                }
+            }
+        }
+    if(Options.m_bRemoveSlivers)
+        {
+        for(auto pEntity : aEntities)
+            {
             std::set<face *,EntityCompare> sFaces;
             FindFaces(rResult,pEntity,sFaces);
-            std::set<face *,EntityCompare>::iterator FaceIter=sFaces.begin();
-            while(FaceIter!=sFaces.end())
+            for(auto pFace : sFaces)
                 {
-                face *pFace=*FaceIter;
-                if(pFace->GetTriangles(rResult).empty())
+                if(pFace->IsSliver())
                     {
-                    RemoveFace(rResult,pFace);
+                    RemoveSliver(rResult,pFace);
                     }
-                ++FaceIter;
+                }
+            }
+        }
+    if(Options.m_bSnapVertices)
+        {
+        for(auto pEntity : aEntities)
+            {
+            std::set<vertex *,EntityCompare> sVertices;
+            FindVertices(rResult,pEntity,sVertices);
+            for(auto pVertex : sVertices)
+                {
+                pVertex->Snap(rResult);
                 }
             }
         }
     }
-*/
+
 } // End of SGMInternal namespace

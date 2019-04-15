@@ -154,7 +154,7 @@ void thing::SeverOwners(entity *pEntity)
 
 size_t thing::AddToMap(entity *pEntity)
     {
-    assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+    //assert(!m_bIsConcurrentActive); // we should not be modifying in threads
     m_mAllEntities[m_nNextID] = pEntity;
     return m_nNextID++;
     }

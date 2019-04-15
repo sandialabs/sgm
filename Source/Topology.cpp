@@ -520,7 +520,6 @@ edge* FindFirstEdgeOnFaceAtVertex(SGM::Result  &,//rResult,
     return nullptr;
     }
 
-
 size_t OrderEdgesAboutVertexOnFace(SGM::Result         &rResult,
                                    vertex        const *pVertex,
                                    face          const *pFace,

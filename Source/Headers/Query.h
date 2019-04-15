@@ -23,5 +23,11 @@ void FindClosestPointOnFace(SGM::Result        &rResult,
                             face         const *pFace,
                             SGM::Point3D       &ClosestPoint,
                             entity            *&pCloseEntity);
+
+double CheckFacet(std::vector<SGM::Point3D>      const &aPoints3D,
+                  std::vector<SGM::UnitVector3D> const &aNormals,
+                  std::vector<unsigned>          const &aTriangles,
+                  surface                        const *pSurface,
+                  size_t                                nWhere);
 }
 #endif // QUERY_H

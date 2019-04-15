@@ -419,6 +419,22 @@ namespace SGMInternal {
             m_Tree()
     {}
 
+    inline complex::complex(SGM::Result                     &rResult,
+                            std::vector<SGM::Point2D> const &aPoints) :
+            topology(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(),
+            m_aSegments(),
+            m_aTriangles(),
+            m_Tree()
+    {
+    size_t nPoints=aPoints.size();
+    m_aPoints.reserve(nPoints);
+    for(SGM::Point2D const &uv : aPoints)
+        {
+        m_aPoints.push_back(SGM::Point3D(uv.m_u,uv.m_v,0));
+        }
+    }
+
     inline complex::complex(SGM::Result              &rResult,
                      std::vector<unsigned>     const &aSegments,
                      std::vector<SGM::Point3D> const &aPoints) :

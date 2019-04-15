@@ -7,6 +7,7 @@
 #include "Surface.h"
 #include "Topology.h"
 #include "Primitive.h"
+#include "Query.h"
 
 #include <sstream>
 
@@ -19,29 +20,6 @@ inline std::ostream& operator<<(std::ostream& out, const entity *pEntity)
     {
     return out << SGM::EntityTypeName(pEntity->GetType()) << " " << pEntity->GetID();
     }
-
-// TODO - bring this back if we decide to prevent deleting an entity with parents
-//void CheckPreexistingConditions(SGM::Result              &rResult,
-//                                std::vector<std::string> &aCheckStrings)
-//{
-//    switch(rResult.GetResult())
-//    {
-//    case SGM::ResultTypeOK:
-//    {
-//        return;
-//        break;
-//    }
-//    case SGM::ResultTypeDeleteWillCorruptModel:
-//    {
-//        aCheckStrings.emplace_back(rResult.Message().c_str());
-//        aCheckStrings.emplace_back("An invalid delete was attempted but not performed.  Clearing Result.");
-//        rResult.SetResult(SGM::ResultTypeOK);
-//        return;
-//    }
-//    default:
-//      return;
-//    }
-//}
 
 bool thing::Check(SGM::Result              &rResult,
                   SGM::CheckOptions  const &Options,
@@ -351,6 +329,50 @@ bool volume::Check(SGM::Result              &rResult,
     return bAnswer;
     }
 
+// Returns the normal angle mismatch or zero if the facet checks.
+
+double CheckFacet(std::vector<SGM::Point3D>      const &aPoints3D,
+                  std::vector<SGM::UnitVector3D> const &aNormals,
+                  std::vector<unsigned>          const &aTriangles,
+                  surface                        const *pSurface,
+                  size_t                                nWhere)
+    {
+    double dMaxAngle=0;
+    unsigned int a=aTriangles[nWhere];
+    unsigned int b=aTriangles[nWhere+1];
+    unsigned int c=aTriangles[nWhere+2];
+    SGM::Point3D const &A=aPoints3D[a];
+    SGM::Point3D const &B=aPoints3D[b];
+    SGM::Point3D const &C=aPoints3D[c];
+    SGM::Vector3D TestNorm=SGM::UnitVector3D(B-A)*SGM::UnitVector3D(C-A);
+    double dMagnitude=TestNorm.Magnitude();
+    if( dMagnitude<0.17364817766693034885171662676931 || // 10 degrees.
+        (C-A).MagnitudeSquared()<SGM_MIN_TOL || (B-A).MagnitudeSquared()<SGM_MIN_TOL)
+        {
+        return 0;
+        }
+    SGM::UnitVector3D Norm=TestNorm;
+    double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
+    double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
+    double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
+    double dTol=0.64278760968653932632264340990726; // cos(50) degrees
+    if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
+        {
+        // Check to see if this is at a singularity 
+
+        if( pSurface->SingularLowU()==false && 
+            pSurface->SingularHighU()==false && 
+            pSurface->SingularLowV()==false && 
+            pSurface->SingularHighV()==false)
+            {
+            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
+            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
+            dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
+            }
+        }
+    return dMaxAngle;
+    }
+
 bool face::Check(SGM::Result              &rResult,
                  SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings,
@@ -445,33 +467,20 @@ bool face::Check(SGM::Result              &rResult,
 
     // Check the facets
 
-    std::vector<SGM::Point3D> const &aPoints=GetPoints3D(rResult);
-    std::vector<SGM::UnitVector3D> const &aNormals=GetNormals(rResult);
-    std::vector<unsigned int> const &aTriangles=GetTriangles(rResult);
-    size_t nTriangles=aTriangles.size();
+    size_t nTriangles=GetTriangles(rResult).size(); // Called to force facets to exist.
     double dMaxAngle=0;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
-        unsigned int a=aTriangles[Index1];
-        unsigned int b=aTriangles[Index1+1];
-        unsigned int c=aTriangles[Index1+2];
-        SGM::Point3D const &A=aPoints[a];
-        SGM::Point3D const &B=aPoints[b];
-        SGM::Point3D const &C=aPoints[c];
-        SGM::Vector3D TestNorm=(B-A)*(C-A);
-        double dMagnitude=TestNorm.Magnitude();
-        if(dMagnitude<SGM_FIT)
+        if(double dAngle=CheckFacet(m_aPoints3D,m_aNormals,m_aTriangles,m_pSurface,Index1))
             {
-            continue;
-            }
-        SGM::UnitVector3D Norm=TestNorm;
-        double dDotA=a<aNormals.size() ? Norm%aNormals[a] : -1;
-        double dDotB=b<aNormals.size() ? Norm%aNormals[b] : -1;
-        double dDotC=c<aNormals.size() ? Norm%aNormals[c] : -1;
-        double dTol=0.64278760968653932632264340990726; // cos(50) degrees
-        if(dDotA<dTol || dDotB<dTol || dDotC<dTol)
-            {
+            dMaxAngle=std::max(dMaxAngle,dAngle);
 #if 0
+            unsigned int a=m_aTriangles[Index1];
+            unsigned int b=m_aTriangles[Index1+1];
+            unsigned int c=m_aTriangles[Index1+2];
+            SGM::Point3D const &A=m_aPoints3D[a];
+            SGM::Point3D const &B=m_aPoints3D[b];
+            SGM::Point3D const &C=m_aPoints3D[c];
             line *pLine1=new line(rResult,A,B);
             SGM::Interval1D Domain1(0.0,A.Distance(B));
             line *pLine2=new line(rResult,B,C);
@@ -482,17 +491,6 @@ bool face::Check(SGM::Result              &rResult,
             CreateEdge(rResult,pLine2,&Domain2);
             CreateEdge(rResult,pLine3,&Domain3);
 #endif
-            // Check to see if this is at a singularity 
-
-            if( m_pSurface->SingularHighU()==false && 
-                m_pSurface->SingularHighU()==false && 
-                m_pSurface->SingularHighU()==false && 
-                m_pSurface->SingularHighU()==false)
-                {
-                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotA)*180/SGM_PI);
-                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotB)*180/SGM_PI);
-                dMaxAngle = std::max(dMaxAngle, SGM::SAFEacos(dDotC)*180/SGM_PI);
-                }
             }
         }
     if(dMaxAngle!=0)
@@ -500,6 +498,13 @@ bool face::Check(SGM::Result              &rResult,
         bAnswer=false;
         std::stringstream ss;
         ss << "Facets of " << this << " differ from surface normal by angle " << dMaxAngle;
+        aCheckStrings.emplace_back(ss.str());
+        }
+    if(IsSliver())
+        {
+        bAnswer=false;
+        std::stringstream ss;
+        ss << this << " is a sliver face.";
         aCheckStrings.emplace_back(ss.str());
         }
     if(nTriangles==0)
@@ -638,7 +643,7 @@ bool edge::Check(SGM::Result              &rResult,
 
 bool vertex::Check(SGM::Result              &,//rResult,
                    SGM::CheckOptions  const &,//Options,
-                   std::vector<std::string> &,//aCheckStrings,
+                   std::vector<std::string> &aCheckStrings,
                    bool                      /*bChildren*/) const
     {
     bool bAnswer=true;
@@ -649,7 +654,18 @@ bool vertex::Check(SGM::Result              &,//rResult,
             bAnswer = false;
             std::stringstream ss;
             ss << this << " points to " << pEdge << " but the edge does not point back to the vertex";
+            aCheckStrings.emplace_back(ss.str());
             }
+        //SGM::Point3D CPos;
+        //pEdge->GetCurve()->Inverse(m_Pos,&CPos);
+        //double dDist=m_Pos.Distance(CPos);
+        //if(SGM_MIN_TOL<dDist)
+        //    {
+        //    bAnswer = false;
+        //    std::stringstream ss;
+        //    ss << this << " distance to " << pEdge << " is " << dDist;
+        //    aCheckStrings.emplace_back(ss.str());
+        //    }
         }
     return bAnswer;
     }

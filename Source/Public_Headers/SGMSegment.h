@@ -89,6 +89,14 @@ namespace SGM {
                        double          *dS = nullptr,
                        double          *dT = nullptr) const;
 
+        // Returns the distance between the two segments and the point, Pos1,
+        // and the point, Pos2 on this segment and the given segment, that come
+        // closest to each other.
+
+        double DistanceBetween(Segment3D const &Seg,
+                               Point3D         &Pos1,
+                               Point3D         &Pos2) const;
+
         bool PointOnSegment(Point3D const &Pos,
                             double         dTolerance) const;
 

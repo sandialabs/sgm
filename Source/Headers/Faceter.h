@@ -58,24 +58,9 @@ bool FacetFaceLoops(SGM::Result                             &rResult,
                     edge                                    *pInputEdge=nullptr,
                     std::vector<bool>                       *pImprintFlags=nullptr);
 
-//bool FlipTriangles(std::vector<SGM::Point2D>      const &aPoints,
-//                   std::vector<unsigned int>            &aTriangles,
-//                   std::vector<unsigned int>            &aAdjacencies,
-//                   unsigned int                          nTri,
-//                   unsigned int                          nEdge,
-//                   std::vector<SGM::Point3D>      const *pPoints3D=nullptr,
-//                   std::vector<SGM::UnitVector3D> const *pNormals=nullptr,
-//                   std::vector<size_t>            const *aTris=nullptr,
-//                   SGM::BoxTree                         *Tree=nullptr);
-
-//void FixBackPointers(unsigned int                     nTri,
-//                     std::vector<unsigned int> const &aTriangles,
-//                     std::vector<unsigned int>       &aAdjacencies);
-
-void DelaunayFlips(std::vector<SGM::Point2D>      const &aPoints,
-                   std::vector<unsigned int>            &aTriangles,
-                   std::vector<unsigned int>            &aAdjacencies);
-
+void DelaunayFlips(std::vector<SGM::Point2D> const &aPoints,
+                   std::vector<unsigned int>       &aTriangles,
+                   std::vector<unsigned int>       &aAdjacencies);
 
 //  Devides all triangles into four triangles in the following way;
 //  Points on edges are moved to the edges.
@@ -129,6 +114,13 @@ void SplitEdgeUpdateTree(SGM::Point2D        const &D,
                          std::vector<size_t> const &aTris,
                          SGM::BoxTree              &Tree);
 
+bool FacetFaceLoops(SGM::Result                             &rResult,
+                    face                              const *pFace,
+                    std::vector<SGM::Point2D>               &aPoints2D,
+                    std::vector<SGM::Point3D>               &aPoints3D,
+                    std::vector<std::vector<unsigned int> > &aaPolygons,
+                    edge                                    *pInputEdge,
+                    std::vector<bool>                       *pImprintFlags);
 }
 
 #endif // FACETER_H

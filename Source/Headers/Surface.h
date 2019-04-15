@@ -620,6 +620,8 @@ class NUBsurface: public surface
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
+        void ReParam(SGM::Result &rResult);
+
     public:
 
         std::vector<std::vector<SGM::Point3D> > m_aaControlPoints;
@@ -721,6 +723,8 @@ class NURBsurface: public surface
         size_t GetVParams() const {return m_nVParams;}
 
         bool IsSame(surface const *pOther,double dTolerance) const override;
+
+        void ReParam(SGM::Result &rResult);
 
     public:
 

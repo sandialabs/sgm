@@ -90,6 +90,8 @@ void NURBsurface::Construct(SGM::Result &rResult)
     m_nUParams=aUParams.size();
     m_nVParams=aVParams.size();
     size_t nParams=m_nUParams*m_nVParams;
+    m_aSeedParams.clear();
+    m_aSeedPoints.clear();
     m_aSeedParams.reserve(nParams);
     m_aSeedPoints.reserve(nParams);
 
@@ -487,6 +489,70 @@ SGM::Point2D NURBsurface::Inverse(SGM::Point3D const &Pos,
         Evaluate(uv,ClosePos);
         }
     return uv;
+    }
+
+void NURBsurface::ReParam(SGM::Result &rResult)
+    {
+    // Clear data that will change.
+
+    bool bTight=false;
+    for(auto *pFace : m_sFaces)
+        {
+        if(pFace->IsTight(rResult))
+            {
+            bTight=true;
+            }
+        }
+    for(auto *pFace : m_sFaces)
+        {
+        pFace->ClearFacets(rResult);
+        for(edge *pEdge : pFace->GetEdges())
+            {
+            pFace->ClearUVBoundary(pEdge);
+            }
+        }
+    
+    // Scale domain.
+
+    size_t Index1;
+    size_t nUKnots=m_aUKnots.size();
+    size_t nVKnots=m_aVKnots.size();
+    double dUScale=1.0/m_Domain.m_UDomain.Length();
+    double dVScale=1.0/m_Domain.m_VDomain.Length();
+    if(dUScale*10<dVScale || dVScale*10<dUScale || bTight)
+        {
+        for(Index1=0;Index1<nUKnots;++Index1)
+            {
+            m_aUKnots[Index1]*=dUScale;
+            }
+        for(Index1=0;Index1<nVKnots;++Index1)
+            {
+            m_aVKnots[Index1]*=dVScale;
+            }
+        m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
+        m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
+        m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
+        m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
+        Construct(rResult);
+        }
+
+    // Scale Speed.
+
+    SGM::Point2D uv=m_Domain.MidPoint();
+    SGM::Vector3D dU,dV;
+    Evaluate(uv,nullptr,&dU,&dV);
+    double dUMag=dU.Magnitude();
+    double dVMag=dV.Magnitude();
+    for(Index1=0;Index1<nUKnots;++Index1)
+        {
+        m_aUKnots[Index1]*=dUMag;
+        }
+    for(Index1=0;Index1<nVKnots;++Index1)
+        {
+        m_aVKnots[Index1]*=dVMag;
+        }
+
+    Construct(rResult);
     }
 
 void NURBsurface::Transform(SGM::Result            &,//rResult,
