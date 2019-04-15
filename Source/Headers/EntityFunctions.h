@@ -18,12 +18,16 @@ class HealOptions
     public:
 
     HealOptions():
-        m_bHealAddApex(true),
-        m_bRemoveZeroFacetFaces(true)
+        m_bReparamNURBS(true),
+        m_bRemoveSlivers(true),
+        m_bSimplifySurfaces(true),
+        m_bSnapVertices(false)
     {}
 
-    bool m_bHealAddApex;
-    bool m_bRemoveZeroFacetFaces;
+    bool m_bReparamNURBS;
+    bool m_bRemoveSlivers;
+    bool m_bSimplifySurfaces;
+    bool m_bSnapVertices;
     };
 
 void DeleteEntity(SGM::Result &rResult,

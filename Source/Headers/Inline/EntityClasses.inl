@@ -419,6 +419,22 @@ namespace SGMInternal {
             m_Tree()
     {}
 
+    inline complex::complex(SGM::Result                     &rResult,
+                            std::vector<SGM::Point2D> const &aPoints) :
+            topology(rResult, SGM::EntityType::ComplexType),
+            m_aPoints(),
+            m_aSegments(),
+            m_aTriangles(),
+            m_Tree()
+    {
+    size_t nPoints=aPoints.size();
+    m_aPoints.reserve(nPoints);
+    for(SGM::Point2D const &uv : aPoints)
+        {
+        m_aPoints.push_back(SGM::Point3D(uv.m_u,uv.m_v,0));
+        }
+    }
+
     inline complex::complex(SGM::Result              &rResult,
                      std::vector<unsigned>     const &aSegments,
                      std::vector<SGM::Point3D> const &aPoints) :
@@ -641,29 +657,6 @@ namespace SGMInternal {
         m_sVertices.swap(other.m_sVertices);
         //m_Signature.swap(other.m_Signature);
     }
-
-    inline std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
-                                                         edge        *pEdge) const
-        {
-        auto iter=m_mUVBoundary.find(pEdge);
-        if(iter==m_mUVBoundary.end())
-            {
-            pEdge->GetFacets(rResult); // as a side effect will fill in this->m_mUVBoundary
-            iter=m_mUVBoundary.find(pEdge);
-            }
-        return iter->second;
-        }
-
-    inline void face::SetUVBoundary(edge                const *pEdge,
-                             std::vector<SGM::Point2D> &aSurfParams)
-        {
-        m_mUVBoundary[(edge *)pEdge]=aSurfParams;
-        }
-
-    inline void face::ClearUVBoundary(edge const *pEdge)
-        {
-        m_mUVBoundary.erase((edge *)pEdge);
-        }
 
     //
     // edge

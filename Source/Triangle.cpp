@@ -690,7 +690,7 @@ void RemoveOutsideTriangles(SGM::Result                               &rResult,
         aAreas.reserve(nPolygons);
         for(auto aPolygon : aGroup)
             {
-            aAreas.push_back(SGM::PolygonArea(SGM::PointsFromPolygon(aPoints2D,aPolygon)));
+            aAreas.push_back(SGM::PolygonArea(SGM::PointsFromPolygon2D(aPoints2D,aPolygon)));
             }
         aaAreas.push_back(aAreas);
         }

@@ -67,6 +67,15 @@ NUBsurface::NUBsurface(SGM::Result                                  &rResult,
 
 void NUBsurface::Construct(SGM::Result &rResult)
     {
+     for(auto *pFace : m_sFaces)
+        {
+        pFace->ClearFacets(rResult);
+        for(edge *pEdge : pFace->GetEdges())
+            {
+            pFace->ClearUVBoundary(pEdge);
+            }
+        }
+
     m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
     m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
     m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
@@ -120,8 +129,11 @@ void NUBsurface::Construct(SGM::Result &rResult)
     m_nUParams=aUParams.size();
     m_nVParams=aVParams.size();
     size_t nParams=m_nUParams*m_nVParams;
+    m_aSeedParams.clear();
+    m_aSeedPoints.clear();
     m_aSeedParams.reserve(nParams);
     m_aSeedPoints.reserve(nParams);
+
     for(Index1=0;Index1<m_nUParams;++Index1)
         {
         double v=aUParams[Index1];
@@ -135,6 +147,55 @@ void NUBsurface::Construct(SGM::Result &rResult)
             m_aSeedPoints.push_back(Pos);
             }
         }
+    }
+
+void NUBsurface::ReParam(SGM::Result &rResult)
+    {
+    for(auto *pFace : m_sFaces)
+        {
+        pFace->ClearFacets(rResult);
+        for(edge *pEdge : pFace->GetEdges())
+            {
+            pFace->ClearUVBoundary(pEdge);
+            }
+        }
+    
+    double dUScale=1.0/m_Domain.m_UDomain.Length();
+    double dVScale=1.0/m_Domain.m_VDomain.Length();
+    size_t nUKnots=m_aUKnots.size();
+    size_t nVKnots=m_aVKnots.size();
+    size_t Index1;
+    for(Index1=0;Index1<nUKnots;++Index1)
+        {
+        m_aUKnots[Index1]*=dUScale;
+        }
+    for(Index1=0;Index1<nVKnots;++Index1)
+        {
+        m_aVKnots[Index1]*=dVScale;
+        }
+    
+    Construct(rResult);
+
+    //SGM::Vector3D dU,dV;
+    //SGM::Point2D uv=m_Domain.MidPoint();
+    //Evaluate(uv,nullptr,&dU,&dV);
+    //double dUMag=dU.Magnitude();
+    //double dVMag=dV.Magnitude();
+    //if( dUMag*10<dVMag || dVMag*10<dUMag)
+    //    {
+    //    for(Index1=0;Index1<nUKnots;++Index1)
+    //        {
+    //        m_aUKnots[Index1]*=dUMag;
+    //        }
+    //    for(Index1=0;Index1<nVKnots;++Index1)
+    //        {
+    //        m_aVKnots[Index1]*=dVMag;
+    //        }
+    //    m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
+    //    m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
+    //    m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
+    //    m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
+    //    }
     }
 
 bool NUBsurface::IsSame(surface const *pOther,double dTolerance) const

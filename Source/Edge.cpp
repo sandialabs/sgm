@@ -199,6 +199,14 @@ double edge::DistanceToEdge(SGM::Point3D const &Pos) const
     SGM::Point3D CPos;
     double t=m_pCurve->Inverse(Pos,&CPos);
     SnapToDomain(t,SGM_ZERO);
+    if(t<m_Domain.m_dMin)
+        {
+        t=m_Domain.m_dMin;
+        }
+    if(m_Domain.m_dMax<t)
+        {
+        t=m_Domain.m_dMax;
+        }
     m_pCurve->Evaluate(t,&CPos);
     double dDist=CPos.Distance(Pos);
     SGM::Point3D Start,End;

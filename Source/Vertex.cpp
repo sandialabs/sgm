@@ -1,5 +1,6 @@
 #include "EntityClasses.h"
 #include "Topology.h"
+#include "Curve.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -108,5 +109,57 @@ void vertex::AddEdge(edge *pEdge)
 void vertex::TransformData(SGM::Transform3D const &Trans)
     {
     m_Pos*=Trans;
+    }
+
+double vertex::Snap(SGM::Result &rResult)
+    {
+    double dAnswer=SGM_MAX;
+    double dOldAnswer=1E+11;
+    bool bSnapped=false;
+    while(SGM_MIN_TOL<fabs(dAnswer-dOldAnswer))
+        {
+        dOldAnswer=dAnswer;
+        double dMaxDist=0;
+        for(edge *pEdge : m_sEdges)
+            {
+            SGM::Point3D CPos;
+            pEdge->GetCurve()->Inverse(m_Pos,&CPos);
+            double dDist=m_Pos.Distance(CPos);
+            if(dMaxDist<dDist)
+                {
+                dMaxDist=dDist;
+                }
+            m_Pos=CPos;
+            }
+        dAnswer=dMaxDist;
+        bSnapped=true;
+        }
+    if(bSnapped)
+        {
+        for(edge *pEdge : m_sEdges)
+            {
+            pEdge->ClearFacets(rResult);
+            for(auto *pFace : pEdge->GetFaces())
+                {
+                pFace->ClearFacets(rResult);
+                pFace->ClearUVBoundary(pEdge);
+                }
+            if(pEdge->GetStart()==this)
+                {
+                double t=pEdge->GetCurve()->Inverse(m_Pos);
+                SGM::Interval1D Domain=pEdge->GetDomain();
+                Domain.m_dMin=t;
+                pEdge->SetDomain(rResult,Domain);
+                }
+            if(pEdge->GetEnd()==this)
+                {
+                double t=pEdge->GetCurve()->Inverse(m_Pos);
+                SGM::Interval1D Domain=pEdge->GetDomain();
+                Domain.m_dMax=t;
+                pEdge->SetDomain(rResult,Domain);
+                }
+            }
+        }
+    return dAnswer;
     }
 }

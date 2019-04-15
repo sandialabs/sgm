@@ -175,6 +175,21 @@ std::vector<SGM::Point3D> const &NUBcurve::GetSeedPoints() const
         FacetOptions Options;
         Options.m_dEdgeAngleTol=SEED_POINT_EDGE_ANGLE_TOL;
         FacetCurve(this,m_Domain,Options,m_aSeedPoints,m_aSeedParams);
+        if(m_aSeedPoints.size()==2)
+            {
+            double t0=m_aSeedParams[0];
+            double t2=m_aSeedParams[1];
+            double t1=(t2+t0)*0.5;
+            SGM::Point3D Pos2=m_aSeedPoints[1];
+            SGM::Point3D Pos1;
+            Evaluate(t1,&Pos1);
+            m_aSeedParams.pop_back();
+            m_aSeedPoints.pop_back();
+            m_aSeedParams.push_back(t1);
+            m_aSeedParams.push_back(t2);
+            m_aSeedPoints.push_back(Pos1);
+            m_aSeedPoints.push_back(Pos2);
+            }
         }
     return m_aSeedPoints;
     }

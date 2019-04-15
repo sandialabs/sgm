@@ -26,7 +26,7 @@ namespace SGM
                 m_bSingleVolume(false),
                 m_bVerbose(false),
                 m_bMerge(false),
-                m_bHeal(false),
+                m_bHeal(true),
                 m_bSplitFile(false)
                 {}
 
@@ -59,7 +59,7 @@ namespace SGM
                                    // For STL the triangles are merged in each complex.
 
             bool m_bHeal;          // Runs the healer on the part.
-                                   // Default is false,
+                                   // Default is true,
                                    // Used in STEP read.
 
             bool m_bSplitFile;     // Split the file into smaller parts.

@@ -25,11 +25,6 @@ namespace SGM {
 
 SGM_EXPORT double PolygonArea(std::vector<Point2D> const &aPolygon);
 
-// Returns the indices of of all the points that form concave angles.
-
-//SGM_EXPORT size_t FindConcavePoints(std::vector<Point2D> const &aPolygon,
-//                                    std::vector<size_t>        &aConcavePoints);
-
 // If the given point is on the polygon, then the returned answer may
 // be either true or false.
 
@@ -48,8 +43,11 @@ SGM_EXPORT bool PointInPolygonGroup(Point2D                                 cons
 
 // Coverts a polygon from a vector of indices to a vector of points.
 
-SGM_EXPORT std::vector<Point2D> PointsFromPolygon(std::vector<Point2D>      const &aPoints2D,
-                                                  std::vector<unsigned int> const &aPolygon);
+SGM_EXPORT std::vector<Point2D> PointsFromPolygon2D(std::vector<Point2D>      const &aPoints2D,
+                                                    std::vector<unsigned int> const &aPolygon);
+
+SGM_EXPORT std::vector<Point3D> PointsFromPolygon3D(std::vector<Point3D>      const &aPoints3D,
+                                                    std::vector<unsigned int> const &aPolygon);
 
 // Merges the indices of close points, within dTolerance, in aPolygon.
 
@@ -122,6 +120,15 @@ SGM_EXPORT bool InsertPolygon(Result                     &rResult,
                               std::vector<UnitVector3D>  *pNormals = nullptr,
                               std::vector<bool>          *pImprintFlag = nullptr);
 
+// FindGlobalPinchPoints returns pairs of points on the given polygon such that 
+// the ration of the distance between them to the distance along the polygon between
+// them is less than the given dMaxRadio.  The ratio for each pair is also returned.
+
+size_t FindGlobalPinchPoints(std::vector<Point3D> const &aPolygon,
+                            double                      dMaxRatio,
+                            std::vector<SGM::Point3D>   &aFirstPoints,
+                            std::vector<SGM::Point3D>   &aSecondPoints,
+                            std::vector<double>         &aRatios);
 }
 
 #endif //SGM_POLYGON_H

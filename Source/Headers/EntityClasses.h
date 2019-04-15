@@ -531,6 +531,9 @@ class complex : public topology
                 std::vector<SGM::Point3D> const &aPoints);
 
         complex(SGM::Result                     &rResult,
+                std::vector<SGM::Point2D> const &aPoints);
+
+        complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
                 double                           dTolerance);              // Merge points and make triangles
 
@@ -1046,6 +1049,14 @@ class face : public topology
         
         void ClearVertices() {m_sVertices.clear();}
 
+        SGM::Interval2D FindUVBox(SGM::Result &rResult) const;
+
+        bool IsSliver() const;
+
+        bool IsTight(SGM::Result &rResult) const;
+
+        bool IsParametricRectangle(SGM::Result &rResult,double dPercentTol) const;
+
     private:
         
         void InitializeFacetSubdivision(SGM::Result &rResult,
@@ -1279,6 +1290,10 @@ class vertex : public topology
         void TransformData(SGM::Transform3D const &Trans);
 
         volume *GetVolume() const;
+
+        // Snaps this vertex to its edges and returns the max distance.
+
+        double Snap(SGM::Result &rResult);
 
     private:
 

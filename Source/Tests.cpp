@@ -214,6 +214,14 @@ bool TestCurve(SGM::Result              &rResult,
         bAnswer=false;
         }
 
+
+    if(bAnswer==false)
+        {
+        edge *pEdge=*(pCurve->GetEdges().begin());
+        face *pFace=*(pEdge->GetFaces().begin());
+        std::cout << " Edge " << pEdge->GetID() << " Face " << pFace->GetID() << " ";
+        }
+
     return bAnswer;
     }
 

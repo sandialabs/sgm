@@ -53,6 +53,35 @@ bool Segment2D::Intersect(Segment2D const &Seg,
     return bAnswer;
     }
 
+double Segment3D::DistanceBetween(Segment3D const &Seg,
+                                  Point3D         &Pos1,
+                                  Point3D         &Pos2) const
+    {
+    double dS,dT;
+    Intersect(Seg,Pos1,Pos2,&dS,&dT);
+    if(dS<-SGM_ZERO)
+        {
+        Pos1=m_Start;
+        Pos2=Seg.ClosestPoint(Pos1);
+        }
+    else if(SGM_ZERO<dS)
+        {
+        Pos1=m_End;
+        Pos2=Seg.ClosestPoint(Pos1);
+        }
+    else if(dT<-SGM_ZERO)
+        {
+        Pos2=Seg.m_Start;
+        Pos1=ClosestPoint(Pos2);
+        }
+    else if(SGM_ZERO<dT)
+        {
+        Pos2=Seg.m_End;
+        Pos1=ClosestPoint(Pos2);
+        }
+    return Pos1.Distance(Pos2);
+    }
+
 bool Segment3D::Intersect(Segment3D const &Seg,
                           Point3D         &Pos1,
                           Point3D         &Pos2,

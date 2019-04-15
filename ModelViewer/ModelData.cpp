@@ -210,6 +210,8 @@ void ModelData::check(std::vector<std::string> &aLog)
 {
     SGM::CheckOptions Options;
     SGM::CheckEntity(dPtr->mResult, SGM::Thing(), Options, aLog);
+    for (auto & String: aLog)
+        std::cout << String << std::endl;
 }
 
 void ModelData::create_block(SGM::Point3D const &Pos0,
@@ -716,9 +718,9 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     SGM::FindFaces(dPtr->mResult, VolumeID, sFaces);
 
     size_t nFaces = sFaces.size();
+    char Data[100];
     if (nFaces > 1)
         {
-        char Data[100];
         snprintf(Data, sizeof(Data), "%lu Faces", nFaces);
         volume_item->setText(1, Data);
         }
@@ -727,9 +729,80 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
         volume_item->setText(1, "1 Face");
         }
 
+    int nPlane=0;
+    int nCylinder=0;
+    int nCone=0;
+    int nSphere=0;
+    int nTorus=0;
+    int nRevolve=0;
+    int nExtrude=0;
+    int nOffset=0; 
+    int nNUBsurface=0;
+    int nNURBsurface=0;
+    int nFacets=0;
     for (const SGM::Face &FaceID : sFaces)
         {
         add_face_to_tree(volume_item, FaceID);
+        nFacets+=(int)(SGM::GetFaceTriangles(dPtr->mResult, FaceID).size()/3);
+        auto nType=SGM::GetSurfaceType(dPtr->mResult,SGM::GetSurfaceOfFace(dPtr->mResult,FaceID));
+        switch(nType)
+            {
+            case SGM::PlaneType:
+                {
+                ++nPlane;
+                break;
+                }
+            case SGM::CylinderType:
+                {
+                ++nCylinder;
+                break;
+                }
+            case SGM::ConeType:
+                {
+                ++nCone;
+                break;
+                }
+            case SGM::SphereType:
+                {
+                ++nSphere;
+                break;
+                }
+
+            case SGM::TorusType:
+                {
+                ++nTorus;
+                break;
+                }
+            case SGM::RevolveType:
+                {
+                ++nRevolve;
+                break;
+                }
+            case SGM::ExtrudeType:
+                {
+                ++nExtrude;
+                break;
+                }
+            case SGM::OffsetType:
+                {
+                ++nOffset;
+                break;
+                }
+            case SGM::NUBSurfaceType:
+                {
+                ++nNUBsurface;
+                break;
+                }
+            case SGM::NURBSurfaceType:
+                {
+                ++nNURBsurface;
+                break;
+                }
+            default:
+                {
+                throw;
+                }
+            }
         }
 
     std::set<SGM::Edge> sEdges;
@@ -737,7 +810,6 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     size_t nEdges = sEdges.size();
     if (nEdges > 1)
         {
-        char Data[100];
         snprintf(Data, sizeof(Data), "%lu Edges", nEdges);
         volume_item->setText(1, Data);
         }
@@ -749,6 +821,82 @@ void ModelData::add_volume_to_tree(QTreeWidgetItem *parent, SGM::Volume VolumeID
     for (const SGM::Edge &EdgeID : sEdges)
         {
         add_edge_to_tree(volume_item, EdgeID, nullptr);
+        }
+    
+    auto *facet_data_item = new QTreeWidgetItem(volume_item);
+    facet_data_item->setText(0, "Facets");
+    snprintf(Data, sizeof(Data), "%d", nFacets);
+    facet_data_item->setText(1, Data);
+
+    if(nPlane)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Planes");
+        snprintf(Data, sizeof(Data), "%d", nPlane);
+        data_item->setText(1, Data);
+        }
+    if(nCylinder)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Cylinders");
+        snprintf(Data, sizeof(Data), "%d", nCylinder);
+        data_item->setText(1, Data);
+        }
+    if(nCone)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Cones");
+        snprintf(Data, sizeof(Data), "%d", nCone);
+        data_item->setText(1, Data);
+        }
+    if(nSphere)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Spheres");
+        snprintf(Data, sizeof(Data), "%d", nSphere);
+        data_item->setText(1, Data);
+        }
+    if(nTorus)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Tori");
+        snprintf(Data, sizeof(Data), "%d", nTorus);
+        data_item->setText(1, Data);
+        }
+    if(nRevolve)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Revolves");
+        snprintf(Data, sizeof(Data), "%d", nRevolve);
+        data_item->setText(1, Data);
+        }
+    if(nExtrude)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Extrudes");
+        snprintf(Data, sizeof(Data), "%d", nExtrude);
+        data_item->setText(1, Data);
+        }
+    if(nOffset)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "Offsets");
+        snprintf(Data, sizeof(Data), "%d", nOffset);
+        data_item->setText(1, Data);
+        }
+    if(nNUBsurface)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "NUBs");
+        snprintf(Data, sizeof(Data), "%d", nNUBsurface);
+        data_item->setText(1, Data);
+        }
+    if(nNURBsurface)
+        {
+        auto *data_item = new QTreeWidgetItem(volume_item);
+        data_item->setText(0, "NURBs");
+        snprintf(Data, sizeof(Data), "%d", nNURBsurface);
+        data_item->setText(1, Data);
         }
 }
 
@@ -795,6 +943,12 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
         auto *flipped_data_item = new QTreeWidgetItem(face_item);
         flipped_data_item->setText(0, "Flipped");
         }
+
+    int nFacets=(int)(SGM::GetFaceTriangles(dPtr->mResult, FaceID).size()/3);
+    auto *facet_data_item = new QTreeWidgetItem(face_item);
+    facet_data_item->setText(0, "Facets");
+    snprintf(Data, sizeof(Data), "%d", nFacets);
+    facet_data_item->setText(1, Data);
 
     for (const SGM::Edge &EdgeID : sEdges)
         {
