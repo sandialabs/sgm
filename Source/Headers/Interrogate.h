@@ -20,6 +20,11 @@ bool PointInVolume(SGM::Result        &rResult,
                    volume       const *pVolume,
                    double              dTolerance=SGM_MIN_TOL);
 
+std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
+                                 std::vector<SGM::Point3D> const &aPoints,
+                                 volume                    const *pVolume,
+                                 double                           dTolerance=SGM_MIN_TOL);
+
 void PointsInVolumes(SGM::Result                         &rResult,
                      std::vector<SGM::Point3D>     const &aPoints,
                      std::vector<std::vector<volume *> > &aaVolumes,

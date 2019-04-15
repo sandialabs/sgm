@@ -7,6 +7,7 @@
 
 //#define SGM_TIMER 
 #include "Util/timer.h"
+#include "SGMEntityFunctions.h"
 
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
@@ -162,6 +163,8 @@ size_t thing::AddToMap(entity *pEntity)
 void thing::DeleteEntity(entity *pEntity)
     {
     assert(!m_bIsConcurrentActive); // we should not be modifying in threads
+    //std::cout << SGM::EntityTypeName(pEntity->GetType()) << ' ' << pEntity->GetID() << " thing::DeleteEntity" << std::endl;
+    assert(m_mAllEntities.count(pEntity->GetID()));
     m_mAllEntities.erase(pEntity->GetID());
     delete pEntity;
     }

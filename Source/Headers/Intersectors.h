@@ -45,7 +45,7 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
                      std::vector<entity *>                            &aEntites,
                      double                                            dTolerance,
                      bool                                              bUseWholeLine=false,
-                     std::vector<SGM::BoxTree::BoundedItemType>       *aHitFacesSupplied=nullptr);
+                     std::vector<face*>                               *aHitFacesSupplied=nullptr);
 
 
 size_t RayFireFace(SGM::Result                        &rResult,

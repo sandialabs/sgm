@@ -115,9 +115,7 @@ public:
 
     entity& operator=(const entity&) = delete;
 
-    virtual ~entity()
-        {
-        }
+    virtual ~entity();
 
     virtual void Accept(EntityVisitor &) = 0;
 
@@ -902,7 +900,7 @@ class face : public topology
     
         face& operator=(const face&) = delete;
 
-        ~face() override = default;
+        ~face() override;
 
         void Accept(EntityVisitor &) override;
 
@@ -1081,6 +1079,11 @@ class face : public topology
         mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
         mutable std::set<vertex *,EntityCompare>            m_sVertices;
         mutable Signature                                   m_Signature;
+
+    edge *FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const;
+
+    vertex *FindClosestVertex(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Point2D &FoundVertexUV) const;
+
     };
 
 class edge : public topology
@@ -1097,7 +1100,7 @@ class edge : public topology
     
         edge& operator=(const edge&) = delete;
 
-        ~edge() override = default;
+        ~edge() override;
 
         void Accept(EntityVisitor &) override;
 
@@ -1238,7 +1241,7 @@ class vertex : public topology
     
         vertex& operator=(const vertex&) = delete;
 
-        ~vertex() override = default;
+        ~vertex() override;
 
         void Accept(EntityVisitor &) override;
 

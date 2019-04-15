@@ -41,6 +41,14 @@ namespace SGMInternal {
             m_sAttributes(other.m_sAttributes)
     { }
 
+    inline entity::~entity()
+        {
+#ifndef NDEBUG // write bad things on this entity
+        m_ID = 18446744073709551615UL;
+        m_Box.Reset();
+#endif
+        }
+
     inline size_t entity::IDFromThing(SGM::Result &rResult)
         {
         thing* pThing = rResult.GetThing();
@@ -631,6 +639,26 @@ namespace SGMInternal {
             m_mSeamType(other.m_mSeamType)
     {}
 
+    inline face::~face()
+        {
+#ifndef NDEBUG
+        m_sEdges.clear();
+        m_mSideType.clear();
+        m_pVolume = nullptr;
+        m_pSurface = nullptr;
+        //m_bFlipped
+        m_nSides = -1;
+        m_aPoints3D.clear();
+        m_aNormals.clear();
+        m_aTriangles.clear();
+        m_aPoints2D.clear();
+        m_mSeamType.clear();
+        m_mUVBoundary.clear();
+        m_sVertices.clear();
+        //m_Signature;
+#endif
+        }
+
     inline void face::Accept(EntityVisitor &v)
     { v.Visit(*this); }
 
@@ -681,6 +709,21 @@ namespace SGMInternal {
             m_dTolerance(other.m_dTolerance)
     {}
 
+    inline edge::~edge()
+        {
+#ifndef NDEBUG
+        m_pStart = nullptr;
+        m_pEnd = nullptr;
+        m_sFaces.clear();
+        m_pVolume = nullptr;
+        m_pCurve = nullptr;
+        m_aPoints3D.clear();
+        m_aParams.clear();
+        m_Domain.Reset();
+        m_dTolerance = std::numeric_limits<double>::signaling_NaN();
+#endif
+        }
+
     inline void edge::Accept(EntityVisitor &v)
     { v.Visit(*this); }
 
@@ -714,6 +757,12 @@ namespace SGMInternal {
             m_Pos(other.m_Pos),
             m_sEdges(other.m_sEdges)
     {}
+
+    inline vertex::~vertex()
+    {
+        m_Pos = {std::numeric_limits<double>::signaling_NaN(),std::numeric_limits<double>::signaling_NaN(),std::numeric_limits<double>::signaling_NaN()};
+        m_sEdges.clear();
+    }
 
     inline void vertex::Accept(EntityVisitor &v)
     { v.Visit(*this); }

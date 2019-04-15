@@ -275,4 +275,9 @@ void revolve::SetCurve(curve *pCurve)
     m_bClosedV = pCurve->GetClosed();
     m_Domain.m_VDomain = pCurve->GetDomain();
     }
+
+curve* revolve::GetCurve() const
+    {
+    return m_pCurve;
+    }
 }

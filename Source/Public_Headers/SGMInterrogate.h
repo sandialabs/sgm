@@ -68,6 +68,11 @@ namespace SGM
                                   SGM::Entity  const &EntityID,
                                   double              dTolerance=SGM_MIN_TOL);
 
+    SGM_EXPORT std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
+                                                std::vector<SGM::Point3D> const &aPoints,
+                                                SGM::Volume               const &VolumeID,
+                                                double                           dTolerance=SGM_MIN_TOL);
+
     SGM_EXPORT void PointsInVolumes(SGM::Result                            &rResult,
                                     std::vector<SGM::Point3D>        const &aPoints,
                                     std::vector<std::vector<SGM::Volume> > &aaVolumeIDs,

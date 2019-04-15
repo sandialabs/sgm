@@ -796,6 +796,8 @@ class revolve : public surface
 
         void SetCurve(curve *pCurve);
 
+        curve *GetCurve() const;
+
         bool IsSame(surface const *pOther,double dTolerance) const override;
 
     public:

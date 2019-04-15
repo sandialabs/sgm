@@ -1056,6 +1056,8 @@ void MergeEdges(SGM::Result                     &rResult,
         vertex *pEndKeep=pKeepEdge->GetEnd();
         vertex *pStartDelete=pDeleteEdge->GetStart();
         vertex *pEndDelete=pDeleteEdge->GetEnd();
+        size_t nDeleteEdgeID = pDeleteEdge->GetID();
+        size_t nDeleteEndVertexID = pDeleteEdge->GetEnd()->GetID();
       
         if( pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
             pEndKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
