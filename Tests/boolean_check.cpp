@@ -85,7 +85,7 @@ TEST(modify, block_block_slot_face2)
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
 
-TEST(modify, DISABLED_block_block_one_eighth_intersect)
+TEST(modify, block_block_one_eighth_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -100,7 +100,7 @@ TEST(modify, DISABLED_block_block_one_eighth_intersect)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_block_block_one_eighth_subtract)
+TEST(modify, block_block_one_eighth_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -115,7 +115,7 @@ TEST(modify, DISABLED_block_block_one_eighth_subtract)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_block_block_one_eighth_unite)
+TEST(modify, block_block_one_eighth_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -277,7 +277,7 @@ TEST(modify, square_sqaure_coincident_edge_unite)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_sphere_unite)
+TEST(modify, DISABLED_block_sphere_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -292,7 +292,7 @@ TEST(modify, block_sphere_unite)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_sphere_subtract)
+TEST(modify, DISABLED_block_sphere_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -307,7 +307,7 @@ TEST(modify, block_sphere_subtract)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, sphere_block_subtract)
+TEST(modify, DISABLED_sphere_block_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -322,7 +322,7 @@ TEST(modify, sphere_block_subtract)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_sphere_intersect)
+TEST(modify, DISABLED_block_sphere_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 

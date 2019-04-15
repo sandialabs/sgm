@@ -1082,8 +1082,6 @@ class face : public topology
 
     edge *FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const;
 
-    vertex *FindClosestVertex(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Point2D &FoundVertexUV) const;
-
     };
 
 class edge : public topology

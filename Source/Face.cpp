@@ -399,28 +399,6 @@ edge* face::FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double
         return pCloseEdge;
     }
 
-vertex* face::FindClosestVertex(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Point2D &FoundVertexUV) const
-    {
-    vertex *pFoundVertex = nullptr;
-    std::set<vertex *, EntityCompare> const & sVertices = GetVertices();
-    for (vertex *pVertex : sVertices)
-        {
-        edge *pVertexEdge = FindFirstEdgeOnFaceAtVertex(rResult, pVertex, this);
-        if (pVertexEdge)
-            {
-            SGM::EdgeSideType nVertexEdgeType = GetSideType(pVertexEdge);
-            SGM::Point2D VertexUV = AdvancedInverse(pVertexEdge, nVertexEdgeType, pVertex->GetPoint());
-            if (SGM::NearEqual(uv.DistanceSquared(VertexUV), dMinDist, SGM_MIN_TOL, false))
-                {
-                FoundVertexUV = VertexUV;
-                pFoundVertex = pVertex;
-                break;
-                }
-            }
-        }
-    return pFoundVertex;
-    }
-
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        edge               **pInCloseEdge,
@@ -465,9 +443,12 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
 
     // Look for close vertex.
-    vertex *pFoundVertex;
-    SGM::Point2D FoundVertexUV;
-    pFoundVertex = FindClosestVertex(rResult, uv, dMinDist, FoundVertexUV);
+    vertex *pFoundVertex=nullptr;
+    if(pCloseEnt->GetType()==SGM::VertexType)
+        {
+        pFoundVertex=(vertex *)pCloseEnt;
+        }
+    SGM::Point2D FoundVertexUV=AdvancedInverse(pCloseEdge,GetSideType(pCloseEdge),ClosePos);
 
     if(pFoundVertex==nullptr)
         {

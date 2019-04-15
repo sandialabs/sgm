@@ -465,7 +465,7 @@ void ImprintPeninsula(SGM::Result &rResult,
                       entity      *pStartEntity,
                       entity      *pEndEntity)
     {
-    if(pStartEntity)
+     if(pStartEntity)
         {
         if(pStartEntity->GetType()==SGM::EdgeType)
             {
@@ -1056,8 +1056,6 @@ void MergeEdges(SGM::Result                     &rResult,
         vertex *pEndKeep=pKeepEdge->GetEnd();
         vertex *pStartDelete=pDeleteEdge->GetStart();
         vertex *pEndDelete=pDeleteEdge->GetEnd();
-        size_t nDeleteEdgeID = pDeleteEdge->GetID();
-        size_t nDeleteEndVertexID = pDeleteEdge->GetEnd()->GetID();
       
         if( pStartKeep->GetPoint().DistanceSquared(pStartDelete->GetPoint())<SGM_ZERO &&
             pEndKeep->GetPoint().DistanceSquared(pEndDelete->GetPoint())<SGM_ZERO)
@@ -1416,15 +1414,18 @@ bool ImprintFaces(SGM::Result                                                   
             if(pEdge->GetFaces().empty())
                 {
                 vertex *pVertex=pEdge->GetStart();
-                pVertex->RemoveEdge(pEdge);
-                if(pVertex->GetEdges().empty())
+                if(pVertex->GetEdges().size()==1)
                     {
+                    pVertex->SeverRelations(rResult);
                     rResult.GetThing()->DeleteEntity(pVertex);
                     }
-                curve *pPointCurve=pEdge->GetCurve();
+                curve *pCurve=pEdge->GetCurve();
                 pEdge->SeverRelations(rResult);
                 rResult.GetThing()->DeleteEntity(pEdge);
-                rResult.GetThing()->DeleteEntity(pPointCurve);
+                if(pCurve->GetEdges().empty())
+                    {
+                    rResult.GetThing()->DeleteEntity(pCurve);
+                    }
                 }
             }
         }

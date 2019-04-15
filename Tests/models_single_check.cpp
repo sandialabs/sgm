@@ -262,6 +262,7 @@ TEST(speed_check, DISABLED_point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
+#if 0
 TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -546,6 +547,7 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 //        }
 //    SGMTesting::ReleaseTestThing(pThing);
 //    }
+#endif
 
 TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     {

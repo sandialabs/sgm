@@ -44,7 +44,7 @@ namespace SGMInternal {
     inline entity::~entity()
         {
 #ifndef NDEBUG // write bad things on this entity
-        m_ID = 18446744073709551615UL;
+        m_ID = 0xFFFFFFFFFFFFFFFF;
         m_Box.Reset();
 #endif
         }
