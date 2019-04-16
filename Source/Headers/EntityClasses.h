@@ -186,6 +186,9 @@ protected:
     mutable std::set<entity *, EntityCompare>    m_sOwners;
     mutable std::set<attribute *, EntityCompare> m_sAttributes;
 
+
+
+
     // Only to be called from the thing constructor.
 
     entity();
@@ -1055,6 +1058,8 @@ class face : public topology
 
         bool IsParametricRectangle(SGM::Result &rResult,double dPercentTol) const;
 
+        SGM::BoxTree const &GetFacetTree(SGM::Result &rResult) const;
+
     private:
         
         void InitializeFacetSubdivision(SGM::Result &rResult,
@@ -1079,6 +1084,7 @@ class face : public topology
         mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
         mutable std::set<vertex *,EntityCompare>            m_sVertices;
         mutable Signature                                   m_Signature;
+        mutable SGM::BoxTree                                m_FacetTree;
 
     edge *FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const;
 

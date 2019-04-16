@@ -264,15 +264,15 @@ TEST(speed_check, DISABLED_point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-#if 0
-TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
+
+TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_ALL;// DIRECTION_ALL;
+    const int RAY_FIRE_DIRECTION = DIRECTION_X;// DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -479,11 +479,9 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
             }
         }
 
-#endif
-
     // set ray fire direction
-//    rResult.SetDebugFlag(6);
-//    rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
+    rResult.SetDebugFlag(6);
+    rResult.SetDebugData({FireDirection.m_x, FireDirection.m_y, FireDirection.m_z});
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -503,10 +501,15 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
     if (RAY_FIRE_DIRECTION != DIRECTION_ALL)
         {
+        std::cout << "Ray Direction = {" << FireDirection.m_x << ',' << FireDirection.m_y << ',' << FireDirection.m_z << '}' << std::endl;
+        //std::cout.setf(std::ios::floatfield,std::ios::scientific);
+        std::cout << std::setprecision(15);
+
         // make linear edges for the inside points
-        for (SGM::Point3D const &rPoint : aPointsInside)
+        for (SGM::Point3D const &Point : aPointsInside)
             {
-            SGM::CreateLinearEdge(rResult,rPoint, rPoint+10*FireDirection);
+            std::cout << '{' << std::setw(19) << Point[0] << ',' << std::setw(19) << Point[1] << ',' << std::setw(19) << Point[2] << '}' << std::endl;
+            SGM::CreateLinearEdge(rResult,Point, Point+10*FireDirection);
             }
         }
 
@@ -551,7 +554,7 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 //    }
 #endif
 
-TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

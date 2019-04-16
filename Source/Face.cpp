@@ -592,6 +592,24 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
+SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
+    {
+    if(m_FacetTree.IsEmpty())
+        {
+        // get a box for each triangle
+        unsigned nIndices = m_aTriangles.size();
+        for (unsigned i = 0; i < nIndices; )
+            {
+            SGM::Point3D const &A = m_aPoints3D[m_aTriangles[i++]];
+            SGM::Point3D const &B = m_aPoints3D[m_aTriangles[i++]];
+            SGM::Point3D const &C = m_aPoints3D[m_aTriangles[i++]];
+            SGM::Interval3D TriangleBox(A,B,C);
+            m_FacetTree.Insert(&A,TriangleBox);
+            }
+        }
+    return m_FacetTree;
+    }
+
 bool OnNonLinearEdge(SGM::Point3D const &PosA,
                      SGM::Point3D const &PosB,
                      entity       const *pAEnt,
@@ -649,6 +667,7 @@ void face::ClearFacets(SGM::Result &rResult) const
         m_aTriangles.clear();
         m_aNormals.clear();
         m_mSeamType.clear();
+        m_FacetTree.Clear();
         }
     m_Box.Reset();
     if(m_pVolume)

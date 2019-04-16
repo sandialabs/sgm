@@ -8,9 +8,14 @@ namespace SGM {
 
     const size_t BoxTree::REINSERT_CHILDREN = 2;    // in the range 1 < m <= MIN_CHILDREN
     const size_t BoxTree::MIN_CHILDREN = 4;         // in the range 2 <= m < M
-    const size_t BoxTree::MAX_CHILDREN = 16;        // in the range MIN_CHILDREN*2 <= m < M
-    const size_t BoxTree::RESERVE_CHILDREN = 12;    // in the range 2 <= m < M
-    const size_t BoxTree::CHOOSE_SUBTREE = 16;
+    const size_t BoxTree::MAX_CHILDREN = 14;        // in the range MIN_CHILDREN*2 <= m < M
+    const size_t BoxTree::RESERVE_CHILDREN = 10;    // in the range 2 <= m < M
+    const size_t BoxTree::CHOOSE_SUBTREE = 14;      // should probably be ==MAX_CHILDREN for speed
+
+
+//    const size_t BoxTree::MAX_CHILDREN = 16;        // in the range MIN_CHILDREN*2 <= m < M
+//    const size_t BoxTree::RESERVE_CHILDREN = 12;    // in the range 2 <= m < M
+//    const size_t BoxTree::CHOOSE_SUBTREE = 16;
     const size_t BoxTree::MEMORY_POOL_BYTES = 4096; // chunk size of a multiple of 4096 may be best
     const bool   BoxTree::MAX_GT_CHOOSE_SUBTREE = MAX_CHILDREN > (CHOOSE_SUBTREE*2)/3;
 
