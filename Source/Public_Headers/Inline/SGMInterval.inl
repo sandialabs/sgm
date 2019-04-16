@@ -490,6 +490,15 @@ namespace SGM {
                 tmax > 0.0); // forward direction only
     }
 
+    inline bool Interval3D::IntersectsRayTight(Ray3D const &ray) const
+        {
+        double tmin, tmax;
+        bool may_intersect = IntersectsLineImpl(ray, tmin, tmax);
+        return (may_intersect &&
+                tmin < std::numeric_limits<double>::infinity() &&
+                tmax > 0.0); // forward direction only
+        }
+
     inline bool Interval3D::IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance) const
     {
         double t_min, t_max;

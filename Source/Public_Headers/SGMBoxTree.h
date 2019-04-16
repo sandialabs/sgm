@@ -150,6 +150,12 @@ namespace SGM {
                                                           double         radius,
                                                           double         tolerance) const;
 
+        /// Count items whose bounds intersect the ray
+        size_t CountIntersectsRay(Ray3D const &ray, double tolerance) const;
+
+        /// Count items whose bounds intersect the ray with zero tolerance
+        size_t CountIntersectsRayTight(Ray3D const &ray) const;
+
         ///////////////////////////////////////////////////////////////////////
         //
         // Utility functors, for advanced users and the implementation
@@ -276,6 +282,19 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
+        /// A Filter that matches node or leaf when the given ray intersects.
+        struct IsIntersectingRayTight {
+
+            Ray3D m_ray;
+
+            IsIntersectingRayTight() = delete;
+
+            explicit IsIntersectingRayTight(Ray3D const & ray)
+                : m_ray(ray) { }
+
+            bool operator()(Bounded const * node) const;
+            };
+
         /// A Filter that matches node or leaf when the given segment intersects
         struct IsIntersectingSegment
         {
@@ -357,8 +376,6 @@ namespace SGM {
 
         /**
          * Visitor operation that pushes a Leaf into a container when it passes a given Filter.
-         *
-         * @tparam Filter filter returning true or false given a Leaf
          */
         struct PushLeaf {
             std::vector<BoundedItemType> m_aContainer;
@@ -368,6 +385,21 @@ namespace SGM {
 
             void operator()(Leaf const *leaf);
         };
+
+        /**
+         * Visitor operation that counts a Leaf when it passes a given Filter.
+         */
+        struct LeafCounter {
+            size_t m_nCount;
+            bool bContinueVisiting;
+
+            LeafCounter() : m_nCount(0), bContinueVisiting(true) {};
+
+            void operator()(SGM::BoxTree::Leaf const *)
+                {
+                ++m_nCount;
+                }
+            };
 
         /**
          * Traverse the tree; for each Node that passes the Filter and has Leaf children, perform the given

@@ -115,11 +115,9 @@ struct RayFaceBoxIntersections
 
 inline bool DoesRayMissFaceFacets(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
     {
-    auto const & FaceBox = pFace->GetBox(rResult);
-    double dRelativeTolerance = SGM_FIT * FaceBox.FourthPerimeter();
     auto const & Tree = pFace->GetFacetTree(rResult);
-    auto aHitFacets = Tree.FindIntersectsRay(Ray, dRelativeTolerance);
-    return aHitFacets.empty();
+    size_t count = Tree.CountIntersectsRayTight(Ray);
+    return count == 0;
     }
 
 double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray,double dTolerance)

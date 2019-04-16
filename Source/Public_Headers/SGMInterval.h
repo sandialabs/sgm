@@ -310,6 +310,8 @@ namespace SGM {
 
         bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_ZERO) const;
 
+        bool IntersectsRayTight(Ray3D const &ray) const;
+
         bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_ZERO) const;
 
         // If a sphere overlaps any part of this bounding box, tolerance acts as increase in sphere radius.

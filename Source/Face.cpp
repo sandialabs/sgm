@@ -604,6 +604,7 @@ SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
             SGM::Point3D const &B = m_aPoints3D[m_aTriangles[i++]];
             SGM::Point3D const &C = m_aPoints3D[m_aTriangles[i++]];
             SGM::Interval3D TriangleBox(A,B,C);
+            TriangleBox.Extend(0.05 * TriangleBox.FourthPerimeter()); // allow for triangles at convex edges
             m_FacetTree.Insert(&A,TriangleBox);
             }
         }
