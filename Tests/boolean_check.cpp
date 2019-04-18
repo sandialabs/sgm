@@ -46,7 +46,7 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
 //
 //    SGM::SubtractBodies(rResult,BlockID1,BlockID2);
 //
-//    check_entity_verbose(rResult,BlockID1);
+//    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 //
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
@@ -80,7 +80,7 @@ TEST(modify, block_block_slot_face2)
 //
 //    SGM::SubtractBodies(rResult,BlockID1,BlockID2);
 //
-//    check_entity_verbose(rResult,BlockID1);
+//    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 //
 //    SGMTesting::ReleaseTestThing(pThing);
 //}
@@ -95,7 +95,7 @@ TEST(modify, block_block_one_eighth_intersect)
 
     SGM::IntersectBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -110,7 +110,7 @@ TEST(modify, block_block_one_eighth_subtract)
 
     SGM::SubtractBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -125,7 +125,7 @@ TEST(modify, block_block_one_eighth_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -146,7 +146,7 @@ TEST(modify, square_square_coincident_face_vertex_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -165,7 +165,7 @@ TEST(modify, square_square_coincident_edge_vertex_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -180,7 +180,7 @@ TEST(modify, square_square_over_coincident_edge_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -195,7 +195,7 @@ TEST(modify, square_square_half_coincident_edge_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -210,7 +210,7 @@ TEST(modify, block_block_coincident_vertex_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -225,7 +225,7 @@ TEST(modify, block_block_coincident_edge_unite)
     
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -240,7 +240,7 @@ TEST(modify, block_block_coincident_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -255,7 +255,7 @@ TEST(modify, square_sqaure_full_coincident_unite)
 
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -272,12 +272,12 @@ TEST(modify, square_sqaure_coincident_edge_unite)
     SGM::UniteBodies(rResult,BlockID1,BlockID2);
     SGM::UniteBodies(rResult,BlockID1,BlockID3);
 
-    check_entity_verbose(rResult,BlockID1);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_block_sphere_unite)
+TEST(modify, block_sphere_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -287,12 +287,12 @@ TEST(modify, DISABLED_block_sphere_unite)
 
     SGM::UniteBodies(rResult,BlockID,SphereID);
 
-    check_entity_verbose(rResult,BlockID);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_block_sphere_subtract)
+TEST(modify, block_sphere_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -302,12 +302,12 @@ TEST(modify, DISABLED_block_sphere_subtract)
 
     SGM::SubtractBodies(rResult,BlockID,SphereID);
 
-    check_entity_verbose(rResult,BlockID);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_sphere_block_subtract)
+TEST(modify, sphere_block_subtract)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -317,12 +317,12 @@ TEST(modify, DISABLED_sphere_block_subtract)
 
     SGM::SubtractBodies(rResult,SphereID,BlockID);
 
-    check_entity_verbose(rResult,SphereID);
+    EXPECT_TRUE(check_entity_verbose(rResult,SphereID));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, DISABLED_block_sphere_intersect)
+TEST(modify, block_sphere_intersect)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -332,7 +332,7 @@ TEST(modify, DISABLED_block_sphere_intersect)
 
     SGM::IntersectBodies(rResult,BlockID,SphereID);
 
-    check_entity_verbose(rResult,BlockID);
+    EXPECT_TRUE(check_entity_verbose(rResult,BlockID));
 
     SGMTesting::ReleaseTestThing(pThing);
 }
@@ -372,7 +372,7 @@ TEST(modify, imprint_block_on_sphere)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, close_island_imprint)
+TEST(modify, DISABLED_close_island_imprint)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -389,6 +389,8 @@ TEST(modify, close_island_imprint)
     SGM::ImprintEdgeOnFace(rResult,Edge1,FaceID);
     SGM::ImprintEdgeOnFace(rResult,Edge2,FaceID);
     SGM::ImprintEdgeOnFace(rResult,Edge3,FaceID);
+
+    EXPECT_TRUE(check_entity_verbose(rResult,BodyID1));
 
     SGMTesting::ReleaseTestThing(pThing);
 }

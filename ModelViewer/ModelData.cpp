@@ -929,7 +929,8 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
 
     std::set<SGM::Surface> sSurfaces;
     SGM::FindSurfaces(dPtr->mResult, FaceID, sSurfaces);
-    add_surface_to_tree(face_item, *(sSurfaces.begin()));
+    SGM::Surface SurfaceID=*(sSurfaces.begin());
+    add_surface_to_tree(face_item, SurfaceID);
 
     int nSides = SGM::GetSidesOfFace(dPtr->mResult, FaceID);
     auto *sides_data_item = new QTreeWidgetItem(face_item);
@@ -938,7 +939,7 @@ void ModelData::add_face_to_tree(QTreeWidgetItem *parent, SGM::Face FaceID)
     snprintf(Data, sizeof(Data), "%d", nSides);
     sides_data_item->setText(1, Data);
 
-    if(bool bFlipped = SGM::IsFaceFlipped(dPtr->mResult, FaceID))
+    if(SGM::IsFaceFlipped(dPtr->mResult, FaceID))
         {
         auto *flipped_data_item = new QTreeWidgetItem(face_item);
         flipped_data_item->setText(0, "Flipped");
@@ -1348,60 +1349,31 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             snprintf(Data0, sizeof(Data0), "Surface %lu", SurfaceID.m_ID);
             surface_item->setText(0, Data0);
             }
-        case SGM::ThingType:
-            break;
-        case SGM::AssemblyType:
-            break;
-        case SGM::ReferenceType:
-            break;
-        case SGM::ComplexType:
-            break;
-        case SGM::BodyType:
-            break;
-        case SGM::VolumeType:
-            break;
-        case SGM::FaceType:
-            break;
-        case SGM::EdgeType:
-            break;
-        case SGM::VertexType:
-            break;
-        case SGM::CurveType:
-            break;
-        case SGM::LineType:
-            break;
-        case SGM::CircleType:
-            break;
-        case SGM::EllipseType:
-            break;
-        case SGM::ParabolaType:
-            break;
-        case SGM::HyperbolaType:
-            break;
-        case SGM::NUBCurveType:
-            break;
-        case SGM::NURBCurveType:
-            break;
-        case SGM::PointCurveType:
-            break;
-        case SGM::HelixCurveType:
-            break;
-        case SGM::HermiteCurveType:
-            break;
-        case SGM::TorusKnotCurveType:
-            break;
-        case SGM::SurfaceType:
-            break;
-        case SGM::AttributeType:
-            break;
-        case SGM::StringAttributeType:
-            break;
-        case SGM::IntegerAttributeType:
-            break;
-        case SGM::DoubleAttributeType:
-            break;
-        case SGM::CharAttributeType:
-            break;
+        }
+    
+    if(SGM::IsSurfaceSingularHighU(dPtr->mResult, SurfaceID))
+        {
+        auto *singular_data_item = new QTreeWidgetItem(surface_item);
+        singular_data_item->setText(0, "Singular");
+        singular_data_item->setText(1, "High U");
+        }
+    if(SGM::IsSurfaceSingularHighV(dPtr->mResult, SurfaceID))
+        {
+        auto *singular_data_item = new QTreeWidgetItem(surface_item);
+        singular_data_item->setText(0, "Singular");
+        singular_data_item->setText(1, "High V");
+        }
+    if(SGM::IsSurfaceSingularLowU(dPtr->mResult, SurfaceID))
+        {
+        auto *singular_data_item = new QTreeWidgetItem(surface_item);
+        singular_data_item->setText(0, "Singular");
+        singular_data_item->setText(1, "Low U");
+        }
+    if(SGM::IsSurfaceSingularLowU(dPtr->mResult, SurfaceID))
+        {
+        auto *singular_data_item = new QTreeWidgetItem(surface_item);
+        singular_data_item->setText(0, "Singular");
+        singular_data_item->setText(1, "Low V");
         }
 }
 

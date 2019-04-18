@@ -1079,9 +1079,6 @@ class face : public topology
         mutable std::map<edge *,std::vector<SGM::Point2D> > m_mUVBoundary;
         mutable std::set<vertex *,EntityCompare>            m_sVertices;
         mutable Signature                                   m_Signature;
-
-    edge *FindClosestEdge(SGM::Result &rResult, const SGM::Point2D &uv, double dMinDist, SGM::Segment2D &CloseSeg) const;
-
     };
 
 class edge : public topology

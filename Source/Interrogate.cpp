@@ -498,14 +498,14 @@ bool PointInVolume(SGM::Result        &rResult,
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *> aEntity;
         nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitsFaces);
-        //if(rResult.GetDebugFlag()==6)
-        //    {
-        //    std::vector<double> aData;
-        //    aData.push_back(Axis.m_x);
-        //    aData.push_back(Axis.m_y);
-        //    aData.push_back(Axis.m_z);
-        //    rResult.SetDebugData(aData);
-        //    }
+        if(rResult.GetDebugFlag()==6)
+            {
+            std::vector<double> aData;
+            aData.push_back(Axis.m_x);
+            aData.push_back(Axis.m_y);
+            aData.push_back(Axis.m_z);
+            rResult.SetDebugData(aData);
+            }
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {

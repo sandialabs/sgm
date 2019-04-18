@@ -362,7 +362,44 @@ void NUBsurface::Evaluate(SGM::Point2D const &uv,
         }
     if(Norm)
         {
-        *Norm=SGM::Vector3D(SKL[1][0])*SGM::Vector3D(SKL[0][1]);
+        SGM::Vector3D Vec=SGM::Vector3D(SKL[1][0])*SGM::Vector3D(SKL[0][1]);
+        if(Vec.MagnitudeSquared()<SGM_ZERO)
+            {
+            SGM::Point2D TempUV=uv;
+            bool bFound=true;
+            if(m_bSingularLowU && fabs(uv.m_u-m_Domain.m_UDomain.m_dMin)<SGM_MIN_TOL)
+                {
+                TempUV.m_u=m_Domain.m_UDomain.MidPoint(0.01);
+                }
+            else if(m_bSingularHighU && fabs(uv.m_u-m_Domain.m_UDomain.m_dMax)<SGM_MIN_TOL)
+                {
+                TempUV.m_u=m_Domain.m_UDomain.MidPoint(0.99);
+                }
+            else if(m_bSingularLowV && fabs(uv.m_v-m_Domain.m_VDomain.m_dMin)<SGM_MIN_TOL)
+                {
+                TempUV.m_v=m_Domain.m_VDomain.MidPoint(0.01);
+                }
+            else if(m_bSingularHighV && fabs(uv.m_v-m_Domain.m_VDomain.m_dMax)<SGM_MIN_TOL)
+                {
+                TempUV.m_v=m_Domain.m_VDomain.MidPoint(0.99);
+                }
+            else
+                {
+                bFound=false;
+                }
+            if(bFound)
+                {
+                Evaluate(TempUV,nullptr,nullptr,nullptr,Norm);
+                }
+            else
+                {
+                *Norm=Vec;
+                }
+            }
+        else
+            {
+            *Norm=SGM::Vector3D(SKL[1][0])*SGM::Vector3D(SKL[0][1]);
+            }
         }
     if(Duu)
         {

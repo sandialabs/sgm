@@ -1083,7 +1083,7 @@ TEST(math_check, revolve_hermite)
     /*SGM::Surface SurfIDCopy=*/SGM::CreateExtrudeSurface(rResult,Axis,CurveID);
 }
 
-TEST(math_check, closest_point)
+TEST(math_check, DISABLED_closest_point)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

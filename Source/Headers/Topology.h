@@ -30,7 +30,7 @@ void FindVolumes(SGM::Result                      &rResult,
 void FindFaces(SGM::Result                    &rResult,
                entity                   const *pEntity,
                std::set<face *,EntityCompare> &sFaces,
-                bool                           bTopLevel=false);
+               bool                           bTopLevel=false);
 
 void FindEdges(SGM::Result                    &rResult,
                entity                   const *pEntity,
