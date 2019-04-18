@@ -49,7 +49,7 @@ namespace SGM {
         double Length() const;
 
         // Returns the distance from Pos to this line segments.
-        // In addition the functio returns the closest point if 
+        // In addition the function returns the closest point if 
         // pClosePoint points to a Point2D.
 
         double Distance(Point2D const &Pos,Point2D *pClosePoint=nullptr) const;

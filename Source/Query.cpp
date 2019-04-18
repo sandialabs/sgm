@@ -22,53 +22,29 @@ void FindClosestPointOnEdge3D(SGM::Result        &,//rResult,
     {
     curve const *pCurve=pEdge->GetCurve();
     double t=pCurve->Inverse(Point,&ClosestPoint);
-    pEdge->SnapToDomain(t,SGM_MIN_TOL);
-    double dEdge=Point.DistanceSquared(ClosestPoint);
-    if(pEdge->GetDomain().InInterval(t,SGM_ZERO)==false)
+    if(pEdge->GetDomain().InInterior(t,SGM_MIN_TOL))
         {
-        SGM::EntityType nCurveType=pCurve->GetCurveType();
-        switch(nCurveType)
-            {
-            case SGM::LineType:
-                {
-                dEdge=DBL_MAX;
-                break;
-                }
-            case SGM::CircleType:
-                {
-                dEdge=DBL_MAX;
-                break;
-                }
-            default:
-                {
-                // Look for local mins
-                dEdge=DBL_MAX;
-                break;
-                }
-            }
-        }
-    double dStart=DBL_MAX,dEnd=DBL_MAX;
-    if(pEdge->GetStart())
-        {
-        dStart=Point.DistanceSquared(pEdge->GetStart()->GetPoint());
-        }
-    if(pEdge->GetEnd())
-        {
-        dEnd=Point.DistanceSquared(pEdge->GetEnd()->GetPoint());
-        }
-    if(dStart<=dEnd && dStart<=dEdge)
-        {
-        ClosestPoint=pEdge->GetStart()->GetPoint();
-        pCloseEntity=(entity *)pEdge->GetStart();
-        }
-    else if(dEnd<=dStart && dEnd<=dEdge)
-        {
-        ClosestPoint=pEdge->GetEnd()->GetPoint();
-        pCloseEntity=(entity *)pEdge->GetEnd();
+        pCloseEntity=(entity *)pEdge;
         }
     else
         {
-        pCloseEntity=(entity *)pEdge;
+        double dStart=DBL_MAX,dEnd=DBL_MAX;
+        if(pEdge->GetStart())
+            {
+            dStart=Point.DistanceSquared(pEdge->GetStart()->GetPoint());
+            }
+        if(pEdge->GetEnd())
+            {
+            dEnd=Point.DistanceSquared(pEdge->GetEnd()->GetPoint());
+            }
+        if(dStart<dEnd)
+            {
+            pCloseEntity=(entity *)pEdge->GetStart();
+            }
+        else
+            {
+            pCloseEntity=(entity *)pEdge->GetEnd();
+            }
         }
     }
 

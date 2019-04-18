@@ -241,7 +241,7 @@ TEST(speed_check, DISABLED_point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.99338449336725,   1.78114559759887, -0.112058775609127);
+    SGM::Point3D TestPoint(-2.99338449336725,  0.366425467792747,  -1.64718061859023);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -264,7 +264,7 @@ TEST(speed_check, DISABLED_point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-
+#if 0
 TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -518,6 +518,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
+#endif
 
 //TEST(speed_check, dodecahedron_rays)
 //    {
@@ -554,7 +555,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 //    }
 #endif
 
-TEST(speed_check, points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -628,7 +629,7 @@ TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, single_points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_single_points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -930,7 +931,7 @@ TEST(models_single_check, import_check_brick10)
 
 }
 
-TEST(intersection_check, check_plane_circle_consistent_with_cylinder_line_intersections)
+TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_line_intersections)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
