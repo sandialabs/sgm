@@ -3365,6 +3365,10 @@ void FacetFace(SGM::Result                    &rResult,
             }
         case SGM::TorusType:
             {
+            std::vector<SGM::Point2D> aOldPoints2D=aPoints2D;
+            std::vector<SGM::Point3D> aOldPoints3D=aPoints3D;
+            std::vector<std::vector<unsigned> > aaOldPoly=aaPolygons;
+
             SGM::Interval2D Box(aPoints2D);
             double dU=Box.m_UDomain.Length();
             double dV=Box.m_VDomain.Length();
@@ -3406,16 +3410,33 @@ void FacetFace(SGM::Result                    &rResult,
 
                 SGM::Surface SurfID(pFace->GetSurface()->GetID());
                 size_t nPolygons=aaPolygons.size();
+                bool bCouldNotImprint=false;
                 for(Index1=0;Index1<nPolygons;++Index1)
                     {
                     std::vector<unsigned> aPolygonIndices;
                     std::vector<bool> aFlags=FindPolygonImprintFlags(aImprintFlags,aaPolygons[Index1]);
-                    SGM::InsertPolygon(rResult,SGM::PointsFromPolygon2D(aPolygonPoints,aaPolygons[Index1]),
-                                       aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags);
+                    if(SGM::InsertPolygon(rResult,SGM::PointsFromPolygon2D(aPolygonPoints,aaPolygons[Index1]),
+                                       aPoints2D,aTriangles,aPolygonIndices,&SurfID,&aPoints3D,&aNormals,&aFlags)==false)
+                        {
+                        bCouldNotImprint=true;
+                        }
                     aaPolygons[Index1]=aPolygonIndices;
                     }
-                RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
-                //RefineTriangles(aPoints2D,aPoints3D,aNormals,aTriangles,Options.m_dFaceAngleTol,pSurface);
+                if(bCouldNotImprint)
+                    {
+                    aTriangles.clear();
+                    aAdjacencies.clear();
+                    aPoints2D=aOldPoints2D;
+                    aPoints3D=aOldPoints3D;
+                    SGM::TriangulatePolygonWithHoles(rResult,aPoints2D,aaOldPoly,aTriangles,aAdjacencies,pFace->HasBranchedVertex());
+                    aNormals.clear();
+                    FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
+                    RefineTriangles(aPoints2D,aPoints3D,aNormals,aTriangles,pSurface); 
+                    }
+                else
+                    {
+                    RemoveOutsideTriangles(rResult,aaPolygons,aPoints2D,aTriangles,0,&aPoints3D,&aNormals);
+                    }
                 }
 
             break;
