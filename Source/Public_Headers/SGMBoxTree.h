@@ -156,6 +156,10 @@ namespace SGM {
         /// Count items whose bounds intersect the ray with zero tolerance
         size_t CountIntersectsRayTight(Ray3D const &ray) const;
 
+        /// Compute the center of mass of the leaf boxes
+        /// (the point at which the volume weighted relative position of the centers of leaf boxes sum to zero).
+        Point3D FindCenterOfMass() const;
+
         ///////////////////////////////////////////////////////////////////////
         //
         // Utility functors, for advanced users and the implementation
@@ -400,6 +404,20 @@ namespace SGM {
                 ++m_nCount;
                 }
             };
+
+        /**
+         * Visitor operation that sums volumes Leaf into a container when it passes a given Filter.
+         */
+        struct LeafSumMassCentroid {
+            Point3D m_SumVolumeWeightedPosition;
+            double m_SumVolume;
+            bool bContinueVisiting;
+
+            LeafSumMassCentroid() : m_SumVolumeWeightedPosition(0.0,0.0,0.0), m_SumVolume(0.0), bContinueVisiting(true) {};
+
+            void operator()(Leaf const *leaf);
+            };
+
 
         /**
          * Traverse the tree; for each Node that passes the Filter and has Leaf children, perform the given

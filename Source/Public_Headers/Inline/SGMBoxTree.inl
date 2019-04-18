@@ -1,6 +1,14 @@
 #include <algorithm>
 #include <utility>
 
+#if defined(_MSC_VER)
+#define SGM_FORCE_INLINE __forceinline
+#elif defined(__GNUG__)
+#define SGM_FORCE_INLINE __attribute__((always_inline))
+#else
+#define SGM_FORCE_INLINE inline
+#endif
+
 namespace SGM {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -136,6 +144,17 @@ namespace SGM {
         m_aContainer.emplace_back(leaf->m_pObject,leaf->m_Bound);
     }
 
+    inline void BoxTree::LeafSumMassCentroid::operator()(const BoxTree::Leaf *leaf)
+    {
+        Interval3D const &box = leaf->m_Bound;
+        double volume = box.Volume();
+        m_SumVolume += volume;
+        Point3D center = box.MidPoint();
+        m_SumVolumeWeightedPosition.m_x += volume * center.m_x;
+        m_SumVolumeWeightedPosition.m_y += volume * center.m_y;
+        m_SumVolumeWeightedPosition.m_z += volume * center.m_z;
+    }
+
     inline bool BoxTree::RemoveSpecificLeaf::operator()(const BoxTree::Leaf *leaf) const
     {
         if (m_bContinue && m_pLeafObject == leaf->m_pObject)
@@ -155,7 +174,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename Visitor>
-    inline void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
+    SGM_FORCE_INLINE void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
         auto leaf = static_cast<Leaf const*>(item);
         if (m_filter(leaf))
@@ -163,7 +182,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename Visitor>
-    inline void BoxTree::QueryNodeFunctor<Filter, Visitor>::operator()(Bounded const *item)
+    SGM_FORCE_INLINE void BoxTree::QueryNodeFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
         auto node = static_cast<Node const*>(item);
         if (m_visitor.bContinueVisiting && m_filter(node))
@@ -304,6 +323,16 @@ namespace SGM {
     inline size_t BoxTree::CountIntersectsRayTight(Ray3D const &ray) const
     {
     return Query(IsIntersectingRayTight(ray), LeafCounter()).m_nCount;
+    }
+
+    inline Point3D BoxTree::FindCenterOfMass() const
+    {
+        auto visitor = Query(IsAny(), LeafSumMassCentroid());
+        Point3D & centroid = visitor.m_SumVolumeWeightedPosition;
+        centroid.m_x /= visitor.m_SumVolume;
+        centroid.m_y /= visitor.m_SumVolume;
+        centroid.m_z /= visitor.m_SumVolume;
+        return centroid;
     }
 
     inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSegment(Point3D const &p1, 
