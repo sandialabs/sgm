@@ -584,6 +584,30 @@ bool face::PointInFace(SGM::Result        &rResult,
         }
     }
 
+SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
+    {
+    if(m_FacetTree.IsEmpty())
+        {
+        size_t nIndices = GetTriangles(rResult).size(); // This will cause the facet to be created
+                                                        // if they do not already exist.
+        
+        // Get a box for each triangle
+        for (size_t Index1 = 0; Index1 < nIndices; )
+            {
+            SGM::Point3D const &A = m_aPoints3D[m_aTriangles[Index1++]];
+            SGM::Point3D const &B = m_aPoints3D[m_aTriangles[Index1++]];
+            SGM::Point3D const &C = m_aPoints3D[m_aTriangles[Index1++]];
+            SGM::Interval3D TriangleBox(A,B,C);
+
+            // Acount for cood hight error of triangles on convex edges.
+            TriangleBox.Extend(0.05 * TriangleBox.FourthPerimeter()); 
+
+            m_FacetTree.Insert(&A,TriangleBox);
+            }
+        }
+    return m_FacetTree;
+    }
+
 bool OnNonLinearEdge(SGM::Point3D const &PosA,
                      SGM::Point3D const &PosB,
                      entity       const *pAEnt,
@@ -641,6 +665,7 @@ void face::ClearFacets(SGM::Result &rResult) const
         m_aTriangles.clear();
         m_aNormals.clear();
         m_mSeamType.clear();
+        m_FacetTree.Clear();
         }
     m_Box.Reset();
     if(m_pVolume)

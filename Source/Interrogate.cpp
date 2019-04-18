@@ -113,7 +113,14 @@ struct RayFaceBoxIntersections
     ~RayFaceBoxIntersections() = default;
     };
 
-double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray,double dTolerance)
+inline bool DoesRayMissFaceFacets(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
+    {
+    auto const & Tree = pFace->GetFacetTree(rResult);
+    size_t count = Tree.CountIntersectsRayTight(Ray);
+    return count == 0;
+    }
+
+double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
     {
     double dCost;
     auto SurfaceType = pFace->GetSurface()->GetSurfaceType();
@@ -133,72 +140,25 @@ double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D
         double dDot = std::abs(pPlane->m_ZAxis % Ray.m_Direction);
         if (dDot < SGM_MIN_TOL)
             {
-            dCost = 10000; // glancing hit on surface, this ray is expensive
+            dCost = 10000; // glancing hit on surface, assign it to be expensive
             }
         else
             {
-            // only make the cost
-            SGM::Interval1D Domain(-dTolerance,SGM_MAX);
-            std::vector<SGM::Point3D> aPoints;
-            std::vector<SGM::IntersectionType> aTypes;
-            std::vector<entity*> aEntities;
-            size_t nHits=IntersectLineAndPlane(Ray.m_Origin,Ray.m_Direction,Domain,pPlane,dTolerance,aPoints,aTypes);
-            if (nHits == 0)
-                {
+            if (DoesRayMissFaceFacets(rResult,pFace,Ray))
                 dCost = 0;
-                }
-            else if (nHits == 1)
-                {
-                SGM::Point3D const &Pos=aPoints[0];
-                SGM::Point2D uv=pPlane->Inverse(Pos);
-                assert(aTypes[0]!=SGM::CoincidentType);
-                edge *pCloseEdge;
-                bool bOnEdge=false;
-                if (pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
-                    {
-                    dCost = 1;
-                    if(pCloseEdge)
-                        {
-                        if (bOnEdge)
-                            {
-                            dCost = 10000;
-                            }
-                        else
-                            {
-                            double dDist = pCloseEdge->DistanceToEdge(Pos);
-                            if (dDist < SGM_MIN_TOL)
-                                {
-                                dCost = 10000;
-                                }
-                            }
-                        }
-                    }
-                else if(bOnEdge && pCloseEdge)
-                    {
-                    dCost = 10000;
-                    }
-                else
-                    {
-                    dCost = 0;
-                    }
-                }
-            else
-                {
-                dCost = 10000; // that should not happen, this ray is too expensive
-                }
             }
         }
     else if (SurfaceType == SGM::CylinderType)
         {
-        dCost = 10;
+        dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 10;
         }
     else if (SurfaceType == SGM::TorusType || SurfaceType == SGM::SphereType)
         {
-        dCost = 25;
+        dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 25;
         }
     else if (SurfaceType == SGM::NURBSurfaceType || SurfaceType == SGM::NUBSurfaceType)
         {
-        dCost = 1000;
+        dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 1000;
         }
     else if (SurfaceType == SGM::RevolveType)
         {
@@ -207,19 +167,19 @@ double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D
         auto CurveType = pCurve->GetCurveType();
         if (CurveType == SGM::EntityType::LineType)
             {
-            dCost = 15;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 15;
             }
         else if (CurveType == SGM::EntityType::CircleType)
             {
-            dCost = 30;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 30;
             }
         else if (CurveType == SGM::EntityType::NUBCurveType || CurveType == SGM::EntityType::NURBCurveType)
             {
-            dCost = 1000;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 1000;
             }
         else
             {
-            dCost = 100; // guess
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 100; // guess
             }
         }
     else if (SurfaceType == SGM::ExtrudeType)
@@ -229,24 +189,24 @@ double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D
         auto CurveType = pCurve->GetCurveType();
         if (CurveType == SGM::EntityType::LineType)
             {
-            dCost = 2;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 2;
             }
         else if (CurveType == SGM::EntityType::CircleType)
             {
-            dCost = 11;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 11;
             }
         else if (CurveType == SGM::EntityType::NUBCurveType || CurveType == SGM::EntityType::NURBCurveType)
             {
-            dCost = 1000;
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 1000;
             }
         else
             {
-            dCost = 10; // guess
+            dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 10; // guess
             }
         }
     else
         {
-        dCost = 100; // guess
+        dCost = DoesRayMissFaceFacets(rResult,pFace,Ray) ? 0 : 100; // guess
         }
     return dCost;
     }
@@ -267,8 +227,12 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
     for (auto boundedItem : aHitFaces)
         {
         face *pFace = (face *) boundedItem.first;
-        RayFaceIntersection.m_dCost += CostOfFaceIntersection(rResult,pFace,RayFaceIntersection.m_Ray,dTolerance);
-        RayFaceIntersection.m_aHitFaces.push_back(pFace);
+        double dCost = CostOfFaceIntersection(rResult,pFace,RayFaceIntersection.m_Ray);
+        if (dCost > 0)
+            {
+            RayFaceIntersection.m_dCost += dCost;
+            RayFaceIntersection.m_aHitFaces.push_back(pFace);
+            }
         }
     return std::move(RayFaceIntersection);
     }

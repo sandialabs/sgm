@@ -116,6 +116,11 @@ namespace SGM {
         return node->m_Bound.IntersectsRay(m_ray, m_tolerance);
     }
 
+    inline bool BoxTree::IsIntersectingRayTight::operator()(const Bounded *node) const
+    {
+    return node->m_Bound.IntersectsRayTight(m_ray);
+    }
+
     inline bool BoxTree::IsIntersectingSegment::operator()(const Bounded *node) const
     {
         return node->m_Bound.IntersectsSegment(m_point1, m_point2, m_tolerance);
@@ -289,6 +294,16 @@ namespace SGM {
     inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsRay(Ray3D const &ray, double tolerance) const
     {
         return Query(IsIntersectingRay(ray, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline size_t BoxTree::CountIntersectsRay(Ray3D const &ray, double tolerance) const
+    {
+        return Query(IsIntersectingRay(ray, tolerance), LeafCounter()).m_nCount;
+    }
+
+    inline size_t BoxTree::CountIntersectsRayTight(Ray3D const &ray) const
+    {
+    return Query(IsIntersectingRayTight(ray), LeafCounter()).m_nCount;
     }
 
     inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSegment(Point3D const &p1, 
