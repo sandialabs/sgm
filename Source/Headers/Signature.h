@@ -15,26 +15,22 @@ namespace SGMInternal
         Signature() {}
         Signature(std::vector<SGM::Point3D> const &aPoints);
         void Initialize(std::vector<SGM::Point3D> const &aPoints);
-
-
-        bool Matches(Signature const &other, bool bIgnoreScale) const;
+        bool IsValid();
+        bool Matches(Signature const &other, bool bCheckScale) const;
 
     private:
-        //static bool InvertSequenceIfNeeded(std::vector<double> &aSequence);
+        static bool ReverseSequenceIfNeeded(std::vector<double> &aSequence);
         static bool SequencesMatch(std::vector<double> const &aSequence1,
                                    std::vector<double> const &aSequence2);
-    public:
+    private:
         SGM::Point3D Origin;
         SGM::UnitVector3D XAxis;
         SGM::UnitVector3D YAxis;
         SGM::UnitVector3D ZAxis;
         double Scale;
-        std::vector<double> Xsequence;
-        std::vector<double> Ysequence;
-        std::vector<double> Zsequence;
-        //bool bXreversed;
-        //bool bYreversed;
-        //bool bZreversed;
+        std::vector<double> aSequences[3];
+        bool bReversed[3];
+        bool bAxisSymmetry[3];
         double Rubric;
     };
 

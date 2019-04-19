@@ -81,7 +81,7 @@ namespace SGM
     SGM_EXPORT void FindSimilarFaces(SGM::Result            &rResult,
                                      SGM::Face        const &FaceID,
                                      std::vector<SGM::Face> &aSimilar,
-                                     bool                   bIgnoreScale);
+                                     bool                   bCheckScale);
 
     } // End of SGM namespace
 

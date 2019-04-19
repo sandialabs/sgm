@@ -1409,7 +1409,7 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
 
 Signature const & face::GetSignature(SGM::Result &rResult) const
 {
-    if (!m_Signature.Xsequence.size())
+    if (!m_Signature.IsValid())
     {
         std::vector<SGM::Point3D> aFacePoints;
         GetSignaturePoints(rResult, aFacePoints);
@@ -1441,36 +1441,92 @@ void face::GetSignaturePoints(SGM::Result &rResult,
 
     if (m_pSurface->GetSurfaceType() != SGM::PlaneType)
     {
-        SGM::Point3D Origin;
-        SGM::UnitVector3D XAxis, YAxis, ZAxis;
-        FindLeastSquarePlane(aPoints, Origin, XAxis, YAxis, ZAxis);
-
-        SGM::Interval3D Aligned(aPoints, Origin, XAxis, YAxis, ZAxis);
-
-        for (double iz=0; iz<2; iz++)
+        if (aPoints.size())
         {
-            double dZFraction = 0.25 + iz*0.5;
-            for (size_t iy=0; iy<2; iy++)
+            SGM::Point3D Origin;
+            SGM::UnitVector3D XAxis, YAxis, ZAxis;
+            FindLeastSquarePlane(aPoints, Origin, XAxis, YAxis, ZAxis);
+
+            std::vector<SGM::Point3D> aSurfPoints;
+            std::vector<SGM::IntersectionType> aTypes;
+            IntersectLineAndSurface(rResult, Origin, ZAxis, SGM::Interval1D(-SGM_MAX, SGM_MAX),
+                                    m_pSurface, SGM_MIN_TOL, aSurfPoints, aTypes);
+
+            std::vector<SGM::Point3D> aPosOnFace;
+            for (auto Pos : aSurfPoints)
             {
-                double dYFraction = 0.25 + iy*0.5;
-                for (size_t ix=0; ix<2; ix++)
+                SGM::Point2D PosUV = m_pSurface->Inverse(Pos);
+                if (PointInFace(rResult,PosUV))
                 {
-                    double dXFraction = 0.25 + ix*0.5;
-                    SGM::Point3D Coords = Aligned.MidPoint(dXFraction, dYFraction, dZFraction);
-                    SGM::Point3D Pos = Origin + (Coords.m_x * XAxis)
-                                              + (Coords.m_y * YAxis)
-                                              + (Coords.m_z * ZAxis);
+                    aPosOnFace.emplace_back(Pos);
+                }
+            }
 
-                    SGM::Point3D pClosest;
-                    entity *pCloseEntity = nullptr;
-                    FindClosestPointOnFace(rResult, Pos, this, pClosest, pCloseEntity);
+            bool bClosestOnFace = false;
+            SGM::Point3D Closest;
+            double minDist= std::numeric_limits<double>::max();
+            for (auto Pos : aPosOnFace)
+            {
+                double distance = Pos.Distance(Origin);
+                if (distance < minDist)
+                {
+                    Closest = Pos;
+                    bClosestOnFace = true;
+                }
+            }
+            if (bClosestOnFace)
+            {
+                aPoints.emplace_back(Closest);
+            }
+        }
+        else
+        {
+            if (m_pSurface->ClosedInU() && m_pSurface->SingularHighV() && m_pSurface->SingularLowV())
+            {
+                SGM::Interval2D Domain = m_pSurface->GetDomain();
 
-                    aPoints.emplace_back(pClosest);
+                SGM::Point3D Pos;
+                m_pSurface->Evaluate(Domain.LowerLeft(), &Pos);
+                aPoints.emplace_back(Pos);
+                m_pSurface->Evaluate(Domain.UpperLeft(), &Pos);
+                aPoints.emplace_back(Pos);
+
+                for (int index=0; index<4; index++)
+                {
+                    m_pSurface->Evaluate(Domain.MidPoint((double)index/4.0, 0.5), &Pos);
+                    aPoints.emplace_back(Pos);
+                }
+            }
+            else if (m_pSurface->ClosedInV() && m_pSurface->SingularHighU() && m_pSurface->SingularLowU())
+            {
+                SGM::Interval2D Domain = m_pSurface->GetDomain();
+
+                SGM::Point3D Pos;
+                m_pSurface->Evaluate(Domain.LowerLeft(), &Pos);
+                aPoints.emplace_back(Pos);
+                m_pSurface->Evaluate(Domain.LowerRight(), &Pos);
+                aPoints.emplace_back(Pos);
+
+                for (int index=0; index<4; index++)
+                {
+                    m_pSurface->Evaluate(Domain.MidPoint(0.5, (double)index/4.0), &Pos);
+                    aPoints.emplace_back(Pos);
+                }
+            }
+            else if (m_pSurface->ClosedInU() && m_pSurface->ClosedInV())
+            {
+                SGM::Interval2D domain = m_pSurface->GetDomain();
+                for (size_t nV=0; nV<4; nV++)
+                {
+                    for (size_t nU=0; nU<4; nU++)
+                    {
+                        SGM::Point3D Pos;
+                        m_pSurface->Evaluate(domain.MidPoint((double)nU/4.0, (double)nV/4.0), &Pos);
+                        aPoints.emplace_back(Pos);
+                    }
                 }
             }
         }
-
-
     }
 }
 

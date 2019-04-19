@@ -242,14 +242,6 @@ namespace SGM {
 
         explicit Interval3D(const std::vector<Point3D> &aPoints);
 
-        // Find bounding box around a collection of points and aligned with a given coordinate system
-
-        explicit Interval3D(const std::vector<Point3D> &aPoints,
-                            SGM::Point3D               &Origin,
-                            SGM::UnitVector3D          &XAxis,
-                            SGM::UnitVector3D          &YAxis,
-                            SGM::UnitVector3D          &ZAxis);
-        
         explicit Interval3D(const std::vector<Interval3D> &aIntervals);
 
         Interval3D(Interval1D const& x_domain, Interval1D const& y_domain, Interval1D const& z_domain);

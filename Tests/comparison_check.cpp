@@ -7,6 +7,7 @@
 #include "SGMGeometry.h"
 #include "SGMInterrogate.h"
 #include "SGMIntersector.h"
+#include "SGMTranslators.h"
 
 #include "test_utility.h"
 
@@ -112,14 +113,14 @@ TEST(comparison_check, face_comparison)
     SGM::Face Face1, Translated, Different, Scaled, Mirrored;
     SetupFaces(rResult, Face1, Translated, Different, Scaled, Mirrored);
 
-    bool bIgnoreScale = false;
+    bool bCheckScale = true;
 	std::vector<SGM::Face> aSimilar;
-	SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
+	SGM::FindSimilarFaces(rResult, Face1, aSimilar, bCheckScale);
     EXPECT_EQ(aSimilar.size(), 2U);
 
     aSimilar.clear();
-    bIgnoreScale = true;
-    SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
+    bCheckScale = false;
+    SGM::FindSimilarFaces(rResult, Face1, aSimilar, bCheckScale);
     EXPECT_EQ(aSimilar.size(), 3U);
 
 	SGMTesting::ReleaseTestThing(pThing);
@@ -130,9 +131,6 @@ TEST(comparison_check, compare_faces_bounded_by_circles)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-//    SGM::Body Disk1 = SGM::CreateDisk(rResult, SGM::Point3D(5, 0, 0), SGM::UnitVector3D(1, 0, 0), SGM_SQRT_2);
-//    SGM::Body Disk2 = SGM::CreateDisk(rResult, SGM::Point3D(5, 0, 0), SGM::UnitVector3D(1, 0, 0), SGM_SQRT_2);
-//
     // create a sphere surface
     SGM::Surface SphereID = SGM::CreateSphereSurface(rResult, SGM::Point3D(0, 0, 0), 2.0);
     SGM::Surface PlaneID = SGM::CreatePlane(rResult, SGM::Point3D(1, 0, 0), SGM::UnitVector3D(1, 0, 0));
@@ -151,10 +149,16 @@ TEST(comparison_check, compare_faces_bounded_by_circles)
 
         aTypes.clear();
         aTypes.emplace_back(SGM::FaceOnRightType);
+        aEdges.clear();
+        EdgeID = SGM::CreateEdge(rResult, aCurves[0]);
+        aEdges.emplace_back(EdgeID);
         SGM::CreateSheetBody(rResult, SphereID, aEdges, aTypes);
 
         aTypes.clear();
         aTypes.emplace_back(SGM::FaceOnLeftType);
+        aEdges.clear();
+        EdgeID = SGM::CreateEdge(rResult, aCurves[0]);
+        aEdges.emplace_back(EdgeID);
         SGM::CreateSheetBody(rResult, PlaneID, aEdges, aTypes);
 
         std::set<SGM::Face> sFaces;
@@ -162,14 +166,101 @@ TEST(comparison_check, compare_faces_bounded_by_circles)
         EXPECT_EQ(sFaces.size(), 1);
         SGM::Face Face1 = (*(sFaces.begin()));
 
-        bool bIgnoreScale = false;
+        bool bCheckScale = true;
         std::vector<SGM::Face> aSimilar;
-        SGM::FindSimilarFaces(rResult, Face1, aSimilar, bIgnoreScale);
+        SGM::FindSimilarFaces(rResult, Face1, aSimilar, bCheckScale);
         EXPECT_EQ(aSimilar.size(), 0U);
     }
 
     SGMTesting::ReleaseTestThing(pThing);
 }
 
+TEST(comparison_check, compare_spheres)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
 
+    SGM::Body SphereID = SGM::CreateSphere(rResult, SGM::Point3D(0,0,0), 1);
+    SGM::CreateSphere(rResult, SGM::Point3D(5,-1,1), 1);
+    SGM::CreateSphere(rResult, SGM::Point3D(7,3,3), 2.5);
 
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult, SphereID, sFaces);
+    ASSERT_EQ(sFaces.size(), 1);
+
+    std::vector<SGM::Face> aSimilar;
+    bool bCheckScale = true;
+    SGM::FindSimilarFaces(rResult, *sFaces.begin(), aSimilar, bCheckScale);
+    EXPECT_EQ(aSimilar.size(), 1);
+
+    bCheckScale = false;
+    aSimilar.clear();
+    SGM::FindSimilarFaces(rResult, *sFaces.begin(), aSimilar, bCheckScale);
+    EXPECT_EQ(aSimilar.size(), 2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(comparison_check, compare_torii)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Body TorusID = SGM::CreateTorus(rResult, SGM::Point3D(0,0,0), SGM::UnitVector3D(0,0,1), 0.5, 4.0);
+    SGM::CreateTorus(rResult, SGM::Point3D(9,0,-5), SGM::UnitVector3D(0,1,1), 0.5, 4.0);
+    SGM::CreateTorus(rResult, SGM::Point3D(0,0,0), SGM::UnitVector3D(0,0,1), 0.25, 2.0); //uniform scaling of major and minor radii
+
+    std::set<SGM::Face> sFaces;
+    SGM::FindFaces(rResult, TorusID, sFaces);
+    ASSERT_EQ(sFaces.size(), 1);
+
+    std::vector<SGM::Face> aSimilar;
+    bool bCheckScale = true;
+    SGM::FindSimilarFaces(rResult, *sFaces.begin(), aSimilar, bCheckScale);
+    EXPECT_EQ(aSimilar.size(), 1);
+
+    bCheckScale = false;
+    aSimilar.clear();
+    SGM::FindSimilarFaces(rResult, *(sFaces.begin()), aSimilar, bCheckScale);
+    EXPECT_EQ(aSimilar.size(), 2);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+TEST(DISABLED_comparison_check, compare_left_and_right)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Entity> entities;
+    std::vector<std::string> log;
+    SGM::TranslatorOptions const options;
+
+    std::string right_file("right.stp");
+    std::string left_file("left.stp");
+    std::string file_path = get_models_file_path(right_file);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    auto resultType = rResult.GetResult();
+    ASSERT_EQ(resultType, SGM::ResultTypeOK);
+
+    file_path = get_models_file_path(left_file);
+    SGM::ReadFile(rResult, file_path, entities, log, options);
+    resultType = rResult.GetResult();
+    ASSERT_EQ(resultType, SGM::ResultTypeOK);
+
+    //std::set<SGM::Body> sBodies;
+    //SGM::FindBodies(rResult, SGM::Thing().m_ID, sBodies);
+    //bool bCheckScale = true;
+    //bool bCheckHanded = true;
+    //std::vector<SGM::Body> aSimilar;
+    //SGM::FindSimilarBodies(rResult, *(sBodies.begin()), aSimilar, bCheckScale, bCheckHanded);
+    //EXPECT_EQ(aSimilar.size(), 0);
+
+    //bCheckScale = true; 
+    //bCheckHanded = false;
+    //aSimilar.clear();
+    //SGM::FindSimilarBodies(rResult, *(sBodies.begin()), aSimilar, bCheckScale, bCheckHanded);
+    //EXPECT_EQ(aSimilar.size(), 1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
