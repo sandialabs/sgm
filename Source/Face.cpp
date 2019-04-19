@@ -423,9 +423,9 @@ bool face::PointInFace(SGM::Result        &rResult,
         *pInCloseEdge=nullptr;
         }
     SGM::Point3D Pos;
-    SGM::Point2D CloseUV;
+    SGM::Point2D CloseUV1;
     m_pSurface->Evaluate(uv,&Pos);
-    FindClosestBoundary(rResult,this,uv,CloseSeg,&pCloseEdge,&pCloseVertex,CloseUV);
+    FindClosestBoundary(rResult,this,uv,CloseSeg,&pCloseEdge,&pCloseVertex,CloseUV1);
     
     if(pCloseVertex==nullptr)
         {
@@ -563,11 +563,11 @@ bool face::PointInFace(SGM::Result        &rResult,
             bool bAnswer;
             if(bOut1)
                 {
-                bAnswer=InAngle(CloseUV,uv1,uv0,uv);
+                bAnswer=InAngle(CloseUV1,uv1,uv0,uv);
                 }
             else
                 {
-                bAnswer=InAngle(CloseUV,uv0,uv1,uv);
+                bAnswer=InAngle(CloseUV1,uv0,uv1,uv);
                 }
             if(m_bFlipped)
                 {
