@@ -1403,16 +1403,10 @@ void FacetEdge(SGM::Result               &rResult,
         {
         SplitWithSurfaceNormals(Options,pSurface,pCurve,aPoints3D,aParams);
         }
-    std::set<face *,EntityCompare> const &sFaces=pEdge->GetFaces();
+    auto const &sFaces=pEdge->GetFaces();
     for(face *pFace : sFaces)
         {
-        SGM::EdgeSideType nSideType=pFace->GetSideType(pEdge);
-        std::vector<SGM::Point2D> aParams;
-        for(SGM::Point3D const &Pos : aPoints3D)
-            {
-            aParams.push_back(pFace->AdvancedInverse(pEdge,nSideType,Pos));
-            }
-        pFace->SetUVBoundary(pEdge,aParams);
+        pFace->SetUVBoundary(rResult,pEdge);
         }
 
     // Force end points to be on vertices.

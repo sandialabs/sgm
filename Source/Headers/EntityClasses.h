@@ -1041,8 +1041,8 @@ class face : public topology
         std::vector<SGM::Point2D> const &GetUVBoundary(SGM::Result &rResult,
                                                        edge        *pEdge) const;
 
-        void SetUVBoundary(edge                const *pEdge,
-                           std::vector<SGM::Point2D> &aSurfParams);
+        std::vector<SGM::Point2D> const &SetUVBoundary(SGM::Result               &rResult,
+                                                       edge                const *pEdge);
 
         void ClearUVBoundary(edge const *pEdge);
 

@@ -1,3 +1,4 @@
+#include <SGMEntityFunctions.h>
 #include "SGMVector.h"
 #include "SGMInterval.h"
 #include "SGMEntityClasses.h"
@@ -553,13 +554,17 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     {
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
     SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
+
+//    static const SGM::Point3D ProblemPoint(-2.270974214317322,  0.1256220414427698,  -5.319432870427387);
+//    bool bIsProblemPoint = SGM::NearEqual(ProblemPoint,Point,0.001);
+//    if (bIsProblemPoint)
+//        {
+//        std::cout << "IsProblemPoint ===================================" << std::endl;
+//        }
+
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
-    if(rResult.GetDebugFlag()==6)
-        {
-        std::vector<double> const &aData=rResult.GetDebugData();
-        Direction.m_x=aData[0]; Direction.m_y=aData[1]; Direction.m_z=aData[2];
-        }
-    size_t nCountRaysFired=0;
+    size_t nCount=1;
+    size_t nBadRays=0;
     size_t nHits=0;
     bool bContinue=true;
     while(bContinue)
@@ -569,7 +574,6 @@ bool IsRayInVolume(SGM::Result                   &rResult,
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *>              aEntity;
         nHits=RayFireVolume(rResult,Point,Direction,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitFaces);
-        ++nCountRaysFired;
         for (size_t i=0; i<nHits; ++i)
             {
             if(SGM::NearEqual(Point,aPoints[i],dTolerance)) // the point is inside a face
@@ -578,7 +582,45 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                 }
             if(!IsGoodRay(aTypes,aEntity)) // the hit is through an edge or a vertex, use a different ray
                 {
-                Direction=SGM::UnitVector3D(cos(nCountRaysFired),sin(nCountRaysFired),cos(nCountRaysFired+17));
+//                std::cout << std::setprecision(16);
+//                std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
+//                std::cout << std::setprecision(16);
+//                std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
+//
+//                // print the first non-face
+//                size_t nSize = aEntity.size();
+//                for (size_t Index1 = 0; Index1 < nSize; ++Index1)
+//                    {
+//                    entity * entity = aEntity[Index1];
+//                    if (entity->GetType() != SGM::FaceType)
+//                        {
+//                        std::cout << SGM::EntityTypeName(entity->GetType()) << " ID " << entity->GetID() << std::endl;
+//                        break;
+//                        }
+//                    }
+                ++nBadRays;
+                if (nBadRays > 75)
+                    return 1; // throw std::runtime_error("Cannot find ray");
+
+                // look for a new ray
+                size_t nNextMaxCount = nCount+4;
+                RayFaceBoxIntersections TempRayIntersections;
+                TempRayIntersections.m_dCost = 1000000;
+                while (TempRayIntersections.m_dCost > 1000 && nCount < nNextMaxCount)
+                    {
+                    Direction = SGM::UnitVector3D(cos(nCount), sin(nCount), cos(nCount + 17));
+                    ++nCount;
+                    TempRayIntersections = FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction);
+                    }
+                RemoveMissedFacesFromRayIntersections(rResult, TempRayIntersections);
+                if (nBadRays > 25)
+                    {
+                    std::cout << "BadRay " <<
+                              std::setw(2) << nBadRays << ": << " <<
+                              std::setw(2) << nCount <<
+                              " cost = " << TempRayIntersections.m_dCost << std::endl;
+                    }
+                aHitFaces.swap(TempRayIntersections.m_aHitFaces);
                 bContinue=true;
                 break;
                 }
@@ -619,6 +661,7 @@ bool PointInVolume(SGM::Result        &rResult,
     size_t nHits=0;
     bool bFound=true;
     size_t nCount=1;
+    size_t nBadRays=0;
     SGM::UnitVector3D Axis(0,0,1);
     if(rResult.GetDebugFlag()==6)
         {
@@ -631,7 +674,8 @@ bool PointInVolume(SGM::Result        &rResult,
         {
         std::vector<SGM::BoxTree::BoundedItemType> aHitFacesTree;
         bool bIsRayExpensive=true;
-        while (nCount<=12 && bIsRayExpensive)
+        size_t nCountRayExpensive = 0;
+        while (bIsRayExpensive && nCountRayExpensive<=12)
             {
             aHitFacesTree.clear();
             bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,dTolerance,aHitFacesTree);
@@ -639,8 +683,13 @@ bool PointInVolume(SGM::Result        &rResult,
                 {
                 Axis=SGM::UnitVector3D(cos(nCount),sin(nCount),cos(nCount+17));
                 ++nCount;
+                ++nCountRayExpensive;
                 }
             }
+//        if(rResult.GetDebugFlag()==6)
+//            {
+//            rResult.SetDebugData({Axis.m_x, Axis.m_y, Axis.m_z});
+//            }
         std::vector<face*> aHitsFaces;
         for (auto const &PairIter : aHitFacesTree)
             {
@@ -651,14 +700,6 @@ bool PointInVolume(SGM::Result        &rResult,
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *> aEntity;
         nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitsFaces);
-        if(rResult.GetDebugFlag()==6)
-            {
-            std::vector<double> aData;
-            aData.push_back(Axis.m_x);
-            aData.push_back(Axis.m_y);
-            aData.push_back(Axis.m_z);
-            rResult.SetDebugData(aData);
-            }
         size_t Index1;
         for(Index1=0;Index1<nHits;++Index1)
             {
@@ -668,12 +709,33 @@ bool PointInVolume(SGM::Result        &rResult,
                 }
             if(!IsGoodRay(aTypes,aEntity))
                 {
+                std::cout << std::setprecision(16);
+                std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
+                std::cout << std::setprecision(16);
+                std::cout << " Axis={" << std::setw(20) << Axis.m_x << ',' << std::setw(20) << Axis.m_y << ',' << std::setw(20) << Axis.m_z << "} ";
+
+                // print the first non-face
+                size_t nSize = aEntity.size();
+                for (size_t Index1 = 0; Index1 < nSize; ++Index1)
+                    {
+                    entity * entity = aEntity[Index1];
+                    if (entity->GetType() != SGM::FaceType)
+                        {
+                        std::cout << SGM::EntityTypeName(entity->GetType()) << " ID " << entity->GetID() << std::endl;
+                        break;
+                        }
+                    }
+
+                ++nBadRays;
+                if (nBadRays > 100)
+                    return 1; //throw std::runtime_error("Cannot find ray");
+
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
+                ++nCount;
                 bFound=true;
                 break;
                 }
             }
-        ++nCount;
         }
 
     return nHits%2==1;

@@ -241,18 +241,14 @@ TEST(speed_check, DISABLED_point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.99338449336725,  0.366425467792747,  -1.64718061859023);
+    SGM::Point3D TestPoint(-2.421476355786058,   1.901547310773854,  -4.747524732846191);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
     rResult.SetDebugFlag(6);
-    std::vector<double> aData;
-    aData.push_back(1);
-    aData.push_back(0);
-    aData.push_back(0);
-    rResult.SetDebugData(aData);
+    rResult.SetDebugData({-1,0,0});
 
     bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
     
@@ -264,15 +260,15 @@ TEST(speed_check, DISABLED_point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-#if 0
-TEST(speed_check, point_in_volume_OUO_full_model_volume1)
+#if 1
+TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_X;// DIRECTION_ALL;
+    const int RAY_FIRE_DIRECTION = DIRECTION_Y;// DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -327,28 +323,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
         {-2.1430009479311889,
         0.02004745364405721,
         -1.1948043844891936},
-
-        {-1.7357589903911748,
-        0.020047453644267937,
-        -1.1948043844893057},
-
-        {-0.51990540249910955,
-        0.02004745364405721,
-        -1.1948043844891936},
-
-        {0.53116701498726382,
-        0.02004745364405721,
-        -1.1948043844891936},
-
-        {0.59683298501273629,
-        0.02004745364405721,
-        -1.1948043844891936},
-        
-        {0.73720977951579103,
-        0.02004745364405721,
-        -1.1948043844891936}
     };
-
 
     // a point that should be outside
 //    SGM::Point3D TestPoint(-1.7956696576099629, -0.28134119301999427, -0.29265438044251146);
@@ -416,6 +391,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
                     }
                 dY += dIncrement;
                 }
+            SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
             break;
             }
         case DIRECTION_Y:
@@ -434,6 +410,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
                     }
                 dX += dIncrement;
                 }
+            SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
             break;
             }
         case DIRECTION_Z:
@@ -452,6 +429,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
                     }
                 dX += dIncrement;
                 }
+            SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
             break;
             }
         case DIRECTION_ALL:
@@ -478,6 +456,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
             break;
             }
         }
+#endif
 
     // set ray fire direction
     rResult.SetDebugFlag(6);
@@ -509,7 +488,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
         for (SGM::Point3D const &Point : aPointsInside)
             {
             std::cout << '{' << std::setw(19) << Point[0] << ',' << std::setw(19) << Point[1] << ',' << std::setw(19) << Point[2] << '}' << std::endl;
-            SGM::CreateLinearEdge(rResult,Point, Point+10*FireDirection);
+            SGM::CreateLinearEdge(rResult,Point, Point+6*FireDirection);
             }
         }
 
@@ -520,42 +499,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     }
 #endif
 
-//TEST(speed_check, dodecahedron_rays)
-//    {
-//    //  draw rays through vertices of dodecahedron
-//    // where \phi is golden ratio
-//    static const double A = 0.57735026918962576451; // 1 / \sqrt(3)
-//    static const double B = 0.35682208977308993194; // 1 / (\phi * \sqrt(3)
-//    static const double C = 0.93417235896271569645; // \phi / \sqrt(3)
-//    EXPECT_NE(sqrt(3*(A*A)),1.0);
-//    EXPECT_NE(sqrt(B*B+C*C),1.0);
-//    static const double DodecahedronVertices[20][3] =
-//        {
-//            {  A,  A,  A}, { -A, -A, -A},
-//            {  A,  A, -A}, { -A, -A,  A},
-//            {  A, -A,  A}, { -A,  A, -A},
-//            { -A,  A,  A}, {  A, -A, -A},
-//            {  0,  B,  C}, {  0, -B, -C},
-//            {  B,  C,  0}, { -B, -C,  0},
-//            {  C,  0,  B}, { -C,  0, -B},
-//            {  0,  B, -C}, {  0, -B,  C},
-//            {  B, -C,  0}, { -B,  C,  0},
-//            { -C,  0,  B}, {  C,  0, -B}
-//        };
-//    SGM::Point3D Origin(0,0,0);
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//    for (unsigned i = 0; i < 20; ++i)
-//        {
-//        const double *pData = DodecahedronVertices[i];
-//        SGM::Point3D Vertex(pData[0], pData[1], pData[2]);
-//        SGM::CreateLinearEdge(rResult, Origin, Vertex);
-//        }
-//    SGMTesting::ReleaseTestThing(pThing);
-//    }
-#endif
-
-TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -628,40 +572,6 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
-
-TEST(speed_check, DISABLED_single_points_in_volume_OUO_full_model_volume1)
-    {
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-    SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
-
-    SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
-
-    std::vector<SGM::Point3D> aPoints = {{0,0,0}};
-    std::vector<unsigned> aEmpty;
-    //SGM::CreateComplex(rResult,aPoints,aEmpty,aEmpty);
-
-    std::set<SGM::Volume> sVolumes;
-    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-    SGM::Volume VolumeID = *(sVolumes.begin());
-
-    std::vector<bool> aIsPointInside = SGM::PointsInVolume(rResult, aPoints, VolumeID);
-    std::vector<SGM::Point3D> aPointsInside;
-    for (size_t i = 0; i < aPoints.size(); ++i)
-        {
-        if (aIsPointInside[i])
-            {
-            aPointsInside.push_back(aPoints[i]);
-            }
-        }
-    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
-
-    SGMTesting::ReleaseTestThing(pThing);
-    }
-
 
 TEST(models_single_check, import_check_OUO_grv_geom)
 {

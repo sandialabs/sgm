@@ -3,6 +3,7 @@
 #include <vector>
 #include <list>
 
+#include "SGMEntityFunctions.h"
 #include "SGMVector.h"
 #include "SGMTransform.h"
 #include "SGMIntersector.h"
@@ -16,6 +17,9 @@
 #include "Mathematics.h"
 #include "EntityFunctions.h"
 #include "Curve.h"
+
+//#define SGM_TIMER
+#include "Util/timer.h"
 
 // Lets us use fprintf
 #ifdef _MSC_VER
@@ -822,9 +826,6 @@ size_t RayFireFace(SGM::Result                        &rResult,
                    double                              dTolerance,
                    bool                                bUseWholeLine)
     {
-    std::vector<SGM::Point3D> aAllPoints;
-    std::vector<SGM::IntersectionType> aAllTypes;
-    std::vector<entity *> aAllEntites;
     SGM::Interval1D Domain(-dTolerance,SGM_MAX);
     surface const *pSurface=pFace->GetSurface();
     std::vector<SGM::Point3D> aTempPoints;
@@ -840,9 +841,9 @@ size_t RayFireFace(SGM::Result                        &rResult,
             uv=pSurface->Inverse(Origin);
             if(pFace->PointInFace(rResult,uv))
                 {
-                aAllPoints.push_back(Origin);
-                aAllTypes.push_back(SGM::CoincidentType);
-                aAllEntites.push_back((face *)pFace);
+                aPoints.push_back(Origin);
+                aTypes.push_back(SGM::CoincidentType);
+                aEntities.push_back((face *)pFace);
                 }
             else
                 {
@@ -855,9 +856,9 @@ size_t RayFireFace(SGM::Result                        &rResult,
                     size_t nTempPoints=aRayFirePoints.size();
                     for(Index2=0;Index2<nTempPoints;++Index2)
                         {
-                        aAllPoints.push_back(aRayFirePoints[Index2]);
-                        aAllTypes.push_back(SGM::CoincidentType);
-                        aAllEntites.push_back((edge *)pEdge);
+                        aPoints.push_back(aRayFirePoints[Index2]);
+                        aTypes.push_back(SGM::CoincidentType);
+                        aEntities.push_back((edge *)pEdge);
                         }
                     }
                 }
@@ -868,8 +869,8 @@ size_t RayFireFace(SGM::Result                        &rResult,
             bool bOnEdge=false;
             if(pFace->PointInFace(rResult,uv,&pCloseEdge,&bOnEdge))
                 {
-                aAllPoints.push_back(Pos);
-                aAllTypes.push_back(aTempTypes[Index1]);
+                aPoints.push_back(Pos);
+                aTypes.push_back(aTempTypes[Index1]);
                 entity *pEnt=(face *)pFace;
                 if(pCloseEdge)
                     {
@@ -886,21 +887,18 @@ size_t RayFireFace(SGM::Result                        &rResult,
                             }
                         }
                     }
-                aAllEntites.push_back(pEnt);
+                aEntities.push_back(pEnt);
                 }
             else if(bOnEdge && pCloseEdge)
                 {
-                aAllPoints.push_back(Pos);
-                aAllTypes.push_back(SGM::PointType);
-                aAllEntites.push_back(pCloseEdge);
+                aPoints.push_back(Pos);
+                aTypes.push_back(SGM::PointType);
+                aEntities.push_back(pCloseEdge);
                 }
             }
         }
     
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntites);
-    aPoints=aAllPoints;
-    aTypes=aAllTypes;
-    aEntities=aAllEntites;
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
     return nAnswer;
     }
 
@@ -916,6 +914,26 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
                      std::vector<face*>                               *aHitFacesSupplied)
     {
     // Find all ray hits for all faces.
+    aPoints.clear();
+    aTypes.clear();
+    aEntities.clear();
+
+
+//    static const SGM::Point3D ProblemPoint(-2.240873786023575, 1.84134645418636, -2.550193467402649);
+//    bool bIsProblemPoint = SGM::NearEqual(ProblemPoint,Origin,0.001);
+//    if (bIsProblemPoint)
+//        {
+//        //std::cout.setf(std::ios::floatfield,std::ios::scientific);
+//        std::cout << std::setprecision(8);
+//        std::cout << " Origin={" << std::setw(11) << Origin.m_x << ',' << std::setw(11) << Origin.m_y << ',' << std::setw(11) << Origin.m_z << "} ";
+//        std::cout << std::setprecision(15);
+//        std::cout << " Axis={" << std::setw(19) << Axis.m_x << ',' << std::setw(19) << Axis.m_y << ',' << std::setw(19) << Axis.m_z << "} ";
+//        }
+
+    SGM_TIMER_INITIALIZE();
+    SGM_TIMER_START("RayFireVolume");
+
+
 
     SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin,Axis);
@@ -924,42 +942,47 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         {
         auto aHitFacesTree = FaceTree.FindIntersectsRay(Ray,dTolerance);
         aHitFaces = new std::vector<face*>();
+        aHitFaces->reserve(aHitFacesTree.size());
         for (auto const &PairIter : aHitFacesTree)
-            {
             aHitFaces->push_back((face*)PairIter.first);
-            }
         }
     else
         {
         aHitFaces = aHitFacesSupplied;
         }
 
-    std::vector<SGM::Point3D> aAllPoints;
-    std::vector<SGM::IntersectionType> aAllTypes;
-    std::vector<entity *> aAllEntities;
+    std::vector<SGM::Point3D> aSubPoints;
+    std::vector<SGM::IntersectionType> aSubTypes;
+    std::vector<entity *> aSubEntities;
+
     for (auto *pFace : *aHitFaces)
         {
-        std::vector<SGM::Point3D> aSubPoints;
-        std::vector<SGM::IntersectionType> aSubTypes;
-        std::vector<entity *> aSubEntities;
+        aSubPoints.clear();
+        aSubTypes.clear();
+        aSubEntities.clear();
+
         size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
-        for(size_t Index1=0;Index1<nHits;++Index1)
-            {
-            aAllPoints.push_back(aSubPoints[Index1]);
-            aAllTypes.push_back(aSubTypes[Index1]);
-            aAllEntities.push_back(aSubEntities[Index1]);
-            }
+
+        aPoints.reserve(aPoints.size()+nHits);
+        aPoints.insert(aPoints.end(),aSubPoints.begin(),aSubPoints.end());
+        aTypes.reserve(aTypes.size()+nHits);
+        aTypes.insert(aTypes.end(),aSubTypes.begin(),aSubTypes.end());
+        aEntities.reserve(aEntities.size()+nHits);
+        aEntities.insert(aEntities.end(),aSubEntities.begin(),aSubEntities.end());
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aAllEntities);
-    aPoints=aAllPoints;
-    aTypes=aAllTypes;
-    aEntities=aAllEntities;
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
+    aPoints.shrink_to_fit();
+    aTypes.shrink_to_fit();
+    aEntities.shrink_to_fit();
 
     if (aHitFacesSupplied == nullptr)
         {
         delete aHitFaces;
         }
+
+    SGM_TIMER_STOP();
+
     return nAnswer;
     }
 

@@ -352,8 +352,9 @@ void FindClosestBoundary(SGM::Result        &rResult,
                          vertex             **ppCloseVertex,
                          SGM::Point2D       &CloseUV)
     {
-    auto sEdges=pFace->GetEdges();
+    auto const &sEdges=pFace->GetEdges();
     double dMinDist=std::numeric_limits<double>::max();
+    size_t IndexMinEnd=0;
     for(edge *pEdge : sEdges)
         {
         std::vector<SGM::Point2D> const &aUVBoundary=pFace->GetUVBoundary(rResult,pEdge);
@@ -361,41 +362,55 @@ void FindClosestBoundary(SGM::Result        &rResult,
         size_t Index1;
         for(Index1=1;Index1<nUVBoundary;++Index1)
             {
-            SGM::Segment2D Seg(aUVBoundary[Index1-1],aUVBoundary[Index1]);
-            SGM::Point2D TestUV;
-            double dDist=Seg.DistanceSquared(uv,&TestUV);
+            double dDist=SegmentDistanceSquared(aUVBoundary[Index1-1],aUVBoundary[Index1],uv);
             if(dDist<dMinDist)
                 {
                 dMinDist=dDist;
-                CloseUV=TestUV;
-                CloseSeg=Seg;
+                IndexMinEnd=Index1;
                 *ppCloseEdge=pEdge;
                 }
             }
         if(pEdge->IsClosed())
             {
-            SGM::Segment2D Seg(aUVBoundary[nUVBoundary-1],aUVBoundary[0]);
-            SGM::Point2D TestUV;
-            double dDist=Seg.DistanceSquared(uv,&TestUV);
+            double dDist=SegmentDistanceSquared(aUVBoundary[nUVBoundary-1],aUVBoundary[0],uv);
             if(dDist<dMinDist)
                 {
                 dMinDist=dDist;
-                CloseUV=TestUV;
-                CloseSeg=Seg;
+                IndexMinEnd=0;
                 *ppCloseEdge=pEdge;
                 }
             }
         }
+
+    // compute the closest point and store the closest segment
+    std::vector<SGM::Point2D> const &aUVBoundary=pFace->GetUVBoundary(rResult,*ppCloseEdge);
+    size_t IndexMinStart;
+    if (IndexMinEnd==0)
+        {
+        IndexMinStart = aUVBoundary.size()-1;
+        }
+    else
+        {
+        IndexMinStart = IndexMinEnd - 1;
+        }
+    SGM::Point2D const &Start = aUVBoundary[IndexMinStart];
+    SGM::Point2D const &End = aUVBoundary[IndexMinEnd];
+    SGM::Point2D TestUV;
+    SegmentClosestPoint(Start,End,uv,CloseUV);
+    CloseSeg={Start,End};
+
     *ppCloseVertex=nullptr;
     if((*ppCloseEdge)->GetStart())
         {
-        SGM::Point2D StartUV=pFace->AdvancedInverse(*ppCloseEdge,pFace->GetSideType(*ppCloseEdge),(*ppCloseEdge)->GetStart()->GetPoint());
-        if(StartUV.DistanceSquared(CloseUV)<SGM_ZERO)
+        SGM::Point3D Pos;
+        pFace->GetSurface()->Evaluate(CloseUV,&Pos);
+        SGM::Point3D StartPos = (*ppCloseEdge)->GetStart()->GetPoint();
+        if(SGM::NearEqual(Pos,StartPos,SGM_MIN_TOL))
             {
             *ppCloseVertex=(*ppCloseEdge)->GetStart();
             }
-        SGM::Point2D EndUV=pFace->AdvancedInverse(*ppCloseEdge,pFace->GetSideType(*ppCloseEdge),(*ppCloseEdge)->GetEnd()->GetPoint());
-        if(EndUV.DistanceSquared(CloseUV)<SGM_ZERO)
+        SGM::Point3D EndPos = (*ppCloseEdge)->GetEnd()->GetPoint();
+        if(SGM::NearEqual(Pos,EndPos,SGM_MIN_TOL))
             {
             *ppCloseVertex=(*ppCloseEdge)->GetEnd();
             }
@@ -599,8 +614,8 @@ SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
             SGM::Point3D const &C = m_aPoints3D[m_aTriangles[Index1++]];
             SGM::Interval3D TriangleBox(A,B,C);
 
-            // Acount for cood hight error of triangles on convex edges.
-            TriangleBox.Extend(0.05 * TriangleBox.FourthPerimeter()); 
+            // Account for chord height error of triangles on convex edges.
+            TriangleBox.Extend(0.1 * TriangleBox.FourthPerimeter());
 
             m_FacetTree.Insert(&A,TriangleBox);
             }
@@ -1026,24 +1041,47 @@ void face::Negate()
 std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
                                                      edge        *pEdge) const
     {
-    if(m_mUVBoundary.find(pEdge)==m_mUVBoundary.end())
+    auto const &IterEdge = m_mUVBoundary.find(pEdge);
+    if(IterEdge==m_mUVBoundary.end())
         {
-        std::vector<SGM::Point3D> const &aPoints3D=pEdge->GetFacets(rResult);
-        SGM::EdgeSideType nSideType=GetSideType(pEdge);
-        std::vector<SGM::Point2D> aParams;
-        for(SGM::Point3D const &Pos : aPoints3D)
-            {
-            aParams.push_back(AdvancedInverse(pEdge,nSideType,Pos));
-            }
-        ((face *)this)->SetUVBoundary(pEdge,aParams);
+        return const_cast<face*>(this)->SetUVBoundary(rResult,pEdge);
         }
-    return m_mUVBoundary[pEdge];
+    return IterEdge->second;
     }
 
-void face::SetUVBoundary(edge                const *pEdge,
-                         std::vector<SGM::Point2D> &aSurfParams)
+std::vector<SGM::Point2D> const &face::SetUVBoundary(SGM::Result               &rResult,
+                                                     edge                const *pEdge)
     {
-    m_mUVBoundary[(edge *)pEdge]=aSurfParams;
+    std::vector<SGM::Point3D> const &aPoints3D=pEdge->GetFacets(rResult);
+    SGM::EdgeSideType nSideType=GetSideType(pEdge);
+    std::vector<SGM::Point2D> aParams;
+    size_t numPoints = aPoints3D.size();
+    aParams.reserve(numPoints);
+    SGM::Point2D FirstUV = AdvancedInverse(pEdge,nSideType,aPoints3D[0]);
+    aParams.push_back(FirstUV);
+    if (numPoints==2)
+        {
+        SGM::Point2D LastUV = AdvancedInverse(pEdge,nSideType,aPoints3D[1]);
+        aParams.push_back(LastUV);
+        }
+    else
+        {
+        bool IsULine = true;
+        bool IsVLine = true;
+        for (size_t i = 1; i < numPoints; ++i)
+            {
+            SGM::Point2D UV = AdvancedInverse(pEdge,nSideType,aPoints3D[i]);
+            aParams.push_back(UV);
+            IsULine = !IsULine ? false : SGM::NearEqual(FirstUV.m_u, UV.m_u, SGM_MIN_TOL, false);
+            IsVLine = !IsVLine ? false : SGM::NearEqual(FirstUV.m_v, UV.m_v, SGM_MIN_TOL, false);
+            }
+        if (IsULine || IsVLine)
+            {
+            aParams = {aParams.front(), aParams.back()}; // replace it with only end points
+            }
+        }
+    auto IterEdgePair = m_mUVBoundary.emplace((edge *)pEdge,aParams);
+    return IterEdgePair.first->second;
     }
 
 void face::ClearUVBoundary(edge const *pEdge)
