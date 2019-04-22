@@ -1470,10 +1470,6 @@ bool SGM::CheckEntity(SGM::Result              &rResult,
                       SGM::CheckOptions  const &Options,
                       std::vector<std::string> &aCheckStrings)
     {
-    //SGMInternal::CheckPreexistingConditions(rResult, aCheckStrings);
-    //if (rResult.GetResult() != ResultTypeOK)
-    //    return false;
-
     SGMInternal::thing *pThing=rResult.GetThing();
     SGMInternal::entity *pEntity=pThing->FindEntity(EntityID.m_ID);
     return pEntity->Check(rResult,Options,aCheckStrings,true);
@@ -2620,9 +2616,9 @@ void SGM::TweakFace(SGM::Result  &rResult,
     SGMInternal::TweakFace(rResult,pFace,pSurface);
     }
 
-SGM_EXPORT void SGM::Repair(SGM::Result            &rResult,
-                            std::vector<SGM::Body> &aBodies,
-                            SGM::RepairOptions     *pOptions)
+void SGM::Repair(SGM::Result            &rResult,
+                 std::vector<SGM::Body> &aBodies,
+                 SGM::RepairOptions     *pOptions)
     {
     std::vector<SGMInternal::body *> abodies;
     abodies.reserve(aBodies.size());
@@ -2632,6 +2628,25 @@ SGM_EXPORT void SGM::Repair(SGM::Result            &rResult,
         abodies.push_back(pBody);
         }
     SGMInternal::Repair(rResult,abodies,pOptions);
+    }
+
+size_t SGM::FindOverLappingEdges(SGM::Result                  &rResult,
+                             std::vector<SGM::Body> const &aBodies,
+                             std::vector<SGM::Edge>       &aEdges)
+    {
+    std::vector<SGMInternal::body *> abodies;
+    for(auto BodyID : aBodies)
+        {
+        SGMInternal::body *pBody=(SGMInternal::body *)rResult.GetThing()->FindEntity(BodyID.m_ID);
+        abodies.push_back(pBody);
+        }
+    std::vector<SGMInternal::edge *> aedges;
+    size_t nEdges=SGMInternal::FindOverLappingEdges(rResult,abodies,aedges);
+    for(auto *pEdge : aedges)
+        {
+        aEdges.push_back(SGM::Edge(pEdge->GetID()));
+        }
+    return nEdges;
     }
 
 SGM::Vertex SGM::ImprintPoint(SGM::Result        &rResult,

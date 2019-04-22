@@ -529,6 +529,14 @@ bool face::Check(SGM::Result              &rResult,
             }
         }
 
+    if(1E+10<GetBox(rResult).Diagonal())
+        {
+        bAnswer=false;
+        std::stringstream ss;
+        ss << this << " has an infinite bounding box.";
+        aCheckStrings.emplace_back(ss.str());
+        }
+
     if(bChildren)
         {
         if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
@@ -630,6 +638,14 @@ bool edge::Check(SGM::Result              &rResult,
         aCheckStrings.emplace_back(ss.str());
         }
 
+    if(1E+10<GetBox(rResult).Diagonal())
+        {
+        bAnswer=false;
+        std::stringstream ss;
+        ss << this << " has an infinite bounding box.";
+        aCheckStrings.emplace_back(ss.str());
+        }
+
     if(bChildren)
         {
         if(CheckChildren(rResult,this,Options,aCheckStrings)==false)
@@ -725,6 +741,23 @@ bool surface::CheckImplementation(SGM::Result              &rResult,
             }
         }
     bool bAnswer=TestSurface(rResult,this,uv);
+
+    // Extream surface testing.
+
+    //size_t Index1,Index2;
+    //for(Index1=1;Index1<99;++Index1)
+    //    {
+    //    double u=m_Domain.m_UDomain.MidPoint(Index1/99.0);
+    //    for(Index2=2;Index2<99;++Index2)
+    //        {
+    //        double v=m_Domain.m_VDomain.MidPoint(Index1/99.0);
+    //        bAnswer=TestSurface(rResult,this,SGM::Point2D(u,v));
+    //        if(bAnswer==false)
+    //            {
+    //            break;
+    //            }
+    //        }
+    //    }
 
     if(!bAnswer)
         {

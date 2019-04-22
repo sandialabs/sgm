@@ -151,6 +151,16 @@ void NUBsurface::Construct(SGM::Result &rResult)
 
 double NUBsurface::ReParam(SGM::Result &rResult)
     {
+    // Clear data that will change.
+
+    bool bTight=false;
+    for(auto *pFace : m_sFaces)
+        {
+        if(pFace->IsTight(rResult))
+            {
+            bTight=true;
+            }
+        }
     for(auto *pFace : m_sFaces)
         {
         pFace->ClearFacets(rResult);
@@ -160,44 +170,52 @@ double NUBsurface::ReParam(SGM::Result &rResult)
             }
         }
     
-    double dUScale=1.0/m_Domain.m_UDomain.Length();
-    double dVScale=1.0/m_Domain.m_VDomain.Length();
+    // Scale domain.
+
+    size_t Index1;
     size_t nUKnots=m_aUKnots.size();
     size_t nVKnots=m_aVKnots.size();
-    size_t Index1;
+    double dUScale=1.0/m_Domain.m_UDomain.Length();
+    double dVScale=1.0/m_Domain.m_VDomain.Length();
+    double dMaxScale=0;
+    if(dUScale*10<dVScale || dVScale*10<dUScale || bTight)
+        {
+        dMaxScale=std::max(std::max(dUScale,1.0/dUScale),std::max(dVScale,1.0/dVScale));
+        for(Index1=0;Index1<nUKnots;++Index1)
+            {
+            m_aUKnots[Index1]*=dUScale;
+            }
+        for(Index1=0;Index1<nVKnots;++Index1)
+            {
+            m_aVKnots[Index1]*=dVScale;
+            }
+        m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
+        m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
+        m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
+        m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
+        Construct(rResult);
+        }
+
+    // Scale Speed.
+
+    SGM::Point2D uv=m_Domain.MidPoint();
+    SGM::Vector3D dU,dV;
+    Evaluate(uv,nullptr,&dU,&dV);
+    double dUMag=dU.Magnitude();
+    double dVMag=dV.Magnitude();
+    double dMaxMag=std::max(std::max(dUMag,1.0/dUMag),std::max(dVMag,1.0/dVMag));
     for(Index1=0;Index1<nUKnots;++Index1)
         {
-        m_aUKnots[Index1]*=dUScale;
+        m_aUKnots[Index1]*=dUMag;
         }
     for(Index1=0;Index1<nVKnots;++Index1)
         {
-        m_aVKnots[Index1]*=dVScale;
+        m_aVKnots[Index1]*=dVMag;
         }
-    
+
     Construct(rResult);
 
-    return std::max(std::max(dUScale,1.0/dUScale),std::max(dVScale,1.0/dVScale));
-
-    //SGM::Vector3D dU,dV;
-    //SGM::Point2D uv=m_Domain.MidPoint();
-    //Evaluate(uv,nullptr,&dU,&dV);
-    //double dUMag=dU.Magnitude();
-    //double dVMag=dV.Magnitude();
-    //if( dUMag*10<dVMag || dVMag*10<dUMag)
-    //    {
-    //    for(Index1=0;Index1<nUKnots;++Index1)
-    //        {
-    //        m_aUKnots[Index1]*=dUMag;
-    //        }
-    //    for(Index1=0;Index1<nVKnots;++Index1)
-    //        {
-    //        m_aVKnots[Index1]*=dVMag;
-    //        }
-    //    m_Domain.m_UDomain.m_dMin=m_aUKnots.front();
-    //    m_Domain.m_UDomain.m_dMax=m_aUKnots.back();
-    //    m_Domain.m_VDomain.m_dMin=m_aVKnots.front();
-    //    m_Domain.m_VDomain.m_dMax=m_aVKnots.back();
-    //    }
+    return dMaxScale<dMaxMag ? dMaxMag : dMaxScale;
     }
 
 bool NUBsurface::IsSame(surface const *pOther,double dTolerance) const

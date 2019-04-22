@@ -13,6 +13,16 @@
 namespace SGMInternal
 {
 
+void DeleteEntity(SGM::Result &rResult,
+                  entity      *pEntity);
+
+entity *CopyEntity(SGM::Result &rResult,
+                   entity      *pEntity);
+
+void TransformEntity(SGM::Result            &rResult,
+                     SGM::Transform3D const &transform3D,
+                     entity                 *pEntity);
+
 class HealOptions
     {
     public:
@@ -29,19 +39,6 @@ class HealOptions
     bool m_bSimplifySurfaces;
     bool m_bSnapVertices;
     };
-
-void DeleteEntity(SGM::Result &rResult,
-                  entity      *pEntity);
-
-entity *CopyEntity(SGM::Result &rResult,
-                   entity      *pEntity);
-
-void TransformEntity(SGM::Result            &rResult,
-                     SGM::Transform3D const &transform3D,
-                     entity                 *pEntity);
-
-//void CheckPreexistingConditions(SGM::Result              &rResult,
-//                                std::vector<std::string> &aCheckStrings);
 
 void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,

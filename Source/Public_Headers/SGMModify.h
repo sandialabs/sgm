@@ -77,26 +77,36 @@ SGM_EXPORT void TweakFace(SGM::Result  &rResult,
                           SGM::Face    &FaceID,
                           SGM::Surface &SurfaceID);
 
-// Repair the relative placement of a vector of bodies.
-
 class SGM_EXPORT RepairOptions
     {
     public:
 
         RepairOptions():
-            m_bAutoMatch(true),
-            m_bExtremeMerge(true),
-            m_bRotateCircles(true)
+            m_bReparamNURBs(true),
+            m_bRemoveSlivers(true),
+            m_bMerge(true),
+            m_bRotateCircles(true),
+            m_bAutoMatch(false),
+            m_bExtremeMerge(false),
+            m_bMakeAllEdgesHaveVertices(false)
             {}
 
+        bool m_bReparamNURBs;
+        bool m_bRemoveSlivers;
+        bool m_bMerge;
         bool m_bAutoMatch;
         bool m_bExtremeMerge;
         bool m_bRotateCircles;
+        bool m_bMakeAllEdgesHaveVertices;
     };
 
 SGM_EXPORT void Repair(SGM::Result            &rResult,
                        std::vector<SGM::Body> &aBodies,
                        SGM::RepairOptions     *pOptions=nullptr);
+
+SGM_EXPORT size_t FindOverLappingEdges(SGM::Result                  &rResult,
+                                       std::vector<SGM::Body> const &aBodies,
+                                       std::vector<SGM::Edge>       &aEdges);
 
 } // End of SGM namespace
 

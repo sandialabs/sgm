@@ -722,6 +722,10 @@ namespace SGM {
         double dX=m_XDomain.Length();
         double dY=m_YDomain.Length();
         double dZ=m_ZDomain.Length();
+        if(dX<0 || dY<0 || dZ<0)
+            {
+            return 0;
+            }
         return sqrt(dX*dX+dY*dY+dZ*dZ);
         }
 

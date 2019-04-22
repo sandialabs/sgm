@@ -188,27 +188,38 @@ void GetAxesFromSTEP(STEPLineData        const &stepLineData,
                      SGM::UnitVector3D         &XAxis)
     {
     size_t nLength = stepLineData.m_aIDs.size();
-    assert(nLength >= 2 && nLength <= 3);
     size_t nP = stepLineData.m_aIDs[0];
-    size_t nN = stepLineData.m_aIDs[1];
     std::vector<double> const &aP = mSTEPData.at(nP).m_aDoubles;
-    std::vector<double> const &aN = mSTEPData.at(nN).m_aDoubles;
-    Center = SGM::Point3D(aP[0], aP[1], aP[2]);
-    ZAxis = SGM::UnitVector3D(aN[0], aN[1], aN[2]);
-
-    if (nLength == 2)
+    if(aP.size()==3)
         {
-        XAxis = ZAxis.Orthogonal();
-        }
-    else if (nLength == 3)
-        {
-        size_t nX = stepLineData.m_aIDs[2];
-        std::vector<double> const &aX = mSTEPData.at(nX).m_aDoubles;
-        XAxis = SGM::UnitVector3D(aX[0], aX[1], aX[2]);
+        Center = SGM::Point3D(aP[0], aP[1], aP[2]);
         }
     else
         {
-        throw std::runtime_error("AXIS is not 2D or 3D");
+        Center=SGM::Point3D(0,0,0);
+        }
+    
+    if(1<stepLineData.m_aIDs.size())
+        {
+        size_t nN = stepLineData.m_aIDs[1];
+        std::vector<double> const &aN = mSTEPData.at(nN).m_aDoubles;
+        ZAxis = SGM::UnitVector3D(aN[0], aN[1], aN[2]);
+
+        if (nLength == 2)
+            {
+            XAxis = ZAxis.Orthogonal();
+            }
+        else if (nLength == 3)
+            {
+            size_t nX = stepLineData.m_aIDs[2];
+            std::vector<double> const &aX = mSTEPData.at(nX).m_aDoubles;
+            XAxis = SGM::UnitVector3D(aX[0], aX[1], aX[2]);
+            }
+        }
+    else
+        {
+        XAxis=SGM::UnitVector3D(1,0,0);
+        ZAxis=SGM::UnitVector3D(0,0,1);
         }
     }
 
@@ -225,13 +236,14 @@ circle *CreateCircleFromSTEP(SGM::Result               &rResult,
     return new circle(rResult, Center, ZAxis, dRadius, &XAxis);
     }
 
-cone *CreateConeFromSTEP(SGM::Result                &rResult,
+cone *CreateConeFromSTEP(SGM::Result               &rResult,
                          const STEPLineData        &stepLineData,
-                         const STEPLineDataMapType &mSTEPData)
+                         const STEPLineDataMapType &mSTEPData,
+                         double                    &dHalfAngle)
     {
     size_t nAxis = stepLineData.m_aIDs[0];
     double dRadius = stepLineData.m_aDoubles[0];
-    double dHalfAngle = stepLineData.m_aDoubles[1];
+    dHalfAngle = stepLineData.m_aDoubles[1];
     STEPLineData const &SLDA = mSTEPData.at(nAxis);
     SGM::Point3D Center;
     SGM::UnitVector3D ZAxis, XAxis;
@@ -389,7 +401,7 @@ void ConnectVolumesToBodies(STEPLineDataMapType const &mSTEPData,
         std::vector<size_t> const &aIDs = SLD.m_aIDs;
         size_t nID = aIDs.size();
 
-        // next to last ID is the axes for the body
+        // Next to last ID is the axes for the body
         size_t nTransformID = aIDs[nID-2];
         STEPLineData const &SLDA = mSTEPData.at(nTransformID);
         SGM::Point3D Center;
@@ -1035,16 +1047,20 @@ void FlattenAssemblies(SGM::Result &rResult,
 // Create all entities (main function)
 //
 ////////////////////////////////////////////////////////////////////////////////
-void CreateEntities(SGM::Result &rResult,
-                    size_t maxSTEPLineNumber,
-                    STEPLineDataMapType &mSTEPData,
+
+void CreateEntities(SGM::Result           &rResult,
+                    size_t                 maxSTEPLineNumber,
+                    STEPLineDataMapType   &mSTEPData,
                     std::vector<entity *> &aEntities)
     {
     IDEntityMapType mIDToEntityMap;
     std::set<entity *> sEntities;
     std::vector<size_t> aBodies, aVolumes, aFaces, aEdges;
+    std::vector<cone *> aCones;
+    std::vector<double> aHalfAngles;
     std::vector<body *> aSheetBodies;
     BodyToTransformMapType mBodyToTransforms;
+    bool bDegrees=false;
 
     // Create entities in a specific order by STEP #ID line number,
     // from 1 to maxSTEPLineNumber.
@@ -1100,7 +1116,19 @@ void CreateEntities(SGM::Result &rResult,
                 }
             case STEPTag::CONICAL_SURFACE:
                 {
-                mIDToEntityMap[nID] = CreateConeFromSTEP(rResult, stepLineData, mSTEPData);
+                double dHalfAngle;
+                cone *pCone=CreateConeFromSTEP(rResult, stepLineData, mSTEPData, dHalfAngle);
+                mIDToEntityMap[nID]=pCone;
+                aCones.push_back(pCone);
+                aHalfAngles.push_back(dHalfAngle);
+                break;
+                }
+            case STEPTag::CONVERSION_BASED_UNIT:
+                {
+                if(stepLineData.m_aStrings.size())
+                    {
+                    bDegrees=true;
+                    }
                 break;
                 }
             case STEPTag::CYLINDRICAL_SURFACE:
@@ -1207,6 +1235,16 @@ void CreateEntities(SGM::Result &rResult,
                 }
             default:
                 break;
+            }
+        }
+
+    if(bDegrees)
+        {
+        size_t nSize=aHalfAngles.size();
+        size_t Index1;
+        for(Index1=0;Index1<nSize;++Index1)
+            {
+            aCones[Index1]->ChangeHalfAngle(aHalfAngles[Index1]*SGM_PI/180.0);
             }
         }
 

@@ -239,6 +239,17 @@ SGM_EXPORT void CreateOctahedron(double                    dCircumscribedRadius,
                                  std::vector<unsigned int> &aTriangles,
                                  size_t                     nRefine=0);
 
+// SquareBipyramid is the same as CreateOctahedron, with the addition that
+// a dHight may be given that is the distance that the poles are from the center.
+// Unlike CreateOctahedron SquareBipyramid does not a refine options.  
+
+SGM_EXPORT void SquareBipyramid(double                    dRadius,
+                                double                    dHight,
+                                Point3D             const &Center,
+                                UnitVector3D        const &ZAxis,
+                                UnitVector3D        const &XAxis,
+                                std::vector<Point3D>      &aPoints3D,
+                                std::vector<unsigned int> &aTriangles);
 
 } // namespace SGM
 

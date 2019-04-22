@@ -246,6 +246,18 @@ inline void ParseCone(char const *pLineAfterStepTag,
     FindDouble(pos, STEPData.m_aDoubles);       // half-angle
     }
 
+inline void ParseUnits(char const *pLineAfterStepTag,
+                      STEPLineData &STEPData)
+    {
+    // #5735=(CONVERSION_BASED_UNIT('DEGREE',#5734)NAMED_UNIT(*)PLANE_ANGLE_UNIT());
+    static const char key[] = "DEGREE";
+    const char* pFound=FindWord(pLineAfterStepTag, key, 6);
+    if(pFound)
+        {
+        STEPData.m_aStrings.push_back("DEGREE");
+        }
+    }
+
 inline void ParseEllipse(char const *pLineAfterStepTag,
                          STEPLineData &STEPData)
     {
@@ -712,6 +724,11 @@ void ProcessSTEPLine(STEPTagMapType const &mSTEPTagMap,
         case STEPTag::CONTEXT_DEPENDENT_SHAPE_REPRESENTATION:
             {
             ParseContextDependentShapeRepresentation(pLineAfterStepTag, stepLine.m_STEPLineData);
+            break;
+            }
+        case STEPTag::CONVERSION_BASED_UNIT:
+            {
+            ParseUnits(pLineAfterStepTag, stepLine.m_STEPLineData);
             break;
             }
         case STEPTag::CYLINDRICAL_SURFACE:

@@ -7806,6 +7806,11 @@ bool IntersectCylinderAndSurface(SGM::Result                &rResult,
             auto pExtrude=(extrude const *)pSurface;
             return IntersectCylinderAndExtrude(rResult,pCylinder,pExtrude,aCurves,dTolerance);
             }
+        case SGM::EntityType::NUBSurfaceType:
+            {
+            auto pNUBSurface=(NUBsurface const *)pSurface;
+            return IntersectCylinderAndNUB(rResult,pCylinder,pNUBSurface,aCurves,dTolerance);
+            }
         default:
             {
             throw;

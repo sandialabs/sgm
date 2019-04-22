@@ -380,6 +380,10 @@ class cone : public surface
 
         cone *Offset(SGM::Result &rResult,double dValue) const;
 
+        // Changes the half angle of the cone.
+
+        void cone::ChangeHalfAngle(double dHalfAngle);
+
     public:
 
         SGM::Point3D      m_Origin;
