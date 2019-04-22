@@ -1594,10 +1594,73 @@ void Repair(SGM::Result         &rResult,
                     }
                 }
             }
-
-        int a=0;
-        a*=1;
         }
+    if(Options.m_bRotateCircles)
+        {
+        // Merge out edges and then rotate all free circles.
+        }
+    }
+
+void FindOverLappingEdges(SGM::Result         &rResult,
+                          face          const *pFace1,
+                          face          const *pFace2,
+                          std::vector<edge *> &aEdges)
+    {
+    std::vector<curve *> aCurves;
+    IntersectSurfaces(rResult,pFace1->GetSurface(),pFace2->GetSurface(),aCurves,SGM_MIN_TOL);
+    for(auto *pCurve : aCurves)
+        {
+        TrimCurveWithFaces(rResult,pCurve,pFace1,pFace2,aEdges,SGM_MIN_TOL);
+        }
+    }
+    
+void FindOverLappingEdges(SGM::Result         &rResult,
+                          volume        const *pVolume1,
+                          volume        const *pVolume2,
+                          std::vector<edge *> &aEdges)
+    {
+    auto FaceTree=pVolume2->GetFaceTree(rResult);
+    auto sFaces=pVolume1->GetFaces();
+    for(auto *pFace1 : sFaces)
+        {
+        auto aHits=FaceTree.FindIntersectsBox(pFace1->GetBox(rResult));
+        for(auto Hit : aHits)
+            {
+            face *pFace2=(face *)(Hit.first);
+            FindOverLappingEdges(rResult,pFace1,pFace2,aEdges);
+            }
+        }
+    }
+
+size_t FindOverLappingEdges(SGM::Result               &rResult,
+                            std::vector<body *> const &aBodies,
+                            std::vector<edge *>       &aEdges)
+    {
+    std::set<volume *,EntityCompare> sAllVolumes;
+    SGM::BoxTree Tree;
+    for(auto pBody : aBodies)
+        {
+        std::set<volume *,EntityCompare> sVolumes;
+        FindVolumes(rResult,pBody,sVolumes);
+        for(auto pVolume : sVolumes)
+            {
+            Tree.Insert(pVolume,pVolume->GetBox(rResult));
+            sAllVolumes.insert(pVolume);
+            }
+        }
+    for(auto pVolume : sAllVolumes)
+        {
+        auto aHits=Tree.FindIntersectsBox(pVolume->GetBox(rResult));
+        for(auto Hit : aHits)
+            {
+            volume *pHit=(volume *)(Hit.first);
+            if(pHit!=pVolume)
+                {
+                FindOverLappingEdges(rResult,pVolume,pHit,aEdges);
+                }
+            }
+        }
+    return aEdges.size();
     }
 
 } // end namespace SGMInternal

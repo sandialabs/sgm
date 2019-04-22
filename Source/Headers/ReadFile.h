@@ -178,12 +178,12 @@ typedef std::vector<STEPLine *> STEPLineChunk;
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SGM_MULTITHREADED
-size_t ParseSTEPStreamConcurrent(SGM::Result &rResult,
+size_t ParseSTEPStreamConcurrent(SGM::Result                  &rResult,
                                  SGM::TranslatorOptions const &Options,
-                                 std::vector <std::string> &aLog,
-                                 std::ifstream &inputFileStream,
-                                 STEPTagMapType const &mSTEPTagMap,
-                                 STEPLineDataMapType &mSTEPData);
+                                 std::vector <std::string>    &aLog,
+                                 std::ifstream                &inputFileStream,
+                                 STEPTagMapType         const &mSTEPTagMap,
+                                 STEPLineDataMapType          &mSTEPData);
 #endif
 
 void CreateEntities(SGM::Result           &rResult,

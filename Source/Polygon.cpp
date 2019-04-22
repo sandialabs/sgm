@@ -205,6 +205,39 @@ bool FindTrianglesOfPolygonPoints(std::vector<SGM::Point2D> const &aPolygon,
                 }
             else
                 {
+                // Snap the point to the closest point.
+
+                //double dDist=SGM_MAX;
+                //unsigned nWhere=0;
+                //for(size_t Index2=0;Index2<nHits;++Index2)
+                //    {
+                //    size_t nHitTri=*((size_t *)aHits[Index2].first);
+                //    unsigned a=aTriangles[nHitTri];
+                //    unsigned b=aTriangles[nHitTri+1];
+                //    unsigned c=aTriangles[nHitTri+2];
+                //    SGM::Point2D const &A=aPoints2D[a];
+                //    SGM::Point2D const &B=aPoints2D[b];
+                //    SGM::Point2D const &C=aPoints2D[c];
+                //    double dTestA=A.DistanceSquared(D);
+                //    double dTestB=B.DistanceSquared(D);
+                //    double dTestC=C.DistanceSquared(D);
+                //    if(dTestA<dDist)
+                //        {
+                //        dDist=dTestA;
+                //        nWhere=a;
+                //        }
+                //    if(dTestB<dDist)
+                //        {
+                //        dDist=dTestB;
+                //        nWhere=b;
+                //        }
+                //    if(dTestC<dDist)
+                //        {
+                //        dDist=dTestC;
+                //        nWhere=c;
+                //        }
+                //    }
+                //aPolygonIndices.push_back(nWhere);
                 return false;
                 }
             }
@@ -522,7 +555,7 @@ bool ForcePolygonEdgesIntoTriangles(SGM::Result                     &rResult,
         {
         unsigned a=aPolygonIndices[Index1];
         unsigned b=aPolygonIndices[(Index1+1)%nPolygon];
-        if(sEdges.find({a,b})==sEdges.end())
+        if(a!=b && sEdges.find({a,b})==sEdges.end())
             {
             if(pImprintFlag && (*pImprintFlag)[Index1]==false && (*pImprintFlag)[(Index1+1)%nPolygon]==false)
                 {

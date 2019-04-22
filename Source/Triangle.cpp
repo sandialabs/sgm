@@ -18,10 +18,10 @@
 namespace SGMInternal
 {
 
-void RefineTriangles(SGM::Point3D        const &Pos,
+void RefineTriangles(SGM::Point3D        const &Center,
                      double                     dRadius,
                      std::vector<SGM::Point3D> &aPoints,
-                     std::vector<unsigned> &aTriangles)
+                     std::vector<unsigned>     &aTriangles)
     {
     size_t nPoints=aPoints.size();
     size_t nTriangles=aTriangles.size();
@@ -43,8 +43,8 @@ void RefineTriangles(SGM::Point3D        const &Pos,
         if(ABIter==aMap.end())
             {
             SGM::Point3D AB=SGM::MidPoint(A,B);
-            SGM::UnitVector3D UVAB=AB-Pos;
-            AB=Pos+UVAB*dRadius;
+            SGM::UnitVector3D UVAB=AB-Center;
+            AB=Center+UVAB*dRadius;
             ab=(unsigned)aPoints.size();
             aPoints.push_back(AB);
             aMap[{b,a}]=ab;
@@ -59,8 +59,8 @@ void RefineTriangles(SGM::Point3D        const &Pos,
         if(BCIter==aMap.end())
             {
             SGM::Point3D BC=SGM::MidPoint(B,C);
-            SGM::UnitVector3D UVBC=BC-Pos;
-            BC=Pos+UVBC*dRadius;
+            SGM::UnitVector3D UVBC=BC-Center;
+            BC=Center+UVBC*dRadius;
             bc=(unsigned)aPoints.size();
             aPoints.push_back(BC);
             aMap[{c,b}]=bc;
@@ -75,8 +75,8 @@ void RefineTriangles(SGM::Point3D        const &Pos,
         if(CAIter==aMap.end())
             {
             SGM::Point3D CA=SGM::MidPoint(C,A);
-            SGM::UnitVector3D UVCA=CA-Pos;
-            CA=Pos+UVCA*dRadius;
+            SGM::UnitVector3D UVCA=CA-Center;
+            CA=Center+UVCA*dRadius;
             ca=(unsigned)aPoints.size();
             aPoints.push_back(CA);
             aMap[{a,c}]=ca;
@@ -1069,6 +1069,46 @@ void CreateOctahedron(double                     dRadius,
     for(Index1=0;Index1<nRefine;++Index1)
         {
         SGMInternal::RefineTriangles(Center,dRadius,aPoints3D,aTriangles);
+        }
+    }
+
+void SquareBipyramid(double                     dRadius,
+                     double                     dHight,
+                     SGM::Point3D        const &Center,
+                     SGM::UnitVector3D   const &ZAxis,
+                     SGM::UnitVector3D   const &XAxis,
+                     std::vector<SGM::Point3D> &aPoints3D,
+                     std::vector<unsigned>     &aTriangles)
+    {
+    aPoints3D={{       0,        0,  dHight},
+               { dRadius,        0,        0},
+               {       0,  dRadius,        0},
+               {-dRadius,        0,        0},
+               {       0, -dRadius,        0},
+               {       0,        0, -dHight}};
+
+    aTriangles={1,0,4,1,2,0,3,0,2,4,0,3,4,3,5,4,5,1,1,5,2,2,5,3};
+
+    // Rotate and center the points.
+
+    SGM::Point3D OldCenter(0,0,0);
+    SGM::UnitVector3D OldZ=aPoints3D[0]-aPoints3D[5];
+    SGM::Vector3D Vec=aPoints3D[1]-OldCenter;
+    SGM::UnitVector3D OldX=(OldZ*Vec)*OldZ;
+    SGM::UnitVector3D OldY=OldZ*OldX;
+    SGM::UnitVector3D YAxis=ZAxis*XAxis;
+    SGM::Vector3D CenterVec(Center);
+    SGM::Transform3D Trans1(OldX,OldY,OldZ);
+    SGM::Transform3D Trans2;
+    Trans1.Inverse(Trans2);
+    SGM::Transform3D Trans3(XAxis,YAxis,ZAxis,CenterVec);
+    SGM::Transform3D Trans4=Trans2*Trans3;
+
+    size_t nPoints=aPoints3D.size();
+    size_t Index1;
+    for(Index1=0;Index1<nPoints;++Index1)
+        {
+        aPoints3D[Index1]=Trans4*aPoints3D[Index1];
         }
     }
 

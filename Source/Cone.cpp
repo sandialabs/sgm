@@ -6,11 +6,18 @@
 
 namespace SGMInternal {
 
-cone::cone(SGM::Result &rResult,
-           SGM::Point3D const &Center,
+void cone::ChangeHalfAngle(double dHalfAngle)
+    {
+    m_dSinHalfAngle = sin(dHalfAngle);
+    m_dCosHalfAngle = cos(dHalfAngle);
+    m_Domain.m_VDomain.m_dMax = 1.0 / m_dSinHalfAngle;
+    }
+
+cone::cone(SGM::Result             &rResult,
+           SGM::Point3D      const &Center,
            SGM::UnitVector3D const &ZAxis,
-           double dRadius,
-           double dHalfAngle,
+           double                   dRadius,
+           double                   dHalfAngle,
            SGM::UnitVector3D const *XAxis) :
     surface(rResult, SGM::ConeType),
     m_Origin(Center),

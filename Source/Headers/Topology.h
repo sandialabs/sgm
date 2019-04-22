@@ -142,6 +142,10 @@ void Repair(SGM::Result         &rResult,
             std::vector<body *> &aBodies,
             SGM::RepairOptions  *pOptions=nullptr);
 
+size_t FindOverLappingEdges(SGM::Result               &rResult,
+                        std::vector<body *> const &aBodies,
+                        std::vector<edge *>       &aEdges);
+
 body *UnhookFaces(SGM::Result         &rResult,
                   std::vector<face *> &aFaces);
 

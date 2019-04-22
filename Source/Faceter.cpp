@@ -1251,6 +1251,7 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
 
 double MoreFacetChecks(edge const *pEdge)
     {
+    double dAnswer=1.0;
     if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
         {
         std::set<edge *,EntityCompare> sAllEdges;
@@ -1287,21 +1288,18 @@ double MoreFacetChecks(edge const *pEdge)
                     dMinRadius=pCircle->GetRadius();
                     }
                 }
-            return dMinRadius/((circle *)(pEdge->GetCurve()))->GetRadius();
+            double dAnswer=dMinRadius/((circle *)(pEdge->GetCurve()))->GetRadius();
+            if(1<dAnswer)
+                {
+                dAnswer=1.0;
+                }
+            if(dAnswer<0.1)
+                {
+                dAnswer=0.1;
+                }
             }
         }
-    //for(auto pFace : pEdge->GetFaces())
-    //    {
-    //    if(pEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType)
-    //        {
-    //        surface *pSurf=pFace->GetSurface();
-    //        if(pSurf->GetSurfaceType()==SGM::NURBSurfaceType)
-    //            {
-    //            return 0.5;
-    //            }
-    //        }
-    //    }
-    return 1.0;
+    return dAnswer;
     }
 
 void FacetEdge(SGM::Result               &rResult,
@@ -1506,7 +1504,13 @@ static bool FindSeamCrossings(face        const *pFace,
             Node NodeA=aNodes[nA];
             size_t nB=NodeA.m_nNext;
             Node NodeB=aNodes[nB];
-            if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
+
+            double dDist0=fabs(NodeA.m_uv.m_u-Domain.m_dMin);
+            double dDist1=fabs(NodeA.m_uv.m_u-Domain.m_dMax);
+            double dDist2=fabs(NodeB.m_uv.m_u-Domain.m_dMin);
+            double dDist3=fabs(NodeB.m_uv.m_u-Domain.m_dMax);
+
+            if(dDist0<dDist1 && dDist0<dDist2 && dDist0<dDist3)
                 {
                 if(NodeA.m_nNext==NodeA.m_nPrevious)
                     {
@@ -1538,7 +1542,7 @@ static bool FindSeamCrossings(face        const *pFace,
                     aUInHigh.emplace_back(NodeA.m_uv.m_v,nC);
                     }
                 }
-            else if(SGM::NearEqual(NodeA.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
+            else if(dDist1<dDist2 && dDist1<dDist3)
                 {
                 if(NodeA.m_nNext==NodeA.m_nPrevious)
                     {
@@ -1570,7 +1574,7 @@ static bool FindSeamCrossings(face        const *pFace,
                     aUInLow.emplace_back(NodeA.m_uv.m_v,nC);
                     }
                 }
-            else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMin,SGM_MIN_TOL,false))
+            else if(dDist2<dDist3)
                 {
                 if(NodeB.m_nNext==NodeB.m_nPrevious)
                     {
@@ -1602,7 +1606,7 @@ static bool FindSeamCrossings(face        const *pFace,
                     aUOutHigh.emplace_back(NodeB.m_uv.m_v,nC);
                     }
                 }
-            else if(SGM::NearEqual(NodeB.m_uv.m_u,Domain.m_dMax,SGM_MIN_TOL,false))
+            else 
                 {
                 if(NodeB.m_nNext==NodeB.m_nPrevious)
                     {
@@ -2839,7 +2843,7 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
         }
     }
 
-static void FindSpherePoints(sphere                   const *pSphere,
+static void FindSpherePoints(surface                  const *pSurface,
                              std::vector<SGM::Point3D>      &aPoints3D,
                              std::vector<unsigned int>      &aTriangles,
                              std::vector<SGM::Point2D>      &aPoints2D,
@@ -2855,9 +2859,9 @@ static void FindSpherePoints(sphere                   const *pSphere,
     for(Index1=0;Index1<nPoints;++Index1)
         {
         SGM::Point3D Pos=aPoints3D[Index1];
-        SGM::Point2D uv=pSphere->Inverse(Pos);
+        SGM::Point2D uv=pSurface->Inverse(Pos);
         SGM::UnitVector3D Norm;
-        pSphere->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+        pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
         aNormals.push_back(Norm);
         // Make all seam and pole points have a uv.m_u values of zero.
         if(uv.m_v-SGM_MIN_TOL<-SGM_HALF_PI)
@@ -2918,7 +2922,7 @@ static void FindSpherePoints(sphere                   const *pSphere,
             SGM::Point3D const &B=aPoints3D[b];
             SGM::Point3D const &C=aPoints3D[c];
             SGM::Point3D CM=SGM::CenterOfMass(A,B,C);
-            SGM::Point2D GuessUV=pSphere->Inverse(CM);
+            SGM::Point2D GuessUV=pSurface->Inverse(CM);
             if( sPolePoints.find(a)!=sPolePoints.end() ||
                 sPolePoints.find(b)!=sPolePoints.end() ||
                 sPolePoints.find(c)!=sPolePoints.end())
@@ -2932,9 +2936,9 @@ static void FindSpherePoints(sphere                   const *pSphere,
                     GuessUV.m_u=SGM_TWO_PI;
                     }
                 }
-            SGM::Point2D Auv=pSphere->Inverse(A,nullptr,&GuessUV);
-            SGM::Point2D Buv=pSphere->Inverse(B,nullptr,&GuessUV);
-            SGM::Point2D Cuv=pSphere->Inverse(C,nullptr,&GuessUV);
+            SGM::Point2D Auv=pSurface->Inverse(A,nullptr,&GuessUV);
+            SGM::Point2D Buv=pSurface->Inverse(B,nullptr,&GuessUV);
+            SGM::Point2D Cuv=pSurface->Inverse(C,nullptr,&GuessUV);
             if(SGM_TWO_PI<Auv.m_u+SGM_MIN_TOL)
                 {
                 aTriangles[Index1]=(unsigned int)mSeamMap[a];
@@ -2953,8 +2957,8 @@ static void FindSpherePoints(sphere                   const *pSphere,
     // Add the two pole triangles.
 
     size_t nLowMid=0,nHighMid=0,nLowLeft=0,nLowRight=0,nHighLeft=0,nHighRight=0;
-    double dMaxV=pSphere->GetDomain().m_VDomain.m_dMax;
-    double dMinV=pSphere->GetDomain().m_VDomain.m_dMin;
+    double dMaxV=pSurface->GetDomain().m_VDomain.m_dMax;
+    double dMinV=pSurface->GetDomain().m_VDomain.m_dMin;
     double dLowMid=dMaxV,dLowLeft=dMaxV,dLowRight=dMaxV;
     double dHighMid=dMinV,dHighLeft=dMinV,dHighRight=dMinV;
     nPoints=aPoints2D.size();
@@ -3034,6 +3038,10 @@ void FindTorusPoints(torus                    const *pSurface,
     if(nV<3)
         {
         nV=3;
+        }
+    if(10<nU)
+        {
+        nU=(size_t)(nU*1.5);
         }
     size_t Index1;
     for(Index1=0;Index1<=nU;++Index1)
@@ -3216,6 +3224,89 @@ void FindDistances(std::vector<SGM::Point2D> const &aPoints2D,
         }
     }
 
+//void RefineParametrically(surface             const *pTorus,
+//                          std::vector<SGM::Point3D> &aPoints3D,
+//                          std::vector<unsigned>     &aTriangles,
+//                          size_t                     nRefine)
+//    {
+//    size_t nPoints=aPoints3D.size();
+//    size_t nTriangles=aTriangles.size();
+//    aTriangles.reserve(nTriangles*4);
+//    aPoints3D.reserve(nTriangles+2*nPoints-2);
+//    std::map<std::pair<unsigned,unsigned>,unsigned> aMap;
+//    size_t Index1;
+//    for(Index1=0;Index1<nTriangles;Index1+=3)
+//        {
+//        unsigned a=aTriangles[Index1];
+//        unsigned b=aTriangles[Index1+1];
+//        unsigned c=aTriangles[Index1+2];
+//        SGM::Point3D const &A=aPoints3D[a];
+//        SGM::Point3D const &B=aPoints3D[b];
+//        SGM::Point3D const &C=aPoints3D[c];
+//
+//        auto ABIter=aMap.find({a,b});
+//        unsigned ab;
+//        if(ABIter==aMap.end())
+//            {
+//            SGM::Point3D AB=SGM::MidPoint(A,B);
+//            SGM::UnitVector3D UVAB=AB-Center;
+//            AB=Center+UVAB*dRadius;
+//            ab=(unsigned)aPoints.size();
+//            aPoints.push_back(AB);
+//            aMap[{b,a}]=ab;
+//            }
+//        else
+//            {
+//            ab=ABIter->second;
+//            }
+//
+//        auto BCIter=aMap.find({b,c});
+//        unsigned bc;
+//        if(BCIter==aMap.end())
+//            {
+//            SGM::Point3D BC=SGM::MidPoint(B,C);
+//            SGM::UnitVector3D UVBC=BC-Center;
+//            BC=Center+UVBC*dRadius;
+//            bc=(unsigned)aPoints.size();
+//            aPoints.push_back(BC);
+//            aMap[{c,b}]=bc;
+//            }
+//        else
+//            {
+//            bc=BCIter->second;
+//            }
+//
+//        auto CAIter=aMap.find({c,a});
+//        unsigned ca;
+//        if(CAIter==aMap.end())
+//            {
+//            SGM::Point3D CA=SGM::MidPoint(C,A);
+//            SGM::UnitVector3D UVCA=CA-Center;
+//            CA=Center+UVCA*dRadius;
+//            ca=(unsigned)aPoints.size();
+//            aPoints.push_back(CA);
+//            aMap[{a,c}]=ca;
+//            }
+//        else
+//            {
+//            ca=CAIter->second;
+//            }
+//
+//        aTriangles[Index1]=ab;
+//        aTriangles[Index1+1]=bc;
+//        aTriangles[Index1+2]=ca;
+//        aTriangles.push_back(a);
+//        aTriangles.push_back(ab);
+//        aTriangles.push_back(ca);
+//        aTriangles.push_back(b);
+//        aTriangles.push_back(bc);
+//        aTriangles.push_back(ab);
+//        aTriangles.push_back(c);
+//        aTriangles.push_back(ca);
+//        aTriangles.push_back(bc);
+//        }
+//    }
+
 void FacetFace(SGM::Result                    &rResult,
                face                     const *pFace,
                FacetOptions             const &Options,
@@ -3295,8 +3386,8 @@ void FacetFace(SGM::Result                    &rResult,
             FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
             break;
             }
-        case SGM::CylinderType:
         case SGM::ConeType:
+        case SGM::CylinderType:
         case SGM::ExtrudeType:
             {
             // Scaling is needed.
@@ -3374,11 +3465,22 @@ void FacetFace(SGM::Result                    &rResult,
                 FindNormalsAndPoints(pFace,aPoints2D,aNormals,aPoints3D);
                 break;
                 }
-
             auto const *pTorus=(torus const *)(pFace->GetSurface());
             std::vector<SGM::Point2D> aPolygonPoints=aPoints2D;
             aPoints2D.clear();
             FindTorusPoints(pTorus,Box,Options,aPoints3D,aTriangles,aPoints2D,aNormals);
+
+            //SGM::Point3D Pole;
+            //pTorus->Evaluate(pTorus->GetDomain().MidPoint(0,0),&Pole);
+            //double dHight=Pole.Distance(pTorus->m_Center);
+            //SGM::SquareBipyramid(pTorus->m_dMajorRadius+pTorus->m_dMinorRadius,dHight,
+            //                      pTorus->m_Center,pTorus->m_ZAxis,pTorus->m_XAxis,
+            //                      aPoints3D,aTriangles);
+            //FindSpherePoints(pTorus,aPoints3D,aTriangles,aPoints2D,aNormals);
+            //if(pFace)
+            //    {
+            //    return;
+            //    }
 
             if(aaPolygons.size())
                 {

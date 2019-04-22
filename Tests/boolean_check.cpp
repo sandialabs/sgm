@@ -36,6 +36,68 @@ bool check_entity_verbose(SGM::Result &rResult, const SGM::Entity &entity)
     return bValue;
     }
 
+TEST(repair, block_block)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    SGM::Body BlockID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,10));
+    SGM::Body BlockID2=SGM::CreateBlock(rResult,SGM::Point3D(5,5,5),SGM::Point3D(15,15,15));
+    std::vector<SGM::Body> aBodies;
+    aBodies.push_back(BlockID1);
+    aBodies.push_back(BlockID2);
+    std::vector<SGM::Edge> aEdges;
+    SGM::FindOverLappingEdges(rResult,aBodies,aEdges);
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
+//TEST(repair, spring_bottom_cap)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    std::vector<SGM::Entity> entities;
+//    std::vector<std::string> log;
+//    SGM::TranslatorOptions const options;
+//    std::string file_path1 = get_models_file_path("RepairTest/Shock-BottomCap.stp");
+//    SGM::ReadFile(rResult, file_path1, entities, log, options);
+//
+//    std::string file_path2 = get_models_file_path("RepairTest/Shock-Spring.stp");
+//    SGM::ReadFile(rResult, file_path2, entities, log, options);
+//
+//    std::vector<SGM::Body> aBodies;
+//    aBodies.push_back(SGM::Body(entities[0].m_ID));
+//    aBodies.push_back(SGM::Body(entities[1].m_ID));
+//
+//    std::vector<SGM::Edge> aEdges;
+//    SGM::FindOverLappingEdges(rResult,aBodies,aEdges);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+//TEST(repair, spring_bottom_cap_faces)
+//{
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing); 
+//
+//    std::vector<SGM::Entity> entities;
+//    std::vector<std::string> log;
+//    SGM::TranslatorOptions const options;
+//    std::string file_path1 = get_models_file_path("RepairTest/Shock-Faces484-454.stp");
+//    SGM::ReadFile(rResult, file_path1, entities, log, options);
+//
+//    std::vector<SGM::Body> aBodies;
+//    aBodies.push_back(SGM::Body(entities[0].m_ID));
+//    aBodies.push_back(SGM::Body(entities[1].m_ID));
+//
+//    std::vector<SGM::Edge> aEdges;
+//    SGM::FindOverLappingEdges(rResult,aBodies,aEdges);
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//}
+
+
 //TEST(modify, block_block_slot)
 //{
 //    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();

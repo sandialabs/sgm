@@ -324,26 +324,6 @@ inline void AdjustUVSegment(const SGM::Interval1D &DirDomain,
         }
     }
 
-
-inline edge * UpdateClosestEdge(const SGM::Point2D &uv,
-                                const SGM::Point2D &uv0,
-                                const SGM::Point2D &uv1,
-                                edge               *pEdge,
-                                edge               *pCloseEdge,
-                                double             &dMinDist,
-                                SGM::Segment2D     &CloseSeg)
-    {
-    SGM::Segment2D Seg(uv0, uv1);
-    double dDist = Seg.DistanceSquared(uv);
-    if (dDist < dMinDist)
-        {
-        dMinDist = dDist;
-        pCloseEdge = pEdge;
-        CloseSeg = Seg;
-        }
-    return pCloseEdge;
-    }
-
 void FindClosestBoundary(SGM::Result        &rResult,
                          face         const *pFace,
                          SGM::Point2D const &uv,
