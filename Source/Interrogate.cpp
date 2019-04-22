@@ -528,7 +528,7 @@ void FindRaysForPoints(SGM::Result                           &rResult,
             }
 
         if (NextRayIntersects.m_dCost <= dCost ||                          // its as cheap as the previous ray
-            (NextRayIntersects.m_dCost < 2000.0 && nCountSinceNewRay < 4)) // and not super expensive
+            (NextRayIntersects.m_dCost < 1000 && nCountSinceNewRay < 9)) // and not super expensive
             {
             // re-use the previous direction
             dCost =  NextRayIntersects.m_dCost;
@@ -555,13 +555,6 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
     SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
 
-//    static const SGM::Point3D ProblemPoint(-2.270974214317322,  0.1256220414427698,  -5.319432870427387);
-//    bool bIsProblemPoint = SGM::NearEqual(ProblemPoint,Point,0.001);
-//    if (bIsProblemPoint)
-//        {
-//        std::cout << "IsProblemPoint ===================================" << std::endl;
-//        }
-
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
     size_t nCount=1;
     size_t nBadRays=0;
@@ -582,30 +575,14 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                 }
             if(!IsGoodRay(aTypes,aEntity)) // the hit is through an edge or a vertex, use a different ray
                 {
-//                std::cout << std::setprecision(16);
-//                std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
-//                std::cout << std::setprecision(16);
-//                std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
-//
-//                // print the first non-face
-//                size_t nSize = aEntity.size();
-//                for (size_t Index1 = 0; Index1 < nSize; ++Index1)
-//                    {
-//                    entity * entity = aEntity[Index1];
-//                    if (entity->GetType() != SGM::FaceType)
-//                        {
-//                        std::cout << SGM::EntityTypeName(entity->GetType()) << " ID " << entity->GetID() << std::endl;
-//                        break;
-//                        }
-//                    }
                 ++nBadRays;
-                if (nBadRays > 75)
-                    return 1; // throw std::runtime_error("Cannot find ray");
+                if (nBadRays > 4)
+                    return 1;
 
                 // look for a new ray
                 size_t nNextMaxCount = nCount+4;
                 RayFaceBoxIntersections TempRayIntersections;
-                TempRayIntersections.m_dCost = 1000000;
+                TempRayIntersections.m_dCost = std::numeric_limits<double>::max();
                 while (TempRayIntersections.m_dCost > 1000 && nCount < nNextMaxCount)
                     {
                     Direction = SGM::UnitVector3D(cos(nCount), sin(nCount), cos(nCount + 17));
@@ -613,13 +590,16 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                     TempRayIntersections = FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction);
                     }
                 RemoveMissedFacesFromRayIntersections(rResult, TempRayIntersections);
-                if (nBadRays > 25)
-                    {
-                    std::cout << "BadRay " <<
-                              std::setw(2) << nBadRays << ": << " <<
-                              std::setw(2) << nCount <<
-                              " cost = " << TempRayIntersections.m_dCost << std::endl;
-                    }
+//                if (nBadRays == 1)
+//                    {
+//                    std::cout << std::setprecision(16);
+//                    std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
+//                    std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
+//                    }
+//                else if (nBadRays == 4)
+//                    {
+//                    std::cout << "BadRay " << std::setw(2) << nBadRays << ": << " << std::setw(2) << nCount << " cost = " << TempRayIntersections.m_dCost << std::endl;
+//                    }
                 aHitFaces.swap(TempRayIntersections.m_aHitFaces);
                 bContinue=true;
                 break;
@@ -652,6 +632,27 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     return std::move(aIsInside);
     }
 
+//std::vector<bool> PointsInVolumeConcurrent(SGM::Result                     &rResult,
+//                                           std::vector<SGM::Point3D> const &aPoints,
+//                                           volume                    const *pVolume,
+//                                           double                           dTolerance)
+//    {
+//    buffer<unsigned>                     aIndexOrdered;
+//    std::vector<RayFaceBoxIntersections> aRayFaceBoxIntersections;
+//    FindRaysForPointsConcurrent(rResult,aPoints,pVolume,dTolerance,aIndexOrdered,aRayFaceBoxIntersections);
+//    size_t nPoints = aPoints.size();
+//    std::vector<bool> aIsInside(nPoints,false);
+//    // loop over rays in Z-order
+//    for (size_t i = 0; i < nPoints; ++i)
+//        {
+//        RayFaceBoxIntersections const & RayIntersections = aRayFaceBoxIntersections[i];
+//        if (RayIntersections.m_dCost != 0)
+//            {
+//            aIsInside[aIndexOrdered[i]] = IsRayInVolume(rResult,RayIntersections,pVolume,dTolerance);
+//            }
+//        }
+//    return std::move(aIsInside);
+//    }
 
 bool PointInVolume(SGM::Result        &rResult,
                    SGM::Point3D const &Point,
