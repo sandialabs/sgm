@@ -693,9 +693,12 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
                 a*=1;
                 }
             }
-        aPoints.swap(aTempPoints);
-        aTypes.swap(aTempTypes);
-        aEntities.swap(aTempEntities);
+        aPoints.clear();
+        aPoints.insert(aPoints.end(),aTempPoints.begin(),aTempPoints.end());
+        aTypes.clear();
+        aTypes.insert(aTypes.end(),aTempTypes.begin(),aTempTypes.end());
+        aEntities.clear();
+        aEntities.insert(aEntities.end(),aTempEntities.begin(),aTempEntities.end());
         }
     return aPoints.size();
     }
@@ -972,9 +975,6 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         }
 
     size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
-    aPoints.shrink_to_fit();
-    aTypes.shrink_to_fit();
-    aEntities.shrink_to_fit();
 
     if (aHitFacesSupplied == nullptr)
         {

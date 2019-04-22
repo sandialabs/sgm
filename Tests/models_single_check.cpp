@@ -260,7 +260,7 @@ TEST(speed_check, point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-#if 1
+#if 0
 TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -268,7 +268,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_Z;// DIRECTION_ALL;
+    int RAY_FIRE_DIRECTION = DIRECTION_Z;// DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
@@ -499,6 +499,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     }
 #endif
 
+#if 0
 TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -572,6 +573,7 @@ TEST(speed_check, points_in_volume_OUO_full_model_volume1)
 
     SGMTesting::ReleaseTestThing(pThing);
     }
+#endif
 
 TEST(models_single_check, import_check_OUO_grv_geom)
 {
