@@ -232,7 +232,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, DISABLED_point)
+TEST(speed_check, point)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -241,7 +241,7 @@ TEST(speed_check, DISABLED_point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.99338449336725,  0.366425467792747,  -1.64718061859023);
+    SGM::Point3D TestPoint(-2.421476355786058, 1.901547310773854, -4.747524732846191);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -249,7 +249,7 @@ TEST(speed_check, DISABLED_point)
 
     rResult.SetDebugFlag(6);
     std::vector<double> aData;
-    aData.push_back(1);
+    aData.push_back(-1);
     aData.push_back(0);
     aData.push_back(0);
     rResult.SetDebugData(aData);

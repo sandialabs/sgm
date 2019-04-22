@@ -22,7 +22,7 @@ namespace SGMInternal
 {
 
 bool IsGoodRay(std::vector<SGM::IntersectionType> aTypes,
-               std::vector<entity *> aEntity)
+               std::vector<entity *>              aEntity)
 {
     size_t nSize = aEntity.size();
     for (size_t Index1 = 0; Index1 < nSize; ++Index1)
@@ -357,43 +357,71 @@ void FindRaysForPoints(SGM::Result                           &rResult,
         }
     }
 
+bool PointInVolume(SGM::Point3D const &Point,
+                   SGM::Point3D const &HitPoint,
+                   entity       const *pEntity)
+    {
+    SGM::UnitVector3D UVec(0,0,1);
+    if(pEntity->GetType()==SGM::FaceType)
+        {
+        face *pFace=(face *)pEntity;
+        UVec=pFace->FindNormal(Point);
+        }
+    else
+        {
+        edge *pEdge=(edge *)pEntity;
+        std::set<face *,EntityCompare> const &aFaces=pEdge->GetFaces();
+        SGM::Vector3D Vec(0,0,0);
+        for(auto pFace : aFaces)
+            {
+            Vec=Vec+pFace->FindNormal(Point);
+            }
+        UVec=Vec;
+        }
+    return UVec%(Point-HitPoint)<0;
+    }
+
 bool IsRayInVolume(SGM::Result                   &rResult,
                    RayFaceBoxIntersections const &RayIntersections,
                    volume                  const *pVolume,
                    double                        dTolerance)
     {
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
-    SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
+    SGM::UnitVector3D Axis(RayIntersections.m_Ray.m_Direction);
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
     if(rResult.GetDebugFlag()==6)
         {
         std::vector<double> const &aData=rResult.GetDebugData();
-        Direction.m_x=aData[0]; Direction.m_y=aData[1]; Direction.m_z=aData[2];
+        Axis.m_x=aData[0]; Axis.m_y=aData[1]; Axis.m_z=aData[2];
         }
-    size_t nCountRaysFired=0;
+    size_t nCount=1;
     size_t nHits=0;
-    bool bContinue=true;
-    while(bContinue)
+    bool bFound=true;
+    while(bFound)
         {
-        bContinue=false;
+        bFound=false;
         std::vector<SGM::Point3D>          aPoints;
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *>              aEntity;
-        nHits=RayFireVolume(rResult,Point,Direction,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitFaces);
-        ++nCountRaysFired;
-        for (size_t i=0; i<nHits; ++i)
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitFaces);
+        if(nHits)
             {
-            if(SGM::NearEqual(Point,aPoints[i],dTolerance)) // the point is inside a face
+            if(SGM::NearEqual(Point,aPoints[0],dTolerance))
                 {
                 return true;
                 }
-            if(!IsGoodRay(aTypes,aEntity)) // the hit is through an edge or a vertex, use a different ray
+            if(!IsGoodRay(aTypes,aEntity))
                 {
-                Direction=SGM::UnitVector3D(cos(nCountRaysFired),sin(nCountRaysFired),cos(nCountRaysFired+17));
-                bContinue=true;
+                if(4<nCount)
+                    {
+                    //return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    }
+                Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
+                bFound=true;
                 break;
                 }
             }
+        ++nCount;
         }
     return nHits%2==1;
     }
@@ -420,7 +448,6 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
         }
     return std::move(aIsInside);
     }
-
 
 bool PointInVolume(SGM::Result        &rResult,
                    SGM::Point3D const &Point,
@@ -470,15 +497,18 @@ bool PointInVolume(SGM::Result        &rResult,
             aData.push_back(Axis.m_z);
             rResult.SetDebugData(aData);
             }
-        size_t Index1;
-        for(Index1=0;Index1<nHits;++Index1)
+        if(nHits)
             {
-            if(SGM::NearEqual(Point,aPoints[Index1],dTolerance))
+            if(SGM::NearEqual(Point,aPoints[0],dTolerance))
                 {
                 return true;
                 }
             if(!IsGoodRay(aTypes,aEntity))
                 {
+                if(4<nCount)
+                    {
+                    //return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
                 break;
