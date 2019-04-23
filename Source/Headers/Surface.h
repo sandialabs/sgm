@@ -382,7 +382,7 @@ class cone : public surface
 
         // Changes the half angle of the cone.
 
-        void cone::ChangeHalfAngle(double dHalfAngle);
+        void ChangeHalfAngle(double dHalfAngle);
 
     public:
 

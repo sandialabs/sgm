@@ -475,16 +475,7 @@ namespace SGM {
     inline bool Interval3D::IntersectsRay(Ray3D const& ray, double tolerance) const
     {
         double tmin, tmax;
-        bool may_intersect;
-        if (tolerance == 0)
-            {
-            may_intersect = IntersectsLineImpl(ray, tmin, tmax);
-            }
-        else
-            {
-            Interval3D const bigger = Extend(tolerance);
-            may_intersect = bigger.IntersectsLineImpl(ray, tmin, tmax);
-            }
+        bool may_intersect = Extend(tolerance).IntersectsLineImpl(ray, tmin, tmax);
         return (may_intersect &&
                 tmin < std::numeric_limits<double>::infinity() &&
                 tmax > 0.0); // forward direction only
