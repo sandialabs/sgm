@@ -414,11 +414,10 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                 {
                 if(4<nCount)
                     {
-                    //return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
-                break;
                 }
             }
         ++nCount;
@@ -507,11 +506,10 @@ bool PointInVolume(SGM::Result        &rResult,
                 {
                 if(4<nCount)
                     {
-                    //return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 bFound=true;
-                break;
                 }
             }
         ++nCount;

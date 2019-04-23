@@ -241,7 +241,7 @@ TEST(speed_check, point)
     SCOPED_TRACE(ouo_file_name);
     expect_import_ouo_success(ouo_file_name, rResult);
 
-    SGM::Point3D TestPoint(-2.421476355786058, 1.901547310773854, -4.747524732846191);
+    SGM::Point3D TestPoint(-2.99338449336725,-0.0249034159543929, -4.59700933514395);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
@@ -249,7 +249,7 @@ TEST(speed_check, point)
 
     rResult.SetDebugFlag(6);
     std::vector<double> aData;
-    aData.push_back(-1);
+    aData.push_back(1);
     aData.push_back(0);
     aData.push_back(0);
     rResult.SetDebugData(aData);
@@ -264,7 +264,7 @@ TEST(speed_check, point)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-#if 0
+#if 1
 TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
@@ -272,7 +272,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    const int RAY_FIRE_DIRECTION = DIRECTION_X;// DIRECTION_ALL;
+    int RAY_FIRE_DIRECTION = DIRECTION_X;// DIRECTION_ALL;
 
     const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
