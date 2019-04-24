@@ -1270,7 +1270,7 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         size_t whichZero = 2;
         TwoRootSolve(aaMatrix, aRoots, whichZero, aValues, aVectors);
     }
-    else
+    else  // note:  all cubics have at least one root
     {
         aRoots.push_back(0);
         aRoots.push_back(0);
