@@ -362,7 +362,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
             }
         }
 
-    // compute the closest point and store the closest segment
+    // Fnd the closest point and segment.
     std::vector<SGM::Point2D> const &aUVBoundary=pFace->GetUVBoundary(rResult,*ppCloseEdge);
     size_t IndexMinStart;
     if (IndexMinEnd==0)
@@ -380,19 +380,71 @@ void FindClosestBoundary(SGM::Result        &rResult,
     CloseSeg={Start,End};
 
     *ppCloseVertex=nullptr;
-    if((*ppCloseEdge)->GetStart())
+    vertex *pStart=(*ppCloseEdge)->GetStart();
+    if(pStart)
         {
         SGM::Point3D Pos;
         pFace->GetSurface()->Evaluate(CloseUV,&Pos);
-        SGM::Point3D StartPos = (*ppCloseEdge)->GetStart()->GetPoint();
+        SGM::Point3D StartPos=pStart->GetPoint();
         if(SGM::NearEqual(Pos,StartPos,SGM_MIN_TOL))
             {
-            *ppCloseVertex=(*ppCloseEdge)->GetStart();
+            *ppCloseVertex=pStart;
             }
-        SGM::Point3D EndPos = (*ppCloseEdge)->GetEnd()->GetPoint();
+        vertex *pEnd=(*ppCloseEdge)->GetEnd();
+        SGM::Point3D EndPos=pEnd->GetPoint();
         if(SGM::NearEqual(Pos,EndPos,SGM_MIN_TOL))
             {
-            *ppCloseVertex=(*ppCloseEdge)->GetEnd();
+            *ppCloseVertex=pEnd;
+            }
+
+        // Check to see if we are near a cusp and some other edges is closer.
+
+        if(pFace->GetSurface()->ClosedInU()==false && pFace->GetSurface()->ClosedInV()==false)
+            {
+            double t=(*ppCloseEdge)->GetCurve()->Inverse(Pos);
+            double dFraction=(*ppCloseEdge)->GetDomain().Fraction(t);
+            edge *pTestEdge=nullptr;
+            if(dFraction<0.02)
+                {
+                std::vector<edge *> aEdges;
+                FindEdgesOnFaceAtVertex(rResult,pStart,pFace,aEdges);
+                if(aEdges.size()==2)
+                    {
+                    if(aEdges[0]!=(*ppCloseEdge))
+                        {
+                        pTestEdge=aEdges[0];
+                        }
+                    else
+                        {
+                        pTestEdge=aEdges[1];
+                        }
+                    }
+                }
+            else if(0.95<dFraction)
+                {
+                std::vector<edge *> aEdges;
+                FindEdgesOnFaceAtVertex(rResult,pEnd,pFace,aEdges);
+                if(aEdges.size()==2)
+                    {
+                    if(aEdges[0]!=(*ppCloseEdge))
+                        {
+                        pTestEdge=aEdges[0];
+                        }
+                    else
+                        {
+                        pTestEdge=aEdges[1];
+                        }
+                    }
+                }
+            if(pTestEdge)
+                {
+                double dDist1=(*ppCloseEdge)->DistanceToEdge(Pos);
+                double dDist2=pTestEdge->DistanceToEdge(Pos);
+                if(dDist2<dDist1)
+                    {
+                    *ppCloseEdge=pTestEdge;
+                    }
+                }
             }
         }
     }
@@ -493,7 +545,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             *bOnEdge=false;
             }
         SGM::EdgeSideType nType=GetSideType(pCloseEdge);
-        SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,TestPos);
+        SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,ClosePos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);

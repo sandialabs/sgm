@@ -1288,7 +1288,7 @@ double MoreFacetChecks(edge const *pEdge)
                     dMinRadius=pCircle->GetRadius();
                     }
                 }
-            double dAnswer=dMinRadius/((circle *)(pEdge->GetCurve()))->GetRadius();
+            dAnswer=dMinRadius/((circle *)(pEdge->GetCurve()))->GetRadius();
             if(1<dAnswer)
                 {
                 dAnswer=1.0;

@@ -1,3 +1,5 @@
+#include "SGMEnums.h"
+
 #include "EntityClasses.h"
 #include "Topology.h"
 #include "Curve.h"

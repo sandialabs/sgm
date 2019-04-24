@@ -19,18 +19,19 @@
 namespace SGMInternal
 {
 
-void NewtonMethod(double a,
-                  double b,
-                  double c,
-                  double d,
-                  double e,
-                  double &x)
+double NewtonMethod(double                 a,
+                    double                 b,
+                    double                 c,
+                    double                 d,
+                    double                 e,
+                    SGM::Interval1D const &Domain)
     {
     double delta=1.0;
     double fx=1.0;
     double a4=a*4.0;
     double b3=b*3.0;
     double c2=c*2.0;
+    double x=Domain.MidPoint();
     size_t nCount=0;
     while(SGM_ZERO<fabs(delta) && SGM_ZERO<fabs(fx) && nCount<100)
         {
@@ -47,6 +48,33 @@ void NewtonMethod(double a,
         x-=delta;
         ++nCount;
         }
+    if(Domain.InInterval(x,SGM_ZERO)==false)
+        {
+        double dLeft=Domain.m_dMin;
+        double dRight=Domain.m_dMax;
+        double fLeft=dLeft*(dLeft*(dLeft*(a*dLeft+b)+c)+d)+e;
+        double fRight=dRight*(dRight*(dRight*(a*dRight+b)+c)+d)+e;
+        if(fLeft*fRight<=0)
+            {
+            while(SGM_ZERO<dRight-dLeft)
+                {
+                double dMid=(dRight+dLeft)*0.5;
+                double fMid=dMid*(dMid*(dMid*(a*dMid+b)+c)+d)+e;
+                if(fLeft*fMid<=0)
+                    {
+                    dRight=dMid;
+                    fRight=fMid;
+                    }
+                else
+                    {
+                    dLeft=dMid;
+                    fLeft=fMid;
+                    }
+                }
+            x=(dRight+dLeft)*0.5;
+            }
+        }
+    return x;
     }
 
 } // End SGMInternal namespace
@@ -1309,122 +1337,123 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
         return aRoots.size();
     }
 
-    size_t Quartic(double a, double b, double c, double d, double e,
-                        std::vector<double> &aRoots,
-                        double dTolerance)
+size_t Quartic(double a, double b, double c, double d, double e,
+               std::vector<double> &aRoots,
+               double dTolerance)
     {
-        // Make sure that a is positive.
+    // Make sure that a is positive.
 
-        if (fabs(a) < SGM_ZERO)
+    if (fabs(a) < SGM_ZERO)
+        {
+        return Cubic(b, c, d, e, aRoots);
+        }
+    if (a < 0)
+        {
+        a = -a;
+        b = -b;
+        c = -c;
+        d = -d;
+        e = -e;
+        }
+
+    // Find the roots of the derivative.
+
+    std::vector<double> aDRoots, aDRootValues;
+    size_t nDRoots = Cubic(4.0 * a, 3.0 * b, 2.0 * c, d, aDRoots);
+    size_t Index1;
+    for (Index1 = 0; Index1 < nDRoots; ++Index1)
+        {
+        double t = aDRoots[Index1];
+        double t2 = t * t;
+        double t3 = t2 * t;
+        double t4 = t2 * t2;
+        aDRootValues.push_back(a * t4 + b * t3 + c * t2 + d * t + e);
+        }
+
+    // Find all double roots and from where to look for other roots.
+
+    std::vector<double> aCoefficients={a,b,c,d,e};
+    double dBound=SGM::LagrangeBound(aCoefficients);
+    std::vector<SGM::Interval1D> aWhereToLook;
+    if (nDRoots == 1)
+        {
+        if (aDRootValues[0] < -dTolerance)
             {
-            return Cubic(b, c, d, e, aRoots);
+            aWhereToLook.push_back(SGM::Interval1D(-dBound,aDRoots[0]));
+            aWhereToLook.push_back(SGM::Interval1D(aDRoots[0],dBound));
             }
-        if (a < 0)
+        else if (aDRootValues[0] < dTolerance)
             {
-            a = -a;
-            b = -b;
-            c = -c;
-            d = -d;
-            e = -e;
+            aRoots.push_back(aDRoots[0]);
+            }
+        }
+    else
+        {
+        if (aDRootValues[0] < -dTolerance)
+            {
+            aWhereToLook.push_back(SGM::Interval1D(-dBound,aDRoots[0]));
+            }
+        else if (aDRootValues[0] < dTolerance)
+            {
+            aRoots.push_back(aDRoots[0]);
             }
 
-        // Find the roots of the derivative.
-
-        std::vector<double> aDRoots, aDRootValues;
-        size_t nDRoots = Cubic(4.0 * a, 3.0 * b, 2.0 * c, d, aDRoots);
-        size_t Index1;
-        for (Index1 = 0; Index1 < nDRoots; ++Index1)
+        if (nDRoots == 2)
             {
-            double t = aDRoots[Index1];
-            double t2 = t * t;
-            double t3 = t2 * t;
-            double t4 = t2 * t2;
-            aDRootValues.push_back(a * t4 + b * t3 + c * t2 + d * t + e);
-            }
-
-        // Find all double roots and from where to look for other roots.
-
-        std::vector<double> aLookFrom;
-        if (nDRoots == 1)
-            {
-            if (aDRootValues[0] < -dTolerance)
+            if (aDRootValues[0] * aDRootValues[1] < 0)
                 {
-                aLookFrom.push_back(aDRoots[0] - 1.0);
-                aLookFrom.push_back(aDRoots[0] + 1.0);
-                }
-            else if (aDRootValues[0] < dTolerance)
-                {
-                aRoots.push_back(aDRoots[0]);
+                aWhereToLook.push_back(SGM::Interval1D(aDRoots[0],aDRoots[1]));
                 }
             }
         else
             {
-            if (aDRootValues[0] < -dTolerance)
+            if (fabs(aDRootValues[1]) < dTolerance)
                 {
-                aLookFrom.push_back(aDRoots[0] - 1.0);
-                }
-            else if (aDRootValues[0] < dTolerance)
-                {
-                aRoots.push_back(aDRoots[0]);
-                }
-
-            if (nDRoots == 2)
-                {
-                if (aDRootValues[0] * aDRootValues[1] < 0)
-                    {
-                    aLookFrom.push_back((aDRoots[0] + aDRoots[1]) * 0.5);
-                    }
+                aRoots.push_back(aDRoots[1]);
                 }
             else
                 {
-                if (fabs(aDRootValues[1]) < dTolerance)
+                if (aDRootValues[0] * aDRootValues[1] < 0)
                     {
-                    aRoots.push_back(aDRoots[1]);
+                    aWhereToLook.push_back(SGM::Interval1D(aDRoots[0],aDRoots[1]));
                     }
-                else
+                if (aDRootValues[2] * aDRootValues[1] < 0)
                     {
-                    if (aDRootValues[0] * aDRootValues[1] < 0)
-                        {
-                        aLookFrom.push_back((aDRoots[0] + aDRoots[1]) * 0.5);
-                        }
-                    if (aDRootValues[2] * aDRootValues[1] < 0)
-                        {
-                        aLookFrom.push_back((aDRoots[2] + aDRoots[1]) * 0.5);
-                        }
-                    }
-
-                if(fabs(aDRootValues[0])<dTolerance)
-                    {
-                    aRoots.push_back(aDRoots[0]);
-                    }
-                if(fabs(aDRootValues[2])<dTolerance)
-                    {
-                    aRoots.push_back(aDRoots[2]);
+                    aWhereToLook.push_back(SGM::Interval1D(aDRoots[1],aDRoots[2]));
                     }
                 }
 
-            if (aDRootValues[nDRoots - 1] < -dTolerance)
+            if(fabs(aDRootValues[0])<dTolerance)
                 {
-                aLookFrom.push_back(aDRoots[nDRoots - 1] + 1.0);
+                aRoots.push_back(aDRoots[0]);
                 }
-            else if (aDRootValues[nDRoots - 1] < dTolerance)
+            if(fabs(aDRootValues[2])<dTolerance)
                 {
-                aRoots.push_back(aDRoots[nDRoots - 1]);
+                aRoots.push_back(aDRoots[2]);
                 }
             }
 
-        // Look for non-double roots.
-
-        size_t nLookFrom = aLookFrom.size();
-        for (Index1 = 0; Index1 < nLookFrom; ++Index1)
+        if (aDRootValues[nDRoots - 1] < -dTolerance)
             {
-            SGMInternal::NewtonMethod(a, b, c, d, e, aLookFrom[Index1]);
-            aRoots.push_back(aLookFrom[Index1]);
+            aWhereToLook.push_back(SGM::Interval1D(aDRoots[nDRoots-1],dBound));
             }
+        else if (aDRootValues[nDRoots - 1] < dTolerance)
+            {
+            aRoots.push_back(aDRoots[nDRoots - 1]);
+            }
+        }
 
-        SGM::RemoveDuplicates1D(aRoots,dTolerance);
-        std::sort(aRoots.begin(), aRoots.end());
-        return aRoots.size();
+    // Look for non-double roots.
+
+    size_t nLookFrom = aWhereToLook.size();
+    for (Index1 = 0; Index1 < nLookFrom; ++Index1)
+        {
+        aRoots.push_back(SGMInternal::NewtonMethod(a,b,c,d,e,aWhereToLook[Index1]));
+        }
+
+    SGM::RemoveDuplicates1D(aRoots,dTolerance);
+    std::sort(aRoots.begin(), aRoots.end());
+    return aRoots.size();
     }
 
 bool FindQuadratic(SGM::Point2D const &xy1,
@@ -1463,8 +1492,25 @@ bool FindQuadratic(SGM::Point2D const &xy1,
     return false;
     }
 
-    size_t FindMaximalElements(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
-                                    std::vector<size_t> &aMaximalElements)
+    // Given the coefficients of a polynomial in the form a*x^n+b*x^(n-1)+...
+    // i.e. largest power of x first, the function LagrangeBound returns a bound
+    // B such that all the roots of the polynomial are between -B and B.
+
+double LagrangeBound(std::vector<double> aCoefficients)
+    {
+    double dSum=0;
+    size_t Index1;
+    size_t nCoefficients=aCoefficients.size();
+    double dA=aCoefficients.front();
+    for(Index1=1;Index1<nCoefficients;++Index1)
+        {
+        dSum+=fabs(aCoefficients[Index1]/dA);
+        }
+    return std::max(1.0,dSum);
+    }
+
+ size_t FindMaximalElements(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
+                            std::vector<size_t> &aMaximalElements)
     {
         std::set<size_t> sParents, sChildren;
         for (auto pair : sPartialOrder)
