@@ -772,11 +772,11 @@ void RemoveOutsideTriangles(SGM::Result                               &rResult,
                 {
                 SGM::Point2D const &Pos2D=aPoints2D[nWhere];
                 SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
-                std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
+                std::vector<void const*> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
                 double dDist=std::numeric_limits<unsigned>::max();
-                for(auto hit : aHits)
+                for(void const* pVoid : aHits)
                     {
-                    auto pSeg=(SGM::Segment2D const *)(hit.first);
+                    auto pSeg=(SGM::Segment2D const *)(pVoid);
                     double dTestDist=pSeg->Distance(Pos2D);
                     if(dTestDist<dDist)
                         {
@@ -897,7 +897,7 @@ void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
     for(Index1=0;Index1<nPoints;++Index1)
         {
         SGM::Point3D const &Pos=aPoints3D[Index1];
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos,dTolerance);
+        std::vector<void const*> aHits=Tree.FindIntersectsPoint(Pos,dTolerance);
         if(aHits.empty())
             {
             SGM::Interval3D Box(Pos);
@@ -907,7 +907,7 @@ void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
             }
         else
             {
-            size_t nWhere=(SGM::Point3D const *)(aHits[0].first)-pBase;
+            size_t nWhere=(SGM::Point3D const *)(aHits[0])-pBase;
             mMap[(unsigned)Index1]=(unsigned)nWhere;
             }
         }

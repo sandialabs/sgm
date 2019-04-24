@@ -1554,9 +1554,9 @@ void ImprintBodies(SGM::Result                            &rResult,
             {
             SGM::BoxTree const &Tree=pVolume->GetFaceTree(rResult);
             auto aHits=Tree.FindIntersectsBox(pFace1->GetBox(rResult));
-            for(auto hit : aHits)
+            for(void const* pVoid : aHits)
                 {
-                face *pFace2=(face *)hit.first;
+                face *pFace2=(face *)pVoid;
                 aFacePairs.push_back({pFace1,pFace2});
                 }
             }
@@ -1644,14 +1644,14 @@ size_t RayFireFaceSet(SGM::Result                        &rResult,
     {
     // Find all ray hits for all faces.
     SGM::Ray3D Ray(Origin,Axis);
-    std::vector<SGM::BoxTree::BoundedItemType> aHitFaces=FaceTree.FindIntersectsRay(Ray,dTolerance);
+    std::vector<void const*> aHitFaces=FaceTree.FindIntersectsRay(Ray,dTolerance);
 
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
     std::vector<entity *> aAllEntities;
-    for (auto boundedItem : aHitFaces)
+    for (void const* pVoid : aHitFaces)
         {
-        face * pFace = (face*)boundedItem.first;
+        face const * pFace = (face*)pVoid;
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
         std::vector<entity *> aEntity;

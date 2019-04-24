@@ -493,7 +493,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             *bOnEdge=false;
             }
         SGM::EdgeSideType nType=GetSideType(pCloseEdge);
-        SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,TestPos);
+        SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,ClosePos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);
@@ -594,8 +594,12 @@ SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
             SGM::Point3D const &C = m_aPoints3D[m_aTriangles[Index1++]];
             SGM::Interval3D TriangleBox(A,B,C);
 
-            // Account for chord height error of triangles on convex edges.
-            TriangleBox.Extend(0.1 * TriangleBox.FourthPerimeter());
+            // Convex edges, faces error:
+            // estimated error in height when edge of triangle is chord of curvature
+            // we use sum of Box X,Y,Z length as conservative estimate on chord length
+            // error in height h = C * 0.5 * (1 - cos(theta))/sin(theta) where
+            // C is chord of curvature spanned by angle tolerance on face facets
+            TriangleBox.Extend(FACET_FACE_HEIGHT_ERROR_FACTOR * TriangleBox.FourthPerimeter());
 
             m_FacetTree.Insert(&A,TriangleBox);
             }

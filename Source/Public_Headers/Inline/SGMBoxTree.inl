@@ -139,9 +139,14 @@ namespace SGM {
         return node->m_Bound.IntersectsSphere(m_center, m_radius, m_tolerance);
     }
 
+    inline BoxTree::PushLeaf::PushLeaf(size_t nReserve) : m_aContainer(), bContinueVisiting(true)
+    {
+        m_aContainer.reserve(nReserve);
+    };
+
     inline void BoxTree::PushLeaf::operator()(const BoxTree::Leaf *leaf)
     {
-        m_aContainer.emplace_back(leaf->m_pObject,leaf->m_Bound);
+        m_aContainer.emplace_back(leaf->m_pObject);
     }
 
     inline void BoxTree::LeafSumMassCentroid::operator()(const BoxTree::Leaf *leaf)
@@ -269,50 +274,50 @@ namespace SGM {
             }
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindAll() const
+    inline std::vector<void const*> BoxTree::FindAll() const
     {
         return Query(IsAny(), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindEnclosed(Interval3D const &bound) const
+    inline std::vector<void const*> BoxTree::FindEnclosed(Interval3D const &bound) const
     {
         return Query(IsEnclosing(bound), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsBox(const SGM::Interval3D &bound) const
+    inline std::vector<void const*> BoxTree::FindIntersectsBox(const SGM::Interval3D &bound) const
     {
         return Query(IsOverlapping(bound), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsHalfSpace(Point3D const &point,
-                                                                                  UnitVector3D const &unitVector,
-                                                                                  double tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsHalfSpace(Point3D const &point,
+                                                                     UnitVector3D const &unitVector,
+                                                                     double tolerance) const
     {
         return Query(IsIntersectingHalfSpace(point, unitVector, tolerance), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsLine(Ray3D const &ray,
-                                                                             double tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsLine(Ray3D const &ray,
+                                                                double tolerance) const
     {
         return Query(IsIntersectingLine(ray, tolerance), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsPlane(Point3D const &point,
-                                                                              UnitVector3D const &unitVector,
-                                                                              double tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsPlane(Point3D const &point,
+                                                                 UnitVector3D const &unitVector,
+                                                                 double tolerance) const
     {
         return Query(IsIntersectingPlane(point, unitVector, tolerance), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsPoint(Point3D const &point,
-                                                                              double tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsPoint(Point3D const &point,
+                                                                 double tolerance) const
     {
         return Query(IsIntersectingPoint(point, tolerance), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsRay(Ray3D const &ray, double tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsRay(Ray3D const &ray, double tolerance) const
     {
-        return Query(IsIntersectingRay(ray, tolerance), PushLeaf()).m_aContainer;
+        return Query(IsIntersectingRay(ray, tolerance), PushLeaf(SGM_BOX_MAX_RAY_HITS)).m_aContainer;
     }
 
     inline size_t BoxTree::CountIntersectsRay(Ray3D const &ray, double tolerance) const
@@ -335,16 +340,16 @@ namespace SGM {
         return centroid;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSegment(Point3D const &p1, 
-                                                                                Point3D const &p2,
-                                                                                double         tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsSegment(Point3D const &p1,
+                                                                   Point3D const &p2,
+                                                                   double         tolerance) const
     {
         return Query(IsIntersectingSegment(p1, p2, tolerance), PushLeaf()).m_aContainer;
     }
 
-    inline std::vector<BoxTree::BoundedItemType> BoxTree::FindIntersectsSphere(Point3D const &center, 
-                                                                              double          radius,
-                                                                              double          tolerance) const
+    inline std::vector<void const*> BoxTree::FindIntersectsSphere(Point3D const &center,
+                                                                  double          radius,
+                                                                  double          tolerance) const
     {
         return Query(IsIntersectingSphere(center, radius, tolerance), PushLeaf()).m_aContainer;
     }

@@ -133,13 +133,13 @@ bool FindTrianglesOfPolygonPoints(std::vector<SGM::Point2D> const &aPolygon,
         {
         SGM::Point2D const &D=aPolygon[Index1];
         SGM::Point3D Pos3D(D.m_u,D.m_v,0.0);
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dTol);
+        std::vector<void const*> aHits=Tree.FindIntersectsPoint(Pos3D,dTol);
         size_t nHits=aHits.size();
         std::vector<size_t> aEdges,aFacetTris;
         bool bFound=false;
         for(size_t Index2=0;Index2<nHits;++Index2)
             {
-            size_t nHitTri=*((size_t *)aHits[Index2].first);
+            size_t nHitTri=*((size_t *)aHits[Index2]);
             unsigned a=aTriangles[nHitTri];
             unsigned b=aTriangles[nHitTri+1];
             unsigned c=aTriangles[nHitTri+2];
@@ -262,7 +262,7 @@ void ForceEdge(SGM::Result                             &rResult,
     SGM::Point3D EndPos(Enduv.m_u,Enduv.m_v,0.0);
     SGM::Interval3D SegBox(StartPos,EndPos);
 
-    std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsBox(SegBox);
+    std::vector<void const*> aHits=Tree.FindIntersectsBox(SegBox);
     size_t nHits=aHits.size();
     size_t Index1,Index2;
     SGM::Segment2D Seg(Startuv,Enduv);
@@ -273,7 +273,7 @@ void ForceEdge(SGM::Result                             &rResult,
     std::map<unsigned,SGM::Point2D> mClose;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        size_t nHitTri=*((size_t *)aHits[Index1].first);
+        size_t nHitTri=*((size_t *)aHits[Index1]);
         unsigned a=aTriangles[nHitTri];
         unsigned b=aTriangles[nHitTri+1];
         unsigned c=aTriangles[nHitTri+2];
@@ -386,7 +386,7 @@ void ForceEdge(SGM::Result                             &rResult,
     std::vector<void const *> aCutHits;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        size_t nHitTri=*((size_t *)aHits[Index1].first);
+        size_t nHitTri=*((size_t *)aHits[Index1]);
         unsigned a=aTriangles[nHitTri];
         unsigned b=aTriangles[nHitTri+1];
         unsigned c=aTriangles[nHitTri+2];
@@ -397,7 +397,7 @@ void ForceEdge(SGM::Result                             &rResult,
         if(SegmentCrossesTriangle(Seg,A,B,C))
             {
             aCuts.push_back(nHitTri);
-            aCutHits.push_back(aHits[Index1].first);
+            aCutHits.push_back(aHits[Index1]);
             }
         }
 
@@ -1333,7 +1333,7 @@ std::vector<unsigned> MergePolygon(std::vector<Point2D>      const &aPoints2D,
         SGM::Point2D const &Pos2D=aPoints2D[Index1];
         SGM::Point3D Pos=SGM::Point3D(Pos2D.m_u,Pos2D.m_v,0.0);
         SGM::Interval3D Bound(Pos,dTolerance);
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=BTree.FindIntersectsPoint(Pos,dTolerance);
+        std::vector<void const*> aHits=BTree.FindIntersectsPoint(Pos,dTolerance);
         if(aHits.empty())
             {
             BTree.Insert(&aPoints2D[Index1],Bound);
@@ -1341,7 +1341,7 @@ std::vector<unsigned> MergePolygon(std::vector<Point2D>      const &aPoints2D,
             }
         else
             {
-            mMergeMap[Index1]=mMergeMap[(SGM::Point2D const *)aHits[0].first-pBase];
+            mMergeMap[Index1]=mMergeMap[(SGM::Point2D const *)aHits[0]-pBase];
             }
         }
 

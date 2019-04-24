@@ -472,12 +472,12 @@ bool DoPointsMatch(std::vector<SGM::Point3D>     const &aPoints1,
     SGM::Point3D const *pBase=&aPoints2[0];
     for(Index1=0;Index1<nPoints;++Index1)
         {
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(aPoints1[Index1],dTolerance);
+        std::vector<void const*> aHits=Tree.FindIntersectsPoint(aPoints1[Index1],dTolerance);
         if(aHits.size()!=1)
             {
             return false;
             }
-        size_t nWhere=(SGM::Point3D const *)aHits[0].first-pBase;
+        size_t nWhere=(SGM::Point3D const *)aHits[0]-pBase;
         mMatchMap[(unsigned)Index1]=(unsigned)nWhere;
         }
     return true;

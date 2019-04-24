@@ -40,12 +40,12 @@ bool IsGoodRay(std::vector<SGM::IntersectionType> aTypes,
     return true;
 }
 
-bool IsRayExpensive(SGM::Result                                &rResult,
-                    SGM::Point3D      const                    &Origin,
-                    SGM::UnitVector3D const                    &Axis,
-                    volume            const                    *pVolume,
-                    double                                      dTolerance,
-                    std::vector<SGM::BoxTree::BoundedItemType> &aHitFaces)
+bool IsRayExpensive(SGM::Result              &rResult,
+                    SGM::Point3D      const  &Origin,
+                    SGM::UnitVector3D const  &Axis,
+                    volume            const  *pVolume,
+                    double                    dTolerance,
+                    std::vector<void const*> &aHitFaces)
     {
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin, Axis);
@@ -57,9 +57,9 @@ bool IsRayExpensive(SGM::Result                                &rResult,
         return false;
         }
 
-    for (auto boundedItem : aHitFaces)
+    for (void const* pVoid : aHitFaces)
         {
-        face *pFace = (face *) boundedItem.first;
+        face *pFace = (face *)pVoid;
         auto FaceType = pFace->GetSurface()->GetSurfaceType();
         if (FaceType == SGM::NURBSurfaceType || FaceType == SGM::NUBSurfaceType) // || FaceType == SGM::CylinderType)
             {
@@ -219,15 +219,15 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
                                          SGM::UnitVector3D const &Direction)
     {
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
-    std::vector<SGM::BoxTree::BoundedItemType> aHitFaces;
+    std::vector<void const*> aHitFaces;
     RayFaceBoxIntersections RayFaceIntersection(Origin,Direction);
     aHitFaces = FaceTree.FindIntersectsRay(RayFaceIntersection.m_Ray, dTolerance);
     RayFaceIntersection.m_dCost = 0;
     RayFaceIntersection.m_aHitFaces.clear();
     RayFaceIntersection.m_aHitFaces.reserve(aHitFaces.size());
-    for (auto boundedItem : aHitFaces)
+    for (void const* pVoid : aHitFaces)
         {
-        face *pFace = (face *) boundedItem.first;
+        face *pFace = (face *)pVoid;
         double dCost = CostOfFaceIntersection(rResult,pFace,RayFaceIntersection.m_Ray);
         if (dCost > 0)
             {
@@ -599,8 +599,9 @@ bool IsRayInVolume(SGM::Result                   &rResult,
             if(!IsGoodRay(aTypes,aEntity))
                 {
                 ++nBadRays;
-                if (nBadRays > 4)
+                if (nBadRays > 3)
                     {
+                    //std::cout << "nBadRays = " << nBadRays << std::endl;
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 // look for a new ray
@@ -629,6 +630,7 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                 }
             }
         }
+    //if (nBadRays > 0) std::cout << "nBadRays = " << nBadRays << std::endl;
     return nHits%2==1;
     }
 
@@ -696,7 +698,7 @@ bool PointInVolume(SGM::Result        &rResult,
         }
     while(bFound)
         {
-        std::vector<SGM::BoxTree::BoundedItemType> aHitFacesTree;
+        std::vector<void const*> aHitFacesTree;
         bool bIsRayExpensive=true;
         size_t nCountRayExpensive = 0;
         while (bIsRayExpensive && nCountRayExpensive<=12)
@@ -715,9 +717,9 @@ bool PointInVolume(SGM::Result        &rResult,
 //            rResult.SetDebugData({Axis.m_x, Axis.m_y, Axis.m_z});
 //            }
         std::vector<face*> aHitsFaces;
-        for (auto const &PairIter : aHitFacesTree)
+        for (void const* pVoid : aHitFacesTree)
             {
-            aHitsFaces.push_back((face*)PairIter.first);
+            aHitsFaces.push_back((face*)pVoid);
             }
         bFound=false;
         std::vector<SGM::Point3D> aPoints;
