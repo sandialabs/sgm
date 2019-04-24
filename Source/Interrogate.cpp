@@ -870,7 +870,7 @@ bool PointInEntity(SGM::Result        &rResult,
 void FindSimilarFaces(SGM::Result         &rResult,
                       face          const *pFace,
                       std::vector<face *> &aSimilar,
-                      bool                 bIgnoreScale)
+                      bool                 bCheckScale)
 {
     Signature signature = pFace->GetSignature(rResult);
 
@@ -882,7 +882,7 @@ void FindSimilarFaces(SGM::Result         &rResult,
         if (pEnt != pFace)
         {
             Signature sigCheck = pEnt->GetSignature(rResult);
-            if (signature.Matches(sigCheck, bIgnoreScale))
+            if (signature.Matches(sigCheck, bCheckScale))
             {
                 aSimilar.emplace_back(pEnt);
             }

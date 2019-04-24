@@ -33,7 +33,7 @@ void PointsInVolumes(SGM::Result                         &rResult,
 void FindSimilarFaces(SGM::Result         &rResult,
                       face          const *pFace,
                       std::vector<face *> &aSimilar,
-                      bool                 bIgnoreScale);
+                      bool                 bCheckScale);
 
 } // End of SGMInternal namespace
 

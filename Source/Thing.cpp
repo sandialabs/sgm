@@ -85,8 +85,8 @@ void thing::SeverOwners(entity *pEntity)
             auto sFaces = pEdge->GetFaces();
             for (auto pFace: sFaces)
                 {
-                SGM::Result rResult(this);
-                pFace->RemoveEdge(rResult, pEdge);
+                SGM::Result rResult1(this);
+                pFace->RemoveEdge(rResult1, pEdge);
                 }
             if (volume *pVolume = pEdge->GetVolume())
                 {

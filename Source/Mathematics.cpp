@@ -227,7 +227,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                           Point3D                    &Origin,
                           UnitVector3D               &XVec,
                           UnitVector3D               &YVec,
-                          UnitVector3D               &ZVec)
+                          UnitVector3D               &ZVec,
+                          std::vector<double>        *aEigenValues)
     {
     double SumXX = 0.0, SumXY = 0.0, SumXZ = 0.0, SumYY = 0.0, SumYZ = 0.0, SumZZ = 0.0;
     Origin = FindCenterOfMass3D(aPoints);
@@ -263,9 +264,32 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         std::vector<double> aValues2D;
         std::vector<UnitVector2D> aVectors2D;
         FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
-        XVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm;
-        YVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm; 
-        ZVec=ZAnswer;
+        if (aValues2D[0]<aValues2D[1])
+        {
+            XVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm;
+            YVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm; 
+            ZVec=ZAnswer;
+
+            if (aEigenValues != nullptr)
+            {
+                aEigenValues->push_back(aValues2D[1]);
+                aEigenValues->push_back(aValues2D[0]);
+                aEigenValues->push_back(0.0);
+            }
+        }
+        else
+        {
+            XVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm;
+            YVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm; 
+            ZVec=ZAnswer;
+
+            if (aEigenValues != nullptr)
+            {
+                aEigenValues->push_back(aValues2D[0]);
+                aEigenValues->push_back(aValues2D[1]);
+                aEigenValues->push_back(0.0);
+            }
+        }
         return true;
         }
     
@@ -309,12 +333,26 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                 XVec = aVectors[2];
                 YVec = aVectors[1];
                 ZVec = aVectors[0];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[2]);
+                    aEigenValues->push_back(aValues[1]);
+                    aEigenValues->push_back(aValues[0]);
+                }
                 }
             else
                 {
                 XVec = aVectors[1];
                 YVec = aVectors[2];
                 ZVec = aVectors[0];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[1]);
+                    aEigenValues->push_back(aValues[2]);
+                    aEigenValues->push_back(aValues[0]);
+                }
                 }
             }
         else if(aValues[1]<aValues[0] && aValues[1]<aValues[2])
@@ -324,12 +362,26 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                 XVec = aVectors[2];
                 YVec = aVectors[0];
                 ZVec = aVectors[1];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[2]);
+                    aEigenValues->push_back(aValues[0]);
+                    aEigenValues->push_back(aValues[1]);
+                }
                 }
             else
                 {
                 XVec = aVectors[0];
                 YVec = aVectors[2];
                 ZVec = aVectors[1];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[0]);
+                    aEigenValues->push_back(aValues[2]);
+                    aEigenValues->push_back(aValues[1]);
+                }
                 }
             }
         else
@@ -339,13 +391,27 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
                 XVec = aVectors[1];
                 YVec = aVectors[0];
                 ZVec = aVectors[2];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[1]);
+                    aEigenValues->push_back(aValues[0]);
+                    aEigenValues->push_back(aValues[2]);
+                }
                 }
             else
                 {
                 XVec = aVectors[0];
                 YVec = aVectors[1];
                 ZVec = aVectors[2];
+
+                if (aEigenValues != nullptr)
+                {
+                    aEigenValues->push_back(aValues[0]);
+                    aEigenValues->push_back(aValues[1]);
+                    aEigenValues->push_back(aValues[2]);
                 }
+            }
             }
         return true;
         }
@@ -1070,6 +1136,100 @@ Point3D FindLocalCoordinates(Point3D      const &Origin,
         }
     }
 
+void RootSolve(double dRoot,
+               double              const aaMatrix[3][3],
+               std::vector<double>       &aValues,
+               std::vector<UnitVector3D> &aVectors)
+{
+    std::vector<std::vector<double> > aaMat;
+    aaMat.reserve(3);
+    std::vector<double> aMat;
+    aMat.reserve(4);
+    aMat.push_back(aaMatrix[0][0] - dRoot);
+    aMat.push_back(aaMatrix[0][1]);
+    aMat.push_back(aaMatrix[0][2]);
+    aMat.push_back(0.0);
+    aaMat.push_back(aMat);
+    aMat.clear();
+    aMat.push_back(aaMatrix[1][0]);
+    aMat.push_back(aaMatrix[1][1] - dRoot);
+    aMat.push_back(aaMatrix[1][2]);
+    aMat.push_back(0.0);
+    aaMat.push_back(aMat);
+    aMat.clear();
+    aMat.push_back(aaMatrix[2][0]);
+    aMat.push_back(aaMatrix[2][1]);
+    aMat.push_back(aaMatrix[2][2] - dRoot);
+    aMat.push_back(0.0);
+    aaMat.push_back(aMat);
+    aVectors.push_back(UnitVectorSolve(aaMat));
+    aValues.push_back(dRoot);
+}
+
+void OneRootSolve(double              const aaMatrix[3][3],
+                  std::vector<double> const &aRoots,
+                  size_t                     whichIsNonZero,
+                  std::vector<double>       &aValues,
+                  std::vector<UnitVector3D> &aVectors)
+{
+    RootSolve(aRoots[whichIsNonZero], aaMatrix, aValues, aVectors);
+
+    if (SGM::NearEqual(aVectors[0],SGM::Vector3D(0,0,0),SGM_MIN_TOL))
+    {
+        throw std::runtime_error("Unhandled degenerate case in OneRootSolve");
+    }
+
+    SGM::UnitVector3D ZAxis = aVectors[0];
+    aVectors[0] = ZAxis.Orthogonal();
+    aVectors.push_back(ZAxis * aVectors[0]);
+    aVectors.push_back(ZAxis);
+
+    aValues[0] = .5;
+    aValues.push_back(0.5);
+    aValues.push_back(1.0);
+}
+
+
+void TwoRootSolve(double              const aaMatrix[3][3],
+                  std::vector<double> const &aRoots,
+                  size_t                     whichIsZero,
+                  std::vector<double>       &aValues,
+                  std::vector<UnitVector3D> &aVectors)
+{
+    for(size_t index=0; index<aRoots.size(); index++)
+    {
+        if (index == whichIsZero) continue;
+
+        double dRoot = aRoots[index];
+        RootSolve(dRoot, aaMatrix, aValues, aVectors);
+    }
+
+    if (SGM::NearEqual(aVectors[0],aVectors[1],SGM_MIN_TOL))
+    {
+        aVectors[0] = SGM::UnitVector3D(1,0,0);
+        aVectors[1] = SGM::UnitVector3D(0,1,0);
+        aVectors.push_back(SGM::UnitVector3D(0,0,1));
+        aValues[0] = aValues[1] = 1.0;
+        aValues.push_back(1.0);
+    }
+    else
+    {
+        aVectors.push_back(aVectors[0] * aVectors[1]);
+        aValues.push_back((aValues[0] + aValues[1])/2.0);
+    }
+}
+
+void ThreeRootSolve(double              const aaMatrix[3][3],
+                    std::vector<double> const &aRoots,
+                    std::vector<double>       &aValues,
+                    std::vector<UnitVector3D> &aVectors)
+{
+    for(double dRoot : aRoots)
+    {
+        RootSolve(dRoot, aaMatrix, aValues, aVectors);
+    }
+}
+
 size_t FindEigenVectors3D(double               const aaMatrix[3][3],
                           std::vector<double>       &aValues,
                           std::vector<UnitVector3D> &aVectors)
@@ -1090,12 +1250,32 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
 
     if (IsDiagonal3D(aaMatrix))
         {
-        aValues.push_back(aaMatrix[0][0]);
-        aValues.push_back(aaMatrix[1][1]);
-        aValues.push_back(aaMatrix[2][2]);
-        aVectors.emplace_back(1.0, 0.0, 0.0);
-        aVectors.emplace_back(0.0, 1.0, 0.0);
-        aVectors.emplace_back(0.0, 0.0, 1.0);
+        std::vector<double> aRoots;
+        aRoots.push_back(aaMatrix[0][0]);
+        aRoots.push_back(aaMatrix[1][1]);
+        aRoots.push_back(aaMatrix[2][2]);
+        size_t nZeros = 0;
+        size_t whichZero = 0;
+        for (size_t index=0; index<3; index++)
+        {
+            if (fabs(aaMatrix[index][index]) < SGM_ZERO)
+            {
+                nZeros++;
+                whichZero = index;
+            }
+        }
+        if (nZeros == 0)
+        {
+            ThreeRootSolve(aaMatrix, aRoots, aValues, aVectors);
+        }
+        else if (nZeros == 1)
+        {
+            TwoRootSolve(aaMatrix, aRoots, whichZero, aValues, aVectors);
+        }
+        else
+        {
+            throw std::runtime_error("unhandled degenerate case in FindEigenVectors3D");
+        }
         return 3;
         }
 
@@ -1103,40 +1283,30 @@ size_t FindEigenVectors3D(double               const aaMatrix[3][3],
     CharacteristicPolynomial3D(aaMatrix,a,b,c,d);
 
     std::vector<double> aRoots;
-    Cubic(a,b,c,d,aRoots);
+    size_t nRoots = Cubic(a,b,c,d,aRoots);
 
     // To find the Eigen vectors solve Mv=Lv where M is the matrix and
     // L is an Eigen value.
 
-    size_t nAnswer = 0;
-    for(double dRoot : aRoots)
-        {
-        std::vector<std::vector<double> > aaMat;
-        aaMat.reserve(3);
-        std::vector<double> aMat;
-        aMat.reserve(4);
-        aMat.push_back(aaMatrix[0][0] - dRoot);
-        aMat.push_back(aaMatrix[0][1]);
-        aMat.push_back(aaMatrix[0][2]);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        aMat.clear();
-        aMat.push_back(aaMatrix[1][0]);
-        aMat.push_back(aaMatrix[1][1] - dRoot);
-        aMat.push_back(aaMatrix[1][2]);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        aMat.clear();
-        aMat.push_back(aaMatrix[2][0]);
-        aMat.push_back(aaMatrix[2][1]);
-        aMat.push_back(aaMatrix[2][2] - dRoot);
-        aMat.push_back(0.0);
-        aaMat.push_back(aMat);
-        aVectors.push_back(UnitVectorSolve(aaMat));
-        aValues.push_back(dRoot);
-        ++nAnswer;
-        }
-    return nAnswer;
+    if (nRoots == 3)
+    {
+        ThreeRootSolve(aaMatrix, aRoots, aValues, aVectors);
+    }
+    else if (nRoots == 2)
+    {
+        aRoots.push_back(0);
+        size_t whichZero = 2;
+        TwoRootSolve(aaMatrix, aRoots, whichZero, aValues, aVectors);
+    }
+    else  // note:  all cubics have at least one root
+    {
+        aRoots.push_back(0);
+        aRoots.push_back(0);
+        size_t whichNonZero = 0;
+        OneRootSolve(aaMatrix, aRoots, whichNonZero, aValues, aVectors);
+    }
+
+    return 3;
     }
 
     bool BandedSolve(std::vector<std::vector<double> > &aaMatrix)

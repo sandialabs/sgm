@@ -2766,11 +2766,11 @@ SGM::Curve SGM::FindVParamCurve(SGM::Result        &rResult,
 void SGM::FindSimilarFaces(SGM::Result            &rResult,
                            SGM::Face        const &FaceID,
                            std::vector<SGM::Face> &aSimilar,
-                           bool                    bIgnoreScale)
+                           bool                    bCheckScale)
 {
     auto pFace = (SGMInternal::face *)rResult.GetThing()->FindEntity(FaceID.m_ID);
     std::vector<SGMInternal::face *> aFaces;
-    SGMInternal::FindSimilarFaces(rResult, pFace, aFaces, bIgnoreScale);
+    SGMInternal::FindSimilarFaces(rResult, pFace, aFaces, bCheckScale);
     for (auto pEnt : aFaces)
     {
         aSimilar.emplace_back(SGM::Face(pEnt->GetID()));
