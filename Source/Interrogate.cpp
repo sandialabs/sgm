@@ -86,7 +86,7 @@ struct RayFaceBoxIntersections
     {}
 
     RayFaceBoxIntersections(SGM::Point3D const &origin, SGM::UnitVector3D const &dir)
-        : m_Ray(origin,dir), m_dCost(0.0), m_aHitFaces()
+        : m_dCost(0.0), m_Ray(origin,dir), m_aHitFaces()
     {}
 
     RayFaceBoxIntersections &operator=(const RayFaceBoxIntersections &other)
@@ -245,9 +245,10 @@ double RemoveMissedFacesFromRayIntersections(SGM::Result &rResult, RayFaceBoxInt
     {
     SGM::Ray3D const &ray = rayFaceIntersections.m_Ray;
     std::vector<face*> & aHitFaces = rayFaceIntersections.m_aHitFaces;
+    long int nHitFaces = (long int)aHitFaces.size();
 
     // note: size() of vector may be changed inside loop
-    for (int iFace = 0; iFace < aHitFaces.size(); ++iFace)
+    for (long int iFace = 0; iFace < nHitFaces; ++iFace)
         {
         face *pFace = aHitFaces[iFace];
         if (DoesRayMissFaceFacets(rResult,pFace,ray))
@@ -510,7 +511,8 @@ void FindRaysForPoints(SGM::Result                           &rResult,
             SGM::Ray3D const &ray = NextRayIntersects.m_Ray;
             std::vector<face*> & aHitFaces = NextRayIntersects.m_aHitFaces;
             // careful, the size() will be changing
-            for (int iFace = 0; iFace < aHitFaces.size(); ++iFace)
+            long int nHitFaces = (long int)aHitFaces.size();
+            for (long int iFace = 0; iFace < nHitFaces; ++iFace)
                 {
                 face *pFace = aHitFaces[iFace];
                 if (DoesRayMissFaceFacets(rResult,pFace,ray))

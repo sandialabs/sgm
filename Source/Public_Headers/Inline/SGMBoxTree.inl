@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <utility>
 
-#if defined(_MSC_VER)
-#define SGM_FORCE_INLINE __forceinline
-#elif defined(__GNUG__)
-#define SGM_FORCE_INLINE __attribute__((always_inline))
-#else
-#define SGM_FORCE_INLINE inline
-#endif
+//#if defined(_MSC_VER)
+//#define SGM_FORCE_INLINE __forceinline
+//#elif defined(__GNUG__)
+//#define SGM_FORCE_INLINE __attribute__((always_inline))
+//#else
+//#define SGM_FORCE_INLINE inline
+//#endif
 
 namespace SGM {
 
@@ -142,7 +142,7 @@ namespace SGM {
     inline BoxTree::PushLeaf::PushLeaf(size_t nReserve) : m_aContainer(), bContinueVisiting(true)
     {
         m_aContainer.reserve(nReserve);
-    };
+    }
 
     inline void BoxTree::PushLeaf::operator()(const BoxTree::Leaf *leaf)
     {
@@ -179,7 +179,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename Visitor>
-    SGM_FORCE_INLINE void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
+    inline void BoxTree::QueryLeafFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
         auto leaf = static_cast<Leaf const*>(item);
         if (m_filter(leaf))
@@ -187,7 +187,7 @@ namespace SGM {
     }
 
     template<typename Filter, typename Visitor>
-    SGM_FORCE_INLINE void BoxTree::QueryNodeFunctor<Filter, Visitor>::operator()(Bounded const *item)
+    inline void BoxTree::QueryNodeFunctor<Filter, Visitor>::operator()(Bounded const *item)
     {
         auto node = static_cast<Node const*>(item);
         if (m_visitor.bContinueVisiting && m_filter(node))
