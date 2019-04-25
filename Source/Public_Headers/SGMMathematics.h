@@ -345,6 +345,12 @@ namespace SGM
                                   double             &dB,
                                   double             &dC);
 
+    // Given the coefficients of a polynomial in the form a*x^n+b*x^(n-1)+...
+    // i.e. largest power of x first, the function LagrangeBound returns a bound
+    // B such that all the roots of the polynomial are between -B and B.
+
+    SGM_EXPORT double LagrangeBound(std::vector<double> aCoefficients);
+
     ///////////////////////////////////////////////////////////////////////////
     //
     //  Trigonometry functions

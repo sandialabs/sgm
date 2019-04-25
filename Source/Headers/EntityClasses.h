@@ -10,11 +10,13 @@
 
 #include "SGMChecker.h"
 #include "SGMBoxTree.h"
-#include "Util/shared_mutex.h"
 #include "SGMTranslators.h"
+#include "SGMEnums.h"
 
 #include "OrderPoints.h"
 #include "Signature.h"
+
+#include "Util/shared_mutex.h"
 
 namespace SGMInternal
 {
