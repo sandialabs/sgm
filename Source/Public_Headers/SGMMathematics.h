@@ -25,7 +25,8 @@ namespace SGM
                                          Point3D                    &Origin,
                                          UnitVector3D               &XVec,
                                          UnitVector3D               &YVec,
-                                         UnitVector3D               &ZVec);
+                                         UnitVector3D               &ZVec,
+                                         std::vector<double>        *aEigenValues=nullptr);
 
     // Returns the min and max X, Y, and Z value with Origin at (0,0,0).
 

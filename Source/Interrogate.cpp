@@ -126,7 +126,7 @@ inline bool DoesRayMissFaceFacets(SGM::Result &rResult,face const* pFace, SGM::R
     return count == 0;
     }
 
-double CostOfFaceIntersection(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
+double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
     {
     double dCost;
     auto SurfaceType = pFace->GetSurface()->GetSurfaceType();
@@ -228,7 +228,7 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
     for (void const* pVoid : aHitFaces)
         {
         face *pFace = (face *)pVoid;
-        double dCost = CostOfFaceIntersection(rResult,pFace,RayFaceIntersection.m_Ray);
+        double dCost = CostOfFaceIntersection(pFace,RayFaceIntersection.m_Ray);
         if (dCost > 0)
             {
             RayFaceIntersection.m_dCost += dCost;
@@ -260,7 +260,7 @@ double RemoveMissedFacesFromRayIntersections(SGM::Result &rResult, RayFaceBoxInt
                 return 0;
                 }
             // remove cost of the face on this ray
-            rayFaceIntersections.m_dCost -= CostOfFaceIntersection(rResult,pFace,ray);
+            rayFaceIntersections.m_dCost -= CostOfFaceIntersection(pFace,ray);
             }
         }
     return rayFaceIntersections.m_dCost;
@@ -516,7 +516,7 @@ void FindRaysForPoints(SGM::Result                           &rResult,
                 if (DoesRayMissFaceFacets(rResult,pFace,ray))
                     {
                     // remove the face and its contribution to cost on this ray
-                    double dFaceCost = CostOfFaceIntersection(rResult,pFace,ray);
+                    double dFaceCost = CostOfFaceIntersection(pFace,ray);
                     aHitFaces.erase(aHitFaces.begin() + iFace--);
                     NextRayIntersects.m_dCost -= dFaceCost;
                     if (NextRayIntersects.m_dCost == 0)
@@ -761,7 +761,7 @@ bool PointInVolume(SGM::Result        &rResult,
                 ++nBadRays;
                 if (nBadRays > 4)
                     {
-                    return PointInVolume(Point, aPoints[0], aEntity[0]);
+                    return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 ++nCount;
@@ -872,7 +872,7 @@ bool PointInEntity(SGM::Result        &rResult,
 void FindSimilarFaces(SGM::Result         &rResult,
                       face          const *pFace,
                       std::vector<face *> &aSimilar,
-                      bool                 bIgnoreScale)
+                      bool                 bCheckScale)
 {
     Signature signature = pFace->GetSignature(rResult);
 
@@ -884,7 +884,7 @@ void FindSimilarFaces(SGM::Result         &rResult,
         if (pEnt != pFace)
         {
             Signature sigCheck = pEnt->GetSignature(rResult);
-            if (signature.Matches(sigCheck, bIgnoreScale))
+            if (signature.Matches(sigCheck, bCheckScale))
             {
                 aSimilar.emplace_back(pEnt);
             }

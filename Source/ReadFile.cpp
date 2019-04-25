@@ -1154,8 +1154,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
 
     if(Options.m_bHeal)
         {
-        HealOptions Options;
-        Heal(rResult,aEntities,Options);
+        HealOptions Options1;
+        Heal(rResult,aEntities,Options1);
         }
     
     size_t nEntities=aEntities.size();

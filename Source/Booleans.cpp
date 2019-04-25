@@ -757,8 +757,8 @@ face *ImprintSplitter(SGM::Result &rResult,
         {
         if(Index1!=nSplitLoop)
             {
-            edge *pEdge=aaLoops[Index1].front();
-            SGM::Point3D TestPos=pEdge->FindMidPoint();
+            edge *pEdge1=aaLoops[Index1].front();
+            SGM::Point3D TestPos=pEdge1->FindMidPoint();
             SGM::Point2D uv=pNewFace->GetSurface()->Inverse(TestPos);
             if(pNewFace->PointInFace(rResult,uv))
                 {
@@ -1419,12 +1419,12 @@ bool ImprintFaces(SGM::Result                                                   
                     pVertex->SeverRelations(rResult);
                     rResult.GetThing()->DeleteEntity(pVertex);
                     }
-                curve *pCurve=pEdge->GetCurve();
+                curve *pCurve1=pEdge->GetCurve();
                 pEdge->SeverRelations(rResult);
                 rResult.GetThing()->DeleteEntity(pEdge);
-                if(pCurve->GetEdges().empty())
+                if(pCurve1->GetEdges().empty())
                     {
-                    rResult.GetThing()->DeleteEntity(pCurve);
+                    rResult.GetThing()->DeleteEntity(pCurve1);
                     }
                 }
             }
