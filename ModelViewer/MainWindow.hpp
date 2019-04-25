@@ -62,6 +62,8 @@ private slots:
 
     void test_check();
 
+    void test_free_edges();
+
 #ifdef VIEWER_WITH_GTEST
     void test_gtest();
 #endif

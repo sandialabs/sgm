@@ -16,4 +16,7 @@ TestMenu::TestMenu(QWidget *parent) :
 
     QAction *check_action = addAction("&Check", this, SIGNAL(check()));
     check_action->setShortcut(tr("Ctrl+C"));
+
+    QAction *free_edges_action = addAction("&Free edges", this, SIGNAL(free_edges()));
+    free_edges_action->setShortcut(tr("Ctrl+F"));
 }

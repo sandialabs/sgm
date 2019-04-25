@@ -21,6 +21,8 @@ signals:
 
     void check();
 
+    void free_edges();
+
 #ifdef VIEWER_WITH_GTEST
     void gtest();
 #endif

@@ -58,6 +58,8 @@ public:
 
     void check(std::vector<std::string> &aLog);
 
+    void free_edges();
+
     void create_block(SGM::Point3D const &Pos0,
                       SGM::Point3D const &Pos1);
 

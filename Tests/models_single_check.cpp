@@ -263,7 +263,7 @@ TEST(speed_check, DISABLED_point)
     }
 
 #if 1
-TEST(speed_check, point_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -272,12 +272,12 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
 
     int RAY_FIRE_DIRECTION = DIRECTION_Y;// DIRECTION_ALL;
 
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-    SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
 //    const char* file_name = "Matt/FifthWheelWheel.stp";
 //    SCOPED_TRACE(file_name);
 //    expect_import_success(file_name, rResult);
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
 
     std::cout << "point_in_volume_OUO_full_model_volume1:" << std::endl;
 

@@ -214,6 +214,14 @@ void ModelData::check(std::vector<std::string> &aLog)
         std::cout << String << std::endl;
 }
 
+void ModelData::free_edges()
+{
+    SGM::CreateBlock(dPtr->mResult, SGM::Point3D(0,0,0), SGM::Point3D(10,10,10));
+
+    rebuild_tree();
+    rebuild_graphics();
+}
+
 void ModelData::create_block(SGM::Point3D const &Pos0,
                              SGM::Point3D const &Pos1)
 {
