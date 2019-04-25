@@ -85,9 +85,9 @@ class SGM_EXPORT RepairOptions
             m_bReparamNURBs(true),
             m_bRemoveSlivers(true),
             m_bMerge(true),
-            m_bRotateCircles(true),
             m_bAutoMatch(false),
             m_bExtremeMerge(false),
+            m_bRotateCircles(true),
             m_bMakeAllEdgesHaveVertices(false)
             {}
 
