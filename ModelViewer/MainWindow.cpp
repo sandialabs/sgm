@@ -77,6 +77,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->menubar->addMenu(mTestMenu);
   connect(mTestMenu, SIGNAL(check()),
           this, SLOT(test_check()));
+  connect(mTestMenu, SIGNAL(free_edges()),
+          this, SLOT(test_free_edges()));
 #ifdef VIEWER_WITH_GTEST
   connect(mTestMenu, SIGNAL(gtest()),
           this, SLOT(test_gtest()));
@@ -283,6 +285,12 @@ void MainWindow::test_check()
         Msgbox.exec();
         Msgbox.setSizeGripEnabled(true);
       }
+}
+
+
+void MainWindow::test_free_edges()
+{
+  mModel->free_edges();
 }
 
 #ifdef VIEWER_WITH_GTEST

@@ -232,28 +232,28 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, point)
+TEST(speed_check, DISABLED_point)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-    SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
+    const char* file_name = "Hold/FifthWheelWheel-Face347.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_success(file_name, rResult);
 
-    SGM::Point3D TestPoint(0.287592933831012,  -0.29580980902581,  -1.85784469408852);
+    SGM::Point3D TestPoint(-8.67117668709298, 2.06263766676259, -6.32952339743025);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
-
+    
     rResult.SetDebugFlag(6);
-    rResult.SetDebugData({-0.91660825985943817,0.13065933879629224,0.37783254907798519});
-
+    rResult.SetDebugData({0,0,1});
+    
     bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
     
     std::vector<double> aData2=rResult.GetDebugData();
-    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+6*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
+    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+10*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
 
     EXPECT_FALSE(bValue);
 
@@ -261,20 +261,20 @@ TEST(speed_check, point)
     }
 
 #if 1
-TEST(speed_check, point_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    int RAY_FIRE_DIRECTION = DIRECTION_Y;// DIRECTION_ALL;
+    int RAY_FIRE_DIRECTION = DIRECTION_Z;// DIRECTION_ALL;
 
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    const char* ouo_file_name = "Matt/FifthWheelWheel.stp";
     SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
+    expect_import_success(ouo_file_name, rResult);
 
-    std::cout << "point_in_volume_OUO_full_model_volume1:" << std::endl;
+    std::cout << "point_in_volume_FifthWheelWheel:" << std::endl;
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
 
@@ -301,7 +301,7 @@ TEST(speed_check, point_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 100.;
+    dIncrement /= 10.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;

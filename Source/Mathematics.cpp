@@ -264,7 +264,7 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         std::vector<double> aValues2D;
         std::vector<UnitVector2D> aVectors2D;
         FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
-        if (aValues2D[0]<aValues2D[1])
+        if (aValues2D[0]+SGM_ZERO<aValues2D[1])
         {
             XVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm;
             YVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm; 
