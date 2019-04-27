@@ -752,7 +752,7 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
     std::vector<SGM::IntersectionType> aAllTypes;
     std::vector<entity *> aAllEntities;
     SGM::BoxTree const &BTree=pComplex->GetTree();
-    std::vector<SGM::BoxTree::BoundedItemType> aHits;
+    std::vector<void const*> aHits;
     SGM::Ray3D ray(Origin,Axis);
     SGM::Interval1D Domain;
     if(bUseWholeLine)
@@ -775,7 +775,7 @@ size_t RayFireComplex(SGM::Result                        &,//rResult,
     unsigned int const *pBase=&aTriangles[0];
     for(Index1=0;Index1<nHits;++Index1)
         {
-        unsigned int const *pHit=(unsigned int const *)aHits[Index1].first;
+        unsigned int const *pHit=(unsigned int const *)aHits[Index1];
         size_t nWhere=(size_t)(pHit-pBase);
         unsigned int a=aTriangles[nWhere];
         unsigned int b=aTriangles[nWhere+1];
@@ -943,8 +943,8 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         auto aHitFacesTree = FaceTree.FindIntersectsRay(Ray,dTolerance);
         aHitFaces = new std::vector<face*>();
         aHitFaces->reserve(aHitFacesTree.size());
-        for (auto const &PairIter : aHitFacesTree)
-            aHitFaces->push_back((face*)PairIter.first);
+        for (void const* pVoid : aHitFacesTree)
+            aHitFaces->push_back((face*)pVoid);
         }
     else
         {

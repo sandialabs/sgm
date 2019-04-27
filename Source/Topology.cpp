@@ -1643,9 +1643,9 @@ void FindOverLappingEdges(SGM::Result         &rResult,
     for(auto *pFace1 : sFaces)
         {
         auto aHits=FaceTree.FindIntersectsBox(pFace1->GetBox(rResult));
-        for(auto Hit : aHits)
+        for(void const* pVoid : aHits)
             {
-            face *pFace2=(face *)(Hit.first);
+            face *pFace2=(face *)(pVoid);
             FindOverLappingEdges(rResult,pFace1,pFace2,aEdges);
             }
         }
@@ -1670,9 +1670,9 @@ size_t FindOverLappingEdges(SGM::Result               &rResult,
     for(auto pVolume : sAllVolumes)
         {
         auto aHits=Tree.FindIntersectsBox(pVolume->GetBox(rResult));
-        for(auto Hit : aHits)
+        for(void const *pVoid : aHits)
             {
-            volume *pHit=(volume *)(Hit.first);
+            volume *pHit=(volume *)(pVoid);
             if(pHit!=pVolume)
                 {
                 FindOverLappingEdges(rResult,pVolume,pHit,aEdges);

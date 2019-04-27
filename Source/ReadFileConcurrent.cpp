@@ -44,15 +44,16 @@ __pragma(warning(disable: 4996 ))
 namespace SGMInternal
 {
 
-STEPLineChunk ParseSTEPStreamChunk(STEPTagMapType const &mSTEPTagMap,
-                                   bool bScan,
-                                   StringLinesChunk &aStringLinesChunk,
-                                   STEPLineChunk &aSTEPLineChunk)
+std::pair<bool,STEPLineChunk*> ParseSTEPStreamChunk(STEPTagMapType const &mSTEPTagMap,
+                                                    bool bScan,
+                                                    StringLinesChunk *pStringLinesChunk,
+                                                    STEPLineChunk *pSTEPLineChunk)
     {
-    for (size_t iLine = 0; iLine < aStringLinesChunk.size(); ++iLine)
+    bool bContinue = true;
+    for (size_t iLine = 0; iLine < pStringLinesChunk->size(); ++iLine)
         {
-        std::string *pLine = aStringLinesChunk[iLine];
-        STEPLine *stepLine = aSTEPLineChunk[iLine];
+        std::string *pLine = (*pStringLinesChunk)[iLine];
+        STEPLine *stepLine = (*pSTEPLineChunk)[iLine];
 
         // are we at the end of the file?
         if (pLine->empty())
@@ -60,11 +61,12 @@ STEPLineChunk ParseSTEPStreamChunk(STEPTagMapType const &mSTEPTagMap,
             // the result must signal the end for when it gets synced
             stepLine->m_nLineNumber = std::numeric_limits<size_t>::max();
             stepLine->m_sTag.assign("END OF FILE");
+            bContinue=false;
             break;
             }
         ProcessSTEPLine(mSTEPTagMap, *pLine, *stepLine, bScan);
         }
-    return aSTEPLineChunk;
+    return {bContinue,pSTEPLineChunk};
     }
 
 void CreateParseChunks(size_t nNumChunks,
@@ -126,7 +128,7 @@ void QueueParseChunks(std::ifstream &inputFileStream,
                       std::vector<StringLinesChunk *> &aChunkLines,
                       std::vector<STEPLineChunk *> &aChunkSTEPLines,
                       SGM::ThreadPool &threadPool,
-                      std::vector<std::future<STEPLineChunk>> &futures)
+                      std::vector<std::future<std::pair<bool,STEPLineChunk*>>> &futures)
     {
     const size_t NUM_CHUNKS = aChunkLines.size();
     assert(NUM_CHUNKS > 0);
@@ -136,12 +138,12 @@ void QueueParseChunks(std::ifstream &inputFileStream,
     // too many and we will use too much memory
     for (size_t k = 0; k < NUM_CHUNKS; ++k)
         {
-        StringLinesChunk & aStringLinesChunk = *aChunkLines[k];
+        StringLinesChunk * pStringLinesChunk = aChunkLines[k];
 
         for (size_t iLine = 0; iLine < CHUNK_SIZE; ++iLine)
             {
             // post the next string and STEPLine structure to use into the chunk
-            std::string *pLine = aStringLinesChunk[iLine];
+            std::string *pLine = (*pStringLinesChunk)[iLine];
 
             // read line from stream
             if (!std::getline(inputFileStream, *pLine, ';'))
@@ -153,14 +155,14 @@ void QueueParseChunks(std::ifstream &inputFileStream,
                 }
             }
 
-        STEPLineChunk & aSTEPLineChunk = *aChunkSTEPLines[k];
+        STEPLineChunk * pSTEPLineChunk = aChunkSTEPLines[k];
 
         // add chunk task to the queue
         futures.emplace_back(threadPool.enqueue(std::bind(ParseSTEPStreamChunk,
                                                           mSTEPTagMap,
                                                           bScan,
-                                                          aStringLinesChunk,
-                                                          aSTEPLineChunk)));
+                                                          pStringLinesChunk,
+                                                          pSTEPLineChunk)));
         // if no more input stream
         if (!inputFileStream.good())
             return; // done looping over chunks
@@ -172,7 +174,7 @@ void QueueParseChunks(std::ifstream &inputFileStream,
 
 size_t SyncParseChunks(SGM::Result &rResult,
                        std::vector<std::string> &aLog,
-                       std::vector<std::future<STEPLineChunk>> &futures,
+                       std::vector<std::future<std::pair<bool,STEPLineChunk*>>> &futures,
                        STEPLineDataMapType &mSTEPData)
     {
     size_t maxSTEPLineNumber = 0;
@@ -183,7 +185,8 @@ size_t SyncParseChunks(SGM::Result &rResult,
         {
         // get chunk result of the job
         future.wait();
-        STEPLineChunk stepLineChunk = future.get();
+        std::pair<bool,STEPLineChunk*> ReturnValue = future.get();
+        STEPLineChunk &stepLineChunk = *(ReturnValue.second);
         for (size_t iLine = 0; iLine < stepLineChunk.size(); ++iLine)
             {
             STEPLine *pSTEPLine = stepLineChunk[iLine];
@@ -234,7 +237,7 @@ size_t ParseSTEPStreamConcurrent(SGM::Result &rResult,
     SGM::ThreadPool threadPool(NUM_PARSE_THREADS);
 
     // array of jobs (chunks), each result returned in a future object
-    std::vector <std::future<STEPLineChunk>> futures;
+    std::vector<std::future<std::pair<bool,STEPLineChunk*>>> futures;
 
     size_t maxSTEPLineNumber = 0;
     size_t maxChunkSTEPLineNumber;

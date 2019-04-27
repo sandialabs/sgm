@@ -2729,11 +2729,11 @@ void RemoveClosePoints(SGM::Result                               &rResult,
             {
             SGM::Point2D const &Pos2D=aPoints2D[Index1];
             SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
-            std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
+            std::vector<const void*> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
             double dDist=std::numeric_limits<unsigned>::max();
-            for(auto hit : aHits)
+            for(const void* pVoid : aHits)
                 {
-                auto pSeg=(SGM::Segment2D const *)(hit.first);
+                auto pSeg=(SGM::Segment2D const *)(pVoid);
                 double dTestDist=pSeg->Distance(Pos2D);
                 if(dTestDist<dDist)
                     {
@@ -2824,11 +2824,11 @@ void FindPointsToRemove(std::vector<SGM::Point2D>               const &aPolygonP
             SGM::Point2D const &Pos2D=aPoints2D[Index1];
             double dMinDist=aDistances[Index1];
             SGM::Point3D Pos3D(Pos2D.m_u,Pos2D.m_v,0.0);
-            std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
+            std::vector<void const *> aHits=Tree.FindIntersectsPoint(Pos3D,dMinDist);
             double dDist=std::numeric_limits<unsigned>::max();
-            for(auto hit : aHits)
+            for(void const* pVoid : aHits)
                 {
-                auto pSeg=(SGM::Segment2D const *)(hit.first);
+                auto pSeg=(SGM::Segment2D const *)(pVoid);
                 double dTestDist=pSeg->Distance(Pos2D);
                 if(dTestDist<dDist)
                     {

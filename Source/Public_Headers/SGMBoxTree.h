@@ -12,6 +12,8 @@
 
 // #define BOX_TREE_USE_MEMORY_POOL // disable this if multithreaded
 
+#define SGM_BOX_MAX_RAY_HITS 32 // reserved space for size of vector returned by FindIntersectsRay()
+
 namespace SGM {
 
     /**
@@ -110,45 +112,45 @@ namespace SGM {
         ///////////////////////////////////////////////////////////////////////
 
         /// Return all the items in the tree
-        std::vector<BoundedItemType> FindAll() const;
+        std::vector<void const*> FindAll() const;
 
         /// Return items whose bounds are enclosed in the given bound
-        std::vector<BoundedItemType> FindEnclosed(Interval3D const &bound) const;
+        std::vector<void const*> FindEnclosed(Interval3D const &bound) const;
 
         /// Return items whose bounds intersect a given bound
-        std::vector<BoundedItemType> FindIntersectsBox(Interval3D const &bound) const;
+        std::vector<void const*> FindIntersectsBox(Interval3D const &bound) const;
 
         /// Return items whose bounds intersect the half space
-        std::vector<BoundedItemType> FindIntersectsHalfSpace(Point3D      const &point,
-                                                             UnitVector3D const &unitVector,
-                                                             double              tolerance) const;
+        std::vector<void const*> FindIntersectsHalfSpace(Point3D      const &point,
+                                                         UnitVector3D const &unitVector,
+                                                         double              tolerance) const;
 
         /// Return items whose bounds intersect the line
-        std::vector<BoundedItemType> FindIntersectsLine(Ray3D const &ray,
-                                                        double       tolerance = SGM_ZERO) const;
+        std::vector<void const*> FindIntersectsLine(Ray3D const &ray,
+                                                    double       tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the plane
-        std::vector<BoundedItemType> FindIntersectsPlane(Point3D      const &point,
+        std::vector<void const*> FindIntersectsPlane(Point3D      const &point,
                                                          UnitVector3D const &unitVector,
                                                          double              tolerance) const;
 
         /// Return items whose bounds intersect the point
-        std::vector<BoundedItemType> FindIntersectsPoint(Point3D const &point,
-                                                         double         tolerance) const;
+        std::vector<void const*> FindIntersectsPoint(Point3D const &point,
+                                                     double         tolerance) const;
 
         /// Return items whose bounds intersect the ray
-        std::vector<BoundedItemType> FindIntersectsRay(Ray3D const &ray,
-                                                       double       tolerance = SGM_ZERO) const;
+        std::vector<void const*> FindIntersectsRay(Ray3D const &ray,
+                                                   double       tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the segment
-        std::vector<BoundedItemType> FindIntersectsSegment(Point3D const &p1, 
-                                                           Point3D const &p2,
-                                                           double         tolerance = SGM_ZERO) const;
+        std::vector<void const*> FindIntersectsSegment(Point3D const &p1,
+                                                       Point3D const &p2,
+                                                       double         tolerance = SGM_ZERO) const;
 
         /// Return items whose bounds intersect the sphere
-        std::vector<BoundedItemType> FindIntersectsSphere(Point3D const &center,
-                                                          double         radius,
-                                                          double         tolerance) const;
+        std::vector<void const*> FindIntersectsSphere(Point3D const &center,
+                                                      double         radius,
+                                                      double         tolerance) const;
 
         /// Count items whose bounds intersect the ray
         size_t CountIntersectsRay(Ray3D const &ray, double tolerance) const;
@@ -382,10 +384,12 @@ namespace SGM {
          * Visitor operation that pushes a Leaf into a container when it passes a given Filter.
          */
         struct PushLeaf {
-            std::vector<BoundedItemType> m_aContainer;
+            std::vector<void const*> m_aContainer;
             bool bContinueVisiting;
 
             PushLeaf() : m_aContainer(), bContinueVisiting(true) {};
+
+            PushLeaf(size_t nReserve);
 
             void operator()(Leaf const *leaf);
         };

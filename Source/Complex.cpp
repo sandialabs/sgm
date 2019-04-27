@@ -439,11 +439,11 @@ void complex::ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
     for(Index1=0;Index1<aPoints.size();++Index1)
         {
         SGM::Point3D const &Pos=aPoints[Index1];
-        std::vector<SGM::BoxTree::BoundedItemType> aHits=Tree.FindIntersectsPoint(Pos,dTolerance);
+        std::vector<void const*> aHits=Tree.FindIntersectsPoint(Pos,dTolerance);
         bool bFound=false;
-        for(auto Hit : aHits)
+        for(void const* pHit : aHits)
             {
-            size_t nWhere=(size_t)((unsigned *)Hit.first-&m_aSegments[0]);
+            size_t nWhere=(size_t)((unsigned *)pHit-&m_aSegments[0]);
             SGM::Point3D A=m_aPoints[m_aSegments[nWhere]];
             SGM::Point3D B=m_aPoints[m_aSegments[nWhere+1]];
             SGM::Segment3D segment(A,B);
@@ -461,7 +461,7 @@ void complex::ImprintPoints(std::vector<SGM::Point3D> const &aPoints,
                     {
                     unsigned nPos=(unsigned)m_aPoints.size();
                     m_aPoints.push_back(Pos);
-                    Tree.Erase(Hit.first);
+                    Tree.Erase(pHit);
                     size_t nEnd=m_aSegments.size();
                     m_aSegments.push_back(nPos);
                     m_aSegments.push_back(m_aSegments[nWhere+1]);

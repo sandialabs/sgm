@@ -24,7 +24,7 @@ TEST(boxtree_check, intersect_single_item_tree)
     Ray3D ray_start_outside_parallel_x({1.0,3.0,0.0}, {1., 0., 0.});
     auto container = boxTree.FindIntersectsLine(ray_start_outside_parallel_x);
     EXPECT_EQ(container.size(), 1U);
-    EXPECT_EQ(container[0].first, &point0);
+    EXPECT_EQ(container[0], &point0);
 }
 
 TEST(boxtree_check, copy_construct)
@@ -34,9 +34,9 @@ TEST(boxtree_check, copy_construct)
     std::vector<Point3D> points;
     for (int i = 0; i < 43; ++i)
         {
-                points.emplace_back((double)i*17, (double)i*19, (double)i*23);
-                Point3D &point = points.back();
-                boxTree.Insert(&point, Interval3D(point));
+        points.emplace_back((double)i*17, (double)i*19, (double)i*23);
+        Point3D &point = points.back();
+        boxTree.Insert(&point, Interval3D(point));
         }
     // make a copy of tree
     BoxTree boxTreeCopy(boxTree);

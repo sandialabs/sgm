@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <Util/buffer.h>
+#include <OrderPoints.h>
 #include "test_utility.h"
 
 #include "SGMInterrogate.h"
@@ -276,7 +278,7 @@ TEST(speed_check, DISABLED_point)
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
-    
+
     rResult.SetDebugFlag(6);
     rResult.SetDebugData({0,0,1});
     
@@ -288,7 +290,6 @@ TEST(speed_check, DISABLED_point)
             {
             std::vector<double> aData2=rResult.GetDebugData();
             SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+10*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
-
             std::cout << '{' << std::setw(19) << TestPoint[0] << ',' << std::setw(19) << TestPoint[1] << ',' << std::setw(19) << TestPoint[2] << '}' << std::endl;
             }
         else
@@ -308,13 +309,16 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 
     enum {DIRECTION_X, DIRECTION_Y, DIRECTION_Z, DIRECTION_ALL};
 
-    int RAY_FIRE_DIRECTION = DIRECTION_Z;// DIRECTION_ALL;
+    int RAY_FIRE_DIRECTION = DIRECTION_Y;// DIRECTION_ALL;
 
-    const char* ouo_file_name = "Matt/FifthWheelWheel.stp";
+//    const char* file_name = "Matt/FifthWheelWheel.stp";
+//    SCOPED_TRACE(file_name);
+//    expect_import_success(file_name, rResult);
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
     SCOPED_TRACE(ouo_file_name);
-    expect_import_success(ouo_file_name, rResult);
+    expect_import_ouo_success(ouo_file_name, rResult);
 
-    std::cout << "point_in_volume_FifthWheelWheel:" << std::endl;
+    std::cout << "point_in_volume_OUO_full_model_volume1:" << std::endl;
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
 
@@ -614,6 +618,106 @@ TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     SGMTesting::ReleaseTestThing(pThing);
     }
 #endif
+
+//TEST(speed_check, points_z_order)
+//    {
+//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+//    SGM::Result rResult(pThing);
+//
+//    std::cout << "Show grid of points in Z-order" << std::endl;
+//
+//    SGM::Interval3D Bounds(-0.5,0.5,-0.5,0.5,-0.5,0.5);
+//
+//    std::cout << "  Bounds = ([" << Bounds.m_XDomain.m_dMin << "," << Bounds.m_XDomain.m_dMax << "]," <<
+//              "[" << Bounds.m_YDomain.m_dMin << "," << Bounds.m_YDomain.m_dMax << "]," <<
+//              "[" << Bounds.m_ZDomain.m_dMin << "," << Bounds.m_ZDomain.m_dMax << "])" << std::endl;
+//
+//    // make a regular grid of equally spaced points that covers the bounding box
+//
+//    // start and end slightly outside the bounding box
+//    double dExtraX = (Bounds.m_XDomain.m_dMax - Bounds.m_XDomain.m_dMin) / 10.;
+//    double dExtraY = (Bounds.m_YDomain.m_dMax - Bounds.m_YDomain.m_dMin) / 10.;
+//    double dExtraZ = (Bounds.m_ZDomain.m_dMax - Bounds.m_ZDomain.m_dMin) / 10.;
+//
+//    double dStartX = Bounds.m_XDomain.m_dMin - dExtraX;
+//    double dStartY = Bounds.m_YDomain.m_dMin - dExtraY;
+//    double dStartZ = Bounds.m_ZDomain.m_dMin - dExtraZ;
+//
+//    double dEndX = Bounds.m_XDomain.m_dMax + dExtraX;
+//    double dEndY = Bounds.m_YDomain.m_dMax + dExtraY;
+//    double dEndZ = Bounds.m_ZDomain.m_dMax + dExtraZ;
+//
+//    // equal spacing in all three directions
+//    double dIncrement = std::min({std::abs(dEndX - dStartX),
+//                                  std::abs(dEndY - dStartY),
+//                                  std::abs(dEndZ - dStartZ)});
+//    dIncrement /= 6.;
+//
+//    std::vector<SGM::Point3D> aPoints;
+//    std::vector<unsigned> aEmpty;
+//
+//    // First Box of Points
+//    double dX = dStartX;
+//    while (dX < dEndX)
+//        {
+//        double dY = dStartY;
+//        while (dY < dEndY)
+//            {
+//            double dZ = dStartZ;
+//            while (dZ < dEndZ)
+//                {
+//                aPoints.emplace_back(dX, dY, dZ);
+//                dZ += dIncrement;
+//                }
+//            dY += dIncrement;
+//            }
+//        dX += dIncrement;
+//        }
+//
+//    // Second Box of Points
+//    dX = dStartX;
+//    while (dX < dEndX)
+//        {
+//        double dY = dStartY;
+//        while (dY < dEndY)
+//            {
+//            double dZ = dStartZ;
+//            while (dZ < dEndZ)
+//                {
+//                aPoints.emplace_back(dX+1, dY+1, dZ+1);
+//                dZ += dIncrement;
+//                }
+//            dY += dIncrement;
+//            }
+//        dX += dIncrement;
+//        }
+//
+//    buffer<unsigned> aOrder = SGMInternal::OrderPointsZorder(aPoints);
+//
+//    for (unsigned i = 1; i < aPoints.size(); ++i)
+//        {
+//        SGM::Point3D const & A = aPoints[aOrder[i-1]];
+//        SGM::Point3D const & B = aPoints[aOrder[i]];
+//        SGM::CreateLinearEdge(rResult,A,B);
+//        }
+//
+//    // offset all the points in the X-direction
+//    for (auto &Point: aPoints)
+//        {
+//        Point.m_x += 2.5;
+//        }
+//
+//    aOrder = SGMInternal::OrderPointsLexicographical(aPoints);
+//
+//    for (unsigned i = 1; i < aPoints.size(); ++i)
+//        {
+//        SGM::Point3D const & A = aPoints[aOrder[i-1]];
+//        SGM::Point3D const & B = aPoints[aOrder[i]];
+//        SGM::CreateLinearEdge(rResult,A,B);
+//        }
+//
+//    SGMTesting::ReleaseTestThing(pThing);
+//    }
 
 TEST(models_single_check, import_check_OUO_grv_geom)
 {
