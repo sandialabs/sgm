@@ -872,6 +872,19 @@ void SGM::FindWireEdges(SGM::Result         &rResult,
         }
     }
 
+void SGM::FindFreeEdges(SGM::Result         &rResult,
+                        SGM::Entity   const &EntityID,
+                        std::set<SGM::Edge> &sOutEdges)
+    {
+    SGMInternal::entity *pEntity=rResult.GetThing()->FindEntity(EntityID.m_ID);
+    std::set<SGMInternal::edge *,SGMInternal::EntityCompare> sEdges;
+    FindFreeEdges(rResult,pEntity,sEdges);
+    for(auto pEdge : sEdges)
+        {
+        sOutEdges.insert(SGM::Edge(pEdge->GetID()));
+        }
+    }
+
 void SGM::FindEdges(SGM::Result         &rResult,
                     SGM::Entity   const &EntityID,
                     std::set<SGM::Edge> &sEdges,
@@ -978,6 +991,13 @@ double SGM::GetToleranceOfEdge(SGM::Result     &rResult,
     {
     auto pEdge=(SGMInternal::edge const *)rResult.GetThing()->FindEntity(EdgeID.m_ID);
     return pEdge->GetTolerance();
+    }
+
+double SGM::GetToleranceOfVertex(SGM::Result       &rResult,
+                                 SGM::Vertex const &VertexID)
+    {
+    auto pVertex=(SGMInternal::vertex const *)rResult.GetThing()->FindEntity(VertexID.m_ID);
+    return pVertex->GetTolerance();
     }
 
 SGM::Body SGM::CreateBody(SGM::Result &rResult)

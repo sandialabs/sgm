@@ -921,7 +921,6 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
     aTypes.clear();
     aEntities.clear();
 
-
 //    static const SGM::Point3D ProblemPoint(-2.240873786023575, 1.84134645418636, -2.550193467402649);
 //    bool bIsProblemPoint = SGM::NearEqual(ProblemPoint,Origin,0.001);
 //    if (bIsProblemPoint)
@@ -935,8 +934,6 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
 
     SGM_TIMER_INITIALIZE();
     SGM_TIMER_START("RayFireVolume");
-
-
 
     SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin,Axis);
@@ -974,7 +971,7 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         aEntities.insert(aEntities.end(),aSubEntities.begin(),aSubEntities.end());
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,SGM_FIT,bUseWholeLine,aPoints,aTypes,aEntities);
 
     if (aHitFacesSupplied == nullptr)
         {

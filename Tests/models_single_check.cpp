@@ -237,12 +237,42 @@ TEST(speed_check, DISABLED_point)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    const char* file_name = "Hold/FifthWheelWheel-Face347.stp";
+    const char* file_name = "Matt/FifthWheelWheel.stp";
     SCOPED_TRACE(file_name);
     expect_import_success(file_name, rResult);
-
-    SGM::Point3D TestPoint(-8.67117668709298, 2.06263766676259, -6.32952339743025);
-
+    
+    //SGM::Point3D TestPoint(7.37006539759671, 11.9929303858562, -6.32952339743025);
+    std::vector<SGM::Point3D> aTestPoints={{  -17.0737320647877,  -2.06225315501482,  -6.32952339743025},
+                                           {  -12.6432937747305,   9.01384257012808,  -6.32952339743025},
+                                           {  -12.5669069076606,  -1.90947942087492,  -6.32952339743025},
+                                           {  -12.5669069076606,   1.90986393262263,  -6.32952339743025},
+                                           {  -12.5669069076606,   8.93745570305813,  -6.32952339743025},
+                                           {  -10.8863958321217,  -14.4369256203469,  -6.32952339743025},
+                                           {  -10.1989140284921,   3.05566693867189,  -6.32952339743025},
+                                           {  -6.15041007378469,    12.298477854136,  -6.32952339743025},
+                                           {  -5.92124947257484,   12.3748647212059,  -6.32952339743025},
+                                           {  -5.84486260550488,   12.3748647212059,  -6.32952339743025},
+                                           {  -4.62267273238566,  -12.8328014118779,  -6.32952339743025},
+                                           {  -1.03248998009797,   2.90289320453199,  -6.32952339743025},
+                                           { -0.803329378888118,   10.0832587091074,  -6.32952339743025},
+                                           {  0.800794829580851,   10.0832587091074,  -6.32952339743025},
+                                           {   2.48130590511977,  -9.08984492545032,  -6.32952339743025},
+                                           {   4.16181698065869,  -9.54816612787003,  -6.32952339743025},
+                                           {   5.76594118912767,   12.3748647212059,  -6.32952339743025},
+                                           {   5.84232805619762,   12.3748647212059,  -6.32952339743025},
+                                           {   5.91871492326757,   12.3748647212059,  -6.32952339743025},
+                                           {   6.14787552447742,    12.298477854136,  -6.32952339743025},
+                                           {   10.1963794791848,   3.05566693867189,  -6.32952339743025},
+                                           {   12.4879854912834,   1.75709019848273,  -6.32952339743025},
+                                           {   12.5643723583533,  -1.90947942087492,  -6.32952339743025},
+                                           {   12.5643723583533,   1.90986393262263,  -6.32952339743025},
+                                           {   12.5643723583533,   8.93745570305813,  -6.32952339743025},
+                                           {   12.6407592254233,   1.90986393262263,  -6.32952339743025},
+                                           {   12.6407592254233,   9.01384257012808,  -6.32952339743025},
+                                           {   16.9948106484105,  -2.21502688915472,  -6.32952339743025},
+                                           {   17.0711975154804,  -2.13864002208477,  -6.32952339743025},
+                                           {   17.5295187179001,  -3.13166929399413,  -6.32952339743025}};
+    
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
@@ -250,12 +280,22 @@ TEST(speed_check, DISABLED_point)
     rResult.SetDebugFlag(6);
     rResult.SetDebugData({0,0,1});
     
-    bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
-    
-    std::vector<double> aData2=rResult.GetDebugData();
-    SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+10*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
+    for(auto TestPoint : aTestPoints)
+    //auto TestPoint = aTestPoints[12];
+        {
+        bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+        if(bValue)
+            {
+            std::vector<double> aData2=rResult.GetDebugData();
+            SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+10*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
 
-    EXPECT_FALSE(bValue);
+            std::cout << '{' << std::setw(19) << TestPoint[0] << ',' << std::setw(19) << TestPoint[1] << ',' << std::setw(19) << TestPoint[2] << '}' << std::endl;
+            }
+        else
+            {
+            std::cout << "Worked\n";
+            }
+        }
 
     SGMTesting::ReleaseTestThing(pThing);
     }
@@ -301,7 +341,7 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 10.;
+    dIncrement /= 100.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;

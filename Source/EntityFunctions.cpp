@@ -254,11 +254,23 @@ void TransformEntity(SGM::Result            &rResult,
         }
     }
 
-surface *SimplifySurface(SGM::Result &rResult,
-                         surface     *pSurface)
+surface *SimplifySurface(SGM::Result       &rResult,
+                         surface           *pSurface,
+                         HealOptions const &Options)
 
     {
-    if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+    if(pSurface->GetSurfaceType()==SGM::TorusType)
+        {
+        torus *pTorus=(torus *)pSurface;
+        if(Options.m_bRepairApples && pTorus->GetKind()==SGM::TorusKindType::AppleType)
+            {
+            if(pTorus->m_dMajorRadius/pTorus->m_dMinorRadius<0.01)
+                {
+                return new sphere(rResult,pTorus->m_Center,pTorus->m_dMajorRadius+pTorus->m_dMinorRadius,&pTorus->m_XAxis,&pTorus->m_YAxis);
+                }
+            }
+        }
+    else if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
         {
         NURBsurface *pNURB=(NURBsurface *)pSurface;
 
@@ -378,9 +390,16 @@ void Heal(SGM::Result           &rResult,
             FindSurfaces(rResult,pEntity,sSurfaces);
             for(auto pSurface : sSurfaces)
                 {
-                if(surface *pSimplify=SimplifySurface(rResult,pSurface))
+                if(surface *pSimplify=SimplifySurface(rResult,pSurface,Options))
                     {
-                    std::cout << " Simplified " << pSurface->GetID() << "\n";
+                    if(pSimplify->GetSurfaceType()==SGM::PlaneType)
+                        { 
+                        std::cout << " Simplified from NURB to Plane " << pSurface->GetID() << "\n";
+                        }
+                    else if(pSimplify->GetSurfaceType()==SGM::SphereType)
+                        {
+                        std::cout << " Simplified from Torus to Sphere " << pSurface->GetID() << "\n";
+                        }
                     std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
                     for(auto *pFace : sFaces)
                         {

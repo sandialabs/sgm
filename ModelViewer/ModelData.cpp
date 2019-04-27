@@ -216,10 +216,13 @@ void ModelData::check(std::vector<std::string> &aLog)
 
 void ModelData::free_edges()
 {
-    SGM::CreateBlock(dPtr->mResult, SGM::Point3D(0,0,0), SGM::Point3D(10,10,10));
-
-    rebuild_tree();
-    rebuild_graphics();
+    std::set<SGM::Edge> sEdges;
+    SGM::FindFreeEdges(dPtr->mResult, SGM::Thing(), sEdges);
+    std::cout << "Free Edges ";
+    for(auto EdgeID : sEdges)
+        {
+        std::cout << EdgeID.m_ID << "\n";
+        }
 }
 
 void ModelData::create_block(SGM::Point3D const &Pos0,
@@ -1041,6 +1044,13 @@ void ModelData::add_vertex_to_tree(QTreeWidgetItem *parent, SGM::Vertex VertexID
     snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Pos.m_x, Pos.m_y, Pos.m_z);
     data_item->setText(0, "Position");
     data_item->setText(1, Data);
+
+    double dTol = SGM::GetToleranceOfVertex(dPtr->mResult, VertexID);
+    auto *data_item2 = new QTreeWidgetItem(vertex_item);
+    char Data2[100];
+    snprintf(Data2, sizeof(Data2), "%.15G", dTol);
+    data_item2->setText(0, "Tolerance");
+    data_item2->setText(1, Data2);
 }
 
 void ModelData::add_bounding_box_to_tree(QTreeWidgetItem *parent, SGM::Entity EntityID)

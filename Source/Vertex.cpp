@@ -1,4 +1,5 @@
 #include "SGMEnums.h"
+#include "SGMTransform.h"
 
 #include "EntityClasses.h"
 #include "Topology.h"
@@ -15,7 +16,7 @@ namespace SGMInternal
 
 vertex::vertex(SGM::Result &rResult,SGM::Point3D const &Pos) :
             topology(rResult,SGM::EntityType::VertexType),
-            m_Pos(Pos)
+            m_Pos(Pos),m_dTolerance(0)
     {
     }
 
@@ -31,7 +32,10 @@ void vertex::GetParents(std::set<entity *, EntityCompare> &sParents) const
 SGM::Interval3D const &vertex::GetBox(SGM::Result &,bool /*bContruct*/) const
     {
     if (m_Box.IsEmpty())
+        {
         m_Box=SGM::Interval3D(GetPoint());
+        m_Box.Extend(GetTolerance()); // Note that this causes the tolerance to be generated.
+        }
     return m_Box;
     }
 
@@ -101,16 +105,20 @@ void vertex::RemoveEdge(edge *pEdge)
         pFace->ClearVertices();
         }
     m_sEdges.erase(pEdge);
+    m_dTolerance=0;
     }
 
 void vertex::AddEdge(edge *pEdge) 
     {
     m_sEdges.insert(pEdge);
+    m_dTolerance=0;
+    m_Box=SGM::Interval3D();
     }
 
 void vertex::TransformData(SGM::Transform3D const &Trans)
     {
     m_Pos*=Trans;
+    m_dTolerance*=Trans.Scale();
     }
 
 double vertex::Snap(SGM::Result &rResult)
@@ -164,4 +172,24 @@ double vertex::Snap(SGM::Result &rResult)
         }
     return dAnswer;
     }
-}
+
+double vertex::GetTolerance() const
+    {
+    if(m_dTolerance==0)
+        {
+        for(edge const *pEdge : m_sEdges)
+            {
+            SGM::Point3D Pos;
+            pEdge->GetCurve()->Inverse(m_Pos,&Pos);
+            double dDist=Pos.Distance(m_Pos);
+            if(m_dTolerance<dDist)
+                {
+                m_dTolerance=dDist;
+                }
+            }
+        m_dTolerance+=SGM_ZERO;
+        }
+    return m_dTolerance;
+    }
+
+} // End SGM namespace

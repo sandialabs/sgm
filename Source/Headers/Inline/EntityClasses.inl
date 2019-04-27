@@ -756,7 +756,8 @@ namespace SGMInternal {
     inline vertex::vertex(SGM::Result &rResult, vertex const &other) :
             topology(rResult, other),
             m_Pos(other.m_Pos),
-            m_sEdges(other.m_sEdges)
+            m_sEdges(other.m_sEdges),
+            m_dTolerance(0)
     {}
 
     inline vertex::~vertex()
@@ -779,6 +780,7 @@ namespace SGMInternal {
         topology::Swap(other);
         m_Pos.Swap(other.m_Pos);
         m_sEdges.swap(other.m_sEdges);
+        m_dTolerance=other.m_dTolerance;
     }
 
     inline volume *vertex::GetVolume() const
