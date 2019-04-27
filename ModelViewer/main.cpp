@@ -20,14 +20,16 @@ std::string GetExecutableName(const char *path_name)
     if (pos == nullptr)
         {
         pos = strrchr(path_name,'\\');
-        pos = pos == nullptr ? path_name : ++pos;
+        if (pos == nullptr)
+            pos = path_name;
+        else
+            ++pos;
         }
     else
         {
         ++pos;
         }
     return std::string(pos);
-
 }
 
 #ifdef SGM_PRODUCT_VERSION
@@ -91,7 +93,7 @@ void FindFractures(int argc, char **argv)
         ComplexID = SGM::MergeComplexes(rResult, *aComplexes);
         }
     std::vector<SGM::Complex> aHoles;
-    SGM::Complex HolesID=SGM::FindHoles(rResult,ComplexID,aHoles);
+    SGM::FindHoles(rResult,ComplexID,aHoles);
     SGM::DeleteEntity(rResult,ComplexID); 
     std::string OutputSGMLFile(argv[3]);
     SGM::SaveSGM(rResult, OutputSGMLFile, SGM::Thing() , Options);

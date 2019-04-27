@@ -520,7 +520,7 @@ void ModelData::create_torus_knot(SGM::Point3D const &Center,
     std::vector<SGM::EdgeSideType> aTypes;
     aTypes.push_back(SGM::EdgeSideType::FaceOnLeftType);
     aTypes.push_back(SGM::EdgeSideType::FaceOnRightType);
-    SGM::Body BodyID = SGM::CreateSheetBody(dPtr->mResult, SurfaceID, aEdges, aTypes);
+    SGM::CreateSheetBody(dPtr->mResult, SurfaceID, aEdges, aTypes);
 
     rebuild_tree();
     rebuild_graphics();

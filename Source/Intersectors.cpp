@@ -909,56 +909,39 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
                      SGM::Point3D                               const &Origin,
                      SGM::UnitVector3D                          const &Axis,
                      volume                                     const *pVolume,
+                     std::vector<face*>                               &aHitFacesSupplied,
                      std::vector<SGM::Point3D>                        &aPoints,
                      std::vector<SGM::IntersectionType>               &aTypes,
                      std::vector<entity *>                            &aEntities,
                      double                                            dTolerance,
-                     bool                                              bUseWholeLine,
-                     std::vector<face*>                               *aHitFacesSupplied)
+                     bool                                              bUseWholeLine)
     {
     // Find all ray hits for all faces.
     aPoints.clear();
     aTypes.clear();
     aEntities.clear();
 
-
-//    static const SGM::Point3D ProblemPoint(-2.240873786023575, 1.84134645418636, -2.550193467402649);
-//    bool bIsProblemPoint = SGM::NearEqual(ProblemPoint,Origin,0.001);
-//    if (bIsProblemPoint)
-//        {
-//        //std::cout.setf(std::ios::floatfield,std::ios::scientific);
-//        std::cout << std::setprecision(8);
-//        std::cout << " Origin={" << std::setw(11) << Origin.m_x << ',' << std::setw(11) << Origin.m_y << ',' << std::setw(11) << Origin.m_z << "} ";
-//        std::cout << std::setprecision(15);
-//        std::cout << " Axis={" << std::setw(19) << Axis.m_x << ',' << std::setw(19) << Axis.m_y << ',' << std::setw(19) << Axis.m_z << "} ";
-//        }
-
     SGM_TIMER_INITIALIZE();
     SGM_TIMER_START("RayFireVolume");
 
-
-
-    SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
-    SGM::Ray3D Ray(Origin,Axis);
-    std::vector<face*> *aHitFaces;
-    if (aHitFacesSupplied == nullptr)
+    if (aHitFacesSupplied.empty())
         {
-        auto aHitFacesTree = FaceTree.FindIntersectsRay(Ray,dTolerance);
-        aHitFaces = new std::vector<face*>();
-        aHitFaces->reserve(aHitFacesTree.size());
+        SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
+        auto aHitFacesTree = FaceTree.FindIntersectsRay(SGM::Ray3D(Origin,Axis));
+        aHitFacesSupplied.reserve(aHitFacesTree.size());
         for (void const* pVoid : aHitFacesTree)
-            aHitFaces->push_back((face*)pVoid);
+            aHitFacesSupplied.push_back((face*)pVoid);
         }
     else
         {
-        aHitFaces = aHitFacesSupplied;
+        aHitFacesSupplied = aHitFacesSupplied;
         }
 
     std::vector<SGM::Point3D> aSubPoints;
     std::vector<SGM::IntersectionType> aSubTypes;
     std::vector<entity *> aSubEntities;
 
-    for (auto *pFace : *aHitFaces)
+    for (auto *pFace : aHitFacesSupplied)
         {
         aSubPoints.clear();
         aSubTypes.clear();
@@ -975,11 +958,6 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         }
 
     size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
-
-    if (aHitFacesSupplied == nullptr)
-        {
-        delete aHitFaces;
-        }
 
     SGM_TIMER_STOP();
 
@@ -1001,18 +979,19 @@ size_t RayFireBody(SGM::Result                        &rResult,
     std::set<volume *,EntityCompare> const &sVolumes=pBody->GetVolumes();
     std::vector<SGM::Point3D> aAllPoints;
     std::vector<SGM::IntersectionType> aAllTypes;
+    std::vector<face*> aHitTreeFaces;
     for (auto pVolume : sVolumes)
         {
         std::vector<SGM::Point3D> aSubPoints;
         std::vector<SGM::IntersectionType> aSubTypes;
-        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,aEntitiy,dTolerance,bUseWholeLine);
+        aHitTreeFaces.clear();
+        size_t nHits=RayFireVolume(rResult,Origin,Axis,pVolume,aHitTreeFaces,aSubPoints,aSubTypes,aEntitiy,dTolerance,bUseWholeLine);
         for(size_t Index1=0;Index1<nHits;++Index1)
             {
             aAllPoints.push_back(aSubPoints[Index1]);
             aAllTypes.push_back(aSubTypes[Index1]);
             }
         }
-
     size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aAllPoints,aAllTypes,aEntitiy);
     aPoints=aAllPoints;
     aTypes=aAllTypes;
@@ -1068,9 +1047,11 @@ size_t RayFireThing(SGM::Result                        &rResult,
 
     std::set<volume *,EntityCompare> sVolumes;
     FindVolumes(rResult,pThing,sVolumes,true);
+    std::vector<face *> aTreeHitFaces;
     for (auto pVolume : sVolumes)
         {
-        RayFireVolume(rResult,Origin,Axis,pVolume,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+        aTreeHitFaces.clear();
+        RayFireVolume(rResult,Origin,Axis,pVolume,aTreeHitFaces,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
         MovePointsAndTypes(aSubPoints, aSubTypes, aSubEntities, aPoints, aTypes, aEntities);
         }
 
@@ -1142,7 +1123,8 @@ size_t RayFire(SGM::Result                        &rResult,
             }
         case SGM::VolumeType:
             {
-            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
+            std::vector<face*> aTreeHitFaces;
+            return RayFireVolume(rResult,Origin,Axis,(volume const *)pEntity,aTreeHitFaces,aPoints,aTypes,aEntities,dTolerance,bUseWholeLine);
             }
         case SGM::FaceType:
             {

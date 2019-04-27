@@ -1619,7 +1619,7 @@ void FindOverLappingEdges(SGM::Result         &rResult,
                           volume        const *pVolume2,
                           std::vector<edge *> &aEdges)
     {
-    auto FaceTree=pVolume2->GetFaceTree(rResult);
+    auto &FaceTree=pVolume2->GetFaceTree(rResult);
     auto sFaces=pVolume1->GetFaces();
     for(auto *pFace1 : sFaces)
         {

@@ -2,6 +2,7 @@
 #include <string>
 #include <gtest/gtest.h>
 
+#include "SGMConstants.h"
 #include "SGMVector.h"
 #include "SGMInterval.h"
 
@@ -43,12 +44,12 @@ TEST(interval_check, box_ray_intersections) {
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_cross_xx));
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_cross_xy));
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_hit_vertex));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_x));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_y));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_z));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_x_negative));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_y_negative));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_z_negative));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_x,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_y,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_z,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_x_negative,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_y_negative,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_outside_parallel_z_negative,SGM_ZERO));
 
     // rays starting inside the box
     Ray3D ray_start_inside_cross_yy({3,2,0}, unit_yy_slabs);
@@ -58,7 +59,7 @@ TEST(interval_check, box_ray_intersections) {
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_inside_cross_yy));
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_inside_cross_xx));
     EXPECT_TRUE(bbox.IntersectsRay(ray_start_inside_cross_xy));
-    EXPECT_TRUE(bbox.IntersectsRay(ray_start_on_vertex));
+    EXPECT_TRUE(bbox.IntersectsRay(ray_start_on_vertex,SGM_ZERO));
 
     // rays towards the box, but barely outside by tolerance
     Ray3D ray_misses_parallel_x({1.0,4.0+1.E12,0.0}, unit_parallel_x);
@@ -125,12 +126,12 @@ TEST(interval_check, box_line_intersections) {
     EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_cross_xx));
     EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_cross_xy));
     EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_vertex));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_x));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_y));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_z));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_x_negative));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_y_negative));
-    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_z_negative));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_x,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_y,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_z,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_x_negative,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_y_negative,SGM_ZERO));
+    EXPECT_TRUE(bbox.IntersectsLine(ray_outside_away_parallel_z_negative,SGM_ZERO));
 
     // rays parallel towards the box, but barely outside by tolerance
     Ray3D ray_misses_parallel_x({1.0,4.0+1.E12,0.0}, unit_parallel_x);

@@ -198,7 +198,7 @@ void volume::ResetBox(SGM::Result &rResult) const
 
 SGM::BoxTree const &volume::GetFaceTree(SGM::Result &rResult) const
     {
-    if(m_FaceTree.IsEmpty())
+    if (m_FaceTree.IsEmpty())
         BoxTreeInsert(rResult, m_FaceTree, m_sFaces.begin(), m_sFaces.end());
     return m_FaceTree;
     }
