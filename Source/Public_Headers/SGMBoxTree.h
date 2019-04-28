@@ -171,6 +171,12 @@ namespace SGM {
         /// Count items whose bounds intersect the ray with zero tolerance
         size_t CountIntersectsRay(Ray3D const &ray) const;
 
+        /// True if any bounded item intersects the ray
+        bool AnyIntersectsRay(Ray3D const &ray, double tolerance) const;
+
+        /// True if any bounded item intersects the ray
+        bool AnyIntersectsRay(Ray3D const &ray) const;
+
         /// Compute the center of mass of the leaf boxes
         /// (the point at which the volume weighted relative position of the centers of leaf boxes sum to zero).
         Point3D FindCenterOfMass() const;
@@ -439,9 +445,25 @@ namespace SGM {
 
             LeafCounter() : m_nCount(0), bContinueVisiting(true) {};
 
-            void operator()(SGM::BoxTree::Leaf const *)
+            void operator()(Leaf const *)
                 {
                 ++m_nCount;
+                }
+            };
+
+        /**
+         * Visitor operation that holds the first leaf item that passes a given Filter, or none.
+         */
+        struct FirstLeaf {
+            void const* m_pObject;
+            bool bContinueVisiting;
+
+            FirstLeaf() : m_pObject(nullptr), bContinueVisiting(true) {};
+
+            void operator()(Leaf const *leaf)
+                {
+                m_pObject = leaf->m_pObject;
+                bContinueVisiting = false;
                 }
             };
 

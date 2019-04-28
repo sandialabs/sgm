@@ -118,11 +118,9 @@ inline bool operator<(RayFaceBoxIntersections const& lhs, RayFaceBoxIntersection
     return lhs.m_dCost < rhs.m_dCost;
     }
 
-inline bool DoesRayMissFaceFacets(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
+inline bool IsAnyFacetIntersectsRay(SGM::Result &rResult, face const *pFace, SGM::Ray3D const &Ray)
     {
-    auto const & Tree = pFace->GetFacetTree(rResult);
-    size_t count = Tree.CountIntersectsRay(Ray);
-    return count == 0;
+    return pFace->GetFacetTree(rResult).AnyIntersectsRay(Ray);
     }
 
 double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
@@ -222,7 +220,7 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
     for (void const* pVoid : aHitFaces)
         {
         face* pFace = (face*)pVoid;
-        if (!DoesRayMissFaceFacets(rResult,pFace,RayFaceIntersection.m_Ray))
+        if (IsAnyFacetIntersectsRay(rResult, pFace, RayFaceIntersection.m_Ray))
             {
             RayFaceIntersection.m_dCost += CostOfFaceIntersection(pFace, RayFaceIntersection.m_Ray);
             RayFaceIntersection.m_aHitFaces.push_back(pFace);

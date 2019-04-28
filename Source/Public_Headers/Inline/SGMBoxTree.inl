@@ -225,14 +225,22 @@ namespace SGM {
 
         aItemStack[numItems++] = item;
 
-        while(numItems > 0)
+        while(numItems > 0 && m_visitor.bContinueVisiting)
             {
             currentNode = (Node const*)aItemStack[--numItems];
-
-            if (m_filter(currentNode) && m_visitor.bContinueVisiting)
+            if (m_filter(currentNode))
                 {
                 if (currentNode->m_bHasLeaves)
-                    std::for_each(currentNode->m_aItems.begin(), currentNode->m_aItems.end(), queryLeafFunctor);
+                    {
+                    for (Bounded const *childItem : currentNode->m_aItems)
+                        {
+                        queryLeafFunctor(childItem);
+                        if (!m_visitor.bContinueVisiting)
+                            {
+                            break;
+                            }
+                        }
+                    }
                 else
                     {
                     assert(numItems + currentNode->m_aItems.size() < SGM_BOXTREE_MAX_NODE_RECURSION);
@@ -400,6 +408,19 @@ namespace SGM {
     inline size_t BoxTree::CountIntersectsRay(Ray3D const &ray) const
     {
         return Query(IsIntersectingRayTight(ray), LeafCounter()).m_nCount;
+    }
+
+    inline bool BoxTree::AnyIntersectsRay(Ray3D const &ray, double tolerance) const
+    {
+        if (tolerance <= m_dTolerance)
+            return Query(IsIntersectingRayTight(ray), FirstLeaf()).m_pObject != nullptr;
+        else
+            return Query(IsIntersectingRay(ray, tolerance-m_dTolerance), FirstLeaf()).m_pObject != nullptr;
+    }
+
+    inline bool BoxTree::AnyIntersectsRay(Ray3D const &ray) const
+    {
+        return Query(IsIntersectingRayTight(ray), FirstLeaf()).m_pObject != nullptr;
     }
 
     inline Point3D BoxTree::FindCenterOfMass() const
