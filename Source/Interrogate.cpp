@@ -217,6 +217,7 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
     RayFaceBoxIntersections RayFaceIntersection(Origin,Direction);
     std::vector<void const*> aHitFaces(FaceTree.FindIntersectsRay(RayFaceIntersection.m_Ray));
+    RayFaceIntersection.m_aHitFaces.reserve(aHitFaces.size());
     for (void const* pVoid : aHitFaces)
         {
         face* pFace = (face*)pVoid;
@@ -435,7 +436,7 @@ void FindRaysForPoints(SGM::Result                           &rResult,
         RayFaceBoxIntersections NextRayIntersects(FindRayFacesCost(rResult, pVolume, NextPoint, Direction));
 
         if (NextRayIntersects.m_dCost <= dCost ||                          // its as cheap as the previous ray
-            (NextRayIntersects.m_dCost < 1000 && nCountSinceNewRay < 9)) // and not super expensive
+            (NextRayIntersects.m_dCost < 50 && nCountSinceNewRay < 7)) // and not super expensive
             {
             // re-use the previous direction
             dCost =  NextRayIntersects.m_dCost;
