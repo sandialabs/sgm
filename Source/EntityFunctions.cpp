@@ -373,13 +373,20 @@ curve *SimplifyCurve(SGM::Result       &rResult,
     return nullptr;
     }
 
+//bool IsTorus(SGM::Result               &,//rResult,
+//             surface             const *pSurface,
+//             std::vector<edge *> const &aCircles)
+//    {
+//    
+//    }
+
 surface *IsCylinder(SGM::Result               &rResult,
                     surface             const *pSurface,
                     std::vector<edge *> const &aCircles)
     {
     if(aCircles.empty())
         {
-        return false;
+        return nullptr;
         }
     edge *pEdge=aCircles[0];
     circle const *pCircle=(circle const *)pEdge->GetCurve();
