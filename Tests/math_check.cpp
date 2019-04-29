@@ -29,6 +29,18 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
+TEST(math_check, least_sqaures_circle)
+{
+    std::vector<SGM::Point3D> aPoints={{0,0,0},{1,0,0},{1,1,0},{0,1,0}};
+    SGM::Point3D Center;
+    SGM::UnitVector3D Normal;
+    double dRadius;
+    EXPECT_TRUE(SGM::FindLeastSqaureCircle3D(aPoints,Center,Normal,dRadius));
+    EXPECT_TRUE(SGM::NearEqual(Normal,SGM::Vector3D(0,0,1),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(Center,SGM::Point3D(0.5,0.5,0),SGM_MIN_TOL));
+    EXPECT_NEAR(dRadius,0.70710678118654752440084436210485,SGM_ZERO);
+}
+
 TEST(math_check, point_in_tetrahedron)
 {
     SGM::Point3D A(0,0,0),B(1,0,0),C(0,1,0),D(0,0,1);

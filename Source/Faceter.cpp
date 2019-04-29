@@ -1221,21 +1221,25 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
         }
 
     // Force all edges on NUB surfaces to have at least two faces.
-    if(nCount==0 && nPoints==2 && pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
+    if(nCount==0 && nPoints==2)
         {
-        auto Node=lNodes.begin();
-        auto NodeA=Node;
-        ++Node;
-        auto NodeB=Node;
-        double dParamA=NodeA->m_dParam;
-        double dParamB=NodeB->m_dParam;
-        double dParamC=(dParamA+dParamB)*0.5;
-        SGM::Point3D Pos;
-        pCurve->Evaluate(dParamC,&Pos);
-        SGM::Point2D uv=pSurface->Inverse(Pos);
-        FacetNodeNormal NodeC(dParamC,Pos,uv);
-        lNodes.insert(NodeB,NodeC);
-        NodeB=NodeA;
+        if( pSurface->GetSurfaceType()==SGM::NUBSurfaceType || 
+            pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+            {
+            auto Node=lNodes.begin();
+            auto NodeA=Node;
+            ++Node;
+            auto NodeB=Node;
+            double dParamA=NodeA->m_dParam;
+            double dParamB=NodeB->m_dParam;
+            double dParamC=(dParamA+dParamB)*0.5;
+            SGM::Point3D Pos;
+            pCurve->Evaluate(dParamC,&Pos);
+            SGM::Point2D uv=pSurface->Inverse(Pos);
+            FacetNodeNormal NodeC(dParamC,Pos,uv);
+            lNodes.insert(NodeB,NodeC);
+            NodeB=NodeA;
+            }
         }
     
     aPoints3D.clear();

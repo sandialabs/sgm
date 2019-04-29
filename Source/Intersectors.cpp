@@ -3654,6 +3654,18 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
      return LineOrigin+LineAxis*(LineAxis%(Pos-LineOrigin));
      }
 
+ SGM::Point3D ClosestPointOnCircle(SGM::Point3D      const &Pos,
+                                   SGM::Point3D      const &Center,
+                                   SGM::UnitVector3D const &Normal,
+                                   double                   dRadius)
+     {
+     if(SGM::NearEqual(Pos,Center,SGM_ZERO))
+         {
+         return Center;
+         }
+     return Center+SGM::UnitVector3D(Normal*(Pos-Center)*Normal)*dRadius;
+     }
+
  bool PointOnSurfaces(SGM::Point3D const &Pos,
                       surface      const *pSurf1,
                       surface      const *pSurf2,

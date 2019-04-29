@@ -577,5 +577,10 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
  SGM::Point3D ClosestPointOnLine(SGM::Point3D      const &Pos,
                                  SGM::Point3D      const &LineOrigin,
                                  SGM::UnitVector3D const &LineAxis);
+
+ SGM::Point3D ClosestPointOnCircle(SGM::Point3D      const &Pos,
+                                   SGM::Point3D      const &Center,
+                                   SGM::UnitVector3D const &Normal,
+                                   double                   dRadius);
 }
 #endif // INTERSECTOR_H
