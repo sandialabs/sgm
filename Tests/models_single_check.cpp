@@ -1119,6 +1119,38 @@ TEST(assembly_check, import_two_level_assembly)
     SGMTesting::ReleaseTestThing(pThing); 
 }
 
+TEST(models_single_check, model_closest_point_check)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing); 
+
+    expect_import_success("half_annulus_BL_double_1e-5.stp", rResult);
+    expect_check_success(rResult);
+
+    SGM::Point3D TestPos(5.0,0.0,0.0);
+    SGM::Entity TestEnt(3);
+    SGM::Entity CloseEnt;
+    SGM::Point3D ClosePos;
+    SGM::Point3D ExpectedPos(-5.0,0.0,0.0);
+    SGM::FindClosestPointOnEntity(rResult, TestPos, TestEnt, ClosePos, CloseEnt);
+    EXPECT_TRUE(SGM::NearEqual(ClosePos,ExpectedPos,SGM_MIN_TOL));
+    EXPECT_EQ(CloseEnt.m_ID, 17);
+
+    TestPos = {5.00001, 0.0, -0.5};
+    std::vector<SGM::Face> aFaces;
+    SGM::FindCloseFaces(rResult, TestPos, SGM::Thing(), SGM_MIN_TOL, aFaces);
+    EXPECT_EQ(aFaces.size(),2);
+    if (aFaces.size() == 2)
+    {
+        EXPECT_EQ(aFaces[0].m_ID, 4);
+        EXPECT_EQ(aFaces[1].m_ID, 8);
+    }
+
+    SGMTesting::ReleaseTestThing(pThing); 
+}
+
+
+
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif

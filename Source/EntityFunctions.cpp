@@ -373,12 +373,51 @@ curve *SimplifyCurve(SGM::Result       &rResult,
     return nullptr;
     }
 
-//bool IsTorus(SGM::Result               &,//rResult,
-//             surface             const *pSurface,
-//             std::vector<edge *> const &aCircles)
-//    {
-//    
-//    }
+torus *IsTorus(SGM::Result               &rResult,
+               surface             const *pSurface,
+               std::vector<edge *> const &aCircles)
+    {
+    if(aCircles.size()<2)
+        {
+        return nullptr;
+        }
+    edge *pEdge0=aCircles[0];
+    edge *pEdge1=aCircles[1];
+    SGM::UnitVector3D Normal0=((circle *)pEdge0->GetCurve())->GetNormal();
+    SGM::UnitVector3D Normal1=((circle *)pEdge1->GetCurve())->GetNormal();
+    if(0.99619469809174553229501040247389<fabs(Normal0%Normal1)) // Cos(5 degrees)
+        {
+        return nullptr;
+        }
+    SGM::Point3D Center0=((circle *)pEdge0->GetCurve())->GetCenter();
+    SGM::Point3D Center1=((circle *)pEdge1->GetCurve())->GetCenter();
+    SGM::Point3D Origin;
+    SGM::UnitVector3D Axis;
+    IntersectNonParallelPlanes(Center0,Normal0,Center1,Normal1,Origin,Axis);
+    SGM::Point3D Center=ClosestPointOnLine(Center0,Origin,Axis);
+    double dMajor=Center.Distance(Center0);
+    double dMinor=((circle *)pEdge0->GetCurve())->GetRadius();
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    size_t Index1,Index2;
+    for(Index1=0;Index1<5;++Index1)
+        {
+        double u=Index1/4.0;
+        for(Index2=0;Index2<5;++Index2)
+            {
+            double v=Index2/4.0;
+            SGM::Point2D uv=Domain.MidPoint(u,v);
+            SGM::Point3D Pos;
+            pSurface->Evaluate(uv,&Pos);
+            double dDist=Pos.Distance(ClosestPointOnCircle(Pos,Center,Axis,dMajor));
+            if(SGM::NearEqual(dDist,dMinor,SGM_FIT,false)==false)
+                {
+                return nullptr;
+                }
+            }
+        }
+    SGM::UnitVector3D XAxis=Center-Center0;
+    return new torus(rResult,Center,Axis,dMinor,dMajor,true,&XAxis);
+    }
 
 surface *IsCylinder(SGM::Result               &rResult,
                     surface             const *pSurface,
@@ -488,6 +527,10 @@ surface *SimplifySurface(SGM::Result       &rResult,
                 {
                 return pCylinder;
                 }
+            if(surface *pTorus=IsTorus(rResult,pSurface,aCircles))
+                {
+                return pTorus;
+                }
             }
         }
     else if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
@@ -545,6 +588,10 @@ surface *SimplifySurface(SGM::Result       &rResult,
             if(surface *pCylinder=IsCylinder(rResult,pSurface,aCircles))
                 {
                 return pCylinder;
+                }
+            if(surface *pTorus=IsTorus(rResult,pSurface,aCircles))
+                {
+                return pTorus;
                 }
             }
         }
@@ -708,6 +755,8 @@ void Heal(SGM::Result           &rResult,
             size_t nNURBtoCylinder=0;
             size_t nNUBtoCylinder=0;
             size_t nTorusToSphere=0;
+            size_t nNUBtoTorus=0;
+            size_t nNURBtoTorus=0;
             for(auto pSurface : sSurfaces)
                 {
                 if(surface *pSimplify=SimplifySurface(rResult,pSurface,Options))
@@ -723,6 +772,17 @@ void Heal(SGM::Result           &rResult,
                         else
                             {
                             ++nNUBtoPlane;
+                            }
+                        }
+                    else if(pSimplify->GetSurfaceType()==SGM::TorusType)
+                        { 
+                        if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+                            {
+                            ++nNURBtoTorus;
+                            }
+                        else
+                            {
+                            ++nNUBtoTorus;
                             }
                         }
                     else if(pSimplify->GetSurfaceType()==SGM::SphereType)
@@ -746,27 +806,42 @@ void Heal(SGM::Result           &rResult,
                     std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
                     for(auto *pFace : sFaces)
                         {
+                        // Check to see if the surface needs flipping.
+
                         pFace->ClearFacets(rResult);
-                        pFace->ChangeColor(rResult,0,255,0);
                         for(edge *pEdge : pFace->GetEdges())
                             {
                             pFace->ClearUVBoundary(pEdge);
                             }
                         pFace->SetSurface(rResult,pSimplify);
-
-                        // Check to see if the surface needs flipping.
-
+                        
                         std::vector<unsigned> aAdjacencies;
                         std::vector<std::vector<unsigned> > aaPolygons;
                         std::vector<bool> aImprintFlags;
                         std::vector<SGM::Point3D> aPoints3D;
                         std::vector<SGM::Point2D> aPoints2D;
+                        bool bFlipped=false;
                         if(FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags))
                             {
                             double dArea=SGM::PolygonArea(SGM::PointsFromPolygon2D(aPoints2D,aaPolygons[0]));
                             if(dArea<0 || SGM_MAX<dArea)
                                 {
                                 pFace->SetFlipped(!pFace->GetFlipped());
+                                bFlipped=true;
+                                }   
+                            }
+                        else
+                            {
+                            pFace->SetFlipped(!pFace->GetFlipped());
+                            bFlipped=true;
+                            }
+                        
+                        if(bFlipped)
+                            {
+                            pFace->ClearFacets(rResult);
+                            for(edge *pEdge : pFace->GetEdges())
+                                {
+                                pFace->ClearUVBoundary(pEdge);
                                 }
                             }
                         }
@@ -776,10 +851,6 @@ void Heal(SGM::Result           &rResult,
                 if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
                     {
                     std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
-                    for(auto *pFace : sFaces)
-                        {
-                        pFace->ChangeColor(rResult,255,255,0);
-                        }
                     }
                 }
             if(nNURBtoPlane)
@@ -789,6 +860,14 @@ void Heal(SGM::Result           &rResult,
             if(nNUBtoPlane)
                 {
                 std::cout << nNUBtoPlane << " NUBs simplified to plane\n";
+                }
+            if(nNURBtoTorus)
+                {
+                std::cout << nNURBtoTorus << " NURBs simplified to torus\n";
+                }
+            if(nNUBtoTorus)
+                {
+                std::cout << nNUBtoTorus << " NUBs simplified to torus\n";
                 }
             if(nTorusToSphere)
                 {

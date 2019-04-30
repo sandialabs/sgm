@@ -39,10 +39,12 @@ void FindClosestPointOnEdge3D(SGM::Result        &,//rResult,
             }
         if(dStart<dEnd)
             {
+            ClosestPoint = pEdge->GetStart()->GetPoint();
             pCloseEntity=(entity *)pEdge->GetStart();
             }
         else
             {
+            ClosestPoint = pEdge->GetEnd()->GetPoint();
             pCloseEntity=(entity *)pEdge->GetEnd();
             }
         }

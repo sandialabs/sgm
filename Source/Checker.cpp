@@ -474,7 +474,7 @@ bool face::Check(SGM::Result              &rResult,
         if(double dAngle=CheckFacet(m_aPoints3D,m_aNormals,m_aTriangles,m_pSurface,Index1))
             {
             dMaxAngle=std::max(dMaxAngle,dAngle);
-#if 0
+#if 1
             unsigned int a=m_aTriangles[Index1];
             unsigned int b=m_aTriangles[Index1+1];
             unsigned int c=m_aTriangles[Index1+2];

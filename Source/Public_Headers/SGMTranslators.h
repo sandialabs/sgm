@@ -59,11 +59,11 @@ namespace SGM
                                    // For STL the triangles are merged in each complex.
 
             bool m_bHeal;          // Runs the healer on the part.
-                                   // Default is true,
+                                   // Default is true.
                                    // Used in STEP read.
 
             bool m_bSplitFile;     // Split the file into smaller parts.
-                                   // Default is false;
+                                   // Default is false.
                                    // Used in STEP read.
         };
 
