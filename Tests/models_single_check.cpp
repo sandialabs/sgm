@@ -544,7 +544,7 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
     }
 #endif
 
-#if 1
+#if 0
 TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
