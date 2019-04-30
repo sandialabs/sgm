@@ -10,6 +10,7 @@
 #include "Topology.h"
 #include "OrderPoints.h"
 #include "Modify.h"
+#include "Surface.h"
 
 //#define SGM_TIMER
 #include "Util/timer.h"
@@ -1097,6 +1098,74 @@ size_t ParseSTEPStreamSerial(SGM::Result &rResult,
     return maxSTEPLineNumber;
     }
 
+void ColorByType(SGM::Result &rResult,
+                 thing       *pThing)
+    {
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pThing,sFaces);
+    for(auto pFace : sFaces)
+        {
+        surface *pSurf=pFace->GetSurface();
+        switch(pSurf->GetSurfaceType())
+            {
+            case SGM::PlaneType:
+                {
+                pFace->ChangeColor(rResult,0,255,0);
+                break;
+                }
+            case SGM::CylinderType:
+                {
+                pFace->ChangeColor(rResult,0,255,255);
+                break;
+                }
+            case SGM::ConeType:
+                {
+                pFace->ChangeColor(rResult,255,0,255);
+                break;
+                }
+            case SGM::SphereType:
+                {
+                pFace->ChangeColor(rResult,255,255,0);
+                break;
+                }
+            case SGM::TorusType:
+                {
+                pFace->ChangeColor(rResult,255,127,127);
+                break;
+                }
+            case SGM::NUBSurfaceType:
+                {
+                pFace->ChangeColor(rResult,255,127,0);
+                break;
+                }
+            case SGM::NURBSurfaceType:
+                {
+                pFace->ChangeColor(rResult,127,127,0);
+                break;
+                } 
+            case SGM::RevolveType:
+                {
+                pFace->ChangeColor(rResult,127,0,127);
+                break;
+                }    
+            case SGM::ExtrudeType:
+                {
+                pFace->ChangeColor(rResult,0,127,127);
+                break;
+                }
+            case SGM::OffsetType:
+                {
+                pFace->ChangeColor(rResult,0,127,255);
+                break;
+                }
+            default:
+                {
+                throw;
+                }
+            }
+        }
+    }
+
 size_t ReadStepFile(SGM::Result                  &rResult,
                     std::string            const &FileName,
                     thing                        *pThing,
@@ -1171,6 +1240,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
             FixVolumes(rResult,(body *)aEntities[Index1]);
             }
         }
+
+    ColorByType(rResult,pThing);
 
     // create all the triangles/facets/boxes
 
