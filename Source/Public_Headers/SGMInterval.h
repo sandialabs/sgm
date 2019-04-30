@@ -309,15 +309,19 @@ namespace SGM {
 
         bool IntersectsHalfSpace(Point3D const &p, UnitVector3D const &u, double tolerance) const;
 
-        bool IntersectsLine(Ray3D const &ray, double tolerance = SGM_ZERO) const;
+        bool IntersectsLine(Ray3D const &ray, double tolerance) const;
+
+        bool IntersectsLine(Ray3D const &ray) const;
 
         bool IntersectsPlane(Point3D const &p, UnitVector3D const &u, double tolerance) const;
 
         bool InInterval(Point3D const &point, double tolerance) const;
 
-        bool IntersectsRay(Ray3D const &ray, double tolerance = SGM_ZERO) const;
+        bool InInterval(Point3D const &point) const;
 
-        bool IntersectsRayTight(Ray3D const &ray) const;
+        bool IntersectsRay(Ray3D const &ray, double tolerance) const;
+
+        bool IntersectsRay(Ray3D const &ray) const;
 
         bool IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_ZERO) const;
 

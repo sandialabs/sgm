@@ -36,16 +36,18 @@ size_t RayFireBody(SGM::Result                        &rResult,
                    double                              dTolerance,
                    bool                                bUseWholeLine=false);
 
+// Supply the candidate faces, or an empty list of faces
+
 size_t RayFireVolume(SGM::Result                                      &rResult,
                      SGM::Point3D                               const &Origin,
                      SGM::UnitVector3D                          const &Axis,
                      volume                                     const *pVolume,
+                     std::vector<face*>                               &aHitFacesSupplied,
                      std::vector<SGM::Point3D>                        &aPoints,
                      std::vector<SGM::IntersectionType>               &aTypes,
                      std::vector<entity *>                            &aEntites,
                      double                                            dTolerance,
-                     bool                                              bUseWholeLine=false,
-                     std::vector<face*>                               *aHitFacesSupplied=nullptr);
+                     bool                                              bUseWholeLine=false);
 
 
 size_t RayFireFace(SGM::Result                        &rResult,

@@ -33,8 +33,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
-  ui(new Ui::MainWindow),
   mModel(new ModelData),
+  ui(new Ui::MainWindow),
   mFileMenu(new FileMenu),
   mViewMenu(new ViewMenu),
   mTestMenu(new TestMenu),

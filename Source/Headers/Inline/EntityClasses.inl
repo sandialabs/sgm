@@ -580,7 +580,7 @@ namespace SGMInternal {
             m_sFaces(),
             m_sEdges(),
             m_pBody(nullptr),
-            m_FaceTree()
+            m_FaceTree(SGM_MIN_TOL)
     {}
 
     inline volume::volume(SGM::Result &rResult, volume const &other) :

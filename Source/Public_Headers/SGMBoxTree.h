@@ -7,6 +7,7 @@
 #include "SGMMemoryPool.h"
 
 #include <list>
+#include <stack>
 #include <vector>
 #include <map>
 
@@ -33,6 +34,11 @@ namespace SGM {
          * Construct an empty tree.
          */
         BoxTree();
+
+        /**
+         * Construct an empty tree, all bounded inserted will be extended by the given tolerance.
+         */
+        explicit BoxTree(double tolerance);
 
         /**
          * Construct a copy of another tree.
@@ -127,7 +133,9 @@ namespace SGM {
 
         /// Return items whose bounds intersect the line
         std::vector<void const*> FindIntersectsLine(Ray3D const &ray,
-                                                    double       tolerance = SGM_ZERO) const;
+                                                    double       tolerance) const;
+
+        std::vector<void const*> FindIntersectsLine(Ray3D const &ray) const;
 
         /// Return items whose bounds intersect the plane
         std::vector<void const*> FindIntersectsPlane(Point3D      const &point,
@@ -138,14 +146,19 @@ namespace SGM {
         std::vector<void const*> FindIntersectsPoint(Point3D const &point,
                                                      double         tolerance) const;
 
+        /// Return items whose bounds intersect the point
+        std::vector<void const*> FindIntersectsPoint(Point3D const &point) const;
+
         /// Return items whose bounds intersect the ray
         std::vector<void const*> FindIntersectsRay(Ray3D const &ray,
-                                                   double       tolerance = SGM_ZERO) const;
+                                                   double       tolerance) const;
+
+        std::vector<void const*> FindIntersectsRay(Ray3D const &ray) const;
 
         /// Return items whose bounds intersect the segment
         std::vector<void const*> FindIntersectsSegment(Point3D const &p1,
                                                        Point3D const &p2,
-                                                       double         tolerance = SGM_ZERO) const;
+                                                       double         tolerance) const;
 
         /// Return items whose bounds intersect the sphere
         std::vector<void const*> FindIntersectsSphere(Point3D const &center,
@@ -156,7 +169,13 @@ namespace SGM {
         size_t CountIntersectsRay(Ray3D const &ray, double tolerance) const;
 
         /// Count items whose bounds intersect the ray with zero tolerance
-        size_t CountIntersectsRayTight(Ray3D const &ray) const;
+        size_t CountIntersectsRay(Ray3D const &ray) const;
+
+        /// True if any bounded item intersects the ray
+        bool AnyIntersectsRay(Ray3D const &ray, double tolerance) const;
+
+        /// True if any bounded item intersects the ray
+        bool AnyIntersectsRay(Ray3D const &ray) const;
 
         /// Compute the center of mass of the leaf boxes
         /// (the point at which the volume weighted relative position of the centers of leaf boxes sum to zero).
@@ -240,8 +259,19 @@ namespace SGM {
 
             IsIntersectingLine() = delete;
 
-            explicit IsIntersectingLine(Ray3D const & ray, double tolerance = SGM_ZERO)
+            explicit IsIntersectingLine(Ray3D const & ray, double tolerance)
             : m_ray(ray), m_tolerance(tolerance) { }
+
+            bool operator()(Bounded const * node) const;
+        };
+
+        struct IsIntersectingLineTight {
+            Ray3D m_ray;
+
+            IsIntersectingLineTight() = delete;
+
+            explicit IsIntersectingLineTight(Ray3D const & ray)
+                : m_ray(ray) { }
 
             bool operator()(Bounded const * node) const;
         };
@@ -274,6 +304,18 @@ namespace SGM {
             bool operator()(Bounded const * node) const;
         };
 
+        struct IsIntersectingPointTight {
+
+            Point3D m_point;
+
+            IsIntersectingPointTight() = delete;
+
+            explicit IsIntersectingPointTight(Point3D const & point)
+                : m_point(point) { }
+
+            bool operator()(Bounded const * node) const;
+            };
+
         /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRay {
 
@@ -282,7 +324,7 @@ namespace SGM {
             
             IsIntersectingRay() = delete;
 
-            explicit IsIntersectingRay(Ray3D const & ray, double tolerance = SGM_ZERO)
+            explicit IsIntersectingRay(Ray3D const & ray, double tolerance)
                     : m_ray(ray), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
@@ -310,7 +352,7 @@ namespace SGM {
             
             IsIntersectingSegment() = delete;
             
-            explicit IsIntersectingSegment(Point3D const &p1, Point3D const &p2, double tolerance = SGM_ZERO)
+            explicit IsIntersectingSegment(Point3D const &p1, Point3D const &p2, double tolerance)
                     : m_point1(p1), m_point2(p2), m_tolerance(tolerance) { }
             
             bool operator()(Bounded const * node) const;
@@ -389,7 +431,7 @@ namespace SGM {
 
             PushLeaf() : m_aContainer(), bContinueVisiting(true) {};
 
-            PushLeaf(size_t nReserve);
+            explicit PushLeaf(size_t nReserve);
 
             void operator()(Leaf const *leaf);
         };
@@ -403,9 +445,25 @@ namespace SGM {
 
             LeafCounter() : m_nCount(0), bContinueVisiting(true) {};
 
-            void operator()(SGM::BoxTree::Leaf const *)
+            void operator()(Leaf const *)
                 {
                 ++m_nCount;
+                }
+            };
+
+        /**
+         * Visitor operation that holds the first leaf item that passes a given Filter, or none.
+         */
+        struct FirstLeaf {
+            void const* m_pObject;
+            bool bContinueVisiting;
+
+            FirstLeaf() : m_pObject(nullptr), bContinueVisiting(true) {};
+
+            void operator()(Leaf const *leaf)
+                {
+                m_pObject = leaf->m_pObject;
+                bContinueVisiting = false;
                 }
             };
 
@@ -616,6 +674,8 @@ namespace SGM {
         Node* m_treeRoot;
 
         size_t m_treeSize;
+
+        double m_dTolerance;
 
         static const size_t REINSERT_CHILDREN;      // in [1 <= m <= MIN_CHILDREN]
         static const size_t MIN_CHILDREN;           // in [1 <= m < M)

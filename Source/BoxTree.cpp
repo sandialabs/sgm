@@ -29,7 +29,7 @@ namespace SGM {
 #endif // BOX_TREE_USE_MEMORY_POOL
 
     BoxTree::BoxTree()
-            : m_treeRoot(nullptr), m_treeSize(0)
+            : m_treeRoot(nullptr), m_treeSize(0), m_dTolerance(0.0)
     {
         // perform checks on preconditions of our tuning parameters
         static_assert(MIN_CHILDREN <= MAX_CHILDREN / 2, "MAX_CHILDREN should be 2*MIN_CHILDREN");
@@ -40,10 +40,17 @@ namespace SGM {
         static_assert(CHOOSE_SUBTREE <= MAX_CHILDREN, "CHOOSE_SUBTREE must be less or equal to MAX_CHILDREN");
     }
 
+    BoxTree::BoxTree(double tolerance)
+            : m_treeRoot(nullptr), m_treeSize(0), m_dTolerance(tolerance)
+    { }
+
     void BoxTree::Insert(const void* object, const Interval3D& bound)
     {
         auto newLeaf = new Leaf();
-        newLeaf->m_Bound = bound;
+        if (m_dTolerance==0)
+            newLeaf->m_Bound = bound;
+        else
+            newLeaf->m_Bound = bound.Extend(m_dTolerance);
         newLeaf->m_pObject = object;
 
         // create a new root node if necessary
@@ -54,7 +61,7 @@ namespace SGM {
             // reserve memory
             m_treeRoot->m_aItems.reserve(RESERVE_CHILDREN);
             m_treeRoot->m_aItems.push_back(newLeaf);
-            m_treeRoot->m_Bound = bound;
+            m_treeRoot->m_Bound = newLeaf->m_Bound;
             }
         else
             InsertInternal(newLeaf, m_treeRoot);

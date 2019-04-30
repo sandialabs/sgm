@@ -44,12 +44,11 @@ bool IsRayExpensive(SGM::Result              &rResult,
                     SGM::Point3D      const  &Origin,
                     SGM::UnitVector3D const  &Axis,
                     volume            const  *pVolume,
-                    double                    dTolerance,
                     std::vector<void const*> &aHitFaces)
     {
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
     SGM::Ray3D Ray(Origin, Axis);
-    aHitFaces = FaceTree.FindIntersectsRay(Ray, dTolerance);
+    aHitFaces = FaceTree.FindIntersectsRay(Ray);
 
     // skip if debugging ray firing
     if (rResult.GetDebugFlag()==6)
@@ -119,11 +118,9 @@ inline bool operator<(RayFaceBoxIntersections const& lhs, RayFaceBoxIntersection
     return lhs.m_dCost < rhs.m_dCost;
     }
 
-inline bool DoesRayMissFaceFacets(SGM::Result &rResult,face const* pFace, SGM::Ray3D const &Ray)
+inline bool IsAnyFacetIntersectsRay(SGM::Result &rResult, face const *pFace, SGM::Ray3D const &Ray)
     {
-    auto const & Tree = pFace->GetFacetTree(rResult);
-    size_t count = Tree.CountIntersectsRayTight(Ray);
-    return count == 0;
+    return pFace->GetFacetTree(rResult).AnyIntersectsRay(Ray);
     }
 
 double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
@@ -214,63 +211,29 @@ double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
 
 RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
                                          volume const *pVolume,
-                                         double dTolerance,
                                          SGM::Point3D const &Origin,
                                          SGM::UnitVector3D const &Direction)
     {
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
-    std::vector<void const*> aHitFaces;
     RayFaceBoxIntersections RayFaceIntersection(Origin,Direction);
-    aHitFaces = FaceTree.FindIntersectsRay(RayFaceIntersection.m_Ray, dTolerance);
-    RayFaceIntersection.m_dCost = 0;
-    RayFaceIntersection.m_aHitFaces.clear();
+    std::vector<void const*> aHitFaces(FaceTree.FindIntersectsRay(RayFaceIntersection.m_Ray));
     RayFaceIntersection.m_aHitFaces.reserve(aHitFaces.size());
     for (void const* pVoid : aHitFaces)
         {
-        face *pFace = (face *)pVoid;
-        double dCost = CostOfFaceIntersection(pFace,RayFaceIntersection.m_Ray);
-        if (dCost > 0)
+        face* pFace = (face*)pVoid;
+        if (IsAnyFacetIntersectsRay(rResult, pFace, RayFaceIntersection.m_Ray))
             {
-            RayFaceIntersection.m_dCost += dCost;
+            RayFaceIntersection.m_dCost += CostOfFaceIntersection(pFace, RayFaceIntersection.m_Ray);
             RayFaceIntersection.m_aHitFaces.push_back(pFace);
             }
         }
-    return std::move(RayFaceIntersection);
-    }
-
-// Use face facet boxtrees to filter out face missed by a ray.
-// Return new cost of the given ray after faces are filtered out.
-
-double RemoveMissedFacesFromRayIntersections(SGM::Result &rResult, RayFaceBoxIntersections &rayFaceIntersections)
-    {
-    SGM::Ray3D const &ray = rayFaceIntersections.m_Ray;
-    std::vector<face*> & aHitFaces = rayFaceIntersections.m_aHitFaces;
-
-    // note: size() of vector may be changed inside loop
-    for (long int iFace = 0; iFace < (long int)aHitFaces.size(); ++iFace)
-        {
-        face *pFace = aHitFaces[iFace];
-        if (DoesRayMissFaceFacets(rResult,pFace,ray))
-            {
-            // remove the face on this ray
-            aHitFaces.erase(aHitFaces.begin() + iFace--); // reduces iterator by one
-            if (aHitFaces.empty())
-                {
-                rayFaceIntersections.m_dCost = 0;
-                return 0;
-                }
-            // remove cost of the face on this ray
-            rayFaceIntersections.m_dCost -= CostOfFaceIntersection(pFace,ray);
-            }
-        }
-    return rayFaceIntersections.m_dCost;
+    return RayFaceIntersection;
     }
 
 RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResult,
                                      SGM::Point3D                   const &Point,
                                      volume                         const *pVolume,
-                                     std::vector<SGM::UnitVector3D> const &GuessDirections,
-                                     double                                dTolerance)
+                                     std::vector<SGM::UnitVector3D> const &GuessDirections)
     {
 
 //    static const size_t NUM_TEST_RAYS=12; // Icosahedron vertices
@@ -321,20 +284,13 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
     for (size_t i = 0; i < NUM_GUESS_RAYS; ++i)
         {
         SGM::UnitVector3D const &Direction = GuessDirections[i];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction));
+        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         if (aIntersections.back().m_dCost == 0)
             return aIntersections.back();
         }
 
     std::sort(aIntersections.begin(),aIntersections.end());
 
-    // get better costs by removing faces whose facet trees do not intersect the rays
-    for (size_t iRayFaceIntersections = nStartIndex; iRayFaceIntersections < aIntersections.size(); ++iRayFaceIntersections)
-        {
-        auto &rayFaceIntersection = aIntersections[iRayFaceIntersections];
-        if (RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection) < COST_THRESHOLD_1)
-            return rayFaceIntersection;
-        }
     nStartIndex += aIntersections.size();
 
     // try those guesses in the opposite direction
@@ -344,18 +300,13 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         Direction.m_x = -Direction.m_x;
         Direction.m_y = -Direction.m_y;
         Direction.m_z = -Direction.m_z;
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction));
-        if (aIntersections.back().m_dCost == COST_THRESHOLD_1)
+        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
+        if (aIntersections.back().m_dCost < COST_THRESHOLD_1)
             return aIntersections.back();
         }
 
     std::sort(aIntersections.begin()+nStartIndex,aIntersections.end());
-    for (size_t iRayFaceIntersections = nStartIndex; iRayFaceIntersections < aIntersections.size(); ++iRayFaceIntersections)
-        {
-        auto &rayFaceIntersection = aIntersections[iRayFaceIntersections];
-        if (RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection) < COST_THRESHOLD_1)
-            return rayFaceIntersection;
-        }
+
     nStartIndex += aIntersections.size();
 
     // try harder with additional hard coded ray directions
@@ -366,26 +317,16 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         Direction.m_x = aDirection[0];
         Direction.m_y = aDirection[1];
         Direction.m_z = aDirection[2];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction));
+        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_1)
             {
-            RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection);
             return rayFaceIntersection;
             }
         }
 
-    std::sort(aIntersections.begin()+nStartIndex,aIntersections.end());
-
-    for (size_t iRayFaceIntersections = nStartIndex; iRayFaceIntersections < aIntersections.size(); ++iRayFaceIntersections)
-        {
-        auto &rayFaceIntersection = aIntersections[iRayFaceIntersections];
-        if (RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection) < COST_THRESHOLD_1)
-            return rayFaceIntersection;
-        }
-
     // Relax our requirements to a new threshold.
-    // See Ii the new threshold is met by any existing rays.
+    // See the new threshold is met by any existing rays.
     std::sort(aIntersections.begin(),aIntersections.end());
     if (aIntersections[0].m_dCost < COST_THRESHOLD_2)
         return aIntersections[0];
@@ -400,22 +341,12 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         Direction.m_x = aDirection[0];
         Direction.m_y = aDirection[1];
         Direction.m_z = aDirection[2];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction));
+        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_2)
             {
-            RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection);
             return rayFaceIntersection;
             }
-        }
-
-    std::sort(aIntersections.begin()+nStartIndex, aIntersections.end());
-
-    for (size_t iRayFaceIntersections = nStartIndex; iRayFaceIntersections < aIntersections.size(); ++iRayFaceIntersections)
-        {
-        auto & rayFaceIntersection = aIntersections[iRayFaceIntersections];
-        if (RemoveMissedFacesFromRayIntersections(rResult, rayFaceIntersection) < COST_THRESHOLD_2)
-            return rayFaceIntersection;
         }
 
     // return the best we have
@@ -472,7 +403,6 @@ void FindGuessDirections(unsigned                       const aShortestLengths[3
 void FindRaysForPoints(SGM::Result                           &rResult,
                        std::vector<SGM::Point3D>       const &aPoints,
                        volume                          const *pVolume,
-                       double                                 dTolerance,
                        buffer<unsigned>                      &aIndexOrdered,
                        std::vector<RayFaceBoxIntersections>  &aRayFaceBoxIntersections)
     {
@@ -490,7 +420,7 @@ void FindRaysForPoints(SGM::Result                           &rResult,
     // search for cheapest array for our first point
     SGM::Point3D const &FirstPoint = aPoints[aIndexOrdered[0]];
     FindGuessDirections(aShortestLengths,Centroid,FirstPoint,GuessDirections);
-    RayFaceBoxIntersections FirstRayIntersects = FindCheapRay(rResult, FirstPoint, pVolume, GuessDirections, dTolerance);
+    RayFaceBoxIntersections FirstRayIntersects = FindCheapRay(rResult, FirstPoint, pVolume, GuessDirections);
     double dCost = FirstRayIntersects.m_dCost;
     SGM::UnitVector3D Direction = FirstRayIntersects.m_Ray.m_Direction;
     aRayFaceBoxIntersections.emplace_back(FirstRayIntersects);
@@ -503,32 +433,10 @@ void FindRaysForPoints(SGM::Result                           &rResult,
         SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
 
         // reuse the last direction
-        RayFaceBoxIntersections NextRayIntersects(FindRayFacesCost(rResult, pVolume, dTolerance, NextPoint, Direction));
-
-        if (NextRayIntersects.m_dCost > 0)
-            {
-            SGM::Ray3D const &ray = NextRayIntersects.m_Ray;
-            std::vector<face*> & aHitFaces = NextRayIntersects.m_aHitFaces;
-            // careful, the size() will be changing
-            for (long int iFace = 0; iFace < (long int)aHitFaces.size(); ++iFace)
-                {
-                face *pFace = aHitFaces[iFace];
-                if (DoesRayMissFaceFacets(rResult,pFace,ray))
-                    {
-                    // remove the face and its contribution to cost on this ray
-                    double dFaceCost = CostOfFaceIntersection(pFace,ray);
-                    aHitFaces.erase(aHitFaces.begin() + iFace--);
-                    NextRayIntersects.m_dCost -= dFaceCost;
-                    if (NextRayIntersects.m_dCost == 0)
-                        {
-                        break;
-                        }
-                    }
-                }
-            }
+        RayFaceBoxIntersections NextRayIntersects(FindRayFacesCost(rResult, pVolume, NextPoint, Direction));
 
         if (NextRayIntersects.m_dCost <= dCost ||                          // its as cheap as the previous ray
-            (NextRayIntersects.m_dCost < 1000 && nCountSinceNewRay < 9)) // and not super expensive
+            (NextRayIntersects.m_dCost < 50 && nCountSinceNewRay < 7)) // and not super expensive
             {
             // re-use the previous direction
             dCost =  NextRayIntersects.m_dCost;
@@ -539,7 +447,7 @@ void FindRaysForPoints(SGM::Result                           &rResult,
             // cost has increased, find a better cheap ray by searching again
             nCountSinceNewRay = 0;
             FindGuessDirections(aShortestLengths,Centroid,NextPoint,GuessDirections);
-            NextRayIntersects = FindCheapRay(rResult, NextPoint, pVolume, GuessDirections, dTolerance);
+            NextRayIntersects = FindCheapRay(rResult, NextPoint, pVolume, GuessDirections);
             dCost = NextRayIntersects.m_dCost;
             Direction = NextRayIntersects.m_Ray.m_Direction;
             }
@@ -571,6 +479,8 @@ bool PointInVolume(SGM::Point3D const &Point,
     return UVec%(Point-HitPoint)<0;
     }
 
+#define IS_RAY_IN_VOLUME_LOG
+
 bool IsRayInVolume(SGM::Result                   &rResult,
                    RayFaceBoxIntersections const &RayIntersections,
                    volume                  const *pVolume,
@@ -579,6 +489,9 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
     SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
+#ifdef IS_RAY_IN_VOLUME_LOG
+    std::cout << "P{" << Point.m_x << ',' << Point.m_y << ',' << Point.m_z << '}';
+#endif
     size_t nCount=1;
     size_t nBadRays=0;
     size_t nHits=0;
@@ -589,19 +502,30 @@ bool IsRayInVolume(SGM::Result                   &rResult,
         std::vector<SGM::Point3D>          aPoints;
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *>              aEntity;
-        nHits=RayFireVolume(rResult,Point,Direction,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitFaces);
+#ifdef  IS_RAY_IN_VOLUME_LOG
+        std::cout << " D{" << Direction.m_x << ',' << Direction.m_y << ',' << Direction.m_z << '}';
+#endif
+        nHits=RayFireVolume(rResult,Point,Direction,pVolume,aHitFaces,aPoints,aTypes,aEntity,dTolerance,false);
         if(nHits)
             {
             if(SGM::NearEqual(Point,aPoints[0],dTolerance))
                 {
+#ifdef          IS_RAY_IN_VOLUME_LOG
+                std::cout << "on top of " << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
+#endif
                 return true;
                 }
             if(!IsGoodRay(aTypes,aEntity))
                 {
                 ++nBadRays;
+#ifdef          IS_RAY_IN_VOLUME_LOG
+                std::cout << " N" << nBadRays;
+#endif
                 if (nBadRays > 3)
                     {
-                    //std::cout << "nBadRays = " << nBadRays << std::endl;
+#ifdef              IS_RAY_IN_VOLUME_LOG
+                    std::cout << ' ' << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
+#endif
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 // look for a new ray
@@ -612,25 +536,23 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                     {
                     Direction = SGM::UnitVector3D(cos(nCount), sin(nCount), cos(nCount + 17));
                     ++nCount;
-                    TempRayIntersections = FindRayFacesCost(rResult, pVolume, dTolerance, Point, Direction);
+                    TempRayIntersections = FindRayFacesCost(rResult, pVolume, Point, Direction);
                     }
-                RemoveMissedFacesFromRayIntersections(rResult, TempRayIntersections);
+//                RemoveMissedFacesFromRayIntersections(rResult, TempRayIntersections);
 //                if (nBadRays == 1)
 //                    {
 //                    std::cout << std::setprecision(16);
 //                    std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
 //                    std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
 //                    }
-//                else if (nBadRays == 4)
-//                    {
-//                    std::cout << "BadRay " << std::setw(2) << nBadRays << ": << " << std::setw(2) << nCount << " cost = " << TempRayIntersections.m_dCost << std::endl;
-//                    }
                 aHitFaces.swap(TempRayIntersections.m_aHitFaces);
                 bContinue=true;
                 }
             }
         }
-    //if (nBadRays > 0) std::cout << "nBadRays = " << nBadRays << std::endl;
+#ifdef IS_RAY_IN_VOLUME_LOG
+    std::cout << ' ' << ((nHits%2==1) ? "true" : "false") << std::endl;
+#endif
     return nHits%2==1;
     }
 
@@ -642,7 +564,7 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     {
     buffer<unsigned>                     aIndexOrdered;
     std::vector<RayFaceBoxIntersections> aRayFaceBoxIntersections;
-    FindRaysForPoints(rResult,aPoints,pVolume,dTolerance,aIndexOrdered,aRayFaceBoxIntersections);
+    FindRaysForPoints(rResult,aPoints,pVolume,aIndexOrdered,aRayFaceBoxIntersections);
     size_t nPoints = aPoints.size();
     std::vector<bool> aIsInside(nPoints,false);
     // loop over rays in Z-order
@@ -704,7 +626,7 @@ bool PointInVolume(SGM::Result        &rResult,
         while (bIsRayExpensive && nCountRayExpensive<=12)
             {
             aHitFacesTree.clear();
-            bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,dTolerance,aHitFacesTree);
+            bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,aHitFacesTree);
             if (bIsRayExpensive)
                 {
                 Axis=SGM::UnitVector3D(cos(nCount),sin(nCount),cos(nCount+17));
@@ -725,7 +647,7 @@ bool PointInVolume(SGM::Result        &rResult,
         std::vector<SGM::Point3D> aPoints;
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *> aEntity;
-        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aPoints,aTypes,aEntity,dTolerance,false,&aHitsFaces);
+        nHits=RayFireVolume(rResult,Point,Axis,pVolume,aHitsFaces,aPoints,aTypes,aEntity,dTolerance,false);
 //        if(rResult.GetDebugFlag()==6)
 //            {
 //            std::vector<double> aData;

@@ -98,12 +98,12 @@ private slots:
 
 private:
 
+    ModelData *mModel;
     Ui::MainWindow *ui;
     FileMenu *mFileMenu;
     ViewMenu *mViewMenu;
     TestMenu *mTestMenu;
     PrimitiveMenu *mPrimitiveMenu;
-    ModelData *mModel;
     TestDialog *mTestDialog;
 
     void read_settings();

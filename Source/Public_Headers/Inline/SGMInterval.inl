@@ -467,6 +467,17 @@ namespace SGM {
         return true;
     }
 
+    inline bool Interval3D::InInterval(Point3D const &point) const
+    {
+    if (point.m_x < m_XDomain.m_dMin || point.m_x > m_XDomain.m_dMax)
+        return false;
+    if (point.m_y < m_YDomain.m_dMin || point.m_y > m_YDomain.m_dMax)
+        return false;
+    if (point.m_z < m_ZDomain.m_dMin || point.m_z > m_ZDomain.m_dMax)
+        return false;
+    return true;
+    }
+
     inline bool Interval3D::IntersectsLine(Ray3D const & ray, double tolerance) const
     {
         double tmin, tmax;
@@ -489,6 +500,19 @@ namespace SGM {
                 tmax > -std::numeric_limits<double>::infinity());
     }
 
+    inline bool Interval3D::IntersectsLine(Ray3D const & ray) const
+    {
+        double tmin, tmax;
+        bool may_intersect = IntersectsLineImpl(ray, tmin, tmax);
+
+        //Asserts floating point compatibility at compile time so that negative infinity works
+        static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required for negative infinity");
+
+        return (may_intersect &&
+                tmin < std::numeric_limits<double>::infinity() &&
+                tmax > -std::numeric_limits<double>::infinity());
+    }
+
     inline bool Interval3D::IntersectsRay(Ray3D const& ray, double tolerance) const
     {
         double tmin, tmax;
@@ -498,7 +522,7 @@ namespace SGM {
                 tmax > 0.0); // forward direction only
     }
 
-    inline bool Interval3D::IntersectsRayTight(Ray3D const &ray) const
+    inline bool Interval3D::IntersectsRay(Ray3D const &ray) const
         {
         double tmin, tmax;
         bool may_intersect = IntersectsLineImpl(ray, tmin, tmax);
