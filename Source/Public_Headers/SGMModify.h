@@ -88,7 +88,8 @@ class SGM_EXPORT RepairOptions
             m_bAutoMatch(false),
             m_bExtremeMerge(false),
             m_bRotateCircles(true),
-            m_bMakeAllEdgesHaveVertices(false)
+            m_bMakeAllEdgesHaveVertices(false),
+            m_bRepairApples(true)
             {}
 
         bool m_bReparamNURBs;
@@ -98,6 +99,7 @@ class SGM_EXPORT RepairOptions
         bool m_bExtremeMerge;
         bool m_bRotateCircles;
         bool m_bMakeAllEdgesHaveVertices;
+        bool m_bRepairApples;
     };
 
 SGM_EXPORT void Repair(SGM::Result            &rResult,

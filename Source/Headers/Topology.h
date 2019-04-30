@@ -41,6 +41,10 @@ void FindWireEdges(SGM::Result                    &rResult,
                    entity                   const *pEntity,
                    std::set<edge *,EntityCompare> &sEdges);
 
+void FindFreeEdges(SGM::Result                    &rResult,
+                   entity                   const *pEntity,
+                   std::set<edge *,EntityCompare> &sEdges);
+
 void FindVertices(SGM::Result                      &rResult,
                   entity                     const *pEntity,
                   std::set<vertex *,EntityCompare> &sVertices,

@@ -36,6 +36,10 @@ namespace SGM
                                           UnitVector3D         const &YVec,
                                           UnitVector3D         const &ZVec);
 
+    // FindLeastSquareLine3D returns the origin and axis of the lease square line
+    // through the given points.  The function returns false if a line cannot be found.
+    // In addition, the returned axis goes in the direction of the given vector of points.
+
     SGM_EXPORT bool FindLeastSquareLine3D(std::vector<Point3D> const &aPoints,
                                           Point3D                    &Origin,
                                           UnitVector3D               &Axis);
@@ -127,6 +131,11 @@ namespace SGM
                                    Point2D const &C,
                                    Point2D const &D,
                                    double        &dDeterminate);
+    
+    SGM_EXPORT bool FindLeastSqaureCircle3D(std::vector<Point3D> const &aPoints,
+                                            SGM::Point3D               &Center,
+                                            SGM::UnitVector3D          &Normal,
+                                            double                     &dRadius);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -308,7 +317,7 @@ namespace SGM
     
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  Polynomials Functions
+    //  Polynomial Functions
     //
     ///////////////////////////////////////////////////////////////////////////
 

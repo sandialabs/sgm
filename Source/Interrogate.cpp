@@ -479,6 +479,8 @@ bool PointInVolume(SGM::Point3D const &Point,
     return UVec%(Point-HitPoint)<0;
     }
 
+#define IS_RAY_IN_VOLUME_LOG
+
 bool IsRayInVolume(SGM::Result                   &rResult,
                    RayFaceBoxIntersections const &RayIntersections,
                    volume                  const *pVolume,
@@ -487,6 +489,9 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
     SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
+#ifdef IS_RAY_IN_VOLUME_LOG
+    std::cout << "P{" << Point.m_x << ',' << Point.m_y << ',' << Point.m_z << '}';
+#endif
     size_t nCount=1;
     size_t nBadRays=0;
     size_t nHits=0;
@@ -497,19 +502,30 @@ bool IsRayInVolume(SGM::Result                   &rResult,
         std::vector<SGM::Point3D>          aPoints;
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *>              aEntity;
+#ifdef  IS_RAY_IN_VOLUME_LOG
+        std::cout << " D{" << Direction.m_x << ',' << Direction.m_y << ',' << Direction.m_z << '}';
+#endif
         nHits=RayFireVolume(rResult,Point,Direction,pVolume,aHitFaces,aPoints,aTypes,aEntity,dTolerance,false);
         if(nHits)
             {
             if(SGM::NearEqual(Point,aPoints[0],dTolerance))
                 {
+#ifdef          IS_RAY_IN_VOLUME_LOG
+                std::cout << "on top of " << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
+#endif
                 return true;
                 }
             if(!IsGoodRay(aTypes,aEntity))
                 {
                 ++nBadRays;
+#ifdef          IS_RAY_IN_VOLUME_LOG
+                std::cout << " N" << nBadRays;
+#endif
                 if (nBadRays > 3)
                     {
-                    //std::cout << "nBadRays = " << nBadRays << std::endl;
+#ifdef              IS_RAY_IN_VOLUME_LOG
+                    std::cout << ' ' << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
+#endif
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 // look for a new ray
@@ -529,16 +545,14 @@ bool IsRayInVolume(SGM::Result                   &rResult,
 //                    std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
 //                    std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
 //                    }
-//                else if (nBadRays == 4)
-//                    {
-//                    std::cout << "BadRay " << std::setw(2) << nBadRays << ": << " << std::setw(2) << nCount << " cost = " << TempRayIntersections.m_dCost << std::endl;
-//                    }
                 aHitFaces.swap(TempRayIntersections.m_aHitFaces);
                 bContinue=true;
                 }
             }
         }
-    //if (nBadRays > 0) std::cout << "nBadRays = " << nBadRays << std::endl;
+#ifdef IS_RAY_IN_VOLUME_LOG
+    std::cout << ' ' << ((nHits%2==1) ? "true" : "false") << std::endl;
+#endif
     return nHits%2==1;
     }
 

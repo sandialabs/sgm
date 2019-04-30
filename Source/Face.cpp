@@ -386,13 +386,15 @@ void FindClosestBoundary(SGM::Result        &rResult,
         SGM::Point3D Pos;
         pFace->GetSurface()->Evaluate(CloseUV,&Pos);
         SGM::Point3D StartPos=pStart->GetPoint();
-        if(SGM::NearEqual(Pos,StartPos,SGM_MIN_TOL))
+        double dStartDist=Pos.Distance(StartPos);
+        if(dStartDist<pStart->GetTolerance()+SGM_MIN_TOL)
             {
             *ppCloseVertex=pStart;
             }
         vertex *pEnd=(*ppCloseEdge)->GetEnd();
         SGM::Point3D EndPos=pEnd->GetPoint();
-        if(SGM::NearEqual(Pos,EndPos,SGM_MIN_TOL))
+        double dEndDist=Pos.Distance(EndPos);
+        if(dEndDist<pEnd->GetTolerance()+SGM_MIN_TOL)
             {
             *ppCloseVertex=pEnd;
             }
@@ -454,7 +456,14 @@ bool face::PointInFace(SGM::Result        &rResult,
                        edge               **pInCloseEdge,
                        bool               *bOnEdge) const
     {
-    // First check for the closed face case.
+    // First check to see if the point is in the UV bounding box.
+
+    if(GetUVBox(rResult).InInterval(uv,SGM_ZERO)==false)
+        {
+        return false;
+        }
+        
+    // Check for the closed face case.
 
     if(m_sEdges.empty())
         {
@@ -540,17 +549,32 @@ bool face::PointInFace(SGM::Result        &rResult,
                 }
             }
 
-        if(bOnEdge)
-            {
-            *bOnEdge=false;
-            }
         SGM::EdgeSideType nType=GetSideType(pCloseEdge);
         SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,ClosePos);
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);
         SGM::Point3D C2(uv.m_u,uv.m_v,0);
+
         double dTest2=((B2-A2)*(C2-A2)).m_z;
+        if(bOnEdge)
+            {
+            double dDist=ClosePos.Distance(Pos);
+            double dDiag=pCloseEdge->GetBox(rResult).Diagonal();
+            if(dDist/dDiag<SGM_FIT || dTest2<SGM_FIT)
+                {
+                if(pInCloseEdge)
+                    {
+                    *pInCloseEdge=pCloseEdge;
+                    }
+                *bOnEdge=true;
+                }
+            else
+                {
+                *bOnEdge=false;
+                }
+            }
+
         if(SGM_MIN_TOL<dTest2)
             {
             return nType == SGM::FaceOnLeftType ? !m_bFlipped : m_bFlipped;
@@ -659,6 +683,20 @@ SGM::BoxTree const &face::GetFacetTree(SGM::Result &rResult) const
     return m_FacetTree;
     }
 
+SGM::Interval2D const &face::GetUVBox(SGM::Result &rResult) const
+    {
+    if(m_UVBox.IsEmpty())
+        {
+        GetTriangles(rResult).size(); // This will cause the facet to be created
+                                      // if they do not already exist.
+
+        m_UVBox=SGM::Interval2D(m_aPoints2D);
+        double dDiagonal=m_UVBox.Diagonal();
+        m_UVBox.Extend(dDiagonal*0.5);
+        }
+    return m_UVBox;
+    }
+
 bool OnNonLinearEdge(SGM::Point3D const &PosA,
                      SGM::Point3D const &PosB,
                      entity       const *pAEnt,
@@ -719,6 +757,7 @@ void face::ClearFacets(SGM::Result &rResult) const
         m_FacetTree.Clear();
         }
     m_Box.Reset();
+    m_UVBox.Reset();
     if(m_pVolume)
         {
         m_pVolume->ResetBox(rResult);

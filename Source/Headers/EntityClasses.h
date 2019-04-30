@@ -1062,6 +1062,8 @@ class face : public topology
 
         SGM::BoxTree const &GetFacetTree(SGM::Result &rResult) const;
 
+        SGM::Interval2D const &GetUVBox(SGM::Result &rResult) const;
+
     private:
         
         void InitializeFacetSubdivision(SGM::Result &rResult,
@@ -1087,6 +1089,7 @@ class face : public topology
         mutable std::set<vertex *,EntityCompare>            m_sVertices;
         mutable Signature                                   m_Signature;
         mutable SGM::BoxTree                                m_FacetTree;
+        mutable SGM::Interval2D                             m_UVBox;
     };
 
 class edge : public topology
@@ -1284,7 +1287,7 @@ class vertex : public topology
 
         SGM::Point3D const &GetPoint() const {return m_Pos;}
 
-        void SetPoint(SGM::Point3D const &Pos) {m_Pos=Pos;}
+        void SetPoint(SGM::Point3D const &Pos) {m_Pos=Pos;m_dTolerance=0;}
 
         bool IsTopLevel() const override;
 
@@ -1295,11 +1298,14 @@ class vertex : public topology
         // Snaps this vertex to its edges and returns the max distance.
 
         double Snap(SGM::Result &rResult);
+        
+        double GetTolerance() const;
 
     private:
 
         SGM::Point3D                   m_Pos;
         std::set<edge *,EntityCompare> m_sEdges;
+        mutable double                 m_dTolerance;
     };
 
 class attribute : public entity

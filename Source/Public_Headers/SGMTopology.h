@@ -60,6 +60,10 @@ namespace SGM
     SGM_EXPORT void FindWireEdges(SGM::Result         &rResult,
                                   SGM::Entity   const &EntityID,
                                   std::set<SGM::Edge> &sEdges);
+
+    SGM_EXPORT void FindFreeEdges(SGM::Result         &rResult,
+                                  SGM::Entity   const &EntityID,
+                                  std::set<SGM::Edge> &sEdges);
     
     SGM_EXPORT void FindCurves(SGM::Result         &rResult,
                               SGM::Entity    const &EntityID,
@@ -120,6 +124,9 @@ namespace SGM
 
     SGM_EXPORT double GetToleranceOfEdge(SGM::Result     &rResult,
                                          SGM::Edge const &EdgeID);
+
+    SGM_EXPORT double GetToleranceOfVertex(SGM::Result       &rResult,
+                                           SGM::Vertex const &VertexID);
 
 //////////////////////////////////////////////////////////////////////////////
 //

@@ -31,13 +31,17 @@ class HealOptions
         m_bReparamNURBS(true),
         m_bRemoveSlivers(true),
         m_bSimplifySurfaces(true),
-        m_bSnapVertices(false)
+        m_bSimplifyCurves(true),
+        m_bSnapVertices(false),
+        m_bRepairApples(true)
     {}
 
     bool m_bReparamNURBS;
     bool m_bRemoveSlivers;
     bool m_bSimplifySurfaces;
+    bool m_bSimplifyCurves;
     bool m_bSnapVertices;
+    bool m_bRepairApples;
     };
 
 void Heal(SGM::Result           &rResult,

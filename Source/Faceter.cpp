@@ -1221,21 +1221,25 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
         }
 
     // Force all edges on NUB surfaces to have at least two faces.
-    if(nCount==0 && nPoints==2 && pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
+    if(nCount==0 && nPoints==2)
         {
-        auto Node=lNodes.begin();
-        auto NodeA=Node;
-        ++Node;
-        auto NodeB=Node;
-        double dParamA=NodeA->m_dParam;
-        double dParamB=NodeB->m_dParam;
-        double dParamC=(dParamA+dParamB)*0.5;
-        SGM::Point3D Pos;
-        pCurve->Evaluate(dParamC,&Pos);
-        SGM::Point2D uv=pSurface->Inverse(Pos);
-        FacetNodeNormal NodeC(dParamC,Pos,uv);
-        lNodes.insert(NodeB,NodeC);
-        NodeB=NodeA;
+        if( pSurface->GetSurfaceType()==SGM::NUBSurfaceType || 
+            pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+            {
+            auto Node=lNodes.begin();
+            auto NodeA=Node;
+            ++Node;
+            auto NodeB=Node;
+            double dParamA=NodeA->m_dParam;
+            double dParamB=NodeB->m_dParam;
+            double dParamC=(dParamA+dParamB)*0.5;
+            SGM::Point3D Pos;
+            pCurve->Evaluate(dParamC,&Pos);
+            SGM::Point2D uv=pSurface->Inverse(Pos);
+            FacetNodeNormal NodeC(dParamC,Pos,uv);
+            lNodes.insert(NodeB,NodeC);
+            NodeB=NodeA;
+            }
         }
     
     aPoints3D.clear();
@@ -1325,6 +1329,11 @@ void FacetEdge(SGM::Result               &rResult,
     // Added so that this will be found at this time so that things will be thread safe after.
 
     pEdge->GetTolerance(); 
+    if(pEdge->GetStart())
+        {
+        pEdge->GetStart()->GetTolerance();
+        pEdge->GetEnd()->GetTolerance();
+        }
     
     // Find where the facets cross the seams of their surfaces.
 
@@ -1400,11 +1409,6 @@ void FacetEdge(SGM::Result               &rResult,
     for (auto pSurface : sSurfaces)
         {
         SplitWithSurfaceNormals(Options,pSurface,pCurve,aPoints3D,aParams);
-        }
-    auto const &sFaces=pEdge->GetFaces();
-    for(face *pFace : sFaces)
-        {
-        pFace->SetUVBoundary(rResult,pEdge);
         }
 
     // Force end points to be on vertices.
@@ -3357,6 +3361,13 @@ void FacetFace(SGM::Result                    &rResult,
 
     // Start of main code.
     
+    // Added to make sure that UV boundaries are cached.
+    std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+    for(edge *pEdge : sEdges)
+        {
+        ((face *)pFace)->SetUVBoundary(rResult,pEdge);
+        }
+    
     std::vector<unsigned> aAdjacencies;
     std::vector<std::vector<unsigned> > aaPolygons;
     std::vector<bool> aImprintFlags;
@@ -3636,6 +3647,7 @@ void FacetFace(SGM::Result                    &rResult,
             throw;
             }
         }
+    pFace->GetUVBox(rResult);
     }
 
 } // End of SGMInternal namespace

@@ -932,10 +932,6 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         for (void const* pVoid : aHitFacesTree)
             aHitFacesSupplied.push_back((face*)pVoid);
         }
-    else
-        {
-        aHitFacesSupplied = aHitFacesSupplied;
-        }
 
     std::vector<SGM::Point3D> aSubPoints;
     std::vector<SGM::IntersectionType> aSubTypes;
@@ -957,7 +953,7 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         aEntities.insert(aEntities.end(),aSubEntities.begin(),aSubEntities.end());
         }
 
-    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,dTolerance,bUseWholeLine,aPoints,aTypes,aEntities);
+    size_t nAnswer=OrderAndRemoveDuplicates(Origin,Axis,SGM_FIT,bUseWholeLine,aPoints,aTypes,aEntities);
 
     SGM_TIMER_STOP();
 
@@ -3637,6 +3633,18 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
                                  SGM::UnitVector3D const &LineAxis)
      {
      return LineOrigin+LineAxis*(LineAxis%(Pos-LineOrigin));
+     }
+
+ SGM::Point3D ClosestPointOnCircle(SGM::Point3D      const &Pos,
+                                   SGM::Point3D      const &Center,
+                                   SGM::UnitVector3D const &Normal,
+                                   double                   dRadius)
+     {
+     if(SGM::NearEqual(Pos,Center,SGM_ZERO))
+         {
+         return Center;
+         }
+     return Center+SGM::UnitVector3D(Normal*(Pos-Center)*Normal)*dRadius;
      }
 
  bool PointOnSurfaces(SGM::Point3D const &Pos,

@@ -211,6 +211,13 @@ namespace SGM {
 
         void Swap(Interval2D &other);
 
+        double Diagonal() const;
+
+        // Create a new box with the intervals in each direction stretched in the positive and negative directions by
+        // a tolerance.
+
+        Interval2D Extend(double tolerance) const;
+
     public:
 
         Interval1D m_UDomain;

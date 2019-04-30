@@ -1,10 +1,13 @@
 #include "SGMEntityFunctions.h"
+#include "SGMPolygon.h"
 
 #include "EntityClasses.h"
 #include "EntityFunctions.h"
 #include "Curve.h"
 #include "Surface.h"
 #include "Topology.h"
+#include "Intersectors.h"
+#include "Faceter.h"
 
 #include <set>
 #include <SGMTransform.h>
@@ -254,11 +257,240 @@ void TransformEntity(SGM::Result            &rResult,
         }
     }
 
-surface *SimplifySurface(SGM::Result &rResult,
-                         surface     *pSurface)
+bool IsCircle(curve       const *pCurve,
+              SGM::Point3D      &Center,
+              SGM::UnitVector3D &Normal,
+              double            &dRadius)
+    {
+    std::vector<SGM::Point3D> aPoints;
+    aPoints.reserve(7);
+    double dLength=0;
+    size_t Index1;
+    for(Index1=0;Index1<7;++Index1)
+        {
+        SGM::Point3D Pos;
+        pCurve->Evaluate(pCurve->GetDomain().MidPoint(Index1/6.0),&Pos);
+        aPoints.push_back(Pos);
+        if(Index1)
+            {
+            dLength+=aPoints[Index1-1].Distance(aPoints[Index1]);
+            }
+        }
+
+    if(SGM::FindLeastSqaureCircle3D(aPoints,Center,Normal,dRadius))
+        {
+        if(dRadius*0.1<dLength)
+            {
+            double dDist=0;
+            for(auto Pos : aPoints)
+                {
+                double dTestDist=Pos.Distance(ClosestPointOnCircle(Pos,Center,Normal,dRadius));
+                if(dDist<dTestDist)
+                    {
+                    dDist=dTestDist;
+                    }
+                }
+            if(dDist<SGM_MIN_TOL)
+                {
+                return true;
+                }
+            }
+        }
+    return false;
+    }
+
+curve *SimplifyCurve(SGM::Result       &rResult,
+                     curve             *pCurve,
+                     HealOptions const &)//Options)
 
     {
-    if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+    if(pCurve->GetCurveType()==SGM::NUBCurveType)
+        {
+        NUBcurve *pNUB=(NUBcurve *)pCurve;
+        std::vector<SGM::Point3D> const &aPoints=pNUB->GetControlPoints();
+        SGM::Point3D Origin;
+        SGM::UnitVector3D Axis;
+        double dRadius;
+        if(SGM::FindLeastSquareLine3D(aPoints,Origin,Axis))
+            {
+            double dDist=0;
+            for(auto Pos : aPoints)
+                {
+                double dTestDist=Pos.Distance(ClosestPointOnLine(Pos,Origin,Axis));
+                if(dDist<dTestDist)
+                    {
+                    dDist=dTestDist;
+                    }
+                }
+            if(dDist<SGM_MIN_TOL)
+                {
+                return new line(rResult,Origin,Axis);
+                }
+            }
+        if(IsCircle(pCurve,Origin,Axis,dRadius))
+            {
+            SGM::UnitVector3D XAxis=aPoints[0]-Origin;
+            XAxis=Axis*XAxis*Axis;
+            return new circle(rResult,Origin,Axis,dRadius,&XAxis);
+            }
+        }
+    else if(pCurve->GetCurveType()==SGM::NURBCurveType)
+        {
+        NURBcurve *pNURB=(NURBcurve *)pCurve;
+        std::vector<SGM::Point4D> const &aPoints4D=pNURB->GetControlPoints();
+        std::vector<SGM::Point3D> aPoints;
+        aPoints.reserve(aPoints4D.size());
+        for(auto Pos4D : aPoints4D)
+            {
+            aPoints.push_back({Pos4D.m_x,Pos4D.m_y,Pos4D.m_z});
+            }
+        SGM::Point3D Origin;
+        SGM::UnitVector3D Axis;
+        double dRadius;
+        if(SGM::FindLeastSquareLine3D(aPoints,Origin,Axis))
+            {
+            double dDist=0;
+            for(auto Pos : aPoints)
+                {
+                double dTestDist=Pos.Distance(ClosestPointOnLine(Pos,Origin,Axis));
+                if(dDist<dTestDist)
+                    {
+                    dDist=dTestDist;
+                    }
+                }
+            if(dDist<SGM_MIN_TOL)
+                {
+                return new line(rResult,Origin,Axis);
+                }
+            }
+        if(IsCircle(pCurve,Origin,Axis,dRadius))
+            {
+            SGM::UnitVector3D XAxis=aPoints[0]-Origin;
+            XAxis=Axis*XAxis*Axis;
+            return new circle(rResult,Origin,Axis,dRadius,&XAxis);
+            }
+        }
+    return nullptr;
+    }
+
+//bool IsTorus(SGM::Result               &,//rResult,
+//             surface             const *pSurface,
+//             std::vector<edge *> const &aCircles)
+//    {
+//    
+//    }
+
+surface *IsCylinder(SGM::Result               &rResult,
+                    surface             const *pSurface,
+                    std::vector<edge *> const &aCircles)
+    {
+    if(aCircles.empty())
+        {
+        return nullptr;
+        }
+    edge *pEdge=aCircles[0];
+    circle const *pCircle=(circle const *)pEdge->GetCurve();
+    SGM::Point3D const &Center=pCircle->GetCenter();
+    SGM::UnitVector3D const &Normal=pCircle->GetNormal();
+    SGM::UnitVector3D XAxis=pCircle->GetXAxis();
+    XAxis.Negate();
+    double dRadius=pCircle->GetRadius();
+    SGM::Interval2D const &Domain=pSurface->GetDomain();
+    size_t Index1,Index2;
+    for(Index1=0;Index1<5;++Index1)
+        {
+        double u=Index1/4.0;
+        for(Index2=0;Index2<5;++Index2)
+            {
+            double v=Index2/4.0;
+            SGM::Point2D uv=Domain.MidPoint(u,v);
+            SGM::Point3D Pos;
+            pSurface->Evaluate(uv,&Pos);
+            double dDist=Pos.Distance(ClosestPointOnLine(Pos,Center,Normal));
+            if(SGM::NearEqual(dDist,dRadius,SGM_FIT,false)==false)
+                {
+                return nullptr;
+                }
+            }
+        }
+    return new cylinder(rResult,Center,Normal,dRadius,&XAxis);
+    }
+
+surface *SimplifySurface(SGM::Result       &rResult,
+                         surface           *pSurface,
+                         HealOptions const &Options)
+
+    {
+    if(pSurface->GetSurfaceType()==SGM::TorusType)
+        {
+        torus *pTorus=(torus *)pSurface;
+        if(Options.m_bRepairApples && pTorus->GetKind()==SGM::TorusKindType::AppleType)
+            {
+            if(pTorus->m_dMajorRadius/pTorus->m_dMinorRadius<0.01)
+                {
+                return new sphere(rResult,pTorus->m_Center,pTorus->m_dMajorRadius+pTorus->m_dMinorRadius,&pTorus->m_XAxis,&pTorus->m_YAxis);
+                }
+            }
+        }
+    else if(pSurface->GetSurfaceType()==SGM::NUBSurfaceType)
+        {
+        NUBsurface *pNUB=(NUBsurface *)pSurface;
+
+        // Check to see if this NURB is close to a plane.
+
+        std::vector<SGM::Point3D> aPoints;
+        auto aControlPoints=pNUB->GetControlPoints();
+        aPoints.reserve(aControlPoints.size()*aControlPoints[0].size());
+        for(auto Row : aControlPoints)
+            {
+            for(SGM::Point3D Pos : Row)
+                {
+                aPoints.push_back(Pos);
+                }
+            }
+        SGM::Point3D Origin;
+        SGM::UnitVector3D XVec,YVec,ZVec;
+        SGM::FindLeastSquarePlane(aPoints,Origin,XVec,YVec,ZVec);
+        double dError=0;
+        for(SGM::Point3D const &Pos : aPoints)
+            {
+            double dDist=fabs((Pos-Origin)%ZVec);
+            if(dError<dDist)
+                {
+                dError=dDist;
+                }
+            }
+        SGM::Point2D uv=pSurface->GetDomain().MidPoint();
+        if(dError<SGM_FIT)
+            {
+            SGM::UnitVector3D Norm;
+            pSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+            if(Norm%ZVec<0)
+                {
+                ZVec.Negate();
+                }
+            return new plane(rResult,Origin,ZVec);
+            }
+        else
+            {
+            std::vector<edge *> aCircles;
+            for(auto pFace : pSurface->GetFaces())
+                {
+                for(auto pEdge : pFace->GetEdges())
+                    {
+                    if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
+                        {
+                        aCircles.push_back(pEdge);
+                        }
+                    }
+                }
+            if(surface *pCylinder=IsCylinder(rResult,pSurface,aCircles))
+                {
+                return pCylinder;
+                }
+            }
+        }
+    else if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
         {
         NURBsurface *pNURB=(NURBsurface *)pSurface;
 
@@ -296,6 +528,24 @@ surface *SimplifySurface(SGM::Result &rResult,
                 ZVec.Negate();
                 }
             return new plane(rResult,Origin,ZVec);
+            }
+        else
+            {
+            std::vector<edge *> aCircles;
+            for(auto pFace : pSurface->GetFaces())
+                {
+                for(auto pEdge : pFace->GetEdges())
+                    {
+                    if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
+                        {
+                        aCircles.push_back(pEdge);
+                        }
+                    }
+                }
+            if(surface *pCylinder=IsCylinder(rResult,pSurface,aCircles))
+                {
+                return pCylinder;
+                }
             }
         }
     return nullptr;
@@ -370,32 +620,191 @@ void Heal(SGM::Result           &rResult,
           std::vector<entity *> &aEntities,
           HealOptions     const &Options)
     {
-    if(Options.m_bSimplifySurfaces)
+    for(auto pEntity : aEntities)
         {
-        for(auto pEntity : aEntities)
+        // Replace curves with simpler ones.
+
+        if(Options.m_bSimplifyCurves)
+            {
+            size_t nNURBtoLine=0;
+            size_t nNUBtoLine=0;
+            size_t nNURBtoCircle=0;
+            size_t nNUBtoCircle=0;
+            std::set<curve *,EntityCompare> sCurves;
+            FindCurves(rResult,pEntity,sCurves);
+            for(auto pCurve : sCurves)
+                {
+                if(curve *pSimplify=SimplifyCurve(rResult,pCurve,Options))
+                    {
+                    // Output what happened.
+
+                    if(pSimplify->GetCurveType()==SGM::LineType)
+                        { 
+                        if(pCurve->GetCurveType()==SGM::NURBCurveType)
+                            {
+                            ++nNURBtoLine;
+                            }
+                        else
+                            {
+                            ++nNUBtoLine;
+                            }
+                        }
+                    else if(pSimplify->GetCurveType()==SGM::CircleType)
+                        {
+                        if(pCurve->GetCurveType()==SGM::NURBCurveType)
+                            {
+                            ++nNURBtoCircle;
+                            }
+                        else
+                            {
+                            ++nNUBtoCircle;
+                            }
+                        }
+                    
+                    // Replace the curve.
+
+                    std::set<edge *,EntityCompare> sEdges=pCurve->GetEdges();
+                    for(auto *pEdge : sEdges)
+                        {
+                        pEdge->ClearFacets(rResult);
+                        double dStart=pSimplify->Inverse(pEdge->GetStart()->GetPoint());
+                        double dEnd=pSimplify->Inverse(pEdge->GetEnd()->GetPoint());
+                        if(pSimplify->GetClosed() && dEnd<dStart)
+                            {
+                            dStart-=pSimplify->GetDomain().Length();
+                            }
+                        pEdge->SetCurve(rResult,pSimplify);
+                        pEdge->SetDomain(rResult,SGM::Interval1D(dStart,dEnd));
+                        }
+                    rResult.GetThing()->DeleteEntity(pCurve);
+                    }
+                }
+            if(nNURBtoLine)
+                {
+                std::cout << nNURBtoLine << " NURBs simplified to lines\n";
+                }
+            if(nNUBtoLine)
+                {
+                std::cout << nNUBtoLine << " NUBs simplified to lines\n";
+                }
+            if(nNUBtoCircle)
+                {
+                std::cout << nNUBtoCircle << " NUBs simplified to circles\n";
+                }
+            if(nNURBtoCircle)
+                {
+                std::cout << nNURBtoCircle << " NURBs simplified to circles\n";
+                }
+            }
+
+        // Replace surfaces with simpler ones.
+        
+        if(Options.m_bSimplifySurfaces)
             {
             std::set<surface *,EntityCompare> sSurfaces;
             FindSurfaces(rResult,pEntity,sSurfaces);
+            size_t nNURBtoPlane=0;
+            size_t nNUBtoPlane=0;
+            size_t nNURBtoCylinder=0;
+            size_t nNUBtoCylinder=0;
+            size_t nTorusToSphere=0;
             for(auto pSurface : sSurfaces)
                 {
-                if(surface *pSimplify=SimplifySurface(rResult,pSurface))
+                if(surface *pSimplify=SimplifySurface(rResult,pSurface,Options))
                     {
-                    std::cout << " Simplified " << pSurface->GetID() << "\n";
+                    // Output what happened.
+
+                    if(pSimplify->GetSurfaceType()==SGM::PlaneType)
+                        { 
+                        if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+                            {
+                            ++nNURBtoPlane;
+                            }
+                        else
+                            {
+                            ++nNUBtoPlane;
+                            }
+                        }
+                    else if(pSimplify->GetSurfaceType()==SGM::SphereType)
+                        {
+                        ++nTorusToSphere;
+                        }
+                     else if(pSimplify->GetSurfaceType()==SGM::CylinderType)
+                        {
+                        if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+                            {
+                            ++nNURBtoCylinder;
+                            }
+                        else
+                            {
+                            ++nNUBtoCylinder;
+                            }
+                        }
+
+                    // Replace the surface.
+
                     std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
                     for(auto *pFace : sFaces)
                         {
                         pFace->ClearFacets(rResult);
+                        pFace->ChangeColor(rResult,0,255,0);
                         for(edge *pEdge : pFace->GetEdges())
                             {
                             pFace->ClearUVBoundary(pEdge);
                             }
                         pFace->SetSurface(rResult,pSimplify);
+
+                        // Check to see if the surface needs flipping.
+
+                        std::vector<unsigned> aAdjacencies;
+                        std::vector<std::vector<unsigned> > aaPolygons;
+                        std::vector<bool> aImprintFlags;
+                        std::vector<SGM::Point3D> aPoints3D;
+                        std::vector<SGM::Point2D> aPoints2D;
+                        if(FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags))
+                            {
+                            double dArea=SGM::PolygonArea(SGM::PointsFromPolygon2D(aPoints2D,aaPolygons[0]));
+                            if(dArea<0 || SGM_MAX<dArea)
+                                {
+                                pFace->SetFlipped(!pFace->GetFlipped());
+                                }
+                            }
                         }
                     rResult.GetThing()->DeleteEntity(pSurface);
+                    pSurface=pSimplify;
                     }
+                if(pSurface->GetSurfaceType()==SGM::NURBSurfaceType)
+                    {
+                    std::set<face *,EntityCompare> sFaces=pSurface->GetFaces();
+                    for(auto *pFace : sFaces)
+                        {
+                        pFace->ChangeColor(rResult,255,255,0);
+                        }
+                    }
+                }
+            if(nNURBtoPlane)
+                {
+                std::cout << nNURBtoPlane << " NURBs simplified to plane\n";
+                }
+            if(nNUBtoPlane)
+                {
+                std::cout << nNUBtoPlane << " NUBs simplified to plane\n";
+                }
+            if(nTorusToSphere)
+                {
+                std::cout << nTorusToSphere << " Tori simplified to spheres\n";
+                }
+            if(nNURBtoCylinder)
+                {
+                std::cout << nNURBtoCylinder << " NURBs simplified to cylinders\n";
+                }
+            if(nNUBtoCylinder)
+                {
+                std::cout << nNUBtoCylinder << " NUBs simplified to cylinders\n";
                 }
             }
         }
+
     if(Options.m_bReparamNURBS)
         {
         std::vector<size_t> aScales;
@@ -468,31 +877,32 @@ void Heal(SGM::Result           &rResult,
             }
         if(aScales[5])
             {
-            std::cout << " Scaled NURB by more than 1,000,000 " << aScales[5] << "\n";
+            std::cout << aScales[5] << " Scaled NURB by more than 1,000,000\n";
             }
         if(aScales[4])
             {
-            std::cout << " Scaled NURB by more than 100,000 " << aScales[4] << "\n";
+            std::cout << aScales[4] << " Scaled NURB by more than 100,000\n";
             }
         if(aScales[3])
             {
-            std::cout << " Scaled NURB by more than 10,000 " << aScales[3] << "\n";
+            std::cout << aScales[3] << " Scaled NURB by more than 10,000\n";
             }
         if(aScales[2])
             {
-            std::cout << " Scaled NURB by more than 1,000 " << aScales[2] << "\n";
+            std::cout << aScales[2] << " Scaled NURB by more than 1,000\n";
             }
         if(aScales[1])
             {
-            std::cout << " Scaled NURB by more than 100 " << aScales[1] << "\n";
+            std::cout << aScales[1] << " Scaled NURB by more than 100\n";
             }
         if(aScales[0])
             {
-            std::cout << " Scaled NURB by more than 10 " << aScales[0] << "\n";
+            std::cout << aScales[0] << " Scaled NURB by more than 10\n";
             }
         }
     if(Options.m_bRemoveSlivers)
         {
+        size_t nSlivers=0;
         for(auto pEntity : aEntities)
             {
             std::set<face *,EntityCompare> sFaces;
@@ -501,10 +911,15 @@ void Heal(SGM::Result           &rResult,
                 {
                 if(pFace->IsSliver())
                     {
-                    std::cout << " Removed Sliver " << pFace->GetID() << "\n";
+                    ++nSlivers;
                     RemoveSliver(rResult,pFace);
                     }
                 }
+            }
+        if(nSlivers)
+            {
+            std::cout << nSlivers << " Slivers removed\n";
+                   
             }
         }
     if(Options.m_bSnapVertices)

@@ -367,6 +367,25 @@ void FindWireEdges(SGM::Result                    &rResult,
         }
     }
 
+void FindFreeEdges(SGM::Result                    &rResult,
+                   entity                   const *pEntity,
+                   std::set<edge *,EntityCompare> &sEdges)
+    {
+    std::set<edge *,EntityCompare> sAllEdges;
+    FindEdges(rResult,pEntity,sAllEdges,false);
+    for(auto pEdge : sAllEdges)
+        {
+        if(pEdge->GetFaces().size()==1)
+            {
+            face *pFace=*(pEdge->GetFaces().begin());
+            if(pFace->GetSideType(pEdge)!=SGM::FaceOnBothSidesType)
+                {
+                sEdges.insert(pEdge);
+                }
+            }
+        }
+    }
+
 void FindVertices(SGM::Result        &,//rResult,
                   entity       const *pEntity,
                   std::set<vertex *,EntityCompare> &sVertices,

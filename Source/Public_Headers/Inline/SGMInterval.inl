@@ -197,6 +197,17 @@ namespace SGM {
         return m_UDomain.Length() + m_VDomain.Length();
     }
 
+    inline double Interval2D::Diagonal() const
+        {
+        double dU=m_UDomain.Length();
+        double dV=m_VDomain.Length();
+        if(dU<0 || dV<0)
+            {
+            return 0;
+            }
+        return sqrt(dU*dU+dV*dV);
+        }
+
     inline Interval2D const &Interval2D::operator+=(Interval2D const &domain)
     {
         m_UDomain.m_dMin = (std::min)(m_UDomain.m_dMin, domain.m_UDomain.m_dMin);
@@ -264,6 +275,12 @@ namespace SGM {
     {
         m_UDomain.Swap(other.m_UDomain);
         m_VDomain.Swap(other.m_VDomain);
+    }
+    
+    inline Interval2D Interval2D::Extend(double tolerance) const
+    {
+        return {m_UDomain.m_dMin-tolerance, m_UDomain.m_dMax+tolerance,
+                m_VDomain.m_dMin-tolerance, m_VDomain.m_dMax+tolerance};
     }
 
 ///////////////////////////////////////////////////////////////////////////////
