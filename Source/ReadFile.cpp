@@ -1098,6 +1098,22 @@ size_t ParseSTEPStreamSerial(SGM::Result &rResult,
     return maxSTEPLineNumber;
     }
 
+void ColorBySliver(SGM::Result &rResult,
+                   thing       *pThing)
+    {
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pThing,sFaces);
+    for(auto pFace : sFaces)
+        {
+        double dSliver=pFace->SliverValue(rResult);
+        //pFace->ChangeColor(rResult,(int)((1-dSliver)*255),(int)(dSliver*255),0);
+        if(dSliver<0.2)
+            {
+            pFace->ChangeColor(rResult,255,0,0);
+            }
+        }
+    }
+
 void ColorByType(SGM::Result &rResult,
                  thing       *pThing)
     {
@@ -1241,7 +1257,8 @@ size_t ReadStepFile(SGM::Result                  &rResult,
             }
         }
 
-    ColorByType(rResult,pThing);
+    //ColorByType(rResult,pThing);
+    ColorBySliver(rResult,pThing);
 
     // create all the triangles/facets/boxes
 

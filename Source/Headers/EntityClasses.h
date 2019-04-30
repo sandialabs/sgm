@@ -538,7 +538,8 @@ class complex : public topology
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
-                double                           dTolerance);              // Merge points and make triangles
+                double                           dTolerance);   // Merges points and makes triangles (a,b,c)... 
+                                                                // Assuming the points are in STL order.
 
         complex(SGM::Result                     &rResult,
                 std::vector<SGM::Point3D> const &aPoints,
@@ -552,11 +553,11 @@ class complex : public topology
                 std::vector<unsigned> const     &aSegments,
                 std::vector<SGM::Point3D> const &aPoints);
 
-        complex(SGM::Result                      &rResult,            // move constructor avoids copy segments only
+        complex(SGM::Result                      &rResult,      // Move constructor avoids copy segments only
                 std::vector<unsigned>           &&aSegments,
                 std::vector<SGM::Point3D> const  &aPoints);
 
-        complex(SGM::Result                &rResult,            // move constructor avoids copies segments & points
+        complex(SGM::Result                &rResult,            // Move constructor avoids copies segments & points
                 std::vector<unsigned>     &&aSegments,
                 std::vector<SGM::Point3D> &&aPoints);
 
@@ -566,10 +567,10 @@ class complex : public topology
 
         complex(SGM::Result                      &rResult,
                 std::vector<SGM::Point3D> const  &aPoints,
-                std::vector<unsigned>           &&aTriangles);  // move constructor avoids copy of triangles only
+                std::vector<unsigned>           &&aTriangles);  // Move constructor avoids copy of triangles only
 
         complex(SGM::Result                &rResult,
-                std::vector<SGM::Point3D> &&aPoints,            // move constructor avoids copies of points & triangles
+                std::vector<SGM::Point3D> &&aPoints,            // Move constructor avoids copies of points & triangles
                 std::vector<unsigned>     &&aTriangles);
 
         complex(SGM::Result                     &rResult,
@@ -577,21 +578,20 @@ class complex : public topology
                 std::vector<unsigned> const     &aSegments,
                 std::vector<unsigned> const     &aTriangles);
 
-        complex(SGM::Result                &rResult,            // move constructor avoids copies
+        complex(SGM::Result                &rResult,            // Move constructor avoids copies
                 std::vector<SGM::Point3D> &&aPoints,
                 std::vector<unsigned>     &&aSegments,
                 std::vector<unsigned>     &&aTriangles);
 
-        complex(SGM::Result &rResult,                           // merge the given points, optional triangles, segments
+        complex(SGM::Result &rResult,                           // Merge the given points, optional triangles, segments
                 std::vector<SGM::Point3D> const &aPoints,
                 std::vector<unsigned> const     &aSegments,
                 std::vector<unsigned> const     &aTriangles,
                 double                           dTolerance);
 
-        // Create coordinate aligned boxes at each point with 
         complex(SGM::Result                      &rResult,
                 double                            dLength,
-                std::vector<SGM::Point3D>  const &aPoints);
+                std::vector<SGM::Point3D>  const &aPoints);     // Create coordinate aligned boxes at each point.
 
         complex() = delete;
 
@@ -1054,7 +1054,12 @@ class face : public topology
 
         SGM::Interval2D FindUVBox(SGM::Result &rResult) const;
 
+        // Returns a number from zero to one that tells how much of a sliver 
+        // this face is.  Zero is a zero area sliver and one is a fat circle.
+
         bool IsSliver() const;
+
+        double SliverValue(SGM::Result &rResult) const;
 
         bool IsTight(SGM::Result &rResult) const;
 

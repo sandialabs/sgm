@@ -234,6 +234,43 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
+TEST(speed_check, DISABLED_ray)
+    {
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    const char* file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_ouo_check_success(file_name);
+
+    std::vector<SGM::Point3D> aTestPoints={{-2.63217596927203, 0.0051972943868754,  -5.34858138632409}};
+
+    rResult.SetDebugFlag(6);
+    rResult.SetDebugData({0,1,0});
+
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+
+    for(auto TestPoint : aTestPoints)
+        {
+        bool bValue = PointInEntity(rResult,TestPoint,VolumeID);
+        if(bValue)
+            {
+            std::vector<double> aData2=rResult.GetDebugData();
+            SGM::CreateLinearEdge(rResult,TestPoint,TestPoint+10*SGM::Vector3D(aData2[0],aData2[1],aData2[2]));
+            std::cout << '{' << std::setw(19) << TestPoint[0] << ',' << std::setw(19) << TestPoint[1] << ',' << std::setw(19) << TestPoint[2] << '}' << std::endl;
+            }
+        else
+            {
+            std::cout << "Worked\n";
+            }
+        }
+
+    SGMTesting::ReleaseTestThing(pThing);
+    }
+    
+
 TEST(speed_check, DISABLED_point)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
