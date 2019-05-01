@@ -348,7 +348,6 @@ curve *cone::VParamLine(SGM::Result &rResult, double dV) const
     }
     else
     {
-        SGM::Point3D Apex=FindApex();
         SGM::Point3D ZeroV;
         SGM::Point2D uv(0.0,dV);
         Evaluate(uv,&ZeroV);

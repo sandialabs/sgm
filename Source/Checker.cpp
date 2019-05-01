@@ -691,14 +691,18 @@ bool curve::Check(SGM::Result              &rResult,
                   std::vector<std::string> &aCheckStrings,
                   bool                      bChildren) const
     {
-    bool bAnswer=TestCurve(rResult,this,m_Domain.MidPoint());
+    bool bAnswer = true;
+    if (m_CurveType != SGM::PointCurveType)
+    {
+        bAnswer=TestCurve(rResult,this,m_Domain.MidPoint());
 
-    if(!bAnswer)
-        {
-        std::stringstream ss;
-        ss << this << " does not pass derivative and inverse checks.";
-        aCheckStrings.emplace_back(ss.str());
-        }
+        if(!bAnswer)
+            {
+            std::stringstream ss;
+            ss << this << " does not pass derivative and inverse checks.";
+            aCheckStrings.emplace_back(ss.str());
+            }
+    }
 
     // check if the edges are connected
     if (!m_sEdges.empty())

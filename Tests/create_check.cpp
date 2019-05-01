@@ -486,6 +486,21 @@ TEST(create_check, enum_type_names)
     EXPECT_STREQ("CharAttribute",SGM::EntityTypeName(SGM::CharAttributeType));
     }
 
+TEST(create_check, cone_sheet_body)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    SGM::Surface ConeID = SGM::CreateConeSurface(rResult, SGM::Point3D(5,5,0), SGM::UnitVector3D(0,0,1), 2.0, SGM_PI/6.0);
+    SGM::Interval2D Domain = SGM::GetDomainOfSurface(rResult, ConeID);
+    Domain.m_VDomain.m_dMin = -Domain.m_VDomain.m_dMax;
+    SGM::CreateSheetBody(rResult, ConeID, Domain);
+
+    EXPECT_TRUE(SGMTesting::CheckEntityAndPrintLog(rResult, SGM::Thing()));
+
+    SGMTesting::ReleaseTestThing(pThing);
+}
+
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
