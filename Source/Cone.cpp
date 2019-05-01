@@ -3,6 +3,7 @@
 
 #include "Curve.h"
 #include "Surface.h"
+#include "Intersectors.h"
 
 namespace SGMInternal {
 
@@ -338,9 +339,22 @@ curve *cone::UParamLine(SGM::Result &rResult, double dU) const
     return new line(rResult,Apex,UZero-Apex);
     }
 
-curve *cone::VParamLine(SGM::Result &, double) const
+curve *cone::VParamLine(SGM::Result &rResult, double dV) const
     { 
-    return nullptr; 
+    if (SGM::NearEqual(dV,m_Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
+    {
+        SGM::Interval1D Domain(0.0, SGM_TWO_PI);
+        return new PointCurve(rResult, FindApex(), &Domain);
+    }
+    else
+    {
+        SGM::Point3D ZeroV;
+        SGM::Point2D uv(0.0,dV);
+        Evaluate(uv,&ZeroV);
+        SGM::Point3D Origin = ClosestPointOnLine(ZeroV, m_Origin, m_ZAxis);
+        double dRadius = Origin.Distance(ZeroV);
+        return new circle(rResult, Origin, m_ZAxis, dRadius, &m_XAxis);
+    }
     }
 
 }
