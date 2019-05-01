@@ -234,7 +234,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, single_point_in_volume)
+TEST(speed_check, DISABLED_single_point_in_volume)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -247,13 +247,10 @@ TEST(speed_check, single_point_in_volume)
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
-    //rResult.SetDebugFlag(6);
-    //rResult.SetDebugData({0.45087572710671003,0.70219734025538583,0.55102629160890060});
-
-    SGM::Point3D Pos({-2.15674,1.48887,-2.43009});
+    SGM::Point3D Pos({  -2.12188175555481,   2.08149612408045,  -4.38225209694569});
     bool bInside=SGM::PointInEntity(rResult,Pos,VolumeID);
-
-    //SGM::UnitVector3D Vec({0.45087572710671003,0.70219734025538583,0.55102629160890060});
+    
+    //SGM::UnitVector3D Vec({-0.29592680695935403,0.64661186981388485,0.70307923788050575});
     //SGM::CreateLinearEdge(rResult,Pos,Pos+10*Vec);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
@@ -266,6 +263,7 @@ TEST(speed_check, single_point_in_volume)
     if(bInside)
         {
         SGM::CreateVoxels(rResult,aPoints,dLength);
+        SGM::CreatePoints(rResult,aPoints);
         }
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -319,10 +317,11 @@ TEST(speed_check, blueberry_search)
                 }
             }
         }
+    std::cout << std::setprecision(15);
     std::cout << "\n";
     for(auto Pos : aPoints)
         {
-        std::cout << "{" << Pos.m_x << "," << Pos.m_y <<  "," << Pos.m_z << "},\n";
+        std::cout << "{" << std::setw(19) << Pos.m_x << "," << std::setw(19) << Pos.m_y <<  "," << std::setw(19) << Pos.m_z << "},\n";
         }
     std::cout << aPoints.size();
 

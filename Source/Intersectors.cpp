@@ -1227,6 +1227,8 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
         for(Index1=0;Index1<nHits;++Index1)
             {
             IntersectLineAndLine(Origin,Axis,Domain,aTPoints[Index1],CylinderAxis,MaxDomain,dTolerance,aTempPoints,aTempTypes);
+            aTempTypes.clear();
+            aTempTypes=aTTypes;
             }
         }
 
@@ -2160,7 +2162,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     double A=b4+2*b2*d2+d4+2*b2*f2+2*d2*f2+f4;
 
     std::vector<double> aRoots;
-    size_t nRoots=SGM::Quartic(A,B,C,D,E,aRoots,dTolerance);
+    size_t nRoots=SGM::Quartic(A,B,C,D,E,aRoots,SGM_ZERO);
     size_t Index1;
     for(Index1=0;Index1<nRoots;++Index1)
         {

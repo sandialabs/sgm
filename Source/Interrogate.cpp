@@ -682,9 +682,13 @@ bool PointInVolume(SGM::Result        &rResult,
 //                        }
 //                    }
                 ++nBadRays;
-                if (nBadRays > 4)
+                if(5<nBadRays && aEntity[0]->GetType()==SGM::FaceType)
                     {
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    }
+                if(20<nBadRays)
+                    {
+                    return true;
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 ++nCount;

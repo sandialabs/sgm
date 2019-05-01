@@ -1318,64 +1318,64 @@ TEST(math_check, quartic_equation)
     // 2*(x-1)(x-2)(x-3)(x-4) -> 2*x^4-20*x^3+70*x^2-100*x+48 Four roots
 
     std::vector<double> aRoots;
-    size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots,SGM_MIN_TOL);
+    size_t nRoots=SGM::Quartic(2,-20,70,-100,48,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,4U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[2]-3),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[3]-4),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[1]-2),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[2]-3),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[3]-4),SGM_MIN_TOL);
 
     // (x-1)(x-2)(x-3)(x-3) -> x^4-9*x^3+29*x^2-39*x+18 Three roots, one double
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-9,29,-39,18,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-9,29,-39,18,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,3U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[2]-3),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[1]-2),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[2]-3),SGM_MIN_TOL);
 
     // (x-1)(x-2)(x-2)(x-2) -> x^4-7*x^3+18*x^2-20*x+8 Two roots, one triple
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-7,18,-20,8,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-7,18,-20,8,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,2U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[1]-2),SGM_MIN_TOL);
 
     // (x-1)(x-1)(x-2)(x-2) -> x^4-6*x^3+13*x^2-12*x+4 Two double roots
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-6,13,-12,4,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,2U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[1]-2),SGM_MIN_TOL);
 
     // (x-1)(x-2)(x^2+1) -> x^4-3*x^3+3*x^2-3*x+2 Two roots
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-3,3,-3,2,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,2U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
-    EXPECT_LT(fabs(aRoots[1]-2),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
+    EXPECT_LT(fabs(aRoots[1]-2),SGM_MIN_TOL);
 
     // (x-1)(x-1)(x^2+1) -> x^4-2*x^3+2*x^2-2*x+1 One double root.
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-2,2,-2,1,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,1U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
 
     // (x-1)(x-1)(x-1)(x-1) -> x^4-4*x^3+6*x^2-4*x+1 One quadruple root.
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,-4,6,-4,1,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,1U);
-    EXPECT_LT(fabs(aRoots[0]-1),SGM_ZERO);
+    EXPECT_LT(fabs(aRoots[0]-1),SGM_MIN_TOL);
 
     // (x^2+1)(x^2+1) -> x^4+2*x^2+1 No roots.
 
     aRoots.clear();
-    nRoots=SGM::Quartic(1,0,2,0,1,aRoots,SGM_MIN_TOL);
+    nRoots=SGM::Quartic(1,0,2,0,1,aRoots,SGM_ZERO);
     EXPECT_EQ(nRoots,0U);
     }
 
@@ -2740,7 +2740,7 @@ TEST(math_check, line_torus_intersection)
     SGM::Curve Line4=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line4,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,1U);
-    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_ZERO));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(0.0,4.0,0.0),SGM_MIN_TOL));
 
     aPoints.clear();
     aTypes.clear();

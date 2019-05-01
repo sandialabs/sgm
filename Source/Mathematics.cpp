@@ -1549,7 +1549,7 @@ size_t Quartic(double a, double b, double c, double d, double e,
         double t2 = t * t;
         double t3 = t2 * t;
         double t4 = t2 * t2;
-        aDRootValues.push_back(a * t4 + b * t3 + c * t2 + d * t + e);
+        aDRootValues.push_back(a*t4 + b*t3 + c*t2 + d*t + e);
         }
 
     // Find all double roots and from where to look for other roots.
@@ -1559,14 +1559,16 @@ size_t Quartic(double a, double b, double c, double d, double e,
     std::vector<SGM::Interval1D> aWhereToLook;
     if (nDRoots == 1)
         {
-        if (aDRootValues[0] < -dTolerance)
+        if(fabs(aDRootValues[0])<dTolerance)
+            {
+            aRoots.push_back(aDRoots[0]);
+            //aWhereToLook.push_back(SGM::Interval1D(-dBound,aDRoots[0]-SGM_MIN_TOL));
+            //aWhereToLook.push_back(SGM::Interval1D(aDRoots[0]+SGM_MIN_TOL,dBound));
+            }
+        else if(aDRootValues[0]<-dTolerance)
             {
             aWhereToLook.push_back(SGM::Interval1D(-dBound,aDRoots[0]));
             aWhereToLook.push_back(SGM::Interval1D(aDRoots[0],dBound));
-            }
-        else if (aDRootValues[0] < dTolerance)
-            {
-            aRoots.push_back(aDRoots[0]);
             }
         }
     else
@@ -1633,7 +1635,7 @@ size_t Quartic(double a, double b, double c, double d, double e,
         aRoots.push_back(SGMInternal::NewtonMethod(a,b,c,d,e,aWhereToLook[Index1]));
         }
 
-    SGM::RemoveDuplicates1D(aRoots,dTolerance);
+    SGM::RemoveDuplicates1D(aRoots,SGM_MIN_TOL);
     std::sort(aRoots.begin(), aRoots.end());
     return aRoots.size();
     }

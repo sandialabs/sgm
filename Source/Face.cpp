@@ -406,7 +406,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
             double t=(*ppCloseEdge)->GetCurve()->Inverse(Pos);
             double dFraction=(*ppCloseEdge)->GetDomain().Fraction(t);
             edge *pTestEdge=nullptr;
-            if(dFraction<0.02)
+            if(dFraction<0.1)
                 {
                 std::vector<edge *> aEdges;
                 FindEdgesOnFaceAtVertex(rResult,pStart,pFace,aEdges);
@@ -422,7 +422,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
                         }
                     }
                 }
-            else if(0.95<dFraction)
+            else if(0.9<dFraction)
                 {
                 std::vector<edge *> aEdges;
                 FindEdgesOnFaceAtVertex(rResult,pEnd,pFace,aEdges);
