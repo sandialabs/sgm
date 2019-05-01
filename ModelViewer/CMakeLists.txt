@@ -24,8 +24,6 @@ get_target_property(_loc Qt5::qmake LOCATION)
 get_filename_component(_qmake_dir ${_loc} DIRECTORY)
 get_filename_component(_qt_dir ${_qmake_dir} DIRECTORY)
 
-option(BUILD_VIEWER_WITH_GTEST "Build viewer with gtest" ON)
-
 set(MODEL_VIEWER_UIS
     MainWindow.ui)
 
@@ -63,11 +61,15 @@ target_include_directories(sgm_viewer PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR})
 
-if(BUILD_VIEWER_WITH_GTEST)
-  message(STATUS "Build viewer with gtest")
-  target_sources(sgm_viewer PRIVATE ${SGM_VIEWER_GTEST_SOURCES} TestDialog.cpp TestDialog.hpp)
-  target_link_libraries(sgm_viewer PRIVATE gtest)
-  target_compile_definitions(sgm_viewer PRIVATE -DVIEWER_WITH_GTEST)
+if (BUILD_SGM_TESTS)
+  option(BUILD_VIEWER_WITH_GTEST "Build viewer with gtest" ON)
+
+  if(BUILD_VIEWER_WITH_GTEST)
+    message(STATUS "Build viewer with gtest")
+    target_sources(sgm_viewer PRIVATE ${SGM_VIEWER_GTEST_SOURCES} TestDialog.cpp TestDialog.hpp)
+    target_link_libraries(sgm_viewer PRIVATE gtest)
+    target_compile_definitions(sgm_viewer PRIVATE -DVIEWER_WITH_GTEST)
+  endif()
 endif()
 
 if(APPLE)
