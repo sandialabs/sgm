@@ -236,6 +236,14 @@ SGM::Complex SGM::CreateComplex(SGM::Result       &rResult,
     return {SGMInternal::CreateComplex(rResult,pEntity)->GetID()};
     }
 
+SGM::Complex SGM::CreateVoxels(SGM::Result                     &rResult,
+                               std::vector<SGM::Point3D> const &aPoints,
+                               double                           dLength)
+    {
+    SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,dLength,aPoints);
+    return SGM::Complex(pComplex->GetID());
+    }
+
 SGM::Complex SGM::CreateRectangle(SGM::Result        &rResult,
                                   SGM::Point2D const &Pos0,
                                   SGM::Point2D const &Pos1,

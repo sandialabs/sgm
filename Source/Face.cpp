@@ -1234,7 +1234,7 @@ double face::SliverValue(SGM::Result &rResult) const
                 }
             }
         }
-    double dAnswer=4*SGM_PI*dArea/dLength;
+    double dAnswer=4*SGM_PI*dArea/(dLength*dLength);
     if(1<dAnswer)
         {
         dAnswer=1.0;

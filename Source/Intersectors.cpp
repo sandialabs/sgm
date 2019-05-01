@@ -1198,6 +1198,10 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
     SGM::Point3D const &Center=pCylinder->m_Origin;
     SGM::Point3D Pos=Origin+Axis;
     double dRadius=pCylinder->m_dRadius;
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t Index1;
+
     if(fabs(fabs(CylinderAxis%Axis)-1.0)<dTolerance)
         {
         // Empty or coincident.
@@ -1205,15 +1209,10 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
         double dDistanceFromCylinderAxis=Origin.Distance(Center+CylinderAxis*((Origin-Center)%CylinderAxis));
         if(fabs(dDistanceFromCylinderAxis-dRadius)<dTolerance)
             {
-            aPoints.push_back(Origin);
-            aPoints.push_back(Pos);
-            aTypes.push_back(SGM::CoincidentType);
-            aTypes.push_back(SGM::CoincidentType);
-            return 2;
-            }
-        else
-            {
-            return 0;
+            aTempPoints.push_back(Origin);
+            aTempPoints.push_back(Pos);
+            aTempTypes.push_back(SGM::CoincidentType);
+            aTempTypes.push_back(SGM::CoincidentType);
             }
         }
     else
@@ -1221,18 +1220,28 @@ size_t IntersectLineAndCylinder(SGM::Point3D                 const &Origin,
         SGM::Point3D ProjectedOrigin=Origin-CylinderAxis*((Origin-Center)%CylinderAxis);
         SGM::Point3D ProjectedPos=Pos-CylinderAxis*((Pos-Center)%CylinderAxis);
         SGM::UnitVector3D ProjectedAxis=ProjectedPos-ProjectedOrigin;
-        size_t nHits=IntersectLineAndCircle(ProjectedOrigin,ProjectedAxis,Domain,Center,CylinderAxis,dRadius,dTolerance,aPoints,aTypes);
-        size_t Index1;
+        std::vector<SGM::Point3D> aTPoints;
+        std::vector<SGM::IntersectionType> aTTypes;
+        size_t nHits=IntersectLineAndCircle(ProjectedOrigin,ProjectedAxis,Domain,Center,CylinderAxis,dRadius,dTolerance,aTPoints,aTTypes);
         SGM::Interval1D MaxDomain(-SGM_MAX,SGM_MAX);
         for(Index1=0;Index1<nHits;++Index1)
             {
-            std::vector<SGM::Point3D> aTempPoints;
-            std::vector<SGM::IntersectionType> aTempTypes;
-            IntersectLineAndLine(Origin,Axis,Domain,aPoints[Index1],CylinderAxis,MaxDomain,dTolerance,aTempPoints,aTempTypes);
-            aPoints[Index1]=aTempPoints[0];
+            IntersectLineAndLine(Origin,Axis,Domain,aTPoints[Index1],CylinderAxis,MaxDomain,dTolerance,aTempPoints,aTempTypes);
             }
-        return nHits;
         }
+
+    size_t nAnswer=0;
+    for(Index1=0;Index1<aTempPoints.size();++Index1)
+        {
+        double t=(aTempPoints[Index1]-Origin)%Axis;
+        if(Domain.InInterval(t,dTolerance))
+            {
+            ++nAnswer;
+            aPoints.push_back(aTempPoints[Index1]);
+            aTypes.push_back(aTempTypes[Index1]);
+            }
+        }
+    return nAnswer;
     }
 
 size_t IntersectLineAndLine(SGM::Point3D                 const &Origin1,
@@ -1310,52 +1319,61 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
     {
     // IsEmpty, coincident, or one point.
 
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+
     SGM::Point3D Pos0=Origin+Axis*Domain.m_dMin;
     SGM::Point3D Pos1=Origin+Axis*Domain.m_dMax;
     double dDist0=(Pos0-PlaneOrigin)%PlaneNorm;
     double dDist1=(Pos1-PlaneOrigin)%PlaneNorm;
-    if (fabs(Axis%PlaneNorm)<dTolerance) // line and plane are parallel
+    if(fabs(Axis%PlaneNorm)<dTolerance) // line and plane are parallel
         {
         double dDist = (Origin-PlaneOrigin)%PlaneNorm;
         if(fabs(dDist)<dTolerance)
             {
-            aPoints.push_back(Pos0);
-            aPoints.push_back(Pos1);
-            aTypes.push_back(SGM::IntersectionType::CoincidentType);
-            aTypes.push_back(SGM::IntersectionType::CoincidentType);
-            return 2;
-            }
-        else
-            {
-            return 0;
+            aTempPoints.push_back(Pos0);
+            aTempPoints.push_back(Pos1);
+            aTempTypes.push_back(SGM::IntersectionType::CoincidentType);
+            aTempTypes.push_back(SGM::IntersectionType::CoincidentType);
             }
         }
-    if(dDist0*dDist1<0)
+    else if(dDist0*dDist1<0)
         {
         double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.m_x+
                    (Origin.m_y-PlaneOrigin.m_y)*PlaneNorm.m_y+
                    (Origin.m_z-PlaneOrigin.m_z)*PlaneNorm.m_z)/
             (Axis.m_x*PlaneNorm.m_x+Axis.m_y*PlaneNorm.m_y+Axis.m_z*PlaneNorm.m_z);
-        aPoints.push_back(Origin+t*Axis);
-        aTypes.push_back(SGM::IntersectionType::PointType);
-        return 1;
+        aTempPoints.push_back(Origin+t*Axis);
+        aTempTypes.push_back(SGM::IntersectionType::PointType);
         }
     else
         {
         if(fabs(dDist0)<dTolerance)
             {
-            aPoints.push_back(Pos0);
-            aTypes.push_back(SGM::IntersectionType::PointType);
-            return 1;
+            aTempPoints.push_back(Pos0);
+            aTempTypes.push_back(SGM::IntersectionType::PointType);
             }
         else if(fabs(dDist1)<dTolerance)
             {
-            aPoints.push_back(Pos1);
-            aTypes.push_back(SGM::IntersectionType::PointType);
-            return 1;
+            aTempPoints.push_back(Pos1);
+            aTempTypes.push_back(SGM::IntersectionType::PointType);
             }
-        return 0;
         }
+
+    size_t nAnswer=0;
+    size_t Index1;
+    size_t nSize=aTempPoints.size();
+    for(Index1=0;Index1<nSize;++Index1)
+        {
+        double t=(aTempPoints[Index1]-Origin)%Axis;
+        if(Domain.InInterval(t,dTolerance) || aTempTypes[Index1]==SGM::CoincidentType)
+            {
+            ++nAnswer;
+            aPoints.push_back(aTempPoints[Index1]);
+            aTypes.push_back(aTempTypes[Index1]);
+            }
+        }
+    return nAnswer;
     }
 
 size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
@@ -1963,18 +1981,21 @@ size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
     SGM::Point3D Pos=Origin+((Center-Origin)%Axis)*Axis;
     double dDist=Pos.Distance(Center);
     double dRadius=pSphere->m_dRadius;
+    size_t nAnswer=0;
     if(dDist<=dRadius-dTolerance)
         {
         double t=sqrt(dRadius*dRadius-dDist*dDist);
         SGM::Point3D Pos0=Pos-t*Axis;
         if(Domain.InInterval((Pos0-Origin)%Axis,dTolerance))
             {
+            ++nAnswer;
             aPoints.push_back(Pos0);
             aTypes.push_back(SGM::IntersectionType::PointType);
             }
         SGM::Point3D Pos1=Pos+t*Axis;
         if(Domain.InInterval((Pos1-Origin)%Axis,dTolerance))
             {
+            nAnswer++;
             aPoints.push_back(Pos1);
             aTypes.push_back(SGM::IntersectionType::PointType);
             }
@@ -1983,16 +2004,17 @@ size_t IntersectLineAndSphere(SGM::Point3D                 const &Origin,
         {
         if(Domain.InInterval((Pos-Origin)%Axis,dTolerance))
             {
+            nAnswer++;
             aPoints.push_back(Pos);
             aTypes.push_back(SGM::IntersectionType::TangentType);
             }
         }
-    return aPoints.size();
+    return nAnswer;
     }
 
 size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
                             SGM::UnitVector3D            const &Axis,
-                            SGM::Interval1D              const &,//Domain,
+                            SGM::Interval1D              const &Domain,
                             cone                         const *pCone,
                             double                              dTolerance,
                             std::vector<SGM::Point3D>          &aPoints,
@@ -2068,6 +2090,7 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
 
     size_t nHits=aHits.size();
     size_t Index1;
+    size_t nAnswer=0;
     for(Index1=0;Index1<nHits;++Index1)
         {
         SGM::Point3D Pos=aHits[Index1];
@@ -2076,11 +2099,16 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
         pCone->Inverse(Pos,&CPos);
         if(SGM::NearEqual(Pos,CPos,dTolerance))
             {
-            aPoints.push_back(CPos);
-            aTypes.push_back(aTempTypes[Index1]);
+            double t=(CPos-Origin)%Axis;
+            if(Domain.InInterval(t,dTolerance) || aTempTypes[Index1]==SGM::CoincidentType)
+                {
+                ++nAnswer;
+                aPoints.push_back(CPos);
+                aTypes.push_back(aTempTypes[Index1]);
+                }
             }
         }
-    return aPoints.size();
+    return nAnswer;
     }
 
 // In this version of IntersectLineAndTorus the torus has been move to the origin.
@@ -2246,6 +2274,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
     size_t nUParams=pNUBSurface->GetUParams();
     size_t nVParams=pNUBSurface->GetVParams();
     std::vector<SGM::Point3D> aStartPoints;
+    SGM::Interval1D FullDomain(-SGM_MAX,SGM_MAX);
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
         {
@@ -2258,7 +2287,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             pNUBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
             std::vector<SGM::Point3D> aHits;
             std::vector<SGM::IntersectionType> aHitTypes;
-            size_t nHits=IntersectLineAndPlane(Origin,Axis,Domain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
+            size_t nHits=IntersectLineAndPlane(Origin,Axis,FullDomain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
             for(Index3=0;Index3<nHits;++Index3)
                 {
                 aStartPoints.push_back(aHits[Index3]);
@@ -2284,7 +2313,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             pNUBSurface->Evaluate(uv,&CPos,nullptr,nullptr,&LocalNorm);
             std::vector<SGM::Point3D> aTemp;
             std::vector<SGM::IntersectionType> aTempType;
-            if(1==SGMInternal::IntersectLineAndPlane(Origin,Axis,Domain,CPos,LocalNorm,SGM_MIN_TOL,aTemp,aTempType))
+            if(1==SGMInternal::IntersectLineAndPlane(Origin,Axis,FullDomain,CPos,LocalNorm,SGM_MIN_TOL,aTemp,aTempType))
                 {
                 double dDist=aTemp[0].Distance(CPos);
                 if(dDist<dOldDist)
@@ -2324,6 +2353,7 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
 
     // Remove duplicates and find the types.
 
+    size_t nAnswer=0;
     if(size_t nRefinedPoints=aRefinedPoints.size())
         {
         double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
@@ -2332,24 +2362,29 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNUBSurface->Inverse(Pos);
-            if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
+            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
                 {
-                SGM::UnitVector3D Norm;
-                pNUBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
-                aPoints.push_back(Pos);
-                if(fabs(Norm%Axis)<dDuplicatesTolerance)
+                double t=(Origin-Pos)%Axis;
+                if(Domain.InInterior(t,dTolerance))
                     {
-                    aTypes.push_back(SGM::IntersectionType::TangentType);
-                    }
-                else
-                    {
-                    aTypes.push_back(SGM::IntersectionType::PointType);
+                    ++nAnswer;
+                    SGM::UnitVector3D Norm;
+                    pNUBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+                    aPoints.push_back(Pos);
+                    if(fabs(Norm%Axis)<dDuplicatesTolerance)
+                        {
+                        aTypes.push_back(SGM::IntersectionType::TangentType);
+                        }
+                    else
+                        {
+                        aTypes.push_back(SGM::IntersectionType::PointType);
+                        }
                     }
                 }
             }
         }
 
-    return aPoints.size();
+    return nAnswer;
     }
 
 size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
@@ -2368,6 +2403,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
     size_t nUParams=pNURBSurface->GetUParams();
     size_t nVParams=pNURBSurface->GetVParams();
     std::vector<SGM::Point3D> aStartPoints;
+    SGM::Interval1D FullDomain(-SGM_MAX,SGM_MAX);
     size_t Index1,Index2,Index3;
     for(Index1=0;Index1<nUParams;++Index1)
         {
@@ -2380,7 +2416,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             pNURBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
             std::vector<SGM::Point3D> aHits;
             std::vector<SGM::IntersectionType> aHitTypes;
-            size_t nHits=IntersectLineAndPlane(Origin,Axis,Domain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
+            size_t nHits=IntersectLineAndPlane(Origin,Axis,FullDomain,PlaneOrigin,Norm,dTolerance,aHits,aHitTypes);
             for(Index3=0;Index3<nHits;++Index3)
                 {
                 aStartPoints.push_back(aHits[Index3]);
@@ -2406,7 +2442,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             pNURBSurface->Evaluate(uv,&CPos,nullptr,nullptr,&LocalNorm);
             std::vector<SGM::Point3D> aTemp;
             std::vector<SGM::IntersectionType> aTempType;
-            if(1==SGMInternal::IntersectLineAndPlane(Origin,Axis,Domain,CPos,LocalNorm,SGM_MIN_TOL,aTemp,aTempType))
+            if(1==SGMInternal::IntersectLineAndPlane(Origin,Axis,FullDomain,CPos,LocalNorm,SGM_MIN_TOL,aTemp,aTempType))
                 {
                 double dDist=aTemp[0].Distance(CPos);
                 if(dDist<dOldDist)
@@ -2446,6 +2482,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
 
     // Remove duplicates and find the types.
 
+    size_t nAnswer=0;
     if(size_t nRefinedPoints=aRefinedPoints.size())
         {
         double dDuplicatesTolerance=std::max(dTolerance,SGM_MIN_TOL);
@@ -2454,24 +2491,29 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNURBSurface->Inverse(Pos);
-            if(Index1==0 || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
+            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
                 {
-                SGM::UnitVector3D Norm;
-                pNURBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
-                aPoints.push_back(Pos);
-                if(fabs(Norm%Axis)<dDuplicatesTolerance)
+                double t=(Pos-Origin)%Axis;
+                if(Domain.InInterval(t,dTolerance))
                     {
-                    aTypes.push_back(SGM::IntersectionType::TangentType);
-                    }
-                else
-                    {
-                    aTypes.push_back(SGM::IntersectionType::PointType);
+                    ++nAnswer;
+                    SGM::UnitVector3D Norm;
+                    pNURBSurface->Evaluate(uv,nullptr,nullptr,nullptr,&Norm);
+                    aPoints.push_back(Pos);
+                    if(fabs(Norm%Axis)<dDuplicatesTolerance)
+                        {
+                        aTypes.push_back(SGM::IntersectionType::TangentType);
+                        }
+                    else
+                        {
+                        aTypes.push_back(SGM::IntersectionType::PointType);
+                        }
                     }
                 }
             }
         }
 
-    return aPoints.size();
+    return nAnswer;
     }
 
 size_t IntersectLineAndExtrude(SGM::Result                        &rResult,
@@ -2530,7 +2572,9 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
                                std::vector<SGM::Point3D>          &aPoints,
                                std::vector<SGM::IntersectionType> &aTypes)
     {
+    size_t nAnswer=0;
     double dFabsDot=fabs(Direction%pRevolve->m_ZAxis);
+    size_t Index1;
     if (dFabsDot < SGM_ZERO) // Line is perpendicular to the axis of rotation.
         {
         // find closest points on axis and line
@@ -2552,7 +2596,20 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
         for (SGM::Point3D Pos : aCurvePlanePoints)
             {
             double dRadius = PosAxis.Distance(Pos);
-            IntersectLineAndCircle(Origin, Direction, Domain, PosAxis, pRevolve->m_ZAxis, dRadius, dTolerance, aPoints, aTypes);
+            std::vector<SGM::Point3D> aPoints1;
+            std::vector<SGM::IntersectionType> aTypes1;
+            IntersectLineAndCircle(Origin,Direction,Domain,PosAxis,pRevolve->m_ZAxis,dRadius,dTolerance,aPoints1,aTypes1);
+            
+            for(Index1=0;Index1<aPoints1.size();++Index1)
+                {
+                double t=(aPoints1[Index1]-Origin)%Direction;
+                if(Domain.InInterval(t,dTolerance))
+                    {
+                    ++nAnswer;
+                    aPoints.push_back(aPoints1[Index1]);
+                    aTypes.push_back(aTypes1[Index1]);
+                    }
+                }
             }
         }
     else if(SGM::NearEqual(dFabsDot,1,dTolerance,false)) // Line is parallel to the axis of rotation.
@@ -2563,7 +2620,21 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
         SGM::Transform3D trans(pRevolve->m_Origin,pRevolve->m_ZAxis,dAngle);
         curve *pCurve=(curve *)CopyEntity(rResult,pRevolve->m_pCurve);
         pCurve->Transform(rResult,trans);
-        IntersectLineAndCurve(rResult,Origin,Direction,Domain,pCurve,dTolerance,aPoints,aTypes);
+        std::vector<SGM::Point3D> aPoints1;
+        std::vector<SGM::IntersectionType> aTypes1;
+        IntersectLineAndCurve(rResult,Origin,Direction,Domain,pCurve,dTolerance,aPoints1,aTypes1);
+
+        for(Index1=0;Index1<aPoints1.size();++Index1)
+            {
+            double t=(aPoints1[Index1]-Origin)%Direction;
+            if(Domain.InInterval(t,dTolerance))
+                {
+                ++nAnswer;
+                aPoints.push_back(aPoints1[Index1]);
+                aTypes.push_back(aTypes1[Index1]);
+                }
+            }
+
         rResult.GetThing()->DeleteEntity(pCurve);
         }
     else 
@@ -2583,16 +2654,34 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
             std::vector<SGM::Point3D> aPoints1,aPoints2;
             std::vector<SGM::IntersectionType> aTypes1,aTypes2;
             IntersectLineAndCurve(rResult,Pos1,Direction,Domain1,pCurve1,dTolerance,aPoints1,aTypes1);
-            aPoints.insert(aPoints.end(),aPoints1.begin(),aPoints1.end());
-            aTypes.insert(aTypes.end(),aTypes1.begin(),aTypes1.end());
+
+            for(Index1=0;Index1<aPoints1.size();++Index1)
+                {
+                double t=(aPoints1[Index1]-Origin)%Direction;
+                if(Domain.InInterval(t,dTolerance))
+                    {
+                    ++nAnswer;
+                    aPoints.push_back(aPoints1[Index1]);
+                    aTypes.push_back(aTypes1[Index1]);
+                    }
+                }
 
             double dAngle2=SGM::SAFEatan2(-dY,-dX);
             SGM::Transform3D trans2(pRevolve->m_Origin,pRevolve->m_ZAxis,dAngle2);
             curve *pCurve2=(curve *)CopyEntity(rResult,pRevolve->m_pCurve);
             pCurve2->Transform(rResult,trans2);
             IntersectLineAndCurve(rResult,Pos1,-Direction,Domain1,pCurve2,dTolerance,aPoints2,aTypes2);
-            aPoints.insert(aPoints.end(),aPoints2.begin(),aPoints2.end());
-            aTypes.insert(aTypes.end(),aTypes2.begin(),aTypes2.end());
+
+            for(Index1=0;Index1<aPoints2.size();++Index1)
+                {
+                double t=(aPoints2[Index1]-Origin)%Direction;
+                if(Domain.InInterval(t,dTolerance))
+                    {
+                    ++nAnswer;
+                    aPoints.push_back(aPoints2[Index1]);
+                    aTypes.push_back(aTypes2[Index1]);
+                    }
+                }
 
             rResult.GetThing()->DeleteEntity(pCurve1);
             rResult.GetThing()->DeleteEntity(pCurve2);
@@ -2603,7 +2692,7 @@ size_t IntersectLineAndRevolve(SGM::Result                        &rResult,
             throw;
             }
         }
-    return aPoints.size();
+    return nAnswer;
     }
 
 size_t IntersectLineAndSurface(SGM::Result                        &rResult,
@@ -3925,7 +4014,7 @@ size_t IntersectEllipseAndCurve(SGM::Result                        &,//rResult,
                  SGM::Point3D Pos1,Pos2;
                  pCone1->Evaluate(uv1,&Pos1);
                  pCone2->Evaluate(uv2,&Pos2);
-                 SGM::Interval1D Domain(0,SGM_MAX);
+                 SGM::Interval1D Domain(-SGM_MAX,SGM_MAX);
                  std::vector<SGM::Point3D> aWalk;
                  if(-dTolerance<pCone1->PointInside(Pos2))
                      {

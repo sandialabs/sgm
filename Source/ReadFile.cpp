@@ -1107,7 +1107,7 @@ void ColorBySliver(SGM::Result &rResult,
         {
         double dSliver=pFace->SliverValue(rResult);
         //pFace->ChangeColor(rResult,(int)((1-dSliver)*255),(int)(dSliver*255),0);
-        if(dSliver<0.2)
+        if(dSliver<0.1)
             {
             pFace->ChangeColor(rResult,255,0,0);
             }
@@ -1258,7 +1258,7 @@ size_t ReadStepFile(SGM::Result                  &rResult,
         }
 
     //ColorByType(rResult,pThing);
-    ColorBySliver(rResult,pThing);
+    //ColorBySliver(rResult,pThing);
 
     // create all the triangles/facets/boxes
 

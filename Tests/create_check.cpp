@@ -20,24 +20,16 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #endif
 
-//TEST(create_check, voxels)
-//{
-//    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-//    SGM::Result rResult(pThing);
-//
-//    std::vector<std::vector<std::vector<bool> > > aaaVoxels;
-//    std::vector<std::vector<bool> >  aaVoxels;
-//    std::vector<bool> aVoxels;
-//    size_t nX=5,nY=4,nZ=3;
-//    aVoxels.assign(nZ,false);
-//    aaVoxels.assign(nY,aVoxels);
-//    aaaVoxels.assign(nX,aaVoxels);
-//    aaaVoxels[0][0][0]=true;
-//    aaaVoxels[4][3][2]=true;
-//    SGM::CreateVoxels(rResult,SGM::Point3D(0,0,0),1.0,aaaVoxels);
-//
-//    SGMTesting::ReleaseTestThing(pThing);
-//} 
+TEST(create_check, voxels)
+{
+    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
+    SGM::Result rResult(pThing);
+
+    std::vector<SGM::Point3D> aPoints={{0,0,0},{1,1,1},{1,0,1}};
+    SGM::CreateVoxels(rResult,aPoints,1);
+
+    SGMTesting::ReleaseTestThing(pThing);
+} 
 
 TEST(create_check, output_segments_to_sgm)
 {
