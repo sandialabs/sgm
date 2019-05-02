@@ -977,9 +977,9 @@ TEST(intersection_check, intersect_cone_torus)
     SGM::Surface ConeID5=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(2,0,-2),SGM::Point3D(2,0,2),2,0);
     SGM::Surface ConeID6=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(-4,0,0),SGM::Point3D(4,0,0),2,0);
 
-    double dVillarceauAngle=SGM::SAFEasin(0.5);
-    SGM::Surface ConeID7=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(1,-sin(dVillarceauAngle)*3,
-                             -cos(dVillarceauAngle)*3),SGM::Point3D(1,sin(dVillarceauAngle)*3,cos(dVillarceauAngle)*3),4,0);
+//    double dVillarceauAngle=SGM::SAFEasin(0.5);
+//    SGM::Surface ConeID7=SGM::CreateConeSurfaceFromPoints(rResult,SGM::Point3D(1,-sin(dVillarceauAngle)*3,
+//                             -cos(dVillarceauAngle)*3),SGM::Point3D(1,sin(dVillarceauAngle)*3,cos(dVillarceauAngle)*3),4,0);
 
     SGM::Point3D Pos1(3-cos(10*SGM_PI/180.0)*6,0,1+sin(10*SGM_PI/180.0)*6);
     SGM::Point3D Pos2(3-6/cos(10*SGM_PI/180.0),0,1);
