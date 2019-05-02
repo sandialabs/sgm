@@ -11,6 +11,10 @@
 #include "Intersectors.h"
 #include "Signature.h"
 
+#ifdef SGM_MULTITHREADED
+#include "SGMThreadPool.h"
+#endif
+
 #if !defined( _MSC_VER ) || _MSC_VER >= 1900
 #define NOEXCEPT noexcept
 #define NOEXCEPT_ARGS(ARGS) noexcept((ARGS))
@@ -440,14 +444,6 @@ void FindNextRayFaceBoxIntersections(SGM::Result &rResult,
     Direction = NextRayFaceBoxIntersections.m_Ray.m_Direction;
     }
 
-void FindRaysForPoints(SGM::Result                           &rResult,
-                       std::vector<SGM::Point3D>       const &aPoints,
-                       volume                          const *pVolume,
-                       buffer<unsigned>                      &aIndexOrdered,
-                       std::vector<RayFaceBoxIntersections>  &aRayFaceBoxIntersections)
-    {
-    }
-
 bool PointInVolume(SGM::Point3D const &Point,
                    SGM::Point3D const &HitPoint,
                    entity       const *pEntity)
@@ -553,23 +549,31 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     return nHits%2==1;
     }
 
-
-std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
-                                 std::vector<SGM::Point3D> const &aPoints,
-                                 volume                    const *pVolume,
-                                 double                           dTolerance)
+inline void FindVolumeTreeLengths(SGM::Result &rResult,
+                                  const volume *pVolume,
+                                  unsigned int aVolumeShortestLengths[3],
+                                  SGM::Point3D &VolumeCentroid)
     {
-    // get info about the volume tree
-    unsigned aVolumeShortestLengths[3];
+    VolumeCentroid = pVolume->GetFaceTree(rResult).FindCenterOfMass();
     FindShortestLengths(pVolume->GetBox(rResult), aVolumeShortestLengths);
-    SGM::Point3D VolumeCentroid = pVolume->GetFaceTree(rResult).FindCenterOfMass();
-    std::vector<SGM::UnitVector3D> GuessDirections(3);
+    }
 
-    // find an ordering of the points close together
-    buffer<unsigned> aIndexOrdered = SGMInternal::OrderPointsZorder(aPoints);
-
-    size_t nPoints = aPoints.size();
-    std::vector<bool> aIsInside(nPoints,false);
+bool PointsInVolumeLoop(SGM::Result &rResult,
+                        const volume *pVolume,
+                        double dTolerance,
+                        const unsigned int *aVolumeShortestLengths,
+                        const SGM::Point3D *pVolumeCentroid,
+                        size_t iBegin,
+                        size_t iEnd,
+                        const buffer<unsigned int> *p_aIndexOrdered,
+                        const std::vector<SGM::Point3D> *p_aPoints,
+                        std::vector<bool> *p_aIsInside)
+    {
+    // these are passed as pointers in order to avoid copies when using multi-threaded std::future
+    const SGM::Point3D &VolumeCentroid = *pVolumeCentroid;
+    const buffer<unsigned int> &aIndexOrdered = *p_aIndexOrdered;
+    const std::vector<SGM::Point3D> &aPoints = *p_aPoints;
+    std::vector<bool> &aIsInside = *p_aIsInside;
 
     SGM::UnitVector3D Direction;
     SGM::Point3D FirstFacePoint;
@@ -579,8 +583,7 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     bool bUsePrevious = false;
 
     // loop over points in Z-order
-    for (size_t i = 0; i < nPoints; ++i)
-
+    for (size_t i = iBegin; i < iEnd; ++i)
         {
         SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
 
@@ -615,30 +618,71 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
                 }
             }
         }
+    return iEnd > iBegin;
+    }
+
+std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
+                                 std::vector<SGM::Point3D> const &aPoints,
+                                 volume                    const *pVolume,
+                                 double                           dTolerance)
+    {
+    unsigned int aVolumeShortestLengths[3];
+    SGM::Point3D VolumeCentroid;
+    FindVolumeTreeLengths(rResult, pVolume, aVolumeShortestLengths, VolumeCentroid);
+
+    // find an ordering of the points close together
+    buffer<unsigned> aIndexOrdered = SGMInternal::OrderPointsZorder(aPoints);
+
+    size_t nPoints = aPoints.size();
+    std::vector<bool> aIsInside(nPoints,false);
+
+#ifdef SGM_MULTITHREADED
+    rResult.GetThing()->SetConcurrentActive();
+    unsigned nConcurrentThreads = std::thread::hardware_concurrency(); // assume hyperthreads are active and not useful
+    nConcurrentThreads = std::max((unsigned) 4, nConcurrentThreads);
+    SGM::ThreadPool threadPool(nConcurrentThreads);
+    std::vector<std::future<bool>> futures;
+    const unsigned NUM_CHUNKS = 8*nConcurrentThreads;
+    const size_t CHUNK_SIZE = nPoints / NUM_CHUNKS;
+    size_t nRemaining = nPoints % NUM_CHUNKS;
+    size_t iBegin = 0;
+    size_t iEnd = 0;
+    for (unsigned iChunk = 0; iChunk < NUM_CHUNKS; ++iChunk)
+        {
+        iEnd += (nRemaining > 0) ? (CHUNK_SIZE + ((nRemaining--) != 0)) : CHUNK_SIZE;
+        futures.emplace_back(threadPool.enqueue(std::bind(PointsInVolumeLoop,
+                                                          rResult,
+                                                          pVolume,
+                                                          dTolerance,
+                                                          aVolumeShortestLengths,
+                                                          &VolumeCentroid,
+                                                          iBegin, iEnd,
+                                                          &aIndexOrdered,
+                                                          &aPoints,
+                                                          &aIsInside)));
+        iBegin = iEnd;
+        }
+    for (auto &&future: futures)
+        {
+        future.wait();
+        future.get();
+        }
+    futures.clear();
+    rResult.GetThing()->SetConcurrentInactive();
+#else
+    PointsInVolumeLoop(rResult,
+                       pVolume,
+                       dTolerance,
+                       aVolumeShortestLengths,
+                       &VolumeCentroid,
+                       0, nPoints,
+                       &aIndexOrdered,
+                       &aPoints,
+                       &aIsInside);
+#endif
     return std::move(aIsInside);
     }
 
-//std::vector<bool> PointsInVolumeConcurrent(SGM::Result                     &rResult,
-//                                           std::vector<SGM::Point3D> const &aPoints,
-//                                           volume                    const *pVolume,
-//                                           double                           dTolerance)
-//    {
-//    buffer<unsigned>                     aIndexOrdered;
-//    std::vector<RayFaceBoxIntersections> aRayFaceBoxIntersections;
-//    FindRaysForPointsConcurrent(rResult,aPoints,pVolume,dTolerance,aIndexOrdered,aRayFaceBoxIntersections);
-//    size_t nPoints = aPoints.size();
-//    std::vector<bool> aIsInside(nPoints,false);
-//    // loop over rays in Z-order
-//    for (size_t i = 0; i < nPoints; ++i)
-//        {
-//        RayFaceBoxIntersections const & RayIntersections = aRayFaceBoxIntersections[i];
-//        if (RayIntersections.m_dCost != 0)
-//            {
-//            aIsInside[aIndexOrdered[i]] = IsRayInVolume(rResult,RayIntersections,pVolume,dTolerance);
-//            }
-//        }
-//    return std::move(aIsInside);
-//    }
 
 bool PointInVolume(SGM::Result        &rResult,
                    SGM::Point3D const &Point,

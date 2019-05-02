@@ -234,7 +234,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, point)
+TEST(speed_check, DISABLED_point)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -548,7 +548,7 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 #endif
 
 #if 1
-TEST(speed_check, points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);

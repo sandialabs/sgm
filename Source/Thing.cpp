@@ -5,7 +5,7 @@
 #include "Surface.h"
 #include "Curve.h"
 
-//#define SGM_TIMER 
+//#define SGM_TIMER
 #include "Util/timer.h"
 #include "SGMEntityFunctions.h"
 
@@ -309,6 +309,13 @@ inline bool FindEntityBoxData(SGM::Result &rResult, entity *e)
     return true;
     }
 
+inline bool FindFaceFacetTreeData(SGM::Result &rResult, face *f)
+    {
+    f->GetFacetTree(rResult);
+    return true;
+    }
+
+
 //
 // Cached Data Visitors
 //
@@ -346,6 +353,17 @@ struct FacePointsVisitor : EntityVisitor
 
     inline void Visit(face &f) override
         { FindFacePointsData(*pResult, &f); }
+    };
+
+struct FaceFacetTreeVisitor : EntityVisitor
+    {
+    FaceFacetTreeVisitor() = delete;
+
+    explicit FaceFacetTreeVisitor(SGM::Result &rResult) : EntityVisitor(rResult)
+        {}
+
+    inline void Visit(face &f) override
+        { FindFaceFacetTreeData(*pResult, &f); }
     };
 
 template<class SET, class VISITOR>
@@ -577,6 +595,16 @@ void RunEntityVisitorJobs(size_t numJobs,
             auto iter = Begin<volume*>(), end = End<volume*>();
             VolumeBoxVisitor volumeBoxVisitor(rResult);
             RunEntityVisitorJobs(NUM_JOBS, NUM_ENTITY_PER_JOB, iter, end, threadPool, futures, volumeBoxVisitor);
+        }
+        SGM_TIMER_STOP();
+
+        // faces facet trees
+        SGM_TIMER_START("Face facet trees");
+        {
+            const size_t NUM_JOBS = 512, NUM_ENTITY_PER_JOB = 4;
+            auto iter = Begin<face*>(), end = End<face*>();
+            FaceFacetTreeVisitor faceFacetTreeVisitor(rResult);
+            RunEntityVisitorJobs(NUM_JOBS, NUM_ENTITY_PER_JOB, iter, end, threadPool, futures, faceFacetTreeVisitor);
         }
         SGM_TIMER_STOP();
 
