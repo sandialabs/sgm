@@ -491,7 +491,6 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     size_t nBadRays = 0;
     nHits = 0;
     bool bContinue = true;
-    bool bHasNewDirection = false;
     std::vector<SGM::Point3D>          aPoints;
     std::vector<SGM::IntersectionType> aTypes;
     std::vector<entity *>              aEntity;
@@ -518,7 +517,7 @@ bool IsRayInVolume(SGM::Result                   &rResult,
 #ifdef          IS_RAY_IN_VOLUME_LOG
                 std::cout << " N" << nBadRays;
 #endif
-                if (nBadRays > 3)
+                if(5<nBadRays && aEntity[0]->GetType()==SGM::FaceType)
                     {
 #ifdef              IS_RAY_IN_VOLUME_LOG
                     std::cout << ' ' << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
@@ -527,6 +526,10 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                     nHits = 0;
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
+                if(20<nBadRays)
+                    {
+                    return true;
+                    }
                 // look for a new ray
                 size_t nNextMaxCount = nCount+4;
                 RayFaceBoxIntersections TempRayIntersections;
@@ -534,7 +537,6 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                 while (TempRayIntersections.m_dCost > 1000 && nCount < nNextMaxCount)
                     {
                     Direction = SGM::UnitVector3D(cos(nCount), sin(nCount), cos(nCount + 17));
-                    bHasNewDirection = true;
                     ++nCount;
                     TempRayIntersections = FindRayFacesCost(rResult, pVolume, Point, Direction);
                     }
@@ -700,6 +702,7 @@ bool PointInVolume(SGM::Result        &rResult,
         Axis.m_x=aData[0];
         Axis.m_y=aData[1];
         Axis.m_z=aData[2];
+        rResult.SetDebugFlag(0);
         }
     while(bFound)
         {
@@ -731,14 +734,14 @@ bool PointInVolume(SGM::Result        &rResult,
         std::vector<SGM::IntersectionType> aTypes;
         std::vector<entity *> aEntity;
         nHits=RayFireVolume(rResult,Point,Axis,pVolume,aHitsFaces,aPoints,aTypes,aEntity,dTolerance,false);
-//        if(rResult.GetDebugFlag()==6)
-//            {
-//            std::vector<double> aData;
-//            aData.push_back(Axis.m_x);
-//            aData.push_back(Axis.m_y);
-//            aData.push_back(Axis.m_z);
-//            rResult.SetDebugData(aData);
-//            }
+        if(rResult.GetDebugFlag()==7)
+            {
+            std::vector<double> aData;
+            aData.push_back(Axis.m_x);
+            aData.push_back(Axis.m_y);
+            aData.push_back(Axis.m_z);
+            rResult.SetDebugData(aData);
+            }
         if(nHits)
             {
             if(SGM::NearEqual(Point,aPoints[0],dTolerance))
@@ -764,9 +767,13 @@ bool PointInVolume(SGM::Result        &rResult,
 //                        }
 //                    }
                 ++nBadRays;
-                if (nBadRays > 4)
+                if(5<nBadRays && aEntity[0]->GetType()==SGM::FaceType)
                     {
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    }
+                if(20<nBadRays)
+                    {
+                    return true;
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 ++nCount;

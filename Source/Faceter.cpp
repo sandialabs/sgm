@@ -1256,6 +1256,10 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
 double MoreFacetChecks(edge const *pEdge)
     {
     double dAnswer=1.0;
+    if(pEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType)
+        {
+        dAnswer=0.5;
+        }
     if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
         {
         std::set<edge *,EntityCompare> sAllEdges;

@@ -95,6 +95,7 @@ class Result
         // 4 return bad surface tests.
         // 5 make blocks with bad topology connections.
         // 6 set the ray fire direction to m_aDebugData[0-2].
+        // 7 return the ray file direction in m_aDebugData[0-2].
 
     private:
 

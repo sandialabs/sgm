@@ -406,7 +406,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
             double t=(*ppCloseEdge)->GetCurve()->Inverse(Pos);
             double dFraction=(*ppCloseEdge)->GetDomain().Fraction(t);
             edge *pTestEdge=nullptr;
-            if(dFraction<0.02)
+            if(dFraction<0.1)
                 {
                 std::vector<edge *> aEdges;
                 FindEdgesOnFaceAtVertex(rResult,pStart,pFace,aEdges);
@@ -422,7 +422,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
                         }
                     }
                 }
-            else if(0.95<dFraction)
+            else if(0.9<dFraction)
                 {
                 std::vector<edge *> aEdges;
                 FindEdgesOnFaceAtVertex(rResult,pEnd,pFace,aEdges);
@@ -1190,6 +1190,56 @@ bool face::IsSliver() const
             }
         }
     return false;
+    }
+
+double face::SliverValue(SGM::Result &rResult) const
+    {
+    GetTriangles(rResult);
+    std::vector<unsigned> aAdjacencies;
+    SGM::FindAdjacencies2D(m_aTriangles,aAdjacencies);
+    std::vector<entity *> aEntities;
+    FindPointEntities(rResult,aEntities);
+    size_t Index1;
+    size_t nTriangles=m_aTriangles.size();
+    double dArea=0;
+    double dLength=0;
+    for(Index1=0;Index1<nTriangles;Index1+=3)
+        {
+        unsigned a=m_aTriangles[Index1];
+        unsigned b=m_aTriangles[Index1+1];
+        unsigned c=m_aTriangles[Index1+2];
+        SGM::Point3D const &A=m_aPoints3D[a];
+        SGM::Point3D const &B=m_aPoints3D[b];
+        SGM::Point3D const &C=m_aPoints3D[c];
+        dArea+=fabs(((B-A)*(C-A)).Magnitude()*0.5);
+        if(aAdjacencies[Index1]==std::numeric_limits<unsigned int>::max())
+            {
+            if(aEntities[a]!=this && aEntities[b]!=this)
+                {
+                dLength+=A.Distance(B);
+                }
+            }
+        if(aAdjacencies[Index1+1]==std::numeric_limits<unsigned int>::max())
+            {
+            if(aEntities[c]!=this && aEntities[b]!=this)
+                {
+                dLength+=C.Distance(B);
+                }
+            }
+        if(aAdjacencies[Index1+2]==std::numeric_limits<unsigned int>::max())
+            {
+            if(aEntities[a]!=this && aEntities[c]!=this)
+                {
+                dLength+=A.Distance(C);
+                }
+            }
+        }
+    double dAnswer=4*SGM_PI*dArea/(dLength*dLength);
+    if(1<dAnswer)
+        {
+        dAnswer=1.0;
+        }
+    return dAnswer;
     }
 
 bool face::IsTight(SGM::Result &rResult) const

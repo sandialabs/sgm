@@ -92,83 +92,65 @@ complex::complex(SGM::Result                     &rResult,
     {
     if (!CheckIndexMax(rResult,aPoints.size())) return;
 
-//    std::cout << "Points " << aPoints.size() << std::endl;
-//    for (auto & Point : aPoints)
-//        std::cout << Point[0] << ' ' << Point[1] << ' ' << Point[2] << std::endl;
-
     // Merge the points into this points array using sorting and matching.
     // Set the triangles to be the same as the map from old to new point index.
+
     MergePoints(aPoints, dTolerance, m_aPoints, m_aTriangles);
-
-//    std::cout << "Points Merged " << m_aPoints.size() << std::endl;
-//    std::cout << std::scientific << std::setw(16) << std::setprecision(std::numeric_limits<float>::digits10 + 1);
-//    for (size_t i = 0; i < m_aPoints.size(); ++i)
-//        {
-//        auto &Point = m_aPoints[i];
-//        std::cout << "Point " << std::setw(4) << i << ": " << Point[0] << ' ' << Point[1] << ' ' << Point[2]
-//                  << std::endl;
-//        }
-//    const double dRelativeToleranceSquared = dTolerance*dTolerance;
-//    for (size_t i = 0; i < m_aPoints.size(); ++i)
-//        {
-//        auto &Point = m_aPoints[i];
-//        for (size_t j = i+1; j < m_aPoints.size(); ++j)
-//            {
-//            auto &OtherPoint = m_aPoints[j];
-//            if (AlmostEqual(Point, OtherPoint, dRelativeToleranceSquared))
-//                {
-//                std::cout << "Point " << std::setw(4) << i << ": " << Point[0] << ' ' << Point[1] << ' ' << Point[2] << std::endl;
-//                std::cout << "Point " << std::setw(4) << j << ": " << OtherPoint[0] << ' ' << OtherPoint[1] << ' ' << OtherPoint[2] << std::endl;
-//                }
-//            }
-//        }
-
-    // we constructed the triangle array, there can be no unused points
     }
 
-//complex::complex(SGM::Result                                         &rResult,
-//                 SGM::Point3D                                  const &Origin,
-//                 double                                               dLength,
-//                 std::vector<std::vector<std::vector<bool> > > const &aaaVoxels):
-//    topology(rResult, SGM::EntityType::ComplexType),
-//    m_aPoints(),
-//    m_aSegments(),
-//    m_aTriangles(),
-//    m_Tree()
-//    {
-//    size_t nX=aaaVoxels.size();
-//    size_t nY=aaaVoxels[0].size();
-//    size_t nZ=aaaVoxels[0][0].size();
-//    size_t XIndex,YIndex,ZIndex;
-//    for(XIndex=0;XIndex<nX;++XIndex)
-//        {
-//        for(YIndex=0;YIndex<nY;++YIndex)
-//            {
-//            for(ZIndex=0;ZIndex<nZ;++ZIndex)
-//                {
-//                if(aaaVoxels[XIndex][YIndex][ZIndex])
-//                    {
-//                    SGM::Point3D Root000=Origin+XIndex*SGM::Vector3D(dLength,0,0)+YIndex*SGM::Vector3D(0,dLength,0)+ZIndex*SGM::Vector3D(0,0,dLength);
-//                    SGM::Point3D Root100=Root000+SGM::Vector3D(dLength,0,0);
-//                    SGM::Point3D Root010=Root000+SGM::Vector3D(0,dLength,0);
-//                    SGM::Point3D Root110=Root100+SGM::Vector3D(0,dLength,0);
-//                    SGM::Point3D Root001=Root000+SGM::Vector3D(0,0,dLength);
-//                    SGM::Point3D Root101=Root100+SGM::Vector3D(0,0,dLength);
-//                    SGM::Point3D Root011=Root010+SGM::Vector3D(0,0,dLength);
-//                    SGM::Point3D Root111=Root110+SGM::Vector3D(0,0,dLength);
-//                    m_aPoints.push_back(Root000);
-//                    m_aPoints.push_back(Root100);
-//                    m_aPoints.push_back(Root010);
-//                    m_aPoints.push_back(Root110);
-//                    m_aPoints.push_back(Root001);
-//                    m_aPoints.push_back(Root101);
-//                    m_aPoints.push_back(Root011);
-//                    m_aPoints.push_back(Root111);
-//                    }
-//                }
-//            }
-//        }
-//    }
+complex::complex(SGM::Result                      &rResult,
+                 double                            dLength,
+                 std::vector<SGM::Point3D>  const &aPoints) :
+    topology(rResult, SGM::EntityType::ComplexType),
+    m_aPoints(),
+    m_aSegments(),
+    m_aTriangles(),
+    m_Tree()
+    {
+    size_t nPoints=aPoints.size();
+    m_aPoints.reserve(nPoints*8);
+    m_aSegments.reserve(nPoints*24);
+    double dHalf=dLength*0.5;
+    unsigned nCount=0;
+    for(SGM::Point3D const &Pos : aPoints)
+        {
+        m_aPoints.push_back({Pos.m_x-dHalf,Pos.m_y-dHalf,Pos.m_z-dHalf});
+        m_aPoints.push_back({Pos.m_x+dHalf,Pos.m_y-dHalf,Pos.m_z-dHalf});
+        m_aPoints.push_back({Pos.m_x+dHalf,Pos.m_y+dHalf,Pos.m_z-dHalf});
+        m_aPoints.push_back({Pos.m_x-dHalf,Pos.m_y+dHalf,Pos.m_z-dHalf});
+        m_aPoints.push_back({Pos.m_x-dHalf,Pos.m_y-dHalf,Pos.m_z+dHalf});
+        m_aPoints.push_back({Pos.m_x+dHalf,Pos.m_y-dHalf,Pos.m_z+dHalf});
+        m_aPoints.push_back({Pos.m_x+dHalf,Pos.m_y+dHalf,Pos.m_z+dHalf});
+        m_aPoints.push_back({Pos.m_x-dHalf,Pos.m_y+dHalf,Pos.m_z+dHalf});
+
+        m_aSegments.push_back(nCount+0);
+        m_aSegments.push_back(nCount+1);
+        m_aSegments.push_back(nCount+1);
+        m_aSegments.push_back(nCount+2);
+        m_aSegments.push_back(nCount+2);
+        m_aSegments.push_back(nCount+3);
+        m_aSegments.push_back(nCount+3);
+        m_aSegments.push_back(nCount+0);
+        m_aSegments.push_back(nCount+4);
+        m_aSegments.push_back(nCount+5);
+        m_aSegments.push_back(nCount+5);
+        m_aSegments.push_back(nCount+6);
+        m_aSegments.push_back(nCount+6);
+        m_aSegments.push_back(nCount+7);
+        m_aSegments.push_back(nCount+7);
+        m_aSegments.push_back(nCount+4);
+        m_aSegments.push_back(nCount+0);
+        m_aSegments.push_back(nCount+4);
+        m_aSegments.push_back(nCount+1);
+        m_aSegments.push_back(nCount+5);
+        m_aSegments.push_back(nCount+2);
+        m_aSegments.push_back(nCount+6);
+        m_aSegments.push_back(nCount+3);
+        m_aSegments.push_back(nCount+7);
+
+        nCount+=8;
+        }
+    }
 
 complex::complex(SGM::Result &rResult,
                  std::vector<SGM::Point3D> const &aPoints,

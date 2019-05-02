@@ -103,8 +103,12 @@ endfunction()
 
 # the projects we are building
 add_subdirectory(Source)
-add_subdirectory(Tests)
-add_subdirectory(Tests/lib/googletest-release-1.8.0)
+
+option(BUILD_SGM_TESTS "Build the SGM test executable." OFF)
+if(BUILD_SGM_TESTS)
+  add_subdirectory(Tests)
+  add_subdirectory(Tests/lib/googletest-release-1.8.0)
+endif()
 
 option(BUILD_MODEL_VIEWER "Build the Qt based model viewer application." OFF)
 if(BUILD_MODEL_VIEWER)
