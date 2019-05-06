@@ -1480,8 +1480,8 @@ size_t IntersectCoplanarLineAndParabola(SGM::Point3D                 const &Line
 
     double c=Origin2D.m_u;
     double e=Origin2D.m_v;
-    double d=Axis2D.m_u;
-    double f=Axis2D.m_v;
+    double d=Axis2D[0];
+    double f=Axis2D[1];
 
     // a*(c+d*t)^2-(e+f*t)=0
     // (a*c^2-e) + (2*a*c*d-f)*t + (a*d^2)*t^2

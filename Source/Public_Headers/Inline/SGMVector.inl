@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <numeric>
 
 #include "SGMConstants.h"
@@ -62,6 +63,22 @@ namespace SGM {
         std::swap(m_u,other.m_u);
         std::swap(m_v,other.m_v);
     }
+
+    inline bool operator==(Point2D const &A, Point2D const &B)
+        {
+        return (A.m_u==B.m_u && A.m_v==B.m_v);
+        }
+
+    inline bool operator!=(Point2D const &A, Point2D const &B)
+        {
+        return (A.m_u!=B.m_u || A.m_v!=B.m_v);
+        }
+
+    inline std::ostream& operator<<(std::ostream& os, const Point2D& P)
+        {
+        os << '{' << P.m_u << ',' << P.m_v << '}';
+        return os;
+        }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -254,6 +271,22 @@ namespace SGM {
         std::swap(m_y,other.m_y);
         std::swap(m_z,other.m_z);
     }
+
+    inline bool operator==(Point3D const &A, Point3D const &B)
+        {
+        return (A.m_x==B.m_x && A.m_y==B.m_y && A.m_z==B.m_z);
+        }
+
+    inline bool operator!=(Point3D const &A, Point3D const &B)
+        {
+        return (A.m_x!=B.m_x || A.m_y!=B.m_y || A.m_z!=B.m_z);
+        }
+
+    inline std::ostream& operator<<(std::ostream& os, const Point3D& P)
+        {
+        os << '{' << P.m_x << ',' << P.m_y << ',' << P.m_z << '}';
+        return os;
+        }
 
     ///////////////////////////////////////////////////////////////////////////
     //

@@ -63,6 +63,10 @@ namespace SGM
         double m_v;
     };
 
+    inline bool operator==(Point2D const &A, Point2D const &B);
+    inline bool operator!=(Point2D const &A, Point2D const &B);
+    inline std::ostream& operator<<(std::ostream& os, const Point2D& P);
+
     class SGM_EXPORT Point3D
     {
     public:
@@ -101,6 +105,10 @@ namespace SGM
         double m_z;
     };
 
+    inline bool operator==(Point3D const &A, Point3D const &B);
+    inline bool operator!=(Point3D const &A, Point3D const &B);
+    inline std::ostream& operator<<(std::ostream& os, const Point3D& P);
+
     class SGM_EXPORT Point4D
     {
     public:
@@ -135,6 +143,8 @@ namespace SGM
     {
     public:
 
+        enum { N = 2 };
+
         Vector2D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
@@ -142,6 +152,9 @@ namespace SGM
         Vector2D operator*(double dScale) const;
 
         void Swap(Vector2D &other);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_u)[axis]; }
 
         double m_u;
         double m_v;
@@ -224,6 +237,14 @@ namespace SGM
         UnitVector2D(double u,double v);
 
         UnitVector2D(Vector2D const &Vec);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
+
+    private:
+
+        using Vector2D::m_u;
+        using Vector2D::m_v;
+        using Vector2D::operator[];
     };
 
     class SGM_EXPORT UnitVector3D : public Vector3D
