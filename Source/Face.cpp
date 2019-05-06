@@ -447,6 +447,11 @@ void FindClosestBoundary(SGM::Result        &rResult,
         IndexMinStart=IndexMinEnd ? IndexMinEnd-1 : aUVBoundary.size()-1;
         Start=aUVBoundary[IndexMinStart];
         End=aUVBoundary[IndexMinEnd];
+        if( SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u) ||
+            SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
+            {
+
+            }
         }
     SegmentClosestPoint(Start,End,uv,CloseUV);
     CloseSeg={Start,End};

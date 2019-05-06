@@ -711,7 +711,7 @@ bool PointInVolume(SGM::Result        &rResult,
             {
             aHitFacesTree.clear();
             bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,aHitFacesTree);
-            if(nCountRayExpensive<=12) // PRS Show Kevin This Code 
+            if(nCountRayExpensive==12)  
                 {
                 break;
                 }

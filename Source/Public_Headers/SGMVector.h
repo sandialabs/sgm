@@ -135,6 +135,8 @@ namespace SGM
     {
     public:
 
+        enum { N = 2 };
+
         Vector2D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector2D(double u,double v):m_u(u),m_v(v) {}
@@ -142,6 +144,9 @@ namespace SGM
         Vector2D operator*(double dScale) const;
 
         void Swap(Vector2D &other);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_u)[axis]; }
 
         double m_u;
         double m_v;
@@ -224,6 +229,16 @@ namespace SGM
         UnitVector2D(double u,double v);
 
         UnitVector2D(Vector2D const &Vec);
+
+        double U() {return m_u;}
+
+        double V() {return m_v;}
+
+    private:
+
+        using Vector2D::m_u;
+        using Vector2D::m_v;
+        using Vector2D::operator [];
     };
 
     class SGM_EXPORT UnitVector3D : public Vector3D

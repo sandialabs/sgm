@@ -1483,8 +1483,8 @@ size_t IntersectCoplanarLineAndParabola(SGM::Point3D                 const &Line
 
     double c=Origin2D.m_u;
     double e=Origin2D.m_v;
-    double d=Axis2D.m_u;
-    double f=Axis2D.m_v;
+    double d=Axis2D.U();
+    double f=Axis2D.V();
 
     // a*(c+d*t)^2-(e+f*t)=0
     // (a*c^2-e) + (2*a*c*d-f)*t + (a*d^2)*t^2
@@ -1617,8 +1617,8 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
 
         double c=Origin2D.m_u;
         double e=Origin2D.m_v;
-        double d=Axis2D.m_u;
-        double f=Axis2D.m_v;
+        double d=Axis2D.U();
+        double f=Axis2D.V();
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
         double A=f*f*raa-d*d*rbb;
@@ -1716,8 +1716,8 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
 
         double c=Origin2D.m_u;
         double e=Origin2D.m_v;
-        double d=Axis2D.m_u;
-        double f=Axis2D.m_v;
+        double d=Axis2D.U();
+        double f=Axis2D.V();
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
         double A=d*d*raa+f*f*rbb;
@@ -6940,7 +6940,7 @@ double FindMaxWalk(surface           const *pSurface,
         double dVspeed=VecV.Magnitude();
         double dU=dUspeed*Domain.m_UDomain.Length()/nUSize;
         double dV=dVspeed*Domain.m_VDomain.Length()/nVSize;
-        double dAnswer=dU*fabs(UVec.m_u)+dV*fabs(UVec.m_v);
+        double dAnswer=dU*fabs(UVec.U())+dV*fabs(UVec.V());
         return dAnswer*0.2;
         }
     else if(pSurface->GetSurfaceType()==SGM::ExtrudeType)
@@ -8274,7 +8274,7 @@ bool LeavingDomain(surface           const *pSurface,
     if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
         {
         // At the bottom.
-        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D.V())<SGM_MIN_TOL)
             {
             if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
                 {
@@ -8285,7 +8285,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(WalkDir2D.m_v<0)
+        else if(WalkDir2D.V()<0)
             {
             return true;
             }
@@ -8293,7 +8293,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
         {
         // At the top.
-        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D.V())<SGM_MIN_TOL)
             {
             if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
                 {
@@ -8304,7 +8304,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(0<WalkDir2D.m_v)
+        else if(0<WalkDir2D.V())
             {
             return true;
             }
@@ -8312,7 +8312,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
         {
         // On the left.
-        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D.U())<SGM_MIN_TOL)
             {
             if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
                 {
@@ -8323,7 +8323,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(WalkDir2D.m_u<0)
+        else if(WalkDir2D.U()<0)
             {
             return true;
             }
@@ -8331,7 +8331,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
         {
         // On the right.
-        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D.U())<SGM_MIN_TOL)
             {
             if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
                 {
@@ -8342,7 +8342,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(0<WalkDir2D.m_u)
+        else if(0<WalkDir2D.U())
             {
             return true;
             }

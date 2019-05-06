@@ -208,8 +208,8 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
         SGM::UnitVector3D UDu=Du,UDv=Dv;
         k1=aValues[0];
         k2=aValues[1];
-        Vec1=aVectors[0].m_u*UDu+aVectors[0].m_v*UDv;
-        Vec2=aVectors[1].m_u*UDu+aVectors[1].m_v*UDv;
+        Vec1=aVectors[0].U()*UDu+aVectors[0].V()*UDv;
+        Vec2=aVectors[1].U()*UDu+aVectors[1].V()*UDv;
         }
     }
 

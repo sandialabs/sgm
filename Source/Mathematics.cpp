@@ -321,8 +321,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
         if (aValues2D[0]+SGM_ZERO<aValues2D[1])
             {
-            XVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm;
-            YVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm; 
+            XVec=aVectors2D[1].U()*XNorm+aVectors2D[1].V()*YNorm;
+            YVec=aVectors2D[0].U()*XNorm+aVectors2D[0].V()*YNorm; 
             ZVec=ZAnswer;
 
             if (aEigenValues != nullptr)
@@ -334,8 +334,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
             }
         else
             {
-            XVec=aVectors2D[0].m_u*XNorm+aVectors2D[0].m_v*YNorm;
-            YVec=aVectors2D[1].m_u*XNorm+aVectors2D[1].m_v*YNorm; 
+            XVec=aVectors2D[0].U()*XNorm+aVectors2D[0].V()*YNorm;
+            YVec=aVectors2D[1].U()*XNorm+aVectors2D[1].V()*YNorm; 
             ZVec=ZAnswer;
 
             if (aEigenValues != nullptr)
