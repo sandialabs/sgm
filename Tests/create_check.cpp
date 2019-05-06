@@ -25,8 +25,10 @@ TEST(create_check, voxels)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    std::vector<SGM::Point3D> aPoints={{0,0,0},{1,1,1},{1,0,1}};
-    SGM::CreateVoxels(rResult,aPoints,1);
+    std::vector<SGM::Point3D> aPoints1={{0,0,0},{1,1,1},{1,0,1}};
+    SGM::CreateVoxels(rResult,aPoints1,1,true);
+    std::vector<SGM::Point3D> aPoints2={{1,0,0},{0,1,1},{0,0,1}};
+    SGM::CreateVoxels(rResult,aPoints2,1,false);
 
     SGMTesting::ReleaseTestThing(pThing);
 } 

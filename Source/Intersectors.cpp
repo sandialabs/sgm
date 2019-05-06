@@ -654,6 +654,7 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
             {
             aPoints.clear();
             aTypes.clear();
+            aEntities.clear();
             return 0;    
             }
         // only one point was given, and it was valid, so no need to do anything
@@ -678,10 +679,12 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         aTempEntities.push_back(aEntities[aParams[0].second]);
 
         double dLastParam=aParams[0].first;
+        entity *pLastEnt=aEntities[aParams[0].second];
         for(size_t Index1=1;Index1<nGoodHits;++Index1)
             {
-            if(dTolerance<aParams[Index1].first-dLastParam)
+            if(dTolerance<aParams[Index1].first-dLastParam || aEntities[aParams[Index1].second]!=pLastEnt)
                 {
+                pLastEnt=aEntities[aParams[Index1].second];
                 dLastParam=aParams[Index1].first;
                 aTempPoints.push_back(aPoints[aParams[Index1].second]);
                 aTempTypes .push_back(aTypes[aParams[Index1].second]);
@@ -1149,37 +1152,35 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::Point3D            &Origin,
                                 SGM::UnitVector3D       &Axis)
     {
-    double AxisX=Normal1.m_y*Normal2.m_z-Normal1.m_z*Normal2.m_y;
-    double AxisY=Normal1.m_z*Normal2.m_x-Normal1.m_x*Normal2.m_z;
-    double AxisZ=Normal1.m_x*Normal2.m_y-Normal1.m_y*Normal2.m_x;
+    double AxisX=Normal1[1]*Normal2[2]-Normal1[2]*Normal2[1];
+    double AxisY=Normal1[2]*Normal2[0]-Normal1[0]*Normal2[2];
+    double AxisZ=Normal1[0]*Normal2[1]-Normal1[1]*Normal2[0];
 
     double dx=fabs(AxisX);
     double dy=fabs(AxisY);
     double dz=fabs(AxisZ);
 
     double dLength=sqrt(AxisX*AxisX+AxisY*AxisY+AxisZ*AxisZ);
-    Axis.m_x=AxisX/dLength;
-    Axis.m_y=AxisY/dLength;
-    Axis.m_z=AxisZ/dLength;
+    Axis = {AxisX/dLength, AxisY/dLength, AxisZ/dLength};
 
-    double dPlaneDist1=-Origin1.m_x*Normal1.m_x-Origin1.m_y*Normal1.m_y-Origin1.m_z*Normal1.m_z;
-    double dPlaneDist2=-Origin2.m_x*Normal2.m_x-Origin2.m_y*Normal2.m_y-Origin2.m_z*Normal2.m_z;
+    double dPlaneDist1=-Origin1.m_x*Normal1[0]-Origin1.m_y*Normal1[1]-Origin1.m_z*Normal1[2];
+    double dPlaneDist2=-Origin2.m_x*Normal2[0]-Origin2.m_y*Normal2[1]-Origin2.m_z*Normal2[2];
     if(dy<=dx && dz<=dx)
         {
         Origin.m_x=0.0;
-        Origin.m_y=(dPlaneDist2*Normal1.m_z-dPlaneDist1*Normal2.m_z)/AxisX;
-        Origin.m_z=(dPlaneDist1*Normal2.m_y-dPlaneDist2*Normal1.m_y)/AxisX;
+        Origin.m_y=(dPlaneDist2*Normal1[2]-dPlaneDist1*Normal2[2])/AxisX;
+        Origin.m_z=(dPlaneDist1*Normal2[1]-dPlaneDist2*Normal1[1])/AxisX;
         }
     else if(dz<dy)
         {
-        Origin.m_x=(dPlaneDist1*Normal2.m_z-dPlaneDist2*Normal1.m_z)/AxisY;
+        Origin.m_x=(dPlaneDist1*Normal2[2]-dPlaneDist2*Normal1[2])/AxisY;
         Origin.m_y=0.0;
-        Origin.m_z=(dPlaneDist2*Normal1.m_x-dPlaneDist1*Normal2.m_x)/AxisY;
+        Origin.m_z=(dPlaneDist2*Normal1[0]-dPlaneDist1*Normal2[0])/AxisY;
         }
     else
         {
-        Origin.m_x=(dPlaneDist2*Normal1.m_y-dPlaneDist1*Normal2.m_y)/AxisZ;
-        Origin.m_y=(dPlaneDist1*Normal2.m_x-dPlaneDist2*Normal1.m_x)/AxisZ;
+        Origin.m_x=(dPlaneDist2*Normal1[1]-dPlaneDist1*Normal2[1])/AxisZ;
+        Origin.m_y=(dPlaneDist1*Normal2[0]-dPlaneDist2*Normal1[0])/AxisZ;
         Origin.m_z=0.0;
         }
     }
@@ -1341,10 +1342,10 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
         }
     else if(dDist0*dDist1<0)
         {
-        double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.m_x+
-                   (Origin.m_y-PlaneOrigin.m_y)*PlaneNorm.m_y+
-                   (Origin.m_z-PlaneOrigin.m_z)*PlaneNorm.m_z)/
-            (Axis.m_x*PlaneNorm.m_x+Axis.m_y*PlaneNorm.m_y+Axis.m_z*PlaneNorm.m_z);
+        double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm[0]+
+                   (Origin.m_y-PlaneOrigin.m_y)*PlaneNorm[1]+
+                   (Origin.m_z-PlaneOrigin.m_z)*PlaneNorm[2])/
+            (Axis[0]*PlaneNorm[0]+Axis[1]*PlaneNorm[1]+Axis[2]*PlaneNorm[2]);
         aTempPoints.push_back(Origin+t*Axis);
         aTempTypes.push_back(SGM::IntersectionType::PointType);
         }
@@ -1614,8 +1615,8 @@ size_t IntersectLineAndHyperbola(SGM::Point3D                 const &Origin,
 
         double c=Origin2D.m_u;
         double e=Origin2D.m_v;
-        double d=Axis2D.m_u;
-        double f=Axis2D.m_v;
+        double d=Axis2D[0];
+        double f=Axis2D[1];
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
         double A=f*f*raa-d*d*rbb;
@@ -1713,8 +1714,8 @@ size_t IntersectLineAndEllipse(SGM::Point3D                 const &Origin,
 
         double c=Origin2D.m_u;
         double e=Origin2D.m_v;
-        double d=Axis2D.m_u;
-        double f=Axis2D.m_v;
+        double d=Axis2D[0];
+        double f=Axis2D[1];
         double raa=1.0/(dA*dA);
         double rbb=1.0/(dB*dB);
         double A=d*d*raa+f*f*rbb;
@@ -2054,9 +2055,9 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
     double a=TOrigin.m_x;
     double c=TOrigin.m_y;
     double e=TOrigin.m_z;
-    double b=TAxis.m_x;
-    double d=TAxis.m_y;
-    double f=TAxis.m_z;
+    double b=TAxis[0];
+    double d=TAxis[1];
+    double f=TAxis[2];
 
     double A = b*b+d*d-f*f*s;
     double B = 2*(a*b+c*d-e*f*s);
@@ -2140,9 +2141,9 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     double a=Origin.m_x;
     double c=Origin.m_y;
     double e=Origin.m_z;
-    double b=Axis.m_x;
-    double d=Axis.m_y;
-    double f=Axis.m_z;
+    double b=Axis[0];
+    double d=Axis[1];
+    double f=Axis[2];
     double r=dMinorRadius;
     double s=dMajorRadius;
 
@@ -2246,18 +2247,36 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     double dMajorRadius=pTorus->m_dMajorRadius;
     double dMinorRadius=pTorus->m_dMinorRadius;
 
-    size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,Center,XVec,YVec,ZVec,dMinorRadius,dMajorRadius,dTolerance,aPoints,aTypes);
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,Center,XVec,YVec,ZVec,dMinorRadius,dMajorRadius,dTolerance,aTempPoints,aTempTypes);
 
     size_t Index1;
+    size_t nAnswer=0;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        SGM::Point3D Pos=aPoints[Index1];
+        SGM::Point3D Pos=aTempPoints[Index1];
         Pos*=Trans;
         SGM::Point3D SnappedPos;
         pTorus->Inverse(Pos,&SnappedPos);
-        aPoints[Index1]=SnappedPos;
+        if(pTorus->GetType()!=SGM::TorusKindType::DonutType)
+            {
+            double dDist=Pos.Distance(SnappedPos);
+            if(dDist<SGM_MIN_TOL)
+                {
+                ++nAnswer;
+                aPoints.push_back(Pos);
+                aTypes.push_back(aTempTypes[Index1]);
+                }
+            }
+        else
+            {
+            ++nAnswer;
+            aPoints.push_back(Pos);
+            aTypes.push_back(aTempTypes[Index1]);
+            }
         }
-    return nHits;
+    return nAnswer;
     }
 
 size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
@@ -2364,9 +2383,9 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNUBSurface->Inverse(Pos);
-            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
+            if(aPoints.empty() || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
                 {
-                double t=(Origin-Pos)%Axis;
+                double t=(Pos-Origin)%Axis;
                 if(Domain.InInterior(t,dTolerance))
                     {
                     ++nAnswer;
@@ -2493,7 +2512,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNURBSurface->Inverse(Pos);
-            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
+            if(aPoints.empty() || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
                 {
                 double t=(Pos-Origin)%Axis;
                 if(Domain.InInterval(t,dTolerance))
@@ -6919,7 +6938,7 @@ double FindMaxWalk(surface           const *pSurface,
         double dVspeed=VecV.Magnitude();
         double dU=dUspeed*Domain.m_UDomain.Length()/nUSize;
         double dV=dVspeed*Domain.m_VDomain.Length()/nVSize;
-        double dAnswer=dU*fabs(UVec.m_u)+dV*fabs(UVec.m_v);
+        double dAnswer=dU*fabs(UVec[0])+dV*fabs(UVec[1]);
         return dAnswer*0.2;
         }
     else if(pSurface->GetSurfaceType()==SGM::ExtrudeType)
@@ -8253,7 +8272,7 @@ bool LeavingDomain(surface           const *pSurface,
     if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_MIN_TOL,false))
         {
         // At the bottom.
-        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D[1])<SGM_MIN_TOL)
             {
             if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
                 {
@@ -8264,7 +8283,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(WalkDir2D.m_v<0)
+        else if(WalkDir2D[1]<0)
             {
             return true;
             }
@@ -8272,7 +8291,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_MIN_TOL,false))
         {
         // At the top.
-        if(fabs(WalkDir2D.m_v)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D[1])<SGM_MIN_TOL)
             {
             if(fabs(uv.m_u-Domain.m_UDomain.m_dMin)<SGM_MIN_TOL && uv.m_u<0)
                 {
@@ -8283,7 +8302,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(0<WalkDir2D.m_v)
+        else if(0<WalkDir2D[1])
             {
             return true;
             }
@@ -8291,7 +8310,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_MIN_TOL,false))
         {
         // On the left.
-        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D[0])<SGM_MIN_TOL)
             {
             if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
                 {
@@ -8302,7 +8321,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(WalkDir2D.m_u<0)
+        else if(WalkDir2D[0]<0)
             {
             return true;
             }
@@ -8310,7 +8329,7 @@ bool LeavingDomain(surface           const *pSurface,
     else if(SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_MIN_TOL,false))
         {
         // On the right.
-        if(fabs(WalkDir2D.m_u)<SGM_MIN_TOL)
+        if(fabs(WalkDir2D[0])<SGM_MIN_TOL)
             {
             if(fabs(uv.m_v-Domain.m_VDomain.m_dMin)<SGM_MIN_TOL && uv.m_v<0)
                 {
@@ -8321,7 +8340,7 @@ bool LeavingDomain(surface           const *pSurface,
                 return true;
                 }
             }
-        else if(0<WalkDir2D.m_u)
+        else if(0<WalkDir2D[0])
             {
             return true;
             }

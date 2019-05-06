@@ -652,9 +652,9 @@ namespace SGM {
         // else box intersects the plane
 
         // plane equation
-        double A = u.m_x;
-        double B = u.m_y;
-        double C = u.m_z;
+        double A = u[0];
+        double B = u[1];
+        double C = u[2];
         double D = - (A*c.m_x + B*c.m_y + C*c.m_z);
 
         // point coordinates of the eight box vertices

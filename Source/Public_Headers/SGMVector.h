@@ -113,9 +113,16 @@ namespace SGM
     {
     public:
 
+        enum { N = 4 };
+
+        typedef double type;
+
         Point4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_x)[axis]; }
 
         Point4D operator+=(Vector4D const &Vec);
 
@@ -204,6 +211,8 @@ namespace SGM
     {
     public:
 
+        enum { N = 4 };
+
         Vector4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
@@ -215,6 +224,9 @@ namespace SGM
         Vector4D operator/(double dScale) const;
 
         void Swap(Vector4D &other);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_x)[axis]; }
 
         double m_x;
         double m_y;
@@ -239,6 +251,7 @@ namespace SGM
         UnitVector2D(Vector2D const &Vec);
 
         const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
+        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_u)[axis]; }
 
     private:
 
@@ -270,6 +283,16 @@ namespace SGM
                      UnitVector3D const &Norm) const;
 
         UnitVector3D operator*=(Transform3D const &Trans);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_x)[axis]; }
+
+    private:
+
+        using Vector3D::m_x;
+        using Vector3D::m_y;
+        using Vector3D::m_z;
+        using Vector3D::operator[];
     };
 
     class SGM_EXPORT UnitVector4D : public Vector4D
@@ -279,6 +302,18 @@ namespace SGM
         UnitVector4D() {};
 
         UnitVector4D(Vector4D const &Vec);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_x)[axis]; }
+
+    private:
+
+        using Vector4D::m_x;
+        using Vector4D::m_y;
+        using Vector4D::m_z;
+        using Vector4D::m_w;
+        using Vector4D::operator[];
+
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -300,7 +335,7 @@ namespace SGM
         Ray3D(const Point3D &orig, const UnitVector3D &dir) :
                 m_Origin(orig),
                 m_Direction(dir),
-                m_InverseDirection(1./dir.m_x, 1./dir.m_y, 1./dir.m_z),
+                m_InverseDirection(1./dir[0], 1./dir[1], 1./dir[2]),
                 m_xSign(m_InverseDirection.m_x < 0),
                 m_ySign(m_InverseDirection.m_y < 0),
                 m_zSign(m_InverseDirection.m_z < 0)

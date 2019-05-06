@@ -287,6 +287,8 @@ class NUBcurve: public curve
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
 
+        double ReParam();
+
     private:
 
         std::vector<SGM::Point3D> m_aControlPoints;
@@ -355,6 +357,8 @@ class NURBcurve: public curve
         bool IsSame(curve const *pOther,double dTolerance) const override;
 
         std::vector<SGM::Point3D> const &GetSeedPoints() const;
+
+        double ReParam();
 
     private:
 

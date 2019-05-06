@@ -2710,10 +2710,10 @@ TEST(math_check, line_torus_intersection)
     SGM::Curve Line1=SGM::CreateLine(rResult,Origin,Axis);
     size_t nHits=SGM::IntersectCurveAndSurface(rResult,Line1,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,4U);
-    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D( 2.0,0.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[3],SGM::Point3D( 4.0,0.0,0.0),SGM_ZERO));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-4.0,0.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(-2.0,0.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D( 2.0,0.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[3],SGM::Point3D( 4.0,0.0,0.0),SGM_MIN_TOL));
 
     aPoints.clear();
     aTypes.clear();
@@ -2721,9 +2721,9 @@ TEST(math_check, line_torus_intersection)
     SGM::Curve Line2=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line2,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,3U);
-    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D(3.4641016151377545870548926830117,2.0,0.0),SGM_ZERO));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-3.4641016151377545870548926830117,2.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(0.0,2.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[2],SGM::Point3D(3.4641016151377545870548926830117,2.0,0.0),SGM_MIN_TOL));
 
     aPoints.clear();
     aTypes.clear();
@@ -2731,8 +2731,8 @@ TEST(math_check, line_torus_intersection)
     SGM::Curve Line3=SGM::CreateLine(rResult,Origin,Axis);
     nHits=SGM::IntersectCurveAndSurface(rResult,Line3,TorusID,aPoints,aTypes,SGM_MIN_TOL);
     EXPECT_EQ(nHits,2U);
-    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
-    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_ZERO));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[0],SGM::Point3D(-2.6457513110645905905016157536393,3.0,0.0),SGM_MIN_TOL));
+    EXPECT_TRUE(SGM::NearEqual(aPoints[1],SGM::Point3D(2.6457513110645905905016157536393,3.0,0.0),SGM_MIN_TOL));
 
     aPoints.clear();
     aTypes.clear();

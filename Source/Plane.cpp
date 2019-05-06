@@ -108,21 +108,21 @@ void plane::Evaluate(SGM::Point2D const &uv,
     {
     if(Pos)
         {
-        Pos->m_x=m_Origin.m_x+(m_XAxis.m_x*uv.m_u+m_YAxis.m_x*uv.m_v);
-        Pos->m_y=m_Origin.m_y+(m_XAxis.m_y*uv.m_u+m_YAxis.m_y*uv.m_v);
-        Pos->m_z=m_Origin.m_z+(m_XAxis.m_z*uv.m_u+m_YAxis.m_z*uv.m_v);
+        Pos->m_x=m_Origin.m_x+(m_XAxis[0]*uv.m_u+m_YAxis[0]*uv.m_v);
+        Pos->m_y=m_Origin.m_y+(m_XAxis[1]*uv.m_u+m_YAxis[1]*uv.m_v);
+        Pos->m_z=m_Origin.m_z+(m_XAxis[2]*uv.m_u+m_YAxis[2]*uv.m_v);
         }
     if(Du)
         {
-        Du->m_x=m_XAxis.m_x;
-        Du->m_y=m_XAxis.m_y;
-        Du->m_z=m_XAxis.m_z;
+        Du->m_x=m_XAxis[0];
+        Du->m_y=m_XAxis[1];
+        Du->m_z=m_XAxis[2];
         }
     if(Dv)
         {
-        Dv->m_x=m_YAxis.m_x;
-        Dv->m_y=m_YAxis.m_y;
-        Dv->m_z=m_YAxis.m_z;
+        Dv->m_x=m_YAxis[0];
+        Dv->m_y=m_YAxis[1];
+        Dv->m_z=m_YAxis[2];
         }
     if(Norm)
         {
@@ -155,14 +155,14 @@ SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
         double dx=Pos.m_x-m_Origin.m_x;
         double dy=Pos.m_y-m_Origin.m_y;
         double dz=Pos.m_z-m_Origin.m_z;
-        double dU=(dx*m_XAxis.m_x+dy*m_XAxis.m_y+dz*m_XAxis.m_z);
-        double dV=(dx*m_YAxis.m_x+dy*m_YAxis.m_y+dz*m_YAxis.m_z);
+        double dU=(dx*m_XAxis[0]+dy*m_XAxis[1]+dz*m_XAxis[2]);
+        double dV=(dx*m_YAxis[0]+dy*m_YAxis[1]+dz*m_YAxis[2]);
 
         if(ClosePos)
             {
-            ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*dU+m_YAxis.m_x*dV);
-            ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*dU+m_YAxis.m_y*dV);
-            ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*dU+m_YAxis.m_z*dV);
+            ClosePos->m_x=m_Origin.m_x+(m_XAxis[0]*dU+m_YAxis[0]*dV);
+            ClosePos->m_y=m_Origin.m_y+(m_XAxis[1]*dU+m_YAxis[1]*dV);
+            ClosePos->m_z=m_Origin.m_z+(m_XAxis[2]*dU+m_YAxis[2]*dV);
             }
         return {dU,dV};
     }

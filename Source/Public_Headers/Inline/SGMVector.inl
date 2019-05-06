@@ -560,7 +560,7 @@ namespace SGM {
 
     inline UnitVector3D operator-(UnitVector3D const &UVec)
     {
-        return Vector3D(-UVec.m_x,-UVec.m_y,-UVec.m_z);
+        return Vector3D(-UVec[0],-UVec[1],-UVec[2]);
     }
 
     inline Vector2D operator*(double dValue,Vector2D const &Vec)

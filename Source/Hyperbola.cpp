@@ -71,23 +71,23 @@ void hyperbola::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
     if(Pos)
         {
         double y=m_dA*dS;
-        Pos->m_x=m_Center.m_x+m_XAxis.m_x*t+m_YAxis.m_x*y;
-        Pos->m_y=m_Center.m_y+m_XAxis.m_y*t+m_YAxis.m_y*y;
-        Pos->m_z=m_Center.m_z+m_XAxis.m_z*t+m_YAxis.m_z*y;
+        Pos->m_x=m_Center[0]+m_XAxis[0]*t+m_YAxis[0]*y;
+        Pos->m_y=m_Center[1]+m_XAxis[1]*t+m_YAxis[1]*y;
+        Pos->m_z=m_Center[2]+m_XAxis[2]*t+m_YAxis[2]*y;
         }
     if(D1)
         {
         double dy=m_dA*t/(dB2*dS);
-        D1->m_x=m_XAxis.m_x+m_YAxis.m_x*dy;
-        D1->m_y=m_XAxis.m_y+m_YAxis.m_y*dy;
-        D1->m_z=m_XAxis.m_z+m_YAxis.m_z*dy;
+        D1->m_x=m_XAxis[0]+m_YAxis[0]*dy;
+        D1->m_y=m_XAxis[1]+m_YAxis[1]*dy;
+        D1->m_z=m_XAxis[2]+m_YAxis[2]*dy;
         }
     if(D2)
         {
         double ddy=(m_dA*(1.0-t*t/(dR*dB2)))/(dS*dB2);
-        D2->m_x=m_YAxis.m_x*ddy;
-        D2->m_y=m_YAxis.m_y*ddy;
-        D2->m_z=m_YAxis.m_z*ddy;
+        D2->m_x=m_YAxis[0]*ddy;
+        D2->m_y=m_YAxis[1]*ddy;
+        D2->m_z=m_YAxis[2]*ddy;
         }
     }
 

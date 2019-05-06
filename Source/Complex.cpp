@@ -100,7 +100,8 @@ complex::complex(SGM::Result                     &rResult,
 
 complex::complex(SGM::Result                      &rResult,
                  double                            dLength,
-                 std::vector<SGM::Point3D>  const &aPoints) :
+                 std::vector<SGM::Point3D>  const &aPoints,
+                 bool                              bSolid) :
     topology(rResult, SGM::EntityType::ComplexType),
     m_aPoints(),
     m_aSegments(),
@@ -123,31 +124,77 @@ complex::complex(SGM::Result                      &rResult,
         m_aPoints.push_back({Pos.m_x+dHalf,Pos.m_y+dHalf,Pos.m_z+dHalf});
         m_aPoints.push_back({Pos.m_x-dHalf,Pos.m_y+dHalf,Pos.m_z+dHalf});
 
-        m_aSegments.push_back(nCount+0);
-        m_aSegments.push_back(nCount+1);
-        m_aSegments.push_back(nCount+1);
-        m_aSegments.push_back(nCount+2);
-        m_aSegments.push_back(nCount+2);
-        m_aSegments.push_back(nCount+3);
-        m_aSegments.push_back(nCount+3);
-        m_aSegments.push_back(nCount+0);
-        m_aSegments.push_back(nCount+4);
-        m_aSegments.push_back(nCount+5);
-        m_aSegments.push_back(nCount+5);
-        m_aSegments.push_back(nCount+6);
-        m_aSegments.push_back(nCount+6);
-        m_aSegments.push_back(nCount+7);
-        m_aSegments.push_back(nCount+7);
-        m_aSegments.push_back(nCount+4);
-        m_aSegments.push_back(nCount+0);
-        m_aSegments.push_back(nCount+4);
-        m_aSegments.push_back(nCount+1);
-        m_aSegments.push_back(nCount+5);
-        m_aSegments.push_back(nCount+2);
-        m_aSegments.push_back(nCount+6);
-        m_aSegments.push_back(nCount+3);
-        m_aSegments.push_back(nCount+7);
-
+        if(bSolid)
+            {
+            m_aTriangles.push_back(nCount+1);
+            m_aTriangles.push_back(nCount+4);
+            m_aTriangles.push_back(nCount+0);
+            m_aTriangles.push_back(nCount+4);
+            m_aTriangles.push_back(nCount+1);
+            m_aTriangles.push_back(nCount+5);
+                                   
+            m_aTriangles.push_back(nCount+2);
+            m_aTriangles.push_back(nCount+5);
+            m_aTriangles.push_back(nCount+1);
+            m_aTriangles.push_back(nCount+5);
+            m_aTriangles.push_back(nCount+2);
+            m_aTriangles.push_back(nCount+6);
+                                   
+            m_aTriangles.push_back(nCount+3);
+            m_aTriangles.push_back(nCount+6);
+            m_aTriangles.push_back(nCount+2);
+            m_aTriangles.push_back(nCount+6);
+            m_aTriangles.push_back(nCount+3);
+            m_aTriangles.push_back(nCount+7);
+                                   
+            m_aTriangles.push_back(nCount+0);
+            m_aTriangles.push_back(nCount+7);
+            m_aTriangles.push_back(nCount+3);
+            m_aTriangles.push_back(nCount+7);
+            m_aTriangles.push_back(nCount+0);
+            m_aTriangles.push_back(nCount+4);
+                                   
+            m_aTriangles.push_back(nCount+5);
+            m_aTriangles.push_back(nCount+7);
+            m_aTriangles.push_back(nCount+4);
+            m_aTriangles.push_back(nCount+7);
+            m_aTriangles.push_back(nCount+5);
+            m_aTriangles.push_back(nCount+6);
+                                   
+            m_aTriangles.push_back(nCount+3);
+            m_aTriangles.push_back(nCount+1);
+            m_aTriangles.push_back(nCount+0);
+            m_aTriangles.push_back(nCount+1);
+            m_aTriangles.push_back(nCount+3);
+            m_aTriangles.push_back(nCount+2);
+            }
+        else
+            {
+            m_aSegments.push_back(nCount+0);
+            m_aSegments.push_back(nCount+1);
+            m_aSegments.push_back(nCount+1);
+            m_aSegments.push_back(nCount+2);
+            m_aSegments.push_back(nCount+2);
+            m_aSegments.push_back(nCount+3);
+            m_aSegments.push_back(nCount+3);
+            m_aSegments.push_back(nCount+0);
+            m_aSegments.push_back(nCount+4);
+            m_aSegments.push_back(nCount+5);
+            m_aSegments.push_back(nCount+5);
+            m_aSegments.push_back(nCount+6);
+            m_aSegments.push_back(nCount+6);
+            m_aSegments.push_back(nCount+7);
+            m_aSegments.push_back(nCount+7);
+            m_aSegments.push_back(nCount+4);
+            m_aSegments.push_back(nCount+0);
+            m_aSegments.push_back(nCount+4);
+            m_aSegments.push_back(nCount+1);
+            m_aSegments.push_back(nCount+5);
+            m_aSegments.push_back(nCount+2);
+            m_aSegments.push_back(nCount+6);
+            m_aSegments.push_back(nCount+3);
+            m_aSegments.push_back(nCount+7);
+            }
         nCount+=8;
         }
     }
@@ -1550,7 +1597,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_XDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_x<0)
+        if(UpDirection[0]<0)
             {
             std::vector<SGM::Point3D> aPoints = 
                 {
@@ -1577,7 +1624,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_YDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_y<0)
+        if(UpDirection[1]<0)
             {
             std::vector<SGM::Point3D> aPoints =
                 {
@@ -1604,7 +1651,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_ZDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_z<0)
+        if(UpDirection[2]<0)
             {
             std::vector<SGM::Point3D> aPoints =
                 {

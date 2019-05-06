@@ -127,42 +127,43 @@ void cone::Evaluate(SGM::Point2D const &uv,
 
     if(Pos)
         {
-        Pos->m_x=m_Origin.m_x+(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dVScale+m_ZAxis.m_x*dZScale;
-        Pos->m_y=m_Origin.m_y+(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dVScale+m_ZAxis.m_y*dZScale;
-        Pos->m_z=m_Origin.m_z+(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dVScale+m_ZAxis.m_z*dZScale;
+        Pos->m_x=m_Origin[0]+(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dVScale+m_ZAxis[0]*dZScale;
+        Pos->m_y=m_Origin[1]+(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dVScale+m_ZAxis[1]*dZScale;
+        Pos->m_z=m_Origin[2]+(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dVScale+m_ZAxis[2]*dZScale;
         }
     if(Du)
         {
-        Du->m_x=(m_YAxis.m_x*dCosU-m_XAxis.m_x*dSinU)*dVScale;
-        Du->m_y=(m_YAxis.m_y*dCosU-m_XAxis.m_y*dSinU)*dVScale;
-        Du->m_z=(m_YAxis.m_z*dCosU-m_XAxis.m_z*dSinU)*dVScale;
+        Du->m_x=(m_YAxis[0]*dCosU-m_XAxis[0]*dSinU)*dVScale;
+        Du->m_y=(m_YAxis[1]*dCosU-m_XAxis[1]*dSinU)*dVScale;
+        Du->m_z=(m_YAxis[2]*dCosU-m_XAxis[2]*dSinU)*dVScale;
         }
     if(Dv)
         {
         double dDVScale=-m_dRadius*m_dSinHalfAngle;
         double dDZScale=m_dRadius*m_dCosHalfAngle;
-        Dv->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dDVScale+m_ZAxis.m_x*dDZScale;
-        Dv->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dDVScale+m_ZAxis.m_y*dDZScale;
-        Dv->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dDVScale+m_ZAxis.m_z*dDZScale;
+        Dv->m_x=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dDVScale+m_ZAxis[0]*dDZScale;
+        Dv->m_y=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dDVScale+m_ZAxis[1]*dDZScale;
+        Dv->m_z=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dDVScale+m_ZAxis[2]*dDZScale;
         }
     if(Norm)
         {
-        Norm->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*m_dCosHalfAngle+m_ZAxis.m_x*m_dSinHalfAngle;
-        Norm->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*m_dCosHalfAngle+m_ZAxis.m_y*m_dSinHalfAngle;
-        Norm->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*m_dCosHalfAngle+m_ZAxis.m_z*m_dSinHalfAngle;
+        double NormX=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*m_dCosHalfAngle+m_ZAxis[0]*m_dSinHalfAngle;
+        double NormY=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*m_dCosHalfAngle+m_ZAxis[1]*m_dSinHalfAngle;
+        double NormZ=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*m_dCosHalfAngle+m_ZAxis[2]*m_dSinHalfAngle;
+        *Norm = {NormX,NormY,NormZ};
         }
     if(Duu)
         {
-        Duu->m_x=(-m_YAxis.m_x*dSinU-m_XAxis.m_x*dCosU)*dVScale;
-        Duu->m_y=(-m_YAxis.m_y*dSinU-m_XAxis.m_y*dCosU)*dVScale;
-        Duu->m_z=(-m_YAxis.m_z*dSinU-m_XAxis.m_z*dCosU)*dVScale;
+        Duu->m_x=(-m_YAxis[0]*dSinU-m_XAxis[0]*dCosU)*dVScale;
+        Duu->m_y=(-m_YAxis[1]*dSinU-m_XAxis[1]*dCosU)*dVScale;
+        Duu->m_z=(-m_YAxis[2]*dSinU-m_XAxis[2]*dCosU)*dVScale;
         }
     if(Duv)
         {
         double dVScaleD=-m_dRadius*m_dSinHalfAngle;
-        Duv->m_x=(m_YAxis.m_x*dCosU-m_XAxis.m_x*dSinU)*dVScaleD;
-        Duv->m_y=(m_YAxis.m_y*dCosU-m_XAxis.m_y*dSinU)*dVScaleD;
-        Duv->m_z=(m_YAxis.m_z*dCosU-m_XAxis.m_z*dSinU)*dVScaleD;
+        Duv->m_x=(m_YAxis[0]*dCosU-m_XAxis[0]*dSinU)*dVScaleD;
+        Duv->m_y=(m_YAxis[1]*dCosU-m_XAxis[1]*dSinU)*dVScaleD;
+        Duv->m_z=(m_YAxis[2]*dCosU-m_XAxis[2]*dSinU)*dVScaleD;
         }
     if(Dvv)
         {
@@ -207,8 +208,8 @@ SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
     double y=Pos.m_y-m_Origin.m_y;
     double z=Pos.m_z-m_Origin.m_z;
 
-    double dx=x*m_XAxis.m_x+y*m_XAxis.m_y+z*m_XAxis.m_z;
-    double dy=x*m_YAxis.m_x+y*m_YAxis.m_y+z*m_YAxis.m_z;
+    double dx=x*m_XAxis[0]+y*m_XAxis[1]+z*m_XAxis[2];
+    double dy=x*m_YAxis[0]+y*m_YAxis[1]+z*m_YAxis[2];
     double dU=SGM::SAFEatan2(dy,dx);
 
     // Find the closest point to the parameter line at dU.
@@ -218,7 +219,7 @@ SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
     SGM::UnitVector3D LineVec=BasePos-Apex;
     SGM::Point3D LinePos=Apex+LineVec*((Pos-Apex)%LineVec);
     z=LinePos.m_z-m_Origin.m_z;
-    double dz=x*m_ZAxis.m_x+y*m_ZAxis.m_y+z*m_ZAxis.m_z;
+    double dz=x*m_ZAxis[0]+y*m_ZAxis[1]+z*m_ZAxis[2];
 
     double dV=dz/(m_dCosHalfAngle*m_dRadius);
 
@@ -262,9 +263,9 @@ SGM::Point2D cone::Inverse(SGM::Point3D const &Pos,
 
         double dCosU=cos(dU);
         double dSinU=sin(dU);
-        ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dVScale+m_ZAxis.m_x*dZScale;
-        ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dVScale+m_ZAxis.m_y*dZScale;
-        ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dVScale+m_ZAxis.m_z*dZScale;
+        ClosePos->m_x=m_Origin.m_x+(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dVScale+m_ZAxis[0]*dZScale;
+        ClosePos->m_y=m_Origin.m_y+(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dVScale+m_ZAxis[1]*dZScale;
+        ClosePos->m_z=m_Origin.m_z+(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dVScale+m_ZAxis[2]*dZScale;
         }
     return {dU, dV};
     }

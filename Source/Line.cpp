@@ -59,15 +59,15 @@ void line::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D *
     {
     if(Pos)
         {
-        Pos->m_x=m_Origin.m_x+m_Axis.m_x*t;
-        Pos->m_y=m_Origin.m_y+m_Axis.m_y*t;
-        Pos->m_z=m_Origin.m_z+m_Axis.m_z*t;
+        Pos->m_x=m_Origin.m_x+m_Axis[0]*t;
+        Pos->m_y=m_Origin.m_y+m_Axis[1]*t;
+        Pos->m_z=m_Origin.m_z+m_Axis[2]*t;
         }
     if(D1)
         {
-        D1->m_x=m_Axis.m_x;
-        D1->m_y=m_Axis.m_y;
-        D1->m_z=m_Axis.m_z;
+        D1->m_x=m_Axis[0];
+        D1->m_y=m_Axis[1];
+        D1->m_z=m_Axis[2];
         }
     if(D2)
         {
@@ -83,13 +83,13 @@ double line::Inverse(SGM::Point3D const  &Pos,
     {
     SGM::Point3D const &Origin=GetOrigin();
     SGM::UnitVector3D const &Axis=GetAxis();
-    double t=((Pos.m_x-Origin.m_x)*Axis.m_x+(Pos.m_y-Origin.m_y)*Axis.m_y+(Pos.m_z-Origin.m_z)*Axis.m_z);
+    double t=((Pos.m_x-Origin.m_x)*Axis[0]+(Pos.m_y-Origin.m_y)*Axis[1]+(Pos.m_z-Origin.m_z)*Axis[2]);
 
     if(ClosePos)
         {
-        ClosePos->m_x=Origin.m_x+Axis.m_x*t;
-        ClosePos->m_y=Origin.m_y+Axis.m_y*t;
-        ClosePos->m_z=Origin.m_z+Axis.m_z*t;
+        ClosePos->m_x=Origin.m_x+Axis[0]*t;
+        ClosePos->m_y=Origin.m_y+Axis[1]*t;
+        ClosePos->m_z=Origin.m_z+Axis[2]*t;
         }
     return t;
     }

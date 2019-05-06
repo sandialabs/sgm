@@ -140,7 +140,7 @@ bool InAngle(Point2D const &A,
              Point2D const &D)
     {
     UnitVector2D X = B - A;
-    UnitVector2D Y(-X.m_v, X.m_u);
+    UnitVector2D Y(-X[1], X[0]);
     Vector2D DA = D - A;
     double dx = DA % X;
     double dy = DA % Y;

@@ -8,6 +8,7 @@
 #include "Topology.h"
 #include "Intersectors.h"
 #include "Faceter.h"
+#include "Modify.h"
 
 #include <set>
 #include <SGMTransform.h>
@@ -598,11 +599,255 @@ surface *SimplifySurface(SGM::Result       &rResult,
     return nullptr;
     }
 
+bool IsEdgeMergable(edge *pEdge)
+    {
+    if(pEdge->GetFaces().size()==2)
+        {
+        auto iter=pEdge->GetFaces().begin();
+        face *pFace0=*iter;
+        ++iter;
+        face *pFace1=*iter;
+        if(pFace0->GetSurface()->IsSame(pFace1->GetSurface(),SGM_MIN_TOL))
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
+void MergeEdge(SGM::Result &rResult,
+               edge        *pEdge)
+    {
+    // Merge out the edge.
+
+    std::set<vertex *,EntityCompare> sVertices1,sVertices2;
+    if(pEdge->GetStart())
+        {
+        sVertices1.insert(pEdge->GetStart());
+        }
+    if(pEdge->GetEnd())
+        {
+        sVertices1.insert(pEdge->GetEnd());
+        }
+    std::set<face *,EntityCompare> sFaces;
+    FindFaces(rResult,pEdge,sFaces,false);
+    curve *pCurve=pEdge->GetCurve();
+    pEdge->SeverRelations(rResult);
+    rResult.GetThing()->DeleteEntity(pEdge);
+    if(pCurve->GetEdges().empty())
+        {
+        rResult.GetThing()->DeleteEntity(pCurve);
+        }
+    if(sFaces.size()==2)
+        {
+        auto iter=sFaces.begin();
+        face *pFace1=*iter;
+        ++iter;
+        face *pFace2=*iter;
+        MergeFaces(rResult,pFace1,pFace2);
+        }
+
+    // Remove vertices that are no longer needed.
+
+    for(auto pVertex : sVertices1)
+        {
+        if(pVertex->IsTopLevel())
+            {
+            rResult.GetThing()->DeleteEntity(pVertex);
+            }
+        else 
+            {
+            sVertices2.insert(pVertex);
+            }
+        }
+
+    // Check for vertices with less than three edges that can be merged out.
+    
+    std::set<edge *,EntityCompare> sFixEdges;
+    for(auto pVertex : sVertices2)
+        {
+        std::set<edge *,EntityCompare> const &sVertexEdges=pVertex->GetEdges();
+        if(sVertexEdges.size()==1)
+            {
+            edge *pEdge0=*(sVertexEdges.begin());
+            if(pEdge0->GetCurve()->GetClosed())
+                {
+                pEdge0->SetStart(rResult,nullptr);
+                pEdge0->SetEnd(rResult,nullptr);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                sFixEdges.insert(pEdge0);
+                }
+            }
+        else if(sVertexEdges.size()==2)
+            {
+            edge *pEdge0=*(sVertexEdges.begin());
+            edge *pEdge1=*(++sVertexEdges.begin());
+            if(pEdge0->GetCurve()->IsSame(pEdge1->GetCurve(),SGM_MIN_TOL))
+                {
+                if(pEdge0->GetStart()==pVertex)
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        pEdge0->SetStart(rResult,pEdge1->GetEnd());
+                        }
+                    else
+                        {
+                        pEdge0->SetStart(rResult,pEdge1->GetStart());
+                        }
+                    }
+                else
+                    {
+                    if(pEdge1->GetStart()==pVertex)
+                        {
+                        pEdge0->SetEnd(rResult,pEdge1->GetEnd());
+                        }
+                    else
+                        {
+                        pEdge0->SetEnd(rResult,pEdge1->GetStart());
+                        }
+                    }
+                curve *pCurve=pEdge1->GetCurve();
+                pEdge1->SeverRelations(rResult);
+                if(pCurve->IsTopLevel())
+                    {
+                    rResult.GetThing()->DeleteEntity(pCurve);
+                    }
+                rResult.GetThing()->DeleteEntity(pEdge1);
+                pVertex->SeverRelations(rResult);
+                rResult.GetThing()->DeleteEntity(pVertex);
+                sFixEdges.insert(pEdge0);
+                sFixEdges.erase(pEdge1);
+                }
+            }
+        }
+    for(auto pEdge : sFixEdges)
+        {
+        pEdge->FixDomain(rResult);
+        }
+    }
+
+void RemoveSliver(SGM::Result &rResult,
+                  face        *pFace,
+                  vertex      *pVertex,
+                  edge        *pEdge)
+    {
+    if(IsEdgeMergable(pEdge))
+        {
+        MergeEdge(rResult,pEdge);
+        }
+    else
+        {
+        vertex *pA=pEdge->GetStart();
+        vertex *pB=pEdge->GetEnd();
+        SGM::Point3D CPos;
+        pEdge->GetCurve()->Inverse(pVertex->GetPoint(),&CPos);
+        ImprintPointOnEdge(rResult,CPos,pEdge);
+        vertex *pNewVertex=pEdge->GetEnd();
+        MergeVertices(rResult,pVertex,pNewVertex);
+        std::vector<edge *> aEdgesA,aEdgesB;
+        FindEdgesOnFaceAtVertex(rResult,pA,pFace,aEdgesA);
+        FindEdgesOnFaceAtVertex(rResult,pB,pFace,aEdgesB);
+        std::set<curve *,EntityCompare> sDeleteCurves1,sDeleteCurves2;
+        MergeEdges(rResult,aEdgesA[0],aEdgesA[1],sDeleteCurves1);
+        MergeEdges(rResult,aEdgesB[0],aEdgesB[1],sDeleteCurves2);
+        surface *pSurf=pFace->GetSurface();
+        pFace->SeverRelations(rResult);
+        rResult.GetThing()->DeleteEntity(pFace);
+        if(pSurf->GetFaces().empty())
+            {
+            rResult.GetThing()->DeleteEntity(pSurf);
+            }
+        for(auto pCurve : sDeleteCurves1)
+            {
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
+        for(auto pCurve : sDeleteCurves2)
+            {
+            rResult.GetThing()->DeleteEntity(pCurve);
+            }
+        }
+    }
+
+void RemoveSliver(SGM::Result &rResult,
+                  face        *pFace,
+                  vertex      *pVertex)
+    {
+    std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
+    auto iter=sEdges.begin();
+    edge *pEdge0=*iter;
+    ++iter;
+    edge *pEdge1=*iter;
+    ++iter;
+    edge *pEdge2=*iter;
+
+    if(pEdge0->GetStart()!=pVertex && pEdge0->GetEnd()!=pVertex)
+        {
+        RemoveSliver(rResult,pFace,pVertex,pEdge0);
+        }
+    else if(pEdge1->GetStart()!=pVertex && pEdge1->GetEnd()!=pVertex)
+        {
+        RemoveSliver(rResult,pFace,pVertex,pEdge1);
+        }
+    else
+        {
+        RemoveSliver(rResult,pFace,pVertex,pEdge2);
+        }
+    }
+
 void RemoveSliver(SGM::Result &rResult,
                   face        *pFace)
     {
     std::set<edge *,EntityCompare> const &sEdges=pFace->GetEdges();
-    if(sEdges.size()==2)
+    auto sVertices=pFace->GetVertices();
+    if(sVertices.size()==3)
+        {
+        auto iter=sVertices.begin();
+        vertex *pVertex0=*iter;
+        ++iter;
+        vertex *pVertex1=*iter;
+        ++iter;
+        vertex *pVertex2=*iter;
+
+        SGM::Point3D A=pVertex0->GetPoint();
+        SGM::Point3D B=pVertex1->GetPoint();
+        SGM::Point3D C=pVertex2->GetPoint();
+
+        SGM::UnitVector3D BA=B-A,CA=C-A;
+        double dA=BA.Angle(CA);
+        SGM::UnitVector3D AB=A-B,CB=C-B;
+        double dB=AB.Angle(CB);
+        SGM::UnitVector3D AC=A-C,BC=B-C;
+        double dC=AC.Angle(BC);
+
+        if(2.8274333882308139146163790449516<dA)  // 160 degrees.
+            {
+            RemoveSliver(rResult,pFace,pVertex0);
+            }
+        else if(2.8274333882308139146163790449516<dB)  // 160 degrees.
+            {
+            RemoveSliver(rResult,pFace,pVertex1);
+            }
+        else if(2.8274333882308139146163790449516<dC)  // 160 degrees.
+            {
+            RemoveSliver(rResult,pFace,pVertex2);
+            }
+        else if(dA<0.34906585039886591538473815369772)  // 20 degree.
+            {
+            int a=0;
+            a*=1;
+            }
+        else if(dB<0.34906585039886591538473815369772)  // 20 degree.
+            {
+            int a=0;
+            a*=1;
+            }
+        else if(dC<0.34906585039886591538473815369772)  // 20 degree.
+            {
+            int a=0;
+            a*=1;
+            }
+        }
+    else if(sEdges.size()==2)
         {
         auto iter=sEdges.begin();
         edge *pEdge0=*iter;
@@ -988,7 +1233,7 @@ void Heal(SGM::Result           &rResult,
             FindFaces(rResult,pEntity,sFaces);
             for(auto pFace : sFaces)
                 {
-                if(pFace->IsSliver())
+                if(pFace->IsSliver(rResult))
                     {
                     ++nSlivers;
                     RemoveSliver(rResult,pFace);

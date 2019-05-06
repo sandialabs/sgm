@@ -119,56 +119,53 @@ void torus::Evaluate(SGM::Point2D const &uv,
     if(Pos)
         {
         double dSM=dSinV*m_dMinorRadius;
-        Pos->m_x=m_Center.m_x+(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dMCV+m_ZAxis.m_x*dSM;
-        Pos->m_y=m_Center.m_y+(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dMCV+m_ZAxis.m_y*dSM;
-        Pos->m_z=m_Center.m_z+(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dMCV+m_ZAxis.m_z*dSM;
+        Pos->m_x=m_Center.m_x+(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dMCV+m_ZAxis[0]*dSM;
+        Pos->m_y=m_Center.m_y+(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dMCV+m_ZAxis[1]*dSM;
+        Pos->m_z=m_Center.m_z+(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dMCV+m_ZAxis[2]*dSM;
         }
     if(Du)
         {
-        Du->m_x=(m_YAxis.m_x*dCosU-m_XAxis.m_x*dSinU)*dMCV;
-        Du->m_y=(m_YAxis.m_y*dCosU-m_XAxis.m_y*dSinU)*dMCV;
-        Du->m_z=(m_YAxis.m_z*dCosU-m_XAxis.m_z*dSinU)*dMCV;
+        Du->m_x=(m_YAxis[0]*dCosU-m_XAxis[0]*dSinU)*dMCV;
+        Du->m_y=(m_YAxis[1]*dCosU-m_XAxis[1]*dSinU)*dMCV;
+        Du->m_z=(m_YAxis[2]*dCosU-m_XAxis[2]*dSinU)*dMCV;
         }
     if(Dv)
         {
         double dVdMCV=-dSinV*m_dMinorRadius;
         double dVdSM=dCosVMR;
-        Dv->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dVdMCV+m_ZAxis.m_x*dVdSM;
-        Dv->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dVdMCV+m_ZAxis.m_y*dVdSM;
-        Dv->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dVdMCV+m_ZAxis.m_z*dVdSM;
+        Dv->m_x=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dVdMCV+m_ZAxis[0]*dVdSM;
+        Dv->m_y=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dVdMCV+m_ZAxis[1]*dVdSM;
+        Dv->m_z=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dVdMCV+m_ZAxis[2]*dVdSM;
         }
     if(Norm)
         {
         double dCM=dCosVMR;
         double dSM=dSinV*m_dMinorRadius;
-        Norm->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*dCM+m_ZAxis.m_x*dSM;
-        Norm->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*dCM+m_ZAxis.m_y*dSM;
-        Norm->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*dCM+m_ZAxis.m_z*dSM;
-        double dScale=1.0/sqrt(Norm->m_x*Norm->m_x+Norm->m_y*Norm->m_y+Norm->m_z*Norm->m_z);
-        Norm->m_x*=dScale;
-        Norm->m_y*=dScale;
-        Norm->m_z*=dScale;
+        double dNormX=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dCM+m_ZAxis[0]*dSM;
+        double dNormY=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dCM+m_ZAxis[1]*dSM;
+        double dNormZ=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dCM+m_ZAxis[2]*dSM;
+        *Norm = {dNormX,dNormY,dNormZ};
         }
     if(Duu)
         {
-        Duu->m_x=(-m_YAxis.m_x*dSinU-m_XAxis.m_x*dCosU)*dMCV;
-        Duu->m_y=(-m_YAxis.m_y*dSinU-m_XAxis.m_y*dCosU)*dMCV;
-        Duu->m_z=(-m_YAxis.m_z*dSinU-m_XAxis.m_z*dCosU)*dMCV;
+        Duu->m_x=(-m_YAxis[0]*dSinU-m_XAxis[0]*dCosU)*dMCV;
+        Duu->m_y=(-m_YAxis[1]*dSinU-m_XAxis[1]*dCosU)*dMCV;
+        Duu->m_z=(-m_YAxis[2]*dSinU-m_XAxis[2]*dCosU)*dMCV;
         }
     if(Duv)
         {
         double dVdMCV=-dSinV*m_dMinorRadius;
-        Duv->m_x=(m_YAxis.m_x*dCosU-m_XAxis.m_x*dSinU)*dVdMCV;
-        Duv->m_y=(m_YAxis.m_y*dCosU-m_XAxis.m_y*dSinU)*dVdMCV;
-        Duv->m_z=(m_YAxis.m_z*dCosU-m_XAxis.m_z*dSinU)*dVdMCV;
+        Duv->m_x=(m_YAxis[0]*dCosU-m_XAxis[0]*dSinU)*dVdMCV;
+        Duv->m_y=(m_YAxis[1]*dCosU-m_XAxis[1]*dSinU)*dVdMCV;
+        Duv->m_z=(m_YAxis[2]*dCosU-m_XAxis[2]*dSinU)*dVdMCV;
         }
     if(Dvv)
         {
         double ddVdMCV=-dCosVMR;
         double ddVdSM=-dSinV*m_dMinorRadius;
-        Dvv->m_x=(m_XAxis.m_x*dCosU+m_YAxis.m_x*dSinU)*ddVdMCV+m_ZAxis.m_x*ddVdSM;
-        Dvv->m_y=(m_XAxis.m_y*dCosU+m_YAxis.m_y*dSinU)*ddVdMCV+m_ZAxis.m_y*ddVdSM;
-        Dvv->m_z=(m_XAxis.m_z*dCosU+m_YAxis.m_z*dSinU)*ddVdMCV+m_ZAxis.m_z*ddVdSM;
+        Dvv->m_x=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*ddVdMCV+m_ZAxis[0]*ddVdSM;
+        Dvv->m_y=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*ddVdMCV+m_ZAxis[1]*ddVdSM;
+        Dvv->m_z=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*ddVdMCV+m_ZAxis[2]*ddVdSM;
         }
     }
 
@@ -182,8 +179,8 @@ SGM::Point2D torus::Inverse(SGM::Point3D const &Pos,
     double y=Pos.m_y-m_Center.m_y;
     double z=Pos.m_z-m_Center.m_z;
 
-    double dUx=x*m_XAxis.m_x+y*m_XAxis.m_y+z*m_XAxis.m_z;
-    double dUy=x*m_YAxis.m_x+y*m_YAxis.m_y+z*m_YAxis.m_z;
+    double dUx=x*m_XAxis[0]+y*m_XAxis[1]+z*m_XAxis[2];
+    double dUy=x*m_YAxis[0]+y*m_YAxis[1]+z*m_YAxis[2];
     double dU=SGM::SAFEatan2(dUy,dUx);
 
     // Find the v value.
@@ -193,11 +190,11 @@ SGM::Point2D torus::Inverse(SGM::Point3D const &Pos,
         {
         Spoke.Negate();
         }
-    double cx=Pos.m_x-m_Center.m_x-Spoke.m_x*m_dMajorRadius;
-    double cy=Pos.m_y-m_Center.m_y-Spoke.m_y*m_dMajorRadius;
-    double cz=Pos.m_z-m_Center.m_z-Spoke.m_z*m_dMajorRadius;
-    double dVx=cx*Spoke.m_x+cy*Spoke.m_y+cz*Spoke.m_z;
-    double dVy=cx*m_ZAxis.m_x+cy*m_ZAxis.m_y+cz*m_ZAxis.m_z;
+    double cx=Pos.m_x-m_Center.m_x-Spoke[0]*m_dMajorRadius;
+    double cy=Pos.m_y-m_Center.m_y-Spoke[1]*m_dMajorRadius;
+    double cz=Pos.m_z-m_Center.m_z-Spoke[2]*m_dMajorRadius;
+    double dVx=cx*Spoke[0]+cy*Spoke[1]+cz*Spoke[2];
+    double dVy=cx*m_ZAxis[0]+cy*m_ZAxis[1]+cz*m_ZAxis[2];
     double dV=SGM::SAFEatan2(dVy,dVx);
 
     // Adjust to the domain.

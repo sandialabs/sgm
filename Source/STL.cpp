@@ -81,7 +81,7 @@ void SaveSTL(SGM::Result                  &rResult,
             SGM::Point3D const &B=aPoints[b];
             SGM::Point3D const &C=aPoints[c];
             SGM::UnitVector3D Norm=(B-A)*(C-A);
-            fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm.m_x,Norm.m_y,Norm.m_z);
+            fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm[0],Norm[1],Norm[2]);
             fprintf(pFile,"      outer loop\n");
             fprintf(pFile,"         vertex %lf %lf %lf\n",A.m_x,A.m_y,A.m_z);
             fprintf(pFile,"         vertex %lf %lf %lf\n",B.m_x,B.m_y,B.m_z);
@@ -118,7 +118,7 @@ void SaveSTL(SGM::Result                  &rResult,
                 SGM::Point3D const &B=aPoints[b];
                 SGM::Point3D const &C=aPoints[c];
                 SGM::UnitVector3D Norm=(B-A)*(C-A);
-                fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm.m_x,Norm.m_y,Norm.m_z);
+                fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm[0],Norm[1],Norm[2]);
                 fprintf(pFile,"      outer loop\n");
                 fprintf(pFile,"         vertex %lf %lf %lf\n",A.m_x,A.m_y,A.m_z);
                 fprintf(pFile,"         vertex %lf %lf %lf\n",B.m_x,B.m_y,B.m_z);
@@ -147,7 +147,7 @@ void SaveSTL(SGM::Result                  &rResult,
                 SGM::Point2D const &B=aPoints[b];
                 SGM::Point2D const &C=aPoints[c];
                 SGM::UnitVector3D Norm(0,0,1);
-                fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm.m_x,Norm.m_y,Norm.m_z);
+                fprintf(pFile,"   facet normal %lf %lf %lf\n",Norm[0],Norm[1],Norm[2]);
                 fprintf(pFile,"      outer loop \n");
                 fprintf(pFile,"         vertex %lf %lf %lf\n",A.m_u,A.m_v,0.0);
                 fprintf(pFile,"         vertex %lf %lf %lf\n",B.m_u,B.m_v,0.0);
