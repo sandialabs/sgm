@@ -614,9 +614,7 @@ bool PointInVolume(SGM::Result        &rResult,
     if(rResult.GetDebugFlag()==6)
         {
         std::vector<double> aData=rResult.GetDebugData();
-        Axis.m_x=aData[0];
-        Axis.m_y=aData[1];
-        Axis.m_z=aData[2];
+        Axis=SGM::UnitVector3D(aData[0],aData[1],aData[2]);
         rResult.SetDebugFlag(0);
         }
     while(bFound)
@@ -628,6 +626,10 @@ bool PointInVolume(SGM::Result        &rResult,
             {
             aHitFacesTree.clear();
             bIsRayExpensive=IsRayExpensive(rResult,Point,Axis,pVolume,aHitFacesTree);
+            if(nCountRayExpensive<=12) // PRS Show Kevin This Code 
+                {
+                break;
+                }
             if (bIsRayExpensive)
                 {
                 Axis=SGM::UnitVector3D(cos(nCount),sin(nCount),cos(nCount+17));
@@ -635,10 +637,6 @@ bool PointInVolume(SGM::Result        &rResult,
                 ++nCountRayExpensive;
                 }
             }
-//        if(rResult.GetDebugFlag()==6)
-//            {
-//            rResult.SetDebugData({Axis.m_x, Axis.m_y, Axis.m_z});
-//            }
         std::vector<face*> aHitsFaces;
         for (void const* pVoid : aHitFacesTree)
             {
@@ -688,7 +686,7 @@ bool PointInVolume(SGM::Result        &rResult,
                     }
                 if(20<nBadRays)
                     {
-                    return true;
+                    return PointInVolume(Point,aPoints[0],aEntity[0]);
                     }
                 Axis=SGM::UnitVector3D (cos(nCount),sin(nCount),cos(nCount+17));
                 ++nCount;

@@ -654,6 +654,7 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
             {
             aPoints.clear();
             aTypes.clear();
+            aEntities.clear();
             return 0;    
             }
         // only one point was given, and it was valid, so no need to do anything
@@ -678,10 +679,12 @@ size_t OrderAndRemoveDuplicates(SGM::Point3D                 const &Origin,
         aTempEntities.push_back(aEntities[aParams[0].second]);
 
         double dLastParam=aParams[0].first;
+        entity *pLastEnt=aEntities[aParams[0].second];
         for(size_t Index1=1;Index1<nGoodHits;++Index1)
             {
-            if(dTolerance<aParams[Index1].first-dLastParam)
+            if(dTolerance<aParams[Index1].first-dLastParam || aEntities[aParams[Index1].second]!=pLastEnt)
                 {
+                pLastEnt=aEntities[aParams[Index1].second];
                 dLastParam=aParams[Index1].first;
                 aTempPoints.push_back(aPoints[aParams[Index1].second]);
                 aTempTypes .push_back(aTypes[aParams[Index1].second]);
@@ -2246,18 +2249,36 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     double dMajorRadius=pTorus->m_dMajorRadius;
     double dMinorRadius=pTorus->m_dMinorRadius;
 
-    size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,Center,XVec,YVec,ZVec,dMinorRadius,dMajorRadius,dTolerance,aPoints,aTypes);
+    std::vector<SGM::Point3D> aTempPoints;
+    std::vector<SGM::IntersectionType> aTempTypes;
+    size_t nHits=IntersectLineAndTorus(Origin,Axis,Domain,Center,XVec,YVec,ZVec,dMinorRadius,dMajorRadius,dTolerance,aTempPoints,aTempTypes);
 
     size_t Index1;
+    size_t nAnswer=0;
     for(Index1=0;Index1<nHits;++Index1)
         {
-        SGM::Point3D Pos=aPoints[Index1];
+        SGM::Point3D Pos=aTempPoints[Index1];
         Pos*=Trans;
         SGM::Point3D SnappedPos;
         pTorus->Inverse(Pos,&SnappedPos);
-        aPoints[Index1]=SnappedPos;
+        if(pTorus->GetType()!=SGM::TorusKindType::DonutType)
+            {
+            double dDist=Pos.Distance(SnappedPos);
+            if(dDist<SGM_MIN_TOL)
+                {
+                ++nAnswer;
+                aPoints.push_back(Pos);
+                aTypes.push_back(aTempTypes[Index1]);
+                }
+            }
+        else
+            {
+            ++nAnswer;
+            aPoints.push_back(Pos);
+            aTypes.push_back(aTempTypes[Index1]);
+            }
         }
-    return nHits;
+    return nAnswer;
     }
 
 size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
@@ -2364,9 +2385,9 @@ size_t IntersectLineAndNUBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNUBSurface->Inverse(Pos);
-            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
+            if(aPoints.empty() || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
                 {
-                double t=(Origin-Pos)%Axis;
+                double t=(Pos-Origin)%Axis;
                 if(Domain.InInterior(t,dTolerance))
                     {
                     ++nAnswer;
@@ -2493,7 +2514,7 @@ size_t IntersectLineAndNURBSurface(SGM::Point3D                 const &Origin,
             {
             SGM::Point3D const &Pos=aRefinedPoints[Index1].second;
             SGM::Point2D uv=pNURBSurface->Inverse(Pos);
-            if(Index1==0 || (aPoints.size() && dDuplicatesTolerance<Pos.Distance(aPoints.back())))
+            if(aPoints.empty() || dDuplicatesTolerance<Pos.Distance(aPoints.back()))
                 {
                 double t=(Pos-Origin)%Axis;
                 if(Domain.InInterval(t,dTolerance))

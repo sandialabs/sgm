@@ -591,7 +591,8 @@ class complex : public topology
 
         complex(SGM::Result                      &rResult,
                 double                            dLength,
-                std::vector<SGM::Point3D>  const &aPoints);     // Create coordinate aligned boxes at each point.
+                std::vector<SGM::Point3D>  const &aPoints,
+                bool                              bSolid);     // Create coordinate aligned boxes at each point.
 
         complex() = delete;
 
@@ -1057,10 +1058,12 @@ class face : public topology
         // Returns a number from zero to one that tells how much of a sliver 
         // this face is.  Zero is a zero area sliver and one is a fat circle.
 
-        bool IsSliver() const;
-
         double SliverValue(SGM::Result &rResult) const;
 
+        // Returns true if the face is a very small sliver that can be removed.
+
+        bool IsSliver(SGM::Result &rResult) const;
+        
         bool IsTight(SGM::Result &rResult) const;
 
         bool IsParametricRectangle(SGM::Result &rResult,double dPercentTol) const;
@@ -1068,6 +1071,9 @@ class face : public topology
         SGM::BoxTree const &GetFacetTree(SGM::Result &rResult) const;
 
         SGM::Interval2D const &GetUVBox(SGM::Result &rResult) const;
+
+        void SetSeamType(edge        const *pEdge,
+                         SGM::EdgeSeamType  nSeamType) const;
 
     private:
         
@@ -1170,6 +1176,10 @@ class edge : public topology
         vertex *GetStart() const {return m_pStart;}
 
         vertex *GetEnd() const {return m_pEnd;}
+
+        SGM::UnitVector3D GetStartDirection() const;
+
+        SGM::UnitVector3D GetEndDirection() const;
 
         curve *GetCurve() const {return m_pCurve;}
 
@@ -1305,6 +1315,10 @@ class vertex : public topology
         double Snap(SGM::Result &rResult);
         
         double GetTolerance() const;
+
+        // Returns the smallest angle between two of its edges.
+
+        double CuspValue() const;
 
     private:
 

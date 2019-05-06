@@ -238,9 +238,10 @@ SGM::Complex SGM::CreateComplex(SGM::Result       &rResult,
 
 SGM::Complex SGM::CreateVoxels(SGM::Result                     &rResult,
                                std::vector<SGM::Point3D> const &aPoints,
-                               double                           dLength)
+                               double                           dLength,
+                               bool                             bSolid)
     {
-    SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,dLength,aPoints);
+    SGMInternal::complex *pComplex=new SGMInternal::complex(rResult,dLength,aPoints,bSolid);
     return SGM::Complex(pComplex->GetID());
     }
 

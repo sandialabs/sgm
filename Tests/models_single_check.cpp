@@ -12,6 +12,7 @@
 #include "SGMPrimitives.h"
 #include "SGMTranslators.h"
 #include "SGMModify.h"
+#include "SGMGeometry.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -239,93 +240,164 @@ TEST(speed_check, DISABLED_single_point_in_volume)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    const char* file_name = "OUO_full_model_volume1.stp";
+    //const char* file_name = "OUO_full_model_volume1.stp";
+    //SCOPED_TRACE(file_name); 
+    //expect_import_ouo_check_success(file_name);
+
+    const char* file_name = "Matt/FifthWheelWheel.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_success(file_name, rResult);
 
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
-    SGM::Point3D Pos({  -2.12188175555481,   2.08149612408045,  -4.38225209694569});
-    bool bInside=SGM::PointInEntity(rResult,Pos,VolumeID);
-    
-    //SGM::UnitVector3D Vec({-0.29592680695935403,0.64661186981388485,0.70307923788050575});
-    //SGM::CreateLinearEdge(rResult,Pos,Pos+10*Vec);
+    SGM::Point3D Pos({  -4.25052492890367,  -11.3566388529556,  -5.69296617184733});
+    bool bInside1=SGM::PointInEntity(rResult,Pos,VolumeID);
+
+    rResult.SetDebugFlag(6);
+    std::vector<double> aData;
+    aData.push_back(1);
+    aData.push_back(1);
+    aData.push_back(1);
+    rResult.SetDebugData(aData);
+
+    bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID); 
+
+    SGM::UnitVector3D Vec({1,1,1});
+    SGM::CreateLinearEdge(rResult,Pos,Pos+20*Vec);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
     Bounds.Extend(Bounds.m_XDomain.Length()*0.2);
-
     size_t nSize=100;
     double dLength=Bounds.m_XDomain.Length()/nSize;
 
     std::vector<SGM::Point3D> aPoints({Pos});
-    if(bInside)
+    if(bInside1!=bInside2)
         {
-        SGM::CreateVoxels(rResult,aPoints,dLength);
-        SGM::CreatePoints(rResult,aPoints);
+        SGM::CreateVoxels(rResult,aPoints,dLength,false);
         }
 
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, blueberry_search)
+TEST(speed_check, DISABLED_blueberry_search)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    const char* file_name = "OUO_full_model_volume1.stp";
+    //const char* file_name = "OUO_full_model_volume1.stp";
+    //SCOPED_TRACE(file_name); 
+    //expect_import_ouo_check_success(file_name);
+
+    const char* file_name = "Matt/FifthWheelWheel.stp";
     SCOPED_TRACE(file_name);
-    expect_import_ouo_check_success(file_name);
+    expect_import_success(file_name, rResult);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
     Bounds.Extend(Bounds.m_XDomain.Length()*0.2);
 
-    size_t nSize=100;
-    double dLength=Bounds.m_XDomain.Length()/nSize;
-    double dX=Bounds.m_XDomain.Length();
-    double dY=Bounds.m_YDomain.Length();
-    double dZ=Bounds.m_ZDomain.Length();
-    SGM::Vector3D XVec(dLength,0,0),YVec(0,dLength,0),ZVec(0,0,dLength);
-    SGM::Point3D Origin=Bounds.MidPoint(0,0,0);
+    std::vector<SGM::Point3D> aTestPoints={
+{  -4.25052492890367,  -11.3566388529556,  -5.69296617184733},
+{  -3.86411357173061,  -10.9702274957825,  -5.30655481467427},
+{  -3.47770221455755,  -10.5838161386095,  -4.92014345750121},
+{  -3.09129085738449,  -10.1974047814364,  -4.53373210032814},
+{  -2.70487950021143, -0.923532209282961,  -5.69296617184733},
+{  -2.31846814303836, -0.537120852109897,  -5.30655481467427},
+{   -1.9320567858653, -0.150709494936837,  -4.92014345750121},
+{  -1.54564542869224,  0.235701862236223,  -4.53373210032814},
+{  -1.15923407151918,  0.622113219409286,  -4.14732074315508},
+{  -0.77282271434612,   1.00852457658235,  -3.76090938598202},
+{  -0.38641135717306,   1.39493593375541,  -3.37449802880896},
+{                  0,   1.78134729092847,   -2.9880866716359},
+{  0.386411357173063,   2.16775864810153,  -2.60167531446284},
+{  0.772822714346123,   2.55417000527459,  -2.21526395728978},
+{   1.15923407151918,  -11.3566388529556,  -5.69296617184733},
+{   1.54564542869224,  -10.9702274957825,  -5.30655481467427},
+{   1.93205678586531,  -10.5838161386095,  -4.92014345750121},
+{   2.31846814303837,  -10.1974047814364,  -4.53373210032814}
+        };
+    
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
-    std::vector<SGM::Point3D> aPoints;
-    for(size_t nX=0;nX*dLength<dX;++nX)
+    std::vector<SGM::Point3D> aBlue;
+    
+    for(auto Pos : aTestPoints)
         {
-        std::cout << nX << " ";
-        for(size_t nY=0;nY*dLength<dY;++nY)
+        bool bHit1=PointInEntity(rResult,Pos,VolumeID);
+        rResult.SetDebugFlag(6);
+        std::vector<double> aData;
+        aData.push_back(1);
+        aData.push_back(1);
+        aData.push_back(1);
+        rResult.SetDebugData(aData);
+        bool bHit2=PointInEntity(rResult,Pos,VolumeID);
+        rResult.SetDebugFlag(0);
+        if(bHit1!=bHit2)
             {
-            for(size_t nZ=0;nZ*dLength<dZ;++nZ)
-                {
-                SGM::Point3D Pos=Origin+(double)nX*XVec+(double)nY*YVec+(double)nZ*ZVec;
-                rResult.SetDebugFlag(7);
-                bool bHit1=PointInEntity(rResult,Pos,VolumeID);
-                rResult.SetDebugFlag(6);
-                std::vector<double> aData=rResult.GetDebugData();
-                aData[0]*=-1;
-                aData[1]*=-1;
-                aData[2]*=-1;
-                rResult.SetDebugData(aData);
-                bool bHit2=PointInEntity(rResult,Pos,VolumeID);
-                rResult.SetDebugFlag(0);
-                if(bHit1 && bHit1!=bHit2)
-                    {
-                    aPoints.push_back(Pos);
-                    }
-                }
+            aBlue.push_back(Pos);
             }
         }
+    size_t nSize=100;
+    double dLength=Bounds.m_XDomain.Length()/nSize;
+
+    //size_t nSize=100;
+    //double dLength=Bounds.m_XDomain.Length()/nSize;
+    //double dX=Bounds.m_XDomain.Length();
+    //double dY=Bounds.m_YDomain.Length();
+    //double dZ=Bounds.m_ZDomain.Length();
+    //SGM::Vector3D XVec(dLength,0,0),YVec(0,dLength,0),ZVec(0,0,dLength);
+    //SGM::Point3D Origin=Bounds.MidPoint(0,0,0);
+    //std::set<SGM::Volume> sVolumes;
+    //SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    //SGM::Volume VolumeID = *(sVolumes.begin());
+    //std::vector<SGM::Point3D> aPoints,aBlue;
+    //std::cout << dX/dLength << " " << dY/dLength << " " << dZ/dLength << "\n";
+    //for(size_t nX=11;nX*dLength<dX;++nX)
+    //    {
+    //    std::cout << "\n[" << nX << "]\n";
+    //    for(size_t nY=0;nY*dLength<dY;++nY)
+    //        {
+    //        std::cout << nY << " ";
+    //        for(size_t nZ=0;nZ*dLength<dZ;++nZ)
+    //            {
+    //            //std::cout << "[" << nX << "," << nY << "," << nZ << "] ";
+    //            SGM::Point3D Pos=Origin+(double)nX*XVec+(double)nY*YVec+(double)nZ*ZVec;
+    //            bool bHit1=PointInEntity(rResult,Pos,VolumeID);
+    //            if(bHit1)
+    //                {
+    //                aPoints.push_back(Pos);
+    //                }
+    //            rResult.SetDebugFlag(6);
+    //            std::vector<double> aData;
+    //            aData.push_back(1);
+    //            aData.push_back(1);
+    //            aData.push_back(1);
+    //            rResult.SetDebugData(aData);
+    //            bool bHit2=PointInEntity(rResult,Pos,VolumeID);
+    //            rResult.SetDebugFlag(0);
+    //            
+    //            if(bHit1!=bHit2)
+    //                {
+    //                aBlue.push_back(Pos);
+    //                std::cout << std::setprecision(15);
+    //                std::cout << "{" << std::setw(19) << Pos.m_x << "," << std::setw(19) << Pos.m_y <<  "," << std::setw(19) << Pos.m_z << "},\n";
+    //                }
+    //            }
+    //        }
+    //    }
+
     std::cout << std::setprecision(15);
     std::cout << "\n";
-    for(auto Pos : aPoints)
+    for(auto Pos : aBlue)
         {
         std::cout << "{" << std::setw(19) << Pos.m_x << "," << std::setw(19) << Pos.m_y <<  "," << std::setw(19) << Pos.m_z << "},\n";
         }
-    std::cout << aPoints.size();
+    std::cout << "Total " << aBlue.size();
 
-    SGM::CreateVoxels(rResult,aPoints,dLength);
+    //SGM::CreateVoxels(rResult,aPoints,dLength,true);
+    SGM::CreateVoxels(rResult,aBlue,dLength,true);
 
     SGMTesting::ReleaseTestThing(pThing);
     }

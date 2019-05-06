@@ -265,6 +265,20 @@ void edge::SetEnd(SGM::Result &rResult,
     ResetBox(rResult);
     }
 
+SGM::UnitVector3D edge::GetStartDirection() const
+    {
+    SGM::Vector3D Vec;
+    m_pCurve->Evaluate(m_Domain.m_dMin,nullptr,&Vec);
+    return Vec;
+    }
+
+SGM::UnitVector3D edge::GetEndDirection() const
+    {
+    SGM::Vector3D Vec;
+    m_pCurve->Evaluate(m_Domain.m_dMax,nullptr,&Vec);
+    return Vec;
+    }
+
 SGM::Interval1D const &edge::GetDomain() const 
     {
     if(m_Domain.IsEmpty())

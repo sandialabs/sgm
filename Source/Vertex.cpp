@@ -173,6 +173,45 @@ double vertex::Snap(SGM::Result &rResult)
     return dAnswer;
     }
 
+double vertex::CuspValue() const
+    {
+    double dAnswer=10;
+    for(auto pEdge0 : m_sEdges)
+        {
+        for(auto pEdge1 : m_sEdges)
+            {
+            if(pEdge0->GetID()<pEdge1->GetID())
+                {
+                SGM::UnitVector3D Vec0,Vec1;
+                if(pEdge0->GetStart()==this)
+                    {
+                    Vec0=pEdge0->GetStartDirection();
+                    }
+                else
+                    {
+                    Vec0=pEdge1->GetEndDirection();
+                    Vec0.Negate();
+                    }
+                if(pEdge1->GetStart()==this)
+                    {
+                    Vec1=pEdge1->GetStartDirection();
+                    }
+                else
+                    {
+                    Vec1=pEdge0->GetEndDirection();
+                    Vec1.Negate();
+                    }
+                double dAngle=Vec0.Angle(Vec1);
+                if(dAngle<dAnswer)
+                    {
+                    dAnswer=dAngle;
+                    }
+                }
+            }
+        }
+    return dAnswer;
+    }
+
 double vertex::GetTolerance() const
     {
     if(m_dTolerance==0)

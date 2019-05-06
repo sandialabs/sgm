@@ -1256,9 +1256,14 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
 double MoreFacetChecks(edge const *pEdge)
     {
     double dAnswer=1.0;
-    if(pEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType)
+    if(pEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType && pEdge->GetStart())
         {
-        dAnswer=0.5;
+        double dStart=pEdge->GetStart()->CuspValue();
+        double dEnd=pEdge->GetEnd()->CuspValue();
+        if(dStart<SGM_MIN_TOL || dEnd<SGM_MIN_TOL)
+            {
+            dAnswer=0.5;
+            }
         }
     if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
         {
@@ -1328,6 +1333,18 @@ void FacetEdge(SGM::Result               &rResult,
     else
         {
         FacetCurve(pCurve,Domain,Options,aPoints3D,aParams);
+        if(pCurve->GetCurveType()==SGM::NUBCurveType)
+            {
+            NUBcurve *pNUB=(NUBcurve *)pCurve;
+            if(aParams.size()<pNUB->GetControlPoints().size() && aParams.size()<10)
+                {
+                aPoints3D.clear();
+                aParams.clear();
+                FacetOptions TempOptions=Options;
+                TempOptions.m_dEdgeAngleTol*=0.5;
+                FacetCurve(pCurve,Domain,TempOptions,aPoints3D,aParams);
+                }
+            }
         }
 
     // Added so that this will be found at this time so that things will be thread safe after.
@@ -3378,6 +3395,38 @@ void FacetFace(SGM::Result                    &rResult,
     if(!FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags))
         {
         return;
+        }
+
+    // Check for a bounded face.
+
+    SGM::Interval2D Bound(aPoints2D);
+    if(Bound.IsBounded()==false)
+        {
+        // Attempt to repair the face.
+        // Look for a seam edge that can be flipped.
+
+        for(auto *pEdge : pFace->GetEdges())
+            {
+            SGM::EdgeSeamType nSeamType=pFace->GetSeamType(pEdge);
+            if(nSeamType!=SGM::NotASeamType)
+                {
+                if(nSeamType==SGM::UpperUSeamType)
+                    {
+                    ((face *)pFace)->SetSeamType(pEdge,SGM::LowerUSeamType);
+                    ((face *)pFace)->ClearUVBoundary(pEdge);
+                    aAdjacencies.clear();
+                    aaPolygons.clear();
+                    aImprintFlags.clear();
+                    aPoints2D.clear();
+                    aPoints3D.clear();
+                    if(!FacetFaceLoops(rResult,pFace,aPoints2D,aPoints3D,aaPolygons,nullptr,&aImprintFlags))
+                        {
+                        return;
+                        }
+                    break;
+                    }
+                }
+            }
         }
 
     auto pSurface =pFace->GetSurface();

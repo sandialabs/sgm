@@ -45,7 +45,8 @@ namespace SGM
 
     SGM_EXPORT SGM::Complex CreateVoxels(SGM::Result                     &rResult,
                                          std::vector<SGM::Point3D> const &aPoints,
-                                         double                           dLength);
+                                         double                           dLength,
+                                         bool                             bSolid);
 
     // Find functions
 

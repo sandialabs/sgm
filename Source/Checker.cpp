@@ -457,6 +457,18 @@ bool face::Check(SGM::Result              &rResult,
         }
     nDoubleEdges/=2;
 
+    if(m_sEdges.size()<4)
+        {
+        double dSliverValue=SliverValue(rResult);
+        if(dSliverValue<0.01)
+            {
+            bAnswer=false;
+            std::stringstream ss;
+            ss << this << " is a sliver face " << dSliverValue;
+            aCheckStrings.emplace_back(ss.str());
+            }
+        }
+
     if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
         {
         bAnswer=false;
@@ -474,7 +486,7 @@ bool face::Check(SGM::Result              &rResult,
         if(double dAngle=CheckFacet(m_aPoints3D,m_aNormals,m_aTriangles,m_pSurface,Index1))
             {
             dMaxAngle=std::max(dMaxAngle,dAngle);
-#if 1
+#if 0
             unsigned int a=m_aTriangles[Index1];
             unsigned int b=m_aTriangles[Index1+1];
             unsigned int c=m_aTriangles[Index1+2];
@@ -500,7 +512,7 @@ bool face::Check(SGM::Result              &rResult,
         ss << "Facets of " << this << " differ from surface normal by angle " << dMaxAngle;
         aCheckStrings.emplace_back(ss.str());
         }
-    if(IsSliver())
+    if(IsSliver(rResult))
         {
         bAnswer=false;
         std::stringstream ss;

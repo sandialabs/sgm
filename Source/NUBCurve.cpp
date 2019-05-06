@@ -199,6 +199,25 @@ std::vector<double> const &NUBcurve::GetSeedParams() const
     return m_aSeedParams;
     }
 
+double NUBcurve::ReParam()
+    {
+    // Scale Speed.
+
+    double t=m_Domain.MidPoint();
+    SGM::Vector3D Vec;
+    Evaluate(t,nullptr,&Vec);
+    double dMag=Vec.Magnitude();
+    size_t Index1;
+    size_t nKnots=m_aKnots.size();
+    for(Index1=0;Index1<nKnots;++Index1)
+        {
+        m_aKnots[Index1]*=dMag;
+        }
+    m_aSeedParams.clear();
+    m_aSeedPoints.clear();
+    return dMag;
+    }
+
 int NUBcurve::Continuity() const
     {
     int nDegree=(int)GetDegree();
