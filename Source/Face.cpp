@@ -447,10 +447,55 @@ void FindClosestBoundary(SGM::Result        &rResult,
         IndexMinStart=IndexMinEnd ? IndexMinEnd-1 : aUVBoundary.size()-1;
         Start=aUVBoundary[IndexMinStart];
         End=aUVBoundary[IndexMinEnd];
-        if( SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u) ||
-            SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
+        if(SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u))
             {
-
+            if(SurfDomain.m_UDomain.OnBoundary(Start.m_u,SGM_MIN_TOL))
+                {
+                if(Start.m_u<SurfDomain.m_UDomain.MidPoint())
+                    {
+                    Start.m_u+=SurfDomain.m_UDomain.Length();
+                    }
+                else
+                    {
+                    Start.m_u-=SurfDomain.m_UDomain.Length();
+                    }
+                }
+            else if(SurfDomain.m_UDomain.OnBoundary(End.m_u,SGM_MIN_TOL))
+                {
+                if(End.m_u<SurfDomain.m_UDomain.MidPoint())
+                    {
+                    End.m_u+=SurfDomain.m_UDomain.Length();
+                    }
+                else
+                    {
+                    End.m_u-=SurfDomain.m_UDomain.Length();
+                    }
+                }
+            }
+        if(SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
+            {
+            if(SurfDomain.m_VDomain.OnBoundary(Start.m_v,SGM_MIN_TOL))
+                {
+                if(Start.m_v<SurfDomain.m_VDomain.MidPoint())
+                    {
+                    Start.m_v+=SurfDomain.m_VDomain.Length();
+                    }
+                else
+                    {
+                    Start.m_v-=SurfDomain.m_VDomain.Length();
+                    }
+                }
+            else if(SurfDomain.m_VDomain.OnBoundary(End.m_v,SGM_MIN_TOL))
+                {
+                if(End.m_v<SurfDomain.m_VDomain.MidPoint())
+                    {
+                    End.m_v+=SurfDomain.m_VDomain.Length();
+                    }
+                else
+                    {
+                    End.m_v-=SurfDomain.m_VDomain.Length();
+                    }
+                }
             }
         }
     SegmentClosestPoint(Start,End,uv,CloseUV);
