@@ -11,6 +11,10 @@
 #include "Intersectors.h"
 #include "Signature.h"
 
+#ifdef SGM_MULTITHREADED
+#include "SGMThreadPool.h"
+#endif
+
 #if !defined( _MSC_VER ) || _MSC_VER >= 1900
 #define NOEXCEPT noexcept
 #define NOEXCEPT_ARGS(ARGS) noexcept((ARGS))
@@ -400,59 +404,44 @@ void FindGuessDirections(unsigned                       const aShortestLengths[3
         }
     }
 
-void FindRaysForPoints(SGM::Result                           &rResult,
-                       std::vector<SGM::Point3D>       const &aPoints,
-                       volume                          const *pVolume,
-                       buffer<unsigned>                      &aIndexOrdered,
-                       std::vector<RayFaceBoxIntersections>  &aRayFaceBoxIntersections)
+// Return the number of new directions tried, zero if the previous direction was satisfactory
+
+void FindNextRayFaceBoxIntersections(SGM::Result &rResult,
+                                     volume const *pVolume,
+                                     const unsigned int *aVolumeShortestLengths,
+                                     SGM::Point3D const VolumeCentroid,
+                                     SGM::Point3D const &Point,
+                                     bool bTryPrevious,
+                                     double &dCost,
+                                     SGM::UnitVector3D &Direction,
+                                     size_t &nCountSinceNewRay,
+                                     RayFaceBoxIntersections &NextRayFaceBoxIntersections)
     {
-    size_t nPoints = aPoints.size();
-    aIndexOrdered = SGMInternal::OrderPointsZorder(aPoints);
-    aRayFaceBoxIntersections.clear();
-    aRayFaceBoxIntersections.reserve(nPoints);
-
-    // get info about the volume tree
-    unsigned aShortestLengths[3];
-    FindShortestLengths(pVolume->GetBox(rResult), aShortestLengths);
-    SGM::Point3D Centroid = pVolume->GetFaceTree(rResult).FindCenterOfMass();
-    std::vector<SGM::UnitVector3D> GuessDirections(3);
-
-    // search for cheapest array for our first point
-    SGM::Point3D const &FirstPoint = aPoints[aIndexOrdered[0]];
-    FindGuessDirections(aShortestLengths,Centroid,FirstPoint,GuessDirections);
-    RayFaceBoxIntersections FirstRayIntersects = FindCheapRay(rResult, FirstPoint, pVolume, GuessDirections);
-    double dCost = FirstRayIntersects.m_dCost;
-    SGM::UnitVector3D Direction = FirstRayIntersects.m_Ray.m_Direction;
-    aRayFaceBoxIntersections.emplace_back(FirstRayIntersects);
-
-    unsigned nCountSinceNewRay = 0;
-
-    for (size_t i = 1; i < nPoints; ++i)
+    if (bTryPrevious)
         {
-        // for followings point
-        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
-
-        // reuse the last direction
-        RayFaceBoxIntersections NextRayIntersects(FindRayFacesCost(rResult, pVolume, NextPoint, Direction));
-
-        if (NextRayIntersects.m_dCost <= dCost ||                          // its as cheap as the previous ray
-            (NextRayIntersects.m_dCost < 50 && nCountSinceNewRay < 7)) // and not super expensive
+        NextRayFaceBoxIntersections = FindRayFacesCost(rResult, pVolume, Point, Direction);
+        double dNextCost = NextRayFaceBoxIntersections.m_dCost;  
+        if ((nCountSinceNewRay <  12 && dNextCost <= std::min(dCost,1000.))  ||
+            (nCountSinceNewRay < 128 && dNextCost < 10                    ) ||
+            (nCountSinceNewRay <  64 && dNextCost < 20                    ) ||
+            (nCountSinceNewRay <  32 && dNextCost < 50                    ) ||
+            (nCountSinceNewRay <  16 && dNextCost < 100                   ) ||
+            (nCountSinceNewRay <   8 && dNextCost < 200                   ) ||
+            (nCountSinceNewRay <   4 && dNextCost < 500                   ) ||
+            (nCountSinceNewRay <   2 && dNextCost < 1000                  ))
             {
-            // re-use the previous direction
-            dCost =  NextRayIntersects.m_dCost;
-            ++nCountSinceNewRay;
+            ++nCountSinceNewRay; // re-use the previous direction
+            dCost = NextRayFaceBoxIntersections.m_dCost;
+            return;
             }
-        else
-            {
-            // cost has increased, find a better cheap ray by searching again
-            nCountSinceNewRay = 0;
-            FindGuessDirections(aShortestLengths,Centroid,NextPoint,GuessDirections);
-            NextRayIntersects = FindCheapRay(rResult, NextPoint, pVolume, GuessDirections);
-            dCost = NextRayIntersects.m_dCost;
-            Direction = NextRayIntersects.m_Ray.m_Direction;
-            }
-        aRayFaceBoxIntersections.emplace_back(NextRayIntersects);
         }
+    // we are not using the previous direction, find a new one
+    nCountSinceNewRay = 0;
+    std::vector<SGM::UnitVector3D> GuessDirections(3);
+    FindGuessDirections(aVolumeShortestLengths, VolumeCentroid, Point, GuessDirections);
+    NextRayFaceBoxIntersections = FindCheapRay(rResult, Point, pVolume, GuessDirections);
+    dCost = NextRayFaceBoxIntersections.m_dCost;
+    Direction = NextRayFaceBoxIntersections.m_Ray.m_Direction;
     }
 
 bool PointInVolume(SGM::Point3D const &Point,
@@ -479,35 +468,42 @@ bool PointInVolume(SGM::Point3D const &Point,
     return UVec%(Point-HitPoint)<0;
     }
 
-#define IS_RAY_IN_VOLUME_LOG
+//#define IS_RAY_IN_VOLUME_LOG
 
 bool IsRayInVolume(SGM::Result                   &rResult,
                    RayFaceBoxIntersections const &RayIntersections,
                    volume                  const *pVolume,
-                   double                        dTolerance)
+                   double                        dTolerance,
+                   bool                          &bReuseDirection,
+                   size_t                        &nHits,
+                   SGM::Point3D                  &FirstFacePoint)
     {
     SGM::Point3D const &Point = RayIntersections.m_Ray.m_Origin;
     SGM::UnitVector3D Direction(RayIntersections.m_Ray.m_Direction);
     std::vector<face*> aHitFaces = RayIntersections.m_aHitFaces;
 #ifdef IS_RAY_IN_VOLUME_LOG
-    std::cout << "P{" << Point.m_x << ',' << Point.m_y << ',' << Point.m_z << '}';
+    //std::cout.setf(std::ios::floatfield,std::ios::scientific);
+    std::cout << std::setprecision(15);
+    std::cout << "P{" << std::setw(19) << Point.m_x << ',' << std::setw(19) << Point.m_y << ',' << std::setw(19) << Point.m_z << '}';
 #endif
-    size_t nCount=1;
-    size_t nBadRays=0;
-    size_t nHits=0;
-    bool bContinue=true;
+    bReuseDirection = true;
+    size_t nCount = 1;
+    size_t nBadRays = 0;
+    nHits = 0;
+    bool bContinue = true;
+    std::vector<SGM::Point3D>          aPoints;
+    std::vector<SGM::IntersectionType> aTypes;
+    std::vector<entity *>              aEntity;
     while(bContinue)
         {
         bContinue=false;
-        std::vector<SGM::Point3D>          aPoints;
-        std::vector<SGM::IntersectionType> aTypes;
-        std::vector<entity *>              aEntity;
 #ifdef  IS_RAY_IN_VOLUME_LOG
         std::cout << " D{" << Direction.m_x << ',' << Direction.m_y << ',' << Direction.m_z << '}';
 #endif
         nHits=RayFireVolume(rResult,Point,Direction,pVolume,aHitFaces,aPoints,aTypes,aEntity,dTolerance,false);
-        if(nHits)
+        if (nHits)
             {
+            FirstFacePoint = aPoints[0];
             if(SGM::NearEqual(Point,aPoints[0],dTolerance))
                 {
 #ifdef          IS_RAY_IN_VOLUME_LOG
@@ -521,12 +517,18 @@ bool IsRayInVolume(SGM::Result                   &rResult,
 #ifdef          IS_RAY_IN_VOLUME_LOG
                 std::cout << " N" << nBadRays;
 #endif
-                if (nBadRays > 3)
+                if(5<nBadRays && aEntity[0]->GetType()==SGM::FaceType)
                     {
 #ifdef              IS_RAY_IN_VOLUME_LOG
                     std::cout << ' ' << SGM::EntityTypeName(aEntity[0]->GetType()) << " ID " << aEntity[0]->GetID() << std::endl;
 #endif
+                    bReuseDirection = false;
+                    nHits = 0;
                     return PointInVolume(Point,aPoints[0],aEntity[0]);
+                    }
+                if(20<nBadRays)
+                    {
+                    return true;
                     }
                 // look for a new ray
                 size_t nNextMaxCount = nCount+4;
@@ -538,13 +540,6 @@ bool IsRayInVolume(SGM::Result                   &rResult,
                     ++nCount;
                     TempRayIntersections = FindRayFacesCost(rResult, pVolume, Point, Direction);
                     }
-//                RemoveMissedFacesFromRayIntersections(rResult, TempRayIntersections);
-//                if (nBadRays == 1)
-//                    {
-//                    std::cout << std::setprecision(16);
-//                    std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
-//                    std::cout << " Axis={" << std::setw(20) << Direction.m_x << ',' << std::setw(20) << Direction.m_y << ',' << std::setw(20) << Direction.m_z << "} ";
-//                    }
                 aHitFaces.swap(TempRayIntersections.m_aHitFaces);
                 bContinue=true;
                 }
@@ -556,50 +551,140 @@ bool IsRayInVolume(SGM::Result                   &rResult,
     return nHits%2==1;
     }
 
+inline void FindVolumeTreeLengths(SGM::Result &rResult,
+                                  const volume *pVolume,
+                                  unsigned int aVolumeShortestLengths[3],
+                                  SGM::Point3D &VolumeCentroid)
+    {
+    VolumeCentroid = pVolume->GetFaceTree(rResult).FindCenterOfMass();
+    FindShortestLengths(pVolume->GetBox(rResult), aVolumeShortestLengths);
+    }
+
+bool PointsInVolumeLoop(SGM::Result &rResult,
+                        const volume *pVolume,
+                        double dTolerance,
+                        const unsigned int *aVolumeShortestLengths,
+                        const SGM::Point3D *pVolumeCentroid,
+                        size_t iBegin,
+                        size_t iEnd,
+                        const buffer<unsigned int> *p_aIndexOrdered,
+                        const std::vector<SGM::Point3D> *p_aPoints,
+                        std::vector<bool> *p_aIsInside)
+    {
+    // these are passed as pointers in order to avoid copies when using multi-threaded std::future
+    const SGM::Point3D &VolumeCentroid = *pVolumeCentroid;
+    const buffer<unsigned int> &aIndexOrdered = *p_aIndexOrdered;
+    const std::vector<SGM::Point3D> &aPoints = *p_aPoints;
+    std::vector<bool> &aIsInside = *p_aIsInside;
+
+    SGM::UnitVector3D Direction;
+    SGM::Point3D FirstFacePoint;
+    double dCost = 0.0;
+    size_t nCountSinceNewRay = 0;
+    size_t nHits = 0;
+    bool bUsePrevious = false;
+
+    // loop over points in Z-order
+    for (size_t i = iBegin; i < iEnd; ++i)
+        {
+        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+
+        RayFaceBoxIntersections NextRayIntersects;
+        FindNextRayFaceBoxIntersections(rResult,
+                                        pVolume,
+                                        aVolumeShortestLengths,
+                                        VolumeCentroid,
+                                        NextPoint,
+                                        bUsePrevious,
+                                        dCost,
+                                        Direction,
+                                        nCountSinceNewRay,
+                                        NextRayIntersects);
+        if (dCost == 0)
+            {
+            bUsePrevious = true;
+            nHits = 0;
+            }
+        else
+            {
+            aIsInside[aIndexOrdered[i]] = IsRayInVolume(rResult,
+                                                        NextRayIntersects,
+                                                        pVolume,
+                                                        dTolerance,
+                                                        bUsePrevious,
+                                                        nHits,
+                                                        FirstFacePoint);
+            if (bUsePrevious && nHits > 0)
+                {
+                Direction = FirstFacePoint - NextPoint;
+                }
+            }
+        }
+    return iEnd > iBegin;
+    }
 
 std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
                                  std::vector<SGM::Point3D> const &aPoints,
                                  volume                    const *pVolume,
                                  double                           dTolerance)
     {
-    buffer<unsigned>                     aIndexOrdered;
-    std::vector<RayFaceBoxIntersections> aRayFaceBoxIntersections;
-    FindRaysForPoints(rResult,aPoints,pVolume,aIndexOrdered,aRayFaceBoxIntersections);
+    unsigned int aVolumeShortestLengths[3];
+    SGM::Point3D VolumeCentroid;
+    FindVolumeTreeLengths(rResult, pVolume, aVolumeShortestLengths, VolumeCentroid);
+
+    // find an ordering of the points close together
+    buffer<unsigned> aIndexOrdered = SGMInternal::OrderPointsZorder(aPoints);
+
     size_t nPoints = aPoints.size();
     std::vector<bool> aIsInside(nPoints,false);
-    // loop over rays in Z-order
-    for (size_t i = 0; i < nPoints; ++i)
+
+#ifdef SGM_MULTITHREADED
+    rResult.GetThing()->SetConcurrentActive();
+    unsigned nConcurrentThreads = std::thread::hardware_concurrency(); // assume hyperthreads are active and not useful
+    nConcurrentThreads = std::max((unsigned) 4, nConcurrentThreads);
+    SGM::ThreadPool threadPool(nConcurrentThreads);
+    std::vector<std::future<bool>> futures;
+    const unsigned NUM_CHUNKS = 8*nConcurrentThreads;
+    const size_t CHUNK_SIZE = nPoints / NUM_CHUNKS;
+    size_t nRemaining = nPoints % NUM_CHUNKS;
+    size_t iBegin = 0;
+    size_t iEnd = 0;
+    for (unsigned iChunk = 0; iChunk < NUM_CHUNKS; ++iChunk)
         {
-        RayFaceBoxIntersections const & RayIntersections = aRayFaceBoxIntersections[i];
-        if (RayIntersections.m_dCost != 0)
-            {
-            aIsInside[aIndexOrdered[i]] = IsRayInVolume(rResult,RayIntersections,pVolume,dTolerance);
-            }
+        iEnd += (nRemaining > 0) ? (CHUNK_SIZE + ((nRemaining--) != 0)) : CHUNK_SIZE;
+        futures.emplace_back(threadPool.enqueue(std::bind(PointsInVolumeLoop,
+                                                          rResult,
+                                                          pVolume,
+                                                          dTolerance,
+                                                          aVolumeShortestLengths,
+                                                          &VolumeCentroid,
+                                                          iBegin, iEnd,
+                                                          &aIndexOrdered,
+                                                          &aPoints,
+                                                          &aIsInside)));
+        iBegin = iEnd;
         }
+    for (auto &&future: futures)
+        {
+        future.wait();
+        future.get();
+        }
+    futures.clear();
+    rResult.GetThing()->SetConcurrentInactive();
+#else
+    PointsInVolumeLoop(rResult,
+                       pVolume,
+                       dTolerance,
+                       aVolumeShortestLengths,
+                       &VolumeCentroid,
+                       0, nPoints,
+                       &aIndexOrdered,
+                       &aPoints,
+                       &aIsInside);
+#endif
     return std::move(aIsInside);
     }
 
-//std::vector<bool> PointsInVolumeConcurrent(SGM::Result                     &rResult,
-//                                           std::vector<SGM::Point3D> const &aPoints,
-//                                           volume                    const *pVolume,
-//                                           double                           dTolerance)
-//    {
-//    buffer<unsigned>                     aIndexOrdered;
-//    std::vector<RayFaceBoxIntersections> aRayFaceBoxIntersections;
-//    FindRaysForPointsConcurrent(rResult,aPoints,pVolume,dTolerance,aIndexOrdered,aRayFaceBoxIntersections);
-//    size_t nPoints = aPoints.size();
-//    std::vector<bool> aIsInside(nPoints,false);
-//    // loop over rays in Z-order
-//    for (size_t i = 0; i < nPoints; ++i)
-//        {
-//        RayFaceBoxIntersections const & RayIntersections = aRayFaceBoxIntersections[i];
-//        if (RayIntersections.m_dCost != 0)
-//            {
-//            aIsInside[aIndexOrdered[i]] = IsRayInVolume(rResult,RayIntersections,pVolume,dTolerance);
-//            }
-//        }
-//    return std::move(aIsInside);
-//    }
 
 bool PointInVolume(SGM::Result        &rResult,
                    SGM::Point3D const &Point,

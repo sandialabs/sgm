@@ -633,7 +633,7 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             double dDist=ClosePos.Distance(Pos);
             double dDiag=pCloseEdge->GetBox(rResult).Diagonal();
-            if(dDist/dDiag<SGM_FIT || fabs(dTest2)<SGM_FIT)
+            if(dDist/dDiag<SGM_FIT || std::abs(dTest2)<SGM_FIT)
                 {
                 if(pInCloseEdge)
                     {

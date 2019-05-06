@@ -15,7 +15,9 @@ sgm_project_setup()
 # build settings for all projects
 OPTION(BUILD_SHARED_LIBS "Build with shared libraries" OFF)
 OPTION(CMAKE_BUILD_TYPE "Build type" Release)
-
+IF(UNIX)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
+ENDIF(UNIX)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
