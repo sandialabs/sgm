@@ -1152,37 +1152,35 @@ void IntersectNonParallelPlanes(SGM::Point3D      const &Origin1,
                                 SGM::Point3D            &Origin,
                                 SGM::UnitVector3D       &Axis)
     {
-    double AxisX=Normal1.m_y*Normal2.m_z-Normal1.m_z*Normal2.m_y;
-    double AxisY=Normal1.m_z*Normal2.m_x-Normal1.m_x*Normal2.m_z;
-    double AxisZ=Normal1.m_x*Normal2.m_y-Normal1.m_y*Normal2.m_x;
+    double AxisX=Normal1.Y()*Normal2.Z()-Normal1.Z()*Normal2.Y();
+    double AxisY=Normal1.Z()*Normal2.X()-Normal1.X()*Normal2.Z();
+    double AxisZ=Normal1.X()*Normal2.Y()-Normal1.Y()*Normal2.X();
 
     double dx=fabs(AxisX);
     double dy=fabs(AxisY);
     double dz=fabs(AxisZ);
 
     double dLength=sqrt(AxisX*AxisX+AxisY*AxisY+AxisZ*AxisZ);
-    Axis.m_x=AxisX/dLength;
-    Axis.m_y=AxisY/dLength;
-    Axis.m_z=AxisZ/dLength;
+    Axis = {AxisX/dLength, AxisY/dLength, AxisZ/dLength};
 
-    double dPlaneDist1=-Origin1.m_x*Normal1.m_x-Origin1.m_y*Normal1.m_y-Origin1.m_z*Normal1.m_z;
-    double dPlaneDist2=-Origin2.m_x*Normal2.m_x-Origin2.m_y*Normal2.m_y-Origin2.m_z*Normal2.m_z;
+    double dPlaneDist1=-Origin1.m_x*Normal1.X()-Origin1.m_y*Normal1.Y()-Origin1.m_z*Normal1.Z();
+    double dPlaneDist2=-Origin2.m_x*Normal2.X()-Origin2.m_y*Normal2.Y()-Origin2.m_z*Normal2.Z();
     if(dy<=dx && dz<=dx)
         {
         Origin.m_x=0.0;
-        Origin.m_y=(dPlaneDist2*Normal1.m_z-dPlaneDist1*Normal2.m_z)/AxisX;
-        Origin.m_z=(dPlaneDist1*Normal2.m_y-dPlaneDist2*Normal1.m_y)/AxisX;
+        Origin.m_y=(dPlaneDist2*Normal1.Z()-dPlaneDist1*Normal2.Z())/AxisX;
+        Origin.m_z=(dPlaneDist1*Normal2.Y()-dPlaneDist2*Normal1.Y())/AxisX;
         }
     else if(dz<dy)
         {
-        Origin.m_x=(dPlaneDist1*Normal2.m_z-dPlaneDist2*Normal1.m_z)/AxisY;
+        Origin.m_x=(dPlaneDist1*Normal2.Z()-dPlaneDist2*Normal1.Z())/AxisY;
         Origin.m_y=0.0;
-        Origin.m_z=(dPlaneDist2*Normal1.m_x-dPlaneDist1*Normal2.m_x)/AxisY;
+        Origin.m_z=(dPlaneDist2*Normal1.X()-dPlaneDist1*Normal2.X())/AxisY;
         }
     else
         {
-        Origin.m_x=(dPlaneDist2*Normal1.m_y-dPlaneDist1*Normal2.m_y)/AxisZ;
-        Origin.m_y=(dPlaneDist1*Normal2.m_x-dPlaneDist2*Normal1.m_x)/AxisZ;
+        Origin.m_x=(dPlaneDist2*Normal1.Y()-dPlaneDist1*Normal2.Y())/AxisZ;
+        Origin.m_y=(dPlaneDist1*Normal2.X()-dPlaneDist2*Normal1.X())/AxisZ;
         Origin.m_z=0.0;
         }
     }
@@ -1344,10 +1342,10 @@ size_t IntersectLineAndPlane(SGM::Point3D                 const &Origin,
         }
     else if(dDist0*dDist1<0)
         {
-        double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.m_x+
-                   (Origin.m_y-PlaneOrigin.m_y)*PlaneNorm.m_y+
-                   (Origin.m_z-PlaneOrigin.m_z)*PlaneNorm.m_z)/
-            (Axis.m_x*PlaneNorm.m_x+Axis.m_y*PlaneNorm.m_y+Axis.m_z*PlaneNorm.m_z);
+        double t=-((Origin.m_x-PlaneOrigin.m_x)*PlaneNorm.X()+
+                   (Origin.m_y-PlaneOrigin.m_y)*PlaneNorm.Y()+
+                   (Origin.m_z-PlaneOrigin.m_z)*PlaneNorm.Z())/
+            (Axis.X()*PlaneNorm.X()+Axis.Y()*PlaneNorm.Y()+Axis.Z()*PlaneNorm.Z());
         aTempPoints.push_back(Origin+t*Axis);
         aTempTypes.push_back(SGM::IntersectionType::PointType);
         }
@@ -2057,9 +2055,9 @@ size_t IntersectLineAndCone(SGM::Point3D                 const &Origin,
     double a=TOrigin.m_x;
     double c=TOrigin.m_y;
     double e=TOrigin.m_z;
-    double b=TAxis.m_x;
-    double d=TAxis.m_y;
-    double f=TAxis.m_z;
+    double b=TAxis.X();
+    double d=TAxis.Y();
+    double f=TAxis.Z();
 
     double A = b*b+d*d-f*f*s;
     double B = 2*(a*b+c*d-e*f*s);
@@ -2143,9 +2141,9 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
     double a=Origin.m_x;
     double c=Origin.m_y;
     double e=Origin.m_z;
-    double b=Axis.m_x;
-    double d=Axis.m_y;
-    double f=Axis.m_z;
+    double b=Axis.X();
+    double d=Axis.Y();
+    double f=Axis.Z();
     double r=dMinorRadius;
     double s=dMajorRadius;
 
@@ -2261,7 +2259,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
         Pos*=Trans;
         SGM::Point3D SnappedPos;
         pTorus->Inverse(Pos,&SnappedPos);
-        if(pTorus->GetType()!=SGM::TorusKindType::DonutType)
+        if(pTorus->GetKind()!=SGM::TorusKindType::DonutType)
             {
             double dDist=Pos.Distance(SnappedPos);
             if(dDist<SGM_MIN_TOL)

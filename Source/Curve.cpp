@@ -305,23 +305,23 @@ void ParabolaEvaluate(SGM::Point3D     const &Center,
 
     if(Pos)
         {
-        Pos->m_x=Center.m_x+XAxis.m_x*t+YAxis.m_x*y;
-        Pos->m_y=Center.m_y+XAxis.m_y*t+YAxis.m_y*y;
-        Pos->m_z=Center.m_z+XAxis.m_z*t+YAxis.m_z*y;
+        Pos->m_x=Center.m_x+XAxis.X()*t+YAxis.X()*y;
+        Pos->m_y=Center.m_y+XAxis.Y()*t+YAxis.Y()*y;
+        Pos->m_z=Center.m_z+XAxis.Z()*t+YAxis.Z()*y;
         }
     if(D1)
         {
         double dy=2.0*dA*t;
-        D1->m_x=XAxis.m_x+YAxis.m_x*dy;
-        D1->m_y=XAxis.m_y+YAxis.m_y*dy;
-        D1->m_z=XAxis.m_z+YAxis.m_z*dy;
+        D1->m_x=XAxis.X()+YAxis.X()*dy;
+        D1->m_y=XAxis.Y()+YAxis.Y()*dy;
+        D1->m_z=XAxis.Z()+YAxis.Z()*dy;
         }
     if(D2)
         {
         double ddy=2.0*dA;
-        D2->m_x=YAxis.m_x*ddy;
-        D2->m_y=YAxis.m_y*ddy;
-        D2->m_z=YAxis.m_z*ddy;
+        D2->m_x=YAxis.X()*ddy;
+        D2->m_y=YAxis.Y()*ddy;
+        D2->m_z=YAxis.Z()*ddy;
         }
     }
 

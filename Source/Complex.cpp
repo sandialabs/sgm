@@ -1597,7 +1597,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_XDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_x<0)
+        if(UpDirection.X()<0)
             {
             std::vector<SGM::Point3D> aPoints = 
                 {
@@ -1624,7 +1624,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_YDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_y<0)
+        if(UpDirection.Y()<0)
             {
             std::vector<SGM::Point3D> aPoints =
                 {
@@ -1651,7 +1651,7 @@ complex *complex::CreateOrientedBoundingBox(SGM::Result             &rResult,
     if(Box.m_ZDomain.Length()<dTolerance)
         {
         complex * pComplex;
-        if(UpDirection.m_z<0)
+        if(UpDirection.Z()<0)
             {
             std::vector<SGM::Point3D> aPoints =
                 {

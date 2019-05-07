@@ -300,10 +300,7 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
     // try those guesses in the opposite direction
     for (size_t i = 0; i < NUM_GUESS_RAYS; ++i)
         {
-        SGM::UnitVector3D Direction = GuessDirections[i];
-        Direction.m_x = -Direction.m_x;
-        Direction.m_y = -Direction.m_y;
-        Direction.m_z = -Direction.m_z;
+        SGM::UnitVector3D Direction(-GuessDirections[i]);
         aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         if (aIntersections.back().m_dCost < COST_THRESHOLD_1)
             return aIntersections.back();
@@ -318,9 +315,10 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         {
         double const *aDirection = aaDirections[i];
         SGM::UnitVector3D Direction;
-        Direction.m_x = aDirection[0];
-        Direction.m_y = aDirection[1];
-        Direction.m_z = aDirection[2];
+        SGM::Vector3D &VectorDirection = Direction; // so we can change member data directly
+        VectorDirection.m_x = aDirection[0];
+        VectorDirection.m_y = aDirection[1];
+        VectorDirection.m_z = aDirection[2];
         aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_1)
@@ -342,9 +340,10 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         {
         double const *aDirection = aaDirections[i];
         SGM::UnitVector3D Direction;
-        Direction.m_x = aDirection[0];
-        Direction.m_y = aDirection[1];
-        Direction.m_z = aDirection[2];
+        SGM::Vector3D &VectorDirection = Direction;
+        VectorDirection.m_x = aDirection[0];
+        VectorDirection.m_y = aDirection[1];
+        VectorDirection.m_z = aDirection[2];
         aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_2)
@@ -392,7 +391,9 @@ void FindGuessDirections(unsigned                       const aShortestLengths[3
     SGM::Vector3D CentroidDirection(Point - Centroid);
 
     // initialize all the entries of all the unit vectors to zero
-    double *pStart = &GuessDirections[0][0];
+    assert(GuessDirections.size()==3);
+    SGM::Vector3D &StartVector = GuessDirections[0];
+    double *pStart = &(StartVector[0]);
     std::fill(pStart,pStart+9, 0.0);
 
     // put a -1 or 1 in the directions of the Point is away from the Centroid
@@ -400,7 +401,8 @@ void FindGuessDirections(unsigned                       const aShortestLengths[3
     for (unsigned i = 0; i < 3; ++i)
         {
         size_t iDirection = aShortestLengths[i];
-        GuessDirections[i][iDirection] = std::signbit(CentroidDirection[iDirection]) ? -1.0 : 1.0;
+        SGM::Vector3D &GuessDirectionVector = GuessDirections[i];
+        GuessDirectionVector[iDirection] = std::signbit(CentroidDirection[iDirection]) ? -1.0 : 1.0;
         }
     }
 
@@ -735,9 +737,9 @@ bool PointInVolume(SGM::Result        &rResult,
         if(rResult.GetDebugFlag()==7)
             {
             std::vector<double> aData;
-            aData.push_back(Axis.m_x);
-            aData.push_back(Axis.m_y);
-            aData.push_back(Axis.m_z);
+            aData.push_back(Axis.X());
+            aData.push_back(Axis.Y());
+            aData.push_back(Axis.Z());
             rResult.SetDebugData(aData);
             }
         if(nHits)
@@ -751,7 +753,7 @@ bool PointInVolume(SGM::Result        &rResult,
 //                std::cout << std::setprecision(16);
 //                std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
 //                std::cout << std::setprecision(16);
-//                std::cout << " Axis={" << std::setw(20) << Axis.m_x << ',' << std::setw(20) << Axis.m_y << ',' << std::setw(20) << Axis.m_z << "} ";
+//                std::cout << " Axis={" << std::setw(20) << Axis.X() << ',' << std::setw(20) << Axis[1] << ',' << std::setw(20) << Axis[2] << "} ";
 
 //                // print the first non-face
 //                size_t nSize = aEntity.size();

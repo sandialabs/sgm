@@ -63,6 +63,10 @@ namespace SGM
         double m_v;
     };
 
+    inline bool operator==(Point2D const &A, Point2D const &B);
+    inline bool operator!=(Point2D const &A, Point2D const &B);
+    inline std::ostream& operator<<(std::ostream& os, const Point2D& P);
+
     class SGM_EXPORT Point3D
     {
     public:
@@ -101,13 +105,24 @@ namespace SGM
         double m_z;
     };
 
+    inline bool operator==(Point3D const &A, Point3D const &B);
+    inline bool operator!=(Point3D const &A, Point3D const &B);
+    inline std::ostream& operator<<(std::ostream& os, const Point3D& P);
+
     class SGM_EXPORT Point4D
     {
     public:
 
+        enum { N = 4 };
+
+        typedef double type;
+
         Point4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Point4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_x)[axis]; }
 
         Point4D operator+=(Vector4D const &Vec);
 
@@ -164,10 +179,6 @@ namespace SGM
 
         explicit Vector3D(Point3D const &Pos);
 
-        double Dot(Vector3D const &v) const {
-            return m_x*v.m_x + m_y*v.m_y + m_z*v.m_z;
-        }
-
         double Magnitude() const;
 
         double MagnitudeSquared() const;
@@ -196,6 +207,8 @@ namespace SGM
     {
     public:
 
+        enum { N = 4 };
+
         Vector4D() {}; // Note that for performance things are intentionally left uninitialized.
 
         Vector4D(double x,double y,double z,double w):m_x(x),m_y(y),m_z(z),m_w(w) {}
@@ -207,6 +220,9 @@ namespace SGM
         Vector4D operator/(double dScale) const;
 
         void Swap(Vector4D &other);
+
+        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
+        double& operator []( const size_t axis )             { assert(axis < N); return (&m_x)[axis]; }
 
         double m_x;
         double m_y;
@@ -230,15 +246,15 @@ namespace SGM
 
         UnitVector2D(Vector2D const &Vec);
 
-        double U() {return m_u;}
+        double U() const {return m_u;}
 
-        double V() {return m_v;}
+        double V() const {return m_v;}
 
     private:
 
         using Vector2D::m_u;
         using Vector2D::m_v;
-        using Vector2D::operator [];
+        using Vector2D::operator[];
     };
 
     class SGM_EXPORT UnitVector3D : public Vector3D
@@ -264,6 +280,19 @@ namespace SGM
                      UnitVector3D const &Norm) const;
 
         UnitVector3D operator*=(Transform3D const &Trans);
+
+        double X() const {return m_x;}
+
+        double Y() const {return m_y;}
+
+        double Z() const {return m_z;}
+
+    private:
+
+        using Vector3D::m_x;
+        using Vector3D::m_y;
+        using Vector3D::m_z;
+        using Vector3D::operator[];
     };
 
     class SGM_EXPORT UnitVector4D : public Vector4D
@@ -273,6 +302,23 @@ namespace SGM
         UnitVector4D() {};
 
         UnitVector4D(Vector4D const &Vec);
+
+        double X() const {return m_x;}
+
+        double Y() const {return m_y;}
+
+        double Z() const {return m_z;}
+
+        double W() const {return m_w;}
+
+    private:
+
+        using Vector4D::m_x;
+        using Vector4D::m_y;
+        using Vector4D::m_z;
+        using Vector4D::m_w;
+        using Vector4D::operator[];
+
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -294,7 +340,7 @@ namespace SGM
         Ray3D(const Point3D &orig, const UnitVector3D &dir) :
                 m_Origin(orig),
                 m_Direction(dir),
-                m_InverseDirection(1./dir.m_x, 1./dir.m_y, 1./dir.m_z),
+                m_InverseDirection(1./dir.X(), 1./dir.Y(), 1./dir.Z()),
                 m_xSign(m_InverseDirection.m_x < 0),
                 m_ySign(m_InverseDirection.m_y < 0),
                 m_zSign(m_InverseDirection.m_z < 0)

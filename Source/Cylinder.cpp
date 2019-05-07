@@ -87,33 +87,34 @@ void cylinder::Evaluate(SGM::Point2D const &uv,
 
     if(Pos)
         {
-        Pos->m_x=m_Origin.m_x+(m_XAxis.m_x*dCos+m_YAxis.m_x*dSin+m_ZAxis.m_x*uv.m_v)*m_dRadius;
-        Pos->m_y=m_Origin.m_y+(m_XAxis.m_y*dCos+m_YAxis.m_y*dSin+m_ZAxis.m_y*uv.m_v)*m_dRadius;
-        Pos->m_z=m_Origin.m_z+(m_XAxis.m_z*dCos+m_YAxis.m_z*dSin+m_ZAxis.m_z*uv.m_v)*m_dRadius;
+        Pos->m_x=m_Origin.m_x+(m_XAxis.X()*dCos+m_YAxis.X()*dSin+m_ZAxis.X()*uv.m_v)*m_dRadius;
+        Pos->m_y=m_Origin.m_y+(m_XAxis.Y()*dCos+m_YAxis.Y()*dSin+m_ZAxis.Y()*uv.m_v)*m_dRadius;
+        Pos->m_z=m_Origin.m_z+(m_XAxis.Z()*dCos+m_YAxis.Z()*dSin+m_ZAxis.Z()*uv.m_v)*m_dRadius;
         }
     if(Du)
         {
-        Du->m_x=(m_YAxis.m_x*dCos-m_XAxis.m_x*dSin)*m_dRadius;
-        Du->m_y=(m_YAxis.m_y*dCos-m_XAxis.m_y*dSin)*m_dRadius;
-        Du->m_z=(m_YAxis.m_z*dCos-m_XAxis.m_z*dSin)*m_dRadius;
+        Du->m_x=(m_YAxis.X()*dCos-m_XAxis.X()*dSin)*m_dRadius;
+        Du->m_y=(m_YAxis.Y()*dCos-m_XAxis.Y()*dSin)*m_dRadius;
+        Du->m_z=(m_YAxis.Z()*dCos-m_XAxis.Z()*dSin)*m_dRadius;
         }
     if(Dv)
         {
-        Dv->m_x=m_ZAxis.m_x*m_dRadius;
-        Dv->m_y=m_ZAxis.m_y*m_dRadius;
-        Dv->m_z=m_ZAxis.m_z*m_dRadius;
+        Dv->m_x=m_ZAxis.X()*m_dRadius;
+        Dv->m_y=m_ZAxis.Y()*m_dRadius;
+        Dv->m_z=m_ZAxis.Z()*m_dRadius;
         }
     if(Norm)
         {
-        Norm->m_x=m_XAxis.m_x*dCos+m_YAxis.m_x*dSin;
-        Norm->m_y=m_XAxis.m_y*dCos+m_YAxis.m_y*dSin;
-        Norm->m_z=m_XAxis.m_z*dCos+m_YAxis.m_z*dSin;
+        double dNormX=m_XAxis.X()*dCos+m_YAxis.X()*dSin;
+        double dNormY=m_XAxis.Y()*dCos+m_YAxis.Y()*dSin;
+        double dNormZ=m_XAxis.Z()*dCos+m_YAxis.Z()*dSin;
+        *Norm = {dNormX,dNormY,dNormZ};
         }
     if(Duu)
         {
-        Duu->m_x=(-m_XAxis.m_x*dCos-m_YAxis.m_x*dSin)*m_dRadius;
-        Duu->m_y=(-m_XAxis.m_y*dCos-m_YAxis.m_y*dSin)*m_dRadius;
-        Duu->m_z=(-m_XAxis.m_z*dCos-m_YAxis.m_z*dSin)*m_dRadius;
+        Duu->m_x=(-m_XAxis.X()*dCos-m_YAxis.X()*dSin)*m_dRadius;
+        Duu->m_y=(-m_XAxis.Y()*dCos-m_YAxis.Y()*dSin)*m_dRadius;
+        Duu->m_z=(-m_XAxis.Z()*dCos-m_YAxis.Z()*dSin)*m_dRadius;
         }
     if(Duv)
         {
@@ -137,10 +138,10 @@ SGM::Point2D cylinder::Inverse(SGM::Point3D const &Pos,
     double y=Pos.m_y-m_Origin.m_y;
     double z=Pos.m_z-m_Origin.m_z;
 
-    double dx=x*m_XAxis.m_x+y*m_XAxis.m_y+z*m_XAxis.m_z;
-    double dy=x*m_YAxis.m_x+y*m_YAxis.m_y+z*m_YAxis.m_z;
+    double dx=x*m_XAxis.X()+y*m_XAxis.Y()+z*m_XAxis.Z();
+    double dy=x*m_YAxis.X()+y*m_YAxis.Y()+z*m_YAxis.Z();
     double dU=SGM::SAFEatan2(dy,dx);
-    double dV=(x*m_ZAxis.m_x+y*m_ZAxis.m_y+z*m_ZAxis.m_z)/m_dRadius;
+    double dV=(x*m_ZAxis.X()+y*m_ZAxis.Y()+z*m_ZAxis.Z())/m_dRadius;
 
     while(dU<m_Domain.m_UDomain.m_dMin)
         {
@@ -178,9 +179,9 @@ SGM::Point2D cylinder::Inverse(SGM::Point3D const &Pos,
         {
         double dCos=cos(dU);
         double dSin=sin(dU);
-        ClosePos->m_x=m_Origin.m_x+(m_XAxis.m_x*dCos+m_YAxis.m_x*dSin+m_ZAxis.m_x*dV)*m_dRadius;
-        ClosePos->m_y=m_Origin.m_y+(m_XAxis.m_y*dCos+m_YAxis.m_y*dSin+m_ZAxis.m_y*dV)*m_dRadius;
-        ClosePos->m_z=m_Origin.m_z+(m_XAxis.m_z*dCos+m_YAxis.m_z*dSin+m_ZAxis.m_z*dV)*m_dRadius;
+        ClosePos->m_x=m_Origin.m_x+(m_XAxis.X()*dCos+m_YAxis.X()*dSin+m_ZAxis.X()*dV)*m_dRadius;
+        ClosePos->m_y=m_Origin.m_y+(m_XAxis.Y()*dCos+m_YAxis.Y()*dSin+m_ZAxis.Y()*dV)*m_dRadius;
+        ClosePos->m_z=m_Origin.m_z+(m_XAxis.Z()*dCos+m_YAxis.Z()*dSin+m_ZAxis.Z()*dV)*m_dRadius;
         }
     return {dU, dV};
     }

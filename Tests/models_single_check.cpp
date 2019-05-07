@@ -235,7 +235,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(speed_check, single_point_in_volume)
+TEST(speed_check, DISABLED_single_point_in_volume)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -281,7 +281,7 @@ TEST(speed_check, single_point_in_volume)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, blueberry_search)
+TEST(speed_check, DISABLED_blueberry_search)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -987,7 +987,7 @@ TEST(models_single_check, import_check_glom4_0019_Bhinkey_A)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, ACISSphereGeometry_arbitraryCenter)
+TEST(models_single_check, DISABLED_ACISSphereGeometry_arbitraryCenter)
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);
@@ -1121,7 +1121,7 @@ TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_li
     std::vector<SGM::IntersectionType> aTypesFaceLine;
     std::vector<SGM::Entity> aEntity;
     //Euclid::Point3D line_vect = {0.9946543569679107, 0.1032603997898127, -1.270825582042912e-14};
-    SGM::UnitVector3D line_vect = {plane_normal[1],-plane_normal[0],plane_normal[2]}; // choose orthog to plane_normals
+    SGM::UnitVector3D line_vect = {plane_normal.Y(),-plane_normal.X(),plane_normal.Z()}; // choose orthog to plane_normals
     {
         size_t surf_id = 7; //26;
 
@@ -1129,7 +1129,7 @@ TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_li
         SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, aEntity, tolerance, bUseWholeLine);
     }
 
-    const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];
+    const double dot_prod = plane_normal.X()*line_vect.X()+plane_normal.Y()*line_vect.Y()+plane_normal.Z()*line_vect.Z();
 
     EXPECT_NEAR(dot_prod, 0.0, tolerance);
     EXPECT_EQ(1U, aPointsEdgePlane.size());

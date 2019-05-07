@@ -52,9 +52,9 @@ namespace SGM {
                                     UnitVector3D const &YAxis,
                                     UnitVector3D const &ZAxis)
     {
-        m_Matrix[0] = Vector4D(XAxis.m_x, YAxis.m_x, ZAxis.m_x, 0);
-        m_Matrix[1] = Vector4D(XAxis.m_y, YAxis.m_y, ZAxis.m_y, 0);
-        m_Matrix[2] = Vector4D(XAxis.m_z, YAxis.m_z, ZAxis.m_z, 0);
+        m_Matrix[0] = Vector4D(XAxis.X(), YAxis.X(), ZAxis.X(), 0);
+        m_Matrix[1] = Vector4D(XAxis.Y(), YAxis.Y(), ZAxis.Y(), 0);
+        m_Matrix[2] = Vector4D(XAxis.Z(), YAxis.Z(), ZAxis.Z(), 0);
         m_Matrix[3] = Vector4D(0, 0, 0, 1);
     }
 
@@ -66,9 +66,9 @@ namespace SGM {
                                     Vector3D const &Translate
     )
     {
-        m_Matrix[0] = Vector4D(XAxis.m_x, YAxis.m_x, ZAxis.m_x, Translate.m_x);
-        m_Matrix[1] = Vector4D(XAxis.m_y, YAxis.m_y, ZAxis.m_y, Translate.m_y);
-        m_Matrix[2] = Vector4D(XAxis.m_z, YAxis.m_z, ZAxis.m_z, Translate.m_z);
+        m_Matrix[0] = Vector4D(XAxis.X(), YAxis.X(), ZAxis.X(), Translate.m_x);
+        m_Matrix[1] = Vector4D(XAxis.Y(), YAxis.Y(), ZAxis.Y(), Translate.m_y);
+        m_Matrix[2] = Vector4D(XAxis.Z(), YAxis.Z(), ZAxis.Z(), Translate.m_z);
         m_Matrix[3] = Vector4D(0, 0, 0, 1);
     }
 

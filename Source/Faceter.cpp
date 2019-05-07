@@ -2384,14 +2384,14 @@ static SGM::Interval3D TriangleBox(std::vector<SGM::Point2D> &aPoints,
     }
 
 void SplitEdgeUpdateTree(SGM::Point2D        const &D,
-                                std::vector<SGM::Point2D> &aPoints,
-                                std::vector<unsigned int> &aTriangles,
-                                size_t                     nHitTri,
-                                size_t                     nEdge1,
-                                size_t                     nOther,
-                                size_t                     nEdge2,
-                                std::vector<size_t> const &aTris,
-                                SGM::BoxTree              &Tree)
+                         std::vector<SGM::Point2D> &aPoints,
+                         std::vector<unsigned int> &aTriangles,
+                         size_t                     nHitTri,
+                         size_t                     nEdge1,
+                         size_t                     nOther,
+                         size_t                     nEdge2,
+                         std::vector<size_t> const &aTris,
+                         SGM::BoxTree              &Tree)
     {
     unsigned int a1=aTriangles[nHitTri];
     unsigned int b1=aTriangles[nHitTri+1];

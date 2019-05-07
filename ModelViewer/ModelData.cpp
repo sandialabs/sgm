@@ -1102,17 +1102,17 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "XAxis");
             data_item2->setText(1, Data);
 
             auto *data_item3 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "YAxis");
             data_item3->setText(1, Data);
 
             auto *data_item4 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.X(), ZAxis.Y(), ZAxis.Z());
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
 
@@ -1136,17 +1136,17 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "XAxis");
             data_item2->setText(1, Data);
 
             auto *data_item3 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "YAxis");
             data_item3->setText(1, Data);
 
             auto *data_item4 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.X(), ZAxis.Y(), ZAxis.Z());
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
 
@@ -1175,17 +1175,17 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "XAxis");
             data_item2->setText(1, Data);
 
             auto *data_item3 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "YAxis");
             data_item3->setText(1, Data);
 
             auto *data_item4 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.X(), ZAxis.Y(), ZAxis.Z());
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
 
@@ -1224,17 +1224,17 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "XAxis");
             data_item2->setText(1, Data);
 
             auto *data_item3 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "YAxis");
             data_item3->setText(1, Data);
 
             auto *data_item4 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.X(), ZAxis.Y(), ZAxis.Z());
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
 
@@ -1264,17 +1264,17 @@ void ModelData::add_surface_to_tree(QTreeWidgetItem *parent, SGM::Surface Surfac
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "XAxis");
             data_item2->setText(1, Data);
 
             auto *data_item3 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "YAxis");
             data_item3->setText(1, Data);
 
             auto *data_item4 = new QTreeWidgetItem(surface_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.m_x, ZAxis.m_y, ZAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", ZAxis.X(), ZAxis.Y(), ZAxis.Z());
             data_item4->setText(0, "ZAxis");
             data_item4->setText(1, Data);
 
@@ -1423,7 +1423,7 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
             data_item1->setText(1, Data);
 
             auto *data_item2 = new QTreeWidgetItem(curve_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Axis.m_x, Axis.m_y, Axis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Axis.X(), Axis.Y(), Axis.Z());
             data_item2->setText(0, "Axis");
             data_item2->setText(1, Data);
 
@@ -1447,17 +1447,17 @@ void ModelData::add_curve_to_tree(QTreeWidgetItem *parent, SGM::Curve CurveID)
             data_item1->setText(1, Data);
 
             auto data_item2 = new QTreeWidgetItem(curve_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.m_x, XAxis.m_y, XAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", XAxis.X(), XAxis.Y(), XAxis.Z());
             data_item2->setText(0, "X Axis");
             data_item2->setText(1, Data);
 
             auto data_item3 = new QTreeWidgetItem(curve_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.m_x, YAxis.m_y, YAxis.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", YAxis.X(), YAxis.Y(), YAxis.Z());
             data_item3->setText(0, "Y Axis");
             data_item3->setText(1, Data);
 
             auto data_item4 = new QTreeWidgetItem(curve_item);
-            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Normal.m_x, Normal.m_y, Normal.m_z);
+            snprintf(Data, sizeof(Data), "(%.15G, %.15G, %.15G)", Normal.X(), Normal.Y(), Normal.Z());
             data_item4->setText(0, "Z Axis");
             data_item4->setText(1, Data);
 
