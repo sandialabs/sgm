@@ -987,7 +987,7 @@ TEST(models_single_check, import_check_glom4_0019_Bhinkey_A)
     expect_import_check_success(file_name);
 }
 
-TEST(models_single_check, DISABLED_ACISSphereGeometry_arbitraryCenter)
+TEST(models_single_check, ACISSphereGeometry_arbitraryCenter)
 {
     const char* file_name = "ACISSphereGeometry_arbitraryCenter.stp";
     SCOPED_TRACE(file_name);
