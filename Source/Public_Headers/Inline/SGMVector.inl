@@ -17,6 +17,9 @@ namespace SGM {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+    inline Point2D::Point2D(double u, double v)
+        : m_u(u),m_v(v) {}
+
     inline double Point2D::Distance(Point2D const &Pos) const
     {
         double dU = Pos.m_u - m_u;
@@ -476,6 +479,18 @@ namespace SGM {
             }
     }
 
+    inline double MakeUnitVector3D(Point3D const& A, Point3D const& B, UnitVector3D &U)
+        {
+        Vector3D &V = U; // we will unitize the vector ourselves in order to save the length
+        V = {B.m_x - A.m_x, B.m_y - A.m_y, B.m_z - A.m_z};
+        double dLength = std::sqrt(V.MagnitudeSquared());
+        double dScale = 1.0/dLength;
+        V.m_x *= dScale;
+        V.m_y *= dScale;
+        V.m_z *= dScale;
+        return dLength;
+        }
+
     ///////////////////////////////////////////////////////////////////////////
     //
     //  UnitVector4D methods
@@ -516,6 +531,15 @@ namespace SGM {
 //  Ray3D methods
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+    inline Ray3D::Ray3D(const Point3D &orig, const UnitVector3D &dir) :
+        m_Origin(orig),
+        m_Direction(dir),
+        m_InverseDirection(1./dir[0], 1./dir[1], 1./dir[2]),
+        m_xSign(m_InverseDirection.m_x < 0),
+        m_ySign(m_InverseDirection.m_y < 0),
+        m_zSign(m_InverseDirection.m_z < 0)
+        { }
 
     inline void Ray3D::Swap(Ray3D &other)
     {

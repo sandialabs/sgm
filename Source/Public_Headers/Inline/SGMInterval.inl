@@ -2,6 +2,7 @@
 #define SGM_INTERVAL_INL
 
 #include "SGMVector.h"
+#include <cmath>
 
 //
 // Inline function definitions
@@ -531,28 +532,58 @@ namespace SGM {
                 tmax > 0.0); // forward direction only
         }
 
-    inline bool Interval3D::IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance) const
-    {
+    inline bool Interval3D::IntersectsSegment(Ray3D const &ray, double length, double tolerance) const
+        {
+        if (tolerance == 0.0) return IntersectsSegment(ray, length);
         double t_min, t_max;
         bool may_intersect;
-        Vector3D segment(p2.m_x - p1.m_x, p2.m_y - p1.m_y, p2.m_z - p1.m_z);
-        double length = std::sqrt(segment.MagnitudeSquared());
-        UnitVector3D u(segment.m_x/length, segment.m_y/length, segment.m_z/length);
-        Ray3D ray(p1, u);
-        if (tolerance == 0)
-            {
-            may_intersect = IntersectsLineImpl(ray, t_min, t_max);
-            }
-        else
-            {
-            Interval3D const bigger = Extend(tolerance);
-            may_intersect = bigger.IntersectsLineImpl(ray, t_min, t_max);
-            }
+        Interval3D const bigger = Extend(tolerance);
+        may_intersect = bigger.IntersectsLineImpl(ray, t_min, t_max);
         // interval [t_min,t_max] must intersect interval [0,length]
         return (may_intersect && ((std::max)(0.0,t_min) <= (std::min)(length,t_max)));
-    }
+        }
 
-    inline bool Interval3D::IntersectsLineImpl(Ray3D const& ray, double& t_min, double& t_max) const {
+    inline bool Interval3D::IntersectsSegment(Ray3D const &ray, double length) const
+        {
+        double t_min, t_max;
+        bool may_intersect = IntersectsLineImpl(ray, t_min, t_max);
+        // interval [t_min,t_max] must intersect interval [0,length]
+        if (may_intersect)
+            {
+            if (std::isnan(t_max))
+                {
+                // The segment lies in one of the planes of the bounding box.
+                // tweak the bounding box by a small tolerance
+                Interval3D const bigger = Extend(FourthPerimeter()*std::numeric_limits<double>::epsilon());
+                may_intersect = bigger.IntersectsLineImpl(ray, t_min, t_max);
+                if (!may_intersect)
+                    {
+                    return false;
+                    }
+                }
+            return ((std::max)(0.0,t_min) <= (std::min)(length,t_max));
+            }
+        return false;
+        }
+
+    inline bool Interval3D::IntersectsSegment(Point3D const &p1, Point3D const &p2, double tolerance) const
+        {
+        UnitVector3D u;
+        double length = MakeUnitVector3D(p1, p2, u);
+        Ray3D ray(p1,u);
+        return IntersectsSegment(ray,length,tolerance);
+        }
+
+    inline bool Interval3D::IntersectsSegment(Point3D const &p1, Point3D const &p2) const
+        {
+        UnitVector3D u;
+        double length = MakeUnitVector3D(p1, p2, u);
+        Ray3D ray(p1,u);
+        return IntersectsSegment(ray,length);
+        }
+
+    inline bool Interval3D::IntersectsLineImpl(Ray3D const& ray, double& t_min, double& t_max) const
+    {
 
         // This implementation follows:
         // Williams, Amy, et al., "An Efficient and Robust Ray–Box Intersection Algorithm,"

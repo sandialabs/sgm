@@ -213,6 +213,48 @@ double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
     return dCost;
     }
 
+// A Filter that matches:
+//      1) BoxTree::Node when the given ray intersects,
+//      2) BoxTree::Leaf (containing a face*) when the given ray intersects face->FacetTree.
+struct IsIntersectingRayFacetTree
+    {
+    SGM::Result & m_rResult;
+    SGM::Ray3D & m_ray;
+
+    IsIntersectingRayFacetTree() = delete;
+
+    inline IsIntersectingRayFacetTree(SGM::Result &rResult, SGM::Ray3D const & ray)
+        : m_rResult(rResult), m_ray(const_cast<SGM::Ray3D&>(ray)) { }
+
+    inline bool operator()(SGM::BoxTree::Node const * node) const
+        {
+        return node->m_Bound.IntersectsRay(m_ray);
+        }
+
+    inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
+        {
+        if (leaf->m_Bound.IntersectsRay(m_ray))
+            {
+            face* pFace = (face*)leaf->m_pObject;
+            if (pFace->GetFacetTree(m_rResult).AnyIntersectsRay(m_ray))
+                {
+                return true;
+                }
+            };
+        return false;
+        }
+    };
+
+// fill a vector with faces who have a facet that intersects the given ray
+
+inline void FindFacetsIntersectsRay(SGM::Result &rResult,
+                                    SGM::BoxTree const &FaceTree,
+                                    SGM::Ray3D const &ray,
+                                    std::vector<face*> &FacesHit)
+    {
+    FaceTree.Query(IsIntersectingRayFacetTree(rResult,ray), SGM::BoxTree::PushLeafObject<face>(FacesHit));
+    }
+
 RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
                                          volume const *pVolume,
                                          SGM::Point3D const &Origin,
@@ -220,16 +262,11 @@ RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
     {
     SGM::BoxTree const &FaceTree = pVolume->GetFaceTree(rResult);
     RayFaceBoxIntersections RayFaceIntersection(Origin,Direction);
-    std::vector<void const*> aHitFaces(FaceTree.FindIntersectsRay(RayFaceIntersection.m_Ray));
-    RayFaceIntersection.m_aHitFaces.reserve(aHitFaces.size());
-    for (void const* pVoid : aHitFaces)
+    RayFaceIntersection.m_aHitFaces.reserve(SGM_BOX_MAX_RAY_HITS);
+    FindFacetsIntersectsRay(rResult,FaceTree,RayFaceIntersection.m_Ray,RayFaceIntersection.m_aHitFaces);
+    for (face* pFace : RayFaceIntersection.m_aHitFaces)
         {
-        face* pFace = (face*)pVoid;
-        if (IsAnyFacetIntersectsRay(rResult, pFace, RayFaceIntersection.m_Ray))
-            {
-            RayFaceIntersection.m_dCost += CostOfFaceIntersection(pFace, RayFaceIntersection.m_Ray);
-            RayFaceIntersection.m_aHitFaces.push_back(pFace);
-            }
+        RayFaceIntersection.m_dCost += CostOfFaceIntersection(pFace, RayFaceIntersection.m_Ray);
         }
     return RayFaceIntersection;
     }
@@ -288,7 +325,7 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
     for (size_t i = 0; i < NUM_GUESS_RAYS; ++i)
         {
         SGM::UnitVector3D const &Direction = GuessDirections[i];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
+        aIntersections.emplace_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         if (aIntersections.back().m_dCost == 0)
             return aIntersections.back();
         }
@@ -301,7 +338,7 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
     for (size_t i = 0; i < NUM_GUESS_RAYS; ++i)
         {
         SGM::UnitVector3D Direction(-GuessDirections[i]);
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
+        aIntersections.emplace_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         if (aIntersections.back().m_dCost < COST_THRESHOLD_1)
             return aIntersections.back();
         }
@@ -319,7 +356,7 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         VectorDirection.m_x = aDirection[0];
         VectorDirection.m_y = aDirection[1];
         VectorDirection.m_z = aDirection[2];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
+        aIntersections.emplace_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_1)
             {
@@ -344,7 +381,7 @@ RayFaceBoxIntersections FindCheapRay(SGM::Result                          &rResu
         VectorDirection.m_x = aDirection[0];
         VectorDirection.m_y = aDirection[1];
         VectorDirection.m_z = aDirection[2];
-        aIntersections.push_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
+        aIntersections.emplace_back(FindRayFacesCost(rResult, pVolume, Point, Direction));
         auto &rayFaceIntersection = aIntersections.back();
         if (rayFaceIntersection.m_dCost < COST_THRESHOLD_2)
             {
@@ -423,7 +460,8 @@ void FindNextRayFaceBoxIntersections(SGM::Result &rResult,
         {
         NextRayFaceBoxIntersections = FindRayFacesCost(rResult, pVolume, Point, Direction);
         double dNextCost = NextRayFaceBoxIntersections.m_dCost;  
-        if ((nCountSinceNewRay <  12 && dNextCost <= std::min(dCost,1000.))  ||
+        if ( dNextCost == 0                                                 ||
+            (nCountSinceNewRay <  12 && dNextCost <= std::min(dCost,1000.)) ||
             (nCountSinceNewRay < 128 && dNextCost < 10                    ) ||
             (nCountSinceNewRay <  64 && dNextCost < 20                    ) ||
             (nCountSinceNewRay <  32 && dNextCost < 50                    ) ||
@@ -433,7 +471,7 @@ void FindNextRayFaceBoxIntersections(SGM::Result &rResult,
             (nCountSinceNewRay <   2 && dNextCost < 1000                  ))
             {
             ++nCountSinceNewRay; // re-use the previous direction
-            dCost = NextRayFaceBoxIntersections.m_dCost;
+            dCost = dNextCost;
             return;
             }
         }
@@ -562,6 +600,47 @@ inline void FindVolumeTreeLengths(SGM::Result &rResult,
     FindShortestLengths(pVolume->GetBox(rResult), aVolumeShortestLengths);
     }
 
+// A Filter that matches:
+//      1) BoxTree::Node when the given bounding box intersects,
+//      2) BoxTree::Leaf (containing a face*) when the given bounding box intersects face->FacetTree.
+struct IsOverlappingFacetTree
+    {
+    SGM::Result & m_rResult;
+    SGM::Interval3D &m_bound; // implicitly constant will not be changed
+
+    IsOverlappingFacetTree() = delete;
+
+    inline explicit IsOverlappingFacetTree(SGM::Result &rResult, SGM::Interval3D const & bound)
+        : m_rResult(rResult), m_bound(const_cast<SGM::Interval3D&>(bound)) { }
+
+    inline bool operator()(SGM::BoxTree::Node const * node) const
+        {
+        return m_bound.IntersectsBox(node->m_Bound);
+        }
+
+    inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
+        {
+        if (m_bound.IntersectsBox(leaf->m_Bound))
+            {
+            face* pFace = (face*)leaf->m_pObject;
+            if (pFace->GetFacetTree(m_rResult).AnyIntersectsBox(m_bound))
+                {
+                return true;
+                }
+            };
+        return false;
+        }
+    };
+
+// True if the given Bound overlaps the box of any facet of faces in the given FaceTree.
+
+inline bool AnyFacetIntersectsBox(SGM::Result &rResult,
+                                  SGM::BoxTree const &FaceTree,
+                                  SGM::Interval3D &Bound)
+    {
+    return FaceTree.Query(IsOverlappingFacetTree(rResult,Bound), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
+    }
+
 bool PointsInVolumeLoop(SGM::Result &rResult,
                         const volume *pVolume,
                         double dTolerance,
@@ -586,10 +665,28 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
     size_t nHits = 0;
     bool bUsePrevious = false;
 
+    SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
+
     // loop over points in Z-order
     for (size_t i = iBegin; i < iEnd; ++i)
         {
         SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+
+        if (i > iBegin)
+            {
+            SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i-1]];
+            SGM::Interval3D Bound(PreviousPoint,NextPoint);
+            if (!AnyFacetIntersectsBox(rResult,FaceTree,Bound))
+                {
+                // we have our answer, it is the same as the previous point
+                aIsInside[aIndexOrdered[i]] = aIsInside[aIndexOrdered[i-1]];
+                dCost = 0.0;
+                bUsePrevious = false;
+                nHits = 0;
+                ++nCountSinceNewRay;
+                continue; // go to the next point
+                }
+            }
 
         RayFaceBoxIntersections NextRayIntersects;
         FindNextRayFaceBoxIntersections(rResult,
@@ -684,7 +781,7 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
                        &aPoints,
                        &aIsInside);
 #endif
-    return std::move(aIsInside);
+    return aIsInside;
     }
 
 

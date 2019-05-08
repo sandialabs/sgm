@@ -237,94 +237,94 @@ bool TestCurve(SGM::Result              &rResult,
             {}
 
         void Visit(thing &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(assembly &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(attribute &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(body &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(complex &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(edge &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(face &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(reference &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(vertex &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(volume &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(line &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(circle &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(ellipse &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(hyperbola &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(parabola &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(hermite &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(NUBcurve &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(NURBcurve &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(PointCurve &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(TorusKnot &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(plane &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(cylinder &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(cone &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(sphere &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(torus &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(revolve &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(extrude &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(offset &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(NUBsurface &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         void Visit(NURBsurface &x) override
-            { auto box = x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
+            { x.GetBox(*pResult); x.TransformBox(*pResult, m_Transform3D); x.ResetBox(*pResult); }
 
         };
 

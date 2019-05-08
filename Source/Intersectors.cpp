@@ -2259,7 +2259,7 @@ size_t IntersectLineAndTorus(SGM::Point3D                 const &Origin,
         Pos*=Trans;
         SGM::Point3D SnappedPos;
         pTorus->Inverse(Pos,&SnappedPos);
-        if(pTorus->GetType()!=SGM::TorusKindType::DonutType)
+        if(pTorus->GetKind()!=SGM::TorusKindType::DonutType)
             {
             double dDist=Pos.Distance(SnappedPos);
             if(dDist<SGM_MIN_TOL)

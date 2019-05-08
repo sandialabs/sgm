@@ -4,27 +4,33 @@
 namespace SGM
 {
 
-template<class PointType, typename ElemType>
-inline PointTree<PointType, ElemType>::PointTree() :
-    m_Root(NULL), m_nSize(0)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree<PointType, ElemType, DistanceOp>::PointTree() :
+    m_Root(NULL), m_nSize(0), m_DistanceOp()
     {}
 
-template<class PointType, typename ElemType>
-inline PointTree<PointType, ElemType>::PointTree(std::vector<std::pair<PointType, ElemType>> &points)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree<PointType, ElemType, DistanceOp>::PointTree(const DistanceOp& distanceOp) :
+    m_Root(NULL), m_nSize(0), m_DistanceOp(distanceOp)
+    {}
+
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree<PointType, ElemType, DistanceOp>::PointTree(std::vector<std::pair<PointType, ElemType>> &points, const DistanceOp& distanceOp) :
+    m_Root(NULL), m_nSize(0), m_DistanceOp(distanceOp)
     {
     m_Root = BuildTree(points.begin(), points.end(), 0);
     m_nSize = points.size();
     }
 
-template<class PointType, typename ElemType>
-inline PointTree<PointType, ElemType>::PointTree(const PointTree &other)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree<PointType, ElemType, DistanceOp>::PointTree(const PointTree<PointType, ElemType, DistanceOp> &other)
     {
     m_Root = DeepCopy(other.m_Root);
     m_nSize = other.m_nSize;
     }
 
-template<class PointType, typename ElemType>
-inline PointTree <PointType, ElemType> &PointTree<PointType, ElemType>::operator=(const PointTree &other)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree <PointType, ElemType, DistanceOp> &PointTree<PointType, ElemType, DistanceOp>::operator=(const PointTree<PointType, ElemType, DistanceOp> &other)
     {
     if (this != &other)
         {
@@ -35,8 +41,8 @@ inline PointTree <PointType, ElemType> &PointTree<PointType, ElemType>::operator
     return *this;
     }
 
-template<class PointType, typename ElemType>
-inline typename PointTree<PointType, ElemType>::Node * PointTree<PointType, ElemType>::DeepCopy(typename PointTree<PointType, ElemType>::Node *root)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline typename PointTree<PointType, ElemType, DistanceOp>::Node * PointTree<PointType, ElemType, DistanceOp>::DeepCopy(typename PointTree<PointType, ElemType, DistanceOp>::Node *root)
     {
     if (root == NULL) return NULL;
     Node *newRoot = new Node(*root);
@@ -50,11 +56,11 @@ inline typename PointTree<PointType, ElemType>::Node * PointTree<PointType, Elem
 // The root of the subtree is at level 'currLevel'.
 // O(n) time partitioning algorithm is used to locate the median element
 
-template<class PointType, typename ElemType>
-typename PointTree<PointType, ElemType>::Node *
-PointTree<PointType, ElemType>::BuildTree(typename std::vector<std::pair<PointType, ElemType>>::iterator start,
-                                          typename std::vector<std::pair<PointType, ElemType>>::iterator end,
-                                          int currLevel)
+template<class PointType, typename ElemType, typename DistanceOp>
+typename PointTree<PointType, ElemType, DistanceOp>::Node *
+PointTree<PointType, ElemType, DistanceOp>::BuildTree(typename std::vector<std::pair<PointType, ElemType>>::iterator start,
+                                                      typename std::vector<std::pair<PointType, ElemType>>::iterator end,
+                                                      int currLevel)
     {
     if (start >= end) return NULL; // empty tree
 
@@ -81,8 +87,8 @@ PointTree<PointType, ElemType>::BuildTree(typename std::vector<std::pair<PointTy
     }
 
 
-template<class PointType, typename ElemType>
-inline void PointTree<PointType, ElemType>::FreeRecurse(typename PointTree<PointType, ElemType>::Node *currNode)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline void PointTree<PointType, ElemType, DistanceOp>::FreeRecurse(typename PointTree<PointType, ElemType, DistanceOp>::Node *currNode)
     {
     if (currNode == NULL) return;
     FreeRecurse(currNode->m_Left);
@@ -90,26 +96,26 @@ inline void PointTree<PointType, ElemType>::FreeRecurse(typename PointTree<Point
     delete currNode;
     }
 
-template<class PointType, typename ElemType>
-inline PointTree<PointType, ElemType>::~PointTree()
+template<class PointType, typename ElemType, typename DistanceOp>
+inline PointTree<PointType, ElemType, DistanceOp>::~PointTree()
     {
     FreeRecurse(m_Root);
     }
 
-template<class PointType, typename ElemType>
-inline std::size_t PointTree<PointType, ElemType>::Dimension() const
+template<class PointType, typename ElemType, typename DistanceOp>
+inline std::size_t PointTree<PointType, ElemType, DistanceOp>::Dimension() const
     {
     return N;
     }
 
-template<class PointType, typename ElemType>
-inline std::size_t PointTree<PointType, ElemType>::Size() const
+template<class PointType, typename ElemType, typename DistanceOp>
+inline std::size_t PointTree<PointType, ElemType, DistanceOp>::Size() const
     {
     return m_nSize;
     }
 
-template<class PointType, typename ElemType>
-bool PointTree<PointType, ElemType>::Empty() const
+template<class PointType, typename ElemType, typename DistanceOp>
+bool PointTree<PointType, ElemType, DistanceOp>::Empty() const
     {
     return m_nSize == 0;
     }
@@ -118,9 +124,9 @@ bool PointTree<PointType, ElemType>::Empty() const
 // Returns the Node that contains point if it is present in subtree 'currNode'.
 // Returns the Node below which point should be inserted if point is not in the subtree.
 
-template<class PointType, typename ElemType>
-inline typename PointTree<PointType, ElemType>::Node *
-PointTree<PointType, ElemType>::FindNode(typename PointTree<PointType, ElemType>::Node *currNode,
+template<class PointType, typename ElemType, typename DistanceOp>
+inline typename PointTree<PointType, ElemType, DistanceOp>::Node *
+PointTree<PointType, ElemType, DistanceOp>::FindNode(typename PointTree<PointType, ElemType, DistanceOp>::Node *currNode,
                                          const PointType &pt) const
     {
     if (currNode == NULL || currNode->m_Point == pt) return currNode;
@@ -137,15 +143,15 @@ PointTree<PointType, ElemType>::FindNode(typename PointTree<PointType, ElemType>
         }
     }
 
-template<class PointType, typename ElemType>
-inline bool PointTree<PointType, ElemType>::Contains(const PointType &Point) const
+template<class PointType, typename ElemType, typename DistanceOp>
+inline bool PointTree<PointType, ElemType, DistanceOp>::Contains(const PointType &Point) const
     {
     auto node = FindNode(m_Root, Point);
     return node != NULL && node->m_Point == Point;
     }
 
-template<class PointType, typename ElemType>
-inline void PointTree<PointType, ElemType>::Insert(const PointType &pt, const ElemType &value)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline void PointTree<PointType, ElemType, DistanceOp>::Insert(const PointType &pt, const ElemType &value)
     {
     auto targetNode = FindNode(m_Root, pt);
     if (targetNode == NULL)
@@ -176,8 +182,8 @@ inline void PointTree<PointType, ElemType>::Insert(const PointType &pt, const El
         }
     }
 
-template<class PointType, typename ElemType>
-inline const ElemType &PointTree<PointType, ElemType>::At(const PointType &Point) const
+template<class PointType, typename ElemType, typename DistanceOp>
+inline const ElemType &PointTree<PointType, ElemType, DistanceOp>::At(const PointType &Point) const
     {
     auto node = FindNode(m_Root, Point);
     if (node == NULL || node->m_Point != Point)
@@ -190,15 +196,15 @@ inline const ElemType &PointTree<PointType, ElemType>::At(const PointType &Point
         }
     }
 
-template<class PointType, typename ElemType>
-inline ElemType &PointTree<PointType, ElemType>::At(const PointType &Point)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline ElemType &PointTree<PointType, ElemType, DistanceOp>::At(const PointType &Point)
     {
-    const PointTree<PointType, ElemType> &constThis = *this;
+    const PointTree<PointType, ElemType, DistanceOp> &constThis = *this;
     return const_cast<ElemType &>(constThis.At(Point));
     }
 
-template<class PointType, typename ElemType>
-inline ElemType &PointTree<PointType, ElemType>::operator[](const PointType &Point)
+template<class PointType, typename ElemType, typename DistanceOp>
+inline ElemType &PointTree<PointType, ElemType, DistanceOp>::operator[](const PointType &Point)
     {
     auto node = FindNode(m_Root, Point);
     if (node != NULL && node->m_Point == Point)
@@ -215,16 +221,16 @@ inline ElemType &PointTree<PointType, ElemType>::operator[](const PointType &Poi
         }
     }
 
-template<class PointType, typename ElemType>
-void PointTree<PointType, ElemType>::NearestNeighborRecurse(const typename PointTree<PointType, ElemType>::Node *currNode,
-                                                            const PointType &key,
-                                                            SGMInternal::bounded_priority_queue<ElemType> &pQueue) const
+template<class PointType, typename ElemType, typename DistanceOp>
+void PointTree<PointType, ElemType, DistanceOp>::NearestNeighborRecurse(const typename PointTree<PointType, ElemType, DistanceOp>::Node *currNode,
+                                                                        const PointType &key,
+                                                                        SGMInternal::bounded_priority_queue<ElemType> &pQueue) const
     {
     if (currNode == NULL) return;
     const PointType &currPoint = currNode->m_Point;
 
     // Add the current point to the BPQ if it is closer to 'key' that some point in the BPQ
-    pQueue.enqueue(currNode->m_Value, Distance(currPoint, key));
+    pQueue.enqueue(currNode->m_Value, m_DistanceOp(currPoint, key));
 
     // Recursively search the half of the tree that contains Point 'key'
     int currLevel = currNode->m_Level;
@@ -248,8 +254,8 @@ void PointTree<PointType, ElemType>::NearestNeighborRecurse(const typename Point
         }
     }
 
-template<class PointType, typename ElemType>
-std::vector<ElemType> PointTree<PointType, ElemType>::NearestNeighbors(const PointType &Point, std::size_t k) const
+template<class PointType, typename ElemType, typename DistanceOp>
+std::vector<ElemType> PointTree<PointType, ElemType, DistanceOp>::NearestNeighbors(const PointType &Point, std::size_t k) const
     {
     std::vector<ElemType> Neighbors;
     if (Empty()) return Neighbors;

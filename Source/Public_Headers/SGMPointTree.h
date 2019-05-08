@@ -13,26 +13,34 @@
 namespace SGM
 {
 
+template<class PointType, typename ElemType, typename DistanceOp>
+class PointTree;
+
+typedef PointTree<Point2D,unsigned,DistanceSquared> PointTreeIndices2D;
+typedef PointTree<Point3D,unsigned,DistanceSquared> PointTreeIndices3D;
+
+typedef PointTree<Point2D,Point2D*,DistanceSquared> PointTreePointers2D;
+typedef PointTree<Point3D,Point2D*,DistanceSquared> PointTreePointers3D;
+
 // PointTree is a kd-tree in 2 or 3 dimensions for finding k nearest neighbors.
 
-template<class PointType, typename ElemType>
+template<class PointType, typename ElemType, typename DistanceOp>
 class PointTree
     {
 public:
 
-    enum
-        {
-        N = PointType::N
-        };
+    enum { N = PointType::N };
 
     // Construct an empty PointTree
 
     PointTree();
 
+    explicit PointTree(const DistanceOp& distanceOp);
+
     // Build a balanced KD-tree from a large vector of pair<point,element>.
     // The vector will be re-ordered in the process.
 
-    explicit PointTree(std::vector<std::pair<PointType, ElemType>> &points);
+    explicit PointTree(std::vector<std::pair<PointType, ElemType>> &points, const DistanceOp& distanceOp = DistanceOp());
 
     ~PointTree();
 
@@ -99,9 +107,11 @@ private:
             {}
         };
 
-    Node *m_Root;
+    Node        *m_Root;
+    std::size_t  m_nSize;
+    DistanceOp   m_DistanceOp;
 
-    std::size_t m_nSize;
+private:
 
     Node *BuildTree(typename std::vector<std::pair<PointType, ElemType>>::iterator start,
                     typename std::vector<std::pair<PointType, ElemType>>::iterator end, int currLevel);

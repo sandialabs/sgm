@@ -262,7 +262,7 @@ TEST(speed_check, DISABLED_single_point_in_volume)
     aData.push_back(1);
     rResult.SetDebugData(aData);
 
-    bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID); 
+    bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID);
 
     SGM::UnitVector3D Vec = {1,1,1};
     SGM::CreateLinearEdge(rResult,Pos,Pos+20*Vec);

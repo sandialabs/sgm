@@ -26,7 +26,6 @@ namespace SGM {
         return SAFEatan2(YVec%Vec,(*this)%Vec);
     }
 
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // Transform operators for Point, Vector, UnitVector

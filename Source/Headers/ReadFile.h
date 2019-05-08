@@ -81,7 +81,7 @@ struct STEPLineData
         other.m_nSTEPTag = STEPTag::NULL_NONE_INVALID;
         m_aIDs = std::move(other.m_aIDs);
         m_aDoubles = std::move(other.m_aDoubles);
-        m_aInts = std::move(m_aInts);
+        m_aInts = std::move(other.m_aInts);
         m_aSizes = std::move(other.m_aSizes);
         m_aStrings = std::move(other.m_aStrings);
         m_bFlag = other.m_bFlag;
