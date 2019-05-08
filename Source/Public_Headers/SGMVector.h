@@ -179,10 +179,6 @@ namespace SGM
 
         explicit Vector3D(Point3D const &Pos);
 
-        double Dot(Vector3D const &v) const {
-            return m_x*v.m_x + m_y*v.m_y + m_z*v.m_z;
-        }
-
         double Magnitude() const;
 
         double MagnitudeSquared() const;
@@ -250,8 +246,9 @@ namespace SGM
 
         UnitVector2D(Vector2D const &Vec);
 
-        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
-        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_u)[axis]; }
+        double U() const {return m_u;}
+
+        double V() const {return m_v;}
 
     private:
 
@@ -284,8 +281,11 @@ namespace SGM
 
         UnitVector3D operator*=(Transform3D const &Trans);
 
-        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
-        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_x)[axis]; }
+        double X() const {return m_x;}
+
+        double Y() const {return m_y;}
+
+        double Z() const {return m_z;}
 
     private:
 
@@ -307,8 +307,13 @@ namespace SGM
 
         UnitVector4D(Vector4D const &Vec);
 
-        const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_x)[axis]; }
-        const double& operator []( const size_t axis ) { assert(axis < N); return (&m_x)[axis]; }
+        double X() const {return m_x;}
+
+        double Y() const {return m_y;}
+
+        double Z() const {return m_z;}
+
+        double W() const {return m_w;}
 
     private:
 

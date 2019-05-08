@@ -834,9 +834,9 @@ bool PointInVolume(SGM::Result        &rResult,
         if(rResult.GetDebugFlag()==7)
             {
             std::vector<double> aData;
-            aData.push_back(Axis[0]);
-            aData.push_back(Axis[1]);
-            aData.push_back(Axis[2]);
+            aData.push_back(Axis.X());
+            aData.push_back(Axis.Y());
+            aData.push_back(Axis.Z());
             rResult.SetDebugData(aData);
             }
         if(nHits)
@@ -850,7 +850,7 @@ bool PointInVolume(SGM::Result        &rResult,
 //                std::cout << std::setprecision(16);
 //                std::cout << " Origin={" << std::setw(20) << Point.m_x << ',' << std::setw(20) << Point.m_y << ',' << std::setw(20) << Point.m_z << "} ";
 //                std::cout << std::setprecision(16);
-//                std::cout << " Axis={" << std::setw(20) << Axis[0] << ',' << std::setw(20) << Axis[1] << ',' << std::setw(20) << Axis[2] << "} ";
+//                std::cout << " Axis={" << std::setw(20) << Axis.X() << ',' << std::setw(20) << Axis[1] << ',' << std::setw(20) << Axis[2] << "} ";
 
 //                // print the first non-face
 //                size_t nSize = aEntity.size();

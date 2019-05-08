@@ -70,23 +70,23 @@ void ellipse::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3
 
     if(Pos)
         {
-        Pos->m_x=m_Center[0]+m_XAxis[0]*dCosA+m_YAxis[0]*dSinB;
-        Pos->m_y=m_Center[1]+m_XAxis[1]*dCosA+m_YAxis[1]*dSinB;
-        Pos->m_z=m_Center[2]+m_XAxis[2]*dCosA+m_YAxis[2]*dSinB;
+        Pos->m_x=m_Center[0]+m_XAxis.X()*dCosA+m_YAxis.X()*dSinB;
+        Pos->m_y=m_Center[1]+m_XAxis.Y()*dCosA+m_YAxis.Y()*dSinB;
+        Pos->m_z=m_Center[2]+m_XAxis.Z()*dCosA+m_YAxis.Z()*dSinB;
         }
     if(D1)
         {
         double dCosB=dCos*m_dB;
         double dSinA=dSin*m_dA;
-        D1->m_x=m_YAxis[0]*dCosB-m_XAxis[0]*dSinA;
-        D1->m_y=m_YAxis[1]*dCosB-m_XAxis[1]*dSinA;
-        D1->m_z=m_YAxis[2]*dCosB-m_XAxis[2]*dSinA;
+        D1->m_x=m_YAxis.X()*dCosB-m_XAxis.X()*dSinA;
+        D1->m_y=m_YAxis.Y()*dCosB-m_XAxis.Y()*dSinA;
+        D1->m_z=m_YAxis.Z()*dCosB-m_XAxis.Z()*dSinA;
         }
     if(D2)
         {
-        D2->m_x=-m_XAxis[0]*dCosA-m_YAxis[0]*dSinB;
-        D2->m_y=-m_XAxis[1]*dCosA-m_YAxis[1]*dSinB;
-        D2->m_z=-m_XAxis[2]*dCosA-m_YAxis[2]*dSinB;
+        D2->m_x=-m_XAxis.X()*dCosA-m_YAxis.X()*dSinB;
+        D2->m_y=-m_XAxis.Y()*dCosA-m_YAxis.Y()*dSinB;
+        D2->m_z=-m_XAxis.Z()*dCosA-m_YAxis.Z()*dSinB;
         }
     }
 

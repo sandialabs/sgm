@@ -708,9 +708,9 @@ inline void add_point(buffer<GLfloat>::iterator &iter_data,
 inline void add_normal(buffer<GLfloat>::iterator &iter_data,
                        const SGM::UnitVector3D &normal)
 {
-    *iter_data++ = (GLfloat) normal[0];
-    *iter_data++ = (GLfloat) normal[1];
-    *iter_data++ = (GLfloat) normal[2];
+    *iter_data++ = (GLfloat) normal.X();
+    *iter_data++ = (GLfloat) normal.Y();
+    *iter_data++ = (GLfloat) normal.Z();
 }
 
 inline void add_color(buffer<GLfloat>::iterator &iter_data,

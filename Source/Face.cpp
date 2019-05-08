@@ -527,10 +527,55 @@ void FindClosestBoundary(SGM::Result        &rResult,
         IndexMinStart=IndexMinEnd ? IndexMinEnd-1 : aUVBoundary.size()-1;
         Start=aUVBoundary[IndexMinStart];
         End=aUVBoundary[IndexMinEnd];
-        if( SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u) ||
-            SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
+        if(SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u))
             {
-
+            if(SurfDomain.m_UDomain.OnBoundary(Start.m_u,SGM_MIN_TOL))
+                {
+                if(Start.m_u<SurfDomain.m_UDomain.MidPoint())
+                    {
+                    Start.m_u+=SurfDomain.m_UDomain.Length();
+                    }
+                else
+                    {
+                    Start.m_u-=SurfDomain.m_UDomain.Length();
+                    }
+                }
+            else if(SurfDomain.m_UDomain.OnBoundary(End.m_u,SGM_MIN_TOL))
+                {
+                if(End.m_u<SurfDomain.m_UDomain.MidPoint())
+                    {
+                    End.m_u+=SurfDomain.m_UDomain.Length();
+                    }
+                else
+                    {
+                    End.m_u-=SurfDomain.m_UDomain.Length();
+                    }
+                }
+            }
+        if(SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
+            {
+            if(SurfDomain.m_VDomain.OnBoundary(Start.m_v,SGM_MIN_TOL))
+                {
+                if(Start.m_v<SurfDomain.m_VDomain.MidPoint())
+                    {
+                    Start.m_v+=SurfDomain.m_VDomain.Length();
+                    }
+                else
+                    {
+                    Start.m_v-=SurfDomain.m_VDomain.Length();
+                    }
+                }
+            else if(SurfDomain.m_VDomain.OnBoundary(End.m_v,SGM_MIN_TOL))
+                {
+                if(End.m_v<SurfDomain.m_VDomain.MidPoint())
+                    {
+                    End.m_v+=SurfDomain.m_VDomain.Length();
+                    }
+                else
+                    {
+                    End.m_v-=SurfDomain.m_VDomain.Length();
+                    }
+                }
             }
         }
     SegmentClosestPoint(Start,End,uv,CloseUV);
@@ -1289,8 +1334,8 @@ std::vector<SGM::Point2D> const &face::GetUVBoundary(SGM::Result &rResult,
     return IterEdge->second;
     }
 
-std::vector<SGM::Point2D> const &face::SetUVBoundary(SGM::Result               &rResult,
-                                                     edge                const *pEdge)
+std::vector<SGM::Point2D> const &face::SetUVBoundary(SGM::Result &rResult,
+                                                     edge  const *pEdge)
     {
     std::vector<SGM::Point3D> const &aPoints3D=pEdge->GetFacets(rResult);
     SGM::EdgeSideType nSideType=GetSideType(pEdge);
@@ -1729,7 +1774,8 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
         // Check for singularities.
         if( pEdge->GetStart() && 
             m_pSurface->SingularHighV() && 
-            SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_FIT,false))
+            SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMax,SGM_FIT,false) &&
+            bFirstCall)
             {
             SGM::Point3D PosE;
             if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_FIT))
@@ -1740,12 +1786,13 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
                 {
                 PosE=pEdge->FindMidPoint(0.99);
                 }
-            SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+            SGM::Point2D uvE=AdvancedInverse(pEdge,nType,PosE,false);
             uv.m_u=uvE.m_u;
             }
         else if( pEdge->GetStart() && 
-                    m_pSurface->SingularHighU() && 
-                    SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_FIT,false))
+                 m_pSurface->SingularHighU() && 
+                 SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMax,SGM_FIT,false) &&
+                 bFirstCall)
             {
             SGM::Point3D PosE;
             if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_FIT))
@@ -1756,12 +1803,13 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
                 {
                 PosE=pEdge->FindMidPoint(0.99);
                 }
-            SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+            SGM::Point2D uvE=AdvancedInverse(pEdge,nType,PosE,false);
             uv.m_v=uvE.m_v;
             }
         else if( pEdge->GetStart() && 
-                    m_pSurface->SingularLowV() && 
-                    SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_FIT,false))
+                 m_pSurface->SingularLowV() && 
+                 SGM::NearEqual(uv.m_v,Domain.m_VDomain.m_dMin,SGM_FIT,false) &&
+                 bFirstCall)
             {
             SGM::Point3D PosE;
             if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_FIT))
@@ -1772,12 +1820,13 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
                 {
                 PosE=pEdge->FindMidPoint(0.99);
                 }
-            SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+            SGM::Point2D uvE=AdvancedInverse(pEdge,nType,PosE,false);
             uv.m_u=uvE.m_u;
             }
         else if( pEdge->GetStart() && 
-                    m_pSurface->SingularLowU() && 
-                    SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_FIT,false))
+                 m_pSurface->SingularLowU() && 
+                 SGM::NearEqual(uv.m_u,Domain.m_UDomain.m_dMin,SGM_FIT,false) &&
+                 bFirstCall)
             {
             SGM::Point3D PosE;
             if(SGM::NearEqual(Pos,pEdge->GetStart()->GetPoint(),SGM_FIT))
@@ -1788,7 +1837,7 @@ SGM::Point2D face::AdvancedInverse(edge         const *pEdge,
                 {
                 PosE=pEdge->FindMidPoint(0.99);
                 }
-            SGM::Point2D uvE=m_pSurface->Inverse(PosE);
+            SGM::Point2D uvE=AdvancedInverse(pEdge,nType,PosE,false);
             uv.m_v=uvE.m_v;
             }
 

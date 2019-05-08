@@ -62,21 +62,21 @@ void circle::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vector3D
 
     if(Pos)
         {
-        Pos->m_x=m_Center[0]+(m_XAxis[0]*dCos+m_YAxis[0]*dSin)*m_dRadius;
-        Pos->m_y=m_Center[1]+(m_XAxis[1]*dCos+m_YAxis[1]*dSin)*m_dRadius;
-        Pos->m_z=m_Center[2]+(m_XAxis[2]*dCos+m_YAxis[2]*dSin)*m_dRadius;
+        Pos->m_x=m_Center[0]+(m_XAxis.X()*dCos+m_YAxis.X()*dSin)*m_dRadius;
+        Pos->m_y=m_Center[1]+(m_XAxis.Y()*dCos+m_YAxis.Y()*dSin)*m_dRadius;
+        Pos->m_z=m_Center[2]+(m_XAxis.Z()*dCos+m_YAxis.Z()*dSin)*m_dRadius;
         }
     if(D1)
         {
-        D1->m_x=(m_YAxis[0]*dCos-m_XAxis[0]*dSin)*m_dRadius;
-        D1->m_y=(m_YAxis[1]*dCos-m_XAxis[1]*dSin)*m_dRadius;
-        D1->m_z=(m_YAxis[2]*dCos-m_XAxis[2]*dSin)*m_dRadius;
+        D1->m_x=(m_YAxis.X()*dCos-m_XAxis.X()*dSin)*m_dRadius;
+        D1->m_y=(m_YAxis.Y()*dCos-m_XAxis.Y()*dSin)*m_dRadius;
+        D1->m_z=(m_YAxis.Z()*dCos-m_XAxis.Z()*dSin)*m_dRadius;
         }
     if(D2)
         {
-        D2->m_x=(-m_XAxis[0]*dCos-m_YAxis[0]*dSin)*m_dRadius;
-        D2->m_y=(-m_XAxis[1]*dCos-m_YAxis[1]*dSin)*m_dRadius;
-        D2->m_z=(-m_XAxis[2]*dCos-m_YAxis[2]*dSin)*m_dRadius;
+        D2->m_x=(-m_XAxis.X()*dCos-m_YAxis.X()*dSin)*m_dRadius;
+        D2->m_y=(-m_XAxis.Y()*dCos-m_YAxis.Y()*dSin)*m_dRadius;
+        D2->m_z=(-m_XAxis.Z()*dCos-m_YAxis.Z()*dSin)*m_dRadius;
         }
     }
 
@@ -93,8 +93,8 @@ double circle::Inverse(SGM::Point3D const &Pos,
     double dSpokeY=Pos.m_y-Center.m_y;
     double dSpokeZ=Pos.m_z-Center.m_z;
 
-    double dx=dSpokeX*XAxis[0]+dSpokeY*XAxis[1]+dSpokeZ*XAxis[2];
-    double dy=dSpokeX*YAxis[0]+dSpokeY*YAxis[1]+dSpokeZ*YAxis[2];
+    double dx=dSpokeX*XAxis.X()+dSpokeY*XAxis.Y()+dSpokeZ*XAxis.Z();
+    double dy=dSpokeX*YAxis.X()+dSpokeY*YAxis.Y()+dSpokeZ*YAxis.Z();
     double t=std::atan2(dy,dx);
 
     while(t<m_Domain.m_dMin)
@@ -124,9 +124,9 @@ double circle::Inverse(SGM::Point3D const &Pos,
         double dCos=cos(t);
         double dSin=sin(t);
 
-        ClosePos->m_x=Center.m_x+(XAxis[0]*dCos+YAxis[0]*dSin)*dRadius;
-        ClosePos->m_y=Center.m_y+(XAxis[1]*dCos+YAxis[1]*dSin)*dRadius;
-        ClosePos->m_z=Center.m_z+(XAxis[2]*dCos+YAxis[2]*dSin)*dRadius;
+        ClosePos->m_x=Center.m_x+(XAxis.X()*dCos+YAxis.X()*dSin)*dRadius;
+        ClosePos->m_y=Center.m_y+(XAxis.Y()*dCos+YAxis.Y()*dSin)*dRadius;
+        ClosePos->m_z=Center.m_z+(XAxis.Z()*dCos+YAxis.Z()*dSin)*dRadius;
         }
     return t;
     }

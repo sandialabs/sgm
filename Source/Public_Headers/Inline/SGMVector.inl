@@ -535,7 +535,7 @@ namespace SGM {
     inline Ray3D::Ray3D(const Point3D &orig, const UnitVector3D &dir) :
         m_Origin(orig),
         m_Direction(dir),
-        m_InverseDirection(1./dir[0], 1./dir[1], 1./dir[2]),
+        m_InverseDirection(1./dir.X(), 1./dir.Y(), 1./dir.Z()),
         m_xSign(m_InverseDirection.m_x < 0),
         m_ySign(m_InverseDirection.m_y < 0),
         m_zSign(m_InverseDirection.m_z < 0)
@@ -584,7 +584,7 @@ namespace SGM {
 
     inline UnitVector3D operator-(UnitVector3D const &UVec)
     {
-        return Vector3D(-UVec[0],-UVec[1],-UVec[2]);
+        return Vector3D(-UVec.X(),-UVec.Y(),-UVec.Z());
     }
 
     inline Vector2D operator*(double dValue,Vector2D const &Vec)

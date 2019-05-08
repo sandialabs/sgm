@@ -50,9 +50,9 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
 
     if(Pos)
         {
-        Pos->m_x=m_Center.m_x+(m_XAxis[0]*dCosA+m_YAxis[0]*dSinA)*(m_dMajorRadius+dCosB)+m_Normal[0]*dSinB;
-        Pos->m_y=m_Center.m_y+(m_XAxis[1]*dCosA+m_YAxis[1]*dSinA)*(m_dMajorRadius+dCosB)+m_Normal[1]*dSinB;
-        Pos->m_z=m_Center.m_z+(m_XAxis[2]*dCosA+m_YAxis[2]*dSinA)*(m_dMajorRadius+dCosB)+m_Normal[2]*dSinB;
+        Pos->m_x=m_Center.m_x+(m_XAxis.X()*dCosA+m_YAxis.X()*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.X()*dSinB;
+        Pos->m_y=m_Center.m_y+(m_XAxis.Y()*dCosA+m_YAxis.Y()*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.Y()*dSinB;
+        Pos->m_z=m_Center.m_z+(m_XAxis.Z()*dCosA+m_YAxis.Z()*dSinA)*(m_dMajorRadius+dCosB)+m_Normal.Z()*dSinB;
         }
     if(D1)
         {
@@ -60,9 +60,9 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         double dSinAnA=dSinA*m_nA;
         double dCosBnB=dCosB*m_nB;
         double dSinBnB=dSinB*m_nB;
-        D1->m_x=(m_YAxis[0]*dCosAnA-m_XAxis[0]*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis[0]*dCosA+m_YAxis[0]*dSinA)*dSinBnB+m_Normal[0]*dCosBnB;
-        D1->m_y=(m_YAxis[1]*dCosAnA-m_XAxis[1]*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis[1]*dCosA+m_YAxis[1]*dSinA)*dSinBnB+m_Normal[1]*dCosBnB;
-        D1->m_z=(m_YAxis[2]*dCosAnA-m_XAxis[2]*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis[2]*dCosA+m_YAxis[2]*dSinA)*dSinBnB+m_Normal[2]*dCosBnB;
+        D1->m_x=(m_YAxis.X()*dCosAnA-m_XAxis.X()*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.X()*dCosA+m_YAxis.X()*dSinA)*dSinBnB+m_Normal.X()*dCosBnB;
+        D1->m_y=(m_YAxis.Y()*dCosAnA-m_XAxis.Y()*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.Y()*dCosA+m_YAxis.Y()*dSinA)*dSinBnB+m_Normal.Y()*dCosBnB;
+        D1->m_z=(m_YAxis.Z()*dCosAnA-m_XAxis.Z()*dSinAnA)*(m_dMajorRadius+dCosB)-(m_XAxis.Z()*dCosA+m_YAxis.Z()*dSinA)*dSinBnB+m_Normal.Z()*dCosBnB;
         }
     if(D2)
         {
@@ -74,12 +74,12 @@ void TorusKnot::Evaluate(double t,SGM::Point3D *Pos,SGM::Vector3D *D1,SGM::Vecto
         double dSinAnAnA=dSinAnA*m_nA;
         double dCosBnBnB=dCosBnB*m_nB;
         double dSinBnBnB=dSinBnB*m_nB;
-        D2->m_x=(-m_YAxis[0]*dSinAnAnA-m_XAxis[0]*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis[0]*dCosAnA-m_XAxis[0]*dSinAnA)*dSinBnB-
-                (m_XAxis[0]*dCosA+m_YAxis[0]*dSinA)*dCosBnBnB+(m_XAxis[0]*dSinAnA-m_YAxis[0]*dCosAnA)*dSinBnB-m_Normal[0]*dSinBnBnB;
-        D2->m_y=(-m_YAxis[1]*dSinAnAnA-m_XAxis[1]*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis[1]*dCosAnA-m_XAxis[1]*dSinAnA)*dSinBnB-
-                (m_XAxis[1]*dCosA+m_YAxis[1]*dSinA)*dCosBnBnB+(m_XAxis[1]*dSinAnA-m_YAxis[1]*dCosAnA)*dSinBnB-m_Normal[1]*dSinBnBnB;
-        D2->m_z=(-m_YAxis[2]*dSinAnAnA-m_XAxis[2]*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis[2]*dCosAnA-m_XAxis[2]*dSinAnA)*dSinBnB-
-                (m_XAxis[2]*dCosA+m_YAxis[2]*dSinA)*dCosBnBnB+(m_XAxis[2]*dSinAnA-m_YAxis[2]*dCosAnA)*dSinBnB-m_Normal[2]*dSinBnBnB;
+        D2->m_x=(-m_YAxis.X()*dSinAnAnA-m_XAxis.X()*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.X()*dCosAnA-m_XAxis.X()*dSinAnA)*dSinBnB-
+                (m_XAxis.X()*dCosA+m_YAxis.X()*dSinA)*dCosBnBnB+(m_XAxis.X()*dSinAnA-m_YAxis.X()*dCosAnA)*dSinBnB-m_Normal.X()*dSinBnBnB;
+        D2->m_y=(-m_YAxis.Y()*dSinAnAnA-m_XAxis.Y()*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.Y()*dCosAnA-m_XAxis.Y()*dSinAnA)*dSinBnB-
+                (m_XAxis.Y()*dCosA+m_YAxis.Y()*dSinA)*dCosBnBnB+(m_XAxis.Y()*dSinAnA-m_YAxis.Y()*dCosAnA)*dSinBnB-m_Normal.Y()*dSinBnBnB;
+        D2->m_z=(-m_YAxis.Z()*dSinAnAnA-m_XAxis.Z()*dCosAnAnA)*(m_dMajorRadius+dCosB)-(m_YAxis.Z()*dCosAnA-m_XAxis.Z()*dSinAnA)*dSinBnB-
+                (m_XAxis.Z()*dCosA+m_YAxis.Z()*dSinA)*dCosBnBnB+(m_XAxis.Z()*dSinAnA-m_YAxis.Z()*dCosAnA)*dSinBnB-m_Normal.Z()*dSinBnBnB;
         }
     }
 

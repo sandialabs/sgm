@@ -683,9 +683,9 @@ namespace SGM {
         // else box intersects the plane
 
         // plane equation
-        double A = u[0];
-        double B = u[1];
-        double C = u[2];
+        double A = u.X();
+        double B = u.Y();
+        double C = u.X();
         double D = - (A*c.m_x + B*c.m_y + C*c.m_z);
 
         // point coordinates of the eight box vertices
@@ -711,13 +711,13 @@ namespace SGM {
         for (int i = 0; i < 8; ++i)
             {
             Vector3D q(vertex[i][0] - c.m_x, vertex[i][1] - c.m_y, vertex[i][2] - c.m_z);
-            p_dot = q.Dot(u);
+            p_dot = q%u;
             if (p_dot > p_distance_squared)
                 {
                 p_distance_squared = p_dot;
                 ip = i;
                 }
-            n_dot = q.Dot(u_negative);
+            n_dot = q%u_negative;
             if (n_dot > n_distance_squared)
                 {
                 n_distance_squared = n_dot;

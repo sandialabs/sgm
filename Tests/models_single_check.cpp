@@ -247,24 +247,24 @@ TEST(speed_check, DISABLED_single_point_in_volume)
     const char* file_name = "Matt/FifthWheelWheel.stp";
     SCOPED_TRACE(file_name);
     expect_import_success(file_name, rResult);
-
+     
     std::set<SGM::Volume> sVolumes;
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
-    SGM::Point3D Pos = {  -2.70487950021143, -0.923532209282961,  -5.69296617184733};
+    SGM::Point3D Pos({  -3.86411357173061,  -11.7430502101287,  -5.69296617184733});
     bool bInside1=SGM::PointInEntity(rResult,Pos,VolumeID);
 
     rResult.SetDebugFlag(6);
     std::vector<double> aData;
     aData.push_back(1);
-    aData.push_back(1);
-    aData.push_back(1);
+    aData.push_back(-2);
+    aData.push_back(3);
     rResult.SetDebugData(aData);
 
     bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID);
 
-    SGM::UnitVector3D Vec = {1,1,1};
+    SGM::UnitVector3D Vec({0.45087572710671003,0.70219734025538583,0.55102629160890060});
     SGM::CreateLinearEdge(rResult,Pos,Pos+20*Vec);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
@@ -297,6 +297,7 @@ TEST(speed_check, DISABLED_blueberry_search)
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
     Bounds.Extend(Bounds.m_XDomain.Length()*0.2);
 
+#if 0
     std::vector<SGM::Point3D> aTestPoints={
 {  -4.25052492890367,  -11.3566388529556,  -5.69296617184733},
 {  -3.86411357173061,  -10.9702274957825,  -5.30655481467427},
@@ -342,51 +343,54 @@ TEST(speed_check, DISABLED_blueberry_search)
     size_t nSize=100;
     double dLength=Bounds.m_XDomain.Length()/nSize;
 
-    //size_t nSize=100;
-    //double dLength=Bounds.m_XDomain.Length()/nSize;
-    //double dX=Bounds.m_XDomain.Length();
-    //double dY=Bounds.m_YDomain.Length();
-    //double dZ=Bounds.m_ZDomain.Length();
-    //SGM::Vector3D XVec(dLength,0,0),YVec(0,dLength,0),ZVec(0,0,dLength);
-    //SGM::Point3D Origin=Bounds.MidPoint(0,0,0);
-    //std::set<SGM::Volume> sVolumes;
-    //SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
-    //SGM::Volume VolumeID = *(sVolumes.begin());
-    //std::vector<SGM::Point3D> aPoints,aBlue;
-    //std::cout << dX/dLength << " " << dY/dLength << " " << dZ/dLength << "\n";
-    //for(size_t nX=11;nX*dLength<dX;++nX)
-    //    {
-    //    std::cout << "\n[" << nX << "]\n";
-    //    for(size_t nY=0;nY*dLength<dY;++nY)
-    //        {
-    //        std::cout << nY << " ";
-    //        for(size_t nZ=0;nZ*dLength<dZ;++nZ)
-    //            {
-    //            //std::cout << "[" << nX << "," << nY << "," << nZ << "] ";
-    //            SGM::Point3D Pos=Origin+(double)nX*XVec+(double)nY*YVec+(double)nZ*ZVec;
-    //            bool bHit1=PointInEntity(rResult,Pos,VolumeID);
-    //            if(bHit1)
-    //                {
-    //                aPoints.push_back(Pos);
-    //                }
-    //            rResult.SetDebugFlag(6);
-    //            std::vector<double> aData;
-    //            aData.push_back(1);
-    //            aData.push_back(1);
-    //            aData.push_back(1);
-    //            rResult.SetDebugData(aData);
-    //            bool bHit2=PointInEntity(rResult,Pos,VolumeID);
-    //            rResult.SetDebugFlag(0);
-    //            
-    //            if(bHit1!=bHit2)
-    //                {
-    //                aBlue.push_back(Pos);
-    //                std::cout << std::setprecision(15);
-    //                std::cout << "{" << std::setw(19) << Pos.m_x << "," << std::setw(19) << Pos.m_y <<  "," << std::setw(19) << Pos.m_z << "},\n";
-    //                }
-    //            }
-    //        }
-    //    }
+#else
+
+    size_t nSize=100;
+    double dLength=Bounds.m_XDomain.Length()/nSize;
+    double dX=Bounds.m_XDomain.Length();
+    double dY=Bounds.m_YDomain.Length();
+    double dZ=Bounds.m_ZDomain.Length();
+    SGM::Vector3D XVec(dLength,0,0),YVec(0,dLength,0),ZVec(0,0,dLength);
+    SGM::Point3D Origin=Bounds.MidPoint(0,0,0);
+    std::set<SGM::Volume> sVolumes;
+    SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
+    SGM::Volume VolumeID = *(sVolumes.begin());
+    std::vector<SGM::Point3D> aPoints,aBlue;
+    std::cout << dX/dLength << " " << dY/dLength << " " << dZ/dLength << "\n";
+    for(size_t nX=0;nX*dLength<dX;++nX)
+        {
+        std::cout << "\n[" << nX << "]\n";
+        for(size_t nY=0;nY*dLength<dY;++nY)
+            {
+            std::cout << nY << " ";
+            for(size_t nZ=0;nZ*dLength<dZ;++nZ)
+                {
+                //std::cout << "[" << nX << "," << nY << "," << nZ << "] ";
+                SGM::Point3D Pos=Origin+(double)nX*XVec+(double)nY*YVec+(double)nZ*ZVec;
+                bool bHit1=PointInEntity(rResult,Pos,VolumeID);
+                if(bHit1)
+                    {
+                    aPoints.push_back(Pos);
+                    }
+                rResult.SetDebugFlag(6);
+                std::vector<double> aData;
+                aData.push_back(1);
+                aData.push_back(-2);
+                aData.push_back(3);
+                rResult.SetDebugData(aData);
+                bool bHit2=PointInEntity(rResult,Pos,VolumeID);
+                rResult.SetDebugFlag(0);
+                
+                if(bHit1!=bHit2)
+                    {
+                    aBlue.push_back(Pos);
+                    std::cout << std::setprecision(15);
+                    std::cout << "{" << std::setw(19) << Pos.m_x << "," << std::setw(19) << Pos.m_y <<  "," << std::setw(19) << Pos.m_z << "},\n";
+                    }
+                }
+            }
+        }
+#endif
 
     std::cout << std::setprecision(15);
     std::cout << "\n";
@@ -396,7 +400,7 @@ TEST(speed_check, DISABLED_blueberry_search)
         }
     std::cout << "Total " << aBlue.size();
 
-    //SGM::CreateVoxels(rResult,aPoints,dLength,true);
+    SGM::CreateVoxels(rResult,aPoints,dLength,true);
     SGM::CreateVoxels(rResult,aBlue,dLength,true);
 
     SGMTesting::ReleaseTestThing(pThing);
@@ -1117,7 +1121,7 @@ TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_li
     std::vector<SGM::IntersectionType> aTypesFaceLine;
     std::vector<SGM::Entity> aEntity;
     //Euclid::Point3D line_vect = {0.9946543569679107, 0.1032603997898127, -1.270825582042912e-14};
-    SGM::UnitVector3D line_vect = {plane_normal[1],-plane_normal[0],plane_normal[2]}; // choose orthog to plane_normals
+    SGM::UnitVector3D line_vect = {plane_normal.Y(),-plane_normal.X(),plane_normal.Z()}; // choose orthog to plane_normals
     {
         size_t surf_id = 7; //26;
 
@@ -1125,7 +1129,7 @@ TEST(intersection_check, DISABLED_check_plane_circle_consistent_with_cylinder_li
         SGM::RayFire(rResult, left_coords_face_node, line_vect, surf_id, aPointsFaceLine, aTypesFaceLine, aEntity, tolerance, bUseWholeLine);
     }
 
-    const double dot_prod = plane_normal[0]*line_vect[0]+plane_normal[1]*line_vect[1]+plane_normal[2]*line_vect[2];
+    const double dot_prod = plane_normal.X()*line_vect.X()+plane_normal.Y()*line_vect.Y()+plane_normal.Z()*line_vect.Z();
 
     EXPECT_NEAR(dot_prod, 0.0, tolerance);
     EXPECT_EQ(1U, aPointsEdgePlane.size());

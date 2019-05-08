@@ -321,8 +321,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
         FindEigenVectors2D(&aaMatrix2D[0],aValues2D,aVectors2D);
         if (aValues2D[0]+SGM_ZERO<aValues2D[1])
             {
-            XVec=aVectors2D[1][0]*XNorm+aVectors2D[1][1]*YNorm;
-            YVec=aVectors2D[0][0]*XNorm+aVectors2D[0][1]*YNorm;
+            XVec=aVectors2D[1].U()*XNorm+aVectors2D[1].V()*YNorm;
+            YVec=aVectors2D[0].U()*XNorm+aVectors2D[0].V()*YNorm;
             ZVec=ZAnswer;
 
             if (aEigenValues != nullptr)
@@ -334,8 +334,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
             }
         else
             {
-            XVec=aVectors2D[0][0]*XNorm+aVectors2D[0][1]*YNorm;
-            YVec=aVectors2D[1][0]*XNorm+aVectors2D[1][1]*YNorm;
+            XVec=aVectors2D[0].U()*XNorm+aVectors2D[0].V()*YNorm;
+            YVec=aVectors2D[1].U()*XNorm+aVectors2D[1].V()*YNorm;
             ZVec=ZAnswer;
 
             if (aEigenValues != nullptr)
@@ -1125,21 +1125,21 @@ Point3D FindLocalCoordinates(Point3D      const &Origin,
         aaMat.reserve(3);
         std::vector<double> aMat;
         aMat.reserve(4);
-        aMat.push_back(X[0]);
-        aMat.push_back(Y[0]);
-        aMat.push_back(Z[0]);
+        aMat.push_back(X.X());
+        aMat.push_back(Y.X());
+        aMat.push_back(Z.X());
         aMat.push_back(Vec.m_x);
         aaMat.push_back(aMat);
         aMat.clear();
-        aMat.push_back(X[1]);
-        aMat.push_back(Y[1]);
-        aMat.push_back(Z[1]);
+        aMat.push_back(X.Y());
+        aMat.push_back(Y.Y());
+        aMat.push_back(Z.Y());
         aMat.push_back(Vec.m_y);
         aaMat.push_back(aMat);
         aMat.clear();
-        aMat.push_back(X[2]);
-        aMat.push_back(Y[2]);
-        aMat.push_back(Z[2]);
+        aMat.push_back(X.Z());
+        aMat.push_back(Y.Z());
+        aMat.push_back(Z.Z());
         aMat.push_back(Vec.m_z);
         aaMat.push_back(aMat);
         if (LinearSolve(aaMat) == false)

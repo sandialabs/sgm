@@ -55,7 +55,7 @@ void WriteLine(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nDirection=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Axis[0],Axis[1],Axis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Axis.X(),Axis.Y(),Axis.Z());
     size_t nVector=nLine;
     fprintf(pFile,"#%lu=VECTOR('',#%lu,%#.15G);\n",nLine++,nDirection,1.0);
     mCurveMap[pLine->GetID()]=nLine;
@@ -81,9 +81,9 @@ void WriteCircle(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Center.m_x,Center.m_y,Center.m_z);
     size_t nDirection1=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,ZVec[0],ZVec[1],ZVec[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,ZVec.X(),ZVec.Y(),ZVec.Z());
     size_t nDirection2=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XVec[0],XVec[1],XVec[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XVec.X(),XVec.Y(),XVec.Z());
     size_t nAxis=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nDirection1,nDirection2);
     mCurveMap[pCircle->GetID()]=nLine;
@@ -269,9 +269,9 @@ void WritePlane(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis[0],XAxis[1],XAxis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.X(),XAxis.Y(),XAxis.Z());
     size_t nAxis3D=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pPlane->GetID()]=nLine;
@@ -297,9 +297,9 @@ void WriteSphere(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis[0],XAxis[1],XAxis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.X(),XAxis.Y(),XAxis.Z());
     size_t nAxis3D=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pSphere->GetID()]=nLine;
@@ -325,9 +325,9 @@ void WriteCylinder(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis[0],XAxis[1],XAxis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.X(),XAxis.Y(),XAxis.Z());
     size_t nAxis3D=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pCylinder->GetID()]=nLine;
@@ -364,9 +364,9 @@ void WriteTorus(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis[0],XAxis[1],XAxis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.X(),XAxis.Y(),XAxis.Z());
     size_t nAxis3D=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pTorus->GetID()]=nLine;
@@ -404,9 +404,9 @@ void WriteCone(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nXAxis=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis[0],XAxis[1],XAxis[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,XAxis.X(),XAxis.Y(),XAxis.Z());
     size_t nAxis3D=nLine;
     fprintf(pFile,"#%lu=AXIS2_PLACEMENT_3D('',#%lu,#%lu,#%lu);\n",nLine++,nPos,nNorm,nXAxis);
     mSurfaceMap[pCone->GetID()]=nLine;
@@ -432,7 +432,7 @@ void WriteRevolve(FILE                    *pFile,
     size_t nPos=nLine;
     fprintf(pFile,"#%lu=CARTESIAN_POINT('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Pos.m_x,Pos.m_y,Pos.m_z);
     size_t nNorm=nLine;
-    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm[0],Norm[1],Norm[2]);
+    fprintf(pFile,"#%lu=DIRECTION('',(%#.15G,%#.15G,%#.15G));\n",nLine++,Norm.X(),Norm.Y(),Norm.Z());
     size_t nAxis1=nLine;
     fprintf(pFile,"#%lu=AXIS1_PLACEMENT('',#%lu,#%lu);\n",nLine++,nPos,nNorm);
 

@@ -108,21 +108,21 @@ void plane::Evaluate(SGM::Point2D const &uv,
     {
     if(Pos)
         {
-        Pos->m_x=m_Origin.m_x+(m_XAxis[0]*uv.m_u+m_YAxis[0]*uv.m_v);
-        Pos->m_y=m_Origin.m_y+(m_XAxis[1]*uv.m_u+m_YAxis[1]*uv.m_v);
-        Pos->m_z=m_Origin.m_z+(m_XAxis[2]*uv.m_u+m_YAxis[2]*uv.m_v);
+        Pos->m_x=m_Origin.m_x+(m_XAxis.X()*uv.m_u+m_YAxis.X()*uv.m_v);
+        Pos->m_y=m_Origin.m_y+(m_XAxis.Y()*uv.m_u+m_YAxis.Y()*uv.m_v);
+        Pos->m_z=m_Origin.m_z+(m_XAxis.Z()*uv.m_u+m_YAxis.Z()*uv.m_v);
         }
     if(Du)
         {
-        Du->m_x=m_XAxis[0];
-        Du->m_y=m_XAxis[1];
-        Du->m_z=m_XAxis[2];
+        Du->m_x=m_XAxis.X();
+        Du->m_y=m_XAxis.Y();
+        Du->m_z=m_XAxis.Z();
         }
     if(Dv)
         {
-        Dv->m_x=m_YAxis[0];
-        Dv->m_y=m_YAxis[1];
-        Dv->m_z=m_YAxis[2];
+        Dv->m_x=m_YAxis.X();
+        Dv->m_y=m_YAxis.Y();
+        Dv->m_z=m_YAxis.Z();
         }
     if(Norm)
         {
@@ -155,14 +155,14 @@ SGM::Point2D plane::Inverse(SGM::Point3D const &Pos,
         double dx=Pos.m_x-m_Origin.m_x;
         double dy=Pos.m_y-m_Origin.m_y;
         double dz=Pos.m_z-m_Origin.m_z;
-        double dU=(dx*m_XAxis[0]+dy*m_XAxis[1]+dz*m_XAxis[2]);
-        double dV=(dx*m_YAxis[0]+dy*m_YAxis[1]+dz*m_YAxis[2]);
+        double dU=(dx*m_XAxis.X()+dy*m_XAxis.Y()+dz*m_XAxis.Z());
+        double dV=(dx*m_YAxis.X()+dy*m_YAxis.Y()+dz*m_YAxis.Z());
 
         if(ClosePos)
             {
-            ClosePos->m_x=m_Origin.m_x+(m_XAxis[0]*dU+m_YAxis[0]*dV);
-            ClosePos->m_y=m_Origin.m_y+(m_XAxis[1]*dU+m_YAxis[1]*dV);
-            ClosePos->m_z=m_Origin.m_z+(m_XAxis[2]*dU+m_YAxis[2]*dV);
+            ClosePos->m_x=m_Origin.m_x+(m_XAxis.X()*dU+m_YAxis.X()*dV);
+            ClosePos->m_y=m_Origin.m_y+(m_XAxis.Y()*dU+m_YAxis.Y()*dV);
+            ClosePos->m_z=m_Origin.m_z+(m_XAxis.Z()*dU+m_YAxis.Z()*dV);
             }
         return {dU,dV};
     }

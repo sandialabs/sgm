@@ -756,7 +756,7 @@ double FindAngle(std::vector<SGM::Point2D> const &aPoints,
     SGM::Point2D const &PosC=aPoints[aPolygon[nC]];
     SGM::UnitVector2D VecAB=PosA-PosB;
     SGM::UnitVector2D VecCB=PosC-PosB;
-    double dUp=VecAB[1]*VecCB[0]-VecAB[0]*VecCB[1];
+    double dUp=VecAB.V()*VecCB.U()-VecAB.U()*VecCB.V();
     if(dUp<SGM_ZERO)
         {
         return 10;
@@ -804,7 +804,7 @@ void TriangulatePolygonSubSub(std::vector<SGM::Point2D> const &aPoints,
         SGM::Point2D const &PosC = aPoints[aPolygon[(Index1 + 1) % nPolygon]];
         SGM::UnitVector2D VecAB = PosA - PosB;
         SGM::UnitVector2D VecCB = PosC - PosB;
-        double dUp = VecAB[1] * VecCB[0] - VecAB[0] * VecCB[1];
+        double dUp = VecAB.V() * VecCB.U() - VecAB.U() * VecCB.V();
         if( dUp < SGM_ZERO )  // Check to make sure that the angle is less than 180 degrees.
             {
             sAngles.insert(std::pair<double, unsigned>(10.0, (unsigned)Index1));

@@ -65,46 +65,46 @@ void sphere::Evaluate(SGM::Point2D const &uv,
 
     if(Pos)
         {
-        Pos->m_x=m_Center.m_x+((m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dCosV+m_ZAxis[0]*dSinV)*m_dRadius;
-        Pos->m_y=m_Center.m_y+((m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dCosV+m_ZAxis[1]*dSinV)*m_dRadius;
-        Pos->m_z=m_Center.m_z+((m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dCosV+m_ZAxis[2]*dSinV)*m_dRadius;
+        Pos->m_x=m_Center.m_x+((m_XAxis.X()*dCosU+m_YAxis.X()*dSinU)*dCosV+m_ZAxis.X()*dSinV)*m_dRadius;
+        Pos->m_y=m_Center.m_y+((m_XAxis.Y()*dCosU+m_YAxis.Y()*dSinU)*dCosV+m_ZAxis.Y()*dSinV)*m_dRadius;
+        Pos->m_z=m_Center.m_z+((m_XAxis.Z()*dCosU+m_YAxis.Z()*dSinU)*dCosV+m_ZAxis.Z()*dSinV)*m_dRadius;
         }
     if(Du)
         {
-        Du->m_x=(m_YAxis[0]*dCosU-m_XAxis[0]*dSinU)*dCosV*m_dRadius;
-        Du->m_y=(m_YAxis[1]*dCosU-m_XAxis[1]*dSinU)*dCosV*m_dRadius;
-        Du->m_z=(m_YAxis[2]*dCosU-m_XAxis[2]*dSinU)*dCosV*m_dRadius;
+        Du->m_x=(m_YAxis.X()*dCosU-m_XAxis.X()*dSinU)*dCosV*m_dRadius;
+        Du->m_y=(m_YAxis.Y()*dCosU-m_XAxis.Y()*dSinU)*dCosV*m_dRadius;
+        Du->m_z=(m_YAxis.Z()*dCosU-m_XAxis.Z()*dSinU)*dCosV*m_dRadius;
         }
     if(Dv)
         {
-        Dv->m_x=(m_ZAxis[0]*dCosV-(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dSinV)*m_dRadius;
-        Dv->m_y=(m_ZAxis[1]*dCosV-(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dSinV)*m_dRadius;
-        Dv->m_z=(m_ZAxis[2]*dCosV-(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dSinV)*m_dRadius;
+        Dv->m_x=(m_ZAxis.X()*dCosV-(m_XAxis.X()*dCosU+m_YAxis.X()*dSinU)*dSinV)*m_dRadius;
+        Dv->m_y=(m_ZAxis.Y()*dCosV-(m_XAxis.Y()*dCosU+m_YAxis.Y()*dSinU)*dSinV)*m_dRadius;
+        Dv->m_z=(m_ZAxis.Z()*dCosV-(m_XAxis.Z()*dCosU+m_YAxis.Z()*dSinU)*dSinV)*m_dRadius;
         }
     if(Norm)
         {
-        double dNormX=(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dCosV+m_ZAxis[0]*dSinV;
-        double dNormY=(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dCosV+m_ZAxis[1]*dSinV;
-        double dNormZ=(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dCosV+m_ZAxis[2]*dSinV;
+        double dNormX=(m_XAxis.X()*dCosU+m_YAxis.X()*dSinU)*dCosV+m_ZAxis.X()*dSinV;
+        double dNormY=(m_XAxis.Y()*dCosU+m_YAxis.Y()*dSinU)*dCosV+m_ZAxis.Y()*dSinV;
+        double dNormZ=(m_XAxis.Z()*dCosU+m_YAxis.Z()*dSinU)*dCosV+m_ZAxis.Z()*dSinV;
         *Norm = {dNormX,dNormY,dNormZ};
         }
     if(Duu)
         {
-        Duu->m_x=(-m_YAxis[0]*dSinU-m_XAxis[0]*dCosU)*dCosV*m_dRadius;
-        Duu->m_y=(-m_YAxis[1]*dSinU-m_XAxis[1]*dCosU)*dCosV*m_dRadius;
-        Duu->m_z=(-m_YAxis[2]*dSinU-m_XAxis[2]*dCosU)*dCosV*m_dRadius;
+        Duu->m_x=(-m_YAxis.X()*dSinU-m_XAxis.X()*dCosU)*dCosV*m_dRadius;
+        Duu->m_y=(-m_YAxis.Y()*dSinU-m_XAxis.Y()*dCosU)*dCosV*m_dRadius;
+        Duu->m_z=(-m_YAxis.Z()*dSinU-m_XAxis.Z()*dCosU)*dCosV*m_dRadius;
         }
     if(Duv)
         {
-        Duv->m_x=(m_XAxis[0]*dSinU-m_YAxis[0]*dCosU)*dSinV*m_dRadius;
-        Duv->m_y=(m_XAxis[1]*dSinU-m_YAxis[1]*dCosU)*dSinV*m_dRadius;
-        Duv->m_z=(m_XAxis[2]*dSinU-m_YAxis[2]*dCosU)*dSinV*m_dRadius;
+        Duv->m_x=(m_XAxis.X()*dSinU-m_YAxis.X()*dCosU)*dSinV*m_dRadius;
+        Duv->m_y=(m_XAxis.Y()*dSinU-m_YAxis.Y()*dCosU)*dSinV*m_dRadius;
+        Duv->m_z=(m_XAxis.Z()*dSinU-m_YAxis.Z()*dCosU)*dSinV*m_dRadius;
         }
     if(Dvv)
         {
-        Dvv->m_x=(-m_ZAxis[0]*dSinV-(m_XAxis[0]*dCosU+m_YAxis[0]*dSinU)*dCosV)*m_dRadius;
-        Dvv->m_y=(-m_ZAxis[1]*dSinV-(m_XAxis[1]*dCosU+m_YAxis[1]*dSinU)*dCosV)*m_dRadius;
-        Dvv->m_z=(-m_ZAxis[2]*dSinV-(m_XAxis[2]*dCosU+m_YAxis[2]*dSinU)*dCosV)*m_dRadius;
+        Dvv->m_x=(-m_ZAxis.X()*dSinV-(m_XAxis.X()*dCosU+m_YAxis.X()*dSinU)*dCosV)*m_dRadius;
+        Dvv->m_y=(-m_ZAxis.Y()*dSinV-(m_XAxis.Y()*dCosU+m_YAxis.Y()*dSinU)*dCosV)*m_dRadius;
+        Dvv->m_z=(-m_ZAxis.Z()*dSinV-(m_XAxis.Z()*dCosU+m_YAxis.Z()*dSinU)*dCosV)*m_dRadius;
         }
     }
 
@@ -116,8 +116,8 @@ SGM::Point2D sphere::Inverse(SGM::Point3D const &Pos,
     double y=Pos.m_y-m_Center.m_y;
     double z=Pos.m_z-m_Center.m_z;
 
-    double dUx=x*m_XAxis[0]+y*m_XAxis[1]+z*m_XAxis[2];
-    double dUy=x*m_YAxis[0]+y*m_YAxis[1]+z*m_YAxis[2];
+    double dUx=x*m_XAxis.X()+y*m_XAxis.Y()+z*m_XAxis.Z();
+    double dUy=x*m_YAxis.X()+y*m_YAxis.Y()+z*m_YAxis.Z();
 
     double dU=SGM::SAFEatan2(dUy,dUx);
     double dV=0.0;
@@ -138,8 +138,8 @@ SGM::Point2D sphere::Inverse(SGM::Point3D const &Pos,
     else
         {
         SGM::UnitVector3D Spoke=VSpoke;
-        double dVx=x*Spoke[0]+y*Spoke[1]+z*Spoke[2];
-        double dVy=x*m_ZAxis[0]+y*m_ZAxis[1]+z*m_ZAxis[2];
+        double dVx=x*Spoke.X()+y*Spoke.Y()+z*Spoke.Z();
+        double dVy=x*m_ZAxis.X()+y*m_ZAxis.Y()+z*m_ZAxis.Z();
         dV=SGM::SAFEatan2(dVy,dVx);
         }
 

@@ -25,9 +25,9 @@ SortablePlane::SortablePlane(std::vector<SGM::Point3D> const &aPoints)
         {
         ZVec.Negate();
         }
-    aData[0]=ZVec[0];
-    aData[1]=ZVec[1];
-    aData[2]=ZVec[2];
+    aData[0]=ZVec.X();
+    aData[1]=ZVec.Y();
+    aData[2]=ZVec.Z();
     aData[3]=dDist;
     double dTol=SGM_ZERO;
     size_t nPoints=aPoints.size();

@@ -158,9 +158,9 @@ namespace SGM {
         Vector4D const &XAxis = Matrix[0];
         Vector4D const &YAxis = Matrix[1];
         Vector4D const &ZAxis = Matrix[2];
-        double x = UVec[0] * XAxis.m_x + UVec[1] * XAxis.m_y + UVec[2] * XAxis.m_z;
-        double y = UVec[0] * YAxis.m_x + UVec[1] * YAxis.m_y + UVec[2] * YAxis.m_z;
-        double z = UVec[0] * ZAxis.m_x + UVec[1] * ZAxis.m_y + UVec[2] * ZAxis.m_z;
+        double x = UVec.X() * XAxis.m_x + UVec.Y() * XAxis.m_y + UVec.Z() * XAxis.m_z;
+        double y = UVec.X() * YAxis.m_x + UVec.Y() * YAxis.m_y + UVec.Z() * YAxis.m_z;
+        double z = UVec.X() * ZAxis.m_x + UVec.Y() * ZAxis.m_y + UVec.Z() * ZAxis.m_z;
         return {x, y, z};
     }
 
