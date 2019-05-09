@@ -197,8 +197,8 @@ void surface::PrincipleCurvature(SGM::Point2D const &uv,
     double N=Dvv%Norm;
     const double aaMatrix[2][2] =
         {
-        L, M,
-        M, N
+            {L, M},
+            {M, N}
         };
     std::vector<double> aValues;
     std::vector<SGM::UnitVector2D> aVectors;

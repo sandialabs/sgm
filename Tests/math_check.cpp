@@ -827,10 +827,8 @@ TEST(math_check, find_min_edge_length_3D)
 
 TEST(math_check, matrix_multiply)
 {
-    double aMatrix1[2][2] = {1, 2,
-                             3, 4};
-    double aMatrix2[2][2] = {1, 2,
-                             3, 4};
+    double aMatrix1[2][2] = {{1, 2},{3, 4}};
+    double aMatrix2[2][2] = {{1, 2},{3, 4}};
     double aAnswer[2][2];
     SGM::FindProduct2D(aMatrix1,aMatrix2,aAnswer);
     EXPECT_NEAR(aAnswer[0][0],7,SGM_ZERO);
@@ -838,9 +836,9 @@ TEST(math_check, matrix_multiply)
     EXPECT_NEAR(aAnswer[1][0],15,SGM_ZERO);
     EXPECT_NEAR(aAnswer[1][1],22,SGM_ZERO);
 
-    double aMatrix3[3][3] = {1,2,2,
-                             3,4,2,
-                             3,4,2};
+    double aMatrix3[3][3] = {{1,2,2},
+                             {3,4,2},
+                             {3,4,2}};
     double aAnswer2[3][3];
     SGM::FindProduct3D(aMatrix3,aMatrix3,aAnswer2);
 }

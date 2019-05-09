@@ -41,7 +41,7 @@ namespace SGM
 
         Point2D() {}; // Note that for performance things are intentionally left uninitialized.
 
-        Point2D(double u,double v):m_u(u),m_v(v) {}
+        Point2D(double u,double v);
 
         const double& operator []( const size_t axis ) const { assert(axis < N); return (&m_u)[axis]; }
         double& operator []( const size_t axis )             { assert(axis < N); return (&m_u)[axis]; }
@@ -295,6 +295,10 @@ namespace SGM
         using Vector3D::operator[];
     };
 
+    // make a unit vector in the direction A->B and return the length |B - A|
+
+    inline double MakeUnitVector3D(Point3D const& A, Point3D const& B, UnitVector3D &U);
+
     class SGM_EXPORT UnitVector4D : public Vector4D
     {
     public:
@@ -337,14 +341,7 @@ namespace SGM
         // sign to be calculated only once in the constructor, and so we disallow
         // changing member variables so we do not violate the inverse direction and sign.
 
-        Ray3D(const Point3D &orig, const UnitVector3D &dir) :
-                m_Origin(orig),
-                m_Direction(dir),
-                m_InverseDirection(1./dir.X(), 1./dir.Y(), 1./dir.Z()),
-                m_xSign(m_InverseDirection.m_x < 0),
-                m_ySign(m_InverseDirection.m_y < 0),
-                m_zSign(m_InverseDirection.m_z < 0)
-        { }
+        Ray3D(const Point3D &orig, const UnitVector3D &dir);
 
         void Swap(Ray3D &other);
 
@@ -422,6 +419,24 @@ namespace SGM
     inline bool NearEqual(Point4D const &Pos1,Point4D const &Pos2,double dTolerance);
 
     inline bool NearEqual(Vector3D const &Vec1,Vector3D const &Vec2,double dTolerance);
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Functors with operator() for algorithms.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct DistanceSquared
+        {
+        DistanceSquared() {}
+
+        double operator()(SGM::Point2D const &A, SGM::Point2D const &B) const
+            { return A.DistanceSquared(B); }
+
+        double operator()(SGM::Point3D const &A, SGM::Point3D const &B) const
+            { return A.DistanceSquared(B); }
+        };
 
 } // End of SGM namespace
 

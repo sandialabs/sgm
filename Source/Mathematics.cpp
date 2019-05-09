@@ -313,8 +313,8 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
             }
         const double aaMatrix2D[2][2] =
                 {
-                SumXX2D, SumXY2D,
-                SumXY2D, SumYY2D,
+                    {SumXX2D, SumXY2D},
+                    {SumXY2D, SumYY2D},
                 };
         std::vector<double> aValues2D;
         std::vector<UnitVector2D> aVectors2D;
@@ -368,9 +368,9 @@ bool FindLeastSquarePlane(std::vector<Point3D> const &aPoints,
 
     const double aaMatrix[3][3] =
             {
-            SumXX*dScale, SumXY*dScale, SumXZ*dScale,
-            SumXY*dScale, SumYY*dScale, SumYZ*dScale,
-            SumXZ*dScale, SumYZ*dScale, SumZZ*dScale
+                {SumXX*dScale, SumXY*dScale, SumXZ*dScale},
+                {SumXY*dScale, SumYY*dScale, SumYZ*dScale},
+                {SumXZ*dScale, SumYZ*dScale, SumZZ*dScale}
             };
 
     std::vector<double> aValues;
@@ -652,9 +652,9 @@ bool InCircumcircle(SGM::Point2D const &A,
     const double a22 = a20*a20+a21*a21;
     const double aMatrix[3][3] =
         {
-        a00, a01, a02,
-        a10, a11, a12,
-        a20, a21, a22
+            {a00, a01, a02},
+            {a10, a11, a12},
+            {a20, a21, a22}
         };
     dDet=SGM::Determinate3D(aMatrix);
     return SGM_MIN_TOL<dDet;

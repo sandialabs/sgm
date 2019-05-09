@@ -144,7 +144,12 @@ namespace SGM {
 
     inline bool BoxTree::IsIntersectingSegment::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsSegment(m_point1, m_point2, m_tolerance);
+        return node->m_Bound.IntersectsSegment(m_ray, m_length, m_tolerance);
+    }
+
+    inline bool BoxTree::IsIntersectingSegmentTight::operator()(const Bounded *node) const
+    {
+    return node->m_Bound.IntersectsSegment(m_ray, m_length);
     }
 
     inline bool BoxTree::IsIntersectingSphere::operator()(const Bounded *node) const
@@ -160,6 +165,12 @@ namespace SGM {
     inline void BoxTree::PushLeaf::operator()(const BoxTree::Leaf *leaf)
     {
         m_aContainer.emplace_back(leaf->m_pObject);
+    }
+
+    template <class ObjectType>
+    inline void BoxTree::PushLeafObject<ObjectType>::operator()(const BoxTree::Leaf *leaf)
+    {
+        m_aObjects.emplace_back((ObjectType*)leaf->m_pObject);
     }
 
     inline void BoxTree::LeafSumMassCentroid::operator()(const BoxTree::Leaf *leaf)
@@ -221,7 +232,7 @@ namespace SGM {
         Bounded const* aItemStack[SGM_BOXTREE_MAX_NODE_RECURSION];
         size_t numItems=0;
         Node const* currentNode;
-        QueryLeafFunctor<Filter, Visitor> queryLeafFunctor(m_filter, m_visitor);        
+        //QueryLeafFunctor<Filter, Visitor> queryLeafFunctor(m_filter, m_visitor);
 
         aItemStack[numItems++] = item;
 
@@ -234,10 +245,15 @@ namespace SGM {
                     {
                     for (Bounded const *childItem : currentNode->m_aItems)
                         {
-                        queryLeafFunctor(childItem);
-                        if (!m_visitor.bContinueVisiting)
+                        //queryLeafFunctor(childItem); // just write it inline here
+                        auto leaf = static_cast<Leaf const*>(childItem);
+                        if (m_filter(leaf))
                             {
-                            break;
+                            m_visitor(leaf);
+                            if (!m_visitor.bContinueVisiting)
+                                {
+                                break;
+                                }
                             }
                         }
                     }
@@ -423,6 +439,11 @@ namespace SGM {
         return Query(IsIntersectingRayTight(ray), FirstLeaf()).m_pObject != nullptr;
     }
 
+    inline bool BoxTree::AnyIntersectsBox(const SGM::Interval3D &bound) const
+    {
+        return Query(IsOverlapping(bound), FirstLeaf()).m_pObject != nullptr;
+    }
+
     inline Point3D BoxTree::FindCenterOfMass() const
     {
         auto visitor = Query(IsAny(), LeafSumMassCentroid());
@@ -437,7 +458,19 @@ namespace SGM {
                                                                    Point3D const &p2,
                                                                    double         tolerance) const
     {
-        return Query(IsIntersectingSegment(p1, p2, tolerance), PushLeaf()).m_aContainer;
+        UnitVector3D u;
+        double length = MakeUnitVector3D(p1, p2, u);
+        Ray3D ray(p1,u);
+        return Query(IsIntersectingSegment(ray, length, tolerance), PushLeaf()).m_aContainer;
+    }
+
+    inline std::vector<void const*> BoxTree::FindIntersectsSegment(Point3D const &p1,
+                                                                   Point3D const &p2) const
+    {
+        UnitVector3D u;
+        double length = MakeUnitVector3D(p1, p2, u);
+        Ray3D ray(p1,u);
+        return Query(IsIntersectingSegmentTight(ray, length), PushLeaf()).m_aContainer;
     }
 
     inline std::vector<void const*> BoxTree::FindIntersectsSphere(Point3D const &center,
