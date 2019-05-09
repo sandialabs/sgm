@@ -324,12 +324,41 @@ inline void AdjustUVSegment(const SGM::Interval1D &DirDomain,
         }
     }
 
+bool CrossesBoundary(surface      const *pSurface,
+                     SGM::Point2D const &uv1,
+                     SGM::Point2D const &uv2)
+    {
+    if(pSurface->ClosedInU())
+        {
+        double dLength=pSurface->GetDomain().m_UDomain.Length();
+        double dDelta=fabs(uv1.m_u-uv2.m_u);
+        if(dLength*0.5<dDelta)
+            {
+            return true;
+            }
+        }
+    if(pSurface->ClosedInV())
+        {
+        double dLength=pSurface->GetDomain().m_VDomain.Length();
+        double dDelta=fabs(uv1.m_v-uv2.m_v);
+        if(dLength*0.5<dDelta)
+            {
+            return true;
+            }
+        }
+    return false;
+    }
+
 double FixSegmentSqauredDistance(surface      const *pSurface,
                                  SGM::Point2D const &uv1,
                                  SGM::Point2D const &uv2,
                                  SGM::Point2D const &uv)
     {
     SGM::Point2D FixedUV1=uv1,FixedUV2=uv2;
+    if(CrossesBoundary(pSurface,uv1,uv2))
+        {
+        return SGM_MAX;
+        }
     if(pSurface->ClosedInU())
         {
         if(fabs(pSurface->GetDomain().m_UDomain.m_dMin-uv1.m_u)<SGM_MIN_TOL)
@@ -720,7 +749,8 @@ bool face::PointInFace(SGM::Result        &rResult,
                 }
             *bOnEdge=true;
             }
-        if(SGM::NearEqual(Pos,pCloseVertex->GetPoint(),SGM_MIN_TOL))
+        SGM::Point3D const &VertexPos=pCloseVertex->GetPoint();
+        if(SGM::NearEqual(Pos,VertexPos,SGM_MIN_TOL))
             {
             return true;
             }
@@ -729,48 +759,85 @@ bool face::PointInFace(SGM::Result        &rResult,
         if(aEdges.size()==2)
             {
             edge *pEdge0=aEdges[0];
-            edge *pEdge1=aEdges[1];
-            SGM::Point2D uv0,uv1;
-            bool bOut0=true,bOut1=true;
+            SGM::Point3D Pos0;
             if(pEdge0->GetStart()==pCloseVertex)
                 {
-                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.001));
+                Pos0=pEdge0->FindMidPoint(0.001);
                 }
             else
                 {
-                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.999));
-                bOut0=false;
+                Pos0=pEdge0->FindMidPoint(0.999);
                 }
+            SGM::Point2D uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),Pos0);
+
+            edge *pEdge1=aEdges[1];
+            SGM::Point3D Pos1;
             if(pEdge1->GetStart()==pCloseVertex)
                 {
-                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.001));
+                Pos1=pEdge1->FindMidPoint(0.001);
                 }
             else
                 {
-                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.999));
-                bOut1=false;
+                Pos1=pEdge1->FindMidPoint(0.999);
                 }
-            if(GetSideType(pEdge0)==SGM::FaceOnRightType)
-                {
-                bOut0=!bOut0;
-                }
-            if(GetSideType(pEdge1)==SGM::FaceOnRightType)
-                {
-                bOut1=!bOut1;
-                }
-            bool bAnswer;
-            if(bOut1)
-                {
-                bAnswer=InAngle(CloseUV1,uv1,uv0,uv);
-                }
-            else
-                {
-                bAnswer=InAngle(CloseUV1,uv0,uv1,uv);
-                }
+            SGM::Point2D uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),Pos1);
+            
+            SGM::UnitVector3D CloseNorm;
+            m_pSurface->Evaluate(CloseUV1,nullptr,nullptr,nullptr,&CloseNorm);
             if(m_bFlipped)
                 {
-                bAnswer=!bAnswer;
+                CloseNorm.Negate();
                 }
+            SGM::UnitVector3D Vec0=Pos0-VertexPos;
+            SGM::UnitVector3D Vec1=Pos1-VertexPos;
+            double dAngle=Vec0.Angle(Vec1);
+            SGM::Vector3D TestVec=Vec0*Vec1;
+            double dTestDot=TestVec%CloseNorm;
+            bool bAnswer;
+            if(fabs(dAngle-SGM_PI)<SGM_FIT)
+                {
+                // Almost flat angle.  Treat as an interior edge point.
+
+                SGM::Point2D CloseUV;
+                CloseSeg.Distance(uv,&CloseUV);
+                SGM::Point3D TestPos;
+                m_pSurface->Evaluate(CloseUV,&TestPos);
+                double t=pCloseEdge->GetCurve()->Inverse(TestPos);
+                SGM::Vector3D Vec;
+                SGM::Point3D ClosePos;
+                pCloseEdge->GetCurve()->Evaluate(t,&ClosePos,&Vec);
+                SGM::EdgeSideType nType=GetSideType(pCloseEdge);
+                SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,ClosePos);
+                SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
+                SGM::Point3D A2(a2.m_u,a2.m_v,0);
+                SGM::Point3D B2(b2.m_u,b2.m_v,0);
+                SGM::Point3D C2(uv.m_u,uv.m_v,0);
+                double dTest2=((B2-A2)*(C2-A2)).m_z;
+                if(SGM_MIN_TOL<dTest2)
+                    {
+                    return nType == SGM::FaceOnLeftType ? !m_bFlipped : m_bFlipped;
+                    }
+                else if(dTest2<-SGM_MIN_TOL)
+                    {
+                    return nType == SGM::FaceOnLeftType ? m_bFlipped : !m_bFlipped;
+                    }
+                else
+                    {
+                    return true;
+                    }
+                }
+            else
+                {
+                if(dTestDot<0)
+                    {
+                    bAnswer=InAngle(CloseUV1,uv0,uv1,uv);
+                    }
+                else
+                    {
+                    bAnswer=!InAngle(CloseUV1,uv1,uv0,uv);
+                    }
+                }
+
             if(bAnswer==false && bOnEdge)
                 {
                 double dDist=pCloseVertex->GetPoint().Distance(Pos);

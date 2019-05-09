@@ -54,12 +54,6 @@ bool IsRayExpensive(SGM::Result              &rResult,
     SGM::Ray3D Ray(Origin, Axis);
     aHitFaces = FaceTree.FindIntersectsRay(Ray);
 
-    // skip if debugging ray firing
-    if (rResult.GetDebugFlag()==6)
-        {
-        return false;
-        }
-
     for (void const* pVoid : aHitFaces)
         {
         face *pFace = (face *)pVoid;
