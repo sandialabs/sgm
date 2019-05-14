@@ -256,7 +256,7 @@ TEST(models_single_check, single_point_in_face)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, DISABLED_single_point_in_face)
+TEST(speed_check, single_point_in_face)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -265,7 +265,7 @@ TEST(speed_check, DISABLED_single_point_in_face)
     //SCOPED_TRACE(file_name); 
     //expect_import_ouo_check_success(file_name);
 
-    const char* file_name = "Hold/FifthWheelWheel-Face615.stp";
+    const char* file_name = "Hold/FifthWheelWheel-Face2214.stp";
     SCOPED_TRACE(file_name);
     expect_import_success(file_name, rResult);
      
@@ -273,18 +273,18 @@ TEST(speed_check, DISABLED_single_point_in_face)
     SGM::FindFaces(rResult,SGM::Thing(),sFaces);
     SGM::Face FaceID = *(sFaces.begin());
 
-    SGM::Point3D Pos({-1.0002715660471369,2.7987404435329086,-2.0391798652604987});
+    SGM::Point3D Pos({-1.8792107076289142,2.9817389056077608,-3.0953349250381628});
     bool bInside1=SGM::PointInEntity(rResult,Pos,FaceID);
 
-    std::vector<SGM::Point3D> aPoints={{-1.0002715660471369,2.7987404435329086,-2.0391798652604987}};
+    std::vector<SGM::Point3D> aPoints={{-1.8792107076289142,2.9817389056077608,-3.0953349250381628}};
     SGM::CreatePoints(rResult,aPoints);
 
-    EXPECT_FALSE(bInside1);
+    EXPECT_TRUE(bInside1);
 
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, DISABLED_single_point_in_volume)
+TEST(speed_check, single_point_in_volume)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -313,7 +313,7 @@ TEST(speed_check, DISABLED_single_point_in_volume)
 
     bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID);
 
-    SGM::UnitVector3D Vec({2,-3,1});
+    SGM::UnitVector3D Vec({ 0.45087572710671,0.702197340255386,0.551026291608901});
     SGM::CreateLinearEdge(rResult,Pos,Pos+20*Vec);
     
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
