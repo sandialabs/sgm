@@ -487,8 +487,8 @@ void MinimumFaceEdgeSegmentDistanceSquared(SGM::Result               &rResult,
             }
         if (pEdge->IsClosed())
             {
-            SGM::Point2D uv1=aUVBoundary[Index1-1];
-            SGM::Point2D uv2=aUVBoundary[Index1];
+            SGM::Point2D uv1=aUVBoundary[nUVBoundary-1];
+            SGM::Point2D uv2=aUVBoundary[0];
             double dDist = squaredDistanceOp(pSurface,uv1,uv2,uv);
             if (dDist < dMinDist)
                 {
@@ -716,7 +716,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     {
     // First check to see if the point is in the UV bounding box.
 
-    if(GetUVBox(rResult).InInterval(uv,SGM_ZERO)==false)
+    if(m_UVBox.IsEmpty()==false && m_UVBox.InInterval(uv,SGM_ZERO)==false)
         {
         return false;
         }
