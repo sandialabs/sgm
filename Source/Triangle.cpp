@@ -134,32 +134,6 @@ double DistanceSquaredTriangle3D(Point3D const &A,
     return std::min({dDistAB,dDistBC,dDistCA});
     }
 
-bool InAngle(Point2D const &A,
-             Point2D const &B,
-             Point2D const &C,
-             Point2D const &D)
-    {
-    UnitVector2D X = B - A;
-    UnitVector2D Y(-X.U(), X.V());
-    Vector2D DA = D - A;
-    double dx = DA % X;
-    double dy = DA % Y;
-    double dAngleD = SAFEatan2(dy, dx);
-    if (dAngleD < 0)
-        {
-        dAngleD += SGM_TWO_PI;
-        }
-    Vector2D CA = C - A;
-    dx = CA % X;
-    dy = CA % Y;
-    double dAngleC = SAFEatan2(dy, dx);
-    if (dAngleC < 0)
-        {
-        dAngleC += SGM_TWO_PI;
-        }
-    return dAngleD <= dAngleC;
-    }
-
 size_t FindAdjacences1D(std::vector<unsigned> const &aSegments,
                         std::vector<unsigned>       &aAdjacency)
     {

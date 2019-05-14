@@ -373,6 +373,161 @@ double CheckFacet(std::vector<SGM::Point3D>      const &aPoints3D,
     return dMaxAngle;
     }
 
+//void FixLoop(std::vector<edge *>            const &aLoop,
+//             std::vector<SGM::EdgeSideType> const &aFlipped)
+//    {
+//    size_t Index1;
+//    size_t nLoop=aLoop.size();
+//    std::vector<bool> aFlipEdge;
+//    aFlipEdge.assign(nLoop,false);
+//    for(Index1=0;Index1<nLoop;++Index1)
+//        {
+//        size_t nLast=(Index1+nLoop-1)%nLoop;
+//        if( aFlipped[Index1]!=SGM::FaceOnBothSidesType &&
+//            aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+//            {
+//            edge *pLast=aLoop[nLast];
+//            edge *pEdge=aLoop[Index1];
+//            vertex *pLastEnd=aFlipped[nLast]==SGM::FaceOnRightType ? pLast->GetStart() : pLast->GetEnd();
+//            vertex *pThisStart=aFlipped[Index1]==SGM::FaceOnRightType ? pEdge->GetEnd() : pEdge->GetStart();
+//            if(pLastEnd!=pThisStart)
+//                {
+//                aFlipEdge[Index1]=true;
+//                }
+//            }
+//        }
+//
+//    int a=0;
+//    a*=1;
+//    }
+
+bool face::CheckLoop(SGM::Result &rResult,
+                     bool         //bFix
+                     ) const
+    {
+    std::vector<std::vector<edge *> > aaLoops;
+    std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
+    size_t nLoops=FindLoops(rResult,aaLoops,aaFlipped);
+    size_t Index1;
+
+    // Check for consistant 
+    std::vector<bool> aLoopStatus;
+    aLoopStatus.assign(nLoops,true);
+    bool bAnswer=true;
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        std::vector<edge *> const &aLoop=aaLoops[Index1];
+        std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
+        size_t nEdges=aLoop.size();
+        bool bFoundBadFlip=false;
+        for(Index1=0;Index1<nEdges;++Index1)
+            {
+            size_t nLast=(Index1+nEdges-1)%nEdges;
+            size_t nNext=(Index1+1)%nEdges;
+            edge *pLast=aLoop[nLast];
+            edge *pEdge=aLoop[Index1];
+            edge *pNext=aLoop[nNext];
+            if(aFlipped[Index1]!=SGM::FaceOnBothSidesType)
+                {
+                if(aFlipped[Index1]==SGM::FaceOnLeftType)
+                    {
+                    if(aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+                        {
+                        if(aFlipped[nLast]==SGM::FaceOnLeftType)
+                            {
+                            if(pLast->GetEnd()!=pEdge->GetStart())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        else
+                            {
+                            if(pLast->GetStart()!=pEdge->GetStart())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        }
+                    if(aFlipped[nNext]!=SGM::FaceOnBothSidesType)
+                        {
+                        if(aFlipped[nNext]==SGM::FaceOnLeftType)
+                            {
+                            if(pNext->GetStart()!=pEdge->GetEnd())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        else
+                            {
+                            if(pNext->GetEnd()!=pEdge->GetEnd())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        }
+                    }
+                else
+                    {
+                    if(aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+                        {
+                        if(aFlipped[nLast]==SGM::FaceOnLeftType)
+                            {
+                            if(pLast->GetEnd()!=pEdge->GetEnd())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        else
+                            {
+                            if(pLast->GetStart()!=pEdge->GetEnd())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        }
+                    if(aFlipped[nNext]!=SGM::FaceOnBothSidesType)
+                        {
+                        if(aFlipped[nNext]==SGM::FaceOnLeftType)
+                            {
+                            if(pNext->GetStart()!=pEdge->GetStart())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        else
+                            {
+                            if(pLast->GetEnd()!=pEdge->GetStart())
+                                {
+                                bFoundBadFlip=true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        if(bFoundBadFlip)
+            {
+            aLoopStatus[Index1]=false;
+            }
+        }
+
+    for(Index1=0;Index1<nLoops;++Index1)
+        {
+        if(aLoopStatus[Index1]==false)
+            {
+            bAnswer=false;
+            //if(bFix)
+            //    {
+            //    std::vector<edge *> const &aLoop=aaLoops[Index1];
+            //    std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
+            //    FixLoop(aLoop,aFlipped);
+            //    }
+            }
+        }
+
+    return bAnswer;
+    }
+
 bool face::Check(SGM::Result              &rResult,
                  SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings,
@@ -396,66 +551,74 @@ bool face::Check(SGM::Result              &rResult,
 
     // Check the loops
 
-    std::vector<std::vector<edge *> > aaLoops;
-    std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
-    size_t nLoops=FindLoops(rResult,aaLoops,aaFlipped);
-    size_t Index1,Index2;
-    size_t nTotalEdges=0;
-    size_t nDoubleEdges=0;
-    for(Index1=0;Index1<nLoops;++Index1)
+    if(CheckLoop(rResult)==false)
         {
-        std::vector<edge *> const &aLoop=aaLoops[Index1];
-        std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
-        size_t nEdges=aLoop.size();
-        nTotalEdges+=nEdges;
-        std::vector<vertex *> aStarts,aEnds;
-        aStarts.reserve(nEdges);
-        aEnds.reserve(nEdges);
-        if(m_bFlipped)
-            {
-            for(Index2=0;Index2<nEdges;++Index2)
-                {
-                edge *pEdge=aLoop[Index2];
-                if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
-                    {
-                    ++nDoubleEdges;
-                    }
-                aStarts.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
-                aEnds.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
-                }
-            }
-        else
-            {
-            for(Index2=0;Index2<nEdges;++Index2)
-                {
-                edge *pEdge=aLoop[Index2];
-                if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
-                    {
-                    ++nDoubleEdges;
-                    }
-                aStarts.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
-                aEnds.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
-                }
-            }
-        
-        for(Index2=0;Index2<nEdges;++Index2)
-            {
-            edge *pEdge=aLoop[Index2];
-            vertex *pStart=aStarts[(Index2+1)%nEdges];
-            vertex *pEnd=aEnds[Index2];
-            if(pStart!=pEnd)
-                {
-                bAnswer=false;
-                std::stringstream ss;
-                ss << "start " << SGM::EntityTypeName(pStart->GetType()) << ' ' << pStart->GetID() << " and " <<
-                      " end "  << SGM::EntityTypeName(pEnd->GetType())   << ' ' << pEnd->GetID() <<
-                      " of "   << SGM::EntityTypeName(pEdge->GetType())  << ' ' << pEdge->GetID() <<
-                      " on "   << SGM::EntityTypeName(GetType())         << ' ' << GetID() << " do not match.";
-                aCheckStrings.emplace_back(ss.str());
-                }
-            }
+        bAnswer=false;
+        std::stringstream ss;
+        ss << "Face " << GetID() << " has inconsistant loops.";
+        aCheckStrings.emplace_back(ss.str());
         }
-    nDoubleEdges/=2;
+
+    //std::vector<std::vector<edge *> > aaLoops;
+    //std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
+    //size_t nLoops=FindLoops(rResult,aaLoops,aaFlipped);
+    //size_t Index1,Index2;
+    //size_t nTotalEdges=0;
+    //size_t nDoubleEdges=0;
+    //for(Index1=0;Index1<nLoops;++Index1)
+    //    {
+    //    std::vector<edge *> const &aLoop=aaLoops[Index1];
+    //    std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
+    //    size_t nEdges=aLoop.size();
+    //    nTotalEdges+=nEdges;
+    //    std::vector<vertex *> aStarts,aEnds;
+    //    aStarts.reserve(nEdges);
+    //    aEnds.reserve(nEdges);
+    //    if(m_bFlipped)
+    //        {
+    //        for(Index2=0;Index2<nEdges;++Index2)
+    //            {
+    //            edge *pEdge=aLoop[Index2];
+    //            if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+    //                {
+    //                ++nDoubleEdges;
+    //                }
+    //            aStarts.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
+    //            aEnds.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
+    //            }
+    //        }
+    //    else
+    //        {
+    //        for(Index2=0;Index2<nEdges;++Index2)
+    //            {
+    //            edge *pEdge=aLoop[Index2];
+    //            if(GetSideType(pEdge)==SGM::FaceOnBothSidesType)
+    //                {
+    //                ++nDoubleEdges;
+    //                }
+    //            aStarts.push_back(aFlipped[Index2] ? pEdge->GetEnd() : pEdge->GetStart());
+    //            aEnds.push_back(aFlipped[Index2] ? pEdge->GetStart() : pEdge->GetEnd());
+    //            }
+    //        }
+    //    
+    //    for(Index2=0;Index2<nEdges;++Index2)
+    //        {
+    //        edge *pEdge=aLoop[Index2];
+    //        vertex *pStart=aStarts[(Index2+1)%nEdges];
+    //        vertex *pEnd=aEnds[Index2];
+    //        if(pStart!=pEnd)
+    //            {
+    //            bAnswer=false;
+    //            std::stringstream ss;
+    //            ss << "start " << SGM::EntityTypeName(pStart->GetType()) << ' ' << pStart->GetID() << " and " <<
+    //                  " end "  << SGM::EntityTypeName(pEnd->GetType())   << ' ' << pEnd->GetID() <<
+    //                  " of "   << SGM::EntityTypeName(pEdge->GetType())  << ' ' << pEdge->GetID() <<
+    //                  " on "   << SGM::EntityTypeName(GetType())         << ' ' << GetID() << " do not match.";
+    //            aCheckStrings.emplace_back(ss.str());
+    //            }
+    //        }
+    //    }
+    //nDoubleEdges/=2;
 
     if(m_sEdges.size()<4)
         {
@@ -469,18 +632,19 @@ bool face::Check(SGM::Result              &rResult,
             }
         }
 
-    if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
-        {
-        bAnswer=false;
-        std::stringstream ss;
-        ss << "The loops of " << this << " are missing " << (nDoubleEdges+m_sEdges.size())-nTotalEdges << " edges.";
-        aCheckStrings.emplace_back(ss.str());
-        }
+    //if(nTotalEdges-nDoubleEdges!=m_sEdges.size())
+    //    {
+    //    bAnswer=false;
+    //    std::stringstream ss;
+    //    ss << "The loops of " << this << " are missing " << (nDoubleEdges+m_sEdges.size())-nTotalEdges << " edges.";
+    //    aCheckStrings.emplace_back(ss.str());
+    //    }
 
     // Check the facets
 
     size_t nTriangles=GetTriangles(rResult).size(); // Called to force facets to exist.
     double dMaxAngle=0;
+    size_t Index1;
     for(Index1=0;Index1<nTriangles;Index1+=3)
         {
         if(double dAngle=CheckFacet(m_aPoints3D,m_aNormals,m_aTriangles,m_pSurface,Index1))

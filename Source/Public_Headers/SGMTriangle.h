@@ -51,16 +51,6 @@ inline double SignedArea(Point2D const &A,
                          Point2D const &B,
                          Point2D const &C);
 
-// Returns true if D is inside the angle formed by A as the angle vertex
-// and B and C as its sides.  If D is found first, before C when going
-// counter clockwise from B to D around A, or if D is on the ray AB or AC,
-// then true is returned.
-
-SGM_EXPORT bool InAngle(Point2D const &A,
-                        Point2D const &B,
-                        Point2D const &C,
-                        Point2D const &D);
-
 // Given triangles in the form <a0,b0,c0,a1,b1,c1,...>
 // FindAdjacencies return a vector of the form <Tab0,Tbc0,Tca0,Tab1,Tbc1,Tca1,...>
 // such that Tab0 is the index of the start of the triangle in aTriangles
