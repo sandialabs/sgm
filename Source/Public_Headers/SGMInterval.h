@@ -124,6 +124,11 @@ namespace SGM {
 
         bool Stretch(const Interval1D &other);
 
+        // Increase the ends of this interval if necessary to contain the given coordinate.
+        // Returns true if this interval was modified.
+
+        bool Stretch(const double u);
+
         void Swap(Interval1D &other);
 
     public:
@@ -278,6 +283,11 @@ namespace SGM {
         // Returns true if this box was modified.
 
         bool Stretch(const Interval3D &bb);
+
+        // Increase the ends of this interval if necessary to contain the given point.
+        // Returns true if this interval was modified.
+
+        bool Stretch(Point3D const &P);
 
         // One fourth the sum of the lengths of all edges
 

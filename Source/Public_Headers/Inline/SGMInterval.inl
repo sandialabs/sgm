@@ -107,6 +107,22 @@ namespace SGM {
         return result;
     }
 
+    inline bool Interval1D::Stretch(double u)
+        {
+        bool result = false;
+        if (u < m_dMin)
+            {
+            m_dMin = u;
+            result = true;
+            }
+        else if (m_dMax < u)
+            {
+            m_dMax = u;
+            result = true;
+            }
+        return result;
+        }
+
     inline void Interval1D::Swap(Interval1D &other)
     {
         using std::swap;
@@ -382,6 +398,13 @@ namespace SGM {
         result = m_YDomain.Stretch(bb.m_YDomain) || result;
         return m_ZDomain.Stretch(bb.m_ZDomain) || result;
     }
+
+    inline bool Interval3D::Stretch(Point3D const &P)
+        {
+        bool result = m_XDomain.Stretch(P.m_x);
+        result = m_YDomain.Stretch(P.m_y) || result;
+        return m_ZDomain.Stretch(P.m_z) || result;
+        }
 
     inline double Interval3D::FourthPerimeter() const
     {

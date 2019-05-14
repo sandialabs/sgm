@@ -4,6 +4,7 @@
 #include "SGMVector.h"
 #include "Util/buffer.h"
 
+#include <cfloat>
 #include <cmath>
 #include <iostream>
 
@@ -37,7 +38,7 @@ buffer<unsigned> OrderPointsLexicographical(std::vector<SGM::Point3D> const &aPo
 //      - vector of Point3D
 //      - vector of Point3DSeparate corresponding to each Point3D
 //
-buffer<unsigned> OrderPointsZorder(std::vector<SGM::Point3D> const &aPoints);
+buffer<unsigned> OrderPointsMorton(std::vector<SGM::Point3D> const &aPoints);
 
 
 /// True if points are close using only a relative tolerance.
@@ -152,6 +153,263 @@ struct Point3DSeparate
 
     DoubleSeparate data[3];
     };
+
+
+/* Creating the tree below
+ *
+ *           1 
+ *     /   /   \     \
+ *    2   3    4     5
+ *             |   / |  \
+ *             6  7  8  9
+ *
+ * We use two pointers per node, left child and next right sibling.
+ *
+ *    1
+ *    |
+ *    2 -> 3 -> 4 -> 5
+ *              |    |
+ *              6    7 -> 8 -> 9
+ *
+ * Node *n1  = newNode(1);
+ * Node *n2  = n1->AddChild(newNode(2));
+ * Node *n3  = n1->AddChild(newNode(3));
+ * Node *n4  = n1->AddChild(newNode(4));
+ * Node *n6  = n4->AddChild(newNode(6));
+ * Node *n5  = n1->AddChild(newNode(5));
+ * Node *n7  = n5->AddChild(newNode(7));
+ * Node *n8  = n5->AddChild(newNode(8));
+ * Node *n9  = n5->AddChild(newNode(9));
+ */
+
+template <class IntervalType, class PointType>
+class MortonSegmentsTree
+    {
+    public:
+
+    enum { MAX_LEAF_SIZE=16 };
+    enum { MAX_CHILD_PER_NODE=8 };
+
+    MortonSegmentsTree()
+        : m_p_aPoints(nullptr), m_p_aOrderPoints(nullptr), m_Begin(0), m_End(0), m_Root()
+        {}
+
+    MortonSegmentsTree(std::vector<PointType> const *p_aPoints, buffer<unsigned> const *p_aOrderPoints,
+                       unsigned iBegin, unsigned iEnd);
+
+    struct Bounded
+        {
+        Bounded()
+            : m_Interval()
+        {}
+
+        IntervalType m_Interval;
+        };
+
+    // Leaf nodes do not have children.
+    // Leaf nodes are consecutive Segments defined by a range [iBegin,iEnd) of a vector of PointType.
+
+    struct Leaf : public Bounded
+        {
+        unsigned m_Begin;
+        unsigned m_End;
+
+        Leaf() = delete;
+
+        Leaf(std::vector<PointType> const &aPoints,
+             buffer<unsigned>       const &aIndexOrdered,
+             unsigned                      iBegin,
+             unsigned                      iEnd)
+            : Bounded(), m_Begin(iBegin), m_End(iEnd)
+            {
+            // the bound is composed of the bounds of all the segments,
+            // there must be at least one segment (two points)
+            assert(iEnd - iBegin > 1);
+
+            SGM::Point3D const *pPreviousPoint = &aPoints[aIndexOrdered[iBegin]];
+            SGM::Point3D const *pNextPoint = &aPoints[aIndexOrdered[iBegin+1]];
+            Bounded::m_Interval = IntervalType(*pPreviousPoint,*pNextPoint);
+
+            for (unsigned i = iBegin+2; i < iEnd; ++i)
+                {
+                pNextPoint = &aPoints[aIndexOrdered[i]];
+                Bounded::m_Interval.m_XDomain.Stretch(pNextPoint->m_x);
+                Bounded::m_Interval.m_YDomain.Stretch(pNextPoint->m_y);
+                Bounded::m_Interval.m_ZDomain.Stretch(pNextPoint->m_z);
+                }
+            }
+        };
+
+    struct Node : public Bounded
+        {
+        Bounded *m_aChildren[MAX_CHILD_PER_NODE];
+        unsigned m_nChildren;
+        bool     m_bHasLeaves;
+
+        Node()
+            : m_aChildren(), m_nChildren(0), m_bHasLeaves(false)
+            {}
+
+        explicit Node(bool bHasLeaves)
+            : m_aChildren(), m_nChildren(0), m_bHasLeaves(bHasLeaves)
+            {}
+
+        // Add a child to this Node,
+        // Return pointer to it.
+
+        Bounded* AddChild(Bounded* pNewChild)
+            {
+            // enlarge the bounds to include the child
+            Bounded::m_Interval += pNewChild->m_Interval;
+
+            assert(m_nChildren < MAX_CHILD_PER_NODE);
+            m_aChildren[m_nChildren++] = pNewChild;
+            return pNewChild;
+            }
+        };
+
+    std::vector<PointType> const *m_p_aPoints;
+    buffer<unsigned> const *m_p_aOrderPoints;
+    unsigned m_Begin;
+    unsigned m_End;
+    Node* m_Root;
+    std::vector<Node> m_AllNodes;
+    std::vector<Leaf> m_AllLeaves;
+
+    void ReserveLeavesAndNodes();
+
+    void CreateLeaves();
+
+    void CreateNodeBranches();
+    };
+
+
+template <class IntervalType, class PointType>
+void MortonSegmentsTree<IntervalType,PointType>::ReserveLeavesAndNodes()
+    {
+    // note: the way we insert segments into Leaf, to make up the difference,
+    // some leaves will end up one larger than MAX_LEAF_SIZE
+    size_t nLeaves = (m_End - m_Begin) / MAX_LEAF_SIZE;
+    m_AllLeaves.reserve(nLeaves);
+
+    // count nodes required by recursion of levels until we get to the one root
+    size_t nPreviousLevelNodes = nLeaves;
+    size_t nNextLevelNodes;
+    size_t nNodes = 0;
+    while (nPreviousLevelNodes > 1)
+        {
+        nNextLevelNodes = nPreviousLevelNodes / MAX_CHILD_PER_NODE + (nPreviousLevelNodes % MAX_CHILD_PER_NODE > 0);
+        nNodes += nNextLevelNodes;
+        nPreviousLevelNodes = nNextLevelNodes;
+        }
+
+    m_AllNodes.reserve(nNodes);
+    }
+
+template <class IntervalType, class PointType>
+MortonSegmentsTree<IntervalType,PointType>::MortonSegmentsTree(std::vector<PointType> const *p_aPoints,
+                                                               buffer<unsigned>       const *p_aOrderPoints,
+                                                               unsigned                      iBegin,
+                                                               unsigned                      iEnd)
+    : m_p_aPoints(p_aPoints),
+      m_p_aOrderPoints(p_aOrderPoints),
+      m_Begin(iBegin),
+      m_End(iEnd),
+      m_Root(),
+      m_AllNodes(),
+      m_AllLeaves()
+    {
+    ReserveLeavesAndNodes();
+    CreateLeaves();
+    CreateNodeBranches();
+    }
+
+// Create all the Leaf nodes AND the bottom level Nodes (parent of Leaf).
+
+template <class IntervalType, class PointType>
+void MortonSegmentsTree<IntervalType,PointType>::CreateLeaves()
+    {
+    const size_t nPoints = m_End - m_Begin;
+    const size_t nSegments = nPoints-1;
+    const size_t nLeaves = nSegments / MAX_LEAF_SIZE;
+    size_t nRemaining = nSegments % nLeaves;
+
+    unsigned iPointsBegin = m_Begin;
+    unsigned iPointsEnd = m_Begin;
+    unsigned nSegmentsPerLeaf;
+
+    // how many parents of leaves do we need?
+    unsigned iLeavesInNode = MAX_CHILD_PER_NODE;
+    Node *pFirstLevelNode = nullptr;
+
+    for (unsigned iLeaf = 0; iLeaf < nLeaves; ++iLeaf)
+        {
+        nSegmentsPerLeaf = (nRemaining > 0) ? (MAX_LEAF_SIZE + ((nRemaining--) != 0)) : MAX_LEAF_SIZE;
+        iPointsEnd = iPointsBegin + nSegmentsPerLeaf + 1;
+        assert(iPointsEnd <= m_p_aPoints->size());
+
+        // create the leaf
+        m_AllLeaves.emplace_back(*m_p_aPoints, *m_p_aOrderPoints, iPointsBegin, iPointsEnd);
+
+        // get start point of first segment of next leaf
+        iPointsBegin = iPointsEnd - 1;
+
+        // do we need a new first level node?
+        if (iLeavesInNode == MAX_CHILD_PER_NODE)
+            {
+            // create the first level node
+            m_AllNodes.emplace_back(true);
+            pFirstLevelNode = &m_AllNodes.back();
+            iLeavesInNode = 0;
+            }
+
+        // add leaf to current first level node
+        pFirstLevelNode->AddChild(&m_AllLeaves.back());
+        ++iLeavesInNode;
+        }
+    }
+
+// Create the remainder of nodes at higher levels about the first until we get to root
+
+template <class IntervalType, class PointType>
+void MortonSegmentsTree<IntervalType,PointType>::CreateNodeBranches()
+    {
+    // create nodes by recursion of levels until we get to the one root
+    size_t nPreviousLevelNodes = m_AllNodes.size();
+    size_t nNextLevelNodes;
+    size_t iStartPrevious = 0;
+    size_t iEndPrevious;
+    while (nPreviousLevelNodes > 1)
+        {
+        iEndPrevious = iStartPrevious + nPreviousLevelNodes;
+        nNextLevelNodes = nPreviousLevelNodes / MAX_CHILD_PER_NODE + (nPreviousLevelNodes % MAX_CHILD_PER_NODE > 0);
+
+        size_t nChildrenInNode = MAX_CHILD_PER_NODE;
+        Node *pNext = nullptr;
+
+        for (size_t iPrevious = iStartPrevious; iPrevious < iEndPrevious; ++iPrevious)
+            {
+            // do we need a new first level node?
+            if (nChildrenInNode == MAX_CHILD_PER_NODE)
+                {
+                // create a new node
+                m_AllNodes.emplace_back();
+                pNext = &m_AllNodes.back();
+                nChildrenInNode = 0;
+                }
+            pNext->AddChild(&m_AllNodes[iPrevious]);
+            ++nChildrenInNode;
+            }
+        nPreviousLevelNodes = nNextLevelNodes;
+        iStartPrevious = iEndPrevious;
+        }
+    m_Root = &m_AllNodes.back();
+    }
+
+
+
+
+/// Node class with child nodes and a minimal bounding box enclosing the children.
 
 
 //template <>

@@ -11,6 +11,8 @@
 #include "Intersectors.h"
 #include "Signature.h"
 
+#include <queue>
+
 #ifdef SGM_MULTITHREADED
 #include "SGMThreadPool.h"
 #endif
@@ -120,11 +122,6 @@ struct RayFaceBoxIntersections
 inline bool operator<(RayFaceBoxIntersections const& lhs, RayFaceBoxIntersections const& rhs)
     {
     return lhs.m_dCost < rhs.m_dCost;
-    }
-
-inline bool IsAnyFacetIntersectsRay(SGM::Result &rResult, face const *pFace, SGM::Ray3D const &Ray)
-    {
-    return pFace->GetFacetTree(rResult).AnyIntersectsRay(Ray);
     }
 
 double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
@@ -627,10 +624,91 @@ struct IsOverlappingFacetTree
                 {
                 return true;
                 }
-            };
+            }
         return false;
         }
     };
+
+// A Filter that matches:
+//      1) Node when the AABB around Segment overlaps Node box
+//      2) Leaf when
+//         a) the AABB around Segment overlaps a Leaf box, and
+//         c) the Segment intersects that Leaf box
+struct IsIntersectingBoxSegment
+    {
+    SGM::Result & m_rResult;
+    SGM::Interval3D & m_Bound;
+    SGM::Ray3D & m_Ray;
+    double m_dLength;
+
+    IsIntersectingBoxSegment() = delete;
+
+    inline IsIntersectingBoxSegment(SGM::Result &rResult, SGM::Interval3D const & Bound, SGM::Ray3D const & Ray, double dLength)
+    : m_rResult(rResult),
+        m_Bound(const_cast<SGM::Interval3D&>(Bound)),
+        m_Ray(const_cast<SGM::Ray3D&>(Ray)),
+        m_dLength(dLength)
+    { }
+
+    inline bool operator()(SGM::BoxTree::Node const * node) const
+        {
+        return m_Bound.IntersectsBox(node->m_Bound);
+        }
+
+    inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
+        {
+        if (m_Bound.IntersectsBox(leaf->m_Bound))
+            {
+            if (leaf->m_Bound.IntersectsSegment(m_Ray,m_dLength))
+                {
+                return true;
+                }
+            }
+        return false;
+        }
+    };
+
+// A Filter that matches:
+//      1) FaceTree Node when the AABB around Segment overlaps Node box
+//      2) FaceTree Leaf (containing a face*) when
+//         a) the AABB around Segment overlaps a Leaf box, and
+//         b) the AABB around Segment overlaps a facet (in face->FacetTree) box, and
+//         c) the Segment intersects that facet box
+struct IsForestIntersectingSegment
+    {
+    SGM::Result & m_rResult;
+    SGM::Interval3D m_Bound;
+    SGM::UnitVector3D m_Direction;
+    double m_dLength;
+    SGM::Ray3D m_Ray;
+
+    IsForestIntersectingSegment() = delete;
+
+    inline IsForestIntersectingSegment(SGM::Result &rResult, SGM::Point3D const & A, SGM::Point3D const & B)
+        : m_rResult(rResult),
+          m_Bound(A,B),
+          m_Direction(),
+          m_dLength(MakeUnitVector3D(A,B,m_Direction)),
+          m_Ray(A,m_Direction)
+        { }
+
+    inline bool operator()(SGM::BoxTree::Node const * node) const
+        {
+        return m_Bound.IntersectsBox(node->m_Bound);
+        }
+
+    inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
+        {
+        if (m_Bound.IntersectsBox(leaf->m_Bound))
+            {
+            face* pFace = (face*)leaf->m_pObject;
+            SGM::BoxTree const & FacetTree = pFace->GetFacetTree(m_rResult);
+            return FacetTree.Query(IsIntersectingBoxSegment(m_rResult,m_Bound,m_Ray,m_dLength), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
+            }
+        return false;
+        }
+    };
+
 
 // True if the given Bound overlaps the box of any facet of faces in the given FaceTree.
 
@@ -639,6 +717,150 @@ inline bool AnyFacetIntersectsBox(SGM::Result &rResult,
                                   SGM::Interval3D &Bound)
     {
     return FaceTree.Query(IsOverlappingFacetTree(rResult,Bound), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
+    }
+
+inline bool AnyFacetIntersectsSegment(SGM::Result &rResult,
+                                      SGM::BoxTree const &FaceTree,
+                                      SGM::Point3D const &A,
+                                      SGM::Point3D const &B)
+    {
+    return FaceTree.Query(IsForestIntersectingSegment(rResult,A,B), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
+    }
+
+// For each point in Morton order, set true or false that the segment formed with the previous point may cross
+// one or more faces.
+
+bool PointCrossFacesLoop(SGM::Result &rResult,
+                      const volume *pVolume,
+                      size_t iBegin,
+                      size_t iEnd,
+                      const buffer<unsigned int> *p_aIndexOrdered,
+                      const std::vector<SGM::Point3D> *p_aPoints,
+                      std::vector<bool> *p_aPointCrosses)
+    {
+    const buffer<unsigned int> &aIndexOrdered = *p_aIndexOrdered;
+    const std::vector<SGM::Point3D> &aPoints = *p_aPoints;
+    std::vector<bool> &aPointCrosses = *p_aPointCrosses;
+    SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
+
+    aPointCrosses[iBegin] = true;
+
+
+#if 0
+
+    // TODO: remove this, its only a speed test for tree
+    MortonSegmentsTree<SGM::Interval3D,SGM::Point3D> SegmentTree(p_aPoints,p_aIndexOrdered,iBegin,iEnd);
+
+    typedef MortonSegmentsTree<SGM::Interval3D,SGM::Point3D>::Node Node;
+    typedef MortonSegmentsTree<SGM::Interval3D,SGM::Point3D>::Leaf Leaf;
+
+    size_t nSegmentsChecked = 0;
+
+//    void LevelOrderTraversal(Node * root)
+//        {
+
+        // level order traversal using queue
+        Node* root = SegmentTree.m_Root;
+        std::queue<Node *> q;
+        q.push(root);
+        while (!q.empty())
+            {
+            int n = q.size();
+            while (n > 0)
+                {
+                Node * pNode = q.front();
+                q.pop();
+
+                // TODO: save the facets that are intersected, put into queue
+                if (AnyFacetIntersectsBox(rResult,FaceTree,pNode->m_Interval))
+                    {
+                    if (pNode->m_bHasLeaves)
+                        {
+                        for (unsigned iChild = 0; iChild < pNode->m_nChildren; ++iChild)
+                            {
+                            Leaf* pLeaf = (Leaf*)pNode->m_aChildren[iChild];
+
+                            // TODO: only look in the facets we saved above
+                            if (AnyFacetIntersectsBox(rResult,FaceTree,pLeaf->m_Interval))
+                                {
+                                for (unsigned i = pLeaf->m_Begin+1; i < pLeaf->m_End; ++i)
+                                    {
+                                    SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+                                    SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i - 1]];
+                                    if (AnyFacetIntersectsSegment(rResult, FaceTree, PreviousPoint, NextPoint))
+                                        {
+                                        aPointCrosses[i] = true;
+                                        }
+                                    ++nSegmentsChecked;
+                                    }
+                                }
+                            }
+                        }
+                    else
+                        {
+                        for (unsigned iChild = 0; iChild < pNode->m_nChildren; ++iChild)
+                            {
+                            Node* pChildNode = (Node*)pNode->m_aChildren[iChild];
+                            q.push(pChildNode);
+                            }
+                        }
+                    }
+                n--;
+                }
+            }
+//        }
+
+
+    std::cout << "nSegmentsChecked = " << nSegmentsChecked << " out of " << iEnd-iBegin-1 << std::endl;
+
+    // more expensive O(N) algorithm can be used to check the answer with the MortonSegmentsTree
+    for (size_t i = iBegin+1; i < iEnd; ++i)
+        {
+        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+        SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i - 1]];
+        if (AnyFacetIntersectsSegment(rResult, FaceTree, PreviousPoint, NextPoint))
+            {
+            if (!aPointCrosses[i])
+                {
+                std::cout << "aPointCrosses[" << i << "]" << " is not true" << std::endl;
+                }
+            }
+        else
+            {
+            if (aPointCrosses[i])
+                {
+                std::cout << "aPointCrosses[" << i << "]" << " is not false" << std::endl;
+                }
+            }
+        }
+
+#else
+
+    // loop over points in Morton order
+    for (size_t i = iBegin+1; i < iEnd; ++i)
+        {
+        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+        SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i - 1]];
+        SGM::Interval3D Box(PreviousPoint, NextPoint);
+        if (AnyFacetIntersectsBox(rResult,FaceTree,Box))
+        //if (AnyFacetIntersectsSegment(rResult, FaceTree, PreviousPoint, NextPoint))
+            {
+            aPointCrosses[i] = true;
+            }
+        }
+
+#endif
+
+
+
+
+
+
+
+
+
+
+    return true;
     }
 
 bool PointsInVolumeLoop(SGM::Result &rResult,
@@ -650,12 +872,14 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
                         size_t iEnd,
                         const buffer<unsigned int> *p_aIndexOrdered,
                         const std::vector<SGM::Point3D> *p_aPoints,
+                        std::vector<bool> *p_aPointCrosses,
                         std::vector<bool> *p_aIsInside)
     {
     // these are passed as pointers in order to avoid copies when using multi-threaded std::future
     const SGM::Point3D &VolumeCentroid = *pVolumeCentroid;
     const buffer<unsigned int> &aIndexOrdered = *p_aIndexOrdered;
     const std::vector<SGM::Point3D> &aPoints = *p_aPoints;
+    std::vector<bool> &aPointCrosses = *p_aPointCrosses;
     std::vector<bool> &aIsInside = *p_aIsInside;
 
     SGM::UnitVector3D Direction;
@@ -665,29 +889,30 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
     size_t nHits = 0;
     bool bUsePrevious = false;
 
-    SGM::BoxTree const &FaceTree=pVolume->GetFaceTree(rResult);
+    size_t nPointsSolvedByCrossing = 0;
+    size_t nPointsFindNextRay = 0;
+    size_t nPointsCostZero = 0;
+    size_t nPointsRayInVolume = 0;
 
-    // loop over points in Z-order
+    assert(aPointCrosses[iBegin]);
+
+    // loop over points in Morton order
     for (size_t i = iBegin; i < iEnd; ++i)
         {
-        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
-
-        if (i > iBegin)
+            // use the segment crossing pre-processing
+        if (!aPointCrosses[i])
             {
-            SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i-1]];
-            SGM::Interval3D Bound(PreviousPoint,NextPoint);
-            if (!AnyFacetIntersectsBox(rResult,FaceTree,Bound))
-                {
-                // we have our answer, it is the same as the previous point
-                aIsInside[aIndexOrdered[i]] = aIsInside[aIndexOrdered[i-1]];
-                dCost = 0.0;
-                bUsePrevious = false;
-                nHits = 0;
-                ++nCountSinceNewRay;
-                continue; // go to the next point
-                }
+            // we have our answer, it is the same as the previous point
+            aIsInside[aIndexOrdered[i]] = aIsInside[aIndexOrdered[i-1]];
+            dCost = 0.0;
+            bUsePrevious = false;
+            nHits = 0;
+            ++nCountSinceNewRay;
+            ++nPointsSolvedByCrossing;
+            continue; // go to the next point
             }
 
+        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
         RayFaceBoxIntersections NextRayIntersects;
         FindNextRayFaceBoxIntersections(rResult,
                                         pVolume,
@@ -699,10 +924,13 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
                                         Direction,
                                         nCountSinceNewRay,
                                         NextRayIntersects);
+        ++nPointsFindNextRay;
+
         if (dCost == 0)
             {
             bUsePrevious = true;
             nHits = 0;
+            ++nPointsCostZero;
             }
         else
             {
@@ -713,12 +941,22 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
                                                         bUsePrevious,
                                                         nHits,
                                                         FirstFacePoint);
+            ++nPointsRayInVolume;
+
             if (bUsePrevious && nHits > 0)
                 {
                 Direction = FirstFacePoint - NextPoint;
                 }
             }
         }
+
+    std::cout << "PointsInVolumeLoop: " <<
+                 iEnd - iBegin << " = " <<
+                 nPointsSolvedByCrossing << " + (" <<
+                 nPointsFindNextRay << " = " <<
+                 nPointsCostZero << " + " <<
+                 nPointsRayInVolume << ")" << std::endl;
+    std::cout.flush();
     return iEnd > iBegin;
     }
 
@@ -732,9 +970,10 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     FindVolumeTreeLengths(rResult, pVolume, aVolumeShortestLengths, VolumeCentroid);
 
     // find an ordering of the points close together
-    buffer<unsigned> aIndexOrdered = SGMInternal::OrderPointsZorder(aPoints);
+    buffer<unsigned> aIndexOrdered = SGMInternal::OrderPointsMorton(aPoints);
 
     size_t nPoints = aPoints.size();
+    std::vector<bool> aPointCrosses(nPoints,false);
     std::vector<bool> aIsInside(nPoints,false);
 
 #ifdef SGM_MULTITHREADED
@@ -745,9 +984,33 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     std::vector<std::future<bool>> futures;
     const unsigned NUM_CHUNKS = 8*nConcurrentThreads;
     const size_t CHUNK_SIZE = nPoints / NUM_CHUNKS;
+
     size_t nRemaining = nPoints % NUM_CHUNKS;
     size_t iBegin = 0;
     size_t iEnd = 0;
+    for (unsigned iChunk = 0; iChunk < NUM_CHUNKS; ++iChunk)
+        {
+        iEnd += (nRemaining > 0) ? (CHUNK_SIZE + ((nRemaining--) != 0)) : CHUNK_SIZE;
+        futures.emplace_back(threadPool.enqueue(std::bind(PointCrossFacesLoop,
+                                                          rResult,
+                                                          pVolume,
+                                                          iBegin, iEnd,
+                                                          &aIndexOrdered,
+                                                          &aPoints,
+                                                          &aPointCrosses)));
+        iBegin = iEnd;
+        }
+    for (auto &&future: futures)
+        {
+        future.wait();
+        future.get();
+        }
+    futures.clear();
+
+
+    nRemaining = nPoints % NUM_CHUNKS;
+    iBegin = 0;
+    iEnd = 0;
     for (unsigned iChunk = 0; iChunk < NUM_CHUNKS; ++iChunk)
         {
         iEnd += (nRemaining > 0) ? (CHUNK_SIZE + ((nRemaining--) != 0)) : CHUNK_SIZE;
@@ -760,6 +1023,7 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
                                                           iBegin, iEnd,
                                                           &aIndexOrdered,
                                                           &aPoints,
+                                                          &aPointCrosses,
                                                           &aIsInside)));
         iBegin = iEnd;
         }
@@ -771,6 +1035,12 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
     futures.clear();
     rResult.GetThing()->SetConcurrentInactive();
 #else
+    PointCrossFacesLoop(rResult,
+                        pVolume,
+                        0, nPoints,
+                        &aIndexOrdered,
+                        &aPoints,
+                        &aPointCrosses);
     PointsInVolumeLoop(rResult,
                        pVolume,
                        dTolerance,
@@ -779,6 +1049,7 @@ std::vector<bool> PointsInVolume(SGM::Result                     &rResult,
                        0, nPoints,
                        &aIndexOrdered,
                        &aPoints,
+                       &aPointCrosses,
                        &aIsInside);
 #endif
     return aIsInside;

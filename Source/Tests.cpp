@@ -848,7 +848,7 @@ bool RunInternalTest(SGM::Result &rResult,
                 {-0.5000000000001, -0.5000000000001, -1.0000000000001}
             };
 
-        buffer<unsigned> aIndexOrdered1 = SGMInternal::OrderPointsZorder(aPoints1);
+        buffer<unsigned> aIndexOrdered1 = SGMInternal::OrderPointsMorton(aPoints1);
 
         if (aIndexOrdered1[0] != 5u ||
             aIndexOrdered1[1] != 1u ||
@@ -936,7 +936,7 @@ bool RunInternalTest(SGM::Result &rResult,
                 { -3000.000000001e-16,      5000.000000001e-16,     -3000.000000001e-16},
             };
 
-        buffer<unsigned> aIndexOrdered3 = SGMInternal::OrderPointsZorder(aPoints3);
+        buffer<unsigned> aIndexOrdered3 = SGMInternal::OrderPointsMorton(aPoints3);
 
         // every consecutive pair in the sorted list should be close
         bool bExpectedAlmostEqual = true;
@@ -980,7 +980,7 @@ bool RunInternalTest(SGM::Result &rResult,
                 }
             }
             {
-            buffer<unsigned> aIndexOrdered4 = SGMInternal::OrderPointsZorder(aPoints4);
+            buffer<unsigned> aIndexOrdered4 = SGMInternal::OrderPointsMorton(aPoints4);
             buffer<unsigned> aExpectedZorder4 = { 0, 2, 4, 6, 7, 9, 3, 5, 1, 8 };
             if (aIndexOrdered4 != aExpectedZorder4)
                 {

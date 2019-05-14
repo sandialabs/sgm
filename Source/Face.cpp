@@ -303,30 +303,30 @@ void FixSegmentU(SGM::Interval1D const &UDomain,
                  SGM::Point2D          &FixedUV1,
                  SGM::Point2D          &FixedUV2)
     {
-    if(fabs(UDomain.m_dMin-uv1.m_u)<SGM_MIN_TOL)
+    if(UDomain.MidPoint()<uv2.m_u)
         {
-        if(UDomain.MidPoint()<uv2.m_u)
+        if(fabs(UDomain.m_dMin-uv1.m_u)<SGM_MIN_TOL)
             {
             FixedUV1.m_u+=UDomain.Length();
             }
         }
-    if(fabs(UDomain.m_dMax-uv1.m_u)<SGM_MIN_TOL)
+    else
         {
-        if(uv2.m_u<UDomain.MidPoint())
+        if(fabs(UDomain.m_dMax-uv1.m_u)<SGM_MIN_TOL)
             {
             FixedUV1.m_u-=UDomain.Length();
             }
         }
-    if(fabs(UDomain.m_dMin-uv2.m_u)<SGM_MIN_TOL)
+    if(UDomain.MidPoint()<uv1.m_u)
         {
-        if(UDomain.MidPoint()<uv1.m_u)
+        if(fabs(UDomain.m_dMin-uv2.m_u)<SGM_MIN_TOL)
             {
             FixedUV2.m_u+=UDomain.Length();
             }
         }
-    if(fabs(UDomain.m_dMax-uv2.m_u)<SGM_MIN_TOL)
+    else
         {
-        if(uv1.m_u<UDomain.MidPoint())
+        if(fabs(UDomain.m_dMax-uv2.m_u)<SGM_MIN_TOL)
             {
             FixedUV2.m_u-=UDomain.Length();
             }
@@ -339,30 +339,30 @@ void FixSegmentV(SGM::Interval1D const &VDomain,
                  SGM::Point2D          &FixedUV1,
                  SGM::Point2D          &FixedUV2)
     {
-    if(fabs(VDomain.m_dMin-uv1.m_v)<SGM_MIN_TOL)
+    if(VDomain.MidPoint()<uv2.m_v)
         {
-        if(VDomain.MidPoint()<uv2.m_v)
+        if(fabs(VDomain.m_dMin-uv1.m_v)<SGM_MIN_TOL)
             {
             FixedUV1.m_v+=VDomain.Length();
             }
         }
-    if(fabs(VDomain.m_dMax-uv1.m_v)<SGM_MIN_TOL)
+    else
         {
-        if(uv2.m_v<VDomain.MidPoint())
+        if(fabs(VDomain.m_dMax-uv1.m_v)<SGM_MIN_TOL)
             {
             FixedUV1.m_v-=VDomain.Length();
             }
         }
-    if(fabs(VDomain.m_dMin-uv2.m_v)<SGM_MIN_TOL)
+    if(VDomain.MidPoint()<uv1.m_v)
         {
-        if(VDomain.MidPoint()<uv1.m_v)
+        if(fabs(VDomain.m_dMin-uv2.m_v)<SGM_MIN_TOL)
             {
             FixedUV2.m_v+=VDomain.Length();
             }
         }
-    if(fabs(VDomain.m_dMax-uv2.m_v)<SGM_MIN_TOL)
+    else
         {
-        if(uv1.m_v<VDomain.MidPoint())
+        if(fabs(VDomain.m_dMax-uv2.m_v)<SGM_MIN_TOL)
             {
             FixedUV2.m_v-=VDomain.Length();
             }

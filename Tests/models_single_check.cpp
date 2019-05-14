@@ -252,7 +252,7 @@ TEST(speed_check, DISABLED_single_point_in_volume)
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
-    SGM::Point3D Pos({  -3.86411357173061,  -11.7430502101287,  -5.69296617184733});
+    SGM::Point3D Pos = {  -3.86411357173061,  -11.7430502101287,  -5.69296617184733};
     bool bInside1=SGM::PointInEntity(rResult,Pos,VolumeID);
 
     rResult.SetDebugFlag(6);
@@ -264,7 +264,7 @@ TEST(speed_check, DISABLED_single_point_in_volume)
 
     bool bInside2=SGM::PointInEntity(rResult,Pos,VolumeID);
 
-    SGM::UnitVector3D Vec({0.45087572710671003,0.70219734025538583,0.55102629160890060});
+    SGM::UnitVector3D Vec = {0.45087572710671003,0.70219734025538583,0.55102629160890060};
     SGM::CreateLinearEdge(rResult,Pos,Pos+20*Vec);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
@@ -798,7 +798,7 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
 //        dX += dIncrement;
 //        }
 //
-//    buffer<unsigned> aOrder = SGMInternal::OrderPointsZorder(aPoints);
+//    buffer<unsigned> aOrder = SGMInternal::OrderPointsMorton(aPoints);
 //
 //    for (unsigned i = 1; i < aPoints.size(); ++i)
 //        {

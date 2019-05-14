@@ -94,26 +94,37 @@ bool LessZOrder(const SGM::Point3D &p, const Point3DSeparate &p_s,
     return p[index_max] < q[index_max];
     }
 
-std::vector<Point3DSeparate> CreatePoint3DSeparates(std::vector<SGM::Point3D> const &aPoints)
+void CreatePoint3DSeparates(SGM::Point3D const *pPoints,
+                            size_t             iBegin,
+                            size_t             iEnd,
+                            Point3DSeparate    *pPointSeparates,
+                            unsigned           *pIndexOrdered)
     {
-    std::vector<Point3DSeparate> aPointSeparates;
-    aPointSeparates.reserve(aPoints.size());
-    for (auto const & iPoint : aPoints)
-        aPointSeparates.emplace_back(iPoint);
-    return aPointSeparates;
+    for (size_t i = iBegin; i < iEnd; ++i)
+        {
+        new (pPointSeparates+i) Point3DSeparate(pPoints[i]); // placement new at the address, no need to delete
+        }
+    for (size_t i = iBegin; i < iEnd; ++i)
+        {
+        pIndexOrdered[i] = i;
+        }
     }
 
-buffer<unsigned> OrderPointsZorder(std::vector<SGM::Point3D> const &aPoints)
+buffer<unsigned> OrderPointsMorton(std::vector<SGM::Point3D> const &aPoints)
     {
-    // fill the range [0,nPoints-1]
     buffer<unsigned> aIndexOrdered(aPoints.size());
-    std::iota(aIndexOrdered.begin(), aIndexOrdered.end(), 0);
-
-    // Make a version of points separated into mantissa and exponent
-    auto aPointSeparates = CreatePoint3DSeparates(aPoints);
 
     SGM::Point3D const *pPoints = aPoints.data();
-    Point3DSeparate const *pPointSeparates = aPointSeparates.data();
+    unsigned *pIndexOrdered = aIndexOrdered.data();
+    Point3DSeparate *pPointSeparates = new Point3DSeparate[aPoints.size()];
+
+    // Make a version of points separated into mantissa and exponent
+    // and fill an array with range [0,nPoints-1]
+
+//#if defined(SGM_MULTITHREADED)
+//#else
+    CreatePoint3DSeparates(pPoints,0,aPoints.size(),pPointSeparates,pIndexOrdered);
+//#endif
 
     // Sort the index array using our Less function for pairs of Point3D and Point3DSeparate
 #if defined(SGM_MULTITHREADED) && !defined(_MSC_VER)
@@ -129,7 +140,9 @@ buffer<unsigned> OrderPointsZorder(std::vector<SGM::Point3D> const &aPoints)
                   return LessZOrder(pPoints[i], pPointSeparates[i], pPoints[j], pPointSeparates[j]);
                   });
 #endif
+    delete[] pPointSeparates;
     return aIndexOrdered;
     }
+
 
 } // namespace SGMInternal
