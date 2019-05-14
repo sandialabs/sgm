@@ -29,5 +29,5 @@ TEST(pointtree_check, basic_2D)
     EXPECT_TRUE(Tree.Size()==5);
     std::vector<unsigned> aNear = Tree.NearestNeighbors({0.9,0.9},1);
     EXPECT_EQ(aNear.size(),1);
-    EXPECT_EQ(aNear[0],3);
+    EXPECT_TRUE(aNear[0]==3);
     }

@@ -769,12 +769,6 @@ class complex : public topology
 
         bool CheckIndexMax(SGM::Result &rResult, size_t aPointsSize) const;
 
-        std::vector<SGM::Point3D> m_aPoints;
-        std::vector<unsigned> m_aSegments;
-        std::vector<unsigned> m_aTriangles;
-
-        mutable SGM::BoxTree      m_Tree;
-
         void FindTopAndBottomTriangles(std::vector<unsigned int> &aBottom,
                                        std::vector<unsigned int> &aTop) const;
 
@@ -798,6 +792,17 @@ class complex : public topology
                                 std::vector<SGM::Point3D> &aUsedPoints,
                                 std::vector<unsigned> &aSegments,
                                 std::vector<unsigned> &aTriangles) const;
+
+        bool CheckLoop(SGM::Result &rResult) const;
+
+        // Data members
+
+        std::vector<SGM::Point3D> m_aPoints;
+        std::vector<unsigned>     m_aSegments;
+        std::vector<unsigned>     m_aTriangles;
+
+        mutable SGM::BoxTree      m_Tree;
+
     };
 
 class volume : public topology
@@ -1078,11 +1083,13 @@ class face : public topology
     private:
         
         void InitializeFacetSubdivision(SGM::Result &rResult,
-                                        const size_t MAX_LEVELS,
+                                        size_t MAX_LEVELS,
                                         std::vector<SGM::Point2D> &aPoints2D,
                                         std::vector<SGM::Point3D> &aPoints3D,
                                         std::vector<unsigned int> &aTriangles,
                                         std::vector<entity *> &aEntities) const;
+
+        //bool CheckLoop(SGM::Result &rResult,bool bFix=false) const;
 
         std::set<edge *,EntityCompare>      m_sEdges;
         std::map<edge *,SGM::EdgeSideType>  m_mSideType;

@@ -219,9 +219,9 @@ namespace SGM {
         /// A Filter that matches node or leaf when when the given bounding box intersects.
         struct IsOverlapping {
 
-            Interval3D &m_bound; // implicitly constant will not be changed
+            Interval3D m_bound; // implicitly constant will not be changed
 
-            IsOverlapping() = delete;
+            IsOverlapping();
 
             explicit IsOverlapping(Interval3D const & bound)
                     : m_bound(const_cast<Interval3D&>(bound)) { }
@@ -326,7 +326,7 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRay {
 
-            Ray3D & m_ray;
+            Ray3D m_ray;
             double m_tolerance;
             
             IsIntersectingRay() = delete;
@@ -340,7 +340,7 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRayTight {
 
-            Ray3D & m_ray;
+            Ray3D m_ray;
 
             IsIntersectingRayTight() = delete;
 
@@ -353,7 +353,7 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given segment intersects
         struct IsIntersectingSegment
         {
-            Ray3D &m_ray; // implicitly constant, it will not be changed
+            Ray3D m_ray; // implicitly constant, it will not be changed
             double m_length;
             double m_tolerance;
             
@@ -369,7 +369,7 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given segment intersects
         struct IsIntersectingSegmentTight
             {
-            Ray3D &m_ray; // implicitly constant, it will not be changed
+            Ray3D m_ray; // implicitly constant, it will not be changed
             double m_length;
 
             IsIntersectingSegmentTight() = delete;
@@ -461,7 +461,7 @@ namespace SGM {
         
         template <class ObjectType>
         struct PushLeafObject {
-            std::vector<ObjectType*> &m_aObjects;
+            std::vector<ObjectType*> m_aObjects;
             bool bContinueVisiting;
             
             PushLeafObject() = delete;

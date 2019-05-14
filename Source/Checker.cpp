@@ -373,6 +373,161 @@ double CheckFacet(std::vector<SGM::Point3D>      const &aPoints3D,
     return dMaxAngle;
     }
 
+//void FixLoop(std::vector<edge *>            const &aLoop,
+//             std::vector<SGM::EdgeSideType> const &aFlipped)
+//    {
+//    size_t Index1;
+//    size_t nLoop=aLoop.size();
+//    std::vector<bool> aFlipEdge;
+//    aFlipEdge.assign(nLoop,false);
+//    for(Index1=0;Index1<nLoop;++Index1)
+//        {
+//        size_t nLast=(Index1+nLoop-1)%nLoop;
+//        if( aFlipped[Index1]!=SGM::FaceOnBothSidesType &&
+//            aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+//            {
+//            edge *pLast=aLoop[nLast];
+//            edge *pEdge=aLoop[Index1];
+//            vertex *pLastEnd=aFlipped[nLast]==SGM::FaceOnRightType ? pLast->GetStart() : pLast->GetEnd();
+//            vertex *pThisStart=aFlipped[Index1]==SGM::FaceOnRightType ? pEdge->GetEnd() : pEdge->GetStart();
+//            if(pLastEnd!=pThisStart)
+//                {
+//                aFlipEdge[Index1]=true;
+//                }
+//            }
+//        }
+//
+//    int a=0;
+//    a*=1;
+//    }
+
+//bool face::CheckLoop(SGM::Result &rResult,
+//                     bool         //bFix
+//                     ) const
+//    {
+//    std::vector<std::vector<edge *> > aaLoops;
+//    std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;
+//    size_t nLoops=FindLoops(rResult,aaLoops,aaFlipped);
+//    size_t Index1,Index2;
+//
+//    // Check for consistant 
+//    std::vector<bool> aLoopStatus;
+//    aLoopStatus.assign(nLoops,true);
+//    bool bAnswer=true;
+//    for(Index1=0;Index1<nLoops;++Index1)
+//        {
+//        std::vector<edge *> const &aLoop=aaLoops[Index1];
+//        std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
+//        size_t nEdges=aLoop.size();
+//        bool bFoundBadFlip=false;
+//        for(Index2=0;Index2<nEdges;++Index2)
+//            {
+//            size_t nLast=(Index2+nEdges-1)%nEdges;
+//            size_t nNext=(Index2+1)%nEdges;
+//            edge *pLast=aLoop[nLast];
+//            edge *pEdge=aLoop[Index2];
+//            edge *pNext=aLoop[nNext];
+//            if(aFlipped[Index2]!=SGM::FaceOnBothSidesType)
+//                {
+//                if(aFlipped[Index2]==SGM::FaceOnLeftType)
+//                    {
+//                    if(aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+//                        {
+//                        if(aFlipped[nLast]==SGM::FaceOnLeftType)
+//                            {
+//                            if(pLast->GetEnd()!=pEdge->GetStart())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        else
+//                            {
+//                            if(pLast->GetStart()!=pEdge->GetStart())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        }
+//                    if(aFlipped[nNext]!=SGM::FaceOnBothSidesType)
+//                        {
+//                        if(aFlipped[nNext]==SGM::FaceOnLeftType)
+//                            {
+//                            if(pNext->GetStart()!=pEdge->GetEnd())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        else
+//                            {
+//                            if(pNext->GetEnd()!=pEdge->GetEnd())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                else
+//                    {
+//                    if(aFlipped[nLast]!=SGM::FaceOnBothSidesType)
+//                        {
+//                        if(aFlipped[nLast]==SGM::FaceOnLeftType)
+//                            {
+//                            if(pLast->GetEnd()!=pEdge->GetEnd())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        else
+//                            {
+//                            if(pLast->GetStart()!=pEdge->GetEnd())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        }
+//                    if(aFlipped[nNext]!=SGM::FaceOnBothSidesType)
+//                        {
+//                        if(aFlipped[nNext]==SGM::FaceOnLeftType)
+//                            {
+//                            if(pNext->GetStart()!=pEdge->GetStart())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        else
+//                            {
+//                            if(pLast->GetEnd()!=pEdge->GetStart())
+//                                {
+//                                bFoundBadFlip=true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        if(bFoundBadFlip)
+//            {
+//            aLoopStatus[Index1]=false;
+//            }
+//        }
+//
+//    for(Index1=0;Index1<nLoops;++Index1)
+//        {
+//        if(aLoopStatus[Index1]==false)
+//            {
+//            bAnswer=false;
+//            //if(bFix)
+//            //    {
+//            //    std::vector<edge *> const &aLoop=aaLoops[Index1];
+//            //    std::vector<SGM::EdgeSideType> const &aFlipped=aaFlipped[Index1];
+//            //    FixLoop(aLoop,aFlipped);
+//            //    }
+//            }
+//        }
+//
+//    return bAnswer;
+//    }
+
 bool face::Check(SGM::Result              &rResult,
                  SGM::CheckOptions  const &Options,
                  std::vector<std::string> &aCheckStrings,
@@ -395,6 +550,14 @@ bool face::Check(SGM::Result              &rResult,
         }
 
     // Check the loops
+
+    //if(CheckLoop(rResult)==false)
+    //    {
+    //    bAnswer=false;
+    //    std::stringstream ss;
+    //    ss << "Face " << GetID() << " has inconsistant loops.";
+    //    aCheckStrings.emplace_back(ss.str());
+    //    }
 
     std::vector<std::vector<edge *> > aaLoops;
     std::vector<std::vector<SGM::EdgeSideType> > aaFlipped;

@@ -20,10 +20,11 @@ namespace SGM {
 // vector in the right handed direction.
 
     double UnitVector3D::Angle(UnitVector3D const &Vec,
-                                    UnitVector3D const &Norm) const
+                               UnitVector3D const &Norm) const
     {
         UnitVector3D YVec=Norm*(*this);
-        return SAFEatan2(YVec%Vec,(*this)%Vec);
+        double dAnswer=SAFEatan2(YVec%Vec,(*this)%Vec);
+        return dAnswer<0 ? dAnswer+SGM_TWO_PI : dAnswer;
     }
 
 ///////////////////////////////////////////////////////////////////////////

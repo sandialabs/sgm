@@ -1256,14 +1256,10 @@ static void SplitWithSurfaceNormals(FacetOptions        const &Options,
 double MoreFacetChecks(edge const *pEdge)
     {
     double dAnswer=1.0;
-    if(pEdge->GetCurve()->GetCurveType()==SGM::NUBCurveType && pEdge->GetStart())
+    if( (pEdge->GetStart() && pEdge->GetStart()->CuspValue()<SGM_MIN_TOL) ||
+        (pEdge->GetEnd() && pEdge->GetEnd()->CuspValue()<SGM_MIN_TOL))
         {
-        double dStart=pEdge->GetStart()->CuspValue();
-        double dEnd=pEdge->GetEnd()->CuspValue();
-        if(dStart<SGM_MIN_TOL || dEnd<SGM_MIN_TOL)
-            {
-            dAnswer=0.5;
-            }
+        return 0.5;
         }
     if(pEdge->GetCurve()->GetCurveType()==SGM::CircleType)
         {

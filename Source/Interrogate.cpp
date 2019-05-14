@@ -56,12 +56,6 @@ bool IsRayExpensive(SGM::Result              &rResult,
     SGM::Ray3D Ray(Origin, Axis);
     aHitFaces = FaceTree.FindIntersectsRay(Ray);
 
-    // skip if debugging ray firing
-    if (rResult.GetDebugFlag()==6)
-        {
-        return false;
-        }
-
     for (void const* pVoid : aHitFaces)
         {
         face *pFace = (face *)pVoid;
@@ -215,25 +209,25 @@ double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
 //      2) BoxTree::Leaf (containing a face*) when the given ray intersects face->FacetTree.
 struct IsIntersectingRayFacetTree
     {
-    SGM::Result & m_rResult;
-    SGM::Ray3D & m_ray;
+    SGM::Result *m_rResult;
+    SGM::Ray3D  *m_pRay;
 
     IsIntersectingRayFacetTree() = delete;
 
-    inline IsIntersectingRayFacetTree(SGM::Result &rResult, SGM::Ray3D const & ray)
-        : m_rResult(rResult), m_ray(const_cast<SGM::Ray3D&>(ray)) { }
+    inline IsIntersectingRayFacetTree(SGM::Result &rResult, SGM::Ray3D const &Ray)
+        : m_rResult(&rResult), m_pRay(const_cast<SGM::Ray3D*>(&Ray)) { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
-        return node->m_Bound.IntersectsRay(m_ray);
+        return node->m_Bound.IntersectsRay(*m_pRay);
         }
 
     inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
         {
-        if (leaf->m_Bound.IntersectsRay(m_ray))
+        if (leaf->m_Bound.IntersectsRay(*m_pRay))
             {
             face* pFace = (face*)leaf->m_pObject;
-            if (pFace->GetFacetTree(m_rResult).AnyIntersectsRay(m_ray))
+            if (pFace->GetFacetTree(*m_rResult).AnyIntersectsRay(*m_pRay))
                 {
                 return true;
                 }
@@ -246,10 +240,10 @@ struct IsIntersectingRayFacetTree
 
 inline void FindFacetsIntersectsRay(SGM::Result &rResult,
                                     SGM::BoxTree const &FaceTree,
-                                    SGM::Ray3D const &ray,
+                                    SGM::Ray3D const &Ray,
                                     std::vector<face*> &FacesHit)
     {
-    FaceTree.Query(IsIntersectingRayFacetTree(rResult,ray), SGM::BoxTree::PushLeafObject<face>(FacesHit));
+    FaceTree.Query(IsIntersectingRayFacetTree(rResult,Ray), SGM::BoxTree::PushLeafObject<face>(FacesHit));
     }
 
 RayFaceBoxIntersections FindRayFacesCost(SGM::Result &rResult,
@@ -602,25 +596,25 @@ inline void FindVolumeTreeLengths(SGM::Result &rResult,
 //      2) BoxTree::Leaf (containing a face*) when the given bounding box intersects face->FacetTree.
 struct IsOverlappingFacetTree
     {
-    SGM::Result & m_rResult;
-    SGM::Interval3D &m_bound; // implicitly constant will not be changed
+    SGM::Result *m_rResult;
+    SGM::Interval3D *m_pInterval; // implicitly constant will not be changed
 
     IsOverlappingFacetTree() = delete;
 
     inline explicit IsOverlappingFacetTree(SGM::Result &rResult, SGM::Interval3D const & bound)
-        : m_rResult(rResult), m_bound(const_cast<SGM::Interval3D&>(bound)) { }
+        : m_rResult(&rResult), m_pInterval(const_cast<SGM::Interval3D*>(&bound)) { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
-        return m_bound.IntersectsBox(node->m_Bound);
+        return m_pInterval->IntersectsBox(node->m_Bound);
         }
 
     inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
         {
-        if (m_bound.IntersectsBox(leaf->m_Bound))
+        if (m_pInterval->IntersectsBox(leaf->m_Bound))
             {
             face* pFace = (face*)leaf->m_pObject;
-            if (pFace->GetFacetTree(m_rResult).AnyIntersectsBox(m_bound))
+            if (pFace->GetFacetTree(*m_rResult).AnyIntersectsBox(*m_pInterval))
                 {
                 return true;
                 }
@@ -636,30 +630,30 @@ struct IsOverlappingFacetTree
 //         c) the Segment intersects that Leaf box
 struct IsIntersectingBoxSegment
     {
-    SGM::Result & m_rResult;
-    SGM::Interval3D & m_Bound;
-    SGM::Ray3D & m_Ray;
+    SGM::Result * m_pResult;
+    SGM::Interval3D * m_pInterval;
+    SGM::Ray3D * m_pRay;
     double m_dLength;
 
     IsIntersectingBoxSegment() = delete;
 
     inline IsIntersectingBoxSegment(SGM::Result &rResult, SGM::Interval3D const & Bound, SGM::Ray3D const & Ray, double dLength)
-    : m_rResult(rResult),
-        m_Bound(const_cast<SGM::Interval3D&>(Bound)),
-        m_Ray(const_cast<SGM::Ray3D&>(Ray)),
+    : m_pResult(&rResult),
+        m_pInterval(const_cast<SGM::Interval3D*>(&Bound)),
+        m_pRay(const_cast<SGM::Ray3D*>(&Ray)),
         m_dLength(dLength)
     { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
-        return m_Bound.IntersectsBox(node->m_Bound);
+        return m_pInterval->IntersectsBox(node->m_Bound);
         }
 
     inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
         {
-        if (m_Bound.IntersectsBox(leaf->m_Bound))
+        if (m_pInterval->IntersectsBox(leaf->m_Bound))
             {
-            if (leaf->m_Bound.IntersectsSegment(m_Ray,m_dLength))
+            if (leaf->m_Bound.IntersectsSegment(*m_pRay,m_dLength))
                 {
                 return true;
                 }
@@ -676,8 +670,8 @@ struct IsIntersectingBoxSegment
 //         c) the Segment intersects that facet box
 struct IsForestIntersectingSegment
     {
-    SGM::Result & m_rResult;
-    SGM::Interval3D m_Bound;
+    SGM::Result *m_pResult;
+    SGM::Interval3D m_Interval;
     SGM::UnitVector3D m_Direction;
     double m_dLength;
     SGM::Ray3D m_Ray;
@@ -685,8 +679,8 @@ struct IsForestIntersectingSegment
     IsForestIntersectingSegment() = delete;
 
     inline IsForestIntersectingSegment(SGM::Result &rResult, SGM::Point3D const & A, SGM::Point3D const & B)
-        : m_rResult(rResult),
-          m_Bound(A,B),
+        : m_pResult(&rResult),
+          m_Interval(A,B),
           m_Direction(),
           m_dLength(MakeUnitVector3D(A,B,m_Direction)),
           m_Ray(A,m_Direction)
@@ -694,16 +688,16 @@ struct IsForestIntersectingSegment
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
-        return m_Bound.IntersectsBox(node->m_Bound);
+        return m_Interval.IntersectsBox(node->m_Bound);
         }
 
     inline bool operator()(SGM::BoxTree::Leaf const * leaf) const
         {
-        if (m_Bound.IntersectsBox(leaf->m_Bound))
+        if (m_Interval.IntersectsBox(leaf->m_Bound))
             {
             face* pFace = (face*)leaf->m_pObject;
-            SGM::BoxTree const & FacetTree = pFace->GetFacetTree(m_rResult);
-            return FacetTree.Query(IsIntersectingBoxSegment(m_rResult,m_Bound,m_Ray,m_dLength), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
+            SGM::BoxTree const & FacetTree = pFace->GetFacetTree(*m_pResult);
+            return FacetTree.Query(IsIntersectingBoxSegment(*m_pResult,m_Interval,m_Ray,m_dLength), SGM::BoxTree::FirstLeaf()).m_pObject != nullptr;
             }
         return false;
         }

@@ -939,6 +939,8 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
     std::vector<SGM::Point3D> aSubPoints;
     std::vector<SGM::IntersectionType> aSubTypes;
     std::vector<entity *> aSubEntities;
+    //std::cout << std::setprecision(15);
+    //std::cout << "New Run " << Axis.X() << "," << Axis.Y() << "," << Axis.Z() << "\n";
 
     for (auto *pFace : aHitFacesSupplied)
         {
@@ -946,7 +948,11 @@ size_t RayFireVolume(SGM::Result                                      &rResult,
         aSubTypes.clear();
         aSubEntities.clear();
 
+        //std::cout << pFace->GetID() << " Hits ";
+
         size_t nHits=RayFireFace(rResult,Origin,Axis,pFace,aSubPoints,aSubTypes,aSubEntities,dTolerance,bUseWholeLine);
+
+        //std::cout << nHits << "\n";
 
         aPoints.reserve(aPoints.size()+nHits);
         aPoints.insert(aPoints.end(),aSubPoints.begin(),aSubPoints.end());

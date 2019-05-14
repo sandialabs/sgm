@@ -303,32 +303,38 @@ void FixSegmentU(SGM::Interval1D const &UDomain,
                  SGM::Point2D          &FixedUV1,
                  SGM::Point2D          &FixedUV2)
     {
-    if(UDomain.MidPoint()<uv2.m_u)
+    bool bNotFixed=true;
+    if(fabs(UDomain.m_dMin-uv1.m_u)<SGM_MIN_TOL)
         {
-        if(fabs(UDomain.m_dMin-uv1.m_u)<SGM_MIN_TOL)
+        if(UDomain.MidPoint()<uv2.m_u)
             {
             FixedUV1.m_u+=UDomain.Length();
+            bNotFixed=false;
             }
         }
-    else
+    else if(fabs(UDomain.m_dMax-uv1.m_u)<SGM_MIN_TOL)
         {
-        if(fabs(UDomain.m_dMax-uv1.m_u)<SGM_MIN_TOL)
+        if(uv2.m_u<UDomain.MidPoint())
             {
             FixedUV1.m_u-=UDomain.Length();
+            bNotFixed=false;
             }
         }
-    if(UDomain.MidPoint()<uv1.m_u)
+    if(bNotFixed)
         {
         if(fabs(UDomain.m_dMin-uv2.m_u)<SGM_MIN_TOL)
             {
-            FixedUV2.m_u+=UDomain.Length();
+            if(UDomain.MidPoint()<uv1.m_u)
+                {
+                FixedUV2.m_u+=UDomain.Length();
+                }
             }
-        }
-    else
-        {
-        if(fabs(UDomain.m_dMax-uv2.m_u)<SGM_MIN_TOL)
+        else if(fabs(UDomain.m_dMax-uv2.m_u)<SGM_MIN_TOL)
             {
-            FixedUV2.m_u-=UDomain.Length();
+            if(uv1.m_u<UDomain.MidPoint())
+                {
+                FixedUV2.m_u-=UDomain.Length();
+                }
             }
         }
     }
@@ -339,95 +345,109 @@ void FixSegmentV(SGM::Interval1D const &VDomain,
                  SGM::Point2D          &FixedUV1,
                  SGM::Point2D          &FixedUV2)
     {
-    if(VDomain.MidPoint()<uv2.m_v)
+    bool bNotFixed=true;
+    if(fabs(VDomain.m_dMin-uv1.m_v)<SGM_MIN_TOL)
         {
-        if(fabs(VDomain.m_dMin-uv1.m_v)<SGM_MIN_TOL)
+        if(VDomain.MidPoint()<uv2.m_v)
             {
             FixedUV1.m_v+=VDomain.Length();
+            bNotFixed=false;
             }
         }
-    else
+    else if(fabs(VDomain.m_dMax-uv1.m_v)<SGM_MIN_TOL)
         {
-        if(fabs(VDomain.m_dMax-uv1.m_v)<SGM_MIN_TOL)
+        if(uv2.m_v<VDomain.MidPoint())
             {
             FixedUV1.m_v-=VDomain.Length();
+            bNotFixed=false;
             }
         }
-    if(VDomain.MidPoint()<uv1.m_v)
+    if(bNotFixed)
         {
         if(fabs(VDomain.m_dMin-uv2.m_v)<SGM_MIN_TOL)
             {
-            FixedUV2.m_v+=VDomain.Length();
+            if(VDomain.MidPoint()<uv1.m_v)
+                {
+                FixedUV2.m_v+=VDomain.Length();
+                }
             }
-        }
-    else
-        {
-        if(fabs(VDomain.m_dMax-uv2.m_v)<SGM_MIN_TOL)
+        else if(fabs(VDomain.m_dMax-uv2.m_v)<SGM_MIN_TOL)
             {
-            FixedUV2.m_v-=VDomain.Length();
+            if(uv1.m_v<VDomain.MidPoint())
+                {
+                FixedUV2.m_v-=VDomain.Length();
+                }
             }
         }
     }
 
 inline void FixSegmentUV(SGM::Interval1D const &UDomain,
                          SGM::Interval1D const &VDomain,
-                         SGM::Point2D    const &uv1,
-                         SGM::Point2D    const &uv2,
+                         SGM::Point2D          &uv1,
+                         SGM::Point2D          &uv2,
                          SGM::Point2D          &FixedUV1,
                          SGM::Point2D          &FixedUV2)
     {
     FixSegmentU(UDomain,uv1,uv2,FixedUV1,FixedUV2);
     FixSegmentV(VDomain,uv1,uv2,FixedUV1,FixedUV2);
+    uv1=FixedUV1;
+    uv2=FixedUV2;
     }
 
 struct
     {
-    double operator()(surface const *pSurface,
-                      SGM::Point2D const &uv1,
-                      SGM::Point2D const &uv2,
+    double operator()(surface      const *pSurface,
+                      SGM::Point2D       &uv1,
+                      SGM::Point2D       &uv2,
                       SGM::Point2D const &uv) const
         {
         SGM::Interval1D const &UDomain = pSurface->GetDomain().m_UDomain;
         SGM::Interval1D const &VDomain = pSurface->GetDomain().m_VDomain;
         SGM::Point2D FixedUV1=uv1,FixedUV2=uv2;
         FixSegmentUV(UDomain,VDomain,uv1,uv2,FixedUV1,FixedUV2);
+        uv1=FixedUV1;
+        uv2=FixedUV2;
         return SegmentDistanceSquared(FixedUV1,FixedUV2,uv);
         }
     } FixSegmentSquaredDistanceUV;
 
 struct
     {
-    double operator()(surface const *pSurface,
-                      SGM::Point2D const &uv1,
-                      SGM::Point2D const &uv2,
+    double operator()(surface      const *pSurface,
+                      SGM::Point2D       &uv1,
+                      SGM::Point2D       &uv2,
                       SGM::Point2D const &uv) const
         {
         SGM::Interval1D const &UDomain = pSurface->GetDomain().m_UDomain;
         SGM::Point2D FixedUV1=uv1,FixedUV2=uv2;
         FixSegmentU(UDomain,uv1,uv2,FixedUV1,FixedUV2);
+        uv1=FixedUV1;
+        uv2=FixedUV2;
         return SegmentDistanceSquared(FixedUV1,FixedUV2,uv);
         }
     } FixSegmentSquaredDistanceU;
 
 struct
     {
-    double operator()(surface const *pSurface,
-                      SGM::Point2D const &uv1,
-                      SGM::Point2D const &uv2,
+    double operator()(surface      const *pSurface,
+                      SGM::Point2D       &uv1,
+                      SGM::Point2D       &uv2,
                       SGM::Point2D const &uv) const
         {
         SGM::Interval1D const &VDomain = pSurface->GetDomain().m_VDomain;
         SGM::Point2D FixedUV1=uv1,FixedUV2=uv2;
         FixSegmentV(VDomain,uv1,uv2,FixedUV1,FixedUV2);
+        uv1=FixedUV1;
+        uv2=FixedUV2;
         return SegmentDistanceSquared(FixedUV1,FixedUV2,uv);
         }
     } FixSegmentSquaredDistanceV;
 
 struct
     {
-    double operator()(surface const *,
-                      SGM::Point2D const &uv1,
-                      SGM::Point2D const &uv2,
+    double operator()(surface      const *,
+                      SGM::Point2D       &uv1,
+                      SGM::Point2D       &uv2,
                       SGM::Point2D const &uv) const
         {
         return SegmentDistanceSquared(uv1,uv2,uv);
@@ -441,11 +461,11 @@ void MinimumFaceEdgeSegmentDistanceSquared(SGM::Result               &rResult,
                                            SegmentSquaredDistanceOp   squaredDistanceOp,
                                            edge                     **ppCloseEdge,
                                            double                    &dMinDist,
-                                           size_t                    &IndexMinEnd)
+                                           SGM::Point2D              &OutUV1,
+                                           SGM::Point2D              &OutUV2)
     {
     surface *pSurface=pFace->GetSurface();
     dMinDist=std::numeric_limits<double>::max();
-    IndexMinEnd=0;
     auto const &sEdges=pFace->GetEdges();
     for (edge *pEdge : sEdges)
         {
@@ -454,21 +474,27 @@ void MinimumFaceEdgeSegmentDistanceSquared(SGM::Result               &rResult,
         size_t Index1;
         for (Index1 = 1; Index1 < nUVBoundary; ++Index1)
             {
-            double dDist = squaredDistanceOp(pSurface, aUVBoundary[Index1 - 1], aUVBoundary[Index1], uv);
+            SGM::Point2D uv1=aUVBoundary[Index1-1];
+            SGM::Point2D uv2=aUVBoundary[Index1];
+            double dDist = squaredDistanceOp(pSurface,uv1,uv2,uv);
             if (dDist < dMinDist)
                 {
                 dMinDist = dDist;
-                IndexMinEnd = Index1;
+                OutUV1 = uv1;
+                OutUV2 = uv2;
                 *ppCloseEdge = pEdge;
                 }
             }
         if (pEdge->IsClosed())
             {
-            double dDist = squaredDistanceOp(pSurface, aUVBoundary[nUVBoundary - 1], aUVBoundary[0], uv);
+            SGM::Point2D uv1=aUVBoundary[nUVBoundary-1];
+            SGM::Point2D uv2=aUVBoundary[0];
+            double dDist = squaredDistanceOp(pSurface,uv1,uv2,uv);
             if (dDist < dMinDist)
                 {
                 dMinDist = dDist;
-                IndexMinEnd = 0;
+                OutUV1 = uv1;
+                OutUV2 = uv2;
                 *ppCloseEdge = pEdge;
                 }
             }
@@ -485,7 +511,7 @@ void FindClosestBoundary(SGM::Result        &rResult,
     {
     surface *pSurface=pFace->GetSurface();
     double dMinDist=std::numeric_limits<double>::max();
-    size_t IndexMinEnd=0;
+    SGM::Point2D Start,End;
 
     bool bClosedInU = pSurface->ClosedInU();
     bool bClosedInV = pSurface->ClosedInV();
@@ -495,38 +521,30 @@ void FindClosestBoundary(SGM::Result        &rResult,
         if (bClosedInV)
             {
             MinimumFaceEdgeSegmentDistanceSquared(rResult,pFace,uv,FixSegmentSquaredDistanceUV,
-                                                  ppCloseEdge,dMinDist,IndexMinEnd);
+                                                  ppCloseEdge,dMinDist,Start,End);
             }
         else
             {
             MinimumFaceEdgeSegmentDistanceSquared(rResult,pFace,uv,FixSegmentSquaredDistanceU,
-                                                  ppCloseEdge,dMinDist,IndexMinEnd);
+                                                  ppCloseEdge,dMinDist,Start,End);
             }
         }
     else if (bClosedInV)
         {
         MinimumFaceEdgeSegmentDistanceSquared(rResult,pFace,uv,FixSegmentSquaredDistanceV,
-                                              ppCloseEdge,dMinDist,IndexMinEnd);
+                                              ppCloseEdge,dMinDist,Start,End);
         }
     else
         {
         MinimumFaceEdgeSegmentDistanceSquared(rResult,pFace,uv,SegmentSquaredDistance,
-                                              ppCloseEdge,dMinDist,IndexMinEnd);
+                                              ppCloseEdge,dMinDist,Start,End);
         }
 
     // Fnd the closest point and segment.
-    std::vector<SGM::Point2D> const &aUVBoundary=pFace->GetUVBoundary(rResult,*ppCloseEdge);
-    size_t IndexMinStart=IndexMinEnd ? IndexMinEnd-1 : aUVBoundary.size()-1;
-    SGM::Point2D Start=aUVBoundary[IndexMinStart];
-    SGM::Point2D End=aUVBoundary[IndexMinEnd];
     SGM::Interval2D const &SurfDomain=pSurface->GetDomain();
     if( SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u) ||
         SurfDomain.m_VDomain.Length()*0.5<fabs(End.m_v-Start.m_v))
         {
-        IndexMinEnd=IndexMinStart;
-        IndexMinStart=IndexMinEnd ? IndexMinEnd-1 : aUVBoundary.size()-1;
-        Start=aUVBoundary[IndexMinStart];
-        End=aUVBoundary[IndexMinEnd];
         if(SurfDomain.m_UDomain.Length()*0.5<fabs(End.m_u-Start.m_u))
             {
             if(SurfDomain.m_UDomain.OnBoundary(Start.m_u,SGM_MIN_TOL))
@@ -653,6 +671,44 @@ void FindClosestBoundary(SGM::Result        &rResult,
         }
     }
 
+void FixUV(surface      const* pSurface,
+           SGM::Point2D const &GuessUV,
+           SGM::Point2D       &uv)
+    {
+    // Make sure that uv did not flip over the boundary from GuessUV.
+
+    if(pSurface->ClosedInU())
+        {
+        double dLength=pSurface->GetDomain().m_UDomain.Length();
+        if(dLength*0.5<fabs(GuessUV.m_u-uv.m_u))
+            {
+            if(GuessUV.m_u<uv.m_u)
+                {
+                uv.m_u-=dLength;
+                }
+            else
+                {
+                uv.m_u+=dLength;
+                }
+            }
+        }
+    if(pSurface->ClosedInV())
+        {
+        double dLength=pSurface->GetDomain().m_VDomain.Length();
+        if(dLength*0.5<fabs(GuessUV.m_v-uv.m_v))
+            {
+            if(GuessUV.m_v<uv.m_v)
+                {
+                uv.m_v-=dLength;
+                }
+            else
+                {
+                uv.m_v+=dLength;
+                }
+            }
+        }
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        edge               **pInCloseEdge,
@@ -660,7 +716,7 @@ bool face::PointInFace(SGM::Result        &rResult,
     {
     // First check to see if the point is in the UV bounding box.
 
-    if(GetUVBox(rResult).InInterval(uv,SGM_ZERO)==false)
+    if(m_UVBox.IsEmpty()==false && m_UVBox.InInterval(uv,SGM_ZERO)==false)
         {
         return false;
         }
@@ -753,6 +809,9 @@ bool face::PointInFace(SGM::Result        &rResult,
 
         SGM::EdgeSideType nType=GetSideType(pCloseEdge);
         SGM::Point2D a2=AdvancedInverse(pCloseEdge,nType,ClosePos);
+
+        FixUV(m_pSurface,CloseUV1,a2);
+
         SGM::Point2D b2=a2+m_pSurface->FindSurfaceDirection(a2,Vec);
         SGM::Point3D A2(a2.m_u,a2.m_v,0);
         SGM::Point3D B2(b2.m_u,b2.m_v,0);
@@ -800,7 +859,8 @@ bool face::PointInFace(SGM::Result        &rResult,
                 }
             *bOnEdge=true;
             }
-        if(SGM::NearEqual(Pos,pCloseVertex->GetPoint(),SGM_MIN_TOL))
+        SGM::Point3D const &VertexPos=pCloseVertex->GetPoint();
+        if(SGM::NearEqual(Pos,VertexPos,SGM_MIN_TOL))
             {
             return true;
             }
@@ -810,47 +870,62 @@ bool face::PointInFace(SGM::Result        &rResult,
             {
             edge *pEdge0=aEdges[0];
             edge *pEdge1=aEdges[1];
-            SGM::Point2D uv0,uv1;
-            bool bOut0=true,bOut1=true;
+
+            // The edges must be ordered counter clockwise
+
+            if(GetSideType(pEdge0)==SGM::FaceOnLeftType)
+                {
+                if(pEdge0->GetStart()==pCloseVertex)
+                    {
+                    std::swap(pEdge0,pEdge1);
+                    }
+                }
+            else
+                {
+                if(pEdge0->GetEnd()==pCloseVertex)
+                    {
+                    std::swap(pEdge0,pEdge1);
+                    }
+                }
+            
+            SGM::Point3D Pos0;
             if(pEdge0->GetStart()==pCloseVertex)
                 {
-                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.001));
+                Pos0=pEdge0->FindMidPoint(0.001);
                 }
             else
                 {
-                uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),pEdge0->FindMidPoint(0.999));
-                bOut0=false;
+                Pos0=pEdge0->FindMidPoint(0.999);
                 }
+            SGM::Point2D uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),Pos0);
+
+            FixUV(m_pSurface,CloseUV1,uv0);
+
+            SGM::Point3D Pos1;
             if(pEdge1->GetStart()==pCloseVertex)
                 {
-                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.001));
+                Pos1=pEdge1->FindMidPoint(0.001);
                 }
             else
                 {
-                uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),pEdge1->FindMidPoint(0.999));
-                bOut1=false;
+                Pos1=pEdge1->FindMidPoint(0.999);
                 }
-            if(GetSideType(pEdge0)==SGM::FaceOnRightType)
-                {
-                bOut0=!bOut0;
-                }
-            if(GetSideType(pEdge1)==SGM::FaceOnRightType)
-                {
-                bOut1=!bOut1;
-                }
-            bool bAnswer;
-            if(bOut1)
-                {
-                bAnswer=InAngle(CloseUV1,uv1,uv0,uv);
-                }
-            else
-                {
-                bAnswer=InAngle(CloseUV1,uv0,uv1,uv);
-                }
+            SGM::Point2D uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),Pos1);
+
+            FixUV(m_pSurface,CloseUV1,uv1);
+
+            SGM::UnitVector3D Vec0(uv0.m_u-CloseUV1.m_u,uv0.m_v-CloseUV1.m_v,0);
+            SGM::UnitVector3D Vec1(uv1.m_u-CloseUV1.m_u,uv1.m_v-CloseUV1.m_v,0);
+            SGM::UnitVector3D Vec2(uv .m_u-CloseUV1.m_u,uv .m_v-CloseUV1.m_v,0);
+            SGM::UnitVector3D Vec3(0,0,-1);
             if(m_bFlipped)
                 {
-                bAnswer=!bAnswer;
+                Vec3.Negate();
                 }
+            double dAngle1=Vec0.Angle(Vec1,Vec3);
+            double dAngle2=Vec0.Angle(Vec2,Vec3);
+            bool bAnswer= dAngle2<dAngle1;
+
             if(bAnswer==false && bOnEdge)
                 {
                 double dDist=pCloseVertex->GetPoint().Distance(Pos);
@@ -1344,6 +1419,7 @@ std::vector<SGM::Point2D> const &face::SetUVBoundary(SGM::Result &rResult,
     aParams.reserve(numPoints);
     SGM::Point2D FirstUV = AdvancedInverse(pEdge,nSideType,aPoints3D[0]);
     aParams.push_back(FirstUV);
+    size_t Index1;
     if (numPoints==2)
         {
         SGM::Point2D LastUV = AdvancedInverse(pEdge,nSideType,aPoints3D[1]);
@@ -1351,19 +1427,11 @@ std::vector<SGM::Point2D> const &face::SetUVBoundary(SGM::Result &rResult,
         }
     else
         {
-        //bool IsULine = true;
-        //bool IsVLine = true;
-        for (size_t i = 1; i < numPoints; ++i)
+        for(Index1=1;Index1<numPoints;++Index1)
             {
-            SGM::Point2D UV = AdvancedInverse(pEdge,nSideType,aPoints3D[i]);
+            SGM::Point2D UV = AdvancedInverse(pEdge,nSideType,aPoints3D[Index1]);
             aParams.push_back(UV);
-            //IsULine = !IsULine ? false : SGM::NearEqual(FirstUV.m_u, UV.m_u, SGM_MIN_TOL, false);
-            //IsVLine = !IsVLine ? false : SGM::NearEqual(FirstUV.m_v, UV.m_v, SGM_MIN_TOL, false);
             }
-        //if (IsULine || IsVLine)
-        //    {
-        //    aParams = {aParams.front(), aParams.back()}; // replace it with only end points
-        //    }
         }
     auto IterEdgePair = m_mUVBoundary.emplace((edge *)pEdge,aParams);
     return IterEdgePair.first->second;
