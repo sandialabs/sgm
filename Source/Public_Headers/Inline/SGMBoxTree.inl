@@ -84,22 +84,22 @@ namespace SGM {
 
     inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Node *node) const
     {
-        return m_bound.IntersectsBox(node->m_Bound);
+        return m_pBound->IntersectsBox(node->m_Bound);
     }
 
     inline bool BoxTree::IsOverlapping::operator()(const BoxTree::Leaf *leaf) const
     {
-        return m_bound.IntersectsBox(leaf->m_Bound);
+        return m_pBound->IntersectsBox(leaf->m_Bound);
     }
 
     inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Node *node) const
     {
-        return m_bound.IntersectsBox(node->m_Bound);
+        return m_pBound->IntersectsBox(node->m_Bound);
     }
 
     inline bool BoxTree::IsEnclosing::operator()(const BoxTree::Leaf *leaf) const
     {
-        return m_bound.EnclosesBox(leaf->m_Bound);
+        return m_pBound->EnclosesBox(leaf->m_Bound);
     }
 
     inline bool BoxTree::IsIntersectingHalfSpace::operator()(const Bounded *node) const
@@ -109,52 +109,52 @@ namespace SGM {
 
     inline bool BoxTree::IsIntersectingLine::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsLine(m_ray, m_tolerance);
+        return node->m_Bound.IntersectsLine(*m_pRay, m_tolerance);
     }
 
     inline bool BoxTree::IsIntersectingLineTight::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsLine(m_ray);
+        return node->m_Bound.IntersectsLine(*m_pRay);
     }
 
     inline bool BoxTree::IsIntersectingPlane::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsPlane(m_point, m_unitVector, m_tolerance);
+        return node->m_Bound.IntersectsPlane(*m_pPoint, *m_pUnitVector, m_tolerance);
     }
 
     inline bool BoxTree::IsIntersectingPoint::operator()(const Bounded *node) const
     {
-        return node->m_Bound.InInterval(m_point, m_tolerance);
+        return node->m_Bound.InInterval(*m_pPoint, m_tolerance);
     }
 
     inline bool BoxTree::IsIntersectingPointTight::operator()(const Bounded *node) const
     {
-    return node->m_Bound.InInterval(m_point);
+    return node->m_Bound.InInterval(*m_pPoint);
     }
 
     inline bool BoxTree::IsIntersectingRay::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsRay(m_ray, m_tolerance);
+        return node->m_Bound.IntersectsRay(*m_pRay, m_tolerance);
     }
 
     inline bool BoxTree::IsIntersectingRayTight::operator()(const Bounded *node) const
     {
-    return node->m_Bound.IntersectsRay(m_ray);
+    return node->m_Bound.IntersectsRay(*m_pRay);
     }
 
     inline bool BoxTree::IsIntersectingSegment::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsSegment(m_ray, m_length, m_tolerance);
+        return node->m_Bound.IntersectsSegment(*m_pRay, m_length, m_tolerance);
     }
 
     inline bool BoxTree::IsIntersectingSegmentTight::operator()(const Bounded *node) const
     {
-    return node->m_Bound.IntersectsSegment(m_ray, m_length);
+    return node->m_Bound.IntersectsSegment(*m_pRay, m_length);
     }
 
     inline bool BoxTree::IsIntersectingSphere::operator()(const Bounded *node) const
     {
-        return node->m_Bound.IntersectsSphere(m_center, m_radius, m_tolerance);
+        return node->m_Bound.IntersectsSphere(*m_pCenter, m_radius, m_tolerance);
     }
 
     inline BoxTree::PushLeaf::PushLeaf(size_t nReserve) : m_aContainer(), bContinueVisiting(true)
@@ -170,7 +170,7 @@ namespace SGM {
     template <class ObjectType>
     inline void BoxTree::PushLeafObject<ObjectType>::operator()(const BoxTree::Leaf *leaf)
     {
-        m_aObjects.emplace_back((ObjectType*)leaf->m_pObject);
+        m_p_aObjects->emplace_back((ObjectType*)leaf->m_pObject);
     }
 
     inline void BoxTree::LeafSumMassCentroid::operator()(const BoxTree::Leaf *leaf)
@@ -197,8 +197,8 @@ namespace SGM {
 
     inline void BoxTree::ReplaceLeafItem::operator()(BoxTree::Leaf *leaf)
     {
-        auto search = m_ItemMap.find(leaf->m_pObject);
-        if (search != m_ItemMap.end())
+        auto search = m_pItemMap->find(leaf->m_pObject);
+        if (search != m_pItemMap->end())
             leaf->m_pObject = search->second;
     }
 

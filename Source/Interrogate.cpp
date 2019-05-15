@@ -210,12 +210,12 @@ double CostOfFaceIntersection(face const* pFace, SGM::Ray3D const &Ray)
 struct IsIntersectingRayFacetTree
     {
     SGM::Result *m_rResult;
-    SGM::Ray3D  *m_pRay;
+    SGM::Ray3D const *m_pRay;
 
     IsIntersectingRayFacetTree() = delete;
 
     inline IsIntersectingRayFacetTree(SGM::Result &rResult, SGM::Ray3D const &Ray)
-        : m_rResult(&rResult), m_pRay(const_cast<SGM::Ray3D*>(&Ray)) { }
+        : m_rResult(&rResult), m_pRay(&Ray) { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
@@ -597,12 +597,12 @@ inline void FindVolumeTreeLengths(SGM::Result &rResult,
 struct IsOverlappingFacetTree
     {
     SGM::Result *m_rResult;
-    SGM::Interval3D *m_pInterval; // implicitly constant will not be changed
+    SGM::Interval3D const *m_pInterval; // implicitly constant will not be changed
 
     IsOverlappingFacetTree() = delete;
 
     inline explicit IsOverlappingFacetTree(SGM::Result &rResult, SGM::Interval3D const & bound)
-        : m_rResult(&rResult), m_pInterval(const_cast<SGM::Interval3D*>(&bound)) { }
+        : m_rResult(&rResult), m_pInterval(&bound) { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
         {
@@ -630,18 +630,18 @@ struct IsOverlappingFacetTree
 //         c) the Segment intersects that Leaf box
 struct IsIntersectingBoxSegment
     {
-    SGM::Result * m_pResult;
-    SGM::Interval3D * m_pInterval;
-    SGM::Ray3D * m_pRay;
+    SGM::Result *m_pResult;
+    SGM::Interval3D const *m_pInterval;
+    SGM::Ray3D const *m_pRay;
     double m_dLength;
 
     IsIntersectingBoxSegment() = delete;
 
     inline IsIntersectingBoxSegment(SGM::Result &rResult, SGM::Interval3D const & Bound, SGM::Ray3D const & Ray, double dLength)
-    : m_pResult(&rResult),
-        m_pInterval(const_cast<SGM::Interval3D*>(&Bound)),
-        m_pRay(const_cast<SGM::Ray3D*>(&Ray)),
-        m_dLength(dLength)
+        : m_pResult(&rResult),
+          m_pInterval(&Bound),
+          m_pRay(&Ray),
+          m_dLength(dLength)
     { }
 
     inline bool operator()(SGM::BoxTree::Node const * node) const
@@ -739,10 +739,10 @@ bool PointCrossFacesLoop(SGM::Result &rResult,
 
     aPointCrosses[iBegin] = true;
 
+#if 1
 
-#if 0
+    // use tree search of the morton segments O(log(N))
 
-    // TODO: remove this, its only a speed test for tree
     MortonSegmentsTree<SGM::Interval3D,SGM::Point3D> SegmentTree(p_aPoints,p_aIndexOrdered,iBegin,iEnd);
 
     typedef MortonSegmentsTree<SGM::Interval3D,SGM::Point3D>::Node Node;
@@ -805,7 +805,7 @@ bool PointCrossFacesLoop(SGM::Result &rResult,
 //        }
 
 
-    std::cout << "nSegmentsChecked = " << nSegmentsChecked << " out of " << iEnd-iBegin-1 << std::endl;
+    std::cout << "tree nSegmentsChecked = " << nSegmentsChecked << " out of " << iEnd-iBegin-1 << std::endl;
 
     // more expensive O(N) algorithm can be used to check the answer with the MortonSegmentsTree
     for (size_t i = iBegin+1; i < iEnd; ++i)

@@ -219,12 +219,12 @@ namespace SGM {
         /// A Filter that matches node or leaf when when the given bounding box intersects.
         struct IsOverlapping {
 
-            Interval3D m_bound; // implicitly constant will not be changed
+            Interval3D const *m_pBound;
 
-            IsOverlapping();
+            IsOverlapping() = delete;
 
             explicit IsOverlapping(Interval3D const & bound)
-                    : m_bound(const_cast<Interval3D&>(bound)) { }
+                    : m_pBound(&bound) { }
 
             bool operator()(Node const * node) const;
 
@@ -234,12 +234,12 @@ namespace SGM {
         /// A Filter that matches node or leaf if their bounding box completely covers the given bounding box.
         struct IsEnclosing {
 
-            Interval3D m_bound;
+            Interval3D const *m_pBound;
 
             IsEnclosing() = delete;
 
             explicit IsEnclosing(Interval3D const & bound)
-                    :m_bound(bound) { }
+                    :m_pBound(&bound) { }
 
             bool operator()(Node const * node) const;
 
@@ -261,38 +261,38 @@ namespace SGM {
 
         /// A Filter that matches node or leaf when the given line intersects.
         struct IsIntersectingLine {
-            Ray3D m_ray;
+            Ray3D const *m_pRay;
             double m_tolerance;
 
             IsIntersectingLine() = delete;
 
             explicit IsIntersectingLine(Ray3D const & ray, double tolerance)
-            : m_ray(ray), m_tolerance(tolerance) { }
+            : m_pRay(&ray), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
         };
 
         struct IsIntersectingLineTight {
-            Ray3D m_ray;
+            Ray3D const *m_pRay;
 
             IsIntersectingLineTight() = delete;
 
             explicit IsIntersectingLineTight(Ray3D const & ray)
-                : m_ray(ray) { }
+                : m_pRay(&ray) { }
 
             bool operator()(Bounded const * node) const;
         };
 
         /// A Filter that matches node or leaf when the given plane intersects.
         struct IsIntersectingPlane {
-            Point3D m_point;
-            UnitVector3D m_unitVector;
+            Point3D const *m_pPoint;
+            UnitVector3D const *m_pUnitVector;
             double m_tolerance;
             
             IsIntersectingPlane() = delete;
             
             IsIntersectingPlane(Point3D const & point, UnitVector3D const & unitVector, double tolerance)
-                    : m_point(point), m_unitVector(unitVector), m_tolerance(tolerance) { }
+                    : m_pPoint(&point), m_pUnitVector(&unitVector), m_tolerance(tolerance) { }
             
             bool operator()(Bounded const * node) const;
         };
@@ -301,24 +301,24 @@ namespace SGM {
         struct IsIntersectingPoint {
 
             double m_tolerance;
-            Point3D m_point;
+            Point3D const *m_pPoint;
 
             IsIntersectingPoint() = delete;
 
             explicit IsIntersectingPoint(Point3D const & point, double tolerance)
-                    : m_tolerance(tolerance), m_point(point) { }
+                    : m_tolerance(tolerance), m_pPoint(&point) { }
 
             bool operator()(Bounded const * node) const;
         };
 
         struct IsIntersectingPointTight {
 
-            Point3D m_point;
+            Point3D const *m_pPoint;
 
             IsIntersectingPointTight() = delete;
 
             explicit IsIntersectingPointTight(Point3D const & point)
-                : m_point(point) { }
+                : m_pPoint(&point) { }
 
             bool operator()(Bounded const * node) const;
             };
@@ -326,13 +326,13 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRay {
 
-            Ray3D m_ray;
+            Ray3D const *m_pRay;
             double m_tolerance;
             
             IsIntersectingRay() = delete;
 
             explicit IsIntersectingRay(Ray3D const & ray, double tolerance)
-                    : m_ray(const_cast<Ray3D&>(ray)), m_tolerance(tolerance) { }
+                    : m_pRay(&ray), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
         };
@@ -340,12 +340,12 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given ray intersects.
         struct IsIntersectingRayTight {
 
-            Ray3D m_ray;
+            Ray3D const *m_pRay;
 
             IsIntersectingRayTight() = delete;
 
             explicit IsIntersectingRayTight(Ray3D const & ray)
-                : m_ray(const_cast<Ray3D&>(ray)) { }
+                : m_pRay(&ray) { }
 
             bool operator()(Bounded const * node) const;
             };
@@ -353,14 +353,14 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given segment intersects
         struct IsIntersectingSegment
         {
-            Ray3D m_ray; // implicitly constant, it will not be changed
+            Ray3D const *m_pRay; // implicitly constant, it will not be changed
             double m_length;
             double m_tolerance;
             
             IsIntersectingSegment() = delete;
             
             explicit IsIntersectingSegment(Ray3D const &ray, double length, double tolerance)
-                : m_ray(const_cast<Ray3D &>(ray)), m_length(length), m_tolerance(tolerance)
+                : m_pRay(&ray), m_length(length), m_tolerance(tolerance)
                 { }
             
             bool operator()(Bounded const * node) const;
@@ -369,13 +369,13 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given segment intersects
         struct IsIntersectingSegmentTight
             {
-            Ray3D m_ray; // implicitly constant, it will not be changed
+            Ray3D const *m_pRay; // implicitly constant, it will not be changed
             double m_length;
 
             IsIntersectingSegmentTight() = delete;
 
             explicit IsIntersectingSegmentTight(Ray3D const &ray, double length)
-                : m_ray(const_cast<Ray3D &>(ray)), m_length(length)
+                : m_pRay(&ray), m_length(length)
                 { }
 
             bool operator()(Bounded const * node) const;
@@ -384,14 +384,14 @@ namespace SGM {
         /// A Filter that matches node or leaf when the given sphere intersects
         struct IsIntersectingSphere
         {
-            Point3D m_center;
+            Point3D const *m_pCenter;
             double m_radius;
             double m_tolerance;
 
             IsIntersectingSphere() = delete;
 
             explicit IsIntersectingSphere(Point3D const &center, double radius, double tolerance)
-                    : m_center(center), m_radius(radius), m_tolerance(tolerance) { }
+                    : m_pCenter(&center), m_radius(radius), m_tolerance(tolerance) { }
 
             bool operator()(Bounded const * node) const;
         };
@@ -431,13 +431,13 @@ namespace SGM {
         /// Visitor operation for replacing the item on leaves using a map from old item to new item.
         struct ReplaceLeafItem {
 
-            ItemMapType & m_ItemMap; // implicitly const, it will not be changed
+            ItemMapType const *m_pItemMap; // implicitly const, it will not be changed
             bool bContinueVisiting;
 
             ReplaceLeafItem() = delete;
 
             explicit ReplaceLeafItem(ItemMapType const &itemMap)
-                : m_ItemMap(const_cast<ItemMapType &>(itemMap)), bContinueVisiting(true) {}
+                : m_pItemMap(&itemMap), bContinueVisiting(true) {}
 
             ReplaceLeafItem(const ReplaceLeafItem&) = default;
             ReplaceLeafItem& operator=(const ReplaceLeafItem &) = delete;
@@ -446,7 +446,7 @@ namespace SGM {
         };
 
         /**
-         * Visitor operation that pushes a Leaf into a container when it passes a given Filter.
+         * Visitor operation that pushes a Leaf into its own container when it passes a given Filter.
          */
         struct PushLeaf {
             std::vector<void const*> m_aContainer;
@@ -458,17 +458,21 @@ namespace SGM {
 
             void operator()(Leaf const *leaf);
         };
-        
+
+        /**
+         * Visitor operation that pushes a Leaf object into a given container when it passes a given Filter.
+         * It casts the void* into the pointer type of the given container.
+         */
         template <class ObjectType>
         struct PushLeafObject {
-            std::vector<ObjectType*> m_aObjects;
+            std::vector<ObjectType*> *m_p_aObjects;
             bool bContinueVisiting;
             
             PushLeafObject() = delete;
             
             explicit PushLeafObject(std::vector<ObjectType*> &aObjects) 
-                    : m_aObjects(aObjects), bContinueVisiting(true)
-                { m_aObjects.clear(); };
+                    : m_p_aObjects(&aObjects), bContinueVisiting(true)
+                { m_p_aObjects->clear(); };
             
             void operator()(Leaf const *leaf);
         };

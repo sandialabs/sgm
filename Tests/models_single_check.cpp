@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <Util/buffer.h>
-#include <OrderPoints.h>
+#include "Util/buffer.h"
+#include "OrderPoints.h"
 #include "test_utility.h"
 
 #include "SGMInterrogate.h"
@@ -13,6 +13,9 @@
 #include "SGMTranslators.h"
 #include "SGMModify.h"
 #include "SGMGeometry.h"
+
+#define SGM_TIMER
+#include "Util/timer.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -787,9 +790,12 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-    SCOPED_TRACE(ouo_file_name);
-    expect_import_ouo_success(ouo_file_name, rResult);
+//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+//    SCOPED_TRACE(ouo_file_name);
+//    expect_import_ouo_success(ouo_file_name, rResult);
+    const char* file_name = "Matt/FifthWheelWheel.stp";
+    SCOPED_TRACE(file_name);
+    expect_import_success(file_name, rResult);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
 
@@ -812,7 +818,7 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 100.;
+    dIncrement /= 30.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
@@ -841,7 +847,13 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     SGM::FindVolumes(rResult,SGM::Thing(),sVolumes);
     SGM::Volume VolumeID = *(sVolumes.begin());
 
+    SGM_TIMER_INITIALIZE();
+    SGM_TIMER_START("PointsInVolume");
+
     std::vector<bool> aIsPointInside = SGM::PointsInVolume(rResult, aPoints, VolumeID);
+
+    SGM_TIMER_STOP();
+    SGM_TIMER_SUM();
 
     std::vector<SGM::Point3D> aPointsInside;
     for (size_t i = 0; i < aPoints.size(); ++i)
@@ -851,7 +863,10 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
             aPointsInside.push_back(aPoints[i]);
             }
         }
-    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+    //SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+    SGM::CreateVoxels(rResult,aPointsInside,dIncrement,true);
+
+    std::cout << "PointsInVolume = " << aPointsInside.size() << " of " << aPoints.size() << " are inside" << std::endl;
 
     SGMTesting::ReleaseTestThing(pThing);
     }
