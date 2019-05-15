@@ -709,6 +709,42 @@ void FixUV(surface      const* pSurface,
         }
     }
 
+edge *FindInEdge(face                const *pFace,
+                 std::vector<edge *> const &aEdges,
+                 vertex              const *pVertex)
+    {
+    for(edge *pEdge : aEdges)
+        {
+        if(pFace->GetSideType(pEdge)==SGM::FaceOnLeftType && pEdge->GetEnd()==pVertex)
+            {
+            return pEdge;
+            }
+        if(pFace->GetSideType(pEdge)==SGM::FaceOnRightType && pEdge->GetStart()==pVertex)
+            {
+            return pEdge;
+            }
+        }
+    return nullptr;
+    }
+
+edge *FindOutEdge(face                const *pFace,
+                  std::vector<edge *> const &aEdges,
+                  vertex              const *pVertex)
+    {
+    for(edge *pEdge : aEdges)
+        {
+        if(pFace->GetSideType(pEdge)==SGM::FaceOnLeftType && pEdge->GetStart()==pVertex)
+            {
+            return pEdge;
+            }
+        if(pFace->GetSideType(pEdge)==SGM::FaceOnRightType && pEdge->GetEnd()==pVertex)
+            {
+            return pEdge;
+            }
+        }
+    return nullptr;
+    }
+
 bool face::PointInFace(SGM::Result        &rResult,
                        SGM::Point2D const &uv,
                        edge               **pInCloseEdge,
@@ -868,51 +904,72 @@ bool face::PointInFace(SGM::Result        &rResult,
         FindEdgesOnFaceAtVertex(rResult,pCloseVertex,this,aEdges);
         if(aEdges.size()==2)
             {
-            edge *pEdge0=aEdges[0];
-            edge *pEdge1=aEdges[1];
+            //edge *pEdge0=aEdges[0];
+            //edge *pEdge1=aEdges[1];
+            //
+            //// The edges must be ordered counter clockwise
+            //
+            //if(GetSideType(pEdge0)==SGM::FaceOnLeftType)
+            //    {
+            //    if(pEdge0->GetStart()==pCloseVertex)
+            //        {
+            //        std::swap(pEdge0,pEdge1);
+            //        }
+            //    }
+            //else
+            //    {
+            //    if(pEdge0->GetEnd()==pCloseVertex)
+            //        {
+            //        std::swap(pEdge0,pEdge1);
+            //        }
+            //    }
+            //
+            //SGM::Point3D Pos0;
+            //if(pEdge0->GetStart()==pCloseVertex)
+            //    {
+            //    Pos0=pEdge0->FindMidPoint(0.001);
+            //    }
+            //else
+            //    {
+            //    Pos0=pEdge0->FindMidPoint(0.999);
+            //    }
+            //SGM::Point2D uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),Pos0);
+            //
+            //FixUV(m_pSurface,CloseUV1,uv0);
+            //
+            //SGM::Point3D Pos1;
+            //if(pEdge1->GetStart()==pCloseVertex)
+            //    {
+            //    Pos1=pEdge1->FindMidPoint(0.001);
+            //    }
+            //else
+            //    {
+            //    Pos1=pEdge1->FindMidPoint(0.999);
+            //    }
+            //SGM::Point2D uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),Pos1);
+            //
+            //FixUV(m_pSurface,CloseUV1,uv1);
 
-            // The edges must be ordered counter clockwise
+            edge *pEdge0=FindInEdge(this,aEdges,pCloseVertex);
+            edge *pEdge1=FindOutEdge(this,aEdges,pCloseVertex);
 
-            if(GetSideType(pEdge0)==SGM::FaceOnLeftType)
+            if(pEdge0==nullptr || pEdge1==nullptr)
                 {
-                if(pEdge0->GetStart()==pCloseVertex)
-                    {
-                    std::swap(pEdge0,pEdge1);
-                    }
+                return false;
                 }
-            else
-                {
-                if(pEdge0->GetEnd()==pCloseVertex)
-                    {
-                    std::swap(pEdge0,pEdge1);
-                    }
-                }
-            
-            SGM::Point3D Pos0;
-            if(pEdge0->GetStart()==pCloseVertex)
-                {
-                Pos0=pEdge0->FindMidPoint(0.001);
-                }
-            else
-                {
-                Pos0=pEdge0->FindMidPoint(0.999);
-                }
-            SGM::Point2D uv0=AdvancedInverse(pEdge0,GetSideType(pEdge0),Pos0);
 
-            FixUV(m_pSurface,CloseUV1,uv0);
-
-            SGM::Point3D Pos1;
-            if(pEdge1->GetStart()==pCloseVertex)
+            std::vector<SGM::Point2D> const &aUVs0=GetUVBoundary(rResult,pEdge0);
+            std::vector<SGM::Point2D> const &aUVs1=GetUVBoundary(rResult,pEdge1);
+            SGM::Point2D uv0=aUVs0[1];
+            SGM::Point2D uv1=aUVs1[1];
+            if(pEdge0->GetEnd()==pCloseVertex)
                 {
-                Pos1=pEdge1->FindMidPoint(0.001);
+                uv0=aUVs0[aUVs0.size()-2];
                 }
-            else
+            if(pEdge1->GetEnd()==pCloseVertex)
                 {
-                Pos1=pEdge1->FindMidPoint(0.999);
+                uv1=aUVs1[aUVs1.size()-2];
                 }
-            SGM::Point2D uv1=AdvancedInverse(pEdge1,GetSideType(pEdge1),Pos1);
-
-            FixUV(m_pSurface,CloseUV1,uv1);
 
             SGM::UnitVector3D Vec0(uv0.m_u-CloseUV1.m_u,uv0.m_v-CloseUV1.m_v,0);
             SGM::UnitVector3D Vec1(uv1.m_u-CloseUV1.m_u,uv1.m_v-CloseUV1.m_v,0);

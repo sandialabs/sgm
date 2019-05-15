@@ -277,7 +277,7 @@ TEST(modify, block_block_coincident_vertex_unite)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_block_coincident_edge_unite)
+TEST(modify, DISABLED_block_block_coincident_edge_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 
@@ -292,7 +292,7 @@ TEST(modify, block_block_coincident_edge_unite)
     SGMTesting::ReleaseTestThing(pThing);
 }
 
-TEST(modify, block_block_coincident_unite)
+TEST(modify, DISABLED_block_block_coincident_unite)
 {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing); 

@@ -36,13 +36,13 @@ SGM_EXPORT double DistanceSquaredTriangle3D(Point3D const &A,
                                             Point3D const &C,
                                             Point3D const &P);
 
-inline Point2D CenterOfMass(Point2D const &A,
-                            Point2D const &B,
-                            Point2D const &C);
+inline Point2D CenterOfMass2D(Point2D const &A,
+                              Point2D const &B,
+                              Point2D const &C);
 
-inline Point3D CenterOfMass(Point3D const &A,
-                            Point3D const &B,
-                            Point3D const &C);
+inline Point3D CenterOfMass3D(Point3D const &A,
+                              Point3D const &B,
+                              Point3D const &C);
 
 // Returns the area of the triangle ABC as positive if ABC are counter
 // clockwise else it returns a negative area of triangle ABC.
@@ -62,7 +62,7 @@ inline double SignedArea(Point2D const &A,
 // std::numeric_limits<unsigned int>::max() for that edges.
 
 SGM_EXPORT size_t FindAdjacencies2D(std::vector<unsigned int> const &aTriangles,
-                                    std::vector<unsigned int>       &aAdjacences);
+                                    std::vector<unsigned int>       &aAdjacencies);
 
 // Given segments in the form <a0,b0,a1,b1,b2,c2,...>
 // FindAdjacences1D returns a verctor of the form <Sa0,Sb0,Sa1,Sb1,...>
@@ -74,8 +74,8 @@ SGM_EXPORT size_t FindAdjacencies2D(std::vector<unsigned int> const &aTriangles,
 // is adjecent then std::numeric_limits<unsigned int>::max() is returned for
 // the point.
 
-SGM_EXPORT size_t FindAdjacences1D(std::vector<unsigned int> const &aSegments,
-                                   std::vector<unsigned int>       &aAdjacences);
+SGM_EXPORT size_t FindAdjacencies1D(std::vector<unsigned int> const &aSegments,
+                                    std::vector<unsigned int>       &aAdjacencies);
 
 // Returns the length of the longest edge of the given triangles.
 
@@ -171,7 +171,7 @@ SGM_EXPORT void MergeTriangles3D(std::vector<Point3D> const &aPoints3D,
 
 ///////////////////////////////////////////////////////////////////////////
 //
-//  Polyhedra
+//  Polyhedral
 //
 ///////////////////////////////////////////////////////////////////////////
 

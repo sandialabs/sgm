@@ -638,7 +638,7 @@ bool complex::FindPolygon(std::vector<unsigned> &aPolygon) const
     if (IsCycle())
         {
         std::vector<unsigned> aAdjacences;
-        SGM::FindAdjacences1D(m_aSegments,aAdjacences);
+        SGM::FindAdjacencies1D(m_aSegments,aAdjacences);
         if(!m_aSegments.empty())
             {
             unsigned nStart=m_aSegments[0];

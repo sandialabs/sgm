@@ -173,8 +173,8 @@ namespace SGM
     // a given nParent element.  An element a is a decendent of b if a<b.
 
     SGM_EXPORT size_t FindDescendants(std::set<std::pair<size_t, size_t> > const &sPartialOrder,
-                                      size_t nParent,
-                                      std::vector<size_t> &aDescendants);
+                                      size_t                                      nParent,
+                                      std::vector<size_t>                        &aDescendants);
 
     // Given a partial order, definded by a set of ordered pairs of indices,
     // such that a<b if and only if <a,b> is in the set, find the decendents of
