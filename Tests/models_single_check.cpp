@@ -666,17 +666,17 @@ TEST(speed_check, DISABLED_point_in_volume_OUO_full_model_volume1)
 #endif
 
 #if 1
-TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
+TEST(speed_check, points_in_volume_OUO_full_model_volume1)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
 
-//    const char* ouo_file_name = "OUO_full_model_volume1.stp";
-//    SCOPED_TRACE(ouo_file_name);
-//    expect_import_ouo_success(ouo_file_name, rResult);
-    const char* file_name = "Matt/FifthWheelWheel.stp";
-    SCOPED_TRACE(file_name);
-    expect_import_success(file_name, rResult);
+    const char* ouo_file_name = "OUO_full_model_volume1.stp";
+    SCOPED_TRACE(ouo_file_name);
+    expect_import_ouo_success(ouo_file_name, rResult);
+//    const char* file_name = "Matt/FifthWheelWheel.stp";
+//    SCOPED_TRACE(file_name);
+//    expect_import_success(file_name, rResult);
 
     SGM::Interval3D Bounds = SGM::GetBoundingBox(rResult,SGM::Thing());
 
@@ -699,7 +699,7 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
     double dIncrement = std::min({std::abs(dEndX - dStartX),
                                   std::abs(dEndY - dStartY),
                                   std::abs(dEndZ - dStartZ)});
-    dIncrement /= 30.;
+    dIncrement /= 100.;
 
     std::vector<SGM::Point3D> aPoints;
     std::vector<unsigned> aEmpty;
@@ -744,8 +744,8 @@ TEST(speed_check, DISABLED_points_in_volume_OUO_full_model_volume1)
             aPointsInside.push_back(aPoints[i]);
             }
         }
-    //SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
-    SGM::CreateVoxels(rResult,aPointsInside,dIncrement,true);
+    SGM::CreateComplex(rResult,aPointsInside,aEmpty,aEmpty);
+    //SGM::CreateVoxels(rResult,aPointsInside,dIncrement,true);
 
     std::cout << "PointsInVolume = " << aPointsInside.size() << " of " << aPoints.size() << " are inside" << std::endl;
 

@@ -748,7 +748,7 @@ bool PointCrossFacesLoop(SGM::Result &rResult,
     typedef MortonSegmentsTree<SGM::Interval3D,SGM::Point3D>::Node Node;
     typedef MortonSegmentsTree<SGM::Interval3D,SGM::Point3D>::Leaf Leaf;
 
-    size_t nSegmentsChecked = 0;
+//    size_t nSegmentsChecked = 0;
 
 //    void LevelOrderTraversal(Node * root)
 //        {
@@ -785,7 +785,7 @@ bool PointCrossFacesLoop(SGM::Result &rResult,
                                         {
                                         aPointCrosses[i] = true;
                                         }
-                                    ++nSegmentsChecked;
+                                    //++nSegmentsChecked;
                                     }
                                 }
                             }
@@ -803,30 +803,28 @@ bool PointCrossFacesLoop(SGM::Result &rResult,
                 }
             }
 //        }
+//    std::cout << "tree nSegmentsChecked = " << nSegmentsChecked << " out of " << iEnd-iBegin-1 << std::endl;
 
-
-    std::cout << "tree nSegmentsChecked = " << nSegmentsChecked << " out of " << iEnd-iBegin-1 << std::endl;
-
-    // more expensive O(N) algorithm can be used to check the answer with the MortonSegmentsTree
-    for (size_t i = iBegin+1; i < iEnd; ++i)
-        {
-        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
-        SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i - 1]];
-        if (AnyFacetIntersectsSegment(rResult, FaceTree, PreviousPoint, NextPoint))
-            {
-            if (!aPointCrosses[i])
-                {
-                std::cout << "aPointCrosses[" << i << "]" << " is not true" << std::endl;
-                }
-            }
-        else
-            {
-            if (aPointCrosses[i])
-                {
-                std::cout << "aPointCrosses[" << i << "]" << " is not false" << std::endl;
-                }
-            }
-        }
+//    // more expensive O(N) algorithm can be used to check the answer with the MortonSegmentsTree
+//    for (size_t i = iBegin+1; i < iEnd; ++i)
+//        {
+//        SGM::Point3D const &NextPoint = aPoints[aIndexOrdered[i]];
+//        SGM::Point3D const &PreviousPoint = aPoints[aIndexOrdered[i - 1]];
+//        if (AnyFacetIntersectsSegment(rResult, FaceTree, PreviousPoint, NextPoint))
+//            {
+//            if (!aPointCrosses[i])
+//                {
+//                std::cout << "aPointCrosses[" << i << "]" << " is not true" << std::endl;
+//                }
+//            }
+//        else
+//            {
+//            if (aPointCrosses[i])
+//                {
+//                std::cout << "aPointCrosses[" << i << "]" << " is not false" << std::endl;
+//                }
+//            }
+//        }
 
 #else
 
@@ -944,13 +942,13 @@ bool PointsInVolumeLoop(SGM::Result &rResult,
             }
         }
 
-    std::cout << "PointsInVolumeLoop: " <<
-                 iEnd - iBegin << " = " <<
-                 nPointsSolvedByCrossing << " + (" <<
-                 nPointsFindNextRay << " = " <<
-                 nPointsCostZero << " + " <<
-                 nPointsRayInVolume << ")" << std::endl;
-    std::cout.flush();
+//    std::cout << "PointsInVolumeLoop: " <<
+//                 iEnd - iBegin << " = " <<
+//                 nPointsSolvedByCrossing << " + (" <<
+//                 nPointsFindNextRay << " = " <<
+//                 nPointsCostZero << " + " <<
+//                 nPointsRayInVolume << ")" << std::endl;
+//    std::cout.flush();
     return iEnd > iBegin;
     }
 
