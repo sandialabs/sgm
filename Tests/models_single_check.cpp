@@ -235,28 +235,7 @@ TEST(models_single_check, import_check_OUO_full_model_volume1)
     expect_import_ouo_check_success(file_name);
 }
 
-TEST(models_single_check, single_point_in_face)
-    {
-    SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
-    SGM::Result rResult(pThing);
-
-    SGM::Body BodyID1=SGM::CreateBlock(rResult,SGM::Point3D(0,0,0),SGM::Point3D(10,10,0));
-    SGM::Body BodyID2=SGM::CreateBlock(rResult,SGM::Point3D(10,0,0),SGM::Point3D(20,20,0));
-    SGM::UniteBodies(rResult,BodyID1,BodyID2);
-
-    std::set<SGM::Face> sFaces;
-    SGM::FindFaces(rResult,BodyID1,sFaces);
-    SGM::Face FaceID=*(sFaces.begin());
-
-    SGM::Point3D Pos(11,9,0);
-    double dAnswer=SGM::PointInEntity(rResult,Pos,FaceID);
-
-    EXPECT_TRUE(dAnswer);
-
-    SGMTesting::ReleaseTestThing(pThing);
-    }
-
-TEST(speed_check, single_point_in_face)
+TEST(speed_check, DISABLED_single_point_in_face)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
@@ -273,7 +252,7 @@ TEST(speed_check, single_point_in_face)
     SGM::FindFaces(rResult,SGM::Thing(),sFaces);
     SGM::Face FaceID = *(sFaces.begin());
 
-    SGM::Point3D Pos({-1.8792107076289142,2.9817389056077608,-3.0953349250381628});
+    SGM::Point3D Pos={-1.8792107076289142,2.9817389056077608,-3.0953349250381628};
     bool bInside1=SGM::PointInEntity(rResult,Pos,FaceID);
 
     std::vector<SGM::Point3D> aPoints={{-1.8792107076289142,2.9817389056077608,-3.0953349250381628}};
@@ -284,7 +263,7 @@ TEST(speed_check, single_point_in_face)
     SGMTesting::ReleaseTestThing(pThing);
     }
 
-TEST(speed_check, single_point_in_volume)
+TEST(speed_check, DISABLED_single_point_in_volume)
     {
     SGMInternal::thing *pThing = SGMTesting::AcquireTestThing();
     SGM::Result rResult(pThing);
