@@ -134,8 +134,8 @@ double DistanceSquaredTriangle3D(Point3D const &A,
     return std::min({dDistAB,dDistBC,dDistCA});
     }
 
-size_t FindAdjacences1D(std::vector<unsigned> const &aSegments,
-                        std::vector<unsigned>       &aAdjacency)
+size_t FindAdjacencies1D(std::vector<unsigned> const &aSegments,
+                         std::vector<unsigned>       &aAdjacency)
     {
     std::vector<SGMInternal::VertexData> aVertices;
     size_t nSegments = aSegments.size();
@@ -524,7 +524,7 @@ void FindBoundary(std::vector<unsigned> const &aTriangles,
 size_t FindComponents1D(std::vector<unsigned> const &aSegments)
     {
     std::vector<unsigned> aAdjacency;
-    SGM::FindAdjacences1D(aSegments,aAdjacency);
+    SGM::FindAdjacencies1D(aSegments,aAdjacency);
     std::set<size_t> sVertices;
     std::set<SGM::GraphEdge> sEdges;
     size_t nSegments=aSegments.size();

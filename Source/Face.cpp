@@ -958,8 +958,18 @@ bool face::PointInFace(SGM::Result        &rResult,
                 return false;
                 }
 
-            SGM::Point2D const &uv0=GetUVBoundary(rResult,pEdge0)[1];
-            SGM::Point2D const &uv1=GetUVBoundary(rResult,pEdge1)[1];
+            std::vector<SGM::Point2D> const &aUVs0=GetUVBoundary(rResult,pEdge0);
+            std::vector<SGM::Point2D> const &aUVs1=GetUVBoundary(rResult,pEdge1);
+            SGM::Point2D uv0=aUVs0[1];
+            SGM::Point2D uv1=aUVs1[1];
+            if(pEdge0->GetEnd()==pCloseVertex)
+                {
+                uv0=aUVs0[aUVs0.size()-2];
+                }
+            if(pEdge1->GetEnd()==pCloseVertex)
+                {
+                uv1=aUVs1[aUVs1.size()-2];
+                }
 
             SGM::UnitVector3D Vec0(uv0.m_u-CloseUV1.m_u,uv0.m_v-CloseUV1.m_v,0);
             SGM::UnitVector3D Vec1(uv1.m_u-CloseUV1.m_u,uv1.m_v-CloseUV1.m_v,0);
